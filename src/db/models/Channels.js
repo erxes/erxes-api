@@ -37,10 +37,9 @@ const ChannelSchema = mongoose.Schema({
 
 class Channel {
   /**
-   * Create new channel,
-   * adds `userId` to the `membersId` if it doesn't contain it
+   * Create a new channel,
+   * adds `userId` to the `memberIds` if it doesn't contain it
    * @param {Object} args
-   * @param {func} args2
    * @return {Promise} Newly created channel obj
    */
   static createChannel(doc) {
@@ -54,8 +53,8 @@ class Channel {
     doc.openConversationCount = 0;
     doc.memberIds = doc.memberIds || [];
 
-    if (doc.memberIds.indexOf(this.userId) === -1) {
-      doc.memberIds.push(this.userId);
+    if (!doc.memberIds.includes(doc.userId)) {
+      doc.memberIds.push(doc.userId);
     }
     return this.create(doc);
   }

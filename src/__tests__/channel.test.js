@@ -26,12 +26,19 @@ describe('channel creation tests', () => {
   let _user2;
   let _integration;
 
+  /**
+   * Before each test create test data
+   * containing 2 users and an integration
+   */
   beforeEach(async () => {
     _user = await userFactory({});
     _integration = await integrationFactory({});
     _user2 = await userFactory({});
   });
 
+  /**
+   * After each test remove the test data
+   */
   afterEach(async () => {
     await Channels.remove({});
     await Users.remove({});
@@ -48,18 +55,5 @@ describe('channel creation tests', () => {
 
     const channel = await Channels.createChannel(doc);
     expect(channel.memberIds.length).toBe(2);
-  });
-
-  test('create channel with validation errors', async () => {
-    const doc = {
-      userId: _user._id,
-      memberIds: [_user2._id],
-      integrationIds: [_integration._id],
-    };
-    try {
-      await Channels.createChannel(doc);
-    } catch (e) {
-      expect(e.errors.name.message).toBe('Path `name` is required.');
-    }
   });
 });

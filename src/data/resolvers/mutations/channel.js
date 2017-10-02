@@ -6,7 +6,8 @@ export default {
    * @param {Object} args
    * @return {Promise} returns true
    */
-  async channelsCreate(root, args) {
+  channelsCreate(root, args) {
+    // TODO: sendNotifications method should here
     return Channels.createChannel(args);
   },
 };
