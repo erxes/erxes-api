@@ -45,10 +45,15 @@ class Channel {
    */
   static createChannel(doc) {
     const { userId } = doc;
-    if (!userId) throw new ChannelCreationException('userId must be supplied');
+
+    if (!userId) {
+      throw new ChannelCreationException('userId must be supplied');
+    }
+
     doc.conversationCount = 0;
     doc.openConversationCount = 0;
-    doc.memberIds = doc.memberIds == null ? [] : doc.memberIds;
+    doc.memberIds = doc.memberIds || [];
+
     if (doc.memberIds.indexOf(this.userId) === -1) {
       doc.memberIds.push(this.userId);
     }

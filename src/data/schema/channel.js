@@ -6,7 +6,7 @@ export const types = `
     integrationIds: [String]
     memberIds: [String]
     createdAt: Date
-    userId: String
+    userId: String!
     conversationCount: Int
     openConversationCount: Int
   }
@@ -23,5 +23,5 @@ export const mutations = `
     description: String,
     memberIds: [String],
     integrationIds: [String],
-    userId: String!): String
+    userId: String!): Channel
 `;

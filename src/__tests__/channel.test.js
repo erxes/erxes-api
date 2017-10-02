@@ -16,6 +16,7 @@ describe('createChannel', () => {
       });
     } catch (e) {
       expect(e.value).toBe('channel.create.exception');
+      expect(e.message).toBe('userId must be supplied');
     }
   });
 });
@@ -24,6 +25,7 @@ describe('channel creation tests', () => {
   let _user;
   let _user2;
   let _integration;
+
   beforeEach(async () => {
     _user = await userFactory({});
     _integration = await integrationFactory({});
@@ -44,10 +46,6 @@ describe('channel creation tests', () => {
       integrationIds: [_integration._id],
     };
 
-    let channelObj = Channels(doc);
-    let errors = channelObj.validateSync();
-    expect(errors).toBe(undefined);
-
     const channel = await Channels.createChannel(doc);
     expect(channel.memberIds.length).toBe(2);
   });
@@ -61,7 +59,7 @@ describe('channel creation tests', () => {
     try {
       await Channels.createChannel(doc);
     } catch (e) {
-      expect(typeof e).toBe('object');
+      expect(e.errors.name.message).toBe('Path `name` is required.');
     }
   });
 });

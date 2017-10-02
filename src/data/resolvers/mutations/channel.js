@@ -7,7 +7,6 @@ export default {
    * @return {Promise} returns true
    */
   async channelsCreate(root, args) {
-    const channel = await Channels.createChannel(args);
-    return channel._id;
+    return Channels.createChannel(args);
   },
 };
