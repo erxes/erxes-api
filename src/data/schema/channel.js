@@ -24,4 +24,12 @@ export const mutations = `
     memberIds: [String],
     integrationIds: [String],
     userId: String!): Channel
+
+  channelsUpdate(
+    id: String!,
+    name: String!,
+    description: String,
+    memberIds: [String],
+    integrationIds: [String],
+    userId: String!): Boolean
 `;

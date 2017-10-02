@@ -10,4 +10,19 @@ export default {
     // TODO: sendNotifications method should here
     return Channels.createChannel(args);
   },
+
+  /**
+   * Update channel data
+   * @param {Object}
+   * @param {String} args.id
+   * @param {Object} args
+   * @return {Promise} returns mongoose model update method return value
+   */
+  channelsUpdate(root, args) {
+    const { id } = args;
+    delete args.id;
+    Channels.updateChannel(id, args);
+    // TODO: sendNotifications method shoul be here
+    return;
+  },
 };
