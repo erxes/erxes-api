@@ -1,21 +1,67 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import shortid from 'shortid';
+import { createdAtModifier } from '../plugins';
+
+function ChannelCreationException(message) {
+  this.message = message;
+  this.value = 'channel.create.exception';
+  this.toString = `${this.value} - ${this.value}`;
+}
 
 const ChannelSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
-  name: String,
+  name: {
+    type: String,
+    required: true,
+  },
   description: String,
-  integrationIds: [String],
-  memberIds: [String],
-  createdAt: Date,
-  userId: String,
-  conversationCount: Number,
-  openConversationCount: Number,
+  // TODO: Check if regex id is available for use
+  integrationIds: {
+    type: [String],
+  },
+  // TODO: Check if regex id is available for use
+  memberIds: {
+    type: [String],
+  },
+  conversationCount: {
+    type: Number,
+  },
+  openConversationCount: {
+    type: Number,
+  },
 });
+
+class Channel {
+  /**
+   * Create a new channel,
+   * adds `userId` to the `memberIds` if it doesn't contain it
+   * @param {Object} args
+   * @return {Promise} Newly created channel obj
+   */
+  static createChannel(doc) {
+    const { userId } = doc;
+
+    if (!userId) {
+      throw new ChannelCreationException('userId must be supplied');
+    }
+
+    doc.conversationCount = 0;
+    doc.openConversationCount = 0;
+    doc.memberIds = doc.memberIds || [];
+
+    if (!doc.memberIds.includes(doc.userId)) {
+      doc.memberIds.push(doc.userId);
+    }
+    return this.create(doc);
+  }
+}
+
+ChannelSchema.plugin(createdAtModifier);
+ChannelSchema.loadClass(Channel);
 
 const Channels = mongoose.model('channels', ChannelSchema);
 
