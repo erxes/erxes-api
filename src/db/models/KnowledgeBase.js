@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import { random } from '../utils';
+import shortid from 'shortid';
 
 const KbArticlesSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   title: String,
   summary: String,
@@ -25,7 +25,7 @@ const KbCategoriesSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   title: String,
   description: String,
@@ -44,7 +44,7 @@ const KbTopicsSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   title: String,
   brandId: String,

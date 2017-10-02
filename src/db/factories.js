@@ -1,4 +1,4 @@
-import utils from './utils';
+import shortid from 'shortid';
 import faker from 'faker';
 import { Users, Integrations } from './models';
 
@@ -16,8 +16,8 @@ export const integrationFactory = params => {
   const integration = new Integrations({
     name: faker.random.word(),
     kind: params.kind || 'messenger',
-    brandId: params.brandId || utils.random.id(),
-    formId: params.formId || utils.random.id(),
+    brandId: params.brandId || shortid.generate(),
+    formId: params.formId || shortid.generate(),
   });
 
   return integration.save();

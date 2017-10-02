@@ -9,7 +9,5 @@ export default {
   async channelsCreate(root, args) {
     const channel = await Channels.createChannel(args);
     return channel._id;
-    // Send notification
-    // sendNotifications(channelId, doc.memberIds, this.userId);
   },
 };

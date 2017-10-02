@@ -1,18 +1,12 @@
 import mongoose from 'mongoose';
-import utils from '../utils';
-import { createdAtModifier, channelModifier } from '../plugins';
-
-function ChannelCreationException(message) {
-  this.message = message;
-  this.value = 'channel.create.exception';
-  this.toString = `${this.value} - ${this.value}`;
-}
+import shortid from 'shortid';
+import { createdAtModifier } from '../plugins';
 
 const ChannelSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => utils.random.id(),
+    default: shortid.generate,
   },
   name: {
     type: String,
@@ -27,6 +21,12 @@ const ChannelSchema = mongoose.Schema({
   memberIds: {
     type: [String],
   },
+  conversationCount: {
+    type: Number,
+  },
+  openConversationCount: {
+    type: Number,
+  },
 });
 
 class Channel {
@@ -37,19 +37,18 @@ class Channel {
    * @param {func} args2
    * @return {Promise} Newly created channel obj
    */
-  static createChannel(doc, handleError) {
-    return this.create(doc, (err, doc) => {
-      if (err) {
-        if (!handleError) throw new ChannelCreationException('handleError method not supplied');
-        return handleError(err);
-      }
-      return doc;
-    });
+  static createChannel(doc) {
+    doc.conversationCount = 0;
+    doc.openConversationCount = 0;
+    doc.memberIds = doc.memberIds == null ? [] : doc.memberIds;
+    if (doc.memberIds.indexOf(this.userId) === -1) {
+      doc.memberIds.push(this.userId);
+    }
+    return this.create(doc);
   }
 }
 
 ChannelSchema.plugin(createdAtModifier);
-ChannelSchema.plugin(channelModifier);
 ChannelSchema.loadClass(Channel);
 
 const Channels = mongoose.model('channels', ChannelSchema);

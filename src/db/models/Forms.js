@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import { random } from '../utils';
+import shortid from 'shortid';
 
 const FormSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   title: String,
   code: String,
@@ -20,7 +20,7 @@ const FieldSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   formId: String,
   type: String,

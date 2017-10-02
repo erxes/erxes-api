@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import { random } from '../utils';
+import shortid from 'shortid';
 
 const EngageMessageSchema = mongoose.Schema({
-  _id: { type: String, unique: true, default: () => random.id() },
+  _id: { type: String, unique: true, default: shortid.generate },
   kind: String,
   segmentId: String,
   customerIds: [String],

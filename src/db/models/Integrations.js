@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import utils from '../utils';
+import shortid from 'shortid';
 
 const IntegrationSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => utils.random.id(),
+    default: shortid.generate,
   },
   kind: String,
   name: String,

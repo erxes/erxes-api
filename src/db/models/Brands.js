@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import { random } from '../utils';
+import shortid from 'shortid';
 
 const BrandSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => random.id(),
+    default: shortid.generate,
   },
   code: String,
   name: String,

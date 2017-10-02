@@ -9,14 +9,6 @@ beforeAll(() => connect());
 afterAll(() => disconnect());
 
 describe('createChannel', () => {
-  test('channel validations', () => {
-    let channel = Channels({});
-    let err = channel.validateSync();
-
-    expect(err.errors['name'].message).toBe('Path `name` is required.');
-    expect(Object.keys(err.errors).length).toBe(1);
-  });
-
   test('createChannel without supplying userId as second argument', () => {
     try {
       Channels.createChannel({
@@ -28,27 +20,23 @@ describe('createChannel', () => {
   });
 });
 
-describe('createChannel 2', () => {
+describe('channel creation tests', () => {
   let _user;
   let _user2;
   let _integration;
-  beforeEach(() => {
-    return userFactory({}).then(user => {
-      _user = user;
-      return integrationFactory({}).then(integration => {
-        _integration = integration;
-        return userFactory({}).then(user2 => {
-          _user2 = user2;
-        });
-      });
-    });
+  beforeEach(async () => {
+    _user = await userFactory({});
+    _integration = await integrationFactory({});
+    _user2 = await userFactory({});
   });
 
-  afterEach(() => {
-    return Promise.all([Channels.remove({}), Users.remove({}), Integrations.remove({})]);
+  afterEach(async () => {
+    await Channels.remove({});
+    await Users.remove({});
+    await Integrations.remove({});
   });
 
-  test('create channel without errors', () => {
+  test('create channel without validation errors', async () => {
     const doc = {
       name: 'Channel test',
       userId: _user._id,
@@ -60,41 +48,20 @@ describe('createChannel 2', () => {
     let errors = channelObj.validateSync();
     expect(errors).toBe(undefined);
 
-    Channels.createChannel(doc).then(doc => {
-      expect(doc.memberIds.length).toBe(2);
-    });
-  });
-});
-
-describe('createChannel 3', () => {
-  let _user;
-  let _user2;
-  let _integration;
-  beforeEach(() => {
-    return userFactory({}).then(user => {
-      _user = user;
-      return integrationFactory({}).then(integration => {
-        _integration = integration;
-        return userFactory({}).then(user2 => {
-          _user2 = user2;
-        });
-      });
-    });
+    const channel = await Channels.createChannel(doc);
+    expect(channel.memberIds.length).toBe(2);
   });
 
-  afterEach(() => {
-    return Promise.all([Channels.remove({}), Users.remove({}), Integrations.remove({})]);
-  });
-
-  test('create channel with validation errors', () => {
+  test('create channel with validation errors', async () => {
     const doc = {
       userId: _user._id,
       memberIds: [_user2._id],
       integrationIds: [_integration._id],
     };
-
-    Channels.createChannel(doc, err => {
-      expect(typeof err).toBe('object');
-    });
+    try {
+      await Channels.createChannel(doc);
+    } catch (e) {
+      expect(typeof e).toBe('object');
+    }
   });
 });
