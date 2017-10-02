@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 import shortid from 'shortid';
 import { createdAtModifier } from '../plugins';
 
+function ChannelCreationException(message) {
+  this.message = message;
+  this.value = 'channel.create.exception';
+  this.toString = `${this.value} - ${this.value}`;
+}
+
 const ChannelSchema = mongoose.Schema({
   _id: {
     type: String,
@@ -38,6 +44,8 @@ class Channel {
    * @return {Promise} Newly created channel obj
    */
   static createChannel(doc) {
+    const { userId } = doc;
+    if (!userId) throw new ChannelCreationException('userId must be supplied');
     doc.conversationCount = 0;
     doc.openConversationCount = 0;
     doc.memberIds = doc.memberIds == null ? [] : doc.memberIds;
