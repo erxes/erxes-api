@@ -8,19 +8,6 @@ import { Channels, Users, Integrations } from '../db/models';
 beforeAll(() => connect());
 afterAll(() => disconnect());
 
-describe('createChannel', () => {
-  test('createChannel without supplying userId as second argument', () => {
-    try {
-      Channels.createChannel({
-        name: 'Channel test',
-      });
-    } catch (e) {
-      expect(e.value).toBe('channel.create.exception');
-      expect(e.message).toBe('userId must be supplied');
-    }
-  });
-});
-
 describe('channel creation tests', () => {
   let _user;
   let _user2;
@@ -46,6 +33,15 @@ describe('channel creation tests', () => {
   });
 
   test('create channel without validation errors', async () => {
+    try {
+      Channels.createChannel({
+        name: 'Channel test',
+      });
+    } catch (e) {
+      expect(e.value).toBe('channel.create.exception');
+      expect(e.message).toBe('userId must be supplied');
+    }
+
     const doc = {
       name: 'Channel test',
       userId: _user._id,
