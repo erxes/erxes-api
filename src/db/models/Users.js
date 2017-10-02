@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import utils from '../utils';
 
 const UserSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => Random.id(),
+    default: () => utils.random.id(),
   },
   username: String,
   details: Object,

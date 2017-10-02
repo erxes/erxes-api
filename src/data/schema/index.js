@@ -1,6 +1,10 @@
 import { types as UserTypes, queries as UserQueries } from './user';
 
-import { types as ChannelTypes, queries as ChannelQueries } from './channel';
+import {
+  types as ChannelTypes,
+  queries as ChannelQueries,
+  mutations as ChannelMutations,
+} from './channel';
 
 import { types as BrandTypes, queries as BrandQueries } from './brand';
 
@@ -64,6 +68,7 @@ export const queries = `
 export const mutations = `
   type Mutation {
     ${ConversationMutations}
+    ${ChannelMutations}
   }
 `;
 

@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import { random } from '../utils';
 
 const EngageMessageSchema = mongoose.Schema({
-  _id: { type: String, unique: true, default: () => Random.id() },
+  _id: { type: String, unique: true, default: () => random.id() },
   kind: String,
   segmentId: String,
   customerIds: [String],

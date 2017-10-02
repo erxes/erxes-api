@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import { random } from '../utils';
 
 const CustomerSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => Random.id(),
+    default: () => random.id(),
   },
   integrationId: String,
   name: String,
@@ -47,7 +47,7 @@ const SegmentSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => Random.id(),
+    default: () => random.id(),
   },
   name: String,
   description: String,

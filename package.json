@@ -19,7 +19,8 @@
     "build": "babel src --out-dir dist --ignore __tests__,tests --copy-files",
     "lint": "eslint src",
     "format": "prettier --write --print-width 100 --single-quote --trailing-comma all 'src/**/*.js'",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "test": "jest --config=test.config.json"
   },
   "lint-staged": {
     "*.js": [
@@ -32,13 +33,13 @@
     "cors": "^2.8.1",
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
+    "faker": "^4.1.0",
     "graphql": "^0.10.1",
     "graphql-server-core": "^0.8.2",
     "graphql-server-express": "^0.8.2",
     "graphql-server-module-graphiql": "^0.8.2",
     "graphql-subscriptions": "^0.4.3",
     "graphql-tools": "^1.0.0",
-    "meteor-random": "^0.0.3",
     "moment": "^2.18.1",
     "mongoose": "^4.9.2",
     "passport": "^0.4.0",
@@ -53,6 +54,7 @@
     "babel-preset-env": "^1.6.0",
     "eslint": "3.19.0",
     "husky": "^0.13.4",
+    "jest": "^21.2.1",
     "lint-staged": "^3.6.0",
     "nodemon": "^1.11.0",
     "prettier": "^1.4.4"

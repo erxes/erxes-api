@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import { random } from '../utils';
 
 const ResponseTemplateSchema = mongoose.Schema({
   _id: {
     type: String,
     unique: true,
-    default: () => Random.id(),
+    default: () => random.id(),
   },
   name: String,
   content: String,
