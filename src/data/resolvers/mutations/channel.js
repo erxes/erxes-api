@@ -25,4 +25,14 @@ export default {
     // TODO: sendNotifications method shoul be here
     return;
   },
+
+  /**
+   * Remove a channel
+   * @param {Object}
+   * @param {String} id
+   * @return {Promise} null
+   */
+  channelsRemove(root, id) {
+    return Channels.remove(id);
+  },
 };

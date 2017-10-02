@@ -32,4 +32,6 @@ export const mutations = `
     memberIds: [String],
     integrationIds: [String],
     userId: String!): Boolean
+
+  channelsUpdate(id: String!): Boolean
 `;
