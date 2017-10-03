@@ -22,7 +22,7 @@ import { types as FormTypes, queries as FormQueries } from './form';
 
 import { types as EngageTypes, queries as EngageQueries } from './engage';
 
-import { types as TagTypes, queries as TagQueries } from './tag';
+import { types as TagTypes, queries as TagQueries, mutations as TagMutations } from './tag';
 
 import { types as CustomerTypes, queries as CustomerQueries } from './customer';
 
@@ -78,6 +78,7 @@ export const mutations = `
     ${ConversationMutations}
     ${ChannelMutations}
     ${BrandMutations}
+    ${TagMutations}
     ${emailTemplateMutations}
   }
 `;
