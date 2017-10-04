@@ -37,26 +37,42 @@ const ChannelSchema = mongoose.Schema({
 
 class Channel {
   /**
-   * Create a new channel,
-   * adds `userId` to the `memberIds` if it doesn't contain it
-   * @param {Object} args
-   * @return {Promise} Newly created channel obj
+   *
    */
-  static createChannel(doc) {
+  static preSave(doc) {
     const { userId } = doc;
 
     if (!userId) {
       throw new ChannelCreationException('userId must be supplied');
     }
 
-    doc.conversationCount = 0;
-    doc.openConversationCount = 0;
     doc.memberIds = doc.memberIds || [];
 
     if (!doc.memberIds.includes(doc.userId)) {
       doc.memberIds.push(doc.userId);
     }
+  }
+
+  /**
+   * Create a new channel,
+   * adds `userId` to the `memberIds` if it doesn't contain it
+   * @param {Object} args
+   * @return {Promise} Newly created channel obj
+   */
+  static createChannel(doc) {
+    this.preSave(doc);
+    doc.conversationCount = 0;
+    doc.openConversationCount = 0;
     return this.create(doc);
+  }
+
+  static updateChannel(id, doc) {
+    if (doc && doc._id) {
+      delete doc._id;
+    }
+
+    this.preSave(doc);
+    return this.update(doc);
   }
 }
 
