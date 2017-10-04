@@ -33,6 +33,6 @@ export default {
     if (!emailTemplateObj) {
       throw new Error('Email template not found with id ' + _id);
     }
-    return EmailTemplates.remove(_id);
+    return emailTemplateObj.remove();
   },
 };

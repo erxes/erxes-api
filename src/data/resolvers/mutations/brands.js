@@ -33,7 +33,7 @@ export default {
     const brandObj = await Brands.findOne({ _id });
     if (!brandObj) throw new Error('Brand not found with id ' + _id);
 
-    return Brands.remove(_id);
+    return brandObj.remove();
   },
 
   /**

@@ -88,7 +88,7 @@ describe('Response template mutations', () => {
       { _id: _responseTemplate.id },
       { user: _user },
     );
-    expect(deletedObj.result.ok).toBe(1);
+    expect(deletedObj.id).toBe(_responseTemplate.id);
   });
 
   it('Delete response template login required', async () => {

@@ -73,7 +73,7 @@ describe('Email template mutations', () => {
       { _id: _emailTemplate.id },
       { user: _user },
     );
-    expect(deletedObj.result.ok).toBe(1);
+    expect(deletedObj.id).toBe(_emailTemplate.id);
   });
 
   it('Delete email template login required', async () => {

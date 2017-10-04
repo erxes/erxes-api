@@ -33,6 +33,6 @@ export default {
     if (!responseTemplateObj) {
       throw new Error('Response template not found with id ' + _id);
     }
-    return ResponseTemplates.remove(_id);
+    return responseTemplateObj.remove();
   },
 };

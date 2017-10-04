@@ -83,7 +83,7 @@ describe('Brands mutations', () => {
       { _id: _brand.id },
       { user: _user },
     );
-    expect(brandDeletedObj.result.ok).toBe(1);
+    expect(brandDeletedObj.id).toBe(_brand.id);
   });
 
   it('Delete brand login required', async () => {
