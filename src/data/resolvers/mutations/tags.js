@@ -88,8 +88,7 @@ export default {
    */
   async tagsRemove(root, { ids }, { user }) {
     if (user) {
-      const tagCount = Tags.find({ _id: { $in: ids } }).count();
-
+      const tagCount = await Tags.find({ _id: { $in: ids } }).count();
       if (tagCount !== ids.length) {
         throw new Error('Tag not found');
       }
