@@ -10,12 +10,16 @@ import { types as BrandTypes, queries as BrandQueries, mutations as BrandMutatio
 
 import { types as IntegrationTypes, queries as IntegrationQueries } from './integration';
 
-import { types as ResponseTemplate, queries as ResponseTemplateQueries } from './responseTemplate';
+import {
+  types as ResponseTemplate,
+  queries as ResponseTemplateQueries,
+  mutations as ResponseTemplateMutations,
+} from './responseTemplate';
 
 import {
   types as EmailTemplate,
   queries as EmailTemplateQueries,
-  mutations as emailTemplateMutations,
+  mutations as EmailTemplateMutations,
 } from './emailTemplate';
 
 import { types as FormTypes, queries as FormQueries } from './form';
@@ -78,7 +82,8 @@ export const mutations = `
     ${ConversationMutations}
     ${ChannelMutations}
     ${BrandMutations}
-    ${emailTemplateMutations}
+    ${EmailTemplateMutations}
+    ${ResponseTemplateMutations}
   }
 `;
 

@@ -23,6 +23,7 @@ describe('Email template mutations', () => {
   afterEach(async () => {
     // Clearing test data
     await EmailTemplates.remove({});
+    await Users.remove({});
   });
 
   test('Create email template', async () => {
@@ -32,6 +33,17 @@ describe('Email template mutations', () => {
       { user: _user },
     );
     expect(emailTemplateObj).toBeDefined();
+    expect(emailTemplateObj.name).toBe(_emailTemplate.name);
+    expect(emailTemplateObj.content).toBe(_emailTemplate.content);
+
+    // Login required test
+    expect(() =>
+      emailTemplateMutations.emailTemplateAdd(
+        {},
+        { name: _emailTemplate.name, content: _emailTemplate.content },
+        {},
+      ),
+    ).toThrowError(Error);
   });
 
   test('Update email template', async () => {
@@ -40,16 +52,36 @@ describe('Email template mutations', () => {
       { _id: _emailTemplate.id, name: _emailTemplate.name, content: _emailTemplate.content },
       { user: _user },
     );
-
     expect(emailTemplateObj).toBeDefined();
+    expect(emailTemplateObj.id).toBe(_emailTemplate.id);
+    expect(emailTemplateObj.name).toBe(_emailTemplate.name);
+    expect(emailTemplateObj.content).toBe(_emailTemplate.content);
   });
 
-  test('Delete brand', async () => {
-    const isDeleted = await emailTemplateMutations.emailTemplateRemove(
+  it('Update email template login required', async () => {
+    expect.assertions(1);
+    try {
+      await emailTemplateMutations.emailTemplateEdit({}, { _id: _emailTemplate.id }, {});
+    } catch (e) {
+      expect(e.message).toEqual('Login required');
+    }
+  });
+
+  test('Delete email template', async () => {
+    const deletedObj = await emailTemplateMutations.emailTemplateRemove(
       {},
       { _id: _emailTemplate.id },
       { user: _user },
     );
-    expect(isDeleted).toBeTruthy();
+    expect(deletedObj.result.ok).toBe(1);
+  });
+
+  it('Delete email template login required', async () => {
+    expect.assertions(1);
+    try {
+      await emailTemplateMutations.emailTemplateRemove({}, { _id: _emailTemplate.id }, {});
+    } catch (e) {
+      expect(e.message).toEqual('Login required');
+    }
   });
 });

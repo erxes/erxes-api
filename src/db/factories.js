@@ -1,6 +1,6 @@
 import shortid from 'shortid';
 import faker from 'faker';
-import { Users, Integrations, Brands, EmailTemplates } from './models';
+import { Users, Integrations, Brands, EmailTemplates, ResponseTemplates } from './models';
 
 export const userFactory = (params = {}) => {
   const user = new Users({
@@ -29,6 +29,7 @@ export const brandFactory = (params = {}) => {
     name: faker.random.word(),
     code: params.code || faker.random.word(),
     userId: shortid.generate(),
+    description: params.description || faker.random.word(),
     emailConfig: {
       type: 'simple',
       template: faker.random.word(),
@@ -45,4 +46,15 @@ export const emailTemplateFactory = (params = {}) => {
   });
 
   return emailTemplate.save();
+};
+
+export const responseTemplateFactory = (params = {}) => {
+  const responseTemplate = new ResponseTemplates({
+    name: faker.random.word(),
+    content: params.content || faker.random.word(),
+    brandId: params.brandId || shortid.generate(),
+    files: [faker.random.image()],
+  });
+
+  return responseTemplate.save();
 };

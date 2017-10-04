@@ -2,8 +2,8 @@
 /* eslint-disable no-underscore-dangle */
 
 import { connect, disconnect } from '../db/connection';
-import { Brands } from '../db/models';
-import { brandFactory } from '../db/factories';
+import { Brands, Users } from '../db/models';
+import { brandFactory, userFactory } from '../db/factories';
 import brandMutations from '../data/resolvers/mutations/brands';
 
 beforeAll(() => connect());
@@ -12,44 +12,87 @@ afterAll(() => disconnect());
 
 describe('Brands mutations', () => {
   let _brand;
+  let _user;
 
   beforeEach(async () => {
     // Creating test data
     _brand = await brandFactory();
+    _user = await userFactory();
   });
 
   afterEach(async () => {
     // Clearing test data
     await Brands.remove({});
+    await Users.remove({});
   });
 
   test('Create brand', async () => {
     const brandObj = await brandMutations.brandsAdd(
       {},
-      { code: _brand.code, name: _brand.name },
-      { user: _brand.userId },
+      { code: _brand.code, name: _brand.name, description: _brand.description },
+      { user: _user },
     );
-
     expect(brandObj).toBeDefined();
+    expect(brandObj.code).toBe(_brand.code);
+    expect(brandObj.name).toBe(_brand.name);
+    expect(brandObj.userId).toBe(_user._id);
+
+    // invalid data
+    expect(() =>
+      brandMutations.brandsAdd({}, { code: '', name: _brand.name }, { user: _user }),
+    ).toThrowError(Error);
+
+    // Login required
+    expect(() =>
+      brandMutations.brandsAdd({}, { code: _brand.code, name: brandObj.name }, {}),
+    ).toThrowError(Error);
   });
 
   test('Update brand', async () => {
+    // get new brand object
+    const _brand_update = await brandFactory();
+    // update brand object
     const brandObj = await brandMutations.brandsEdit(
       {},
-      { _id: _brand.id, code: _brand.code, name: _brand.name },
-      { user: _brand.userId },
+      {
+        _id: _brand.id,
+        code: _brand_update.code,
+        name: _brand_update.name,
+        description: _brand_update.description,
+      },
+      { user: _user },
     );
+    // check changes
+    expect(brandObj.code).toBe(_brand_update.code);
+    expect(brandObj.name).toBe(_brand_update.name);
+    expect(brandObj.description).toBe(_brand_update.description);
+  });
 
-    expect(brandObj).toBeDefined();
+  it('Update brand login required', async () => {
+    expect.assertions(1);
+    try {
+      await brandMutations.brandsEdit({}, { _id: _brand.id }, {});
+    } catch (e) {
+      expect(e.message).toEqual('Login required');
+    }
   });
 
   test('Delete brand', async () => {
-    const isDeleted = await brandMutations.brandsRemove(
+    const brandDeletedObj = await brandMutations.brandsRemove(
       {},
       { _id: _brand.id },
-      { user: _brand.userId },
+      { user: _user },
     );
-    expect(isDeleted).toBeTruthy();
+    expect(brandDeletedObj.result.ok).toBe(1);
+  });
+
+  it('Delete brand login required', async () => {
+    expect.assertions(1);
+    try {
+      await brandMutations.brandsRemove({}, { _id: _brand.id }, {});
+    } catch (e) {
+      expect(e.message).toEqual('Login required');
+    }
   });
 
   test('Update brand email config', async () => {
@@ -59,5 +102,7 @@ describe('Brands mutations', () => {
       { user: _brand.userId },
     );
     expect(brandObj).toBeDefined();
+    expect(brandObj.emailConfig.type).toBe(_brand.emailConfig.type);
+    expect(brandObj.emailConfig.template).toBe(_brand.emailConfig.template);
   });
 });
