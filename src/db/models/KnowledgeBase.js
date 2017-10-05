@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import shortid from 'shortid';
 
 const KbArticlesSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
   title: String,
   summary: String,
@@ -24,8 +23,7 @@ const KbArticlesSchema = mongoose.Schema({
 const KbCategoriesSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
   title: String,
   description: String,
@@ -43,8 +41,7 @@ const KbCategoriesSchema = mongoose.Schema({
 const KbTopicsSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
   title: String,
   brandId: String,

@@ -7,6 +7,7 @@ dotenv.config();
 
 const { NODE_ENV, TEST_MONGO_URL, MONGO_URL } = process.env;
 const isTest = NODE_ENV == 'test';
+
 const DB_URI = isTest ? TEST_MONGO_URL : MONGO_URL;
 
 mongoose.Promise = global.Promise;

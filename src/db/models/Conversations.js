@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import shortid from 'shortid';
 
 const ConversationSchema = mongoose.Schema({
-  _id: { type: String, unique: true, default: () => Random.id() },
+  _id: { type: String, default: shortid.generate },
   content: String,
   integrationId: String,
   customerId: String,
@@ -24,7 +24,7 @@ const ConversationSchema = mongoose.Schema({
 export const Conversations = mongoose.model('conversations', ConversationSchema);
 
 const MessageSchema = mongoose.Schema({
-  _id: { type: String, unique: true, default: () => Random.id() },
+  _id: { type: String, default: shortid.generate },
   content: String,
   attachments: Object,
   mentionedUserIds: [String],
