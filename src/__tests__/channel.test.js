@@ -1,9 +1,9 @@
 /* eslint-env jest */
 /* eslint-disable no-underscore-dangle */
 
-import { connect, disconnect } from '../../db/connection';
-import { userFactory, integrationFactory } from '../../db/factories';
-import { Channels, Users, Integrations } from '../../db/models';
+import { connect, disconnect } from '../db/connection';
+import { userFactory, integrationFactory } from '../db/factories';
+import { Channels, Users, Integrations } from '../db/models';
 
 beforeAll(() => connect());
 afterAll(() => disconnect());

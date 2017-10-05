@@ -1,9 +1,9 @@
 /* eslint-env jest */
 /* eslint-disable no-underscore-dangle */
 
-import { connect, disconnect } from '../../db/connection';
-import { userFactory, formFactory, formFieldFactory } from '../../db/factories';
-import { Forms, Users, FormFields } from '../../db/models';
+import { connect, disconnect } from '../db/connection';
+import { userFactory, formFactory, formFieldFactory } from '../db/factories';
+import { Forms, Users, FormFields } from '../db/models';
 
 beforeAll(() => connect());
 afterAll(() => disconnect());
