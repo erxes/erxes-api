@@ -1,6 +1,16 @@
 import shortid from 'shortid';
 import faker from 'faker';
-import { Users, Integrations, Brands, EmailTemplates, Forms, FormFields } from './models';
+
+import {
+  Users,
+  Integrations,
+  Brands,
+  EmailTemplates,
+  ResponseTemplates,
+  Tags,
+  Forms,
+  FormFields,
+} from './models';
 
 export const userFactory = (params = {}) => {
   const user = new Users({
@@ -29,6 +39,7 @@ export const brandFactory = (params = {}) => {
     name: faker.random.word(),
     code: params.code || faker.random.word(),
     userId: shortid.generate(),
+    description: params.description || faker.random.word(),
     emailConfig: {
       type: 'simple',
       template: faker.random.word(),
@@ -45,6 +56,28 @@ export const emailTemplateFactory = (params = {}) => {
   });
 
   return emailTemplate.save();
+};
+
+export const responseTemplateFactory = (params = {}) => {
+  const responseTemplate = new ResponseTemplates({
+    name: faker.random.word(),
+    content: params.content || faker.random.word(),
+    brandId: params.brandId || shortid.generate(),
+    files: [faker.random.image()],
+  });
+
+  return responseTemplate.save();
+};
+
+export const tagsFactory = (params = {}) => {
+  const tag = new Tags({
+    name: faker.random.word(),
+    type: params.type || faker.random.word(),
+    colorCode: params.colorCode || shortid.generate(),
+    userId: shortid.generate(),
+  });
+
+  return tag.save();
 };
 
 export const formFactory = ({ title, code, createdUserId }) => {

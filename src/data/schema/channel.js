@@ -34,4 +34,4 @@ export const mutations = `
     userId: String!): Boolean
 
   channelsRemove(id: String!): Boolean
-  `;
+`;

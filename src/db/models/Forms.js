@@ -46,7 +46,6 @@ class Form {
       delete doc.id;
     }
 
-    console.log('doc: ', doc);
     return this.update({ _id: id }, doc);
   }
 
@@ -67,7 +66,6 @@ class Form {
   }
 
   static updateFormFieldsOrder(orderDics) {
-    console.log('orderDics: ', orderDics);
     // update each field's order
     orderDics.forEach(async ({ id, order }) => {
       await FormFields.updateFormField(id, { order });

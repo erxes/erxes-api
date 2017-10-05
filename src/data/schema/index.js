@@ -10,19 +10,23 @@ import { types as BrandTypes, queries as BrandQueries, mutations as BrandMutatio
 
 import { types as IntegrationTypes, queries as IntegrationQueries } from './integration';
 
-import { types as ResponseTemplate, queries as ResponseTemplateQueries } from './responseTemplate';
+import {
+  types as ResponseTemplate,
+  queries as ResponseTemplateQueries,
+  mutations as ResponseTemplateMutations,
+} from './responseTemplate';
 
 import {
   types as EmailTemplate,
   queries as EmailTemplateQueries,
-  mutations as emailTemplateMutations,
+  mutations as EmailTemplateMutations,
 } from './emailTemplate';
 
 import { types as FormTypes, queries as FormQueries, mutations as FormMutatons } from './form';
 
 import { types as EngageTypes, queries as EngageQueries } from './engage';
 
-import { types as TagTypes, queries as TagQueries } from './tag';
+import { types as TagTypes, queries as TagQueries, mutations as TagMutations } from './tag';
 
 import { types as CustomerTypes, queries as CustomerQueries } from './customer';
 
@@ -78,7 +82,9 @@ export const mutations = `
     ${ConversationMutations}
     ${ChannelMutations}
     ${BrandMutations}
-    ${emailTemplateMutations}
+    ${EmailTemplateMutations}
+    ${ResponseTemplateMutations}
+    ${TagMutations}
     ${FormMutatons}
   }
 `;

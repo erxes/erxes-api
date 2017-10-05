@@ -11,7 +11,7 @@ export const types = `
 `;
 
 export const mutations = `
-  brandsAdd(code: String, name: String, description: String): Brand
+  brandsAdd(code: String!, name: String, description: String): Brand
   brandsEdit(_id: String!, code: String, name: String, description: String): Brand
   brandsRemove(_id: String!): Brand
   brandsConfigEmail(_id: String!, emailConfig: JSON): Brand

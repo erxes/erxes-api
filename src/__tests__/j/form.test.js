@@ -1,9 +1,9 @@
 /* eslint-env jest */
 /* eslint-disable no-underscore-dangle */
 
-import { connect, disconnect } from '../db/connection';
-import { userFactory, formFactory, formFieldFactory } from '../db/factories';
-import { Forms, Users, FormFields } from '../db/models';
+import { connect, disconnect } from '../../db/connection';
+import { userFactory, formFactory, formFieldFactory } from '../../db/factories';
+import { Forms, Users, FormFields } from '../../db/models';
 
 beforeAll(() => connect());
 afterAll(() => disconnect());
@@ -78,9 +78,8 @@ describe('form update tests', () => {
       createdUserId: _user._id,
     });
 
-    const formId = form._id;
-
-    await Forms.updateForm(formId, {
+    await Forms.updateForm({
+      id: form._id,
       title: 'Test form 2',
       description: 'Test form description 2',
     });
@@ -270,9 +269,9 @@ describe('test of update order of form fields', async () => {
     expect(_form_field3.order).toBe(2);
 
     const orderDictArray = [
-      { _id: _form_field3._id, order: 10 },
-      { _id: _form_field2._id, order: 9 },
-      { _id: _form_field._id, order: 8 },
+      { id: _form_field3._id, order: 10 },
+      { id: _form_field2._id, order: 9 },
+      { id: _form_field._id, order: 8 },
     ];
 
     await Forms.updateFormFieldsOrder(orderDictArray);
