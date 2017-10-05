@@ -40,17 +40,18 @@ describe('Brands mutations', () => {
     // invalid data
     expect(() =>
       brandMutations.brandsAdd({}, { code: '', name: _brand.name }, { user: _user }),
-    ).toThrowError(Error);
+    ).toThrowError('Code is required field');
 
     // Login required
     expect(() =>
       brandMutations.brandsAdd({}, { code: _brand.code, name: brandObj.name }, {}),
-    ).toThrowError(Error);
+    ).toThrowError('Login required');
   });
 
   test('Update brand', async () => {
     // get new brand object
     const _brand_update = await brandFactory();
+
     // update brand object
     const brandObj = await brandMutations.brandsEdit(
       {},
@@ -62,13 +63,14 @@ describe('Brands mutations', () => {
       },
       { user: _user },
     );
+
     // check changes
     expect(brandObj.code).toBe(_brand_update.code);
     expect(brandObj.name).toBe(_brand_update.name);
     expect(brandObj.description).toBe(_brand_update.description);
   });
 
-  it('Update brand login required', async () => {
+  test('Update brand login required', async () => {
     expect.assertions(1);
     try {
       await brandMutations.brandsEdit({}, { _id: _brand.id }, {});
@@ -84,9 +86,12 @@ describe('Brands mutations', () => {
       { user: _user },
     );
     expect(brandDeletedObj.id).toBe(_brand.id);
+
+    const brandObj = await Brands.findOne({ _id: _brand.id });
+    expect(brandObj).toBeNull();
   });
 
-  it('Delete brand login required', async () => {
+  test('Delete brand login required', async () => {
     expect.assertions(1);
     try {
       await brandMutations.brandsRemove({}, { _id: _brand.id }, {});
@@ -101,6 +106,7 @@ describe('Brands mutations', () => {
       { _id: _brand.id, config: _brand.emailConfig },
       { user: _brand.userId },
     );
+
     expect(brandObj).toBeDefined();
     expect(brandObj.emailConfig.type).toBe(_brand.emailConfig.type);
     expect(brandObj.emailConfig.template).toBe(_brand.emailConfig.template);

@@ -30,9 +30,11 @@ export default {
     if (!user) throw new Error('Login required');
 
     const emailTemplateObj = await EmailTemplates.findOne({ _id });
+
     if (!emailTemplateObj) {
       throw new Error('Email template not found with id ' + _id);
     }
+
     return emailTemplateObj.remove();
   },
 };

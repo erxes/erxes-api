@@ -30,6 +30,7 @@ export default {
     if (!user) throw new Error('Login required');
 
     const responseTemplateObj = await ResponseTemplates.findOne({ _id });
+
     if (!responseTemplateObj) {
       throw new Error('Response template not found with id ' + _id);
     }

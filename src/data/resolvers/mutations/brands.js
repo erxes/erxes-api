@@ -7,6 +7,7 @@ export default {
    */
   brandsAdd(root, { code, name, description }, { user }) {
     if (!user) throw new Error('Login required');
+
     if (!code) throw new Error('Code is required field');
 
     return Brands.createBrand({ code, name, description, userId: user.id });
@@ -31,6 +32,7 @@ export default {
     if (!user) throw new Error('Login required');
 
     const brandObj = await Brands.findOne({ _id });
+
     if (!brandObj) throw new Error('Brand not found with id ' + _id);
 
     return brandObj.remove();

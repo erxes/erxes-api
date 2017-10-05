@@ -43,7 +43,7 @@ describe('Email template mutations', () => {
         { name: _emailTemplate.name, content: _emailTemplate.content },
         {},
       ),
-    ).toThrowError(Error);
+    ).toThrowError('Login required');
   });
 
   test('Update email template', async () => {
@@ -58,7 +58,7 @@ describe('Email template mutations', () => {
     expect(emailTemplateObj.content).toBe(_emailTemplate.content);
   });
 
-  it('Update email template login required', async () => {
+  test('Update email template login required', async () => {
     expect.assertions(1);
     try {
       await emailTemplateMutations.emailTemplateEdit({}, { _id: _emailTemplate.id }, {});
@@ -74,9 +74,11 @@ describe('Email template mutations', () => {
       { user: _user },
     );
     expect(deletedObj.id).toBe(_emailTemplate.id);
+    const emailTemplateObj = await EmailTemplates.findOne({ _id: _emailTemplate.id });
+    expect(emailTemplateObj).toBeNull();
   });
 
-  it('Delete email template login required', async () => {
+  test('Delete email template login required', async () => {
     expect.assertions(1);
     try {
       await emailTemplateMutations.emailTemplateRemove({}, { _id: _emailTemplate.id }, {});

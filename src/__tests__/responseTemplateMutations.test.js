@@ -50,7 +50,7 @@ describe('Response template mutations', () => {
         { name: _responseTemplate.name, content: _responseTemplate.content },
         {},
       ),
-    ).toThrowError(Error);
+    ).toThrowError('Login required');
   });
 
   test('Update response template', async () => {
@@ -73,7 +73,7 @@ describe('Response template mutations', () => {
     expect(responseTemplateObj.files[0]).toBe(_responseTemplate.files[0]);
   });
 
-  it('Update response template login required', async () => {
+  test('Update response template login required', async () => {
     expect.assertions(1);
     try {
       await responseTemplateMutations.responseTemplateEdit({}, { _id: _responseTemplate.id }, {});
@@ -82,16 +82,18 @@ describe('Response template mutations', () => {
     }
   });
 
-  test('Delete brand', async () => {
+  test('Delete response template', async () => {
     const deletedObj = await responseTemplateMutations.responseTemplateRemove(
       {},
       { _id: _responseTemplate.id },
       { user: _user },
     );
     expect(deletedObj.id).toBe(_responseTemplate.id);
+    const emailTemplateObj = await ResponseTemplates.findOne({ _id: _responseTemplate.id });
+    expect(emailTemplateObj).toBeNull();
   });
 
-  it('Delete response template login required', async () => {
+  test('Delete response template login required', async () => {
     expect.assertions(1);
     try {
       await responseTemplateMutations.responseTemplateRemove({}, { _id: _responseTemplate.id }, {});
