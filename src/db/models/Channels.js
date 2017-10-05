@@ -11,7 +11,6 @@ function ChannelCreationException(message) {
 const ChannelSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   name: {
@@ -26,6 +25,9 @@ const ChannelSchema = mongoose.Schema({
   // TODO: Check if regex id is available for use
   memberIds: {
     type: [String],
+  },
+  userId: {
+    type: String,
   },
   conversationCount: {
     type: Number,
@@ -72,7 +74,11 @@ class Channel {
     }
 
     this.preSave(doc);
-    return this.update(doc);
+    return this.update({ _id: id }, doc);
+  }
+
+  static removeChannel(id) {
+    return this.remove({ _id: id });
   }
 }
 

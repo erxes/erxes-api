@@ -4,7 +4,6 @@ import shortid from 'shortid';
 const EmailTemplateSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   name: String,

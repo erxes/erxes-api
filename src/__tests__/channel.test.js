@@ -116,18 +116,9 @@ describe('channel remove test', () => {
     });
   });
 
-  /**
-   * After each test remove the test data
-   */
-  afterEach(async () => {
-    await Channels.remove({});
-    await Users.remove({});
-    await Integrations.remove({});
-  });
-
   test('channel remove test', async () => {
-    await Channels.remove({ _id: _channel._id });
-    const channelCount = await Channels.findOne({ _id: _channel._id }).count();
+    await Channels.removeChannel(_channel._id);
+    const channelCount = await Channels.find({}).count();
     expect(channelCount).toBe(0);
   });
 });

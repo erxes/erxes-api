@@ -4,7 +4,6 @@ import shortid from 'shortid';
 const CustomerSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   integrationId: String,
@@ -47,7 +46,6 @@ export const Customers = mongoose.model('customers', CustomerSchema);
 const SegmentSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   name: String,

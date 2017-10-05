@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import shortid from 'shortid';
 
 const EngageMessageSchema = mongoose.Schema({
-  _id: { type: String, unique: true, default: shortid.generate },
+  _id: { type: String, default: shortid.generate },
   kind: String,
   segmentId: String,
   customerIds: [String],

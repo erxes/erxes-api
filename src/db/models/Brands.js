@@ -12,7 +12,6 @@ const BrandEmailConfigSchema = mongoose.Schema({
 const BrandSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   code: String,

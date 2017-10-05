@@ -41,7 +41,7 @@ export default {
    */
   async brandsConfigEmail(root, { _id, config }, { user }) {
     if (user) {
-      await Brands.update(_id, { $set: { emailConfig: config } });
+      await Brands.update({ _id }, { $set: { emailConfig: config } });
       return Brands.findOne({ _id });
     }
   },

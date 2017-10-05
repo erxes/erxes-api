@@ -18,7 +18,7 @@ import {
   mutations as emailTemplateMutations,
 } from './emailTemplate';
 
-import { types as FormTypes, queries as FormQueries } from './form';
+import { types as FormTypes, queries as FormQueries, mutations as FormMutatons } from './form';
 
 import { types as EngageTypes, queries as EngageQueries } from './engage';
 
@@ -79,6 +79,7 @@ export const mutations = `
     ${ChannelMutations}
     ${BrandMutations}
     ${emailTemplateMutations}
+    ${FormMutatons}
   }
 `;
 

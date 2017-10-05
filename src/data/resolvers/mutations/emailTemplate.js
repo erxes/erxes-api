@@ -18,7 +18,7 @@ export default {
    */
   async emailTemplateEdit(root, { _id, name, content }, { user }) {
     if (user) {
-      await EmailTemplates.update(_id, { name, content });
+      await EmailTemplates.update({ _id }, { name, content });
       return EmailTemplates.findOne({ _id });
     }
   },

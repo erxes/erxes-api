@@ -1,6 +1,6 @@
 import shortid from 'shortid';
 import faker from 'faker';
-import { Users, Integrations, Brands, EmailTemplates } from './models';
+import { Users, Integrations, Brands, EmailTemplates, Forms, FormFields } from './models';
 
 export const userFactory = (params = {}) => {
   const user = new Users({
@@ -45,4 +45,25 @@ export const emailTemplateFactory = (params = {}) => {
   });
 
   return emailTemplate.save();
+};
+
+export const formFactory = ({ title, code, createdUserId }) => {
+  return Forms.createForm({
+    title: title || faker.random.word(),
+    description: faker.random.word(),
+    code: code || shortid.generate(),
+    createdUserId,
+  });
+};
+
+export const formFieldFactory = (formId, params) => {
+  return FormFields.createFormField(formId || shortid.id(), {
+    type: params.type || faker.random.word(),
+    name: faker.random.word(),
+    validation: params.validation || faker.random.word(),
+    text: faker.random.word(),
+    description: faker.random.word(),
+    isRequired: params.isRequired || false,
+    number: faker.random.word(),
+  });
 };

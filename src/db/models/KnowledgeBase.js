@@ -4,7 +4,6 @@ import shortid from 'shortid';
 const KbArticlesSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   title: String,
@@ -24,7 +23,6 @@ const KbArticlesSchema = mongoose.Schema({
 const KbCategoriesSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   title: String,
@@ -43,7 +41,6 @@ const KbCategoriesSchema = mongoose.Schema({
 const KbTopicsSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
     default: shortid.generate,
   },
   title: String,
