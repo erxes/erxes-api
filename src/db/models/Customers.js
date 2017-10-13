@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
-import Random from 'meteor-random';
+import shortid from 'shortid';
 
 const CustomerSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
   integrationId: String,
   name: String,
@@ -47,8 +46,7 @@ export const Customers = mongoose.model('customers', CustomerSchema);
 const SegmentSchema = mongoose.Schema({
   _id: {
     type: String,
-    unique: true,
-    default: () => Random.id(),
+    default: shortid.generate,
   },
   name: String,
   description: String,
