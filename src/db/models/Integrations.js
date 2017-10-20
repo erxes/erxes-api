@@ -73,8 +73,30 @@ const UiOptionsSchema = mongoose.Schema(
   { _id: false },
 );
 
-// schema for integration document
-const IntegrationSchema = mongoose.Schema({
+// subdocument schema for twitter data
+const TwitterSchema = mongoose.Schema(
+  {
+    // TODO: should be userId
+    id: {
+      type: Number,
+    },
+    token: String,
+    tokenSecret: String,
+  },
+  { _id: false },
+);
+
+// subdocument schema for facebook data
+const FacebookSchema = mongoose.Schema(
+  {
+    appId: String,
+    pageIds: [String],
+  },
+  { _id: false },
+);
+
+// integration main document fields
+const integrationFields = {
   _id: {
     type: String,
     default: () => Random.id(),
@@ -85,30 +107,37 @@ const IntegrationSchema = mongoose.Schema({
   },
   name: String,
   brandId: String,
+};
+
+const IntegrationSchema = mongoose.Schema(integrationFields);
+
+// Schema for form integration
+const FormIntegrationSchema = mongoose.Schema({
+  ...integrationFields,
   formId: String,
   formData: FormDataSchema,
+});
+
+// Schema for messenger integration
+const MessengerIntegrationSchema = mongoose.Schema({
+  ...integrationFields,
   messengerData: MessengerDataSchema,
-  twitterData: Object,
-  facebookData: Object,
   uiOptions: UiOptionsSchema,
 });
 
-class Integration {
-  /**
-   * Generate form integration data based on the given form data (formData)
-   * and integration data (mainDoc)
-   * @param {Integration} mainDoc - Integration object without subdocuments
-   * @param {FormData} formData - Integration forData subdocument
-   * @return {Object} returns an integration object
-   */
-  static generateFormDoc(mainDoc, formData) {
-    return {
-      ...mainDoc,
-      kind: KIND_CHOICES.FORM,
-      formData,
-    };
-  }
+// Schema for twitter integration
+const TwitterIntegrationSchema = mongoose.Schema({
+  ...integrationFields,
+  twitterData: TwitterSchema,
+});
 
+// Schema for facebook integration
+const FacebookIntegrationSchema = mongoose.Schema({
+  ...integrationFields,
+  facebookData: FacebookSchema,
+});
+
+class Integration {
   /**
    * Create an integration, intended as a private method
    * @param {Object} doc - Integration object
@@ -157,6 +186,124 @@ class Integration {
     return this.create(doc);
   }
 
+  /**
+   * Remove integration in addition with its messages, conversations, customers
+   * @param {string} id - Integration id
+   * @return {Promise}
+   */
+  static async removeIntegration(_id) {
+    const conversations = await Conversations.find({ integrationId: _id }, { _id: true });
+
+    const conversationIds = [];
+
+    conversations.forEach(c => {
+      conversationIds.push(c._id);
+    });
+
+    // Remove messages
+    await Messages.remove({ conversationId: { $in: conversationIds } });
+
+    // Remove conversations
+    await Conversations.remove({ integrationId: _id });
+
+    // Remove customers
+    await Customers.remove({ integrationId: _id });
+
+    return this.remove({ _id });
+  }
+
+  /**
+   * Remove all form integrations
+   * @return {Promise}
+   */
+  static removeIntegrations() {
+    return this.remove({ kind: KIND_CHOICES.MESSENGER });
+  }
+}
+
+class FormIntegration extends Integration {
+  /**
+   * Generate form integration data based on the given form data (formData)
+   * and integration data (mainDoc)
+   * @param {Integration} mainDoc - Integration object without subdocuments
+   * @param {FormData} formData - Integration forData subdocument
+   * @return {Object} returns an integration object
+   */
+  static generateFormDoc(mainDoc, formData) {
+    return {
+      ...mainDoc,
+      kind: KIND_CHOICES.FORM,
+      formData,
+    };
+  }
+
+  /**
+   * Create a form kind integration
+   * @param {Object} args.formData - FormData object
+   * @param {string} doc.formData.loadType - Load types for the embedded form
+   * @param {string} doc.formData.successAction - TODO: need more elaborate documentation
+   * @param {string} doc.formData.formEmail - TODO: need more elaborate documentation
+   * @param {string} doc.formData.userEmailTitle - TODO: need more elaborate documentation
+   * @param {string} doc.formData.userEmailContent - TODO: need more elaborate documentation
+   * @param {Email[]} doc.formData.adminEmails - TODO: need more elaborate documentation
+   * @param {string} doc.formData.adminEmailTitle - TODO: need more elaborate documentation
+   * @param {string} doc.formData.adminEmailContent - TODO: need more elaborate documentation
+   * @param {string} doc.formData.thankContent - TODO: need more elaborate documentation
+   * @param {string} doc.formData.redirectUrl - Form redirectUrl on submit
+   * @param {string} args.mainDoc - Integration main document object
+   * @param {string} args.mainDoc.name - Integration name
+   * @param {string} args.mainDoc.brandId - Integration brand id
+   * @param {string} args.mainDoc.formId - Form id related to this integration
+   * @return {Promise} returns form integration document promise
+   * @throws {Exception} throws Exception if formData is notSupplied
+   */
+  static createFormIntegration({ formData, ...mainDoc }) {
+    const doc = this.generateFormDoc(mainDoc, formData);
+
+    if (Object.keys(formData || {}).length === 0) {
+      throw new Error('formData must be supplied');
+    }
+
+    return this.create(doc);
+  }
+
+  /**
+   * Update form integration
+   * @param {string} _id integration id
+   * @param {Object} args.formData - FormData object
+   * @param {string} doc.formData.loadType - Load types for the embedded form
+   * @param {string} doc.formData.successAction - TODO: need more elaborate documentation
+   * @param {string} doc.formData.formEmail - TODO: need more elaborate documentation
+   * @param {string} doc.formData.userEmailTitle - TODO: need more elaborate documentation
+   * @param {string} doc.formData.userEmailContent - TODO: need more elaborate documentation
+   * @param {Email[]} doc.formData.adminEmails - TODO: need more elaborate documentation
+   * @param {string} doc.formData.adminEmailTitle - TODO: need more elaborate documentation
+   * @param {string} doc.formData.adminEmailContent - TODO: need more elaborate documentation
+   * @param {string} doc.formData.thankContent - TODO: need more elaborate documentation
+   * @param {string} doc.formData.redirectUrl - Form redirectUrl on submit
+   * @param {string} args.mainDoc - Integration main document object
+   * @param {string} args.mainDoc.name - Integration name
+   * @param {string} args.mainDoc.brandId - Integration brand id
+   * @param {string} args.mainDoc.formId - Form id related to this integration
+   * @return {Promise} returns Promise resolving updated Integration document
+   */
+  static async updateFormIntegration(_id, { formData, ...mainDoc }) {
+    const doc = this.generateFormDoc(mainDoc, formData);
+
+    await this.update({ _id }, { $set: doc }, { runValidators: true });
+    return this.findOne({ _id });
+  }
+
+  /**
+   * Remove all form integrations
+   * @return {Promise}
+   */
+  static removeIntegrations() {
+    return this.remove({ kind: KIND_CHOICES.FORM });
+  }
+}
+
+class MessengerIntegration extends Integration {
   /**
    * Create a messenger kind integration
    * @param {Object} object - Integration object
@@ -233,89 +380,31 @@ class Integration {
   }
 
   /**
-   * Create a form kind integration
-   * @param {Object} args.formData - FormData object
-   * @param {string} doc.formData.loadType - Load types for the embedded form
-   * @param {string} doc.formData.successAction - TODO: need more elaborate documentation
-   * @param {string} doc.formData.formEmail - TODO: need more elaborate documentation
-   * @param {string} doc.formData.userEmailTitle - TODO: need more elaborate documentation
-   * @param {string} doc.formData.userEmailContent - TODO: need more elaborate documentation
-   * @param {Email[]} doc.formData.adminEmails - TODO: need more elaborate documentation
-   * @param {string} doc.formData.adminEmailTitle - TODO: need more elaborate documentation
-   * @param {string} doc.formData.adminEmailContent - TODO: need more elaborate documentation
-   * @param {string} doc.formData.thankContent - TODO: need more elaborate documentation
-   * @param {string} doc.formData.redirectUrl - Form redirectUrl on submit
-   * @param {string} args.mainDoc - Integration main document object
-   * @param {string} args.mainDoc.name - Integration name
-   * @param {string} args.mainDoc.brandId - Integration brand id
-   * @param {string} args.mainDoc.formId - Form id related to this integration
-   * @return {Promise} returns form integration document promise
-   * @throws {Exception} throws Exception if formData is notSupplied
+   * Remove all messenger integrations
+   * @return {Null}
    */
-  static createFormIntegration({ formData, ...mainDoc }) {
-    const doc = this.generateFormDoc(mainDoc, formData);
-
-    if (Object.keys(formData || {}).length === 0) {
-      throw new Error('formData must be supplied');
+  static async removeIntegrations() {
+    const integrations = await this.find({ kind: KIND_CHOICES.MESSENGER }, { _id: 1 });
+    for (const integration of integrations) {
+      await this.removeIntegration(integration._id);
     }
-
-    return this.create(doc);
-  }
-
-  /**
-   * Update form integration
-   * @param {string} _id integration id
-   * @param {Object} args.formData - FormData object
-   * @param {string} doc.formData.loadType - Load types for the embedded form
-   * @param {string} doc.formData.successAction - TODO: need more elaborate documentation
-   * @param {string} doc.formData.formEmail - TODO: need more elaborate documentation
-   * @param {string} doc.formData.userEmailTitle - TODO: need more elaborate documentation
-   * @param {string} doc.formData.userEmailContent - TODO: need more elaborate documentation
-   * @param {Email[]} doc.formData.adminEmails - TODO: need more elaborate documentation
-   * @param {string} doc.formData.adminEmailTitle - TODO: need more elaborate documentation
-   * @param {string} doc.formData.adminEmailContent - TODO: need more elaborate documentation
-   * @param {string} doc.formData.thankContent - TODO: need more elaborate documentation
-   * @param {string} doc.formData.redirectUrl - Form redirectUrl on submit
-   * @param {string} args.mainDoc - Integration main document object
-   * @param {string} args.mainDoc.name - Integration name
-   * @param {string} args.mainDoc.brandId - Integration brand id
-   * @param {string} args.mainDoc.formId - Form id related to this integration
-   * @return {Promise} returns Promise resolving updated Integration document
-   */
-  static async updateFormIntegration(_id, { formData, ...mainDoc }) {
-    const doc = this.generateFormDoc(mainDoc, formData);
-
-    await this.update({ _id }, { $set: doc }, { runValidators: true });
-    return this.findOne({ _id });
-  }
-
-  /**
-   * Remove integration in addition with its messages, conversations, customers
-   * @param {string} id - Integration id
-   * @return {Promise}
-   */
-  static async removeIntegration(_id) {
-    const conversations = await Conversations.find({ integrationId: _id }, { _id: true });
-
-    const conversationIds = [];
-
-    conversations.forEach(c => {
-      conversationIds.push(c._id);
-    });
-
-    // Remove messages
-    await Messages.remove({ conversationId: { $in: conversationIds } });
-
-    // Remove conversations
-    await Conversations.remove({ integrationId: _id });
-
-    // Remove customers
-    await Customers.remove({ integrationId: _id });
-
-    return this.remove({ _id });
   }
 }
 
 IntegrationSchema.loadClass(Integration);
+FormIntegrationSchema.loadClass(FormIntegration);
+MessengerIntegrationSchema.loadClass(MessengerIntegration);
 
-export default mongoose.model('integrations', IntegrationSchema);
+export const Integrations = mongoose.model('Integrations', IntegrationSchema, 'integrations');
+
+export const FormIntegrations = mongoose.model(
+  'FormIntegrations',
+  FormIntegrationSchema,
+  'integrations',
+);
+
+export const MessengerIntegrations = mongoose.model(
+  'MessengerIntegrations',
+  MessengerIntegrationSchema,
+  'integrations',
+);

@@ -1,10 +1,10 @@
 import faker from 'faker';
 import Random from 'meteor-random';
-import { MODULES, CONVERSATION_STATUSES } from '../data/constants';
-
+import { MODULES, CONVERSATION_STATUSES, KIND_CHOICES } from '../data/constants';
 import {
   Users,
-  Integrations,
+  MessengerIntegrations,
+  FormIntegrations,
   Brands,
   EmailTemplates,
   ResponseTemplates,
@@ -201,20 +201,33 @@ export const conversationMessageFactory = (params = {}) => {
   return conversationMessage.save();
 };
 
-export const integrationFactory = (params = {}) => {
-  const kind = params.kind || 'messenger';
+export const messengerIntegrationFactory = (params = {}) => {
+  const kind = KIND_CHOICES.MESSENGER;
 
-  return Integrations.create({
+  const doc = {
     name: faker.random.word(),
     kind,
-    brandId: params.brandId || Random.id(),
-    formId: params.formId || Random.id(),
-    messengerData: params.messengerData || { welcomeMessage: 'welcome', notifyCustomer: true },
-    formData:
-      params.formData === 'form'
-        ? params.formData
-        : kind === 'form' ? { thankContent: 'thankContent' } : null,
-  });
+    brandId: Random.id(),
+    formId: Random.id(),
+    messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
+  };
+
+  Object.assign(doc, params);
+  return MessengerIntegrations.create(doc);
+};
+
+export const formIntegrationFactory = (params = {}) => {
+  const doc = {
+    name: faker.random.word(),
+    kind: KIND_CHOICES.FORM,
+    brandId: Random.id(),
+    formId: Random.id(),
+    formData: { thankContent: 'thankContent' },
+  };
+
+  Object.assign(doc, params);
+
+  return FormIntegrations.create(doc);
 };
 
 export const formFactory = async ({ title, code, description, createdUserId }) => {

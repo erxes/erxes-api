@@ -3,7 +3,7 @@ import Channels from './Channels';
 import ResponseTemplates from './ResponseTemplates';
 import EmailTemplates from './EmailTemplates';
 import Brands from './Brands';
-import Integrations from './Integrations';
+import { Integrations, FormIntegrations, MessengerIntegrations } from './Integrations';
 import EngageMessages from './Engages';
 import Tags from './Tags';
 import Fields from './Fields';
@@ -27,6 +27,8 @@ export {
   EmailTemplates,
   Brands,
   Integrations,
+  FormIntegrations,
+  MessengerIntegrations,
   Forms,
   FormFields,
   EngageMessages,
