@@ -391,9 +391,53 @@ class MessengerIntegration extends Integration {
   }
 }
 
+class TwitterIntegration extends Integration {
+  /**
+   * Create or get a customer document
+   * @param {string} integrationId - Integration id
+   * @param {Object} user - User object
+   * @param {string} user.id - User id
+   * @param {string} user.name - User name
+   * @param {string} user.id_str - user id
+   * @param {string} user.screen_name - User screen name
+   * @param {string} user.profile_image_url - url for profile image
+   * @return {Promise} return Customer document
+   */
+  static async getOrCreateCustomer(integrationId, user) {
+    const customer = Customers.findOne({
+      integrationId,
+      'twitterData.id': user.id,
+    });
+
+    return (
+      (await customer) ||
+      (await Customers.create({
+        name: user.name,
+        integrationId,
+        twitterData: {
+          id: user.id,
+          idStr: user.id_str,
+          name: user.name,
+          screenName: user.screen_name,
+          profileImageUrl: user.profile_image_url,
+        },
+      }))
+    );
+  }
+}
+
+class FacebookIntegration extends Integration {
+  /**
+   *
+   *
+   */
+}
+
 IntegrationSchema.loadClass(Integration);
 FormIntegrationSchema.loadClass(FormIntegration);
 MessengerIntegrationSchema.loadClass(MessengerIntegration);
+TwitterIntegrationSchema.loadClass(TwitterIntegration);
+FacebookIntegrationSchema.loadClass(FacebookIntegration);
 
 export const Integrations = mongoose.model('Integrations', IntegrationSchema, 'integrations');
 
@@ -406,5 +450,17 @@ export const FormIntegrations = mongoose.model(
 export const MessengerIntegrations = mongoose.model(
   'MessengerIntegrations',
   MessengerIntegrationSchema,
+  'integrations',
+);
+
+export const TwitterIntegrations = mongoose.model(
+  'TwitterIntegrations',
+  TwitterIntegrationSchema,
+  'integrations',
+);
+
+export const FacebookIntegrations = mongoose.model(
+  'FacebookIntegrations',
+  FacebookIntegrationSchema,
   'integrations',
 );
