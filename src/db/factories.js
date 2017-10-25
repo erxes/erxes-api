@@ -22,6 +22,7 @@ import {
   NotificationConfigurations,
   Notifications,
   Channels,
+  Integrations,
 } from './models';
 
 export const userFactory = (params = {}) => {
@@ -172,12 +173,17 @@ export const fieldFactory = (params = {}) => {
 };
 
 export const conversationFactory = (params = {}) => {
-  const conversation = new Conversations({
-    content: params.content || faker.lorem.sentence(),
-    customerId: params.customerId || Random.id(),
-    integrationId: params.integrationId || Random.id(),
+  const doc = {
+    content: faker.lorem.sentence(),
+    customerId: Random.id(),
+    integrationId: Random.id(),
     status: CONVERSATION_STATUSES.NEW,
-  });
+    twitterData: {},
+  };
+
+  Object.assign(doc, params);
+
+  const conversation = new Conversations(doc);
 
   return conversation.save();
 };
@@ -199,6 +205,16 @@ export const conversationMessageFactory = (params = {}) => {
   });
 
   return conversationMessage.save();
+};
+
+export const integrationFactory = (params = {}) => {
+  const doc = {
+    name: faker.random.word(),
+    brandId: Random.id(),
+  };
+
+  Object.assign(doc, params);
+  return Integrations.create(doc);
 };
 
 export const messengerIntegrationFactory = (params = {}) => {
