@@ -21,8 +21,8 @@ beforeAll(() => connect());
 afterAll(() => disconnect());
 
 describe('twitter integration', () => {
-  describe('get or create converstaion', () => {
-    let integration;
+  describe('get or create conversation', () => {
+    let _integration;
 
     const twitterUser = {
       id: 2442424242,
@@ -33,12 +33,14 @@ describe('twitter integration', () => {
     };
 
     beforeEach(async () => {
-      // clear previous data
+      _integration = await integrationFactory();
+    });
+
+    afterEach(async () => {
       await Integrations.remove({});
       await Conversations.remove({});
       await ConversationMessages.remove({});
-
-      integration = await integrationFactory();
+      await Customers.remove({});
     });
 
     test('common', async () => {
@@ -46,7 +48,7 @@ describe('twitter integration', () => {
 
       // create conversation
       await conversationFactory({
-        integrationId: integration._id,
+        integrationId: _integration._id,
         status: CONVERSATION_STATUSES.NEW,
         twitterData: {
           id: tweetId,
@@ -60,7 +62,7 @@ describe('twitter integration', () => {
           in_reply_to_status_id: tweetId,
           user: twitterUser,
         },
-        integration,
+        _integration,
       );
 
       // must not created new conversation
@@ -76,10 +78,9 @@ describe('twitter integration', () => {
       const senderId = 2424424242;
       const recipientId = 92442424424242;
 
-      // creat conversation
+      // create conversation
       await conversationFactory({
-        integrationId: integration._id,
-        status: CONVERSATION_STATUSES.NEW,
+        integrationId: _integration._id,
         twitterData: {
           isDirectMessage: true,
           directMessage: {
@@ -92,7 +93,7 @@ describe('twitter integration', () => {
       });
 
       // direct message
-      getOrCreateDirectMessageConversation(
+      await getOrCreateDirectMessageConversation(
         {
           id: 42242242,
           id_str: '42242242',
@@ -103,11 +104,11 @@ describe('twitter integration', () => {
           recipient_id_str: recipientId.toString(),
           sender: twitterUser,
         },
-        integration,
+        _integration,
       );
 
       // must not created new conversation
-      assert.equal(Conversations.find().count(), 1);
+      assert.equal(await Conversations.find().count(), 1);
 
       const conversation = await Conversations.findOne({});
 
@@ -117,17 +118,15 @@ describe('twitter integration', () => {
   });
 
   describe('reply', function() {
-    let integration;
+    let _integration;
     let twit;
     let stub;
 
     beforeEach(async () => {
-      // clear previous data
-      await Conversations.remove({});
-      await Integrations.remove({});
+      const sandbox = sinon.sandbox.create();
 
       // create integration
-      integration = await integrationFactory({});
+      _integration = await integrationFactory({});
 
       // Twit instance
       twit = new Twit({
@@ -138,15 +137,19 @@ describe('twitter integration', () => {
       });
 
       // save twit instance
-      TwitMap[integration._id] = twit;
+      TwitMap[_integration._id] = twit;
 
       // twit.post
-      stub = sinon.stub(twit, 'post', () => {});
+      stub = sandbox.stub(twit, 'post').callsFake(() => {});
     });
 
-    afterEach(function() {
+    afterEach(async () => {
       // unwrap the spy
       twit.post.restore();
+      await Conversations.remove({});
+      await Integrations.remove({});
+      await ConversationMessages.remove({});
+      await Customers.remove({});
     });
 
     it('direct message', async () => {
@@ -154,7 +157,7 @@ describe('twitter integration', () => {
       const senderId = 242424242;
 
       const conversation = await conversationFactory({
-        integrationId: integration._id,
+        integrationId: _integration._id,
         twitterData: {
           isDirectMessage: true,
           directMessage: {
@@ -185,7 +188,7 @@ describe('twitter integration', () => {
       const screenName = 'test';
 
       const conversation = await conversationFactory({
-        integrationId: integration._id,
+        integrationId: _integration._id,
         twitterData: {
           isDirectMessage: false,
           idStr: tweetIdStr,
@@ -210,17 +213,18 @@ describe('twitter integration', () => {
   });
 
   describe('tweet', () => {
-    let integration;
+    let _integration;
 
     beforeEach(async () => {
-      // clear previous data
-      await Conversations.remove({});
-      await ConversationMessages.remove({});
-      await Integrations.remove({});
-      await Customers.remove({});
-
       // create integration
-      integration = await integrationFactory({});
+      _integration = await integrationFactory({});
+    });
+
+    afterEach(async () => {
+      await Conversations.remove({});
+      await Integrations.remove({});
+      await ConversationMessages.remove({});
+      await Customers.remove({});
     });
 
     it('mention', async () => {
@@ -251,7 +255,7 @@ describe('twitter integration', () => {
       };
 
       // call action
-      await getOrCreateCommonConversation(data, integration);
+      await getOrCreateCommonConversation(data, _integration);
 
       assert.equal(await Conversations.find().count(), 1); // 1 conversation
       assert.equal(await Customers.find().count(), 1); // 1 customer
@@ -262,7 +266,7 @@ describe('twitter integration', () => {
       const message = await ConversationMessages.findOne();
 
       // check conversation field values
-      assert.equal(conversation.integrationId, integration._id);
+      assert.equal(conversation.integrationId, _integration._id);
       assert.equal(conversation.customerId, customer._id);
       assert.equal(conversation.status, CONVERSATION_STATUSES.NEW);
       assert.equal(conversation.content, tweetText);
@@ -272,7 +276,7 @@ describe('twitter integration', () => {
       assert.equal(conversation.twitterData.isDirectMessage, false);
 
       // check customer field values
-      assert.equal(customer.integrationId, integration._id);
+      assert.equal(customer.integrationId, _integration._id);
       assert.equal(customer.twitterData.id, twitterUserId);
       assert.equal(customer.twitterData.idStr, twitterUserIdStr);
       assert.equal(customer.twitterData.name, userName);
@@ -295,7 +299,7 @@ describe('twitter integration', () => {
       data.idStr = newTweetId.toString();
 
       // call action
-      await getOrCreateCommonConversation(data, integration);
+      await getOrCreateCommonConversation(data, _integration);
 
       // must not be created new conversation
       assert.equal(await Conversations.find().count(), 1);
@@ -336,7 +340,7 @@ describe('twitter integration', () => {
       };
 
       // call action
-      await getOrCreateDirectMessageConversation(data, integration);
+      await getOrCreateDirectMessageConversation(data, _integration);
 
       assert.equal(await Conversations.find().count(), 1); // 1 conversation
       assert.equal(await Customers.find().count(), 1); // 1 customer
@@ -347,7 +351,7 @@ describe('twitter integration', () => {
       const message = await ConversationMessages.findOne();
 
       // check conv field values
-      assert.equal(conv.integrationId, integration._id);
+      assert.equal(conv.integrationId, _integration._id);
       assert.equal(conv.customerId, customer._id);
       assert.equal(conv.status, CONVERSATION_STATUSES.NEW);
       assert.equal(conv.content, data.text);
@@ -361,7 +365,7 @@ describe('twitter integration', () => {
       assert.equal(conv.twitterData.directMessage.recipientIdStr, data.recipient_id_str);
 
       // check customer field values
-      assert.equal(customer.integrationId, integration._id);
+      assert.equal(customer.integrationId, _integration._id);
       assert.equal(customer.twitterData.id, data.sender_id);
       assert.equal(customer.twitterData.idStr, data.sender_id_str);
       assert.equal(customer.twitterData.name, data.sender.name);
@@ -379,7 +383,7 @@ describe('twitter integration', () => {
       data.id = 3434343434;
 
       // call action
-      await getOrCreateDirectMessageConversation(data, integration);
+      await getOrCreateDirectMessageConversation(data, _integration);
 
       // must not be created new conversation
       assert.equal(await Conversations.find().count(), 1);

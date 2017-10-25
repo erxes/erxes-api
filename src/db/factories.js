@@ -5,6 +5,7 @@ import {
   Users,
   MessengerIntegrations,
   FormIntegrations,
+  Integrations,
   Brands,
   EmailTemplates,
   ResponseTemplates,
@@ -22,7 +23,6 @@ import {
   NotificationConfigurations,
   Notifications,
   Channels,
-  Integrations,
 } from './models';
 
 export const userFactory = (params = {}) => {
@@ -31,6 +31,12 @@ export const userFactory = (params = {}) => {
     details: {
       fullName: params.fullName || faker.random.word(),
     },
+    emails: [
+      {
+        address: params.email || faker.internet.email(),
+        verified: true,
+      },
+    ],
   });
 
   return user.save();
@@ -50,11 +56,16 @@ export const tagsFactory = (params = { type: 'engageMessage' }) => {
 export const engageMessageFactory = (params = {}) => {
   const engageMessage = new EngageMessages({
     kind: 'manual',
+    method: 'messenger',
     title: faker.random.word(),
     fromUserId: params.userId || faker.random.word(),
     segmentId: params.segmentId || faker.random.word(),
     isLive: true,
     isDraft: false,
+    messenger: {
+      brandId: faker.random.word(),
+      content: faker.random.word(),
+    },
   });
 
   return engageMessage.save();
@@ -72,7 +83,7 @@ export const brandFactory = (params = {}) => {
   const brand = new Brands({
     name: faker.random.word(),
     code: params.code || faker.random.word(),
-    userId: () => Random.id(),
+    userId: Random.id(),
     description: params.description || faker.random.word(),
     emailConfig: {
       type: 'simple',
@@ -161,6 +172,8 @@ export const customerFactory = (params = {}) => {
 
 export const fieldFactory = (params = {}) => {
   const field = new Fields({
+    contentType: params.contentType || 'form',
+    contentTypeId: params.contentTypeId || 'DFAFDASFDASFDSFDASFASF',
     type: params.type || 'input',
     validation: params.validation || 'number',
     text: params.text || faker.random.word(),
@@ -177,19 +190,16 @@ export const conversationFactory = (params = {}) => {
     content: faker.lorem.sentence(),
     customerId: Random.id(),
     integrationId: Random.id(),
-    status: CONVERSATION_STATUSES.NEW,
-    twitterData: {},
   };
 
-  Object.assign(doc, params);
-
-  const conversation = new Conversations(doc);
-
-  return conversation.save();
+  return Conversations.createConversation({
+    ...doc,
+    ...params,
+  });
 };
 
 export const conversationMessageFactory = (params = {}) => {
-  const conversationMessage = new ConversationMessages({
+  return ConversationMessages.createMessage({
     content: params.content || faker.random.word(),
     attachments: {},
     mentionedUserIds: params.mentionedUserIds || [Random.id()],
@@ -203,8 +213,6 @@ export const conversationMessageFactory = (params = {}) => {
     formWidgetData: params.formWidgetData || {},
     facebookData: params.facebookData || {},
   });
-
-  return conversationMessage.save();
 };
 
 export const integrationFactory = (params = {}) => {

@@ -8,8 +8,9 @@ const UserSchema = mongoose.Schema({
     default: () => Random.id(),
   },
   username: String,
+  password: String,
   details: Object,
-  emails: Object,
+  email: String,
 });
 
 const Users = mongoose.model('users', UserSchema);

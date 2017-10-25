@@ -12,7 +12,7 @@ const createMessage = async (conversation, content, user) => {
     // create new message
     const message = await ConversationMessages.createMessage({
       conversationId: conversation._id,
-      customerId: getOrCreateCustomer(conversation.integrationId, user),
+      customerId: (await getOrCreateCustomer(conversation.integrationId, user))._id,
       content,
       internal: false,
     });
@@ -24,8 +24,9 @@ const createMessage = async (conversation, content, user) => {
   // FIXME: its a rather weird function
 };
 
-/*
+/**
  * get or create customer using twitter data
+ * @return {Customer} return Customer document
  */
 const getOrCreateCustomer = async (integrationId, user) => {
   const customer = await Customers.findOne({
@@ -34,12 +35,14 @@ const getOrCreateCustomer = async (integrationId, user) => {
   });
 
   if (customer) {
-    return customer._id;
+    return customer;
   }
 
   // create customer
-  return Customers.createCustomer({
+  return await Customers.createCustomer({
     name: user.name,
+    // Workaround: customer create method now checks for customer email duplciation
+    email: user.screen_name,
     integrationId,
     twitterData: {
       id: user.id,
@@ -72,7 +75,6 @@ export const getOrCreateCommonConversation = async (data, integration) => {
   let conversation;
 
   if (data.in_reply_to_status_id) {
-    console.log('conversations: ', await Conversations.find({}));
     // find conversation by tweet id
     conversation = await Conversations.findOne({
       'twitterData.id': data.in_reply_to_status_id,
@@ -86,7 +88,7 @@ export const getOrCreateCommonConversation = async (data, integration) => {
     conversation = await Conversations.createConversation({
       content: data.text,
       integrationId: integration._id,
-      customerId: await getOrCreateCustomer(integration._id, data.user)._id,
+      customerId: (await getOrCreateCustomer(integration._id, data.user))._id,
       // save tweet id
       twitterData: {
         id: data.id,
@@ -160,7 +162,7 @@ export const getOrCreateDirectMessageConversation = async (data, integration) =>
     conversation = await Conversations.createConversation({
       content: data.text,
       integrationId: integration._id,
-      customerId: await getOrCreateCustomer(integration._id, data.sender)._id,
+      customerId: (await getOrCreateCustomer(integration._id, data.sender))._id,
 
       // save tweet id
       twitterData: {
