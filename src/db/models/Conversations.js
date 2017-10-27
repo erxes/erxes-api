@@ -126,10 +126,10 @@ class Conversation {
    * @param  {Object} conversationObj object
    * @return {Promise} Newly created conversation object
    */
-  static async createConversation(doc) {
+  static async createConversation({ status, ...docFields }) {
     return this.create({
-      ...doc,
-      status: CONVERSATION_STATUSES.NEW,
+      ...docFields,
+      status: status || CONVERSATION_STATUSES.NEW,
       createdAt: new Date(),
       number: (await this.find().count()) + 1,
       messageCount: 0,

@@ -263,7 +263,7 @@ export const facebookIntegrationFactory = (params = {}) => {
     },
   };
 
-  return FacebookIntegrations.create({ ...doc, ...params });
+  return FacebookIntegrations.createIntegration({ ...doc, ...params });
 };
 
 export const formFactory = async ({ title, code, description, createdUserId }) => {

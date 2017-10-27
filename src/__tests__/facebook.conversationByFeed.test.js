@@ -14,8 +14,6 @@ beforeAll(() => connect());
 afterAll(() => disconnect());
 
 describe('facebook integration: get or create conversation by feed info', () => {
-  let _stub;
-
   afterEach(() => {
     graphRequest.get.restore(); // unwraps the spy
   });
@@ -26,9 +24,9 @@ describe('facebook integration: get or create conversation by feed info', () => 
     await ConversationMessages.remove({});
 
     // mock all requests
-    const sandbox = sinon.sandbox.create();
+    const sandbox = await sinon.sandbox.create();
 
-    _stub = sandbox.stub(graphRequest, 'get').callsFake(path => {
+    sandbox.stub(graphRequest, 'get').callsFake(path => {
       if (path.includes('/?fields=access_token')) {
         return {
           access_token: '244242442442',
@@ -60,7 +58,7 @@ describe('facebook integration: get or create conversation by feed info', () => 
     // must be 0 conversations
     assert.equal(await Conversations.find().count(), 0);
 
-    saveWebhookResponse.getOrCreateConversationByFeed({
+    const conversation = await saveWebhookResponse.getOrCreateConversationByFeed({
       verb: 'add',
       sender_id: senderId,
       post_id: postId,
@@ -68,8 +66,6 @@ describe('facebook integration: get or create conversation by feed info', () => 
     });
 
     assert.equal(await Conversations.find().count(), 1); // 1 conversation
-
-    const conversation = Conversations.findOne();
 
     // our posts will be closed automatically
     assert.equal(conversation.status, CONVERSATION_STATUSES.CLOSED);

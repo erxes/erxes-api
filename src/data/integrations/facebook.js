@@ -93,7 +93,6 @@ export class SaveWebhookResponse {
 
   // common get or create conversation helper using both in messenger and feed
   async getOrCreateConversation(params) {
-    console.log('this.getOrCreateConversation');
     // extract params
     const {
       findSelector,
@@ -105,19 +104,15 @@ export class SaveWebhookResponse {
       msgFacebookData,
     } = params;
 
-    console.log('aaaaaa');
-    console.log('findSelector: ', findSelector);
     let conversation = await Conversations.findOne({
       ...findSelector,
     });
 
-    console.log('bbbbbb');
     // create new conversation
     if (!conversation) {
-      console.log('cccccc');
       conversation = await Conversations.createConversation({
         integrationId: this.integration._id,
-        customerId: this.getOrCreateCustomer(senderId),
+        customerId: await this.getOrCreateCustomer(senderId),
         status,
         content,
 
@@ -128,7 +123,6 @@ export class SaveWebhookResponse {
         },
       });
     } else {
-      console.log('ccc');
       // update conversation
       await Conversations.update(
         { _id: conversation._id },
@@ -144,15 +138,16 @@ export class SaveWebhookResponse {
       );
     }
 
-    console.log('ddd');
     // create new message
-    this.createMessage({
+    await this.createMessage({
       conversation,
       userId: senderId,
       content,
       attachments,
       facebookData: msgFacebookData,
     });
+
+    return conversation;
   }
 
   // get or create new conversation by feed info
@@ -161,20 +156,17 @@ export class SaveWebhookResponse {
 
     // collect only added actions
     if (value.verb !== 'add') {
-      console.log(`value.verb !== 'add'`);
       return;
     }
 
     // ignore duplicated action when like
     if (value.verb === 'add' && value.item === 'like') {
-      console.log(`value.verb === 'add' && value.item === 'like'`);
       return;
     }
 
     // if this is already saved then ignore it
     const message = await ConversationMessages.findOne({ 'facebookData.commentId': commentId });
     if (commentId && message) {
-      console.log('commentId && message');
       return;
     }
 
@@ -195,7 +187,6 @@ export class SaveWebhookResponse {
     // when situations like checkin, there will be no text and no link
     // if so ignore it
     if (!messageText) {
-      console.log('!messageText');
       return;
     }
 
@@ -204,22 +195,19 @@ export class SaveWebhookResponse {
     // save returned value. This value will always be the same
     let postId = value.post_id;
 
-    console.log('aaa');
     // get page access token
     let response = await graphRequest.get(
       `${this.currentPageId}/?fields=access_token`,
       this.userAccessToken,
     );
-    console.log('bbb');
 
     // acess token expired
     if (response === 'Error processing https request') {
-      console.log('Error processing https request');
       return;
     }
 
     // get post object
-    response = await graphRequest.get(postId, response.access_token);
+    response = graphRequest.get(postId, response.access_token);
 
     postId = response.id;
 
@@ -230,8 +218,7 @@ export class SaveWebhookResponse {
       status = CONVERSATION_STATUSES.CLOSED;
     }
 
-    console.log('here');
-    await this.getOrCreateConversation({
+    return this.getOrCreateConversation({
       findSelector: {
         'facebookData.kind': FACEBOOK_DATA_KINDS.FEED,
         'facebookData.postId': postId,
@@ -257,7 +244,6 @@ export class SaveWebhookResponse {
         link: value.link,
       },
     });
-    console.log('fff');
   }
 
   // get or create new conversation by page messenger
@@ -345,7 +331,7 @@ export class SaveWebhookResponse {
       // create new message
       const message = await ConversationMessages.createMessage({
         conversationId: conversation._id,
-        customerId: this.getOrCreateCustomer(userId),
+        customerId: await this.getOrCreateCustomer(userId),
         content,
         attachments,
         facebookData,
