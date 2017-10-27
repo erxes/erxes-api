@@ -3,7 +3,11 @@
 
 import faker from 'faker';
 import { connect, disconnect } from '../db/connection';
-import { KIND_CHOICES, FORM_LOAD_TYPES, MESSENGER_DATA_AVAILABILITY } from '../data/constants';
+import {
+  INTEGRATION_KIND_CHOICES,
+  FORM_LOAD_TYPES,
+  MESSENGER_DATA_AVAILABILITY,
+} from '../data/constants';
 import {
   brandFactory,
   messengerIntegrationFactory,
@@ -48,7 +52,7 @@ describe('messenger integration model add method', () => {
 
     expect(integration.name).toBe(doc.name);
     expect(integration.brandId).toBe(doc.brandId);
-    expect(integration.kind).toBe(KIND_CHOICES.MESSENGER);
+    expect(integration.kind).toBe(INTEGRATION_KIND_CHOICES.MESSENGER);
   });
 });
 
@@ -61,7 +65,7 @@ describe('messenger integration model edit method', () => {
     _brand = await brandFactory({});
     _brand2 = await brandFactory({});
     _integration = await messengerIntegrationFactory({
-      kind: KIND_CHOICES.MESSENGER,
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
       brandId: _brand._id,
     });
   });
@@ -86,7 +90,7 @@ describe('messenger integration model edit method', () => {
 
     expect(updatedIntegration.name).toBe(doc.name);
     expect(updatedIntegration.brandId).toBe(doc.brandId);
-    expect(updatedIntegration.kind).toBe(KIND_CHOICES.MESSENGER);
+    expect(updatedIntegration.kind).toBe(INTEGRATION_KIND_CHOICES.MESSENGER);
   });
 });
 
@@ -161,7 +165,7 @@ describe('create form integration', () => {
     expect(integration.name).toEqual(mainDoc.name);
     expect(integration.brandId).toEqual(_brand._id);
     expect(integration.formData.loadType).toEqual(FORM_LOAD_TYPES.EMBEDDED);
-    expect(integration.kind).toEqual(KIND_CHOICES.FORM);
+    expect(integration.kind).toEqual(INTEGRATION_KIND_CHOICES.FORM);
   });
 });
 
@@ -183,7 +187,7 @@ describe('edit form integration', () => {
       name: 'form integration test',
       brandId: _brand._id,
       formId: _form._id,
-      kind: KIND_CHOICES.FORM,
+      kind: INTEGRATION_KIND_CHOICES.FORM,
       formData: {
         loadType: FORM_LOAD_TYPES.EMBEDDED,
       },
@@ -302,7 +306,7 @@ describe('save integration messenger configurations test', () => {
     _integration = await messengerIntegrationFactory({
       name: 'messenger integration test',
       brandId: _brand._id,
-      kind: KIND_CHOICES.MESSENGER,
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
     });
   });
 

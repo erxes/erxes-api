@@ -1,6 +1,6 @@
 import { Conversations, ConversationMessages, Integrations, Customers } from '../../../db/models';
 import { pubsub } from '../subscriptions';
-import { CONVERSATION_STATUSES, KIND_CHOICES } from '../../constants';
+import { CONVERSATION_STATUSES, INTEGRATION_KIND_CHOICES } from '../../constants';
 import utils from '../../utils';
 import { _ } from 'underscore';
 
@@ -108,7 +108,7 @@ export default {
     const kind = integration.kind;
 
     // send reply to twitter
-    if (kind === KIND_CHOICES.TWITTER) {
+    if (kind === INTEGRATION_KIND_CHOICES.TWITTER) {
       // TODO: return tweetReply(conversation, strip(content));
     }
 
@@ -118,7 +118,7 @@ export default {
     // customer's email
     const email = customer ? customer.email : '';
 
-    if (kind === KIND_CHOICES.FORM && email) {
+    if (kind === INTEGRATION_KIND_CHOICES.FORM && email) {
       utils.sendEmail({
         to: email,
         title: 'Reply',
@@ -129,7 +129,7 @@ export default {
     }
 
     // send reply to facebook
-    if (kind === KIND_CHOICES.FACEBOOK) {
+    if (kind === INTEGRATION_KIND_CHOICES.FACEBOOK) {
       // when facebook kind is feed, assign commentId in extraData
       // TODO: facebookReply(conversation, strip(content), messageId);
     }

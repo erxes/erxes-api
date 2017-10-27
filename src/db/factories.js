@@ -1,10 +1,11 @@
 import faker from 'faker';
 import Random from 'meteor-random';
-import { MODULES, CONVERSATION_STATUSES, KIND_CHOICES } from '../data/constants';
+import { MODULES, INTEGRATION_KIND_CHOICES } from '../data/constants';
 import {
   Users,
   MessengerIntegrations,
   FormIntegrations,
+  FacebookIntegrations,
   Integrations,
   Brands,
   EmailTemplates,
@@ -226,7 +227,7 @@ export const integrationFactory = (params = {}) => {
 };
 
 export const messengerIntegrationFactory = (params = {}) => {
-  const kind = KIND_CHOICES.MESSENGER;
+  const kind = INTEGRATION_KIND_CHOICES.MESSENGER;
 
   const doc = {
     name: faker.random.word(),
@@ -243,7 +244,7 @@ export const messengerIntegrationFactory = (params = {}) => {
 export const formIntegrationFactory = (params = {}) => {
   const doc = {
     name: faker.random.word(),
-    kind: KIND_CHOICES.FORM,
+    kind: INTEGRATION_KIND_CHOICES.FORM,
     brandId: Random.id(),
     formId: Random.id(),
     formData: { thankContent: 'thankContent' },
@@ -252,6 +253,17 @@ export const formIntegrationFactory = (params = {}) => {
   Object.assign(doc, params);
 
   return FormIntegrations.create(doc);
+};
+
+export const facebookIntegrationFactory = (params = {}) => {
+  const doc = {
+    facebookData: {
+      appId: faker.random.word(),
+      pageIds: [faker.random.word()],
+    },
+  };
+
+  return FacebookIntegrations.create({ ...doc, ...params });
 };
 
 export const formFactory = async ({ title, code, description, createdUserId }) => {

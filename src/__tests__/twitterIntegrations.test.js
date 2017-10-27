@@ -17,7 +17,6 @@ import {
 } from '../data/integrations/twitter';
 
 beforeAll(() => connect());
-
 afterAll(() => disconnect());
 
 describe('twitter integration', () => {
@@ -117,7 +116,7 @@ describe('twitter integration', () => {
     });
   });
 
-  describe('reply', function() {
+  describe('reply', () => {
     let _integration;
     let twit;
     let stub;

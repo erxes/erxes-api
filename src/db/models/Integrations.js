@@ -4,7 +4,7 @@ import Random from 'meteor-random';
 import { Messages, Conversations } from './Conversations';
 import { Customers } from './';
 import {
-  KIND_CHOICES,
+  INTEGRATION_KIND_CHOICES,
   FORM_SUCCESS_ACTIONS,
   FORM_LOAD_TYPES,
   MESSENGER_DATA_AVAILABILITY,
@@ -127,7 +127,7 @@ const integrationFields = {
   },
   kind: {
     type: String,
-    enum: KIND_CHOICES.ALL,
+    enum: INTEGRATION_KIND_CHOICES.ALL,
   },
   name: String,
   brandId: String,
@@ -241,7 +241,7 @@ class Integration {
    * @return {Promise}
    */
   static removeIntegrations() {
-    return this.remove({ kind: KIND_CHOICES.MESSENGER });
+    return this.remove({ kind: INTEGRATION_KIND_CHOICES.MESSENGER });
   }
 }
 
@@ -256,7 +256,7 @@ class FormIntegration extends Integration {
   static generateFormDoc(mainDoc, formData) {
     return {
       ...mainDoc,
-      kind: KIND_CHOICES.FORM,
+      kind: INTEGRATION_KIND_CHOICES.FORM,
       formData,
     };
   }
@@ -323,7 +323,7 @@ class FormIntegration extends Integration {
    * @return {Promise}
    */
   static removeIntegrations() {
-    return this.remove({ kind: KIND_CHOICES.FORM });
+    return this.remove({ kind: INTEGRATION_KIND_CHOICES.FORM });
   }
 }
 
@@ -339,7 +339,7 @@ class MessengerIntegration extends Integration {
     return this.createIntegration({
       name,
       brandId,
-      kind: KIND_CHOICES.MESSENGER,
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
     });
   }
 
@@ -408,7 +408,7 @@ class MessengerIntegration extends Integration {
    * @return {Null}
    */
   static async removeIntegrations() {
-    const integrations = await this.find({ kind: KIND_CHOICES.MESSENGER }, { _id: 1 });
+    const integrations = await this.find({ kind: INTEGRATION_KIND_CHOICES.MESSENGER }, { _id: 1 });
     for (const integration of integrations) {
       await this.removeIntegration(integration._id);
     }
@@ -455,6 +455,12 @@ class FacebookIntegration extends Integration {
    *
    *
    */
+  static createIntegration(doc) {
+    return super.createIntegration({
+      ...doc,
+      kind: INTEGRATION_KIND_CHOICES.FACEBOOK,
+    });
+  }
 }
 
 IntegrationSchema.loadClass(Integration);
