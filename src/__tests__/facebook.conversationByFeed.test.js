@@ -14,17 +14,8 @@ beforeAll(() => connect());
 afterAll(() => disconnect());
 
 describe('facebook integration: get or create conversation by feed info', () => {
-  afterEach(() => {
-    graphRequest.get.restore(); // unwraps the spy
-  });
-
-  beforeEach(async () => {
-    // clear
-    await Conversations.remove({});
-    await ConversationMessages.remove({});
-
-    // mock all requests
-    const sandbox = await sinon.sandbox.create();
+  beforeEach(() => {
+    const sandbox = sinon.sandbox.create();
 
     sandbox.stub(graphRequest, 'get').callsFake(path => {
       if (path.includes('/?fields=access_token')) {
@@ -35,6 +26,13 @@ describe('facebook integration: get or create conversation by feed info', () => 
 
       return {};
     });
+  });
+
+  afterEach(async () => {
+    graphRequest.get.restore(); // unwraps the spy
+
+    await Conversations.remove({});
+    await ConversationMessages.remove({});
   });
 
   it('admin posts', async () => {
