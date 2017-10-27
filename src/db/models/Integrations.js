@@ -417,6 +417,18 @@ class MessengerIntegration extends Integration {
 
 class TwitterIntegration extends Integration {
   /**
+   * Create TwitterIntegration document
+   * @param {TwitterIntegration} doc - TwitterIntegration object
+   * @return {Promise} returns Promise resolving newly created TwitterIntegration document
+   */
+  static createIntegration(doc) {
+    return super.createIntegration({
+      ...doc,
+      kind: INTEGRATION_KIND_CHOICES.TWITTER,
+    });
+  }
+
+  /**
    * Create or get a customer document
    * @param {string} integrationId - Integration id
    * @param {Object} user - User object
@@ -452,8 +464,9 @@ class TwitterIntegration extends Integration {
 
 class FacebookIntegration extends Integration {
   /**
-   *
-   *
+   * Create FacebookIntegration
+   * @param {FacebookIntegration} doc - Facebook integration object
+   * @return {Promise} returns Promise resolving newly created FacebookIntegration document
    */
   static createIntegration(doc) {
     return super.createIntegration({

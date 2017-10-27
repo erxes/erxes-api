@@ -23,7 +23,9 @@ describe('facebook integration: get or create conversation', () => {
   beforeEach(async () => {
     customer = await customerFactory({});
     integration = await integrationFactory({});
+
     const sandbox = sinon.sandbox.create();
+
     saveWebhookResponse = new SaveWebhookResponse('access_token', integration, {});
 
     sandbox.stub(graphRequest, 'get').callsFake(() => {});

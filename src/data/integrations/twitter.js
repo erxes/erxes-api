@@ -1,5 +1,14 @@
+import soc from 'social-oauth-client';
 import { Conversations, ConversationMessages, Customers } from '../../db/models';
 import { CONVERSATION_STATUSES } from '../constants';
+
+const { TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_REDIRECT_URL } = process.env;
+
+const socTwitter = new soc.Twitter({
+  CONSUMER_KEY: TWITTER_CONSUMER_KEY,
+  CONSUMER_SECRET: TWITTER_CONSUMER_SECRET,
+  REDIRECT_URL: TWITTER_REDIRECT_URL,
+});
 
 // save twit instances by integration id
 export const TwitMap = {};
@@ -188,4 +197,24 @@ const postCallback = error => {
   if (error) {
     throw Error(error.message);
   }
+};
+
+export default {
+  getOrCreateCommonConversation,
+  getOrCreateDirectMessageConversation,
+  tweetReply,
+  TwitMap,
+  authenticate: (queryParams, callback) => {
+    // after user clicked authenticate button
+    socTwitter.callback({ query: queryParams }).then(data => {
+      callback({
+        name: data.info.name,
+        twitterData: {
+          id: data.info.id,
+          token: data.tokens.auth.token,
+          tokenSecret: data.tokens.auth.token_secret,
+        },
+      });
+    });
+  },
 };

@@ -105,7 +105,9 @@ class Customer {
    * @return {Promise} Newly created customer object
    */
   static async createCustomer(doc) {
-    const previousEntry = await this.findOne({ email: doc.email });
+    const previousEntry = await this.findOne({
+      $and: [{ email: doc.email }, { email: { $exists: true } }],
+    });
 
     // check duplication
     if (previousEntry) {

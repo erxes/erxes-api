@@ -8,6 +8,7 @@ import {
   FormIntegrations,
   MessengerIntegrations,
   FacebookIntegrations,
+  TwitterIntegrations,
 } from './Integrations';
 import EngageMessages from './Engages';
 import Tags from './Tags';
@@ -35,6 +36,7 @@ export {
   FormIntegrations,
   MessengerIntegrations,
   FacebookIntegrations,
+  TwitterIntegrations,
   Forms,
   EngageMessages,
   Tags,
