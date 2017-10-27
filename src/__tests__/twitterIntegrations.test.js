@@ -42,7 +42,7 @@ describe('twitter integration', () => {
       await Customers.remove({});
     });
 
-    test('common', async () => {
+    it('common', async () => {
       const tweetId = 2424244244;
 
       // create conversation

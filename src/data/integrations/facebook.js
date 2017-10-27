@@ -46,12 +46,12 @@ export class SaveWebhookResponse {
     this.currentPageId = null;
   }
 
-  start() {
+  async start() {
     const data = this.data;
     const integration = this.integration;
 
     if (data.object === 'page') {
-      data.entry.forEach(entry => {
+      for (let entry of data.entry) {
         // check receiving page is in integration's page list
         if (!integration.facebookData.pageIds.includes(entry.id)) {
           return;
@@ -62,33 +62,33 @@ export class SaveWebhookResponse {
 
         // receive new messenger message
         if (entry.messaging) {
-          this.viaMessengerEvent(entry);
+          await this.viaMessengerEvent(entry);
         }
 
         // receive new feed
         if (entry.changes) {
-          this.viaFeedEvent(entry);
+          await this.viaFeedEvent(entry);
         }
-      });
+      }
     }
   }
 
   // via page messenger
-  viaMessengerEvent(entry) {
-    entry.messaging.forEach(messagingEvent => {
+  async viaMessengerEvent(entry) {
+    for (let messagingEvent of entry.messaging) {
       // someone sent us a message
       if (messagingEvent.message) {
-        this.getOrCreateConversationByMessenger(messagingEvent);
+        await this.getOrCreateConversationByMessenger(messagingEvent);
       }
-    });
+    }
   }
 
   // wall post
-  viaFeedEvent(entry) {
-    entry.changes.forEach(event => {
+  async viaFeedEvent(entry) {
+    for (let event of entry.changes) {
       // someone posted on our wall
-      this.getOrCreateConversationByFeed(event.value);
-    });
+      await this.getOrCreateConversationByFeed(event.value);
+    }
   }
 
   // common get or create conversation helper using both in messenger and feed
@@ -259,7 +259,7 @@ export class SaveWebhookResponse {
       url: attachment.payload ? attachment.payload.url : '',
     }));
 
-    this.getOrCreateConversation({
+    return this.getOrCreateConversation({
       // try to find conversation by senderId, recipientId keys
       findSelector: {
         'facebookData.kind': FACEBOOK_DATA_KINDS.MESSENGER,
@@ -340,7 +340,7 @@ export class SaveWebhookResponse {
 
       // TODO: notify subscription server new message
 
-      return message._id;
+      return message;
     }
   }
 }

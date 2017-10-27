@@ -330,6 +330,54 @@ class Conversation {
 ConversationSchema.loadClass(Conversation);
 export const Conversations = mongoose.model('conversations', ConversationSchema);
 
+const FacebookMessageSchema = mongoose.Schema(
+  {
+    commentId: {
+      type: String,
+      required: false,
+    },
+
+    // comment, reaction, etc ...
+    item: {
+      type: String,
+      required: false,
+    },
+
+    // when share photo
+    photoId: {
+      type: String,
+      required: false,
+    },
+
+    // when share video
+    videoId: {
+      type: String,
+      required: false,
+    },
+
+    link: {
+      type: String,
+      required: false,
+    },
+
+    reactionType: {
+      type: String,
+      required: false,
+    },
+
+    senderId: {
+      type: String,
+      required: false,
+    },
+
+    senderName: {
+      type: String,
+      required: false,
+    },
+  },
+  { _id: false },
+);
+
 const MessageSchema = mongoose.Schema({
   _id: { type: String, unique: true, default: () => Random.id() },
   content: String,
@@ -343,7 +391,7 @@ const MessageSchema = mongoose.Schema({
   isCustomerRead: Boolean,
   engageData: Object,
   formWidgetData: Object,
-  facebookData: FacebookSchema,
+  facebookData: FacebookMessageSchema,
 });
 
 class Message {
