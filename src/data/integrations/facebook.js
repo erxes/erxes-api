@@ -344,3 +344,45 @@ export class SaveWebhookResponse {
     }
   }
 }
+
+/*
+ * post reply to page conversation or comment to wall post
+ */
+export const facebookReply = async ({ conversation, text, messageId, accessToken }) => {
+  // page access token
+  const response = await graphRequest.get(
+    `${conversation.facebookData.pageId}/?fields=access_token`,
+    accessToken,
+  );
+
+  // messenger reply
+  if (conversation.facebookData.kind === FACEBOOK_DATA_KINDS.MESSENGER) {
+    return await graphRequest.post(
+      'me/messages',
+      response.access_token,
+      {
+        recipient: { id: conversation.facebookData.senderId },
+        message: { text },
+      },
+      () => {},
+    );
+  }
+
+  // feed reply
+  if (conversation.facebookData.kind === FACEBOOK_DATA_KINDS.FEED) {
+    const postId = conversation.facebookData.postId;
+
+    // post reply
+    const commentResponse = await graphRequest.post(`${postId}/comments`, response.access_token, {
+      message: text,
+    });
+
+    // save commentId in message object
+    await ConversationMessages.update(
+      { _id: messageId },
+      { $set: { 'facebookData.commentId': commentResponse.id } },
+    );
+  }
+
+  return null;
+};
