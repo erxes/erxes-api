@@ -3,16 +3,29 @@
 
 import faker from 'faker';
 import { connect, disconnect } from '../db/connection';
-import { KIND_CHOICES, FORM_LOAD_TYPES, MESSENGER_DATA_AVAILABILITY } from '../data/constants';
+import {
+  INTEGRATION_KIND_CHOICES,
+  FORM_LOAD_TYPES,
+  MESSENGER_DATA_AVAILABILITY,
+} from '../data/constants';
 import {
   brandFactory,
-  integrationFactory,
+  messengerIntegrationFactory,
+  formIntegrationFactory,
   formFactory,
   userFactory,
   conversationMessageFactory,
   conversationFactory,
 } from '../db/factories';
-import { Integrations, Brands, Users, Forms, ConversationMessages } from '../db/models';
+import {
+  Users,
+  Integrations,
+  FormIntegrations,
+  MessengerIntegrations,
+  Brands,
+  Forms,
+  ConversationMessages,
+} from '../db/models';
 
 beforeAll(() => connect());
 afterAll(() => disconnect());
@@ -26,7 +39,7 @@ describe('messenger integration model add method', () => {
 
   afterEach(async () => {
     await Brands.remove({});
-    await Integrations.remove({});
+    await MessengerIntegrations.remove({});
   });
 
   test('check if messenger integration create method is running successfully', async () => {
@@ -35,11 +48,11 @@ describe('messenger integration model add method', () => {
       brandId: _brand._id,
     };
 
-    const integration = await Integrations.createMessengerIntegration(doc);
+    const integration = await MessengerIntegrations.createMessengerIntegration(doc);
 
     expect(integration.name).toBe(doc.name);
     expect(integration.brandId).toBe(doc.brandId);
-    expect(integration.kind).toBe(KIND_CHOICES.MESSENGER);
+    expect(integration.kind).toBe(INTEGRATION_KIND_CHOICES.MESSENGER);
   });
 });
 
@@ -51,15 +64,16 @@ describe('messenger integration model edit method', () => {
   beforeEach(async () => {
     _brand = await brandFactory({});
     _brand2 = await brandFactory({});
-    _integration = await integrationFactory({
-      kind: KIND_CHOICES.MESSENGER,
+    _integration = await messengerIntegrationFactory({
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
       brandId: _brand._id,
     });
   });
 
   afterEach(async () => {
     await Brands.remove({});
-    await Integrations.remove({});
+    await MessengerIntegrations.remove({});
+    await FormIntegrations.remove({});
   });
 
   test('check if messenger integration update method is running successfully', async () => {
@@ -69,11 +83,14 @@ describe('messenger integration model edit method', () => {
       kind: 'new kind',
     };
 
-    const updatedIntegration = await Integrations.updateMessengerIntegration(_integration._id, doc);
+    const updatedIntegration = await MessengerIntegrations.updateMessengerIntegration(
+      _integration._id,
+      doc,
+    );
 
     expect(updatedIntegration.name).toBe(doc.name);
     expect(updatedIntegration.brandId).toBe(doc.brandId);
-    expect(updatedIntegration.kind).toBe(KIND_CHOICES.MESSENGER);
+    expect(updatedIntegration.kind).toBe(INTEGRATION_KIND_CHOICES.MESSENGER);
   });
 });
 
@@ -90,9 +107,10 @@ describe('form integration create model test without formData', () => {
 
   afterEach(async () => {
     await Brands.remove({});
-    await Integrations.remove({});
+    await FormIntegrations.removeIntegrations();
     await Users.remove({});
     await Forms.remove({});
+    // TODO: remove method on form integrations should probably remove forms as well
   });
 
   test('check if create form integration test wihtout formData is throwing exception', async () => {
@@ -105,7 +123,7 @@ describe('form integration create model test without formData', () => {
     };
 
     try {
-      await Integrations.createFormIntegration(mainDoc);
+      await FormIntegrations.createFormIntegration(mainDoc);
     } catch (e) {
       expect(e.message).toEqual('formData must be supplied');
     }
@@ -125,7 +143,7 @@ describe('create form integration', () => {
 
   afterEach(async () => {
     await Brands.remove({});
-    await Integrations.remove({});
+    await FormIntegrations.remove({});
     await Users.remove({});
     await Forms.remove({});
   });
@@ -141,13 +159,13 @@ describe('create form integration', () => {
       loadType: FORM_LOAD_TYPES.EMBEDDED,
     };
 
-    const integration = await Integrations.createFormIntegration({ ...mainDoc, formData });
+    const integration = await FormIntegrations.createFormIntegration({ ...mainDoc, formData });
 
     expect(integration.formId).toEqual(_form._id);
     expect(integration.name).toEqual(mainDoc.name);
     expect(integration.brandId).toEqual(_brand._id);
     expect(integration.formData.loadType).toEqual(FORM_LOAD_TYPES.EMBEDDED);
-    expect(integration.kind).toEqual(KIND_CHOICES.FORM);
+    expect(integration.kind).toEqual(INTEGRATION_KIND_CHOICES.FORM);
   });
 });
 
@@ -165,11 +183,11 @@ describe('edit form integration', () => {
     _user = await userFactory({});
     _form = await formFactory({ createdUserId: _user._id });
     _form2 = await formFactory({ createdUserId: _user._id });
-    _form_integration = await integrationFactory({
+    _form_integration = await formIntegrationFactory({
       name: 'form integration test',
       brandId: _brand._id,
       formId: _form._id,
-      kind: KIND_CHOICES.FORM,
+      kind: INTEGRATION_KIND_CHOICES.FORM,
       formData: {
         loadType: FORM_LOAD_TYPES.EMBEDDED,
       },
@@ -178,7 +196,7 @@ describe('edit form integration', () => {
 
   afterEach(async () => {
     await Brands.remove({});
-    await Integrations.remove({});
+    await FormIntegrations.remove({});
     await Users.remove({});
     await Forms.remove({});
   });
@@ -194,7 +212,7 @@ describe('edit form integration', () => {
       loadType: FORM_LOAD_TYPES.SHOUTBOX,
     };
 
-    const integration = await Integrations.updateFormIntegration(_form_integration._id, {
+    const integration = await FormIntegrations.updateFormIntegration(_form_integration._id, {
       ...mainDoc,
       formData,
     });
@@ -214,7 +232,7 @@ describe('remove integration model method test', () => {
   beforeEach(async () => {
     _brand = await brandFactory({});
 
-    _integration = await integrationFactory({
+    _integration = await formIntegrationFactory({
       name: 'form integration test',
       brandId: _brand._id,
       kind: 'form',
@@ -234,7 +252,7 @@ describe('remove integration model method test', () => {
   });
 
   test('test if remove form integration model method is working successfully', async () => {
-    await Integrations.removeIntegration({ _id: _integration._id });
+    await FormIntegrations.removeIntegration({ _id: _integration._id });
 
     const integrationCount = await Integrations.find({}).count();
 
@@ -249,7 +267,7 @@ describe('save integration messenger appearance test', () => {
 
   beforeEach(async () => {
     _brand = await brandFactory({});
-    _integration = await integrationFactory({
+    _integration = await messengerIntegrationFactory({
       name: 'messenger integration test',
       brandId: _brand._id,
       kind: 'messenger',
@@ -268,7 +286,10 @@ describe('save integration messenger appearance test', () => {
       logo: faker.random.word(),
     };
 
-    const integration = await Integrations.saveMessengerAppearanceData(_integration._id, uiOptions);
+    const integration = await MessengerIntegrations.saveMessengerAppearanceData(
+      _integration._id,
+      uiOptions,
+    );
 
     expect(integration.uiOptions.color).toEqual(uiOptions.color);
     expect(integration.uiOptions.wallpaper).toEqual(uiOptions.wallpaper);
@@ -282,10 +303,10 @@ describe('save integration messenger configurations test', () => {
 
   beforeEach(async () => {
     _brand = await brandFactory({});
-    _integration = await integrationFactory({
+    _integration = await messengerIntegrationFactory({
       name: 'messenger integration test',
       brandId: _brand._id,
-      kind: KIND_CHOICES.MESSENGER,
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
     });
   });
 
@@ -318,7 +339,10 @@ describe('save integration messenger configurations test', () => {
       thankYouMessage: 'Thank you',
     };
 
-    const integration = await Integrations.saveMessengerConfigs(_integration._id, messengerData);
+    const integration = await MessengerIntegrations.saveMessengerConfigs(
+      _integration._id,
+      messengerData,
+    );
 
     expect(integration.messengerData.notifyCustomer).toEqual(messengerData.notifyCustomer);
     expect(integration.messengerData.availabilityMethod).toEqual(messengerData.availabilityMethod);
@@ -360,7 +384,7 @@ describe('save integration messenger configurations test', () => {
       thankYouMessage: 'Gracias',
     };
 
-    const updatedIntegration = await Integrations.saveMessengerConfigs(
+    const updatedIntegration = await MessengerIntegrations.saveMessengerConfigs(
       _integration._id,
       newMessengerData,
     );

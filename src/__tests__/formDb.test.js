@@ -2,7 +2,7 @@
 /* eslint-disable no-underscore-dangle */
 
 import { connect, disconnect } from '../db/connection';
-import { userFactory, formFactory, fieldFactory, integrationFactory } from '../db/factories';
+import { userFactory, formFactory, fieldFactory, formIntegrationFactory } from '../db/factories';
 import { Forms, Users, Fields, Integrations } from '../db/models';
 import toBeType from 'jest-tobetype';
 
@@ -147,7 +147,7 @@ describe('test exception in remove form method', async () => {
 
     await Fields.remove({});
 
-    await integrationFactory({
+    await formIntegrationFactory({
       formId: _form._id,
       formData: {
         loadType: 'shoutbox',

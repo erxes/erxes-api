@@ -70,15 +70,6 @@ export const FORM_SUCCESS_ACTIONS = {
   ALL_LIST: ['', 'email', 'redirect', 'onPage'],
 };
 
-export const KIND_CHOICES = {
-  MESSENGER: 'messenger',
-  FORM: 'form',
-  TWITTER: 'twitter',
-  FACEBOOK: 'facebook',
-  ALL_LIST: ['messenger', 'form', 'twitter', 'facebook'],
-  ALL: ['messenger', 'form', 'twitter', 'facebook'],
-};
-
 // module constants
 export const MODULES = {
   CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',

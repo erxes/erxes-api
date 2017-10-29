@@ -1,6 +1,52 @@
-import { Integrations } from '../../../db/models';
+import { Integrations, TwitterIntegrations, FacebookIntegrations } from '../../../db/models';
+
+import twitter from '../../integrations/twitter';
 
 export default {
+  /**
+   * Add new facebook integration
+   * @param {Object} doc - Facebook integration object
+   * @param {string} doc.name - name
+   * @param {string} doc.brandId - The id of the brand related integration
+   * @param {string} doc.appId - Facebook app id
+   * @param {String[]} doc.pageIds - Face page ids
+   * @return {Promise} Returns Promise resolving facebook integration document
+   */
+  integrationsAddFacebookIntegration(root, { appId, pageIds, ...docFields }, { user }) {
+    if (!user) {
+      throw new Error('Login required');
+    }
+
+    return FacebookIntegrations.createIntegration({
+      ...docFields,
+      facebookData: {
+        appId,
+        pageIds,
+      },
+    });
+  },
+
+  /**
+   * Add new twitter integration
+   * @param {Object} doc - Twitter integration object
+   * @param {Object} doc.queryParams - Object (dictionary)
+   * @param {string} doc.brandId - The id of the related integration
+   * @return {Promise}
+   */
+  async integrationsAddTwitterIntegration(root, { brandId, queryParams }, { user }) {
+    if (!user) {
+      throw new Error('Login required');
+    }
+
+    return new Promise(resolve => {
+      twitter.authenticate(queryParams, async docFields => {
+        const integration = await TwitterIntegrations.createIntegration({ brandId, ...docFields });
+        await twitter.trackIntegration(integration);
+        resolve(integration);
+      });
+    });
+  },
+
   /**
    * Create a new messenger integration
    * @param {Object} root

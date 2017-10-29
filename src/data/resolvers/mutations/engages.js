@@ -93,7 +93,7 @@ export default {
   async engageMessageSetLiveManual(root, _id, { user }) {
     if (!user) throw new Error('Login required');
 
-    const engageMessage = EngageMessages.engageMessageSetLive(_id);
+    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
 
     await send(engageMessage);
 

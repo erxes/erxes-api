@@ -2,7 +2,7 @@
 /* eslint-disable no-underscore-dangle */
 
 import { connect, disconnect } from '../db/connection';
-import { Fields } from '../db/models';
+import { Fields, Forms } from '../db/models';
 import { formFactory, fieldFactory } from '../db/factories';
 
 beforeAll(() => connect());
@@ -20,9 +20,10 @@ describe('Fields', () => {
     _field = await fieldFactory({ contentType: 'form', order: 1 });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Clearing test fields
-    return Fields.remove({});
+    await Fields.remove({});
+    await Forms.remove({});
   });
 
   test('createField() without contentTypeId', async () => {

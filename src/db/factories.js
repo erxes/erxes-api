@@ -1,9 +1,11 @@
 import faker from 'faker';
 import Random from 'meteor-random';
-import { MODULES, CONVERSATION_STATUSES } from '../data/constants';
-
+import { MODULES, INTEGRATION_KIND_CHOICES } from '../data/constants';
 import {
   Users,
+  MessengerIntegrations,
+  FormIntegrations,
+  FacebookIntegrations,
   Integrations,
   Brands,
   EmailTemplates,
@@ -16,6 +18,7 @@ import {
   Segments,
   EngageMessages,
   Forms,
+  FormFields,
   Fields,
   Companies,
   NotificationConfigurations,
@@ -184,11 +187,15 @@ export const fieldFactory = (params = {}) => {
 };
 
 export const conversationFactory = (params = {}) => {
+  const doc = {
+    content: faker.lorem.sentence(),
+    customerId: Random.id(),
+    integrationId: Random.id(),
+  };
+
   return Conversations.createConversation({
-    content: params.content || faker.lorem.sentence(),
-    customerId: params.customerId || Random.id(),
-    integrationId: params.integrationId || Random.id(),
-    status: CONVERSATION_STATUSES.NEW,
+    ...doc,
+    ...params,
   });
 };
 
@@ -210,19 +217,53 @@ export const conversationMessageFactory = (params = {}) => {
 };
 
 export const integrationFactory = (params = {}) => {
-  const kind = params.kind || 'messenger';
+  const doc = {
+    name: faker.random.word(),
+    brandId: Random.id(),
+  };
 
-  return Integrations.create({
+  Object.assign(doc, params);
+  return Integrations.create(doc);
+};
+
+export const messengerIntegrationFactory = (params = {}) => {
+  const kind = INTEGRATION_KIND_CHOICES.MESSENGER;
+
+  const doc = {
     name: faker.random.word(),
     kind,
-    brandId: params.brandId || Random.id(),
-    formId: params.formId || Random.id(),
-    messengerData: params.messengerData || { welcomeMessage: 'welcome', notifyCustomer: true },
-    formData:
-      params.formData === 'form'
-        ? params.formData
-        : kind === 'form' ? { thankContent: 'thankContent' } : null,
-  });
+    brandId: Random.id(),
+    formId: Random.id(),
+    messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
+  };
+
+  Object.assign(doc, params);
+  return MessengerIntegrations.create(doc);
+};
+
+export const formIntegrationFactory = (params = {}) => {
+  const doc = {
+    name: faker.random.word(),
+    kind: INTEGRATION_KIND_CHOICES.FORM,
+    brandId: Random.id(),
+    formId: Random.id(),
+    formData: { thankContent: 'thankContent' },
+  };
+
+  Object.assign(doc, params);
+
+  return FormIntegrations.create(doc);
+};
+
+export const facebookIntegrationFactory = (params = {}) => {
+  const doc = {
+    facebookData: {
+      appId: faker.random.word(),
+      pageIds: [faker.random.word()],
+    },
+  };
+
+  return FacebookIntegrations.createIntegration({ ...doc, ...params });
 };
 
 export const formFactory = async ({ title, code, description, createdUserId }) => {
@@ -234,6 +275,18 @@ export const formFactory = async ({ title, code, description, createdUserId }) =
     },
     createdUserId || (await userFactory({})),
   );
+};
+
+export const formFieldFactory = (formId, params) => {
+  return FormFields.createFormField(formId || Random.id(), {
+    type: params.type || 'input',
+    name: faker.random.word(),
+    validation: params.validation || 'number',
+    text: faker.random.word(),
+    description: faker.random.word(),
+    isRequired: params.isRequired || false,
+    number: faker.random.word(),
+  });
 };
 
 export const notificationConfigurationFactory = params => {

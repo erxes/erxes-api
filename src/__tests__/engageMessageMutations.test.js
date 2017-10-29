@@ -20,7 +20,7 @@ import {
   segmentsFactory,
   emailTemplateFactory,
   customerFactory,
-  integrationFactory,
+  messengerIntegrationFactory,
 } from '../db/factories';
 
 beforeAll(() => connect());
@@ -31,7 +31,7 @@ describe('engage message mutation tests', () => {
   let _user;
   let _segment;
   let _customer;
-  let _integration;
+  let _messengerIntegration;
   let _emailTemplate;
   let _doc = null;
 
@@ -41,7 +41,7 @@ describe('engage message mutation tests', () => {
     _message = await engageMessageFactory({});
     _emailTemplate = await emailTemplateFactory({});
     _customer = await customerFactory({});
-    _integration = await integrationFactory({ brandId: 'brandId' });
+    _messengerIntegration = await messengerIntegrationFactory({ brandId: 'brandId2' });
     _doc = {
       kind: 'manual',
       method: 'email',
@@ -174,7 +174,7 @@ describe('engage message mutation tests', () => {
       isLive: true,
       customerIds: [_customer._id],
       messenger: {
-        brandId: 'brandId',
+        brandId: 'brandId2',
         content: 'messenger content',
       },
     }));
@@ -182,7 +182,7 @@ describe('engage message mutation tests', () => {
     const conversationObj = {
       userId: _user._id,
       customerId: _customer._id,
-      integrationId: _integration._id,
+      integrationId: _messengerIntegration._id,
       content: 'messenger content',
     };
 
@@ -190,7 +190,7 @@ describe('engage message mutation tests', () => {
       engageData: {
         messageId: _message._id,
         fromUserId: _user._id,
-        brandId: 'brandId',
+        brandId: 'brandId2',
         content: 'messenger content',
       },
       conversationId: 'convId',

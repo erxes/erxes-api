@@ -126,10 +126,10 @@ class Conversation {
    * @param  {Object} conversationObj object
    * @return {Promise} Newly created conversation object
    */
-  static async createConversation(doc) {
+  static async createConversation({ status, ...docFields }) {
     return this.create({
-      ...doc,
-      status: CONVERSATION_STATUSES.NEW,
+      ...docFields,
+      status: status || CONVERSATION_STATUSES.NEW,
       createdAt: new Date(),
       number: (await this.find().count()) + 1,
       messageCount: 0,
@@ -313,10 +313,70 @@ class Conversation {
       );
     }
   }
+
+  /**
+   * Update conversation
+   * @param {string} _id - Id of conversation document
+   * @param {Conversation} doc - Conversation document/object
+   * @return {Promise} returns Promise resolving Conversation document
+   */
+  static async updateConversation(_id, doc) {
+    await this.update({ _id }, { $set: doc });
+
+    return this.findOne({ _id });
+  }
 }
 
 ConversationSchema.loadClass(Conversation);
 export const Conversations = mongoose.model('conversations', ConversationSchema);
+
+const FacebookMessageSchema = mongoose.Schema(
+  {
+    commentId: {
+      type: String,
+      required: false,
+    },
+
+    // comment, reaction, etc ...
+    item: {
+      type: String,
+      required: false,
+    },
+
+    // when share photo
+    photoId: {
+      type: String,
+      required: false,
+    },
+
+    // when share video
+    videoId: {
+      type: String,
+      required: false,
+    },
+
+    link: {
+      type: String,
+      required: false,
+    },
+
+    reactionType: {
+      type: String,
+      required: false,
+    },
+
+    senderId: {
+      type: String,
+      required: false,
+    },
+
+    senderName: {
+      type: String,
+      required: false,
+    },
+  },
+  { _id: false },
+);
 
 const MessageSchema = mongoose.Schema({
   _id: { type: String, unique: true, default: () => Random.id() },
@@ -331,7 +391,7 @@ const MessageSchema = mongoose.Schema({
   isCustomerRead: Boolean,
   engageData: Object,
   formWidgetData: Object,
-  facebookData: FacebookSchema,
+  facebookData: FacebookMessageSchema,
 });
 
 class Message {

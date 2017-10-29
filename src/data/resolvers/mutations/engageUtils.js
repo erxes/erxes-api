@@ -126,7 +126,7 @@ const sendViaMessenger = async message => {
   const { fromUserId, segmentId, customerIds } = message;
   const { brandId, content } = message.messenger;
 
-  const user = Users.findOne({ _id: fromUserId });
+  const user = await Users.findOne({ _id: fromUserId });
 
   // find integration
   const integration = await Integrations.findOne({
