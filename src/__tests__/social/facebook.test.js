@@ -2,10 +2,10 @@
 
 import sinon from 'sinon';
 import { connect, disconnect } from '../../db/connection';
-import { getPageList, receiveWebhookResponse } from '../../social/facebook';
+import { getPageList, receiveWebhookResponse, updateReactions } from '../../social/facebook';
 import { graphRequest } from '../../social/facebookTracker';
-import { Integrations } from '../../db/models';
-import { integrationFactory } from '../../db/factories';
+import { Integrations, ConversationMessages } from '../../db/models';
+import { integrationFactory, conversationMessageFactory } from '../../db/factories';
 
 beforeAll(() => connect());
 afterAll(() => disconnect());
@@ -16,6 +16,7 @@ describe('facebook integration common tests', () => {
   afterEach(async () => {
     // clear
     await Integrations.remove({});
+    await ConversationMessages.remove({});
   });
 
   test('receive web hook response', async () => {
@@ -41,5 +42,49 @@ describe('facebook integration common tests', () => {
     await graphRequest.post();
 
     graphRequest.base.restore(); // unwraps the spy
+  });
+
+  test('post comment update reactions', async () => {
+    const commentId = 'facebookComment';
+    let message = await conversationMessageFactory({
+      facebookData: {
+        commentId,
+      },
+    });
+
+    const reactionType = 'haha';
+    const customerId = 'customer._id';
+
+    const result = await updateReactions({
+      reactions: message.facebookData.reactions,
+      type: reactionType,
+      customerId,
+    });
+
+    await ConversationMessages.update(
+      { 'facebookData.commentId': commentId },
+      {
+        $set: { 'facebookData.reactions': result },
+      },
+    );
+
+    message = await ConversationMessages.findOne({
+      'facebookData.commentId': commentId,
+    });
+
+    const fbData = message.facebookData;
+    expect(fbData.reactions[reactionType].length).toBe(1);
+    expect(fbData.reactions[reactionType][0]).toBe(customerId);
+
+    const newType = 'wow';
+    const changeResult = await updateReactions({
+      reactions: fbData.reactions,
+      type: newType,
+      customerId,
+    });
+
+    expect(changeResult[reactionType].length).toBe(0);
+    expect(changeResult[newType].length).toBe(1);
+    expect(changeResult[newType][0]).toBe(customerId);
   });
 });

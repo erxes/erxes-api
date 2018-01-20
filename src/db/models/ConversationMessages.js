@@ -76,6 +76,12 @@ const FacebookSchema = mongoose.Schema(
       optional: true,
     }),
 
+    // feed post url
+    postUrl: field({
+      type: String,
+      optional: true,
+    }),
+
     // comment reactions
     reactions: field({ type: reactionSchema }),
   },

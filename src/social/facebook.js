@@ -289,6 +289,7 @@ export class SaveWebhookResponse {
         photoId: value.photo_id,
         videoId: value.video_id,
         link: value.link,
+        postUrl: value.post ? value.post.permalink_url : '',
       },
     });
   }
