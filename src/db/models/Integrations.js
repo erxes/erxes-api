@@ -9,7 +9,7 @@ import {
   MESSENGER_DATA_AVAILABILITY,
 } from '../../data/constants';
 
-import { TwitterSchema, FacebookSchema } from '../../social/schemas';
+import { TwitterSchema, FacebookSchema, GmailSchema } from '../../social/schemas';
 import { field } from './utils';
 
 // subdocument schema for MessengerOnlineHours
@@ -116,6 +116,7 @@ const IntegrationSchema = mongoose.Schema({
   formData: field({ type: FormDataSchema }),
   messengerData: field({ type: MessengerDataSchema }),
   twitterData: field({ type: TwitterSchema }),
+  gmailData: field({ type: GmailSchema }),
   facebookData: field({ type: FacebookSchema }),
   uiOptions: field({ type: UiOptionsSchema }),
 });
@@ -171,6 +172,19 @@ class Integration {
       brandId,
       kind: KIND_CHOICES.TWITTER,
       twitterData,
+    });
+  }
+
+  /**
+   * Create twitter integration
+   * @param {Object} doc - Integration doc
+   * @return {Promise} returns integration document promise
+   */
+  static createGmailIntegration({ name, gmailData }) {
+    return this.createIntegration({
+      name,
+      kind: KIND_CHOICES.GMAIL,
+      gmailData,
     });
   }
 

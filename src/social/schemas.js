@@ -26,3 +26,25 @@ export const FacebookSchema = mongoose.Schema(
   },
   { _id: false },
 );
+
+
+export const GmailSchema = mongoose.Schema(
+  {
+    email: {
+      type: String
+    },
+    access_token: {
+      type: String,
+    },
+    refresh_token: {
+      type: String,
+    },
+    token_type: {
+      type: String,
+    },
+    expiry_date: {
+      type: String,
+    }
+  },
+  { _id: false },
+);

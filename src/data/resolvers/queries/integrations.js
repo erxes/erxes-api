@@ -1,5 +1,6 @@
 import { Channels, Integrations } from '../../../db/models';
 import { socUtils } from '../../../social/twitterTracker';
+import { gmailUtils } from '../../../social/gmail';
 import { getConfig, getPageList } from '../../../social/facebook';
 import { moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';
@@ -78,6 +79,14 @@ const integrationQueries = {
   },
 
   /**
+   * Generate gmail integration auth url using credentials in .env
+   * @return {Promise} - Generated url
+   */
+  integrationGetGmailAuthUrl() {
+    return gmailUtils.getGmailAuthorizeUrl();
+  },
+
+  /**
    * Get facebook app list .env
    * @return {Promise} - Apps list
    */
@@ -103,6 +112,6 @@ const integrationQueries = {
   },
 };
 
-moduleRequireLogin(integrationQueries);
+// moduleRequireLogin(integrationQueries);
 
 export default integrationQueries;

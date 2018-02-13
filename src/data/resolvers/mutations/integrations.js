@@ -1,5 +1,6 @@
 import { Integrations } from '../../../db/models';
 import { socUtils } from '../../../social/twitterTracker';
+import { gmailUtils } from '../../../social/gmail';
 import { requireLogin, requireAdmin } from '../../permissions';
 
 const integrationMutations = {
@@ -97,6 +98,39 @@ const integrationMutations = {
   },
 
   /**
+   * Create a new gmail integration
+   * @param {Object} root
+   * @param {Object} code - code
+   * @return {Promise} return Promise resolving Integration document
+   */
+  async integrationsCreateGmailIntegration(root, { code }) {
+    const data = await gmailUtils.authorize(code);
+    const userProfile = await gmailUtils.getUserProfile(data);
+    data.email = userProfile.emailAddress
+    const integration = await Integrations.createGmailIntegration({
+      name: data.email,
+      gmailData: data,
+    });
+
+    return integration;
+  },
+
+  /**
+   * Create a new facebook integration
+   * @param {Object} root
+   * @param {String} integrationId - Integration id
+   * @param {String} subject - email subject
+   * @param {String} body - email body
+   * @param {String} toEmails - to emails
+   * @return {Promise} return Promise resolving Integration document
+   */
+  async integrationsSendGmail(root, { integrationId, subject, body, toEmails }) {
+    const integration = await Integrations.findOne({ _id: integrationId });
+    gmailUtils.sendEmail(integration.gmailData, subject, body, toEmails, integration.gmailData.fromEmail);
+    return integration;
+  },
+
+  /**
    * Create a new facebook integration
    * @param {Object} root
    * @param {String} brandId - Integration brand id
@@ -144,7 +178,7 @@ const integrationMutations = {
    */
   integrationsRemove(root, { _id }) {
     return Integrations.removeIntegration(_id);
-  },
+  }
 };
 
 requireLogin(integrationMutations, 'integrationsCreateMessengerIntegration');
@@ -154,6 +188,7 @@ requireLogin(integrationMutations, 'integrationsSaveMessengerConfigs');
 requireLogin(integrationMutations, 'integrationsCreateFormIntegration');
 requireLogin(integrationMutations, 'integrationsEditFormIntegration');
 requireLogin(integrationMutations, 'integrationsCreateTwitterIntegration');
+// requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
 requireLogin(integrationMutations, 'integrationsCreateFacebookIntegration');
 requireAdmin(integrationMutations, 'integrationsRemove');
 

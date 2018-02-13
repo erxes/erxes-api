@@ -9,6 +9,7 @@ export const types = `
     formData: JSON
     messengerData: JSON
     twitterData: JSON
+    gmailData: JSON
     facebookData: JSON
     uiOptions: JSON
 
@@ -76,6 +77,7 @@ export const queries = `
   integrationGetTwitterAuthUrl: String
   integrationFacebookAppsList: [JSON]
   integrationFacebookPagesList(appId: String): [JSON]
+  integrationGetGmailAuthUrl: String
 `;
 
 export const mutations = `
@@ -106,6 +108,17 @@ export const mutations = `
     brandId: String!,
     queryParams: TwitterIntegrationAuthParams!
   ): Integration
+
+  integrationsCreateGmailIntegration(
+    code: String!
+  ): Integration
+
+  integrationsSendGmail(
+    integrationId: String!,
+    subject: String!,
+    body: String!,
+    toEmails: String!
+  ): String
 
   integrationsCreateFacebookIntegration(
     brandId: String!,
