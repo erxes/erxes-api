@@ -180,7 +180,12 @@ class Integration {
    * @param {Object} doc - Integration doc
    * @return {Promise} returns integration document promise
    */
-  static createGmailIntegration({ name, gmailData }) {
+  static async createGmailIntegration({ name, gmailData }) {
+    const integrationExist = await this.findOne({ 'gmailData.email': gmailData.email });
+    if (integrationExist){
+      return integrationExist;
+    }
+
     return this.createIntegration({
       name,
       kind: KIND_CHOICES.GMAIL,

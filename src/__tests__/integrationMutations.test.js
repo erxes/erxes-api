@@ -2,11 +2,18 @@
 /* eslint-disable no-underscore-dangle */
 
 import faker from 'faker';
+import sinon from 'sinon';
+import { connect, disconnect } from '../db/connection';
 import { FORM_LOAD_TYPES, MESSENGER_DATA_AVAILABILITY } from '../data/constants';
-import { Integrations } from '../db/models';
+import { Integrations, ActivityLogs } from '../db/models';
 import { ROLES } from '../data/constants';
 import integrationMutations from '../data/resolvers/mutations/integrations';
 import { socUtils } from '../social/twitterTracker';
+import { gmailUtils } from '../social/gmail';
+import { integrationFactory } from '../db/factories';
+
+beforeAll(() => connect());
+afterAll(() => disconnect());
 
 describe('mutations', () => {
   const _fakeBrandId = 'fakeBrandId';
@@ -271,5 +278,69 @@ describe('mutations', () => {
         pageIds: ['1'],
       },
     });
+  });
+
+  test('create gmail integration', async () => {
+    // Integrations.createGmailIntegration = jest.fn();
+
+    const fakeToken = {
+      "access_token": "access_token",
+      "refresh_token": "refresh_token",
+      "token_type":"Bearer", "expiry_date":1518420087675};
+
+    const testEmail = 'munkhbold.d@nmtec.co';
+    const authorize = sinon.stub(gmailUtils, 'authorize').callsFake(() => (fakeToken));
+    const getUserProfile = sinon.stub(gmailUtils, 'getUserProfile').callsFake(() => ({
+      emailAddress: testEmail}));
+    await integrationMutations.integrationsCreateGmailIntegration({}, 
+      { code: '123' }, {
+      user: _adminUser,
+    });
+
+    expect(authorize.calledWith('123')).toBe(true);
+    expect(getUserProfile.calledWith(fakeToken)).toBe(true);
+
+    const integration = await Integrations.findOne({
+      'gmailData.email': testEmail
+    });
+
+    expect(integration).toBeDefined();
+  });
+
+
+  test('send gmail', async () => {
+    const email = 'munkhbold.d@nmtec.co';
+    const _integration = await integrationFactory({gmailData: {'email': email}});
+    const args = {
+      integrationId: _integration._id,
+      cocType: 'customer',
+      cocId: 'cocId',
+      subject: 'subject',
+      body: 'body',
+      toEmails: email};
+
+    // fake sendEmail function
+    const sendEmail = sinon.stub(gmailUtils, 'sendEmail').callsFake(() => (null));
+
+      // call mutation
+    await integrationMutations.integrationsSendGmail({}, args, {
+      user: _adminUser,
+    });
+    const [ tokens, subject, body, toEmails, fromEmail, cc ] = sendEmail.firstCall.args;
+    expect(tokens._doc).toEqual({ email: 'munkhbold.d@nmtec.co' });
+    expect(subject).toEqual(args.subject);
+    expect(body).toEqual(args.body);
+    expect(toEmails).toEqual(args.toEmails);
+    expect(fromEmail).toEqual(email);
+    expect(cc).toEqual(undefined);
+
+    const newLog = await ActivityLogs.findOne({
+      'coc.type': 'customer',
+      'coc.id': 'cocId',
+      'activity.type': 'email',
+      'activity.action': 'send'
+    });
+
+    expect(newLog).toBeDefined();
   });
 });

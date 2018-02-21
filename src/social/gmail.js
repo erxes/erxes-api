@@ -59,13 +59,14 @@ export const getGmailAuthorizeUrl = async () => {
  * @param {String} message - email body
  * @return {String} return raw string encrypted by base64
  */
-const createEmail = async (to, from, subject, body) => {
+const createEmail = async (to, from, subject, body, cc) => {
     var str = ["Content-Type: text/plain; charset=\"UTF-8\"\n",
         "MIME-Version: 1.0\n",
         "Content-Transfer-Encoding: 7bit\n",
         "X-Upload-Content-Type: message/rfc822\n",
         "X-Upload-Content-Length: 2000000\n",
         "to: ", to, "\n",
+        "cc: ", cc, "\n",
         "from: ", from, "\n",
         "subject: ", subject, "\n\n",
         body
@@ -76,16 +77,16 @@ const createEmail = async (to, from, subject, body) => {
 
 /**
  * send emails using gmail api
- * @param {object} tokens - access_token
+ * @param {object} tokens - access_token, refresh_token, type, expire_date
  * @param {String} email - email subject
  * @param {String} content - email body
  * @param {String} toEmails - to emails with cc
  */
-export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail ) => {
+export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc ) => {
     const auth = await getOAuth();
     auth.credentials = tokens;
     var gmail = await google.gmail('v1');
-    var raw = await createEmail(toEmails, fromEmail, subject, body);
+    var raw = await createEmail(toEmails, fromEmail, subject, body, cc);
 
     await gmail.users.messages.send({
         auth: auth,

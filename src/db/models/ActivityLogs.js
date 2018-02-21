@@ -143,6 +143,32 @@ class ActivityLog {
     });
   }
 
+   /**
+   * Create activity log for send email
+   * @param {Object} subject - email subject, message, toEmail, fromEmail
+   * @param {Object} user - User collection document
+   * @param {String} cocType - customer or company
+   * @param {String} cocId - Customer or company id
+   * @return {Promise} returns Promise resolving created ActivityLog document
+   */
+  static createSendEmailLog(subject, cocType, cocId, user) {
+    return this.createDoc({
+      activity: {
+        type: ACTIVITY_TYPES.EMAIL,
+        action: ACTIVITY_ACTIONS.SEND,
+        content: subject,
+      },
+      performer: {
+        type: ACTIVITY_PERFORMER_TYPES.USER,
+        id: user._id,
+      },
+      coc: {
+        type: cocType,
+        id: cocId,
+      },
+    });
+  }
+
   static cocFindOne(conversationId, cocId, cocType) {
     return this.findOne({
       'activity.type': ACTIVITY_TYPES.CONVERSATION,

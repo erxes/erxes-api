@@ -115,9 +115,12 @@ export const mutations = `
 
   integrationsSendGmail(
     integrationId: String!,
+    cocType: String!,
+    cocId: String!,
     subject: String!,
     body: String!,
-    toEmails: String!
+    toEmails: String!,
+    cc: String
   ): String
 
   integrationsCreateFacebookIntegration(

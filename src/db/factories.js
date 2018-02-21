@@ -247,6 +247,7 @@ export const integrationFactory = async (params = {}) => {
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     twitterData: params.twitterData || {},
     facebookData: params.facebookData || {},
+    gmailData: params.gmailData || {},
     formData:
       params.formData === 'form'
         ? params.formData

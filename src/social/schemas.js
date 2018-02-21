@@ -31,7 +31,8 @@ export const FacebookSchema = mongoose.Schema(
 export const GmailSchema = mongoose.Schema(
   {
     email: {
-      type: String
+      type: String,
+      unique: true
     },
     access_token: {
       type: String,
