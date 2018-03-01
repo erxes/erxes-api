@@ -105,9 +105,11 @@ const integrationMutations = {
    */
   async integrationsCreateGmailIntegration(root, { code }) {
     const data = await gmailUtils.authorize(code);
+
     // get permission granted email address
     const userProfile = await gmailUtils.getUserProfile(data);
     data.email = userProfile.emailAddress
+
     const integration = await Integrations.createGmailIntegration({
       name: data.email,
       gmailData: data,
@@ -128,9 +130,12 @@ const integrationMutations = {
    */
   async integrationsSendGmail(root, { integrationId, cocType, cocId, subject, body, toEmails, cc }, { user }) {
     const integration = await Integrations.findOne({ _id: integrationId });
+
     // integration.gmailData - access_token
     gmailUtils.sendEmail(integration.gmailData, subject, body, toEmails, integration.gmailData.email, cc);
+
     await ActivityLogs.createSendEmailLog(subject, cocType, cocId, user);
+
     return integration;
   },
 
@@ -192,7 +197,7 @@ requireLogin(integrationMutations, 'integrationsSaveMessengerConfigs');
 requireLogin(integrationMutations, 'integrationsCreateFormIntegration');
 requireLogin(integrationMutations, 'integrationsEditFormIntegration');
 requireLogin(integrationMutations, 'integrationsCreateTwitterIntegration');
-// requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
+requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
 requireLogin(integrationMutations, 'integrationsCreateFacebookIntegration');
 requireAdmin(integrationMutations, 'integrationsRemove');
 

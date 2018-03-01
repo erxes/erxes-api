@@ -24,7 +24,7 @@ describe('mutations', () => {
   const _adminUser = { _id: 'fakeId', role: ROLES.ADMIN };
 
   test(`test if Error('Login required') exception is working as intended`, () => {
-    expect.assertions(10);
+    expect.assertions(11);
 
     // Login required ==================
     const check = mutation => {
@@ -45,6 +45,7 @@ describe('mutations', () => {
     check(integrationMutations.integrationsRemove);
     check(integrationMutations.integrationsCreateTwitterIntegration);
     check(integrationMutations.integrationsCreateFacebookIntegration);
+    check(integrationMutations.integrationsCreateGmailIntegration);
   });
 
   test(`test if Error('Permission required') exception is working as intended`, async () => {
@@ -292,6 +293,7 @@ describe('mutations', () => {
     const authorize = sinon.stub(gmailUtils, 'authorize').callsFake(() => (fakeToken));
     const getUserProfile = sinon.stub(gmailUtils, 'getUserProfile').callsFake(() => ({
       emailAddress: testEmail}));
+
     await integrationMutations.integrationsCreateGmailIntegration({}, 
       { code: '123' }, {
       user: _adminUser,
