@@ -31,6 +31,35 @@ export const getPageList = async accessToken => {
 };
 
 /*
+ * Update comment reactions
+ * @param {[String]} reactions - Object
+ * @param {String} type - like, love, haha, sad, wow, angry etc...
+ * @param {String} customerId - Customer _id
+ * @return {[String]} - Reacion object
+ */
+export const updateReactions = async ({ reactions, type, customerId }) => {
+  const data = reactions || {};
+
+  if (!data[type]) {
+    data[type] = [];
+  }
+
+  const loopData = reactions ? data.toJSON() : data;
+
+  for (let key in loopData) {
+    const obj = data[key];
+
+    if (key === type) {
+      obj.indexOf(customerId) >= 0 ? obj.pop(customerId) : obj.push(customerId);
+    } else {
+      if (obj.indexOf(customerId) >= 0) obj.pop(customerId);
+    }
+  }
+
+  return data;
+};
+
+/*
  * Save webhook response
  * create conversation, customer, message using transmitted data
  *
@@ -165,25 +194,32 @@ export class SaveWebhookResponse {
       return null;
     }
 
-    // ignore duplicated action when like
-    if (value.verb === 'add' && value.item === 'like') {
-      return null;
-    }
-
-    // if this is already saved then ignore it
-    if (
-      commentId &&
-      (await ConversationMessages.findOne({ 'facebookData.commentId': commentId }))
-    ) {
-      return null;
-    }
-
     const senderName = value.from.name;
 
     // sender_id is giving number values when feed and giving string value
     // when messenger. customer.facebookData.senderId has type of string so
     // convert it to string
     const senderId = value.from.id.toString();
+
+    const commentSelector = { 'facebookData.commentId': commentId };
+    const currentComment = await ConversationMessages.findOne(commentSelector);
+
+    // if this is already saved then ignore it
+    if (commentId && currentComment) {
+      if (value.item === 'reaction') {
+        await ConversationMessages.update(commentSelector, {
+          $set: {
+            'facebookData.reactions': await updateReactions({
+              reactions: currentComment.facebookData.reactions,
+              type: value.reaction_type,
+              customerId: await this.getOrCreateCustomer(senderId),
+            }),
+          },
+        });
+      } else {
+        return null;
+      }
+    }
 
     let messageText = value.message;
 
@@ -253,6 +289,7 @@ export class SaveWebhookResponse {
         photoId: value.photo_id,
         videoId: value.video_id,
         link: value.link,
+        postUrl: value.post ? value.post.permalink_url : '',
       },
     });
   }
