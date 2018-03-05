@@ -49,6 +49,8 @@ export const types = `
     links: UserLinksType
     emailSignatures: JSON
     getNotificationByEmail: Boolean
+
+    permissionActions: [String]
   }
 
   type AuthPayload {

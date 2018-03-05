@@ -16,6 +16,7 @@ import integrations from './integrations';
 import notifications from './notifications';
 import knowledgeBase from './knowledgeBase';
 import activityLogs from './activityLogs';
+import permissions from './permissions';
 
 export default {
   ...users,
@@ -37,4 +38,5 @@ export default {
   ...knowledgeBase,
   ...activityLogs,
   ...fieldsgroups,
+  ...permissions,
 };

@@ -33,6 +33,7 @@ import {
   KnowledgeBaseArticles,
   ActivityLogs,
   FieldsGroups,
+  Permissions,
 } from './models';
 
 export const userFactory = (params = {}) => {
@@ -404,4 +405,16 @@ export const fieldGroupFactory = async params => {
   const groupObj = await FieldsGroups.createGroup(doc, faker.random.word());
 
   return FieldsGroups.updateGroup(groupObj._id, params, faker.random.word());
+};
+
+export const permissionFactory = async (params = {}) => {
+  const permission = new Permissions({
+    module: faker.random.word(),
+    action: params.action || faker.random.word(),
+    allowed: params.allowed || false,
+    userId: params.userId || Random.id(),
+    requiredActions: params.requiredActions || [],
+  });
+
+  return permission.save();
 };

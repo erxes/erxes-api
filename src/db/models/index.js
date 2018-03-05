@@ -21,6 +21,7 @@ import {
 } from './KnowledgeBase';
 import { Notifications, NotificationConfigurations } from './Notifications';
 import ActivityLogs from './ActivityLogs';
+import Permissions from './Permissions';
 
 export {
   Users,
@@ -46,4 +47,5 @@ export {
   NotificationConfigurations,
   ActivityLogs,
   FieldsGroups,
+  Permissions,
 };

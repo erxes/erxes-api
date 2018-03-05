@@ -1,4 +1,5 @@
 import customScalars from './customScalars';
+import permissionActions from '../permissions/actions';
 import Mutation from './mutations';
 import Query from './queries';
 import Subscription from './subscriptions';
@@ -21,9 +22,12 @@ import KnowledgeBaseTopic from './knowledgeBaseTopic';
 import ActivityLog from './activityLog';
 import ActivityLogForMonth from './activityLogForMonth';
 import { Field, FieldsGroup } from './field';
+import Permission from './permission';
+import User from './user';
 
 export default {
   ...customScalars,
+  ...permissionActions,
 
   ResponseTemplate,
   Integration,
@@ -37,6 +41,8 @@ export default {
   EngageMessage,
   Conversation,
   ConversationMessage,
+  Permission,
+  User,
 
   Mutation,
   Query,

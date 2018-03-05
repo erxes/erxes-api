@@ -1,4 +1,5 @@
-import { ROLES } from './constants';
+import { ROLES } from '../constants';
+import { can } from './utils';
 
 /**
  * Checks whether user is logged in or not
@@ -84,9 +85,30 @@ export const moduleRequireAdmin = mdl => {
   }
 };
 
+/**
+ * Checks if user is logged and if user is can action
+ * @param {Object} user - User object
+ * @throws {Exception} throws Error('Permission required')
+ * @return {null}
+ */
+export const checkPermission = async (cls, methodName, actionName) => {
+  const oldMethod = cls[methodName];
+
+  cls[methodName] = async (root, args, { user }) => {
+    checkLogin(user);
+
+    const allowed = await can(actionName, user._id);
+
+    if (!allowed) throw new Error('Permission required');
+
+    return oldMethod(root, args, { user });
+  };
+};
+
 export default {
   requireLogin,
   requireAdmin,
   moduleRequireLogin,
   moduleRequireAdmin,
+  checkPermission,
 };

@@ -5,7 +5,7 @@ const tagQueries = {
   /**
    * Tags list
    * @param {Object} args
-   * @param {Strign} args.type
+   * @param {String} args.type
    * @return {Promise} filtered tag objects by type
    */
   tags(root, { type }) {

@@ -17,6 +17,7 @@ import insights from './insights';
 import knowledgeBase from './knowledgeBase';
 import notifications from './notifications';
 import activityLogs from './activityLogs';
+import permissions from './permissions';
 
 export default {
   ...users,
@@ -39,4 +40,5 @@ export default {
   ...notifications,
   ...activityLogs,
   ...fieldsgroups,
+  ...permissions,
 };
