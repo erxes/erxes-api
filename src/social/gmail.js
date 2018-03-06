@@ -92,11 +92,11 @@ export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc 
     auth: auth,
     userId: 'me',
     resource: {
-        raw: raw
+      raw: raw
     }
   }, (err, response) => {
     if( err ){
-        throw new Error(err);
+      throw new Error(err);
     }
   });
 }
