@@ -6,6 +6,7 @@ import {
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
   ACTIVITY_ACTIONS,
+  FIELDS_GROUPS_CONTENT_TYPES,
 } from '../data/constants';
 
 import {
@@ -31,6 +32,7 @@ import {
   KnowledgeBaseCategories,
   KnowledgeBaseArticles,
   ActivityLogs,
+  FieldsGroups,
 } from './models';
 
 export const userFactory = (params = {}) => {
@@ -41,6 +43,14 @@ export const userFactory = (params = {}) => {
       avatar: params.avatar || faker.image.imageUrl(),
       twitterUsername: params.twitterUsername || faker.internet.userName(),
       position: params.position || 'admin',
+    },
+    links: {
+      twitter: params.twitter || faker.random.word(),
+      facebook: params.facebook || faker.random.word(),
+      linkedIn: params.linkedIn || faker.random.word(),
+      youtube: params.youtube || faker.random.word(),
+      github: params.github || faker.random.word(),
+      website: params.website || faker.random.word(),
     },
     email: params.email || faker.internet.email(),
     role: params.role || 'contributor',
@@ -171,7 +181,8 @@ export const companyFactory = (params = {}) => {
 
 export const customerFactory = (params = {}) => {
   const customer = new Customers({
-    name: params.name || faker.random.word(),
+    firstName: params.firstName || faker.random.word(),
+    lastName: params.lastName || faker.random.word(),
     email: params.email || faker.internet.email(),
     phone: params.phone || faker.phone.phoneNumber(),
     messengerData: params.messengerData || {},
@@ -184,7 +195,9 @@ export const customerFactory = (params = {}) => {
   return customer.save();
 };
 
-export const fieldFactory = (params = {}) => {
+export const fieldFactory = async (params = {}) => {
+  const groupObj = await fieldGroupFactory({});
+
   const field = new Fields({
     contentType: params.contentType || 'form',
     contentTypeId: params.contentTypeId || 'DFAFDASFDASFDSFDASFASF',
@@ -194,9 +207,13 @@ export const fieldFactory = (params = {}) => {
     description: params.description || faker.random.word(),
     isRequired: params.isRequired || false,
     order: params.order || 0,
+    isVisible: params.visible || true,
+    groupId: params.groupId || groupObj._id,
   });
 
-  return field.save();
+  await field.save();
+
+  return Fields.updateField(field._id, params);
 };
 
 export const conversationFactory = (params = {}) => {
@@ -356,10 +373,6 @@ export const knowledgeBaseArticleFactory = params => {
 };
 
 export const activityLogFactory = params => {
-  // const activity = params.activity || {};
-  // const performer = params.performer || {};
-  // const coc = params.coc || {};
-
   const doc = {
     activity: {
       type: ACTIVITY_TYPES.INTERNAL_NOTE,
@@ -378,4 +391,18 @@ export const activityLogFactory = params => {
   };
 
   return ActivityLogs.createDoc({ ...doc, ...params }, faker.random.word());
+};
+
+export const fieldGroupFactory = async params => {
+  const doc = {
+    name: faker.random.word(),
+    contentType: FIELDS_GROUPS_CONTENT_TYPES.CUSTOMER,
+    description: faker.random.word(),
+    order: 1,
+    isVisible: true,
+  };
+
+  const groupObj = await FieldsGroups.createGroup(doc, faker.random.word());
+
+  return FieldsGroups.updateGroup(groupObj._id, params, faker.random.word());
 };

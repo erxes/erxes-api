@@ -15,6 +15,11 @@ export const types = `
     customers: [Customer]
     getTags: [Tag]
   }
+
+  type CompaniesListResponse {
+    list: [Company],
+    totalCount: Float,
+  }
 `;
 
 const queryParams = `
@@ -27,13 +32,14 @@ const queryParams = `
 `;
 
 export const queries = `
+  companiesMain(${queryParams}): CompaniesListResponse
   companies(${queryParams}): [Company]
   companyCounts(${queryParams}): JSON
   companyDetail(_id: String!): Company
 `;
 
 const commonFields = `
-  name: String!,
+  name: String,
   size: Int,
   website: String,
   industry: String,
