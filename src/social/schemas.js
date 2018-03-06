@@ -32,18 +32,18 @@ export const GmailSchema = mongoose.Schema(
   {
     email: {
       type: String,
-      unique: true
+      // unique: true
     },
-    access_token: {
+    accessToken: {
       type: String,
     },
-    refresh_token: {
+    refreshToken: {
       type: String,
     },
-    token_type: {
+    tokenType: {
       type: String,
     },
-    expiry_date: {
+    expiryDate: {
       type: String,
     }
   },

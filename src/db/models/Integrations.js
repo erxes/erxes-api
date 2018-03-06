@@ -186,20 +186,21 @@ class Integration {
   }
 
   /**
-   * Create twitter integration
-   * @param {Object} doc - Integration doc
+   * Create gmail integration
+   * @param {String} name - Integration name
+   * @param {Object} gmailData - gmail doc
    * @return {Promise} returns integration document promise
    */
-  static async createGmailIntegration({ name, gmailData }) {
-    const integrationExist = await this.findOne({ 'gmailData.email': gmailData.email });
-    if (integrationExist){
-      return integrationExist;
+  static async createGmailIntegration( gmailData ) {
+    const prevEntry = await this.findOne({ 'gmailData.email': gmailData.email });
+    if (prevEntry){
+      return prevEntry;
     }
 
     return this.createIntegration({
-      name,
+      name: gmailData.email,
       kind: KIND_CHOICES.GMAIL,
-      gmailData,
+      gmailData: gmailData
     });
   }
 

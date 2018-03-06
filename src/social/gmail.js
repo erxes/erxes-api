@@ -18,6 +18,7 @@ const getOAuth = async() => {
   const clientSecret = process.env.GMAIL_CLIENT_SECRET;
   const clientId =  process.env.GMAIL_CLIENT_ID;
   const redirectUrl = process.env.GMAIL_REDIRECT_URL;
+
   return new OAuth2Client(clientId, clientSecret, redirectUrl);
 }
 
@@ -28,11 +29,11 @@ const getOAuth = async() => {
  */
 export const authorize = async (code) => {
   const oauth2Client = await getOAuth();
+
   return new Promise((resolve, reject) => {
     oauth2Client.getToken(code, async (err, token) => {
       if (err) {
         reject(err);
-        return;
       }
       resolve(token);
     })
@@ -45,6 +46,7 @@ export const authorize = async (code) => {
  */
 export const getGmailAuthorizeUrl = async () => {
   const oauth2Client = await getOAuth();
+
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES
@@ -84,7 +86,14 @@ const createEmail = async (to, from, subject, body, cc) => {
  */
 export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc ) => {
   const auth = await getOAuth();
-  auth.credentials = tokens;
+  auth.credentials = {
+    access_token: tokens.accessToken,
+    refresh_token: tokens.refreshToken,
+    expiry_date: tokens.expiryDate,
+    token_type: tokens.tokenType
+  };
+
+  
   var gmail = await google.gmail('v1');
   var raw = await createEmail(toEmails, fromEmail, subject, body, cc);
 
@@ -119,7 +128,6 @@ export const getUserProfile = async(tokens) => {
     }, (err, response) => {
       if (err) {
         reject(err);
-        throw new Error(err);
       }
       resolve(response.data);
     });

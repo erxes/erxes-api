@@ -100,7 +100,7 @@ const integrationMutations = {
   /**
    * Create a new gmail integration
    * @param {Object} root
-   * @param {Object} code - code
+   * @param {Object} code - code is generated from permission granted email
    * @return {Promise} return Promise resolving Integration document
    */
   async integrationsCreateGmailIntegration(root, { code }) {
@@ -111,9 +111,13 @@ const integrationMutations = {
     data.email = userProfile.emailAddress
 
     const integration = await Integrations.createGmailIntegration({
-      name: data.email,
-      gmailData: data,
+      email: data.email,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      tokenType: data.token_type,
+      expiryDate: data.expiry_date
     });
+
     return integration;
   },
 
@@ -126,13 +130,14 @@ const integrationMutations = {
    * @param {String} subject - email subject
    * @param {String} body - email body
    * @param {String} toEmails - to emails
+   * @param {String} cc - cc emails
    * @return {Promise} return Promise resolving Integration document
    */
   async integrationsSendGmail(root, { integrationId, cocType, cocId, subject, body, toEmails, cc }, { user }) {
     const integration = await Integrations.findOne({ _id: integrationId });
 
-    // integration.gmailData - access_token
-    gmailUtils.sendEmail(integration.gmailData, subject, body, toEmails, integration.gmailData.email, cc);
+    // integration.gmailData - accessToken
+    gmailUtils.sendEmail( integration.gmailData, subject, body, toEmails, integration.gmailData.email, cc);
 
     await ActivityLogs.createSendEmailLog(subject, cocType, cocId, user);
 
@@ -197,8 +202,9 @@ requireLogin(integrationMutations, 'integrationsSaveMessengerConfigs');
 requireLogin(integrationMutations, 'integrationsCreateFormIntegration');
 requireLogin(integrationMutations, 'integrationsEditFormIntegration');
 requireLogin(integrationMutations, 'integrationsCreateTwitterIntegration');
-requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
 requireLogin(integrationMutations, 'integrationsCreateFacebookIntegration');
+requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
+requireLogin(integrationMutations, 'integrationsSendGmail');
 requireAdmin(integrationMutations, 'integrationsRemove');
 
 export default integrationMutations;
