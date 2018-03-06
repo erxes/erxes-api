@@ -282,8 +282,6 @@ describe('mutations', () => {
   });
 
   test('create gmail integration', async () => {
-    // Integrations.createGmailIntegration = jest.fn();
-
     const fakeToken = {
       "access_token": "access_token",
       "refresh_token": "refresh_token",
