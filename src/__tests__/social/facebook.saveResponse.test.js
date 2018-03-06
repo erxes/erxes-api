@@ -232,7 +232,6 @@ describe('facebook integration: save webhook response', () => {
     const commentId = '2424242422242424244';
     const parentId = '131313131313131313';
     const senderName = 'Facebook User';
-    const postUrl = 'http://facebook';
 
     // customer posted `wall post` on our wall
     saveWebhookResponse.data = {
@@ -251,9 +250,6 @@ describe('facebook integration: save webhook response', () => {
                 from: {
                   id: senderId,
                   name: senderName,
-                },
-                post: {
-                  permalink_url: postUrl,
                 },
                 message: messageText,
                 link,
@@ -304,7 +300,6 @@ describe('facebook integration: save webhook response', () => {
       parentId,
       senderName,
       postId,
-      postUrl,
       link,
     });
 
@@ -366,7 +361,6 @@ describe('facebook integration: save webhook response', () => {
       senderId,
       senderName,
       postId,
-      postUrl: '',
       reactionType: 'haha',
       commentId: `${commentId}1`,
     });

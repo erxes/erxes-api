@@ -3,18 +3,6 @@ import mongoose from 'mongoose';
 import { Conversations } from './';
 import { field } from './utils';
 
-const reactionSchema = mongoose.Schema(
-  {
-    like: field({ type: [String] }),
-    love: field({ type: [String] }),
-    haha: field({ type: [String] }),
-    wow: field({ type: [String] }),
-    sad: field({ type: [String] }),
-    angry: field({ type: [String] }),
-  },
-  { _id: false },
-);
-
 const FacebookSchema = mongoose.Schema(
   {
     postId: field({
@@ -75,15 +63,6 @@ const FacebookSchema = mongoose.Schema(
       type: String,
       optional: true,
     }),
-
-    // feed post url
-    postUrl: field({
-      type: String,
-      optional: true,
-    }),
-
-    // comment reactions
-    reactions: field({ type: reactionSchema }),
   },
   { _id: false },
 );

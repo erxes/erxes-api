@@ -104,27 +104,5 @@ describe('facebook integration: get or create conversation by feed info', () => 
 
     // our posts will be closed automatically
     expect(conversation.status).toBe(CONVERSATION_STATUSES.CLOSED);
-
-    // update comment reactions ==========
-    await conversationMessageFactory({
-      facebookData: {
-        commentId: 1,
-      },
-    });
-
-    value.item = null;
-    value.comment_id = 1;
-    value.item = 'reaction';
-    value.reaction_type = 'haha';
-
-    await saveWebhookResponse.getOrCreateConversationByFeed(value);
-
-    const message = await ConversationMessages.findOne({
-      'facebookData.commentId': 1,
-    });
-
-    const fbData = message.facebookData;
-    expect(fbData.reactions['haha'].length).toBe(1);
-    expect(fbData.reactions['haha'][0]).toBe(message.customerId);
   });
 });
