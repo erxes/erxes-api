@@ -28,7 +28,7 @@ const getOAuth = async() => {
  */
 export const authorize = async (code) => {
   const oauth2Client = await getOAuth();
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     oauth2Client.getToken(code, async (err, token) => {
       if (err) {
         reject(err);
@@ -94,7 +94,7 @@ export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc 
     resource: {
         raw: raw
     }
-  }, function(err, response) {
+  }, (err, response) => {
     if( err ){
         throw new Error(err);
     }
@@ -112,11 +112,11 @@ export const getUserProfile = async(tokens) => {
   auth.credentials = tokens;
 
   const gmail = await google.gmail('v1');
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     gmail.users.getProfile({
       auth: auth,
       userId: 'me'
-    }, function(err, response) {
+    }, (err, response) => {
       if (err) {
         reject(err);
         throw new Error(err);
