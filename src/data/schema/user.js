@@ -50,6 +50,7 @@ export const types = `
     emailSignatures: JSON
     getNotificationByEmail: Boolean
 
+    isOwner: Boolean
     permissionActions: [String]
   }
 
