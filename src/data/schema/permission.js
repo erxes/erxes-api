@@ -4,10 +4,12 @@ export const types = `
     module: String
     action: String
     userId: String
+    groupId: String
     requiredActions: [String]
     allowed: Boolean
 
     user: User
+    group: UsersGroup
   }
 
   type PermissionModule {
@@ -25,7 +27,8 @@ export const types = `
 const commonParams = `
   module: String,
   action: String,
-  userId: String
+  userId: String,
+  groupId: String
 `;
 
 export const queries = `
@@ -40,6 +43,7 @@ export const mutations = `
     module: String!,
     actions: [String!]!,
     userIds: [String!]!,
+    groupIds: [String!]!,
     allowed: Boolean
   ): [Permission]
   permissionsRemove(ids: [String]!): String

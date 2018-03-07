@@ -4,7 +4,7 @@ import { ModulesMap, ActionsMap } from '../../permissions/utils';
 import _ from 'underscore';
 import { paginate } from './utils';
 
-const generateSelector = ({ module, action, userId }) => {
+const generateSelector = ({ module, action, userId, groupId }) => {
   const filter = {};
 
   if (module) filter.module = module;
@@ -12,6 +12,8 @@ const generateSelector = ({ module, action, userId }) => {
   if (action) filter.action = action;
 
   if (userId) filter.userId = userId;
+
+  if (groupId) filter.groupId = groupId;
 
   return filter;
 };
@@ -27,8 +29,8 @@ const permissionQueries = {
    * @param {Int} args.perPage
    * @return {Promise} filtered permissions list by given parameter
    */
-  permissions(root, { module, action, userId, ...args }) {
-    const filter = generateSelector({ module, action, userId });
+  permissions(root, { module, action, userId, groupId, ...args }) {
+    const filter = generateSelector({ module, action, userId, groupId });
     return paginate(Permissions.find(filter), args);
   },
 

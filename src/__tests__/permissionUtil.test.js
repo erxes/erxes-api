@@ -2,17 +2,16 @@
 /* eslint-disable no-underscore-dangle */
 
 import { connect, disconnect } from '../db/connection';
-import { Users, Permissions } from '../db/models';
+import { Users, Permissions, UsersGroups } from '../db/models';
 import { registerModule, can } from '../data/permissions/utils';
-import { userFactory, permissionFactory } from '../db/factories';
+import { userFactory, permissionFactory, usersGroupFactory } from '../db/factories';
 
 beforeAll(() => connect());
 
 afterAll(() => disconnect());
 
 describe('Test permission utils', () => {
-  let _user;
-  let _user2;
+  let _user, _user2, _user3;
 
   const moduleObj = {
     name: 'testModule',
@@ -27,9 +26,15 @@ describe('Test permission utils', () => {
   };
 
   beforeEach(async () => {
+    const _group = await usersGroupFactory();
+    const _group1 = await usersGroupFactory();
+
     // Creating test data
     _user = await userFactory({ isOwner: true });
-    _user2 = await userFactory({});
+    _user2 = await userFactory();
+    _user3 = await userFactory({
+      groupIds: [_group1._id, _group._id],
+    });
 
     await permissionFactory({
       action: 'action1',
@@ -41,12 +46,25 @@ describe('Test permission utils', () => {
       userId: _user2._id,
       allowed: true,
     });
+
+    await permissionFactory({
+      action: 'action3',
+      groupId: _group._id,
+      allowed: false,
+    });
+
+    await permissionFactory({
+      action: 'action3',
+      groupId: _group._id,
+      allowed: true,
+    });
   });
 
   afterEach(async () => {
     // Clearing test data
-    await Users.remove({ isOwner: true });
+    await Users.remove({});
     await Permissions.remove({});
+    await UsersGroups.remove({});
   });
 
   test('Register module check duplicated module', async () => {
@@ -106,6 +124,12 @@ describe('Test permission utils', () => {
 
   test('Check permission', async () => {
     const checkPermission = await can('action1', _user2._id);
+
+    expect(checkPermission).toEqual(true);
+  });
+
+  test('Check permission', async () => {
+    const checkPermission = await can('action3', _user3._id);
 
     expect(checkPermission).toEqual(true);
   });

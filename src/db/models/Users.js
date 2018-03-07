@@ -63,6 +63,7 @@ const UserSchema = mongoose.Schema({
   starredConversationIds: field({ type: [String] }),
   details: field({ type: DetailSchema }),
   links: field({ type: LinkSchema, default: {} }),
+  groupIds: field({ type: [String] }),
 });
 
 class User {
@@ -75,7 +76,7 @@ class User {
    * @param {Object} doc - user fields
    * @return {Promise} newly created user object
    */
-  static async createUser({ username, email, password, role, details, links }) {
+  static async createUser({ username, email, password, role, details, links, groupIds }) {
     await this.checkDuplications({ twitterUsername: details.twitterUsername });
 
     return this.create({
@@ -84,6 +85,7 @@ class User {
       role,
       details,
       links,
+      groupIds,
       // hash password
       password: await this.generatePassword(password),
     });
@@ -95,13 +97,13 @@ class User {
    * @param {Object} doc - user fields
    * @return {Promise} updated user info
    */
-  static async updateUser(_id, { username, email, password, role, details, links }) {
+  static async updateUser(_id, { username, email, password, role, details, links, groupIds }) {
     await this.checkDuplications({
       userId: _id,
       twitterUsername: details.twitterUsername,
     });
 
-    const doc = { username, email, password, role, details, links };
+    const doc = { username, email, password, role, details, links, groupIds };
 
     // change password
     if (password) {

@@ -18,6 +18,7 @@ import knowledgeBase from './knowledgeBase';
 import notifications from './notifications';
 import activityLogs from './activityLogs';
 import permissions from './permissions';
+import usersGroup from './usersGroup';
 
 export default {
   ...users,
@@ -41,4 +42,5 @@ export default {
   ...activityLogs,
   ...fieldsgroups,
   ...permissions,
+  ...usersGroup,
 };

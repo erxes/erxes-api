@@ -22,6 +22,7 @@ import {
 import { Notifications, NotificationConfigurations } from './Notifications';
 import ActivityLogs from './ActivityLogs';
 import Permissions from './Permissions';
+import UsersGroups from './UsersGroups';
 
 export {
   Users,
@@ -48,4 +49,5 @@ export {
   ActivityLogs,
   FieldsGroups,
   Permissions,
+  UsersGroups,
 };

@@ -46,7 +46,11 @@ export const can = async (action, userId) => {
   if (!userId) {
     return false;
   }
-  const user = await Users.findOne({ _id: userId }).select('isOwner');
+
+  const user = await Users.findOne({ _id: userId }).select({
+    isOwner: 1,
+    groupIds: 1,
+  });
 
   if (!user) {
     return false;
@@ -71,6 +75,22 @@ export const can = async (action, userId) => {
 
     return true;
   });
+
+  if (!allowed && user.groupIds) {
+    entries = await Permissions.find({
+      groupId: { $in: user.groupIds },
+      $or: [{ action: action }, { requiredActions: action }],
+    }).select('allowed');
+
+    entries.every(e => {
+      if (e.allowed) {
+        allowed = true;
+        return false;
+      }
+
+      return true;
+    });
+  }
 
   return allowed;
 };

@@ -77,6 +77,7 @@ const userMutations = {
       channelIds,
       details,
       links,
+      groupIds,
     } = args;
 
     if (password !== passwordConfirmation) {
@@ -90,6 +91,7 @@ const userMutations = {
       role,
       details,
       links,
+      groupIds,
     });
 
     // add new user to channels
@@ -130,6 +132,7 @@ const userMutations = {
       channelIds,
       details,
       links,
+      groupIds,
     } = args;
 
     if (password && password !== passwordConfirmation) {
@@ -144,6 +147,7 @@ const userMutations = {
       role,
       details,
       links,
+      groupIds,
     });
 
     // add new user to channels

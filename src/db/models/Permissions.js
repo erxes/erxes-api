@@ -7,6 +7,7 @@ const EntrySchema = mongoose.Schema({
   module: field({ type: String }),
   action: field({ type: String }),
   userId: field({ type: String }),
+  groupId: field({ type: String }),
   requiredActions: field({ type: [String] }),
   allowed: field({ type: Boolean, default: false }),
 });
@@ -41,14 +42,29 @@ class Permission {
         entry.requiredActions = actionObj.use;
       }
 
-      for (let userId of doc.userIds) {
-        filter = { action, userId };
+      if (doc.userIds) {
+        for (let userId of doc.userIds) {
+          filter = { action, userId };
 
-        const entryObj = await Permissions.findOne(filter);
+          const entryObj = await Permissions.findOne(filter);
 
-        if (!entryObj) {
-          const newEntry = await this.create({ ...entry, userId });
-          permissions.push(newEntry);
+          if (!entryObj) {
+            const newEntry = await this.create({ ...entry, userId });
+            permissions.push(newEntry);
+          }
+        }
+      }
+
+      if (doc.groupIds) {
+        for (let groupId of doc.groupIds) {
+          filter = { action, groupId };
+
+          const entryObj = await Permissions.findOne(filter);
+
+          if (!entryObj) {
+            const newEntry = await this.create({ ...entry, groupId });
+            permissions.push(newEntry);
+          }
         }
       }
     }

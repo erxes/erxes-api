@@ -101,6 +101,12 @@ import {
   mutations as PermissionMutations,
 } from './permission';
 
+import {
+  types as UsersGroupTypes,
+  queries as UsersGroupQueries,
+  mutations as UsersGroupMutations,
+} from './usersGroup';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -126,6 +132,7 @@ export const types = `
   ${NotificationTypes}
   ${FieldGroupTypes}
   ${PermissionTypes}
+  ${UsersGroupTypes}
 `;
 
 export const queries = `
@@ -151,6 +158,7 @@ export const queries = `
     ${ActivityLogQueries}
     ${FieldGroupQueries}
     ${PermissionQueries}
+    ${UsersGroupQueries}
   }
 `;
 
@@ -176,6 +184,7 @@ export const mutations = `
     ${ActivityLogMutations}
     ${FieldGroupMutations}
     ${PermissionMutations}
+    ${UsersGroupMutations}
   }
 `;
 

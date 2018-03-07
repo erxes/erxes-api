@@ -49,6 +49,7 @@ export const types = `
     links: UserLinksType
     emailSignatures: JSON
     getNotificationByEmail: Boolean
+    groupIds: [String]
 
     isOwner: Boolean
     permissionActions: [String]
@@ -75,7 +76,8 @@ const commonParams = `
   links: UserLinks,
   channelIds: [String],
   password: String!,
-  passwordConfirmation: String!
+  passwordConfirmation: String!,
+  groupIds: [String]
 `;
 
 export const mutations = `

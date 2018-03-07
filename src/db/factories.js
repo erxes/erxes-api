@@ -34,6 +34,7 @@ import {
   ActivityLogs,
   FieldsGroups,
   Permissions,
+  UsersGroups,
 } from './models';
 
 export const userFactory = (params = {}) => {
@@ -57,6 +58,7 @@ export const userFactory = (params = {}) => {
     role: params.role || 'contributor',
     password: params.password || '$2a$10$qfBFBmWmUjeRcR.nBBfgDO/BEbxgoai5qQhyjsrDUMiZC6dG7sg1q',
     isOwner: params.isOwner || false,
+    groupIds: params.groupIds || [],
   });
 
   return user.save();
@@ -414,7 +416,17 @@ export const permissionFactory = async (params = {}) => {
     allowed: params.allowed || false,
     userId: params.userId || Random.id(),
     requiredActions: params.requiredActions || [],
+    groupId: params.groupId || faker.random.word(),
   });
 
   return permission.save();
+};
+
+export const usersGroupFactory = () => {
+  const usersGroup = new UsersGroups({
+    name: faker.random.word(),
+    description: faker.random.word(),
+  });
+
+  return usersGroup.save();
 };

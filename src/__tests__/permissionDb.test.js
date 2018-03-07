@@ -2,8 +2,8 @@
 /* eslint-disable no-underscore-dangle */
 
 import { connect, disconnect } from '../db/connection';
-import { Permissions } from '../db/models';
-import { permissionFactory, userFactory } from '../db/factories';
+import { Permissions, UsersGroups } from '../db/models';
+import { userFactory, permissionFactory, usersGroupFactory } from '../db/factories';
 import { registerModule } from '../data/permissions/utils';
 
 beforeAll(() => connect());
@@ -13,6 +13,7 @@ afterAll(() => disconnect());
 describe('Test permissions model', () => {
   let _permission;
   let _user;
+  let _group;
 
   const doc = {
     actions: ['up', ' test'],
@@ -35,11 +36,13 @@ describe('Test permissions model', () => {
     // Creating test data
     _permission = await permissionFactory();
     _user = await userFactory();
+    _group = await usersGroupFactory();
   });
 
   afterEach(async () => {
     // Clearing test data
     await Permissions.remove({});
+    await UsersGroups.remove({});
   });
 
   test('Create permission invalid action', async () => {
@@ -55,12 +58,13 @@ describe('Test permissions model', () => {
     const permission = await Permissions.createPermission({
       ...doc,
       userIds: [_user._id],
+      groupIds: [_group._id],
       actions: ['action', 'action1', 'action2', 'action3'],
     });
 
-    expect(permission.length).toEqual(4);
-    expect(permission[1].userId).toEqual(_user._id);
-    expect(permission[3].module).toEqual(doc.module);
+    expect(permission.length).toEqual(8);
+    const per = permission.find(p => p.groupId === _group._id && p.action === 'action');
+    expect(per.module).toEqual(doc.module);
   });
 
   test('Remove permission not found', async () => {
