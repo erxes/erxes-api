@@ -42,19 +42,15 @@ const permissionQueries = {
     return modules;
   },
 
-  permissionActions(root, { moduleName }) {
+  permissionActions() {
     const actions = [];
 
-    if (!moduleName) return actions;
-
     for (let a of _.pairs(ActionsMap)) {
-      if (moduleName === a[1].module) {
-        actions.push({
-          name: a[0],
-          description: a[1].description,
-          module: a[1].module,
-        });
-      }
+      actions.push({
+        name: a[0],
+        description: a[1].description,
+        module: a[1].module,
+      });
     }
 
     return actions;

@@ -31,7 +31,7 @@ const commonParams = `
 export const queries = `
   permissions(${commonParams}, page: Int, perPage: Int): [Permission]
   permissionModules: [PermissionModule]
-  permissionActions(moduleName: String): [PermissionAction]
+  permissionActions: [PermissionAction]
   permissionsTotalCount(${commonParams}): Int
 `;
 
