@@ -1,5 +1,11 @@
 export const moduleObj = {
   name: 'customer',
   description: 'Customers',
-  actions: [],
+  actions: [
+    {
+      name: 'showCustomerList',
+      description: 'Show customer list',
+      use: [],
+    },
+  ],
 };

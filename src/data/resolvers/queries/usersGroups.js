@@ -1,5 +1,5 @@
 import { UsersGroups } from '../../../db/models';
-import { requireLogin } from '../../permissions';
+import { checkPermission } from '../../permissions';
 import { paginate } from './utils';
 
 const usersGroupQueries = {
@@ -22,7 +22,7 @@ const usersGroupQueries = {
   },
 };
 
-requireLogin(usersGroupQueries, 'usersGroups');
-requireLogin(usersGroupQueries, 'usersGroupsTotalCount');
+checkPermission(usersGroupQueries, 'usersGroups', 'showUserGroupList');
+checkPermission(usersGroupQueries, 'usersGroupsTotalCount', 'showUserGroupList');
 
 export default usersGroupQueries;

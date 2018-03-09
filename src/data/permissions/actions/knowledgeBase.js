@@ -1,5 +1,11 @@
 export const moduleObj = {
   name: 'knowledgeBase',
   description: 'Knowledge base',
-  actions: [],
+  actions: [
+    {
+      name: 'showKnowledgeBaseArticles',
+      description: 'Show knowledge base articles',
+      use: [],
+    },
+  ],
 };

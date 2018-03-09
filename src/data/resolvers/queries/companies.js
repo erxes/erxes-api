@@ -1,7 +1,7 @@
 import { Companies, Segments, Tags } from '../../../db/models';
 import QueryBuilder from './segmentQueryBuilder';
 import { TAG_TYPES, COC_CONTENT_TYPES } from '../../constants';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleRequireLogin, checkPermission } from '../../permissions';
 import { paginate } from './utils';
 
 const listQuery = async params => {
@@ -115,5 +115,7 @@ const companyQueries = {
 };
 
 moduleRequireLogin(companyQueries);
+checkPermission(companyQueries, 'companies', 'showCompanyList');
+checkPermission(companyQueries, 'companiesMain', 'showCompanyList');
 
 export default companyQueries;

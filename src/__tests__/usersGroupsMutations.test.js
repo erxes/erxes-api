@@ -20,13 +20,55 @@ describe('Test user groups mutations', () => {
   beforeEach(async () => {
     // Creating test data
     _group = await usersGroupFactory();
-    _user = await userFactory();
+    _user = await userFactory({ isOwner: true });
   });
 
   afterEach(async () => {
     // Clearing test data
     await UsersGroups.remove({});
     await Users.remove({});
+  });
+
+  test('Permission login required functions', async () => {
+    const checkLogin = async (fn, args) => {
+      try {
+        await fn({}, args, {});
+      } catch (e) {
+        expect(e.message).toEqual('Login required');
+      }
+    };
+
+    expect.assertions(3);
+
+    // add group
+    checkLogin(usersGroupMutations.usersGroupsAdd, doc);
+
+    // edit group
+    checkLogin(usersGroupMutations.usersGroupsEdit, { _id: _group._id, ...doc });
+
+    // remove group
+    checkLogin(usersGroupMutations.usersGroupsRemove, { ids: [] });
+  });
+
+  test(`test if Error('Permission required') error is working as intended`, async () => {
+    const checkLogin = async (fn, args) => {
+      try {
+        await fn({}, args, { user: { _id: 'fakeId' } });
+      } catch (e) {
+        expect(e.message).toEqual('Permission required');
+      }
+    };
+
+    expect.assertions(3);
+
+    // add group
+    checkLogin(usersGroupMutations.usersGroupsAdd, doc);
+
+    // edit group
+    checkLogin(usersGroupMutations.usersGroupsEdit, { _id: _group._id, ...doc });
+
+    // remove group
+    checkLogin(usersGroupMutations.usersGroupsRemove, { _id: _group._id });
   });
 
   test('Create group', async () => {

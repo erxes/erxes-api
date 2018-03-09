@@ -2,7 +2,7 @@ import _ from 'underscore';
 import { Brands, Tags, Integrations, Customers, Segments } from '../../../db/models';
 import { TAG_TYPES, INTEGRATION_KIND_CHOICES, COC_CONTENT_TYPES } from '../../constants';
 import QueryBuilder from './segmentQueryBuilder';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleRequireLogin, checkPermission } from '../../permissions';
 import { paginate } from './utils';
 
 const listQuery = async params => {
@@ -197,5 +197,7 @@ const customerQueries = {
 };
 
 moduleRequireLogin(customerQueries);
+checkPermission(customerQueries, 'customers', 'showCustomerList');
+checkPermission(customerQueries, 'customersMain', 'showCustomerList');
 
 export default customerQueries;

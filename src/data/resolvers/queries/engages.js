@@ -1,5 +1,5 @@
 import { EngageMessages, Tags } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleRequireLogin, checkPermission } from '../../permissions';
 import { paginate } from './utils';
 
 // basic count helper
@@ -152,5 +152,6 @@ const engageQueries = {
 };
 
 moduleRequireLogin(engageQueries);
+checkPermission(engageQueries, 'engageMessages', 'showEngageMessageList');
 
 export default engageQueries;

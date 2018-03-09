@@ -1,7 +1,7 @@
 import { Channels, Brands, Conversations, Tags } from '../../../db/models';
 import { CONVERSATION_STATUSES, INTEGRATION_KIND_CHOICES } from '../../constants';
 import QueryBuilder from './conversationQueryBuilder';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleRequireLogin, checkPermission } from '../../permissions';
 
 const conversationQueries = {
   /**
@@ -211,5 +211,7 @@ const conversationQueries = {
 };
 
 moduleRequireLogin(conversationQueries);
+checkPermission(conversationQueries, 'conversations', 'showConversationList');
+checkPermission(conversationQueries, 'conversationDetail', 'showConversationDetail');
 
 export default conversationQueries;

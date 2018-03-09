@@ -1,5 +1,5 @@
 import { UsersGroups } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission } from '../../permissions';
 
 const usersGroupMutations = {
   /**
@@ -32,6 +32,8 @@ const usersGroupMutations = {
   },
 };
 
-moduleRequireLogin(usersGroupMutations);
+checkPermission(usersGroupMutations, 'usersGroupsAdd', 'addUserGroups');
+checkPermission(usersGroupMutations, 'usersGroupsEdit', 'editUserGroups');
+checkPermission(usersGroupMutations, 'usersGroupsRemove', 'removeUserGroups');
 
 export default usersGroupMutations;

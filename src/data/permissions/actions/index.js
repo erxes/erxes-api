@@ -19,6 +19,7 @@ import { moduleObj as responseTemplateActions } from './responseTemplate';
 import { moduleObj as segmentActions } from './segment';
 import { moduleObj as tagActions } from './tag';
 import { moduleObj as userActions } from './user';
+import { moduleObj as userGroupActions } from './userGroup';
 
 registerModule(activityLogActions);
 registerModule(brandActions);
@@ -40,3 +41,4 @@ registerModule(responseTemplateActions);
 registerModule(segmentActions);
 registerModule(tagActions);
 registerModule(userActions);
+registerModule(userGroupActions);
