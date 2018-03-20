@@ -1,6 +1,8 @@
 export const EMAIL_CONTENT_CLASS = 'erxes-email-content';
 export const EMAIL_CONTENT_PLACEHOLDER = `<div class="${EMAIL_CONTENT_CLASS}"></div>`;
 
+export const LANGUAGE_CHOICES = ['', 'mn', 'en'];
+
 export const CONVERSATION_STATUSES = {
   NEW: 'new',
   OPEN: 'open',
@@ -174,7 +176,8 @@ export const FIELD_CONTENT_TYPES = {
 export const COC_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
-  ALL: ['customer', 'company'],
+  USER: 'user',
+  ALL: ['customer', 'company', 'user'],
 };
 
 export const ROLES = {

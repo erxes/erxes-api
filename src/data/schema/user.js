@@ -59,6 +59,11 @@ export const types = `
     token: String!
     refreshToken: String!
   }
+
+  type UserConversationListResponse {
+    list: [Conversation],
+    totalCount: Float,
+  }
 `;
 
 export const queries = `
@@ -66,6 +71,7 @@ export const queries = `
   userDetail(_id: String): User
   usersTotalCount: Int
   currentUser: User
+  userConversations(_id: String, perPage: Int): UserConversationListResponse
 `;
 
 const commonParams = `
