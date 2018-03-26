@@ -21,6 +21,9 @@ import {
 } from './KnowledgeBase';
 import { Notifications, NotificationConfigurations } from './Notifications';
 import ActivityLogs from './ActivityLogs';
+import { DealBoards, DealPipelines, DealStages, Deals } from './Deals';
+import Products from './Products';
+import Configs from './Configs';
 import Permissions from './Permissions';
 import UsersGroups from './UsersGroups';
 
@@ -47,6 +50,12 @@ export {
   Notifications,
   NotificationConfigurations,
   ActivityLogs,
+  DealBoards,
+  DealPipelines,
+  DealStages,
+  Deals,
+  Products,
+  Configs,
   FieldsGroups,
   Permissions,
   UsersGroups,

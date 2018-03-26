@@ -35,6 +35,7 @@ const LinkSchema = mongoose.Schema(
     twitter: field({ type: String, optional: true }),
     facebook: field({ type: String, optional: true }),
     github: field({ type: String, optional: true }),
+    youtube: field({ type: String, optional: true }),
     website: field({ type: String, optional: true }),
   },
   { _id: false },
@@ -312,7 +313,9 @@ class User {
 
     const createToken = await jwt.sign({ user }, secret, { expiresIn: '20m' });
 
-    const createRefreshToken = await jwt.sign({ user }, secret, { expiresIn: '7d' });
+    const createRefreshToken = await jwt.sign({ user }, secret, {
+      expiresIn: '7d',
+    });
 
     return [createToken, createRefreshToken];
   }
@@ -356,7 +359,9 @@ class User {
    * @return {Object} - generated tokens
    */
   static async login({ email, password }) {
-    const user = await Users.findOne({ email: { $regex: new RegExp(email, 'i') } });
+    const user = await Users.findOne({
+      email: { $regex: new RegExp(email, 'i') },
+    });
 
     if (!user) {
       // user with provided email not found

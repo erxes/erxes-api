@@ -1,7 +1,7 @@
 import faker from 'faker';
 import Random from 'meteor-random';
 import {
-  MODULES,
+  NOTIFICATION_TYPES,
   COC_CONTENT_TYPES,
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
@@ -32,6 +32,11 @@ import {
   KnowledgeBaseCategories,
   KnowledgeBaseArticles,
   ActivityLogs,
+  DealBoards,
+  DealPipelines,
+  DealStages,
+  Deals,
+  Products,
   FieldsGroups,
   Permissions,
   UsersGroups,
@@ -174,7 +179,7 @@ export const companyFactory = (params = {}) => {
   const company = new Companies({
     name: params.name || faker.random.word(),
     size: params.size || faker.random.number(),
-    industry: params.industry || faker.company.bs(),
+    industry: params.industry || 'Airlines',
     website: params.website || faker.internet.domainName(),
     tagIds: params.tagIds || [faker.random.number()],
   });
@@ -295,7 +300,7 @@ export const notificationConfigurationFactory = params => {
 
   return NotificationConfigurations.createOrUpdateConfiguration(
     {
-      notifType: params.notifType || MODULES.CHANNEL_MEMBERS_CHANGE,
+      notifType: params.notifType || NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
       // which module's type it is. For example: indocuments
       isAllowed,
     },
@@ -303,15 +308,23 @@ export const notificationConfigurationFactory = params => {
   );
 };
 
-export const notificationFactory = params => {
-  return Notifications.createNotification({
-    notifType: params.notifType || MODULES.CHANNEL_MEMBERS_CHANGE,
-    createdUser: params.createdUser || userFactory({}),
-    title: params.title || 'new Notification title',
-    content: params.content || 'new Notification content',
-    link: params.link || 'new Notification link',
-    receiver: params.receiver || userFactory({}),
-  });
+export const notificationFactory = async params => {
+  let receiver = params.receiver;
+
+  if (!receiver) {
+    receiver = await userFactory({});
+  }
+
+  return Notifications.createNotification(
+    {
+      notifType: params.notifType || NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
+      title: params.title || 'new Notification title',
+      content: params.content || 'new Notification content',
+      link: params.link || 'new Notification link',
+      receiver: receiver._id,
+    },
+    params.createdUser,
+  );
 };
 
 export const channelFactory = async (params = {}) => {
@@ -393,6 +406,59 @@ export const activityLogFactory = params => {
   };
 
   return ActivityLogs.createDoc({ ...doc, ...params }, faker.random.word());
+};
+
+export const dealBoardFactory = () => {
+  const board = new DealBoards({
+    name: faker.random.word(),
+    userId: Random.id(),
+  });
+
+  return board.save();
+};
+
+export const dealPipelineFactory = (params = {}) => {
+  const pipeline = new DealPipelines({
+    name: faker.random.word(),
+    boardId: params.boardId || faker.random.word(),
+  });
+
+  return pipeline.save();
+};
+
+export const dealStageFactory = (params = {}) => {
+  const stage = new DealStages({
+    name: faker.random.word(),
+    pipelineId: params.pipelineId || faker.random.word(),
+  });
+
+  return stage.save();
+};
+
+export const dealFactory = (params = {}) => {
+  const deal = new Deals({
+    ...params,
+    stageId: params.stageId || faker.random.word(),
+    companyId: faker.random.word(),
+    amount: faker.random.number(),
+    closeDate: new Date(),
+    note: faker.random.word(),
+    assignedUserIds: [faker.random.word()],
+  });
+
+  return deal.save();
+};
+
+export const productFactory = (params = {}) => {
+  const product = new Products({
+    name: params.name || faker.random.word(),
+    type: params.type || faker.random.word(),
+    description: params.description || faker.random.word(),
+    sku: faker.random.word(),
+    createdAt: new Date(),
+  });
+
+  return product.save();
 };
 
 export const fieldGroupFactory = async params => {

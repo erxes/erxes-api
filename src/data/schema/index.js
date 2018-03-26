@@ -95,6 +95,20 @@ import {
   mutations as ActivityLogMutations,
 } from './activityLog';
 
+import { types as DealTypes, queries as DealQueries, mutations as DealMutations } from './deal';
+
+import {
+  types as ProductTypes,
+  queries as ProductQueries,
+  mutations as ProductMutations,
+} from './product';
+
+import {
+  types as ConfigTypes,
+  queries as ConfigQueries,
+  mutations as ConfigMutations,
+} from './config';
+
 import {
   types as PermissionTypes,
   queries as PermissionQueries,
@@ -130,6 +144,9 @@ export const types = `
   ${InsightTypes}
   ${KnowledgeBaseTypes}
   ${NotificationTypes}
+  ${DealTypes}
+  ${ProductTypes}
+  ${ConfigTypes}
   ${FieldGroupTypes}
   ${PermissionTypes}
   ${UsersGroupTypes}
@@ -156,6 +173,9 @@ export const queries = `
     ${KnowledgeBaseQueries}
     ${NotificationQueries}
     ${ActivityLogQueries}
+    ${DealQueries}
+    ${ProductQueries}
+    ${ConfigQueries}
     ${FieldGroupQueries}
     ${PermissionQueries}
     ${UsersGroupQueries}
@@ -182,6 +202,9 @@ export const mutations = `
     ${KnowledgeBaseMutations}
     ${NotificationMutations}
     ${ActivityLogMutations}
+    ${DealMutations}
+    ${ProductMutations}
+    ${ConfigMutations}
     ${FieldGroupMutations}
     ${PermissionMutations}
     ${UsersGroupMutations}
