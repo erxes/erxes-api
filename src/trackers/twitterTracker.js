@@ -1,12 +1,12 @@
 import Twit from 'twit';
 import { OAuth } from 'oauth';
-import { TwitMap, receiveTimeLineResponse, getOrCreateDirectMessageConversation } from './twitter';
+import { TwitMap, receiveTimelineInformation, receiveDirectMessageInformation } from './twitter';
 import { Integrations } from '../db/models';
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
 
-const { TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_REDIRECT_URL } = process.env;
-
 const trackIntegration = integration => {
+  const { TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET } = process.env;
+
   // Twit instance
   const twit = new Twit({
     consumer_key: TWITTER_CONSUMER_KEY,
@@ -23,32 +23,36 @@ const trackIntegration = integration => {
 
   // listen for timeline
   stream.on('tweet', data => {
-    receiveTimeLineResponse(integration, data);
+    receiveTimelineInformation(integration, data);
   });
 
   // listen for direct messages
   stream.on('direct_message', data => {
-    getOrCreateDirectMessageConversation(data.direct_message, integration);
+    receiveDirectMessageInformation(data.direct_message, integration);
   });
 };
 
 // twitter oauth ===============
-const oauth = new OAuth(
-  'https://api.twitter.com/oauth/request_token',
-  'https://api.twitter.com/oauth/access_token',
-  TWITTER_CONSUMER_KEY,
-  TWITTER_CONSUMER_SECRET,
-  '1.0A',
-  TWITTER_REDIRECT_URL,
-  'HMAC-SHA1',
-);
+const getOauth = () => {
+  const { TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_REDIRECT_URL } = process.env;
+
+  return new OAuth(
+    'https://api.twitter.com/oauth/request_token',
+    'https://api.twitter.com/oauth/access_token',
+    TWITTER_CONSUMER_KEY,
+    TWITTER_CONSUMER_SECRET,
+    '1.0A',
+    TWITTER_REDIRECT_URL,
+    'HMAC-SHA1',
+  );
+};
 
 /*
  * Get access token using oauth_token, oauth_verifier
  */
 const getAccessToken = ({ oauth_token, oauth_verifier }) =>
   new Promise((resolve, reject) =>
-    oauth.getOAuthAccessToken(
+    getOauth().getOAuthAccessToken(
       oauth_token,
       '',
       oauth_verifier,
@@ -71,7 +75,7 @@ const authenticate = async queryParams => {
 
   // get account info
   const response = await new Promise((resolve, reject) =>
-    oauth.get(
+    getOauth().get(
       'https://api.twitter.com/1.1/account/verify_credentials.json',
       accessToken,
       accessTokenSecret,
@@ -101,7 +105,7 @@ const authenticate = async queryParams => {
  */
 const getTwitterAuthorizeUrl = () =>
   new Promise((resolve, reject) =>
-    oauth.getOAuthRequestToken((e, oauth_token) => {
+    getOauth().getOAuthRequestToken((e, oauth_token) => {
       if (e) {
         return reject(e.message);
       }
@@ -125,9 +129,9 @@ export const trackIntegrations = () => {
  * Promisify twit post util
  */
 export const twitRequest = {
-  post(twit, path, data) {
+  base(twit, method, path, data) {
     return new Promise((resolve, reject) => {
-      twit.post(path, data, (e, response) => {
+      twit[method](path, data, (e, response) => {
         if (e) {
           return reject(e);
         }
@@ -136,11 +140,37 @@ export const twitRequest = {
       });
     });
   },
+
+  post(twit, path, data) {
+    return this.base(twit, 'post', path, data);
+  },
+
+  get(twit, path, data) {
+    return this.base(twit, 'get', path, data);
+  },
+};
+
+/*
+ * Find root tweet using id
+ */
+export const findParentTweets = async (twit, data, tweets) => {
+  if (data.in_reply_to_status_id_str) {
+    const parentData = await twitRequest.get(twit, 'statuses/show', {
+      id: data.in_reply_to_status_id_str,
+    });
+
+    tweets.push(parentData);
+
+    return findParentTweets(twit, { ...parentData }, tweets);
+  }
+
+  return tweets;
 };
 
 // doing this to mock authenticate function in test
 export const socUtils = {
   authenticate,
   trackIntegration,
+  findParentTweets,
   getTwitterAuthorizeUrl,
 };

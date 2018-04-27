@@ -1,6 +1,5 @@
-import { Integrations, ActivityLogs } from '../../../db/models';
-import { socUtils } from '../../../social/twitterTracker';
-import { gmailUtils } from '../../../social/gmail';
+import { Integrations } from '../../../db/models';
+import { socUtils } from '../../../trackers/twitterTracker';
 import { requireLogin, requireAdmin } from '../../permissions';
 
 const integrationMutations = {

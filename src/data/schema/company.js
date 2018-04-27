@@ -6,6 +6,21 @@ export const types = `
     website: String
     industry: String
     plan: String
+
+    parentCompanyId: String
+    email: String
+    ownerId: String
+    phone: String
+    leadStatus: String
+    lifecycleState: String
+    businessType: String
+    description: String
+    employees: Int
+    doNotDisturb: String
+    links: CompanyLinks
+    owner: User
+    parentCompany: Company
+
     lastSeenAt: Date
     sessionCount: Int
     tagIds: [String]
@@ -13,12 +28,22 @@ export const types = `
     customFieldsData: JSON
 
     customers: [Customer]
+    deals: [Deal]
     getTags: [Tag]
   }
 
   type CompaniesListResponse {
     list: [Company],
     totalCount: Float,
+  }
+
+  type CompanyLinks {
+    linkedIn: String
+    twitter: String
+    facebook: String
+    github: String
+    youtube: String
+    website: String
   }
 `;
 
@@ -44,6 +69,19 @@ const commonFields = `
   website: String,
   industry: String,
   plan: String,
+
+  parentCompanyId: String,
+  email: String,
+  ownerId: String,
+  phone: String,
+  leadStatus: String,
+  lifecycleState: String,
+  businessType: String,
+  description: String,
+  employees: Int,
+  doNotDisturb: String,
+  links: JSON,
+
   lastSeenAt: Date,
   sessionCount: Int,
   tagIds: [String]
@@ -53,7 +91,14 @@ const commonFields = `
 export const mutations = `
   companiesAdd(${commonFields}): Company
   companiesEdit(_id: String!, ${commonFields}): Company
-  companiesAddCustomer(_id: String!, name: String!, email: String): Customer
+
+  companiesAddCustomer(
+    _id: String!
+    firstName: String
+    lastName: String
+    email: String!
+  ): Customer
+
   companiesEditCustomers(_id: String!, customerIds: [String]): Company
   companiesRemove(companyIds: [String]): [String]
   companiesMerge(companyIds: [String], companyFields: JSON) : Company
