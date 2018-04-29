@@ -15,10 +15,11 @@ import { field } from './utils';
 
 // subdocument schema for MessengerOnlineHours
 const MessengerOnlineHoursSchema = mongoose.Schema({
+  _id: field({ pkey: true }),
+
   day: field({ type: String }),
   from: field({ type: String }),
   to: field({ type: String }),
-  _id: field({ pkey: true }),
 });
 
 // subdocument schema for MessengerData
