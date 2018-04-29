@@ -14,14 +14,12 @@ import { TwitterSchema, FacebookSchema } from '../../trackers/schemas';
 import { field } from './utils';
 
 // subdocument schema for MessengerOnlineHours
-const MessengerOnlineHoursSchema = mongoose.Schema(
-  {
-    day: field({ type: String }),
-    from: field({ type: String }),
-    to: field({ type: String }),
-  },
-  { _id: false },
-);
+const MessengerOnlineHoursSchema = mongoose.Schema({
+  day: field({ type: String }),
+  from: field({ type: String }),
+  to: field({ type: String }),
+  _id: field({ pkey: true }),
+});
 
 // subdocument schema for MessengerData
 const MessengerDataSchema = mongoose.Schema(
