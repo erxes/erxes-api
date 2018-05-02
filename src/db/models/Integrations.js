@@ -200,8 +200,8 @@ class Integration {
    * @param {Object} gmailData - gmail doc
    * @return {Promise} returns integration document promise
    */
-  static async createGmailIntegration( gmailData ) {
-    const prevEntry = await this.findOne({ 'gmailData.email': gmailData.email });
+  static async createGmailIntegration(gmailData) {
+    const prevEntry = await this.findOne({gmailData: {email: gmailData.email}});
     if (prevEntry){
       return prevEntry;
     }

@@ -1,5 +1,7 @@
 import google from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import { Integrations, ActivityLogs } from '../db/models';
+import fs from 'fs';
 
 var SCOPES = [
   'https://mail.google.com/',
@@ -61,7 +63,7 @@ export const getGmailAuthorizeUrl = async () => {
  * @param {String} message - email body
  * @return {String} return raw string encrypted by base64
  */
-const createEmail = async (to, from, subject, body, cc) => {
+const encodeEmail = async (to, from, subject, body, cc) => {
   var str = ["Content-Type: text/plain; charset=\"UTF-8\"\n",
     "MIME-Version: 1.0\n",
     "Content-Transfer-Encoding: 7bit\n",
@@ -71,7 +73,7 @@ const createEmail = async (to, from, subject, body, cc) => {
     "cc: ", cc, "\n",
     "from: ", from, "\n",
     "subject: ", subject, "\n\n",
-    body
+    body, "\n"
   ].join('');
 
   return new Buffer(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_');
@@ -84,7 +86,15 @@ const createEmail = async (to, from, subject, body, cc) => {
  * @param {String} content - email body
  * @param {String} toEmails - to emails with cc
  */
-export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc ) => {
+export const sendGmail = async ({integrationId, cocType, cocId, subject, body, toEmails, cc}, user ) => {
+  const integration = await Integrations.findOne({ _id: integrationId });
+
+  if( !integration )
+    throw new Error(`Integration not found id with ${integrationId}`);
+
+  const tokens = integration.gmailData;
+  const fromEmail = integration.gmailData.email;
+
   const auth = await getOAuth();
   auth.credentials = {
     access_token: tokens.accessToken,
@@ -92,21 +102,24 @@ export const sendEmail = async ( tokens, subject, body, toEmails, fromEmail, cc 
     expiry_date: tokens.expiryDate,
     token_type: tokens.tokenType
   };
-
   
   var gmail = await google.gmail('v1');
-  var raw = await createEmail(toEmails, fromEmail, subject, body, cc);
+  var raw = await encodeEmail(toEmails, fromEmail, subject, body, cc);
 
-  await gmail.users.messages.send({
-    auth: auth,
-    userId: 'me',
-    resource: {
-      raw: raw
-    }
-  }, (err, response) => {
-    if( err ){
-      throw new Error(err);
-    }
+  return new Promise((resolve, reject) => {
+    gmail.users.messages.send({
+      auth: auth,
+      userId: 'me',
+      resource: {
+        raw: raw
+      }
+    }, (err, response) => {
+      if( err ){
+        reject(err);
+      }
+      ActivityLogs.createGmailLog(subject, cocType, cocId, user);
+      resolve(response)
+    });
   });
 }
 
@@ -137,7 +150,7 @@ export const getUserProfile = async(tokens) => {
 // doing this to mock authenticate function in test
 export const gmailUtils = {
   getUserProfile,
-  sendEmail,
+  sendGmail,
   authorize,
   getGmailAuthorizeUrl
 };

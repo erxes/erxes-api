@@ -1,6 +1,7 @@
 import { TAG_TYPES, KIND_CHOICES } from '../../constants';
 import { Channels, Integrations, Tags, Brands } from '../../../db/models';
 import { socUtils } from '../../../trackers/twitterTracker';
+import { gmailUtils } from '../../../trackers/gmail';
 import { getConfig, getPageList } from '../../../trackers/facebook';
 import { moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';

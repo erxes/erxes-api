@@ -465,4 +465,20 @@ describe('social integration test', () => {
     expect(integration.kind).toBe(KIND_CHOICES.FACEBOOK);
     expect(integration.facebookData.toJSON()).toEqual(doc.facebookData);
   });
+
+  test('create gmail integration', async () => {
+    const doc = {
+      email: 'test@gmail.com',
+      accessToken: 'access_token',
+      refreshToken: 'refresh_token',
+      tokenType: 'token_type',
+      expiryDate: Date.now().toString()
+    };
+
+    const integration = await Integrations.createGmailIntegration(doc);
+    expect(integration.name).toBe(doc.email);
+    expect(integration.gmailData.accessToken).toBe(doc.accessToken);
+    expect(integration.gmailData.refreshToken).toBe(doc.refreshToken);
+    expect(integration.gmailData.expiryDate).toBe(doc.expiryDate);
+  });
 });

@@ -151,7 +151,7 @@ class ActivityLog {
    * @param {String} cocId - Customer or company id
    * @return {Promise} returns Promise resolving created ActivityLog document
    */
-  static createSendEmailLog(subject, cocType, cocId, user) {
+  static createGmailLog(subject, cocType, cocId, user) {
     return this.createDoc({
       activity: {
         type: ACTIVITY_TYPES.EMAIL,

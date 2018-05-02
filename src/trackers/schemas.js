@@ -75,7 +75,6 @@ export const GmailSchema = mongoose.Schema(
   {
     email: {
       type: String,
-      // unique: true
     },
     accessToken: {
       type: String,

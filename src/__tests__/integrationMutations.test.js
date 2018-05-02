@@ -6,6 +6,7 @@ import { connect, disconnect, graphqlRequest } from '../db/connection';
 import { Users, Integrations, Brands } from '../db/models';
 import { userFactory, integrationFactory, brandFactory } from '../db/factories';
 import { socUtils } from '../trackers/twitterTracker';
+import { gmailUtils } from '../trackers/gmail';
 
 beforeAll(() => connect());
 
@@ -393,66 +394,44 @@ describe('mutations', () => {
     expect(formIntegration.formData.toJSON()).toEqual(args.formData);
   });
 
-  // test('create gmail integration', async () => {
-  //   const fakeToken = {
-  //     "access_token": "access_token",
-  //     "refresh_token": "refresh_token",
-  //     "token_type":"Bearer", "expiry_date":1518420087675};
+  test('create gmail integration', async () => {
+    const fakeToken = {
+      "access_token": "access_token",
+      "refresh_token": "refresh_token",
+      "token_type": "Bearer",
+      "expiry_date": 1518420087675
+    };
 
-  //   const testEmail = 'munkhbold.d@nmtec.co';
-  //   const authorize = sinon.stub(gmailUtils, 'authorize').callsFake(() => (fakeToken));
-  //   const getUserProfile = sinon.stub(gmailUtils, 'getUserProfile').callsFake(() => ({
-  //     emailAddress: testEmail}));
+    const userProfile = {
+      emailAddress: 'munkhbold.d@nmtec.co'
+    }
 
-  //   await integrationMutations.integrationsCreateGmailIntegration({}, 
-  //     { code: '123' }, {
-  //     user: _adminUser,
-  //   });
+    gmailUtils.authorize = jest.fn(() => fakeToken);
+    gmailUtils.getUserProfile = jest.fn(() => userProfile);
+    
+    const mutation = `
+      mutation integrationsCreateGmailIntegration(
+        $code: String!
+      ) {
+        integrationsCreateGmailIntegration(
+          code: $code
+        ) {
+          _id
+          gmailData
+        }
+      }
+    `;
+    
+    const args = {
+      code: 'fakeCode'
+    }
 
-  //   expect(authorize.calledWith('123')).toBe(true);
-  //   expect(getUserProfile.calledWith(fakeToken)).toBe(true);
+    const gmailIntegration = await graphqlRequest(
+      mutation,
+      'integrationsCreateGmailIntegration',
+      args
+    );
 
-  //   const integration = await Integrations.findOne({
-  //     'gmailData.email': testEmail
-  //   });
-
-  //   expect(integration).toBeDefined();
-  // });
-
-
-  // test('send gmail', async () => {
-  //   const email = 'munkhbold.d@nmtec.co';
-  //   const _integration = await integrationFactory({gmailData: {'email': email}});
-  //   const args = {
-  //     integrationId: _integration._id,
-  //     cocType: 'customer',
-  //     cocId: 'cocId',
-  //     subject: 'subject',
-  //     body: 'body',
-  //     toEmails: email};
-
-  //   // fake sendEmail function
-  //   const sendEmail = sinon.stub(gmailUtils, 'sendEmail').callsFake(() => (null));
-
-  //     // call mutation
-  //   await integrationMutations.integrationsSendGmail({}, args, {
-  //     user: _adminUser,
-  //   });
-  //   const [ tokens, subject, body, toEmails, fromEmail, cc ] = sendEmail.firstCall.args;
-  //   expect(tokens._doc).toEqual({ email: 'munkhbold.d@nmtec.co' });
-  //   expect(subject).toEqual(args.subject);
-  //   expect(body).toEqual(args.body);
-  //   expect(toEmails).toEqual(args.toEmails);
-  //   expect(fromEmail).toEqual(email);
-  //   expect(cc).toEqual(undefined);
-
-  //   const newLog = await ActivityLogs.findOne({
-  //     'coc.type': 'customer',
-  //     'coc.id': 'cocId',
-  //     'activity.type': 'email',
-  //     'activity.action': 'send'
-  //   });
-
-  //   expect(newLog).toBeDefined();
-  // });
+    expect(gmailIntegration.gmailData.email).toBe('munkhbold.d@nmtec.co');
+  });
 });

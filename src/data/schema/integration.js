@@ -71,6 +71,11 @@ export const types = `
     wallpaper: String
     logo: String
   }
+
+  type GmailResponseData {
+    status: Int!
+    statusText: String
+  }
 `;
 
 export const queries = `
@@ -137,8 +142,8 @@ export const mutations = `
     subject: String!,
     body: String!,
     toEmails: String!,
-    cc: String
-  ): String
+    cc: String,
+  ): GmailResponseData
 
   integrationsCreateFacebookIntegration(
     brandId: String!,

@@ -1,5 +1,6 @@
 import { Integrations } from '../../../db/models';
 import { socUtils } from '../../../trackers/twitterTracker';
+import { gmailUtils } from '../../../trackers/gmail';
 import { requireLogin, requireAdmin } from '../../permissions';
 
 const integrationMutations = {
@@ -104,43 +105,34 @@ const integrationMutations = {
    */
   async integrationsCreateGmailIntegration(root, { code }) {
     const data = await gmailUtils.authorize(code);
-
     // get permission granted email address
     const userProfile = await gmailUtils.getUserProfile(data);
     data.email = userProfile.emailAddress
 
-    const integration = await Integrations.createGmailIntegration({
+    return Integrations.createGmailIntegration({
       email: data.email,
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       tokenType: data.token_type,
       expiryDate: data.expiry_date
     });
-
-    return integration;
   },
 
   /**
    * Send email 
    * @param {Object} root
-   * @param {String} cocType - company or customer
-   * @param {String} cocId - company or customer id
-   * @param {String} integrationId - Integration id
-   * @param {String} subject - email subject
-   * @param {String} body - email body
-   * @param {String} toEmails - to emails
-   * @param {String} cc - cc emails
-   * @return {Promise} return Promise resolving Integration document
+   * @param {Object} args
+   * @param {String} args.cocType - company or customer
+   * @param {String} args.cocId - company or customer id
+   * @param {String} args.integrationId - Integration id
+   * @param {String} args.subject - email subject
+   * @param {String} args.body - email body
+   * @param {String} args.toEmails - to emails
+   * @param {String} args.cc - cc emails
+   * @return {Promise} return Promise resolving email response
    */
-  async integrationsSendGmail(root, { integrationId, cocType, cocId, subject, body, toEmails, cc }, { user }) {
-    const integration = await Integrations.findOne({ _id: integrationId });
-
-    // integration.gmailData - accessToken
-    gmailUtils.sendEmail( integration.gmailData, subject, body, toEmails, integration.gmailData.email, cc);
-
-    await ActivityLogs.createSendEmailLog(subject, cocType, cocId, user);
-
-    return integration;
+  integrationsSendGmail(root, args, { user }) {
+    return gmailUtils.sendGmail(args, user);
   },
 
   /**

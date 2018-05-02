@@ -358,4 +358,17 @@ describe('ActivityLogs model methods', () => {
     expect(activityLog).toHaveLength(0);
     expect(removed.result).toEqual({ ok: 1, n: 1 });
   });
+
+  test(`Create gmail activity log`, async () => {
+    const company = await companyFactory({});
+    const user = await userFactory({});
+    const cocType = 'company';
+    const cocId = company._id;
+    const subject = 'gmail subject';
+
+    const gmailLog = await ActivityLogs.createGmailLog(subject, cocType, cocId, user);
+    expect(gmailLog.activity.type).toBe('email');
+    expect(gmailLog.coc.type).toBe('company');
+    expect(gmailLog.coc.id).toBe(company._id);
+  });
 });
