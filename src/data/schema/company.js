@@ -6,7 +6,6 @@ export const types = `
     size: Int
     website: String
     industry: String
-    plan: String
 
     parentCompanyId: String
     email: String
@@ -71,7 +70,6 @@ const commonFields = `
   size: Int,
   website: String,
   industry: String,
-  plan: String,
 
   parentCompanyId: String,
   email: String,

@@ -376,7 +376,6 @@ export const COMPANY_BASIC_INFOS = [
   'size',
   'industry',
   'website',
-  'plan',
   'email',
   'phone',
   'leadStatus',

@@ -22,7 +22,6 @@ const check = (companyObj, doc) => {
   expect(companyObj.website).toBe(doc.website);
   expect(companyObj.size).toBe(doc.size);
   expect(companyObj.industry).toBe(doc.industry);
-  expect(companyObj.plan).toBe(doc.plan);
 };
 
 const generateDoc = () => ({
@@ -31,7 +30,6 @@ const generateDoc = () => ({
   website: 'http://company.com',
   size: 1,
   industry: 'Airlines',
-  plan: 'pro',
 });
 
 describe('Companies model tests', () => {
@@ -50,7 +48,7 @@ describe('Companies model tests', () => {
   });
 
   test('Create company', async () => {
-    expect.assertions(8);
+    expect.assertions(7);
 
     // check duplication ==============
     try {
@@ -88,7 +86,7 @@ describe('Companies model tests', () => {
   });
 
   test('Update company', async () => {
-    expect.assertions(7);
+    expect.assertions(6);
 
     const doc = generateDoc();
 
@@ -168,7 +166,7 @@ describe('Companies model tests', () => {
   });
 
   test('mergeCompanies', async () => {
-    expect.assertions(18);
+    expect.assertions(17);
 
     const company1 = await companyFactory({
       tagIds: ['123', '456', '1234'],
@@ -216,7 +214,6 @@ describe('Companies model tests', () => {
       website: 'Test webiste',
       size: 230,
       industry: 'Airlines',
-      plan: 'Test plan',
     };
 
     const updatedCompany = await Companies.mergeCompanies(companyIds, doc);
@@ -225,7 +222,6 @@ describe('Companies model tests', () => {
     expect(updatedCompany.website).toBe(doc.website);
     expect(updatedCompany.size).toBe(doc.size);
     expect(updatedCompany.industry).toBe(doc.industry);
-    expect(updatedCompany.plan).toBe(doc.plan);
     expect(updatedCompany.names).toEqual(expect.arrayContaining(['company1', 'company2']));
 
     // Checking old company datas deleted

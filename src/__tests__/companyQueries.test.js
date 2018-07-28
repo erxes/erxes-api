@@ -42,8 +42,6 @@ describe('companyQueries', () => {
         size
         website
         industry
-        plan
-
         parentCompanyId
         email
         ownerId
@@ -88,7 +86,6 @@ describe('companyQueries', () => {
           names
           website
           industry
-          plan
         }
         totalCount
       }
@@ -103,7 +100,6 @@ describe('companyQueries', () => {
 
   const name = 'companyName';
   const website = faker.internet.url();
-  const plan = 'plan';
 
   afterEach(async () => {
     // Clearing test data
@@ -181,7 +177,6 @@ describe('companyQueries', () => {
   test('Companies filtered by search value', async () => {
     await companyFactory({ names: [name], primaryName: name });
     await companyFactory({ website });
-    await companyFactory({ plan });
     await companyFactory({ industry: 'Banks' });
 
     // companies by name ==============
@@ -201,12 +196,6 @@ describe('companyQueries', () => {
 
     expect(responses.length).toBe(1);
     expect(responses[0].industry).toBe('Banks');
-
-    // companies by plan ==============
-    responses = await graphqlRequest(qryCompanies, 'companies', { searchValue: plan });
-
-    expect(responses.length).toBe(1);
-    expect(responses[0].plan).toBe(plan);
   });
 
   test('Main companies', async () => {

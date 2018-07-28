@@ -20,7 +20,6 @@ const listQuery = async params => {
       { names: { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] } },
       { website: new RegExp(`.*${params.searchValue}.*`, 'i') },
       { industry: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { plan: new RegExp(`.*${params.searchValue}.*`, 'i') },
     ];
 
     selector = { $or: fields };
