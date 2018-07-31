@@ -154,8 +154,12 @@ const conversationMutations = {
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK) {
+      const msg = {
+        text: strip(doc.content),
+        attachments: doc.attachments,
+      };
       // when facebook kind is feed, assign commentId in extraData
-      await facebookReply(conversation, strip(doc.content), message._id);
+      await facebookReply(conversation, msg, message._id);
     }
 
     // Publishing both admin & client
