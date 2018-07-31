@@ -1,3 +1,5 @@
+// TODO: remove customer's email and phone field after customCommand
+
 export const types = `
   type CustomerConnectionChangedResponse {
     _id: String!
@@ -18,7 +20,13 @@ export const types = `
     integrationId: String
     firstName: String
     lastName: String
+
     email: String
+    primaryEmail: String
+    emails: [String]
+    primaryPhone: String
+    phones: [String]
+
     phone: String
     isUser: Boolean
     createdAt: Date
@@ -39,6 +47,8 @@ export const types = `
     hasAuthority: String
     description: String
     doNotDisturb: String
+
+    integration: Integration
     links: CustomerLinks
     companies: [Company]
     conversations: [Conversation]
@@ -75,13 +85,16 @@ export const queries = `
   customerCounts(${queryParams}, byFakeSegment: JSON): JSON
   customerDetail(_id: String!): Customer
   customerListForSegmentPreview(segment: JSON, limit: Int): [Customer]
+  customersExport(${queryParams}): String
 `;
 
 const fields = `
   firstName: String
   lastName: String
-  email: String
-  phone: String
+  primaryEmail: String
+  emails: [String]
+  primaryPhone: String
+  phones: [String]
   ownerId: String
   position: String
   department: String

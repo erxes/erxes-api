@@ -64,6 +64,7 @@ export const types = `
     welcomeMessage: String
     awayMessage: String
     thankYouMessage: String
+    supporterIds: [String]
   }
 
   input MessengerUiOptions {

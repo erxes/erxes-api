@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
-import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES } from '../../data/constants';
+import {
+  CUSTOMER_BASIC_INFOS,
+  CUSTOMER_LEAD_STATUS_TYPES,
+  CUSTOMER_LIFECYCLE_STATE_TYPES,
+} from '../../data/constants';
 import { Fields, Companies, ActivityLogs, Conversations, InternalNotes, EngageMessages } from './';
 import { field } from './utils';
+import Coc from './Coc';
 
 /* location schema */
 const locationSchema = mongoose.Schema(
@@ -102,8 +107,16 @@ const CustomerSchema = mongoose.Schema({
 
   firstName: field({ type: String, label: 'First name', optional: true }),
   lastName: field({ type: String, label: 'Last name', optional: true }),
-  email: field({ type: String, label: 'Email', optional: true }),
-  phone: field({ type: String, label: 'Phone', optional: true }),
+  // TODO: remove email field after customCommand
+  email: field({ type: String, optional: true }),
+
+  primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
+  emails: field({ type: [String], optional: true }),
+  // TODO: remove phone field after customCommand
+  phone: field({ type: String, optional: true }),
+
+  primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
+  phones: field({ type: [String], optional: true }),
 
   ownerId: field({ type: String, optional: true }),
   position: field({ type: String, optional: true, label: 'Position' }),
@@ -147,7 +160,15 @@ const CustomerSchema = mongoose.Schema({
   visitorContactInfo: field({ type: VisitorContactSchema, optional: true }),
 });
 
-class Customer {
+class Customer extends Coc {
+  static getBasicInfos() {
+    return CUSTOMER_BASIC_INFOS;
+  }
+
+  static getCocType() {
+    return 'Customer';
+  }
+
   getFullName() {
     return `${this.firstName || ''} ${this.lastName || ''}`;
   }
@@ -171,16 +192,6 @@ class Customer {
       }
     }
 
-    // Checking if customer has email
-    if (customerFields.email) {
-      previousEntry = await this.find({ ...query, email: customerFields.email });
-
-      // Checking if duplicated
-      if (previousEntry.length > 0) {
-        throw new Error('Duplicated email');
-      }
-    }
-
     // Checking if customer has twitter data
     if (customerFields.twitterData) {
       previousEntry = await this.find({
@@ -188,19 +199,8 @@ class Customer {
         ['twitterData.id']: customerFields.twitterData.id,
       });
 
-      // Checking if duplicated
       if (previousEntry.length > 0) {
         throw new Error('Duplicated twitter');
-      }
-    }
-
-    // Checking if customer has phone
-    if (customerFields.phone) {
-      previousEntry = await this.find({ ...query, phone: customerFields.phone });
-
-      // Checking if duplicated
-      if (previousEntry.length > 0) {
-        throw new Error('Duplicated phone');
       }
     }
 
@@ -211,9 +211,52 @@ class Customer {
         ['facebookData.id']: customerFields.facebookData.id,
       });
 
-      // Checking if duplicated
       if (previousEntry.length > 0) {
         throw new Error('Duplicated facebook');
+      }
+    }
+
+    if (customerFields.primaryEmail) {
+      // check duplication from primaryEmail
+      previousEntry = await this.find({
+        ...query,
+        primaryEmail: customerFields.primaryEmail,
+      });
+
+      if (previousEntry.length > 0) {
+        throw new Error('Duplicated email');
+      }
+
+      // check duplication from emails
+      previousEntry = await this.find({
+        ...query,
+        emails: { $in: [customerFields.primaryEmail] },
+      });
+
+      if (previousEntry.length > 0) {
+        throw new Error('Duplicated email');
+      }
+    }
+
+    if (customerFields.primaryPhone) {
+      // check duplication from primaryPhone
+      previousEntry = await this.find({
+        ...query,
+        primaryPhone: customerFields.primaryPhone,
+      });
+
+      if (previousEntry.length > 0) {
+        throw new Error('Duplicated phone');
+      }
+
+      // Check duplication from phones
+      previousEntry = await this.find({
+        ...query,
+        phones: { $in: [customerFields.primaryPhone] },
+      });
+
+      if (previousEntry.length > 0) {
+        throw new Error('Duplicated phone');
       }
     }
   }
@@ -253,6 +296,17 @@ class Customer {
     await this.update({ _id }, { $set: doc });
 
     return this.findOne({ _id });
+  }
+
+  /**
+   * Mark customer as active
+   * @param  {String} customerId
+   * @return {Promise} Updated customer
+   */
+  static async markCustomerAsActive(customerId) {
+    await this.update({ _id: customerId }, { $set: { 'messengerData.isActive': true } });
+
+    return this.findOne({ _id: customerId });
   }
 
   /**
@@ -318,7 +372,7 @@ class Customer {
     await EngageMessages.removeCustomerEngages(customerId);
     await InternalNotes.removeCustomerInternalNotes(customerId);
 
-    return await this.remove({ _id: customerId });
+    return Customers.remove({ _id: customerId });
   }
 
   /**
@@ -334,17 +388,35 @@ class Customer {
     let tagIds = [];
     let companyIds = [];
 
+    let emails = [];
+    let phones = [];
+
+    if (customerFields.primaryEmail) {
+      emails.push(customerFields.primaryEmail);
+    }
+
+    if (customerFields.primaryPhone) {
+      phones.push(customerFields.primaryPhone);
+    }
+
     // Merging customer tags and companies
     for (let customerId of customerIds) {
       const customer = await this.findOne({ _id: customerId });
 
       if (customer) {
+        // get last customer's integrationId
+        customerFields.integrationId = customer.integrationId;
+
         const customerTags = customer.tagIds || [];
         const customerCompanies = customer.companyIds || [];
 
         // Merging customer's tag and companies into 1 array
         tagIds = tagIds.concat(customerTags);
         companyIds = companyIds.concat(customerCompanies);
+
+        // Merging emails, phones
+        emails = [...emails, ...(customer.emails || [])];
+        phones = [...phones, ...(customer.phones || [])];
 
         // Removing Customers
         await this.remove({ _id: customerId });
@@ -357,11 +429,19 @@ class Customer {
     // Removing Duplicated Companies from customer
     companyIds = Array.from(new Set(companyIds));
 
+    // Removing Duplicated Emails from customer
+    emails = Array.from(new Set(emails));
+
+    // Removing Duplicated Phones from customer
+    phones = Array.from(new Set(phones));
+
     // Creating customer with properties
     const customer = await this.createCustomer({
       ...customerFields,
       tagIds,
       companyIds,
+      emails,
+      phones,
     });
 
     // Updating every modules associated with customers

@@ -9,6 +9,22 @@ export default class Builder {
     this.user = user;
   }
 
+  defaultFilters() {
+    const emptySelector = { $in: [null, ''] };
+
+    return {
+      $nor: [
+        {
+          firstName: emptySelector,
+          lastName: emptySelector,
+          primaryEmail: emptySelector,
+          primaryPhone: emptySelector,
+          visitorContactInfo: null,
+        },
+      ],
+    };
+  }
+
   // filter by segment
   async segmentFilter(segmentId) {
     const segment = await Segments.findOne({ _id: segmentId });
@@ -59,8 +75,10 @@ export default class Builder {
     const fields = [
       { firstName: new RegExp(`.*${value}.*`, 'i') },
       { lastName: new RegExp(`.*${value}.*`, 'i') },
-      { email: new RegExp(`.*${value}.*`, 'i') },
-      { phone: new RegExp(`.*${value}.*`, 'i') },
+      { emails: { $in: [new RegExp(`.*${value}.*`, 'i')] } },
+      { phones: { $in: [new RegExp(`.*${value}.*`, 'i')] } },
+      { 'visitorContactInfo.email': new RegExp(`.*${value}.*`, 'i') },
+      { 'visitorContactInfo.phone': new RegExp(`.*${value}.*`, 'i') },
     ];
 
     return { $or: fields };
@@ -99,6 +117,7 @@ export default class Builder {
    */
   async buildAllQueries() {
     this.queries = {
+      default: this.defaultFilters(),
       segment: {},
       tag: {},
       ids: {},
@@ -117,11 +136,6 @@ export default class Builder {
     // filter by tag
     if (this.params.tag) {
       this.queries.tag = await this.tagFilter(this.params.tag);
-    }
-
-    // filter by ids
-    if (this.params.ids) {
-      this.queries.ids = await this.idsFilter(this.params.ids);
     }
 
     // filter by searchValue
@@ -152,6 +166,13 @@ export default class Builder {
       }
     }
 
+    /** If there are ids and form params, returning ids filter only
+     * filter by ids
+     */
+    if (this.params.ids) {
+      this.queries.ids = await this.idsFilter(this.params.ids);
+    }
+
     // filter by integration
     if (this.params.integration) {
       this.queries.integration = await this.integrationFilter(this.params.integration);
@@ -165,13 +186,14 @@ export default class Builder {
 
   mainQuery() {
     return {
+      ...this.queries.default,
       ...this.queries.segment,
       ...this.queries.tag,
-      ...this.queries.ids,
       ...this.queries.segment,
       ...this.queries.brand,
       ...this.queries.integrationType,
       ...this.queries.form,
+      ...this.queries.ids,
       ...this.queries.integration,
       ...this.queries.searchValue,
     };

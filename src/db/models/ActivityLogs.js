@@ -340,7 +340,7 @@ class ActivityLog {
       activity: {
         type: ACTIVITY_TYPES.COMPANY,
         action: ACTIVITY_ACTIONS.CREATE,
-        content: company.name,
+        content: company.primaryName,
         id: company._id,
       },
       coc: {

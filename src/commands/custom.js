@@ -1,16 +1,54 @@
 import { connect, disconnect } from '../db/connection';
-import { Companies, Deals } from '../db/models';
+import { Companies, Customers } from '../db/models';
 
 export const customCommand = async () => {
   connect();
 
-  const companies = await Companies.find({ website: { $exists: true } });
+  const companies = await Companies.find({
+    name: { $exists: true },
+    primaryName: { $exists: false },
+  });
 
-  for (const company of companies) {
-    await Companies.update({ _id: company._id }, { $set: { links: { website: company.website } } });
+  try {
+    Companies.collection.dropIndexes({ name: 1 });
+  } catch (e) {
+    console.log(e);
   }
 
-  await Deals.updateMany({ name: { $exists: false } }, { $set: { name: 'Deal name' } });
+  for (const company of companies) {
+    await Companies.update(
+      { _id: company._id },
+      {
+        $set: { names: [company.name], primaryName: company.name },
+      },
+    );
+  }
+
+  const customers = await Customers.find({
+    $or: [{ email: { $exists: true } }, { phone: { $exists: true } }],
+  });
+
+  try {
+    Customers.collection.dropIndexes({ email: 1 });
+  } catch (e) {
+    console.log(e);
+  }
+
+  for (const customer of customers) {
+    if (customer.email && !customer.primaryEmail) {
+      await Customers.update(
+        { _id: customer._id },
+        { $set: { primaryEmail: customer.email, emails: [customer.email] } },
+      );
+    }
+
+    if (customer.phone && !customer.primaryPhone) {
+      await Customers.update(
+        { _id: customer._id },
+        { $set: { primaryPhone: customer.phone, phones: [customer.phone] } },
+      );
+    }
+  }
 
   disconnect();
 };

@@ -3,6 +3,7 @@ import QueryBuilder from './segmentQueryBuilder';
 import { TAG_TYPES, COC_CONTENT_TYPES } from '../../constants';
 import { moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';
+import { cocsExport } from './cocExport';
 
 const listQuery = async params => {
   let selector = {};
@@ -16,7 +17,7 @@ const listQuery = async params => {
 
   if (params.searchValue) {
     const fields = [
-      { name: new RegExp(`.*${params.searchValue}.*`, 'i') },
+      { names: { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] } },
       { website: new RegExp(`.*${params.searchValue}.*`, 'i') },
       { industry: new RegExp(`.*${params.searchValue}.*`, 'i') },
       { plan: new RegExp(`.*${params.searchValue}.*`, 'i') },
@@ -58,7 +59,7 @@ const companyQueries = {
   async companiesMain(root, params) {
     const selector = await listQuery(params);
 
-    const list = await paginate(Companies.find(selector), params);
+    const list = await paginate(Companies.find(selector).sort({ primaryName: -1 }), params);
     const totalCount = await Companies.find(selector).count();
 
     return { list, totalCount };
@@ -109,6 +110,20 @@ const companyQueries = {
    */
   companyDetail(root, { _id }) {
     return Companies.findOne({ _id });
+  },
+
+  /**
+   * Export companies to xls file
+   *
+   * @param {Object} args - Query params
+   * @return {String} File url
+   */
+  async companiesExport(root, params) {
+    const selector = await listQuery(params);
+
+    const companies = await paginate(Companies.find(selector), params);
+
+    return cocsExport(companies, 'company');
   },
 };
 

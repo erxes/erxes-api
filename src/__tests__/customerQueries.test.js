@@ -4,7 +4,13 @@ import faker from 'faker';
 import moment from 'moment';
 import { Customers, Segments, Tags } from '../db/models';
 import { graphqlRequest, connect, disconnect } from '../db/connection';
-import { customerFactory, tagsFactory, segmentFactory, formFactory } from '../db/factories';
+import {
+  customerFactory,
+  tagsFactory,
+  segmentFactory,
+  formFactory,
+  integrationFactory,
+} from '../db/factories';
 
 beforeAll(() => connect());
 
@@ -46,8 +52,10 @@ describe('customerQueries', () => {
         integrationId
         firstName
         lastName
-        email
-        phone
+        primaryEmail
+        emails
+        primaryPhone
+        phones
         isUser
         createdAt
         tagIds
@@ -93,8 +101,8 @@ describe('customerQueries', () => {
           _id
           firstName
           lastName
-          email
-          phone
+          primaryEmail
+          primaryPhone
           tagIds
         }
         totalCount
@@ -110,8 +118,8 @@ describe('customerQueries', () => {
 
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
-  const email = faker.internet.email();
-  const phone = '12345678';
+  const primaryEmail = faker.internet.email();
+  const primaryPhone = '12345678';
 
   afterEach(async () => {
     // Clearing test data
@@ -188,8 +196,8 @@ describe('customerQueries', () => {
   test('Customers filtered by search value', async () => {
     await customerFactory({ firstName });
     await customerFactory({ lastName });
-    await customerFactory({ phone });
-    await customerFactory({ email });
+    await customerFactory({ primaryPhone, phones: [primaryPhone] });
+    await customerFactory({ primaryEmail, emails: [primaryEmail] });
 
     // customers by firstName ==============
     let responses = await graphqlRequest(qryCustomers, 'customers', { searchValue: firstName });
@@ -204,16 +212,20 @@ describe('customerQueries', () => {
     expect(responses[0].lastName).toBe(lastName);
 
     // customers by email ==========
-    responses = await graphqlRequest(qryCustomers, 'customers', { searchValue: email });
+    responses = await graphqlRequest(qryCustomers, 'customers', {
+      searchValue: primaryEmail,
+    });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].email).toBe(email);
+    expect(responses[0].primaryEmail).toBe(primaryEmail);
 
     // customers by phone ==============
-    responses = await graphqlRequest(qryCustomers, 'customers', { searchValue: phone });
+    responses = await graphqlRequest(qryCustomers, 'customers', {
+      searchValue: primaryPhone,
+    });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].phone).toBe(phone);
+    expect(responses[0].primaryPhone).toBe(primaryPhone);
   });
 
   test('Main customers', async () => {
@@ -377,5 +389,16 @@ describe('customerQueries', () => {
     responses = await graphqlRequest(qryCustomersMain, 'customersMain', args);
 
     expect(responses.list.length).toBe(3);
+  });
+
+  test('Customer filtered by default selector', async () => {
+    const integration = await integrationFactory({});
+    await Customers.createCustomer({ integrationId: integration._id });
+    await customerFactory();
+    await customerFactory();
+
+    const responses = await graphqlRequest(qryCustomersMain, 'customersMain', {});
+
+    expect(responses.list.length).toBe(2);
   });
 });

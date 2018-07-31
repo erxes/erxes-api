@@ -1,5 +1,3 @@
-import AWS from 'aws-sdk';
-import nodemailer from 'nodemailer';
 import {
   EngageMessages,
   Customers,
@@ -18,27 +16,14 @@ import {
 } from '../../constants';
 import Random from 'meteor-random';
 import QueryBuilder from '../queries/segmentQueryBuilder';
-
-const createTransporter = async () => {
-  const { AWS_SES_ACCESS_KEY_ID, AWS_SES_SECRET_ACCESS_KEY, AWS_REGION } = process.env;
-
-  AWS.config.update({
-    region: AWS_REGION,
-    accessKeyId: AWS_SES_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SES_SECRET_ACCESS_KEY,
-  });
-
-  return nodemailer.createTransport({
-    SES: new AWS.SES({ apiVersion: '2010-12-01' }),
-  });
-};
+import { createTransporter } from '../../utils';
 
 /**
  * Dynamic content tags
  * @param {String} content
  * @param {Object} customer
  * @param {String} customer.name - Customer name
- * @param {String} customer.email - Customer email
+ * @param {String} customer.primaryEmail - Customer email
  * @param {Object} user
  * @param {String} user.fullName - User full name
  * @param {String} user.position - User position
@@ -50,7 +35,7 @@ export const replaceKeys = ({ content, customer, user }) => {
 
   // replace customer fields
   result = result.replace(/{{\s?customer.name\s?}}/gi, customer.name);
-  result = result.replace(/{{\s?customer.email\s?}}/gi, customer.email);
+  result = result.replace(/{{\s?customer.email\s?}}/gi, customer.primaryEmail);
 
   // replace user fields
   result = result.replace(/{{\s?user.fullName\s?}}/gi, user.fullName);
@@ -115,11 +100,11 @@ const sendViaEmail = async message => {
     EngageMessages.addNewDeliveryReport(message._id, mailMessageId, customer._id);
 
     // send email =========
-    const transporter = await createTransporter();
+    const transporter = await createTransporter({ ses: true });
 
     transporter.sendMail({
       from: userEmail,
-      to: customer.email,
+      to: customer.primaryEmail,
       subject: replacedSubject,
       html: replacedContent,
       headers: {
