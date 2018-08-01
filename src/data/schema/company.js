@@ -54,6 +54,7 @@ const queryParams = `
   tag: String,
   ids: [String],
   searchValue: String
+  leadStatus: String
 `;
 
 export const queries = `
