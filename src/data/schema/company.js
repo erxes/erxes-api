@@ -6,7 +6,6 @@ export const types = `
     size: Int
     website: String
     industry: String
-    plan: String
 
     parentCompanyId: String
     email: String
@@ -55,6 +54,7 @@ const queryParams = `
   tag: String,
   ids: [String],
   searchValue: String
+  leadStatus: String
 `;
 
 export const queries = `
@@ -71,7 +71,6 @@ const commonFields = `
   size: Int,
   website: String,
   industry: String,
-  plan: String,
 
   parentCompanyId: String,
   email: String,

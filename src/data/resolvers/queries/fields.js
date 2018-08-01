@@ -108,9 +108,8 @@ const fieldQueries = {
         { name: 'size', label: 'Size', order: 2 },
         { name: 'website', label: 'Website', order: 3 },
         { name: 'industry', label: 'Industry', order: 4 },
-        { name: 'plan', label: 'Plan', order: 5 },
-        { name: 'lastSeenAt', label: 'Last seen at', order: 6 },
-        { name: 'sessionCount', label: 'Session count', order: 7 },
+        { name: 'lastSeenAt', label: 'Last seen at', order: 5 },
+        { name: 'sessionCount', label: 'Session count', order: 6 },
       ];
     }
 

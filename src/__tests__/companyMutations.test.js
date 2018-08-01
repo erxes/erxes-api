@@ -22,7 +22,6 @@ describe('Companies mutations', () => {
     $size: Int
     $website: String
     $industry: String
-    $plan: String
     $lastSeenAt: Date
     $sessionCount: Int
     $tagIds: [String]
@@ -35,7 +34,6 @@ describe('Companies mutations', () => {
     size: $size
     website: $website
     industry: $industry
-    plan: $plan
     lastSeenAt: $lastSeenAt
     sessionCount: $sessionCount
     tagIds: $tagIds
@@ -65,7 +63,6 @@ describe('Companies mutations', () => {
       size: faker.random.number(),
       website: faker.internet.url(),
       industry: 'Airlines',
-      plan: faker.random.word(),
       sessionCount: faker.random.number(),
       tagIds: _company.tagIds,
       customFieldsData: {},
@@ -79,7 +76,6 @@ describe('Companies mutations', () => {
           size
           website
           industry
-          plan
           sessionCount
           tagIds
           customFieldsData
@@ -94,7 +90,6 @@ describe('Companies mutations', () => {
     expect(company.size).toBe(args.size);
     expect(company.website).toBe(args.website);
     expect(company.industry).toBe(args.industry);
-    expect(company.plan).toBe(args.plan);
     expect(company.sessionCount).toBe(args.sessionCount);
     expect(expect.arrayContaining(company.tagIds)).toEqual(args.tagIds);
     expect(company.customFieldsData).toEqual(args.customFieldsData);
@@ -108,7 +103,6 @@ describe('Companies mutations', () => {
       size: faker.random.number(),
       website: faker.internet.url(),
       industry: faker.random.word(),
-      plan: faker.random.word(),
       sessionCount: faker.random.number(),
       tagIds: _company.tagIds,
       customFieldsData: {},
@@ -123,7 +117,6 @@ describe('Companies mutations', () => {
           size
           website
           industry
-          plan
           sessionCount
           tagIds
           customFieldsData
@@ -139,7 +132,6 @@ describe('Companies mutations', () => {
     expect(company.size).toBe(args.size);
     expect(company.website).toBe(args.website);
     expect(company.industry).toBe(args.industry);
-    expect(company.plan).toBe(args.plan);
     expect(company.sessionCount).toBe(args.sessionCount);
     expect(expect.arrayContaining(company.tagIds)).toEqual(args.tagIds);
     expect(company.customFieldsData).toEqual(args.customFieldsData);

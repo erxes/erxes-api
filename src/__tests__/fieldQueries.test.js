@@ -135,14 +135,13 @@ describe('fieldQueries', () => {
     // get company default config
     responses = await graphqlRequest(qry, 'fieldsDefaultColumnsConfig', { contentType: 'company' });
 
-    expect(responses.length).toBe(7);
+    expect(responses.length).toBe(6);
     expect(responses[0].name).toBe('primaryName');
     expect(responses[1].name).toBe('size');
     expect(responses[2].name).toBe('website');
     expect(responses[3].name).toBe('industry');
-    expect(responses[4].name).toBe('plan');
-    expect(responses[5].name).toBe('lastSeenAt');
-    expect(responses[6].name).toBe('sessionCount');
+    expect(responses[4].name).toBe('lastSeenAt');
+    expect(responses[5].name).toBe('sessionCount');
   });
 
   test('Field groups', async () => {

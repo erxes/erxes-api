@@ -59,12 +59,6 @@ const CompanySchema = mongoose.Schema({
     optional: true,
   }),
 
-  plan: field({
-    type: String,
-    label: 'Plan',
-    optional: true,
-  }),
-
   parentCompanyId: field({
     type: String,
     optional: true,
