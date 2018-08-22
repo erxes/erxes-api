@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import {
-  COMPANY_LEAD_STATUS_TYPES,
-  COMPANY_LIFECYCLE_STATE_TYPES,
+  COC_LEAD_STATUS_TYPES,
+  COC_LIFECYCLE_STATE_TYPES,
   COMPANY_BUSINESS_TYPES,
   COMPANY_INDUSTRY_TYPES,
   COMPANY_BASIC_INFOS,
@@ -23,6 +23,11 @@ const LinkSchema = mongoose.Schema(
 
 const CompanySchema = mongoose.Schema({
   _id: field({ pkey: true }),
+
+  createdAt: field({ type: Date, label: 'Created at' }),
+  modifiedAt: field({ type: Date, label: 'Modified at' }),
+  avatar: field({ type: String, optional: true }),
+
   // TODO: remove name field after custom command
   name: field({
     type: String,
@@ -76,14 +81,14 @@ const CompanySchema = mongoose.Schema({
 
   leadStatus: field({
     type: String,
-    enum: COMPANY_LEAD_STATUS_TYPES,
+    enum: COC_LEAD_STATUS_TYPES,
     optional: true,
     label: 'Lead Status',
   }),
 
   lifecycleState: field({
     type: String,
-    enum: COMPANY_LIFECYCLE_STATE_TYPES,
+    enum: COC_LIFECYCLE_STATE_TYPES,
     optional: true,
     label: 'Lifecycle State',
   }),
@@ -96,23 +101,12 @@ const CompanySchema = mongoose.Schema({
   }),
 
   description: field({ type: String, optional: true }),
-  employees: field({ type: Number, optional: true, label: 'Employees' }),
   doNotDisturb: field({
     type: String,
     optional: true,
     label: 'Do not disturb',
   }),
   links: field({ type: LinkSchema, default: {} }),
-
-  lastSeenAt: field({
-    type: Date,
-    label: 'Last seen at',
-  }),
-
-  sessionCount: field({
-    type: Number,
-    label: 'Session count',
-  }),
 
   tagIds: field({
     type: [String],
@@ -185,6 +179,8 @@ class Company {
 
     // clean custom field values
     doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+    doc.createdAt = new Date();
+    doc.modifiedAt = new Date();
 
     return this.create(doc);
   }
@@ -203,6 +199,8 @@ class Company {
       // clean custom field values
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
     }
+
+    doc.modifiedAt = new Date();
 
     await this.update({ _id }, { $set: doc });
 

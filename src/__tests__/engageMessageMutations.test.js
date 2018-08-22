@@ -87,7 +87,7 @@ describe('engage message mutation tests', () => {
     _tag = await tagsFactory();
     _brand = await brandFactory();
     _segment = await segmentFactory({});
-    _message = await engageMessageFactory({ userId: _user._id });
+    _message = await engageMessageFactory({ kind: 'auto', userId: _user._id });
     _emailTemplate = await emailTemplateFactory({});
     _customer = await customerFactory({});
     _integration = await integrationFactory({ brandId: 'brandId' });
@@ -107,6 +107,10 @@ describe('engage message mutation tests', () => {
         templateId: _emailTemplate._id,
         subject: faker.random.word(),
         content: faker.random.word(),
+        attachments: [
+          { name: 'document', url: 'documentPath' },
+          { name: 'image', url: 'imagePath' },
+        ],
       },
       messenger: {
         brandId: _brand._id,

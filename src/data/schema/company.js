@@ -1,6 +1,11 @@
 export const types = `
   type Company {
     _id: String!
+
+    createdAt: Date
+    modifiedAt: Date
+    avatar: String
+
     primaryName: String
     names: [String]
     size: Int
@@ -16,14 +21,11 @@ export const types = `
     lifecycleState: String
     businessType: String
     description: String
-    employees: Int
     doNotDisturb: String
     links: CompanyLinks
     owner: User
     parentCompany: Company
 
-    lastSeenAt: Date
-    sessionCount: Int
     tagIds: [String]
 
     customFieldsData: JSON
@@ -49,12 +51,17 @@ export const types = `
 `;
 
 const queryParams = `
-  page: Int,
-  perPage: Int,
-  segment: String,
-  tag: String,
-  ids: [String],
+  page: Int
+  perPage: Int
+  segment: String
+  tag: String
+  ids: [String]
   searchValue: String
+  lifecycleState: String
+  leadStatus: String
+  sortField: String
+  sortDirection: Int
+  brand: String
 `;
 
 export const queries = `
@@ -66,12 +73,12 @@ export const queries = `
 `;
 
 const commonFields = `
+  avatar: String,
   primaryName: String,
   names: [String]
   size: Int,
   website: String,
   industry: String,
-  plan: String,
 
   parentCompanyId: String,
   email: String,
@@ -81,12 +88,9 @@ const commonFields = `
   lifecycleState: String,
   businessType: String,
   description: String,
-  employees: Int,
   doNotDisturb: String,
   links: JSON,
 
-  lastSeenAt: Date,
-  sessionCount: Int,
   tagIds: [String]
   customFieldsData: JSON
 `;

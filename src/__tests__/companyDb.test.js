@@ -17,6 +17,8 @@ beforeAll(() => connect());
 afterAll(() => disconnect());
 
 const check = (companyObj, doc) => {
+  expect(companyObj.createdAt).toBeDefined();
+  expect(companyObj.modifiedAt).toBeDefined();
   expect(companyObj.name).toBe(doc.name);
   expect(companyObj.email).toBe(doc.email);
   expect(companyObj.website).toBe(doc.website);
@@ -50,7 +52,7 @@ describe('Companies model tests', () => {
   });
 
   test('Create company', async () => {
-    expect.assertions(8);
+    expect.assertions(10);
 
     // check duplication ==============
     try {
@@ -88,7 +90,7 @@ describe('Companies model tests', () => {
   });
 
   test('Update company', async () => {
-    expect.assertions(7);
+    expect.assertions(9);
 
     const doc = generateDoc();
 
@@ -168,7 +170,7 @@ describe('Companies model tests', () => {
   });
 
   test('mergeCompanies', async () => {
-    expect.assertions(18);
+    expect.assertions(20);
 
     const company1 = await companyFactory({
       tagIds: ['123', '456', '1234'],
@@ -217,6 +219,8 @@ describe('Companies model tests', () => {
       size: 230,
       industry: 'Airlines',
       plan: 'Test plan',
+      ownerId: '789',
+      parentCompanyId: '123',
     };
 
     const updatedCompany = await Companies.mergeCompanies(companyIds, doc);
@@ -227,6 +231,8 @@ describe('Companies model tests', () => {
     expect(updatedCompany.industry).toBe(doc.industry);
     expect(updatedCompany.plan).toBe(doc.plan);
     expect(updatedCompany.names).toEqual(expect.arrayContaining(['company1', 'company2']));
+    expect(updatedCompany.ownerId).toBe('789');
+    expect(updatedCompany.parentCompanyId).toBe('123');
 
     // Checking old company datas deleted
     expect(await Companies.find({ _id: companyIds[0] })).toHaveLength(0);

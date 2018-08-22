@@ -62,6 +62,7 @@ export const userFactory = (params = {}) => {
     role: params.role || 'contributor',
     password: params.password || '$2a$10$qfBFBmWmUjeRcR.nBBfgDO/BEbxgoai5qQhyjsrDUMiZC6dG7sg1q',
     isOwner: params.isOwner || false,
+    isActive: typeof params.isActive !== undefined ? params.isActive : true,
   });
 
   return user.save();
@@ -176,6 +177,10 @@ export const companyFactory = (params = {}) => {
     website: params.website || faker.internet.domainName(),
     tagIds: params.tagIds || [faker.random.number()],
     plan: params.plan || faker.random.word(),
+    leadStatus: params.leadStatus || 'open',
+    lifecycleState: params.lifecycleState || 'lead',
+    createdAt: params.createdAt || new Date(),
+    modifiedAt: params.createdAt || new Date(),
   });
 
   return company.save();
@@ -190,6 +195,8 @@ export const customerFactory = (params = {}) => {
     primaryPhone: params.primaryPhone || faker.phone.phoneNumber(),
     emails: params.emails || [faker.internet.email()],
     phones: params.phones || [faker.phone.phoneNumber()],
+    leadStatus: params.leadStatus || 'open',
+    lifecycleState: params.lifecycleState || 'lead',
     messengerData: params.messengerData || {},
     customFieldsData: params.customFieldsData || {},
     companyIds: params.companyIds || [faker.random.number(), faker.random.number()],

@@ -1,53 +1,33 @@
 import { connect, disconnect } from '../db/connection';
-import { Companies, Customers } from '../db/models';
+import { Customers } from '../db/models';
 
 export const customCommand = async () => {
   connect();
 
-  const companies = await Companies.find({
-    name: { $exists: true },
-    primaryName: { $exists: false },
+  const customers = await Customers.find({
+    $or: [{ facebookData: { $exists: true } }, { twitterData: { $exists: true } }],
   });
 
-  try {
-    Companies.collection.dropIndexes({ name: 1 });
-  } catch (e) {
-    console.log(e);
-  }
+  for (let customer of customers) {
+    let twitterProfile;
+    let facebookProfile;
 
-  for (const company of companies) {
-    await Companies.update(
-      { _id: company._id },
+    if (customer.twitterData) {
+      twitterProfile = customer.twitterData._doc.profile_image_url;
+    }
+
+    if (customer.facebookData) {
+      facebookProfile = customer.facebookData._doc.profilePic;
+    }
+
+    await Customers.update(
+      { _id: customer._id },
       {
-        $set: { names: [company.name], primaryName: company.name },
+        $set: {
+          avatar: facebookProfile || twitterProfile,
+        },
       },
     );
-  }
-
-  const customers = await Customers.find({
-    $or: [{ email: { $exists: true } }, { phone: { $exists: true } }],
-  });
-
-  try {
-    Customers.collection.dropIndexes({ email: 1 });
-  } catch (e) {
-    console.log(e);
-  }
-
-  for (const customer of customers) {
-    if (customer.email && !customer.primaryEmail) {
-      await Customers.update(
-        { _id: customer._id },
-        { $set: { primaryEmail: customer.email, emails: [customer.email] } },
-      );
-    }
-
-    if (customer.phone && !customer.primaryPhone) {
-      await Customers.update(
-        { _id: customer._id },
-        { $set: { primaryPhone: customer.phone, phones: [customer.phone] } },
-      );
-    }
   }
 
   disconnect();

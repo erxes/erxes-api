@@ -4,7 +4,14 @@
 import faker from 'faker';
 import { Companies, Tags, Segments } from '../db/models';
 import { graphqlRequest, connect, disconnect } from '../db/connection';
-import { tagsFactory, segmentFactory, companyFactory } from '../db/factories';
+import {
+  tagsFactory,
+  segmentFactory,
+  companyFactory,
+  customerFactory,
+  brandFactory,
+  integrationFactory,
+} from '../db/factories';
 
 beforeAll(() => connect());
 
@@ -16,12 +23,15 @@ const count = response => {
 
 describe('companyQueries', () => {
   const commonParamDefs = `
-    $page: Int,
-    $perPage: Int,
-    $segment: String,
-    $tag: String,
-    $ids: [String],
+    $page: Int
+    $perPage: Int
+    $segment: String
+    $tag: String
+    $ids: [String]
     $searchValue: String
+    $lifecycleState: String
+    $leadStatus: String
+    $brand: String
   `;
 
   const commonParams = `
@@ -31,12 +41,18 @@ describe('companyQueries', () => {
     tag: $tag
     ids: $ids
     searchValue: $searchValue
+    lifecycleState: $lifecycleState
+    leadStatus: $leadStatus
+    brand: $brand
   `;
 
   const qryCompanies = `
     query companies(${commonParamDefs}) {
       companies(${commonParams}) {
         _id
+        createdAt
+        modifiedAt
+
         primaryName
         names
         size
@@ -52,7 +68,6 @@ describe('companyQueries', () => {
         lifecycleState
         businessType
         description
-        employees
         doNotDisturb
         links {
           linkedIn
@@ -65,8 +80,6 @@ describe('companyQueries', () => {
         owner { _id }
         parentCompany { _id }
 
-        lastSeenAt
-        sessionCount
         tagIds
 
         customFieldsData
@@ -156,6 +169,30 @@ describe('companyQueries', () => {
     expect(responses.length).toBe(2);
   });
 
+  test('Companies filtered by leadStatus', async () => {
+    await companyFactory();
+    await companyFactory();
+    await companyFactory({ leadStatus: 'new' });
+    await companyFactory({ leadStatus: 'new' });
+
+    const responses = await graphqlRequest(qryCompanies, 'companies', { leadStatus: 'new' });
+
+    expect(responses.length).toBe(2);
+  });
+
+  test('Companies filtered by lifecycleState', async () => {
+    await companyFactory();
+    await companyFactory();
+    await companyFactory({ lifecycleState: 'subscriber' });
+    await companyFactory({ lifecycleState: 'subscriber' });
+
+    const responses = await graphqlRequest(qryCompanies, 'companies', {
+      lifecycleState: 'subscriber',
+    });
+
+    expect(responses.length).toBe(2);
+  });
+
   test('Companies filtered by segment', async () => {
     await companyFactory({ names: [name], primaryName: name });
     await companyFactory();
@@ -209,6 +246,23 @@ describe('companyQueries', () => {
     expect(responses[0].plan).toBe(plan);
   });
 
+  test('Companies filtered by brandId', async () => {
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id });
+    const integrationId = integration._id;
+
+    const company1 = await companyFactory({});
+    const company2 = await companyFactory({});
+    await companyFactory({});
+
+    await customerFactory({ integrationId, companyIds: [company1._id] });
+    await customerFactory({ integrationId, companyIds: [company2._id] });
+
+    const responses = await graphqlRequest(qryCompanies, 'companies', { brand: brand._id });
+
+    expect(responses.length).toBe(2);
+  });
+
   test('Main companies', async () => {
     await companyFactory({});
     await companyFactory({});
@@ -248,6 +302,30 @@ describe('companyQueries', () => {
     expect(count(response.byTag)).toBe(1);
   });
 
+  test('Company count by leadStatus', async () => {
+    await companyFactory({});
+    await companyFactory({});
+    await companyFactory({ leadStatus: 'new' });
+    await companyFactory({ leadStatus: 'new' });
+
+    const response = await graphqlRequest(qryCount, 'companyCounts');
+
+    expect(response.byLeadStatus['open']).toBe(2);
+    expect(response.byLeadStatus['new']).toBe(2);
+  });
+
+  test('Company count by lifecycleState', async () => {
+    await companyFactory({});
+    await companyFactory({});
+    await companyFactory({ lifecycleState: 'subscriber' });
+    await companyFactory({ lifecycleState: 'subscriber' });
+
+    const response = await graphqlRequest(qryCount, 'companyCounts');
+
+    expect(response.byLifecycleState['subscriber']).toBe(2);
+    expect(response.byLifecycleState['lead']).toBe(2);
+  });
+
   test('Company count by segment', async () => {
     await companyFactory({});
     await companyFactory({});
@@ -258,6 +336,23 @@ describe('companyQueries', () => {
     const response = await graphqlRequest(qryCount, 'companyCounts');
 
     expect(count(response.bySegment)).toBe(1);
+  });
+
+  test('Company count by brand', async () => {
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id });
+    const integrationId = integration._id;
+
+    const company1 = await companyFactory({});
+    const company2 = await companyFactory({});
+    await companyFactory({});
+
+    await customerFactory({ integrationId, companyIds: [company1._id] });
+    await customerFactory({ integrationId, companyIds: [company2._id] });
+
+    const response = await graphqlRequest(qryCount, 'companyCounts', { brand: brand._id });
+
+    expect(response.byBrand[brand._id]).toBe(2);
   });
 
   test('Company detail', async () => {

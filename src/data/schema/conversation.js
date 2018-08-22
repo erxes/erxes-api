@@ -12,15 +12,22 @@ export const types = `
     postId: String
     commentId: String
     parentId: String
+
+    isPost: Boolean
+    reactions: JSON
+    likeCount: Int
+    commentCount: Int
+
     messageId: String
     item: String
-    photoId: String
-    videoId: String
+    photo: String
+    video: String
+    photos: [String]
     link: String
-    reactionType: String
+
     senderId: String
     senderName: String
-  }
+    }
 
   type TwitterData {
     id: Float
@@ -151,7 +158,7 @@ export const queries = `
   ): [ConversationMessage]
 
   conversationMessagesTotalCount(conversationId: String!): Int
-  conversationCounts(${filterParams}): JSON
+  conversationCounts(${filterParams}, only: String): JSON
   conversationsTotalCount(${filterParams}): Int
   conversationDetail(_id: String!): Conversation
   conversationsGetLast(${filterParams}): Conversation
@@ -167,6 +174,7 @@ export const mutations = `
     attachments: [JSON],
     tweetReplyToId: String,
     tweetReplyToScreenName: String,
+    commentReplyToId: String
   ): ConversationMessage
 
   conversationsTweet(

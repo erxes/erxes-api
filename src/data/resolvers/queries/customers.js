@@ -1,12 +1,29 @@
 import { Brands, Tags, Customers, Segments, Forms } from '../../../db/models';
-import { TAG_TYPES, INTEGRATION_KIND_CHOICES, COC_CONTENT_TYPES } from '../../constants';
+import {
+  TAG_TYPES,
+  INTEGRATION_KIND_CHOICES,
+  COC_CONTENT_TYPES,
+  COC_LEAD_STATUS_TYPES,
+  COC_LIFECYCLE_STATE_TYPES,
+} from '../../constants';
 import QueryBuilder from './segmentQueryBuilder';
 import { moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';
 import BuildQuery from './customerQueryBuilder';
 import { cocsExport } from './cocExport';
 
-const CUSTOMERS_SORT = { 'messengerData.lastSeenAt': -1 };
+const sortBuilder = params => {
+  const sortField = params.sortField;
+  const sortDirection = params.sortDirection;
+
+  let sortParams = { 'messengerData.lastSeenAt': -1 };
+
+  if (sortField) {
+    sortParams = { [sortField]: sortDirection };
+  }
+
+  return sortParams;
+};
 
 const customerQueries = {
   /**
@@ -19,7 +36,9 @@ const customerQueries = {
 
     await qb.buildAllQueries();
 
-    return paginate(Customers.find(qb.mainQuery()).sort(CUSTOMERS_SORT), params);
+    const sort = sortBuilder(params);
+
+    return paginate(Customers.find(qb.mainQuery()).sort(sort), params);
   },
 
   /**
@@ -32,7 +51,9 @@ const customerQueries = {
 
     await qb.buildAllQueries();
 
-    const list = await paginate(Customers.find(qb.mainQuery()).sort(CUSTOMERS_SORT), params);
+    const sort = sortBuilder(params);
+
+    const list = await paginate(Customers.find(qb.mainQuery()).sort(sort), params);
     const totalCount = await Customers.find(qb.mainQuery()).count();
 
     return { list, totalCount };
@@ -52,13 +73,28 @@ const customerQueries = {
       byTag: {},
       byFakeSegment: 0,
       byForm: {},
+      byLeadStatus: {},
+      byLifecycleState: {},
     };
 
     const qb = new BuildQuery(params);
+
     await qb.buildAllQueries();
 
+    let mainQuery = qb.mainQuery();
+
+    // if passed at least one filter other than perPage
+    // then find all filtered customers then add subsequent filter to it
+    if (Object.keys(params).length > 1) {
+      const customers = await Customers.find(qb.mainQuery(), { _id: 1 });
+      const customerIds = customers.map(customer => customer._id);
+
+      mainQuery = { _id: { $in: customerIds } };
+    }
+
     const count = query => {
-      const findQuery = Object.assign({}, qb.mainQuery(), query);
+      const findQuery = { $and: [mainQuery, query] };
+
       return Customers.find(findQuery).count();
     };
 
@@ -93,7 +129,7 @@ const customerQueries = {
     const tags = await Tags.find({ type: TAG_TYPES.CUSTOMER });
 
     for (let tag of tags) {
-      counts.byTag[tag._id] = await count(await qb.tagFilter(tag._id));
+      counts.byTag[tag._id] = await count(qb.tagFilter(tag._id));
     }
 
     // Count customers by submitted form
@@ -103,6 +139,16 @@ const customerQueries = {
       counts.byForm[form._id] = await count(
         await qb.formFilter(form._id, params.startDate, params.endDate),
       );
+    }
+
+    // Count customers by lead status
+    for (let status of COC_LEAD_STATUS_TYPES) {
+      counts.byLeadStatus[status] = await count(qb.leadStatusFilter(status));
+    }
+
+    // Count customers by life cycle state
+    for (let state of COC_LIFECYCLE_STATE_TYPES) {
+      counts.byLifecycleState[state] = await count(qb.lifecycleStateFilter(state));
     }
 
     return counts;
@@ -146,7 +192,9 @@ const customerQueries = {
 
     await qb.buildAllQueries();
 
-    const customers = await Customers.find(qb.mainQuery()).sort(CUSTOMERS_SORT);
+    const sort = sortBuilder(params);
+
+    const customers = await Customers.find(qb.mainQuery()).sort(sort);
 
     return cocsExport(customers, 'customer');
   },
