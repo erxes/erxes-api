@@ -8,6 +8,7 @@ erxes is an open source growth marketing platform. Marketing, sales, and custome
 
 ![Build Status](https://travis-ci.org/erxes/erxes-api.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/erxes/erxes-api/badge.svg?branch=coveralls)](https://coveralls.io/github/erxes/erxes-api?branch=coveralls)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ferxes%2Ferxes-api.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ferxes%2Ferxes-api?ref=badge_shield)
 
 ## Running the server
 
@@ -102,3 +103,6 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 ## Copyright & License
 Copyright (c) 2018 erxes Inc - Released under the [MIT license.](https://github.com/erxes/erxes/blob/develop/LICENSE.md)
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ferxes%2Ferxes-api.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ferxes%2Ferxes-api?ref=badge_large)
