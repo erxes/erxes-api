@@ -146,6 +146,8 @@ export const mutations = `
     body: String!,
     toEmails: String!,
     cc: String,
+    bcc: String,
+    attachments: [String],
   ): GmailResponseData
 
   integrationsCreateFacebookIntegration(

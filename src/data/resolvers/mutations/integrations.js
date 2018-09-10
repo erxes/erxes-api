@@ -129,6 +129,8 @@ const integrationMutations = {
    * @param {String} args.body - email body
    * @param {String} args.toEmails - to emails
    * @param {String} args.cc - cc emails
+   * @param {String} args.bcc - bcc emails
+   * @param {List} args.attachments - attachment url list
    * @return {Promise} return Promise resolving email response
    */
   integrationsSendGmail(root, args, { user }) {
