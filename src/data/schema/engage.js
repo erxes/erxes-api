@@ -11,6 +11,7 @@ export const types = `
     isLive: Boolean
     stopDate: Date
     createdDate: Date
+    type: String
     messengerReceivedCustomerIds: [String]
     tagIds: [String]
     stats: JSON
@@ -20,9 +21,24 @@ export const types = `
     messenger: JSON
     deliveryReports: JSON
 
+    scheduleDate: EngageScheduleDate
     segment: Segment
     fromUser: User
     getTags: [Tag]
+  }
+
+  type EngageScheduleDate {
+    type: String,
+    month: String,
+    day: String,
+    time: Date,
+  }
+
+  input EngageScheduleDateInput {
+    type: String,
+    month: String,
+    day: String,
+    time: Date,
   }
 
   input EngageMessageMessengerRule {
@@ -49,19 +65,20 @@ export const types = `
   }
 `;
 
-export const queries = `
-  engageMessages(
-    kind: String
-    status: String
-    tag: String
-    ids: [String]
-    page: Int
-    perPage: Int
-  ): [EngageMessage]
+const listParams = `
+  kind: String
+  status: String
+  tag: String
+  ids: [String]
+  page: Int
+  perPage: Int
+`;
 
+export const queries = `
+  engageMessages(${listParams}): [EngageMessage]
+  engageMessagesTotalCount(${listParams}): Int
   engageMessageDetail(_id: String): EngageMessage
   engageMessageCounts(name: String!, kind: String, status: String): JSON
-  engageMessagesTotalCount: Int
 `;
 
 const commonParams = `
@@ -72,10 +89,13 @@ const commonParams = `
   isDraft: Boolean,
   isLive: Boolean,
   stopDate: Date,
+  scheduleDate: Date,
+  type: String
   segmentId: String,
   customerIds: [String],
   tagIds: [String],
   email: EngageMessageEmail,
+  scheduleDate: EngageScheduleDateInput,
   messenger: EngageMessageMessenger,
 `;
 
