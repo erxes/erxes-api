@@ -39,7 +39,7 @@
     string-format-obj "^1.1.0"
     through2 "^2.0.3"
 
-"@google-cloud/pubsub@^0.18.0":
+"@google-cloud/pubsub@0.18.0":
   version "0.18.0"
   resolved "http://registry.npmjs.org/@google-cloud/pubsub/-/pubsub-0.18.0.tgz#d48dd78531b28383d73980b3c1e2365e04c76432"
   dependencies:

@@ -1,9 +1,13 @@
+import * as PubSub from '@google-cloud/pubsub';
+import * as fs from 'fs';
 import { google } from 'googleapis';
 import * as request from 'request';
-import { ActivityLogs, Integrations } from '../db/models';
+import { CONVERSATION_STATUSES } from '../data/constants';
+import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
+import { IConversationDocument } from '../db/models/definitions/conversations';
 import { getOauthClient } from './googleTracker';
-import { Credentials } from 'google-auth-library/build/src/auth/credentials';
-import * as PubSub from '@google-cloud/pubsub';
+import { ICustomerDocument } from '../db/models/definitions/customers';
 
 interface IMailParams {
   integrationId: string;
@@ -143,9 +147,7 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
 /**
  * Get permission granted email information
  */
-export const getGmailUserProfile = async (
-  credentials: Credentials,
-): Promise<{ emailAddress?: string; historyId?: string }> => {
+export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?: string; historyId?: string }> => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
@@ -164,10 +166,14 @@ export const getGmailUserProfile = async (
 };
 
 /**
- * Get gmail history list
+ * Get gmail inbox updates
  */
-export const getGmailHistoryList = async (integrationId: string): Promise<{ history: JSON }> => {
-  const integration = await Integrations.findOne({ _id: integrationId });
+export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddress: string; historyId: string }) => {
+  console.log('email', emailAddress);
+  const integration = await Integrations.findOne({
+    gmailData: { $exists: true },
+    'gmailData.email': emailAddress,
+  });
 
   if (!integration || !integration.gmailData) {
     throw new Error('Integration not found');
@@ -179,81 +185,173 @@ export const getGmailHistoryList = async (integrationId: string): Promise<{ hist
 
   const gmail: any = await google.gmail('v1');
 
-  return gmail.users.history.list({
+  const response: any = await gmail.users.history.list({
     auth,
     userId: 'me',
+    historyTypes: 'messageAdded',
     startHistoryId: integration.gmailData.historyId,
   });
-};
 
-/**
- * Get gmail latest updates
- */
-export const getGmailLatestUpdates = async (integrationId: string): Promise<{ history: JSON }> => {
-  const integration = await Integrations.findOne({ _id: integrationId });
+  if (response.data.history) {
+    for (const row of response.data.history) {
+      for (const msg of row.messages) {
+        const { data } = await gmail.users.messages.get({
+          auth,
+          userId: 'me',
+          id: msg.id,
+        });
 
-  if (!integration || !integration.gmailData) {
-    throw new Error('Integration not found');
+        const gmailData: { content: string; attachments: string[] } = {
+          content: '',
+          attachments: [],
+        };
+
+        for (const header of data.payload.headers) {
+          const keyHeader = header.name.toLowerCase();
+          if (['from', 'to', 'subject', 'cc', 'bcc'].indexOf(keyHeader) !== -1) {
+            gmailData[keyHeader] = header.value;
+          }
+        }
+        if (data.payload && data.payload.parts) {
+          for (const part of data.payload.parts) {
+            if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
+              gmailData.content = Buffer.from(part.body.data, 'base64').toString();
+            } else if (part.mimeType === 'multipart/related') {
+              for (const filePayload of part.parts) {
+                const filePath = `${__dirname}/../private/gmail/${filePayload.filename}`;
+                await fs.writeFile(filePath, filePayload.body.data, 'utf8', error => {
+                  if (error) {
+                    throw error;
+                  }
+                });
+                gmailData.attachments.push(filePath);
+              }
+            }
+          }
+        } else {
+          gmailData.content = Buffer.from(data.payload.body.data, 'base64').toString();
+        }
+        getOrCreateConversation({ integration, messageId: msg.id, gmailData });
+      }
+    }
   }
-
-  const auth = getOauthClient('gmail');
-
-  auth.setCredentials(integration.gmailData.credentials);
-
-  const gmail: any = await google.gmail('v1');
-
-  const { GOOGLE_TOPIC } = process.env;
-
-  return gmail.users.watch({
-    auth,
-    userId: 'me',
-    requestBody: {
-      topicName: GOOGLE_TOPIC,
-    },
-  });
+  integration.gmailData.historyId = historyId;
+  integration.save();
+  return response.data;
 };
 
-export const googlePushNotifiction = () => {
+export const trackGmail = async () => {
   const { GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_TOPIC, GOOGLE_SUPSCRIPTION_NAME, GOOGLE_PROJECT_ID } = process.env;
-
   const pubsubClient = PubSub({
     projectId: GOOGLE_PROJECT_ID,
     keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
   });
 
   if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC variable not found in env');
+    throw new Error('GOOGLE_TOPIC variable does not found in env');
   }
 
   if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME variable not found in env');
+    throw new Error('GOOGLE_SUPSCRIPTION_NAME variable does not found in env');
   }
 
-  // Reference a topic that has been previously created.
-  var topic = pubsubClient.topic(GOOGLE_TOPIC);
+  const topic = pubsubClient.topic(GOOGLE_TOPIC);
 
-  // Subscribe to the topic.
-  topic.createSubscription(GOOGLE_SUPSCRIPTION_NAME, (error, subscription) => {
-    const onError = err => {
-      console.log('--------error---------');
-      console.log(err);
+  topic.createSubscription(GOOGLE_SUPSCRIPTION_NAME, ({}, subscription) => {
+    const errorHandler = err => {
+      subscription.removeListener('message', messageHandler);
+      subscription.removeListener('error', errorHandler);
+      throw new Error(err);
     };
 
-    const onMessage = message => {
-      console.log('--------message---------');
-      console.log(message);
+    const messageHandler = message => {
+      try {
+        getGmailUpdates(JSON.parse(message.data.toString()));
+      } catch (error) {
+        throw error;
+      }
+
+      // All notifications need to be acknowledged as per the Cloud Pub/Sub
+      message.ack();
     };
 
-    if (error) {
-      subscription.removeListener('message', onMessage);
-      subscription.removeListener('error', onError);
-      throw new Error('error occured');
-    }
-    // Register listeners to start pulling for messages.
+    subscription.on('error', errorHandler);
+    subscription.on('message', messageHandler);
+  });
+};
 
-    subscription.on('error', onError);
-    subscription.on('message', onMessage);
+const getOrCreateCustomer = async (email, integrationId) => {
+  const customer = await Customers.findOne({ emails: { $in: [email] } });
+  if (customer) {
+    return customer;
+  }
 
-    // Remove listeners to stop pulling for messages.
+  return Customers.createCustomer({
+    emails: [email],
+    integrationId,
+  });
+};
+
+const createMessage = async ({
+  conversation,
+  content,
+  customer,
+  gmailData,
+}: {
+  conversation: IConversationDocument;
+  content: string;
+  customer: ICustomerDocument;
+  gmailData: IMsgGmail;
+}): Promise<string> => {
+  if (!conversation) {
+    throw new Error('createMessage: Conversation not found');
+  }
+
+  // create new message
+  const message = await ConversationMessages.createMessage({
+    conversationId: conversation._id,
+    customerId: customer._id,
+    content,
+    gmailData,
+    internal: false,
+  });
+
+  // updating conversation content
+  await Conversations.update({ _id: conversation._id }, { $set: { content } });
+  return message._id;
+};
+
+const getOrCreateConversation = async value => {
+  const { integration, messageId, gmailData } = value;
+  const content = gmailData.subject;
+
+  let conversation = await Conversations.findOne({
+    'gmailData.messageId': messageId,
+  }).sort({ createdAt: -1 });
+
+  const status = CONVERSATION_STATUSES.NEW;
+
+  const customer = await getOrCreateCustomer(gmailData.from, integration.id);
+
+  if (!conversation) {
+    conversation = await Conversations.createConversation({
+      integrationId: integration._id,
+      customerId: customer._id,
+      status,
+      content,
+
+      // save gmail infos
+      gmailData: {
+        messageId,
+      },
+    });
+  }
+
+  // create new message
+  return createMessage({
+    conversation,
+    content,
+    customer,
+    gmailData,
   });
 };

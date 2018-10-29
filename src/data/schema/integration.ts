@@ -100,9 +100,6 @@ export const queries = `
   integrationGetGoogleAccessToken(code: String): JSON
   integrationFacebookAppsList: [JSON]
   integrationFacebookPagesList(appId: String): [JSON]
-  integrationGetGmailMessages(
-    integrationId: String!
-  ): JSON
 `;
 
 export const mutations = `
