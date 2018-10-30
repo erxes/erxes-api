@@ -8,6 +8,7 @@ export const types = `
     _id: String!
     name: String!
     ${commonTypes}
+    pipelines: [DealPipeline]
   }
 
   type DealPipeline {
@@ -23,6 +24,7 @@ export const types = `
     probability: String
     pipelineId: String!
     amount: JSON
+    deals: [Deal]
     ${commonTypes}
   }
 
@@ -45,6 +47,7 @@ export const types = `
     assignedUsers: [User]
     modifiedAt: Date
     modifiedBy: String
+    stage: DealStage
     ${commonTypes}
   }
 `;
@@ -54,6 +57,7 @@ export const queries = `
   dealBoardGetLast: DealBoard
   dealBoardDetail(_id: String!): DealBoard
   dealPipelines(boardId: String!): [DealPipeline]
+  dealPipelineDetail(_id: String!): DealPipeline
   dealStages(pipelineId: String!): [DealStage]
   dealStageDetail(_id: String!): DealStage
   deals(stageId: String, customerId: String, companyId: String): [Deal]
@@ -97,6 +101,6 @@ export const mutations = `
   dealsAdd(${dealMutationParams}): Deal
   dealsEdit(_id: String!, ${dealMutationParams}): Deal
   dealsChange( _id: String!, stageId: String!): Deal
-  dealsUpdateOrder(orders: [OrderItem]): [Deal]
+  dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
 `;

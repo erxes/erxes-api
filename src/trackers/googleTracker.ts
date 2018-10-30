@@ -23,11 +23,7 @@ export const getOauthClient = (service?: string) => {
  */
 export const getAuthorizeUrl = (service?: string) => {
   const oauthClient = getOauthClient(service);
-  let scopes = SCOPES_CALENDAR;
-
-  if (service === 'gmail') {
-    scopes = SCOPES_GMAIL;
-  }
+  const scopes = service === 'gmail' ? SCOPES_GMAIL : SCOPES_CALENDAR;
 
   return oauthClient.generateAuthUrl({
     access_type: 'offline',

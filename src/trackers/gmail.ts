@@ -62,7 +62,7 @@ const encodeEmail = async (
     `Subject: ${utf8Subject}`,
     '',
     '--erxes',
-    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Type: text/html; charset="UTF-8"',
     'MIME-Version: 1.0',
     'Content-Transfer-Encoding: 7bit',
     '',
@@ -121,6 +121,15 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
 
   const raw = await encodeEmail(toEmails, fromEmail, subject, body, attachments, cc, bcc);
 
+  const activityLogContent = JSON.stringify({
+    toEmails,
+    subject,
+    body,
+    attachments,
+    cc,
+    bcc,
+  });
+
   return new Promise((resolve, reject) => {
     const data = {
       auth,
@@ -136,7 +145,7 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
       }
 
       // Create activity log for send gmail
-      ActivityLogs.createGmailLog(subject, cocType, cocId, userId, integrationId);
+      ActivityLogs.createGmailLog(activityLogContent, cocType, cocId, userId);
 
       resolve(response);
     });
