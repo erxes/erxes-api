@@ -6,11 +6,16 @@ import { userFactory } from './factories';
 
 dotenv.config();
 
-const { MONGO_URL = '' } = process.env;
+const { NODE_ENV, MONGO_URL = '' } = process.env;
 
 mongoose.Promise = global.Promise;
 
 mongoose.connection
+  .on('connected', () => {
+    if (NODE_ENV !== 'test') {
+      console.log(`Connected to the database: ${MONGO_URL}`);
+    }
+  })
   .on('disconnected', () => {
     console.log(`Disconnected from the database: ${MONGO_URL}`);
   })

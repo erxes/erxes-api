@@ -1,10 +1,10 @@
 {
   "name": "erxes-api",
-  "version": "0.9.6",
+  "version": "0.9.10",
   "description": "GraphQL API for erxes main project",
   "homepage": "https://erxes.io",
-  "repository": "https://github.com/erxes/erxes-app-api",
-  "bugs": "https://github.com/erxes/erxes-app-api/issues",
+  "repository": "https://github.com/erxes/erxes-api",
+  "bugs": "https://github.com/erxes/erxes-api/issues",
   "keywords": [
     "node",
     "express",
@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node dist",
     "dev": "NODE_ENV=development nodemon -e ts src --exec ts-node",
-    "build": "tsc -p tsconfig.prod.json",
+    "build": "tsc -p tsconfig.prod.json && cp -rf src/private dist/private",
     "lint": "tslint 'src/**/*.ts'",
     "format": "prettier --write --print-width 120 --single-quote --trailing-comma all 'src/**/*.ts'",
     "precommit": "lint-staged",
@@ -54,6 +54,7 @@
     "express": "^4.15.2",
     "fbgraph": "^1.4.1",
     "formidable": "^1.1.1",
+    "git-repo-info": "^2.0.0",
     "googleapis": "^33.0.0",
     "graphql": "^0.10.1",
     "graphql-redis-subscriptions": "^1.4.0",
