@@ -262,7 +262,6 @@ const parseMessage = response => {
  * Get gmail inbox updates
  */
 export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddress: string; historyId: string }) => {
-  console.log('email', emailAddress);
   const integration = await Integrations.findOne({
     gmailData: { $exists: true },
     'gmailData.email': emailAddress,
@@ -295,13 +294,12 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
         });
 
         const gmailData = await parseMessage(data);
-        getOrCreateConversation({ integration, messageId: msg.id, gmailData });
+        await getOrCreateConversation({ integration, messageId: msg.id, gmailData });
       }
     }
   }
   integration.gmailData.historyId = historyId;
   integration.save();
-  return response.data;
 };
 
 export const trackGmail = async () => {
@@ -312,11 +310,11 @@ export const trackGmail = async () => {
   });
 
   if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC constiable does not found in env');
+    throw new Error('GOOGLE_TOPIC constiable did not found in env');
   }
 
   if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME constiable does not found in env');
+    throw new Error('GOOGLE_SUPSCRIPTION_NAME constiable did not found in env');
   }
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
@@ -380,8 +378,6 @@ const createMessage = async ({
     internal: false,
   });
 
-  // updating conversation content
-  await Conversations.update({ _id: conversation._id }, { $set: { content } });
   return message._id;
 };
 
@@ -392,6 +388,7 @@ const getOrCreateConversation = async value => {
   let conversation = await Conversations.findOne({
     'gmailData.messageId': messageId,
   }).sort({ createdAt: -1 });
+
   const status = CONVERSATION_STATUSES.NEW;
 
   const customer = await getOrCreateCustomer(gmailData.from, integration.id);
@@ -408,6 +405,10 @@ const getOrCreateConversation = async value => {
         messageId,
       },
     });
+  } else {
+    conversation.status = CONVERSATION_STATUSES.OPEN;
+    conversation.content = content;
+    conversation.save();
   }
 
   // create new message
