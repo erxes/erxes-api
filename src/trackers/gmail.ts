@@ -1,13 +1,12 @@
 import * as PubSub from '@google-cloud/pubsub';
-import * as fs from 'fs';
 import { google } from 'googleapis';
 import * as request from 'request';
 import { CONVERSATION_STATUSES } from '../data/constants';
 import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
-import { getOauthClient } from './googleTracker';
 import { ICustomerDocument } from '../db/models/definitions/customers';
+import { getOauthClient } from './googleTracker';
 
 interface IMailParams {
   integrationId: string;
@@ -165,6 +164,91 @@ export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?:
   });
 };
 
+const indexHeaders = headers => {
+  if (!headers) {
+    return {};
+  } else {
+    return headers.reduce((result, header) => {
+      result[header.name.toLowerCase()] = header.value;
+      return result;
+    }, {});
+  }
+};
+
+const parseMessage = response => {
+  const gmailData: {
+    to: string;
+    from: string;
+    cc: string;
+    bcc: string;
+    subject: string;
+    textHtml: string;
+    textPlain: string;
+    attachments: any;
+  } = {
+    to: '',
+    from: '',
+    cc: '',
+    bcc: '',
+    subject: '',
+    textHtml: '',
+    textPlain: '',
+    attachments: [],
+  };
+
+  const payload = response.payload;
+  if (!payload) {
+    return gmailData;
+  }
+
+  let headers = indexHeaders(payload.headers);
+  for (const headerKey of ['subject', 'from', 'to', 'cc', 'bcc']) {
+    if (headers.hasOwnProperty(headerKey)) {
+      gmailData[headerKey] = headers[headerKey];
+    }
+  }
+
+  let parts = [payload];
+  let firstPartProcessed = false;
+
+  while (parts.length !== 0) {
+    const part = parts.shift();
+    if (part.parts) {
+      parts = parts.concat(part.parts);
+    }
+    if (firstPartProcessed) {
+      headers = indexHeaders(part.headers);
+    }
+
+    if (!part.body) {
+      continue;
+    }
+
+    const isHtml = part.mimeType && part.mimeType.indexOf('text/html') !== -1;
+    const isPlain = part.mimeType && part.mimeType.indexOf('text/plain') !== -1;
+    const isAttachment = headers['content-disposition'] && headers['content-disposition'].indexOf('attachment') !== -1;
+    const isInline = headers['content-disposition'] && headers['content-disposition'].indexOf('inline') !== -1;
+
+    if (isHtml && !isAttachment) {
+      gmailData.textHtml = Buffer.from(part.body.data, 'base64').toString();
+    } else if (isPlain && !isAttachment) {
+      gmailData.textPlain = Buffer.from(part.body.data, 'base64').toString();
+    } else if (isAttachment || isInline) {
+      const body = part.body;
+      gmailData.attachments.push({
+        filename: part.filename,
+        mimeType: part.mimeType,
+        size: body.size,
+        attachmentId: body.attachmentId,
+      });
+    }
+
+    firstPartProcessed = true;
+  }
+
+  return gmailData;
+};
+
 /**
  * Get gmail inbox updates
  */
@@ -201,36 +285,7 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
           id: msg.id,
         });
 
-        const gmailData: { content: string; attachments: string[] } = {
-          content: '',
-          attachments: [],
-        };
-
-        for (const header of data.payload.headers) {
-          const keyHeader = header.name.toLowerCase();
-          if (['from', 'to', 'subject', 'cc', 'bcc'].indexOf(keyHeader) !== -1) {
-            gmailData[keyHeader] = header.value;
-          }
-        }
-        if (data.payload && data.payload.parts) {
-          for (const part of data.payload.parts) {
-            if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-              gmailData.content = Buffer.from(part.body.data, 'base64').toString();
-            } else if (part.mimeType === 'multipart/related') {
-              for (const filePayload of part.parts) {
-                const filePath = `${__dirname}/../private/gmail/${filePayload.filename}`;
-                await fs.writeFile(filePath, filePayload.body.data, 'utf8', error => {
-                  if (error) {
-                    throw error;
-                  }
-                });
-                gmailData.attachments.push(filePath);
-              }
-            }
-          }
-        } else {
-          gmailData.content = Buffer.from(data.payload.body.data, 'base64').toString();
-        }
+        const gmailData = await parseMessage(data);
         getOrCreateConversation({ integration, messageId: msg.id, gmailData });
       }
     }
@@ -248,11 +303,11 @@ export const trackGmail = async () => {
   });
 
   if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC variable does not found in env');
+    throw new Error('GOOGLE_TOPIC constiable does not found in env');
   }
 
   if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME variable does not found in env');
+    throw new Error('GOOGLE_SUPSCRIPTION_NAME constiable does not found in env');
   }
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
@@ -328,7 +383,6 @@ const getOrCreateConversation = async value => {
   let conversation = await Conversations.findOne({
     'gmailData.messageId': messageId,
   }).sort({ createdAt: -1 });
-
   const status = CONVERSATION_STATUSES.NEW;
 
   const customer = await getOrCreateCustomer(gmailData.from, integration.id);
@@ -352,6 +406,9 @@ const getOrCreateConversation = async value => {
     conversation,
     content,
     customer,
-    gmailData,
+    gmailData: {
+      messageId,
+      ...gmailData,
+    },
   });
 };
