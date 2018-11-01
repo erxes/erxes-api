@@ -437,6 +437,7 @@ interface IIntegrationFactoryInput {
   formId?: string;
   twitterData?: any;
   facebookData?: any;
+  gmailData?: any;
   formData?: any | string;
   tagIds?: string[];
 }
@@ -452,6 +453,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     twitterData: params.twitterData || {},
     facebookData: params.facebookData || {},
+    gmailData: params.gmailData || {},
     formData: params.formData === 'form' ? params.formData : kind === 'form' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
   };

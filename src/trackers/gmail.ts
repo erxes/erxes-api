@@ -173,7 +173,10 @@ export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?:
   });
 };
 
-const indexHeaders = headers => {
+/**
+ * Get headers values
+ */
+export const indexHeaders = headers => {
   if (!headers) {
     return {};
   } else {
@@ -184,7 +187,10 @@ const indexHeaders = headers => {
   }
 };
 
-const parseMessage = response => {
+/**
+ * Parse result of users.messages.get response
+ */
+export const parseMessage = response => {
   const gmailData: {
     to: string;
     from: string;
@@ -259,18 +265,9 @@ const parseMessage = response => {
 };
 
 /**
- * Get gmail inbox updates
+ * Get new messages by stored history id
  */
-export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddress: string; historyId: string }) => {
-  const integration = await Integrations.findOne({
-    gmailData: { $exists: true },
-    'gmailData.email': emailAddress,
-  });
-
-  if (!integration || !integration.gmailData) {
-    throw new Error('Integration not found');
-  }
-
+const getMessagesByHistoryId = async integration => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(integration.gmailData.credentials);
@@ -285,19 +282,35 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
   });
 
   if (response.data.history) {
-    for (const row of response.data.history) {
-      for (const msg of row.messages) {
+    for (const history of response.data.history) {
+      for (const message of history.messages) {
         const { data } = await gmail.users.messages.get({
           auth,
           userId: 'me',
-          id: msg.id,
+          id: message.id,
         });
 
         const gmailData = await parseMessage(data);
-        await getOrCreateConversation({ integration, messageId: msg.id, gmailData });
+        await getOrCreateConversation({ integration, messageId: message.id, gmailData });
       }
     }
   }
+};
+/**
+ * Get gmail inbox updates
+ */
+export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddress: string; historyId: string }) => {
+  const integration = await Integrations.findOne({
+    gmailData: { $exists: true },
+    'gmailData.email': emailAddress,
+  });
+
+  if (!integration || !integration.gmailData) {
+    throw new Error('Integration not found');
+  }
+
+  await utils.getMessagesByHistoryId(integration);
+
   integration.gmailData.historyId = historyId;
   integration.save();
 };
@@ -310,11 +323,11 @@ export const trackGmail = async () => {
   });
 
   if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC constiable did not found in env');
+    throw new Error('GOOGLE_TOPIC not found in env');
   }
 
   if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME constiable did not found in env');
+    throw new Error('GOOGLE_SUPSCRIPTION_NAME not found in env');
   }
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
@@ -342,7 +355,7 @@ export const trackGmail = async () => {
   });
 };
 
-const getOrCreateCustomer = async (email, integrationId) => {
+export const getOrCreateCustomer = async (email, integrationId) => {
   const customer = await Customers.findOne({ emails: { $in: [email] } });
   if (customer) {
     return customer;
@@ -354,7 +367,7 @@ const getOrCreateCustomer = async (email, integrationId) => {
   });
 };
 
-const createMessage = async ({
+export const createMessage = async ({
   conversation,
   content,
   customer,
@@ -381,7 +394,7 @@ const createMessage = async ({
   return message._id;
 };
 
-const getOrCreateConversation = async value => {
+export const getOrCreateConversation = async value => {
   const { integration, messageId, gmailData } = value;
   const content = gmailData.subject;
 
@@ -421,4 +434,8 @@ const getOrCreateConversation = async value => {
       ...gmailData,
     },
   });
+};
+
+export const utils = {
+  getMessagesByHistoryId,
 };
