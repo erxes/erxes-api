@@ -1,7 +1,8 @@
 import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IMessengerIntegration } from '../../../db/models/Integrations';
-import { getGmailUserProfile, sendGmail } from '../../../trackers/gmail';
+import { sendGmail } from '../../../trackers/gmail';
+import { getGmailUserProfile } from '../../../trackers/gmailTracker';
 import { getAccessToken } from '../../../trackers/googleTracker';
 import { socUtils } from '../../../trackers/twitterTracker';
 import { requireAdmin, requireLogin } from '../../permissions';

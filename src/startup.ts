@@ -2,8 +2,8 @@ import * as fs from 'fs';
 import './cronJobs';
 import { trackEngages } from './trackers/engageTracker';
 import { trackIntegrations as trackFacebooks } from './trackers/facebookTracker';
+import { trackGmail } from './trackers/gmailTracker';
 import { trackIntegrations as trackTwitters } from './trackers/twitterTracker';
-import { trackGmail } from './trackers/gmail';
 
 export const init = async app => {
   const makeDirs = () => {

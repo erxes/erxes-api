@@ -1,12 +1,10 @@
-import * as PubSub from '@google-cloud/pubsub';
-import { google } from 'googleapis';
 import * as request from 'request';
 import { CONVERSATION_STATUSES } from '../data/constants';
 import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
-import { getOauthClient } from './googleTracker';
+import { utils } from './gmailTracker';
 
 interface IMailParams {
   integrationId: string;
@@ -112,14 +110,10 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
   }
 
   const fromEmail = integration.gmailData.email;
-
-  const auth = getOauthClient('gmail');
-
-  auth.setCredentials(integration.gmailData.credentials);
-
-  const gmail: any = await google.gmail('v1');
-
+  // get raw string encrypted by base64
   const raw = await encodeEmail(toEmails, fromEmail, subject, body, attachments, cc, bcc);
+
+  const response = await utils.sendEmail(integration.gmailData.credentials, raw);
 
   const activityLogContent = JSON.stringify({
     toEmails,
@@ -130,47 +124,9 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
     bcc,
   });
 
-  return new Promise((resolve, reject) => {
-    const data = {
-      auth,
-      userId: 'me',
-      resource: {
-        raw,
-      },
-    };
+  await ActivityLogs.createGmailLog(activityLogContent, cocType, cocId, userId);
 
-    gmail.users.messages.send(data, (err, response) => {
-      if (err) {
-        reject(err);
-      }
-
-      // Create activity log for send gmail
-      ActivityLogs.createGmailLog(activityLogContent, cocType, cocId, userId);
-
-      resolve(response);
-    });
-  });
-};
-
-/**
- * Get permission granted email information
- */
-export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?: string; historyId?: string }> => {
-  const auth = getOauthClient('gmail');
-
-  auth.setCredentials(credentials);
-
-  const gmail: any = await google.gmail('v1');
-
-  return new Promise((resolve, reject) => {
-    gmail.users.getProfile({ auth, userId: 'me' }, (err, response) => {
-      if (err) {
-        reject(err);
-      }
-
-      resolve(response.data);
-    });
-  });
+  return response;
 };
 
 /**
@@ -179,37 +135,20 @@ export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?:
 export const indexHeaders = headers => {
   if (!headers) {
     return {};
-  } else {
-    return headers.reduce((result, header) => {
-      result[header.name.toLowerCase()] = header.value;
-      return result;
-    }, {});
   }
+
+  return headers.reduce((result, header) => {
+    result[header.name.toLowerCase()] = header.value;
+    return result;
+  }, {});
 };
 
 /**
  * Parse result of users.messages.get response
  */
 export const parseMessage = response => {
-  const gmailData: {
-    to: string;
-    from: string;
-    cc: string;
-    bcc: string;
-    subject: string;
-    textHtml: string;
-    textPlain: string;
-    attachments: any;
-  } = {
-    to: '',
-    from: '',
-    cc: '',
-    bcc: '',
-    subject: '',
-    textHtml: '',
-    textPlain: '',
-    attachments: [],
-  };
+  const gmailData: IMsgGmail = {};
+  gmailData.messageId = response.id;
 
   const payload = response.payload;
   if (!payload) {
@@ -228,9 +167,11 @@ export const parseMessage = response => {
 
   while (parts.length !== 0) {
     const part = parts.shift();
+
     if (part.parts) {
       parts = parts.concat(part.parts);
     }
+
     if (firstPartProcessed) {
       headers = indexHeaders(part.headers);
     }
@@ -239,17 +180,28 @@ export const parseMessage = response => {
       continue;
     }
 
-    const isHtml = part.mimeType && part.mimeType.indexOf('text/html') !== -1;
-    const isPlain = part.mimeType && part.mimeType.indexOf('text/plain') !== -1;
-    const isAttachment = headers['content-disposition'] && headers['content-disposition'].indexOf('attachment') !== -1;
-    const isInline = headers['content-disposition'] && headers['content-disposition'].indexOf('inline') !== -1;
+    const isHtml = part.mimeType && part.mimeType.includes('text/html');
+    const isPlain = part.mimeType && part.mimeType.includes('text/plain');
+    const cd = headers['content-disposition'];
+    const isAttachment = cd && cd.includes('attachment');
+    const isInline = cd && cd.includes('inline');
 
+    // get html content
     if (isHtml && !isAttachment) {
       gmailData.textHtml = Buffer.from(part.body.data, 'base64').toString();
+
+      // get plain text
     } else if (isPlain && !isAttachment) {
       gmailData.textPlain = Buffer.from(part.body.data, 'base64').toString();
+
+      // get attachments
     } else if (isAttachment || isInline) {
       const body = part.body;
+
+      if (!gmailData.attachments) {
+        gmailData.attachments = [];
+      }
+
       gmailData.attachments.push({
         filename: part.filename,
         mimeType: part.mimeType,
@@ -264,38 +216,6 @@ export const parseMessage = response => {
   return gmailData;
 };
 
-/**
- * Get new messages by stored history id
- */
-const getMessagesByHistoryId = async integration => {
-  const auth = getOauthClient('gmail');
-
-  auth.setCredentials(integration.gmailData.credentials);
-
-  const gmail: any = await google.gmail('v1');
-
-  const response: any = await gmail.users.history.list({
-    auth,
-    userId: 'me',
-    historyTypes: 'messageAdded',
-    startHistoryId: integration.gmailData.historyId,
-  });
-
-  if (response.data.history) {
-    for (const history of response.data.history) {
-      for (const message of history.messages) {
-        const { data } = await gmail.users.messages.get({
-          auth,
-          userId: 'me',
-          id: message.id,
-        });
-
-        const gmailData = await parseMessage(data);
-        await getOrCreateConversation({ integration, messageId: message.id, gmailData });
-      }
-    }
-  }
-};
 /**
  * Get gmail inbox updates
  */
@@ -312,47 +232,7 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
   await utils.getMessagesByHistoryId(integration);
 
   integration.gmailData.historyId = historyId;
-  integration.save();
-};
-
-export const trackGmail = async () => {
-  const { GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_TOPIC, GOOGLE_SUPSCRIPTION_NAME, GOOGLE_PROJECT_ID } = process.env;
-  const pubsubClient = PubSub({
-    projectId: GOOGLE_PROJECT_ID,
-    keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
-  });
-
-  if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC not found in env');
-  }
-
-  if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME not found in env');
-  }
-
-  const topic = pubsubClient.topic(GOOGLE_TOPIC);
-
-  topic.createSubscription(GOOGLE_SUPSCRIPTION_NAME, ({}, subscription) => {
-    const errorHandler = err => {
-      subscription.removeListener('message', messageHandler);
-      subscription.removeListener('error', errorHandler);
-      throw new Error(err);
-    };
-
-    const messageHandler = message => {
-      try {
-        getGmailUpdates(JSON.parse(message.data.toString()));
-      } catch (error) {
-        throw error;
-      }
-
-      // All notifications need to be acknowledged as per the Cloud Pub/Sub
-      message.ack();
-    };
-
-    subscription.on('error', errorHandler);
-    subscription.on('message', messageHandler);
-  });
+  await integration.save();
 };
 
 export const getOrCreateCustomer = async (email, integrationId) => {
@@ -421,7 +301,7 @@ export const getOrCreateConversation = async value => {
   } else {
     conversation.status = CONVERSATION_STATUSES.OPEN;
     conversation.content = content;
-    conversation.save();
+    await conversation.save();
   }
 
   // create new message
@@ -434,8 +314,4 @@ export const getOrCreateConversation = async value => {
       ...gmailData,
     },
   });
-};
-
-export const utils = {
-  getMessagesByHistoryId,
 };
