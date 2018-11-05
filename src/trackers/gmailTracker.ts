@@ -45,6 +45,23 @@ const sendEmail = async (credentials, raw) => {
 };
 
 /**
+ * Get attachment by id
+ */
+const getAttachment = async (credentials, attachmentId, messageId) => {
+  const gmail = await google.gmail('v1');
+  const auth = getOauthClient('gmail');
+
+  auth.setCredentials(credentials);
+
+  return gmail.users.messages.attachments.get({
+    auth,
+    id: attachmentId,
+    userId: 'me',
+    messageId,
+  });
+};
+
+/**
  * Get new messages by stored history id
  */
 const getMessagesByHistoryId = async integration => {
@@ -127,4 +144,5 @@ export const trackGmail = async () => {
 export const utils = {
   getMessagesByHistoryId,
   sendEmail,
+  getAttachment,
 };

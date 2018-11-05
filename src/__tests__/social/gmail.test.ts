@@ -1,15 +1,17 @@
 import * as sinon from 'sinon';
 import { CONVERSATION_STATUSES } from '../../data/constants';
-import { conversationFactory, customerFactory, integrationFactory } from '../../db/factories';
-import { ConversationMessages, Conversations, Integrations } from '../../db/models';
+import { conversationFactory, customerFactory, integrationFactory, userFactory } from '../../db/factories';
+import { ActivityLogs, ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {
   createMessage,
+  getAttachIntoBuffer,
   getGmailUpdates,
   getOrCreateConversation,
   getOrCreateCustomer,
   parseMessage,
-  utils,
+  sendGmail,
 } from '../../trackers/gmail';
+import { utils } from '../../trackers/gmailTracker';
 
 describe('gmail integration tests', () => {
   afterEach(async () => {
@@ -30,6 +32,8 @@ describe('gmail integration tests', () => {
     let gmailData = {
       from: 'test@gmail.com',
       subject: 'subject',
+      headerId: '<A22C0A25-9807-4FEE-B57B-90AF7299E615@gmail.com>',
+      reply: '',
     };
 
     // must be created new conversation, new message
@@ -50,6 +54,8 @@ describe('gmail integration tests', () => {
     gmailData = {
       from: 'test@gmail.com',
       subject: 'updated subject',
+      reply: '<A22C0A25-9807-4FEE-B57B-90AF7299E615@gmail.com>',
+      headerId: '<EDFED911-13F1-4F6E-A34F-2968435C78C0@gmail.com>',
     };
 
     await getOrCreateConversation({ integration, messageId: 'messageId', gmailData });
@@ -238,6 +244,11 @@ describe('gmail integration tests', () => {
     expect(gmailData.textHtml).toEqual(
       '<html><head><meta http-equiv="Content-Type" content="text/html; charset=us-ascii"></head><body style="word-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;" class=""><br class=""><div><br class=""><blockquote type="cite" class=""><div class="">Begin forwarded message:</div><br class="Apple-interchange-newline"><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color:rgba(0, 0, 0, 1.0);" class=""><b class="">From: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class="">Munkhbold Dembel &lt;<a href="mailto:mungehubolud@gmail.com" class="">mungehubolud@gmail.com</a>&gt;<br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color:rgba(0, 0, 0, 1.0);" class=""><b class="">Subject: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class=""><b class="">Fwd: test turshilt</b><br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color:rgba(0, 0, 0, 1.0);" class=""><b class="">Date: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class="">October 31, 2018 at 16:24:12 GMT+8<br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color:rgba(0, 0, 0, 1.0);" class=""><b class="">To: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class="">Contacts &lt;<a href="mailto:munkhbold.d@nmtec.co" class="">munkhbold.d@nmtec.co</a>&gt;<br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color:rgba(0, 0, 0, 1.0);" class=""><b class="">Cc: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class="">Munkhbold Dembel &lt;<a href="mailto:munkhbold.de@gmail.com" class="">munkhbold.de@gmail.com</a>&gt;<br class=""></span></div><br class=""><div class=""><meta http-equiv="Content-Type" content="text/html; charset=us-ascii" class=""><div style="word-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;" class=""><br class="">\r\n<div class=""><br class=""><blockquote type="cite" class=""><div class="">Begin forwarded message:</div><br class="Apple-interchange-newline"><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, &quot;Helvetica Neue&quot;, Helvetica, sans-serif;" class=""><b class="">From: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class=""><a href="mailto:munkhbold.d@nmtec.co" class="">munkhbold.d@nmtec.co</a><br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, &quot;Helvetica Neue&quot;, Helvetica, sans-serif;" class=""><b class="">Subject: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class=""><b class="">test turshilt</b><br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, &quot;Helvetica Neue&quot;, Helvetica, sans-serif;" class=""><b class="">Date: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class="">October 29, 2018 at 16:05:35 GMT+8<br class=""></span></div><div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;" class=""><span style="font-family: -webkit-system-font, &quot;Helvetica Neue&quot;, Helvetica, sans-serif;" class=""><b class="">To: </b></span><span style="font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif;" class=""><a href="mailto:munkhbold.d@nmtec.co" class="">munkhbold.d@nmtec.co</a><br class=""></span></div><br class=""><div class=""><div class="">&lt;p&gt;hellow world&lt;/p&gt;<img class="" apple-inline="yes" id="1D74E3D5-E078-41C5-AA19-DB2A2B827838" src="cid:C488637A-757F-4884-BCE0-ED3914E0AC85@lan"></div></div></blockquote></div><br class=""></div></div></blockquote></div><br class=""></body></html>',
     );
+
+    if (!gmailData.attachments) {
+      throw new Error('Attachment not found');
+    }
+
     expect(gmailData.attachments[0].filename).toEqual('clear-400x400-logo.png');
     expect(gmailData.attachments[0].mimeType).toEqual('image/png');
     expect(gmailData.attachments[0].size).toEqual(112714);
@@ -267,5 +278,74 @@ describe('gmail integration tests', () => {
 
     expect(integration.gmailData.historyId).toBe(historyId);
     mock.restore(); // unwraps the spy
+  });
+
+  test('send gmail', async () => {
+    const mailParams = {
+      integrationId: 'integrationId',
+      subject: 'subject',
+      body: 'body',
+      toEmails: 'test@gmail.com',
+      cc: 'test1@gmail.com',
+      bcc: 'test2@gmail.com',
+      attachments: ['https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'],
+      cocType: 'customer',
+      cocId: 'customerId',
+    };
+
+    const user = await userFactory({});
+
+    try {
+      await sendGmail(mailParams, user._id);
+    } catch (e) {
+      expect(e.message).toBe(`Integration not found id with ${mailParams.integrationId}`);
+    }
+
+    const integration = await integrationFactory();
+    mailParams.integrationId = integration._id;
+    const mock = sinon.stub(utils, 'sendEmail').callsFake();
+    await sendGmail(mailParams, user._id);
+
+    const al = await ActivityLogs.findOne({
+      'activity.type': 'email',
+    });
+
+    if (!al) {
+      throw new Error('Activity log not found');
+    }
+
+    expect(al.coc.type).toBe(mailParams.cocType);
+    expect(al.coc.id).toBe(mailParams.cocId);
+
+    if (!al.performedBy) {
+      throw new Error('Activity log performer not found');
+    }
+    const content = JSON.stringify({
+      toEmails: mailParams.toEmails,
+      subject: mailParams.subject,
+      body: mailParams.body,
+      attachments: mailParams.attachments,
+      cc: mailParams.cc,
+      bcc: mailParams.bcc,
+    });
+
+    expect(al.activity.content).toEqual(content);
+    expect(al.performedBy.id).toEqual(user._id);
+
+    mock.restore(); // unwraps the spy
+  });
+
+  test('get attach into buffer', async () => {
+    try {
+      await getAttachIntoBuffer('test.png');
+    } catch (e) {
+      expect(e.message).toBe('Invalid URI "test.png"');
+    }
+
+    const attachUrl = 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png';
+    const attachment: any = await getAttachIntoBuffer(attachUrl);
+
+    expect(attachment.contentLength).toBe('13504');
+    expect(attachment.contentType).toBe('image/png');
   });
 });

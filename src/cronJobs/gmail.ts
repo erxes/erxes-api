@@ -16,7 +16,6 @@ export const callGmailUsersWatch = async () => {
   });
 
   if (!integrations) {
-    console.log('Integration not found');
     return;
   }
 
@@ -51,7 +50,7 @@ export const callGmailUsersWatch = async () => {
  * └───────────────────────── second (0 - 59, OPTIONAL)
  */
 
-schedule.scheduleJob('0 1 * * *', () => {
+schedule.scheduleJob('* */1 * * *', () => {
   callGmailUsersWatch();
 });
 
