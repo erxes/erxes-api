@@ -133,7 +133,7 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
 /**
  * Get headers values
  */
-export const indexHeaders = headers => {
+export const mapHeaders = headers => {
   if (!headers) {
     return {};
   }
@@ -144,18 +144,9 @@ export const indexHeaders = headers => {
   }, {});
 };
 
-/**
- * Parse result of users.messages.get response
- */
-export const parseMessage = response => {
+const getHeaderProperties = (headers, messageId) => {
   const gmailData: IMsgGmail = {};
 
-  const payload = response.payload;
-  if (!payload) {
-    return gmailData;
-  }
-
-  let headers = indexHeaders(payload.headers);
   for (const headerKey of ['subject', 'from', 'to', 'cc', 'bcc', 'references']) {
     if (headers.hasOwnProperty(headerKey)) {
       gmailData[headerKey] = headers[headerKey];
@@ -167,7 +158,57 @@ export const parseMessage = response => {
   }
 
   gmailData.headerId = headers['message-id'];
-  gmailData.messageId = response.id;
+  gmailData.messageId = messageId;
+
+  return gmailData;
+};
+
+const getBodyProperties = (headers, part) => {
+  const gmailData: IMsgGmail = {};
+  const isHtml = part.mimeType && part.mimeType.includes('text/html');
+  const isPlain = part.mimeType && part.mimeType.includes('text/plain');
+  const cd = headers['content-disposition'];
+  const isAttachment = cd && cd.includes('attachment');
+  const isInline = cd && cd.includes('inline');
+
+  // get html content
+  if (isHtml && !isAttachment) {
+    gmailData.textHtml = Buffer.from(part.body.data, 'base64').toString();
+
+    // get plain text
+  } else if (isPlain && !isAttachment) {
+    gmailData.textPlain = Buffer.from(part.body.data, 'base64').toString();
+
+    // get attachments
+  } else if (isAttachment || isInline) {
+    const body = part.body;
+
+    if (!gmailData.attachments) {
+      gmailData.attachments = [];
+    }
+
+    gmailData.attachments.push({
+      filename: part.filename,
+      mimeType: part.mimeType,
+      size: body.size,
+      attachmentId: body.attachmentId,
+    });
+  }
+
+  return gmailData;
+};
+
+/**
+ * Parse result of users.messages.get response
+ */
+export const parseMessage = response => {
+  const payload = response.payload;
+  if (!payload) {
+    return {};
+  }
+
+  let headers = mapHeaders(payload.headers);
+  let gmailData = getHeaderProperties(headers, response.id);
 
   let parts = [payload];
   let firstPartProcessed = false;
@@ -180,42 +221,14 @@ export const parseMessage = response => {
     }
 
     if (firstPartProcessed) {
-      headers = indexHeaders(part.headers);
+      headers = mapHeaders(part.headers);
     }
 
     if (!part.body) {
       continue;
     }
 
-    const isHtml = part.mimeType && part.mimeType.includes('text/html');
-    const isPlain = part.mimeType && part.mimeType.includes('text/plain');
-    const cd = headers['content-disposition'];
-    const isAttachment = cd && cd.includes('attachment');
-    const isInline = cd && cd.includes('inline');
-
-    // get html content
-    if (isHtml && !isAttachment) {
-      gmailData.textHtml = Buffer.from(part.body.data, 'base64').toString();
-
-      // get plain text
-    } else if (isPlain && !isAttachment) {
-      gmailData.textPlain = Buffer.from(part.body.data, 'base64').toString();
-
-      // get attachments
-    } else if (isAttachment || isInline) {
-      const body = part.body;
-
-      if (!gmailData.attachments) {
-        gmailData.attachments = [];
-      }
-
-      gmailData.attachments.push({
-        filename: part.filename,
-        mimeType: part.mimeType,
-        size: body.size,
-        attachmentId: body.attachmentId,
-      });
-    }
+    gmailData = Object.assign(getBodyProperties(headers, part), gmailData);
 
     firstPartProcessed = true;
   }
