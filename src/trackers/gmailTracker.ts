@@ -117,7 +117,11 @@ export const trackGmail = async () => {
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
 
-  topic.createSubscription(GOOGLE_SUPSCRIPTION_NAME, ({}, subscription) => {
+  topic.createSubscription(GOOGLE_SUPSCRIPTION_NAME, (error, subscription) => {
+    if (error) {
+      throw error;
+    }
+
     const errorHandler = err => {
       subscription.removeListener('message', messageHandler);
       subscription.removeListener('error', errorHandler);
