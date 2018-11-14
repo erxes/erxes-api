@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { graphql } from 'graphql';
 import mongoose = require('mongoose');
 import schema from '../data/';
+import * as Models from '../db/models';
 import { userFactory } from './factories';
 
 dotenv.config();
@@ -45,7 +46,11 @@ export const graphqlRequest = async (mutation: string = '', name: string = '', a
     },
   };
 
-  const response: any = await graphql(_schema, mutation, rootValue, context || { user, res }, args);
+  const updatedContext = context || { user, res };
+
+  updatedContext.models = Models;
+
+  const response: any = await graphql(_schema, mutation, rootValue, updatedContext, args);
 
   if (response.errors || !response.data) {
     throw response.errors;

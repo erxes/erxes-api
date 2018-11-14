@@ -10,6 +10,7 @@ import { createServer } from 'http';
 import * as path from 'path';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { userMiddleware } from './auth';
+import { generateModels } from './connectionResolver';
 import schema from './data';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import { pubsub } from './data/resolvers/subscriptions';
@@ -43,10 +44,12 @@ app.use(userMiddleware);
 
 app.use(
   '/graphql',
-  graphqlExpress((req: any, res) => ({
-    schema,
-    context: { user: req.user, res },
-  })),
+  graphqlExpress((req: any, res) => {
+    return {
+      schema,
+      context: { user: req.user, res, models: generateModels() },
+    };
+  }),
 );
 
 app.use('/static', express.static(path.join(__dirname, 'private')));
