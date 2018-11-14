@@ -1,6 +1,5 @@
+import { generateModels } from '../../connectionResolver';
 import ActivityLogs from './ActivityLogs';
-import Brands from './Brands';
-import Channels from './Channels';
 import Companies from './Companies';
 import Configs from './Configs';
 import ConversationMessages from './ConversationMessages';
@@ -12,7 +11,6 @@ import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
 import Forms from './Forms';
 import ImportHistory from './ImportHistory';
-import Integrations from './Integrations';
 import InternalNotes from './InternalNotes';
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from './KnowledgeBase';
 import MessengerApps from './MessengerApps';
@@ -24,14 +22,16 @@ import Session from './Session';
 import Tags from './Tags';
 import Users from './Users';
 
+const { Brands, Channels, Integrations } = generateModels();
+
 export {
   Users,
   Session,
   Channels,
   ResponseTemplates,
   EmailTemplates,
-  Brands,
   Integrations,
+  Brands,
   Forms,
   EngageMessages,
   Tags,

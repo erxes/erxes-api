@@ -1,5 +1,6 @@
 import * as Random from 'meteor-random';
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
+import { IModels } from '../../connectionResolver';
 import * as Models from './';
 import { brandSchema, IBrand, IBrandDocument, IBrandEmailConfig } from './definitions/brands';
 import { IIntegrationDocument } from './definitions/integrations';
@@ -13,27 +14,31 @@ export interface IBrandModel extends Model<IBrandDocument> {
   manageIntegrations({ _id, integrationIds }: { _id: string; integrationIds: string[] }): IIntegrationDocument[];
 }
 
-export const loadClass = models => {
+export const loadClass = (models: IModels) => {
   class Brand {
     public static async generateCode(code?: string) {
+      const { Brands } = models;
+
       let generatedCode = code || Random.id().substr(0, 6);
 
-      let prevBrand = await models.Brands.findOne({ code: generatedCode });
+      let prevBrand = await Brands.findOne({ code: generatedCode });
 
       // search until not existing one found
       while (prevBrand) {
         generatedCode = Random.id().substr(0, 6);
 
-        prevBrand = await models.Brands.findOne({ code: generatedCode });
+        prevBrand = await Brands.findOne({ code: generatedCode });
       }
 
       return generatedCode;
     }
 
     public static async createBrand(doc: IBrand) {
+      const { Brands } = models;
+
       // generate code automatically
       // if there is no brand code defined
-      return models.Brands.create({
+      return Brands.create({
         ...doc,
         code: await this.generateCode(),
         createdAt: new Date(),
@@ -42,12 +47,16 @@ export const loadClass = models => {
     }
 
     public static async updateBrand(_id: string, fields: IBrand) {
-      await models.Brands.update({ _id }, { $set: { ...fields } });
-      return models.Brands.findOne({ _id });
+      const { Brands } = models;
+
+      await Brands.update({ _id }, { $set: { ...fields } });
+      return Brands.findOne({ _id });
     }
 
     public static async removeBrand(_id) {
-      const brandObj = await models.Brands.findOne({ _id });
+      const { Brands } = models;
+
+      const brandObj = await Brands.findOne({ _id });
 
       if (!brandObj) {
         throw new Error(`Brand not found with id ${_id}`);
@@ -57,9 +66,11 @@ export const loadClass = models => {
     }
 
     public static async updateEmailConfig(_id: string, emailConfig: IBrandEmailConfig) {
-      await models.Brands.update({ _id }, { $set: { emailConfig } });
+      const { Brands } = models;
 
-      return models.Brands.findOne({ _id });
+      await Brands.update({ _id }, { $set: { emailConfig } });
+
+      return Brands.findOne({ _id });
     }
 
     public static async manageIntegrations({ _id, integrationIds }: { _id: string; integrationIds: string[] }) {
@@ -73,8 +84,3 @@ export const loadClass = models => {
 
   return brandSchema;
 };
-
-// tslint:disable-next-line
-const Brands = model<IBrandDocument, IBrandModel>('brands', loadClass(Models));
-
-export default Brands;
