@@ -1,39 +1,41 @@
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
+import { IModels } from '../../connectionResolver';
 import { emailTemplateSchema, IEmailTemplate, IEmailTemplateDocument } from './definitions/emailTemplates';
 
-interface IEmailTemplateModel extends Model<IEmailTemplateDocument> {
+export interface IEmailTemplateModel extends Model<IEmailTemplateDocument> {
   updateEmailTemplate(_id: string, fields: IEmailTemplate): IEmailTemplateDocument;
 
   removeEmailTemplate(_id: string): void;
 }
 
-class EmailTemplate {
-  /**
-   * Update email template
-   */
-  public static async updateEmailTemplate(_id: string, fields: IEmailTemplate) {
-    await EmailTemplates.update({ _id }, { $set: fields });
+export const loadClass = (models: IModels) => {
+  class EmailTemplate {
+    /**
+     * Update email template
+     */
+    public static async updateEmailTemplate(_id: string, fields: IEmailTemplate) {
+      const { EmailTemplates } = models;
 
-    return EmailTemplates.findOne({ _id });
-  }
+      await EmailTemplates.update({ _id }, { $set: fields });
 
-  /**
-   * Delete email template
-   */
-  public static async removeEmailTemplate(_id: string) {
-    const emailTemplateObj = await EmailTemplates.findOne({ _id });
-
-    if (!emailTemplateObj) {
-      throw new Error(`Email template not found with id ${_id}`);
+      return EmailTemplates.findOne({ _id });
     }
 
-    return emailTemplateObj.remove();
+    /**
+     * Delete email template
+     */
+    public static async removeEmailTemplate(_id: string) {
+      const { EmailTemplates } = models;
+
+      const emailTemplateObj = await EmailTemplates.findOne({ _id });
+
+      if (!emailTemplateObj) {
+        throw new Error(`Email template not found with id ${_id}`);
+      }
+
+      return emailTemplateObj.remove();
+    }
   }
-}
 
-emailTemplateSchema.loadClass(EmailTemplate);
-
-// tslint:disable-next-line
-const EmailTemplates = model<IEmailTemplateDocument, IEmailTemplateModel>('email_templates', emailTemplateSchema);
-
-export default EmailTemplates;
+  emailTemplateSchema.loadClass(EmailTemplate);
+};

@@ -18,8 +18,10 @@ import { IConfigDocument } from './db/models/definitions/configs';
 import { IMessageDocument as IConversationMessageDocument } from './db/models/definitions/conversationMessages';
 import { IConversationDocument } from './db/models/definitions/conversations';
 import { ICustomerDocument } from './db/models/definitions/customers';
+import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
+import { IEmailTemplateModel } from './db/models/EmailTemplates';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
@@ -34,6 +36,7 @@ export interface IModels {
   Conversations: IConversationModel;
   Users: IUserModel;
   Customers: ICustomerModel;
+  EmailTemplates: IEmailTemplateModel;
 }
 
 export interface IContext {
@@ -66,6 +69,10 @@ export const generateModels = () => {
   );
   models.Users = db.model<IUserDocument, IUserModel>('users', loadUserClass(models));
   models.Customers = db.model<ICustomerDocument, ICustomerModel>('customers', loadCustomerClass(models));
+  models.EmailTemplates = db.model<IEmailTemplateDocument, IEmailTemplateModel>(
+    'email_templates',
+    loadCustomerClass(models),
+  );
 
   return models;
 };
