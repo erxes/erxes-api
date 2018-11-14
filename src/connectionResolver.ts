@@ -9,6 +9,7 @@ import {
   loadClass as loadConversationMessageClass,
 } from './db/models/ConversationMessages';
 import { IConversationModel, loadClass as loadConversationClass } from './db/models/Conversations';
+import { ICustomerModel, loadClass as loadCustomerClass } from './db/models/Customers';
 import { IActivityLogDocument } from './db/models/definitions/activityLogs';
 import { IBrandDocument } from './db/models/definitions/brands';
 import { IChannelDocument } from './db/models/definitions/channels';
@@ -16,6 +17,7 @@ import { ICompanyDocument } from './db/models/definitions/companies';
 import { IConfigDocument } from './db/models/definitions/configs';
 import { IMessageDocument as IConversationMessageDocument } from './db/models/definitions/conversationMessages';
 import { IConversationDocument } from './db/models/definitions/conversations';
+import { ICustomerDocument } from './db/models/definitions/customers';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
@@ -31,6 +33,7 @@ export interface IModels {
   ConversationMessages: IConversationMessageModel;
   Conversations: IConversationModel;
   Users: IUserModel;
+  Customers: ICustomerModel;
 }
 
 export interface IContext {
@@ -62,6 +65,7 @@ export const generateModels = () => {
     loadConversationClass(models),
   );
   models.Users = db.model<IUserDocument, IUserModel>('users', loadUserClass(models));
+  models.Customers = db.model<ICustomerDocument, ICustomerModel>('customers', loadCustomerClass(models));
 
   return models;
 };

@@ -1,5 +1,4 @@
 import { generateModels } from '../../connectionResolver';
-import Customers from './Customers';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
 import EmailTemplates from './EmailTemplates';
 import EngageMessages from './Engages';
@@ -18,6 +17,7 @@ import Tags from './Tags';
 
 const {
   Users,
+  Customers,
   Brands,
   Channels,
   Configs,
