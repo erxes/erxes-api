@@ -1,9 +1,4 @@
 import { generateModels } from '../../connectionResolver';
-import ActivityLogs from './ActivityLogs';
-import Companies from './Companies';
-import Configs from './Configs';
-import ConversationMessages from './ConversationMessages';
-import Conversations from './Conversations';
 import Customers from './Customers';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
 import EmailTemplates from './EmailTemplates';
@@ -20,9 +15,18 @@ import ResponseTemplates from './ResponseTemplates';
 import Segments from './Segments';
 import Session from './Session';
 import Tags from './Tags';
-import Users from './Users';
 
-const { Brands, Channels, Integrations } = generateModels();
+const {
+  Users,
+  Brands,
+  Channels,
+  Configs,
+  Integrations,
+  Companies,
+  ActivityLogs,
+  ConversationMessages,
+  Conversations,
+} = generateModels();
 
 export {
   Users,

@@ -1,9 +1,9 @@
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
 import * as strip from 'strip';
-import { Conversations } from '.';
+import { IModels } from '../../connectionResolver';
 import { IMessage, IMessageDocument, messageSchema } from './definitions/conversationMessages';
 
-interface IMessageModel extends Model<IMessageDocument> {
+export interface IMessageModel extends Model<IMessageDocument> {
   createMessage(doc: IMessage): Promise<IMessageDocument>;
   addMessage(doc: IMessage, userId: string): Promise<IMessageDocument>;
   getNonAsnweredMessage(conversationId: string): Promise<IMessageDocument>;
@@ -11,119 +11,128 @@ interface IMessageModel extends Model<IMessageDocument> {
   markSentAsReadMessages(conversationId: string): Promise<IMessageDocument>;
 }
 
-class Message {
-  /**
-   * Create a message
-   */
-  public static async createMessage(doc: IMessage) {
-    const message = await Messages.create({
-      internal: false,
-      ...doc,
-      createdAt: new Date(),
-    });
+export const loadClass = (models: IModels) => {
+  class Message {
+    /**
+     * Create a message
+     */
+    public static async createMessage(doc: IMessage) {
+      const { ConversationMessages, Conversations } = models;
 
-    const messageCount = await Messages.find({
-      conversationId: message.conversationId,
-    }).count();
+      const message = await ConversationMessages.create({
+        internal: false,
+        ...doc,
+        createdAt: new Date(),
+      });
 
-    await Conversations.update(
-      { _id: message.conversationId },
-      {
-        $set: {
-          messageCount,
+      const messageCount = await ConversationMessages.find({
+        conversationId: message.conversationId,
+      }).count();
 
-          // updating updatedAt
-          updatedAt: new Date(),
+      await Conversations.update(
+        { _id: message.conversationId },
+        {
+          $set: {
+            messageCount,
+
+            // updating updatedAt
+            updatedAt: new Date(),
+          },
         },
-      },
-    );
+      );
 
-    if (message.userId) {
-      // add created user to participators
-      await Conversations.addParticipatedUsers(message.conversationId, message.userId);
+      if (message.userId) {
+        // add created user to participators
+        await Conversations.addParticipatedUsers(message.conversationId, message.userId);
+      }
+
+      // add mentioned users to participators
+      for (const userId of message.mentionedUserIds || []) {
+        await Conversations.addParticipatedUsers(message.conversationId, userId);
+      }
+
+      return message;
     }
 
-    // add mentioned users to participators
-    for (const userId of message.mentionedUserIds || []) {
-      await Conversations.addParticipatedUsers(message.conversationId, userId);
+    /**
+     * Create a conversation message
+     */
+    public static async addMessage(doc: IMessage, userId: string) {
+      const { Conversations } = models;
+
+      const conversation = await Conversations.findOne({
+        _id: doc.conversationId,
+      });
+
+      if (!conversation) {
+        throw new Error(`Conversation not found with id ${doc.conversationId}`);
+      }
+
+      // normalize content, attachments
+      const content = doc.content || '';
+      const attachments = doc.attachments || [];
+
+      doc.content = content;
+      doc.attachments = attachments;
+
+      // if there is no attachments and no content then throw content required error
+      if (attachments.length === 0 && !strip(content)) {
+        throw new Error('Content is required');
+      }
+
+      // setting conversation's content to last message
+      await Conversations.update({ _id: doc.conversationId }, { $set: { content } });
+
+      return this.createMessage({ ...doc, userId });
     }
 
-    return message;
-  }
+    /**
+     * User's last non answered question
+     */
+    public static getNonAsnweredMessage(conversationId: string) {
+      const { ConversationMessages } = models;
 
-  /**
-   * Create a conversation message
-   */
-  public static async addMessage(doc: IMessage, userId: string) {
-    const conversation = await Conversations.findOne({
-      _id: doc.conversationId,
-    });
-
-    if (!conversation) {
-      throw new Error(`Conversation not found with id ${doc.conversationId}`);
+      return ConversationMessages.findOne({
+        conversationId,
+        customerId: { $exists: true },
+      }).sort({ createdAt: -1 });
     }
 
-    // normalize content, attachments
-    const content = doc.content || '';
-    const attachments = doc.attachments || [];
+    /**
+     * Get admin messages
+     */
+    public static getAdminMessages(conversationId: string) {
+      const { ConversationMessages } = models;
 
-    doc.content = content;
-    doc.attachments = attachments;
-
-    // if there is no attachments and no content then throw content required error
-    if (attachments.length === 0 && !strip(content)) {
-      throw new Error('Content is required');
-    }
-
-    // setting conversation's content to last message
-    await Conversations.update({ _id: doc.conversationId }, { $set: { content } });
-
-    return this.createMessage({ ...doc, userId });
-  }
-
-  /**
-   * User's last non answered question
-   */
-  public static getNonAsnweredMessage(conversationId: string) {
-    return Messages.findOne({
-      conversationId,
-      customerId: { $exists: true },
-    }).sort({ createdAt: -1 });
-  }
-
-  /**
-   * Get admin messages
-   */
-  public static getAdminMessages(conversationId: string) {
-    return Messages.find({
-      conversationId,
-      userId: { $exists: true },
-      isCustomerRead: false,
-
-      // exclude internal notes
-      internal: false,
-    }).sort({ createdAt: 1 });
-  }
-
-  /**
-   * Mark sent messages as read
-   */
-  public static markSentAsReadMessages(conversationId: string) {
-    return Messages.update(
-      {
+      return ConversationMessages.find({
         conversationId,
         userId: { $exists: true },
-        isCustomerRead: { $exists: false },
-      },
-      { $set: { isCustomerRead: true } },
-      { multi: true },
-    );
+        isCustomerRead: false,
+
+        // exclude internal notes
+        internal: false,
+      }).sort({ createdAt: 1 });
+    }
+
+    /**
+     * Mark sent messages as read
+     */
+    public static markSentAsReadMessages(conversationId: string) {
+      const { ConversationMessages } = models;
+
+      return ConversationMessages.update(
+        {
+          conversationId,
+          userId: { $exists: true },
+          isCustomerRead: { $exists: false },
+        },
+        { $set: { isCustomerRead: true } },
+        { multi: true },
+      );
+    }
   }
-}
 
-messageSchema.loadClass(Message);
+  messageSchema.loadClass(Message);
 
-// tslint:disable-next-line
-const Messages = model<IMessageDocument, IMessageModel>('conversation_messages', messageSchema);
-
-export default Messages;
+  return messageSchema;
+};
