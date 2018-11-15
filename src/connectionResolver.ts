@@ -25,6 +25,7 @@ import { IFormDocument } from './db/models/definitions/forms';
 import { IImportHistoryDocument } from './db/models/definitions/importHistory';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IInternalNoteDocument } from './db/models/definitions/internalNotes';
+import { IArticleDocument, ICategoryDocument, ITopicDocument } from './db/models/definitions/knowledgebase';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
@@ -33,6 +34,14 @@ import { IFormModel, loadClass as loadFormClass } from './db/models/Forms';
 import { IImportHistoryModel, loadClass as loadImportHistoryClass } from './db/models/ImportHistory';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IInternalNoteModel, loadClass as loadInternalNoteClass } from './db/models/InternalNotes';
+import {
+  IKnowledgebaseArticleModel,
+  IKnowledgebaseCategoryModel,
+  IKnowledgebaseTopicModel,
+  loadArticleClass,
+  loadCategoryClass,
+  loadTopicClass,
+} from './db/models/KnowledgeBase';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -53,6 +62,9 @@ export interface IModels {
   Forms: IFormModel;
   ImportHistory: IImportHistoryModel;
   InternalNotes: IInternalNoteModel;
+  KnowledgeBaseArticles: IKnowledgebaseArticleModel;
+  KnowledgeBaseCategories: IKnowledgebaseCategoryModel;
+  KnowledgeBaseTopics: IKnowledgebaseTopicModel;
 }
 
 export interface IContext {
@@ -105,6 +117,18 @@ export const generateModels = () => {
   models.InternalNotes = db.model<IInternalNoteDocument, IInternalNoteModel>(
     'internal_notes',
     loadInternalNoteClass(models),
+  );
+  models.KnowledgeBaseArticles = db.model<IArticleDocument, IKnowledgebaseArticleModel>(
+    'knowledgebase_articles',
+    loadArticleClass(models),
+  );
+  models.KnowledgeBaseCategories = db.model<ICategoryDocument, IKnowledgebaseCategoryModel>(
+    'knowledgebase_categories',
+    loadCategoryClass(models),
+  );
+  models.KnowledgeBaseTopics = db.model<ITopicDocument, IKnowledgebaseTopicModel>(
+    'knowledgebase_topics',
+    loadTopicClass(models),
   );
 
   return models;
