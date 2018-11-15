@@ -1,6 +1,5 @@
 import { generateModels } from '../../connectionResolver';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
-import Forms from './Forms';
 import ImportHistory from './ImportHistory';
 import InternalNotes from './InternalNotes';
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from './KnowledgeBase';
@@ -27,6 +26,7 @@ const {
   EngageMessages,
   Fields,
   FieldsGroups,
+  Forms,
 } = generateModels();
 
 export {

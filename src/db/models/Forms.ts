@@ -1,10 +1,11 @@
 import * as Random from 'meteor-random';
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
+import { IModels } from '../../connectionResolver';
 import { FIELD_CONTENT_TYPES } from '../../data/constants';
 import { Fields } from './';
 import { formSchema, IForm, IFormDocument } from './definitions/forms';
 
-interface IFormModel extends Model<IFormDocument> {
+export interface IFormModel extends Model<IFormDocument> {
   generateCode(): string;
   createForm(doc: IForm, createdUserId?: string): Promise<IFormDocument>;
 
@@ -14,105 +15,114 @@ interface IFormModel extends Model<IFormDocument> {
   duplicate(_id: string): Promise<IFormDocument>;
 }
 
-class Form {
-  /**
-   * Generates a random and unique 6 letter code
-   */
-  public static async generateCode() {
-    let code;
-    let foundForm = true;
+export const loadClass = (models: IModels) => {
+  class Form {
+    /**
+     * Generates a random and unique 6 letter code
+     */
+    public static async generateCode() {
+      const { Forms } = models;
 
-    do {
-      code = Random.id().substr(0, 6);
-      foundForm = (await Forms.findOne({ code })) ? true : false;
-    } while (foundForm);
+      let code;
+      let foundForm = true;
 
-    return code;
-  }
+      do {
+        code = Random.id().substr(0, 6);
+        foundForm = (await Forms.findOne({ code })) ? true : false;
+      } while (foundForm);
 
-  /**
-   * Creates a form document
-   */
-  public static async createForm(doc: IForm, createdUserId?: string) {
-    if (!createdUserId) {
-      throw new Error('createdUser must be supplied');
+      return code;
     }
 
-    doc.code = await this.generateCode();
+    /**
+     * Creates a form document
+     */
+    public static async createForm(doc: IForm, createdUserId?: string) {
+      const { Forms } = models;
 
-    return Forms.create({
-      ...doc,
-      createdDate: new Date(),
-      createdUserId,
-    });
-  }
+      if (!createdUserId) {
+        throw new Error('createdUser must be supplied');
+      }
 
-  /**
-   * Updates a form document
-   */
-  public static async updateForm(_id: string, { title, description, buttonText, themeColor, callout }: IForm) {
-    await Forms.update(
-      { _id },
-      { $set: { title, description, buttonText, themeColor, callout } },
-      { runValidators: true },
-    );
+      doc.code = await this.generateCode();
 
-    return Forms.findOne({ _id });
-  }
-
-  /**
-   * Remove a form
-   */
-  public static async removeForm(_id: string) {
-    // remove fields
-    await Fields.remove({ contentType: 'form', contentTypeId: _id });
-
-    return Forms.remove({ _id });
-  }
-
-  /**
-   * Duplicates form and form fields of the form
-   */
-  public static async duplicate(_id: string) {
-    const form = await Forms.findOne({ _id });
-
-    if (!form) {
-      throw new Error('Form not found');
-    }
-
-    // duplicate form ===================
-    const newForm = await this.createForm(
-      {
-        title: `${form.title} duplicated`,
-        description: form.description,
-      },
-      form.createdUserId,
-    );
-
-    // duplicate fields ===================
-    const fields = await Fields.find({ contentTypeId: _id });
-
-    for (const field of fields) {
-      await Fields.createField({
-        contentType: FIELD_CONTENT_TYPES.FORM,
-        contentTypeId: newForm._id,
-        type: field.type,
-        validation: field.validation,
-        text: field.text,
-        description: field.description,
-        options: field.options,
-        isRequired: field.isRequired,
-        order: field.order,
+      return Forms.create({
+        ...doc,
+        createdDate: new Date(),
+        createdUserId,
       });
     }
 
-    return newForm;
+    /**
+     * Updates a form document
+     */
+    public static async updateForm(_id: string, { title, description, buttonText, themeColor, callout }: IForm) {
+      const { Forms } = models;
+
+      await Forms.update(
+        { _id },
+        { $set: { title, description, buttonText, themeColor, callout } },
+        { runValidators: true },
+      );
+
+      return Forms.findOne({ _id });
+    }
+
+    /**
+     * Remove a form
+     */
+    public static async removeForm(_id: string) {
+      const { Forms } = models;
+
+      // remove fields
+      await Fields.remove({ contentType: 'form', contentTypeId: _id });
+
+      return Forms.remove({ _id });
+    }
+
+    /**
+     * Duplicates form and form fields of the form
+     */
+    public static async duplicate(_id: string) {
+      const { Forms } = models;
+
+      const form = await Forms.findOne({ _id });
+
+      if (!form) {
+        throw new Error('Form not found');
+      }
+
+      // duplicate form ===================
+      const newForm = await this.createForm(
+        {
+          title: `${form.title} duplicated`,
+          description: form.description,
+        },
+        form.createdUserId,
+      );
+
+      // duplicate fields ===================
+      const fields = await Fields.find({ contentTypeId: _id });
+
+      for (const field of fields) {
+        await Fields.createField({
+          contentType: FIELD_CONTENT_TYPES.FORM,
+          contentTypeId: newForm._id,
+          type: field.type,
+          validation: field.validation,
+          text: field.text,
+          description: field.description,
+          options: field.options,
+          isRequired: field.isRequired,
+          order: field.order,
+        });
+      }
+
+      return newForm;
+    }
   }
-}
 
-formSchema.loadClass(Form);
+  formSchema.loadClass(Form);
 
-// tslint:disable-next-line
-const Forms = model<IFormDocument, IFormModel>('forms', formSchema);
-
-export default Forms;
+  return formSchema;
+};
