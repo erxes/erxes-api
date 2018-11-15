@@ -1,19 +1,20 @@
-import { Model, model } from 'mongoose';
+import { Model } from 'mongoose';
+import { IModels } from '../../connectionResolver';
 import { IMessengerApp, IMessengerAppDocument, messengerAppSchema } from './definitions/messengerApps';
 
-interface IMessengerAppModel extends Model<IMessengerAppDocument> {
+export interface IMessengerAppModel extends Model<IMessengerAppDocument> {
   createApp(doc: IMessengerApp): Promise<IMessengerAppDocument>;
 }
 
-class MessengerApp {
-  public static async createApp(doc: IMessengerApp) {
-    return MessengerApps.create(doc);
+export const loadClass = (models: IModels) => {
+  class MessengerApp {
+    public static async createApp(doc: IMessengerApp) {
+      const { MessengerApps } = models;
+      return MessengerApps.create(doc);
+    }
   }
-}
 
-messengerAppSchema.loadClass(MessengerApp);
+  messengerAppSchema.loadClass(MessengerApp);
 
-// tslint:disable-next-line
-const MessengerApps = model<IMessengerAppDocument, IMessengerAppModel>('messenger_apps', messengerAppSchema);
-
-export default MessengerApps;
+  return messengerAppSchema;
+};

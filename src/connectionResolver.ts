@@ -26,6 +26,7 @@ import { IImportHistoryDocument } from './db/models/definitions/importHistory';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IInternalNoteDocument } from './db/models/definitions/internalNotes';
 import { IArticleDocument, ICategoryDocument, ITopicDocument } from './db/models/definitions/knowledgebase';
+import { IMessengerAppDocument } from './db/models/definitions/messengerApps';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
@@ -42,6 +43,7 @@ import {
   loadCategoryClass,
   loadTopicClass,
 } from './db/models/KnowledgeBase';
+import { IMessengerAppModel, loadClass as loadMessengerAppClass } from './db/models/MessengerApps';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -65,6 +67,7 @@ export interface IModels {
   KnowledgeBaseArticles: IKnowledgebaseArticleModel;
   KnowledgeBaseCategories: IKnowledgebaseCategoryModel;
   KnowledgeBaseTopics: IKnowledgebaseTopicModel;
+  MessengerApps: IMessengerAppModel;
 }
 
 export interface IContext {
@@ -129,6 +132,10 @@ export const generateModels = () => {
   models.KnowledgeBaseTopics = db.model<ITopicDocument, IKnowledgebaseTopicModel>(
     'knowledgebase_topics',
     loadTopicClass(models),
+  );
+  models.MessengerApps = db.model<IMessengerAppDocument, IMessengerAppModel>(
+    'messenger_apps',
+    loadMessengerAppClass(models),
   );
 
   return models;
