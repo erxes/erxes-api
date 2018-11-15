@@ -32,6 +32,7 @@ import {
   IConfigDocument as INotificationConfigDocument,
   INotificationDocument,
 } from './db/models/definitions/notifications';
+import { IResponseTemplateDocument } from './db/models/definitions/responseTemplates';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
@@ -56,6 +57,7 @@ import {
   loadNotificationConfigClass,
 } from './db/models/Notifications';
 import { IProductModel, loadClass as loadProductClass } from './db/models/Products';
+import { IResponseTemplateModel, loadClass as loadResponseTemplateClass } from './db/models/ResponseTemplates';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -83,6 +85,7 @@ export interface IModels {
   Notifications: INotificationModel;
   NotificationConfigurations: INotificationConfigModel;
   Products: IProductModel;
+  ResponseTemplates: IResponseTemplateModel;
 }
 
 export interface IContext {
@@ -161,6 +164,10 @@ export const generateModels = () => {
     loadNotificationConfigClass(models),
   );
   models.Products = db.model<IProductDocument, IProductModel>('products', loadProductClass(models));
+  models.ResponseTemplates = db.model<IResponseTemplateDocument, IResponseTemplateModel>(
+    'response_templates',
+    loadResponseTemplateClass(models),
+  );
 
   return models;
 };

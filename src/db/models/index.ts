@@ -1,6 +1,5 @@
 import { generateModels } from '../../connectionResolver';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
-import ResponseTemplates from './ResponseTemplates';
 import Segments from './Segments';
 import Session from './Session';
 import Tags from './Tags';
@@ -30,6 +29,7 @@ const {
   NotificationConfigurations,
   Notifications,
   Products,
+  ResponseTemplates,
 } = generateModels();
 
 export {
