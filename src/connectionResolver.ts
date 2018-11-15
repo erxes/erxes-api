@@ -22,12 +22,14 @@ import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IEngageMessageDocument } from './db/models/definitions/engages';
 import { IFieldDocument, IFieldGroupDocument } from './db/models/definitions/fields';
 import { IFormDocument } from './db/models/definitions/forms';
+import { IImportHistoryDocument } from './db/models/definitions/importHistory';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
 import { IFieldGroupModel, IFieldModel, loadFieldClass, loadGroupClass } from './db/models/Fields';
 import { IFormModel, loadClass as loadFormClass } from './db/models/Forms';
+import { IImportHistoryModel, loadClass as loadImportHistoryClass } from './db/models/ImportHistory';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
@@ -47,6 +49,7 @@ export interface IModels {
   Fields: IFieldModel;
   FieldsGroups: IFieldGroupModel;
   Forms: IFormModel;
+  ImportHistory: IImportHistoryModel;
 }
 
 export interface IContext {
@@ -92,6 +95,10 @@ export const generateModels = () => {
   models.Fields = db.model<IFieldDocument, IFieldModel>('fields', loadFieldClass(models));
   models.FieldsGroups = db.model<IFieldGroupDocument, IFieldGroupModel>('field_groups', loadGroupClass(models));
   models.Forms = db.model<IFormDocument, IFormModel>('forms', loadFormClass(models));
+  models.ImportHistory = db.model<IImportHistoryDocument, IImportHistoryModel>(
+    'import_histories',
+    loadImportHistoryClass(models),
+  );
 
   return models;
 };
