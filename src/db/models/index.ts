@@ -1,5 +1,4 @@
 import { generateModels } from '../../connectionResolver';
-import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
 
 const {
   Users,
@@ -30,6 +29,10 @@ const {
   Segments,
   Session,
   Tags,
+  DealBoards,
+  DealPipelines,
+  DealStages,
+  Deals,
 } = generateModels();
 
 export {

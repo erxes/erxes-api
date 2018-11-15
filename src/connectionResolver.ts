@@ -10,6 +10,16 @@ import {
 } from './db/models/ConversationMessages';
 import { IConversationModel, loadClass as loadConversationClass } from './db/models/Conversations';
 import { ICustomerModel, loadClass as loadCustomerClass } from './db/models/Customers';
+import {
+  IBoardModel,
+  IDealModel,
+  IPipelineModel,
+  IStageModel,
+  loadBoardClass,
+  loadDealClass,
+  loadPipelineClass,
+  loadStageClass,
+} from './db/models/Deals';
 import { IActivityLogDocument } from './db/models/definitions/activityLogs';
 import { IBrandDocument } from './db/models/definitions/brands';
 import { IChannelDocument } from './db/models/definitions/channels';
@@ -18,7 +28,13 @@ import { IConfigDocument } from './db/models/definitions/configs';
 import { IMessageDocument as IConversationMessageDocument } from './db/models/definitions/conversationMessages';
 import { IConversationDocument } from './db/models/definitions/conversations';
 import { ICustomerDocument } from './db/models/definitions/customers';
-import { IProductDocument } from './db/models/definitions/deals';
+import {
+  IBoardDocument,
+  IDealDocument,
+  IPipelineDocument,
+  IProductDocument,
+  IStageDocument,
+} from './db/models/definitions/deals';
 import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IEngageMessageDocument } from './db/models/definitions/engages';
 import { IFieldDocument, IFieldGroupDocument } from './db/models/definitions/fields';
@@ -94,6 +110,10 @@ export interface IModels {
   Segments: ISegmentModel;
   Session: ISessionModel;
   Tags: ITagModel;
+  DealBoards: IBoardModel;
+  DealPipelines: IPipelineModel;
+  DealStages: IStageModel;
+  Deals: IDealModel;
 }
 
 export interface IContext {
@@ -179,6 +199,11 @@ export const generateModels = () => {
   models.Segments = db.model<ISegmentDocument, ISegmentModel>('segments', loadSegmentClass(models));
   models.Session = db.model<ISessionDocument, ISessionModel>('session', loadSessionClass());
   models.Tags = db.model<ITagDocument, ITagModel>('tags', loadTagClass(models));
+
+  models.DealBoards = db.model<IBoardDocument, IBoardModel>('deal_boards', loadBoardClass(models));
+  models.DealPipelines = db.model<IPipelineDocument, IPipelineModel>('deal_pipelines', loadPipelineClass(models));
+  models.DealStages = db.model<IStageDocument, IStageModel>('deal_stages', loadStageClass(models));
+  models.Deals = db.model<IDealDocument, IDealModel>('deals', loadDealClass(models));
 
   return models;
 };
