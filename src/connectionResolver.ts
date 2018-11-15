@@ -20,10 +20,12 @@ import { IConversationDocument } from './db/models/definitions/conversations';
 import { ICustomerDocument } from './db/models/definitions/customers';
 import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IEngageMessageDocument } from './db/models/definitions/engages';
+import { IFieldDocument, IFieldGroupDocument } from './db/models/definitions/fields';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
+import { IFieldGroupModel, IFieldModel, loadFieldClass, loadGroupClass } from './db/models/Fields';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
@@ -40,6 +42,8 @@ export interface IModels {
   Customers: ICustomerModel;
   EmailTemplates: IEmailTemplateModel;
   EngageMessages: IEngageMessageModel;
+  Fields: IFieldModel;
+  FieldsGroups: IFieldGroupModel;
 }
 
 export interface IContext {
@@ -81,6 +85,10 @@ export const generateModels = () => {
     'engage_messages',
     loadEngageMessageClass(models),
   );
+
+  models.Fields = db.model<IFieldDocument, IFieldModel>('fields', loadFieldClass(models));
+
+  models.FieldsGroups = db.model<IFieldGroupDocument, IFieldGroupModel>('field_groups', loadGroupClass(models));
 
   return models;
 };
