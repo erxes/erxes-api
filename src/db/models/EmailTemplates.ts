@@ -38,4 +38,6 @@ export const loadClass = (models: IModels) => {
   }
 
   emailTemplateSchema.loadClass(EmailTemplate);
+
+  return emailTemplateSchema;
 };

@@ -21,7 +21,7 @@ import { ICustomerDocument } from './db/models/definitions/customers';
 import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
-import { IEmailTemplateModel } from './db/models/EmailTemplates';
+import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
@@ -71,7 +71,7 @@ export const generateModels = () => {
   models.Customers = db.model<ICustomerDocument, ICustomerModel>('customers', loadCustomerClass(models));
   models.EmailTemplates = db.model<IEmailTemplateDocument, IEmailTemplateModel>(
     'email_templates',
-    loadCustomerClass(models),
+    loadEmailTemplateClass(models),
   );
 
   return models;
