@@ -24,6 +24,7 @@ import { IFieldDocument, IFieldGroupDocument } from './db/models/definitions/fie
 import { IFormDocument } from './db/models/definitions/forms';
 import { IImportHistoryDocument } from './db/models/definitions/importHistory';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
+import { IInternalNoteDocument } from './db/models/definitions/internalNotes';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
@@ -31,6 +32,7 @@ import { IFieldGroupModel, IFieldModel, loadFieldClass, loadGroupClass } from '.
 import { IFormModel, loadClass as loadFormClass } from './db/models/Forms';
 import { IImportHistoryModel, loadClass as loadImportHistoryClass } from './db/models/ImportHistory';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
+import { IInternalNoteModel, loadClass as loadInternalNoteClass } from './db/models/InternalNotes';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -50,6 +52,7 @@ export interface IModels {
   FieldsGroups: IFieldGroupModel;
   Forms: IFormModel;
   ImportHistory: IImportHistoryModel;
+  InternalNotes: IInternalNoteModel;
 }
 
 export interface IContext {
@@ -98,6 +101,10 @@ export const generateModels = () => {
   models.ImportHistory = db.model<IImportHistoryDocument, IImportHistoryModel>(
     'import_histories',
     loadImportHistoryClass(models),
+  );
+  models.InternalNotes = db.model<IInternalNoteDocument, IInternalNoteModel>(
+    'internal_notes',
+    loadInternalNoteClass(models),
   );
 
   return models;
