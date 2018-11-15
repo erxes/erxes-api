@@ -1,7 +1,7 @@
 import cronJobs from '../cronJobs';
 import { COC_CONTENT_TYPES } from '../data/constants';
 import mutations from '../data/resolvers/mutations';
-import { graphqlRequest } from '../db/connection';
+import { generateContext, graphqlRequest } from '../db/connection';
 import { conversationFactory, customerFactory, segmentFactory, userFactory } from '../db/factories';
 import { ActivityLogs, Customers, Segments } from '../db/models';
 
@@ -30,16 +30,20 @@ describe('activityLogs', () => {
         emails: ['test@test.test'],
         phones: ['123456789'],
       },
-      { user: _user },
+      generateContext({ user: _user }),
     );
 
     expect(await ActivityLogs.find({}).count()).toBe(1);
 
     // create conversation
-    await mutations.activityLogsAddConversationLog(null, {
-      customerId: customer._id,
-      conversationId: _conversation._id,
-    });
+    await mutations.activityLogsAddConversationLog(
+      null,
+      {
+        customerId: customer._id,
+        conversationId: _conversation._id,
+      },
+      generateContext({ user: _user }),
+    );
 
     expect(await ActivityLogs.find({}).count()).toBe(2);
 
@@ -206,14 +210,18 @@ describe('activityLogs', () => {
         names: ['test company'],
         website: 'test.test.test',
       },
-      { user: _user },
+      generateContext({ user: _user }),
     );
     const customer = await customerFactory({ companyIds: [company._id] });
 
-    await mutations.activityLogsAddConversationLog(null, {
-      customerId: customer._id,
-      conversationId: _conversation._id,
-    });
+    await mutations.activityLogsAddConversationLog(
+      null,
+      {
+        customerId: customer._id,
+        conversationId: _conversation._id,
+      },
+      generateContext({}),
+    );
 
     const query = `
       query activityLogsCompany($_id: String!) {

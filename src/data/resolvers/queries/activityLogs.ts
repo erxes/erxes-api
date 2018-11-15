@@ -1,4 +1,4 @@
-import { Companies, Customers, Deals, Users } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { moduleRequireLogin } from '../../permissions';
 import {
   CompanyMonthActivityLogBuilder,
@@ -11,7 +11,9 @@ const activityLogQueries = {
   /**
    * Get activity log for customer
    */
-  async activityLogsCustomer(_root, { _id }: { _id: string }) {
+  async activityLogsCustomer(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { Customers } = models;
+
     const customer = await Customers.findOne({ _id });
 
     const customerMonthActivityLogBuilder = new CustomerMonthActivityLogBuilder(customer);
@@ -21,7 +23,9 @@ const activityLogQueries = {
   /**
    * Get activity log for company
    */
-  async activityLogsCompany(_root, { _id }: { _id: string }) {
+  async activityLogsCompany(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { Companies } = models;
+
     const company = await Companies.findOne({ _id });
 
     const companyMonthActivityLogBuilder = new CompanyMonthActivityLogBuilder(company);
@@ -31,7 +35,9 @@ const activityLogQueries = {
   /**
    * Get activity logs for user
    */
-  async activityLogsUser(_root, { _id }: { _id: string }) {
+  async activityLogsUser(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { Users } = models;
+
     const user = await Users.findOne({ _id });
 
     const userMonthActivityLogBuilder = new UserMonthActivityLogBuilder(user);
@@ -41,7 +47,9 @@ const activityLogQueries = {
   /**
    * Get activity logs for deal
    */
-  async activityLogsDeal(_root, { _id }: { _id: string }) {
+  async activityLogsDeal(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { Deals } = models;
+
     const deal = await Deals.findOne({ _id });
 
     const dealMonthActivityLogBuilder = new DealMonthActivityLogBuilder(deal);

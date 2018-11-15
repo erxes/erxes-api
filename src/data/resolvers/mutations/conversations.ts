@@ -1,11 +1,10 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { facebookReply, IFacebookReply } from '../../../trackers/facebook';
 import { favorite, retweet, tweet, tweetReply } from '../../../trackers/twitter';
 import { requireLogin } from '../../permissions';
@@ -96,7 +95,8 @@ const conversationMutations = {
   /**
    * Calling this mutation from widget api run new message subscription
    */
-  async conversationPublishClientMessage(_root, { _id }: { _id: string }) {
+  async conversationPublishClientMessage(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { ConversationMessages } = models;
     const message = await ConversationMessages.findOne({ _id });
 
     if (!message) {
@@ -113,7 +113,9 @@ const conversationMutations = {
   /**
    * Create new message in conversation
    */
-  async conversationMessageAdd(_root, doc: IConversationMessageAdd, { user }: { user: IUserDocument }) {
+  async conversationMessageAdd(_root, doc: IConversationMessageAdd, { user, models }: IContext) {
+    const { Conversations, ConversationMessages, Integrations, Customers } = models;
+
     const conversation = await Conversations.findOne({
       _id: doc.conversationId,
     });
@@ -241,8 +243,10 @@ const conversationMutations = {
   async conversationsAssign(
     _root,
     { conversationIds, assignedUserId }: { conversationIds: string[]; assignedUserId: string },
-    { user }: { user: IUserDocument },
+    { user, models }: IContext,
   ) {
+    const { Conversations } = models;
+
     const updatedConversations: IConversationDocument[] = await Conversations.assignUserConversation(
       conversationIds,
       assignedUserId,
@@ -271,7 +275,9 @@ const conversationMutations = {
   /**
    * Unassign employee from conversation
    */
-  async conversationsUnassign(_root, { _ids }: { _ids: string[] }) {
+  async conversationsUnassign(_root, { _ids }: { _ids: string[] }, { models }: IContext) {
+    const { Conversations } = models;
+
     const conversations = await Conversations.unassignUserConversation(_ids);
 
     // notify graphl subscription
@@ -286,8 +292,10 @@ const conversationMutations = {
   async conversationsChangeStatus(
     _root,
     { _ids, status }: { _ids: string[]; status: string },
-    { user }: { user: IUserDocument },
+    { user, models }: IContext,
   ) {
+    const { Conversations, ConversationMessages, Customers, Integrations } = models;
+
     const { conversations } = await Conversations.checkExistanceConversations(_ids);
 
     await Conversations.changeStatusConversation(_ids, status, user._id);
@@ -355,7 +363,9 @@ const conversationMutations = {
   /**
    * Conversation mark as read
    */
-  async conversationMarkAsRead(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async conversationMarkAsRead(_root, { _id }: { _id: string }, { user, models }: IContext) {
+    const { Conversations } = models;
+
     return Conversations.markAsReadConversation(_id, user._id);
   },
 };

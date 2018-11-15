@@ -1,6 +1,5 @@
-import { Channels } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
 import { moduleRequireAdmin } from '../../permissions';
 import utils from '../../utils';
@@ -31,7 +30,9 @@ const channelMutations = {
   /**
    * Create a new channel and send notifications to its members bar the creator
    */
-  async channelsAdd(_root, doc: IChannel, { user }: { user: IUserDocument }) {
+  async channelsAdd(_root, doc: IChannel, { user, models }: IContext) {
+    const { Channels } = models;
+
     const channel = await Channels.createChannel(doc, user._id);
 
     await sendChannelNotifications(channel);
@@ -42,7 +43,9 @@ const channelMutations = {
   /**
    * Update channel data
    */
-  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit) {
+  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { models }: IContext) {
+    const { Channels } = models;
+
     const channel = await Channels.updateChannel(_id, doc);
 
     await sendChannelNotifications(channel);
@@ -53,7 +56,9 @@ const channelMutations = {
   /**
    * Remove a channel
    */
-  async channelsRemove(_root, { _id }: { _id: string }) {
+  async channelsRemove(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { Channels } = models;
+
     await Channels.removeChannel(_id);
 
     return _id;

@@ -35,6 +35,13 @@ export function disconnect() {
   return mongoose.connection.close();
 }
 
+export const generateContext = context => {
+  return {
+    models: Models,
+    ...(context || {}),
+  };
+};
+
 export const graphqlRequest = async (mutation: string = '', name: string = '', args?: any, context?: any) => {
   const user = await userFactory({});
   const rootValue = {};

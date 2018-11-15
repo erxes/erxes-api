@@ -1,4 +1,4 @@
-import { EmailTemplates } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IEmailTemplate } from '../../../db/models/definitions/emailTemplates';
 import { moduleRequireLogin } from '../../permissions';
 
@@ -10,21 +10,27 @@ const emailTemplateMutations = {
   /**
    * Create new email template
    */
-  emailTemplatesAdd(_root, doc: IEmailTemplate) {
+  emailTemplatesAdd(_root, doc: IEmailTemplate, { models }: IContext) {
+    const { EmailTemplates } = models;
+
     return EmailTemplates.create(doc);
   },
 
   /**
    * Update email template
    */
-  emailTemplatesEdit(_root, { _id, ...fields }: IEmailTemplatesEdit) {
+  emailTemplatesEdit(_root, { _id, ...fields }: IEmailTemplatesEdit, { models }: IContext) {
+    const { EmailTemplates } = models;
+
     return EmailTemplates.updateEmailTemplate(_id, fields);
   },
 
   /**
    * Delete email template
    */
-  emailTemplatesRemove(_root, { _id }: { _id: string }) {
+  emailTemplatesRemove(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { EmailTemplates } = models;
+
     return EmailTemplates.removeEmailTemplate(_id);
   },
 };
