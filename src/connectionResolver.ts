@@ -18,6 +18,7 @@ import { IConfigDocument } from './db/models/definitions/configs';
 import { IMessageDocument as IConversationMessageDocument } from './db/models/definitions/conversationMessages';
 import { IConversationDocument } from './db/models/definitions/conversations';
 import { ICustomerDocument } from './db/models/definitions/customers';
+import { IProductDocument } from './db/models/definitions/deals';
 import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
 import { IEngageMessageDocument } from './db/models/definitions/engages';
 import { IFieldDocument, IFieldGroupDocument } from './db/models/definitions/fields';
@@ -54,6 +55,7 @@ import {
   loadNotificationClass,
   loadNotificationConfigClass,
 } from './db/models/Notifications';
+import { IProductModel, loadClass as loadProductClass } from './db/models/Products';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -80,6 +82,7 @@ export interface IModels {
   MessengerApps: IMessengerAppModel;
   Notifications: INotificationModel;
   NotificationConfigurations: INotificationConfigModel;
+  Products: IProductModel;
 }
 
 export interface IContext {
@@ -157,6 +160,7 @@ export const generateModels = () => {
     'notification_configs',
     loadNotificationConfigClass(models),
   );
+  models.Products = db.model<IProductDocument, IProductModel>('products', loadProductClass(models));
 
   return models;
 };

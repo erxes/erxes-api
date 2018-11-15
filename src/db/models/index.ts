@@ -1,6 +1,5 @@
 import { generateModels } from '../../connectionResolver';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
-import Products from './Products';
 import ResponseTemplates from './ResponseTemplates';
 import Segments from './Segments';
 import Session from './Session';
@@ -30,6 +29,7 @@ const {
   MessengerApps,
   NotificationConfigurations,
   Notifications,
+  Products,
 } = generateModels();
 
 export {
