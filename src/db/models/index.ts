@@ -1,8 +1,5 @@
 import { generateModels } from '../../connectionResolver';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
-import Segments from './Segments';
-import Session from './Session';
-import Tags from './Tags';
 
 const {
   Users,
@@ -30,6 +27,9 @@ const {
   Notifications,
   Products,
   ResponseTemplates,
+  Segments,
+  Session,
+  Tags,
 } = generateModels();
 
 export {

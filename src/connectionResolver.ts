@@ -33,6 +33,8 @@ import {
   INotificationDocument,
 } from './db/models/definitions/notifications';
 import { IResponseTemplateDocument } from './db/models/definitions/responseTemplates';
+import { ISegmentDocument } from './db/models/definitions/segments';
+import { ITagDocument } from './db/models/definitions/tags';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
 import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
@@ -58,6 +60,9 @@ import {
 } from './db/models/Notifications';
 import { IProductModel, loadClass as loadProductClass } from './db/models/Products';
 import { IResponseTemplateModel, loadClass as loadResponseTemplateClass } from './db/models/ResponseTemplates';
+import { ISegmentModel, loadClass as loadSegmentClass } from './db/models/Segments';
+import { ISessionDocument, ISessionModel, loadClass as loadSessionClass } from './db/models/Session';
+import { ITagModel, loadClass as loadTagClass } from './db/models/Tags';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
 export interface IModels {
@@ -86,6 +91,9 @@ export interface IModels {
   NotificationConfigurations: INotificationConfigModel;
   Products: IProductModel;
   ResponseTemplates: IResponseTemplateModel;
+  Segments: ISegmentModel;
+  Session: ISessionModel;
+  Tags: ITagModel;
 }
 
 export interface IContext {
@@ -168,6 +176,9 @@ export const generateModels = () => {
     'response_templates',
     loadResponseTemplateClass(models),
   );
+  models.Segments = db.model<ISegmentDocument, ISegmentModel>('segments', loadSegmentClass(models));
+  models.Session = db.model<ISessionDocument, ISessionModel>('session', loadSessionClass());
+  models.Tags = db.model<ITagDocument, ITagModel>('tags', loadTagClass(models));
 
   return models;
 };

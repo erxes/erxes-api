@@ -1,11 +1,21 @@
-import { model, Schema } from 'mongoose';
+import { Document, Model, Schema } from 'mongoose';
 
 export const sessionSchema = new Schema({
   createdAt: { type: Date, default: Date.now, expires: '1d' },
   invalidToken: { type: String },
 });
 
-// tslint:disable-next-line
-const Session = model('session', sessionSchema);
+export interface ISession {
+  createdAt: Date;
+  invalidToken: string;
+}
 
-export default Session;
+export interface ISessionDocument extends ISession, Document {
+  _id: string;
+}
+
+export interface ISessionModel extends Model<ISessionDocument> {}
+
+export const loadClass = () => {
+  return sessionSchema;
+};
