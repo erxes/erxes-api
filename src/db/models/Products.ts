@@ -1,5 +1,4 @@
 import { Model } from 'mongoose';
-import { Deals } from '.';
 import { IModels } from '../../connectionResolver';
 import { IProduct, IProductDocument, productSchema } from './definitions/deals';
 
@@ -35,7 +34,7 @@ export const loadClass = (models: IModels) => {
      * Remove Product
      */
     public static async removeProduct(_id: string) {
-      const { Products } = models;
+      const { Products, Deals } = models;
 
       const product = await Products.findOne({ _id });
 

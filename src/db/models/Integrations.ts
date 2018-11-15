@@ -1,6 +1,5 @@
 import { Model } from 'mongoose';
 import 'mongoose-type-email';
-import { ConversationMessages, Conversations, Customers, Forms } from '.';
 import { IModels } from '../../connectionResolver';
 import { KIND_CHOICES } from '../../data/constants';
 import {
@@ -215,7 +214,7 @@ export const loadClass = (models: IModels) => {
      * Remove integration in addition with its messages, conversations, customers
      */
     public static async removeIntegration(_id: string) {
-      const { Integrations } = models;
+      const { Integrations, Conversations, Customers, ConversationMessages, Forms } = models;
 
       const integration = await Integrations.findOne({ _id });
 

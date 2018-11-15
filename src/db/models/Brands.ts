@@ -1,7 +1,6 @@
 import * as Random from 'meteor-random';
 import { Model } from 'mongoose';
 import { IModels } from '../../connectionResolver';
-import * as Models from './';
 import { brandSchema, IBrand, IBrandDocument, IBrandEmailConfig } from './definitions/brands';
 import { IIntegrationDocument } from './definitions/integrations';
 
@@ -74,9 +73,11 @@ export const loadClass = (models: IModels) => {
     }
 
     public static async manageIntegrations({ _id, integrationIds }: { _id: string; integrationIds: string[] }) {
-      await Models.Integrations.update({ _id: { $in: integrationIds } }, { $set: { brandId: _id } }, { multi: true });
+      const { Integrations } = models;
 
-      return Models.Integrations.find({ _id: { $in: integrationIds } });
+      await Integrations.update({ _id: { $in: integrationIds } }, { $set: { brandId: _id } }, { multi: true });
+
+      return Integrations.find({ _id: { $in: integrationIds } });
     }
   }
 

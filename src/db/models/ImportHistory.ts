@@ -1,5 +1,4 @@
 import { Model } from 'mongoose';
-import { Companies, Customers } from '.';
 import { IModels } from '../../connectionResolver';
 import { IImportHistory, IImportHistoryDocument, importHistorySchema } from './definitions/importHistory';
 import { IUserDocument } from './definitions/users';
@@ -26,6 +25,8 @@ export const loadClass = (models: IModels) => {
      * Remove Imported history
      */
     public static async removeHistory(_id: string) {
+      const { Customers, Companies } = models;
+
       const historyObj = await models.ImportHistory.findOne({ _id });
 
       if (!historyObj) {

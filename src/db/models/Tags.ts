@@ -1,6 +1,5 @@
 import { Model } from 'mongoose';
 import * as _ from 'underscore';
-import { Companies, Conversations, Customers, EngageMessages, Integrations } from '.';
 import { IModels } from '../../connectionResolver';
 import { ITag, ITagDocument, tagSchema } from './definitions/tags';
 
@@ -128,7 +127,7 @@ export const loadClass = (models: IModels) => {
      * Remove Tag
      */
     public static async removeTag(ids: string[]) {
-      const { Tags } = models;
+      const { Tags, Customers, Conversations, EngageMessages, Companies, Integrations } = models;
 
       const tagCount = await Tags.find({ _id: { $in: ids } }).count();
 
@@ -155,7 +154,7 @@ export const loadClass = (models: IModels) => {
      * Attach a tag
      */
     public static async tagsTag(type: string, targetIds: string[], tagIds: string[]) {
-      const { Tags } = models;
+      const { Tags, Conversations, EngageMessages, Companies, Integrations, Customers } = models;
 
       let collection: any = Conversations;
 

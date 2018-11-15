@@ -1,6 +1,5 @@
 import { Model } from 'mongoose';
 import { IModels } from '../../connectionResolver';
-import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes } from './';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument, IFacebookData, ITwitterData } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -28,7 +27,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
 
   mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
 
-  bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
+  bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument, models: IModels): Promise<string[]>;
 }
 
 export const loadClass = (models: IModels) => {
@@ -120,7 +119,7 @@ export const loadClass = (models: IModels) => {
      * Create a customer
      */
     public static async createCustomer(doc: ICustomer, user?: IUserDocument) {
-      const { Customers } = models;
+      const { Customers, Fields } = models;
 
       // Checking duplicated fields of customer
       await Customers.checkDuplication(doc);
@@ -143,7 +142,7 @@ export const loadClass = (models: IModels) => {
      * Update customer
      */
     public static async updateCustomer(_id: string, doc: ICustomer) {
-      const { Customers } = models;
+      const { Customers, Fields } = models;
 
       // Checking duplicated fields of customer
       await Customers.checkDuplication(doc, _id);
@@ -205,7 +204,7 @@ export const loadClass = (models: IModels) => {
      * Removes customer
      */
     public static async removeCustomer(customerId: string) {
-      const { Customers } = models;
+      const { Customers, ActivityLogs, Conversations, EngageMessages, InternalNotes } = models;
 
       // Removing every modules that associated with customer
       await ActivityLogs.removeCustomerActivityLog(customerId);
@@ -220,7 +219,7 @@ export const loadClass = (models: IModels) => {
      * Merge customers
      */
     public static async mergeCustomers(customerIds: string[], customerFields: ICustomer) {
-      const { Customers } = models;
+      const { Customers, ActivityLogs, Conversations, EngageMessages, InternalNotes, Deals } = models;
 
       // Checking duplicated fields of customer
       await Customers.checkDuplication(customerFields, customerIds);
@@ -305,6 +304,7 @@ export const loadClass = (models: IModels) => {
         basicInfos: CUSTOMER_BASIC_INFOS,
         contentType: 'customer',
         create: this.createCustomer,
+        models,
       };
 
       return bulkInsert(params);

@@ -4,7 +4,6 @@
 
 import { Model } from 'mongoose';
 import * as validator from 'validator';
-import { Customers, Forms } from '.';
 import { IModels } from '../../connectionResolver';
 import { FIELD_CONTENT_TYPES } from '../../data/constants';
 import {
@@ -53,7 +52,7 @@ export const loadFieldClass = (models: IModels) => {
      * Create new field
      */
     public static async createField({ contentType, contentTypeId, groupId, ...fields }: IField) {
-      const { Fields } = models;
+      const { Forms, Fields } = models;
 
       const query: { [key: string]: any } = { contentType };
 
@@ -115,7 +114,7 @@ export const loadFieldClass = (models: IModels) => {
      * Remove field
      */
     public static async removeField(_id: string) {
-      const { Fields } = models;
+      const { Customers, Fields } = models;
 
       const fieldObj = await Fields.findOne({ _id });
 

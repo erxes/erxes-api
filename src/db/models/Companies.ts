@@ -1,6 +1,5 @@
 import { Model } from 'mongoose';
 import { IModels } from '../../connectionResolver';
-import { ActivityLogs, Customers, Deals, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { COMPANY_BASIC_INFOS } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
@@ -24,7 +23,7 @@ export interface ICompanyModel extends Model<ICompanyDocument> {
 
   mergeCompanies(companyIds: string[], companyFields: ICompany): Promise<ICompanyDocument>;
 
-  bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
+  bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument, models: IModels): Promise<string[]>;
 }
 
 export const loadClass = (models: IModels) => {
@@ -74,7 +73,7 @@ export const loadClass = (models: IModels) => {
      * Create a company
      */
     public static async createCompany(doc: ICompany, user: IUserDocument) {
-      const { Companies } = models;
+      const { Companies, Fields } = models;
 
       // Checking duplicated fields of company
       await Companies.checkDuplication(doc);
@@ -97,7 +96,7 @@ export const loadClass = (models: IModels) => {
      * Update company
      */
     public static async updateCompany(_id: string, doc: ICompany) {
-      const { Companies } = models;
+      const { Companies, Fields } = models;
 
       // Checking duplicated fields of company
       await Companies.checkDuplication(doc, [_id]);
@@ -116,7 +115,7 @@ export const loadClass = (models: IModels) => {
      * Update company customers
      */
     public static async updateCustomers(_id: string, customerIds: string[]) {
-      const { Companies } = models;
+      const { Companies, Customers } = models;
 
       // Removing companyIds from users
       await Customers.updateMany({ companyIds: { $in: [_id] } }, { $pull: { companyIds: _id } });
@@ -133,7 +132,7 @@ export const loadClass = (models: IModels) => {
      * Remove company
      */
     public static async removeCompany(companyId: string) {
-      const { Companies } = models;
+      const { Companies, ActivityLogs, InternalNotes, Customers } = models;
 
       // Removing modules associated with company
       await ActivityLogs.removeCompanyActivityLog(companyId);
@@ -148,7 +147,7 @@ export const loadClass = (models: IModels) => {
      * Merge companies
      */
     public static async mergeCompanies(companyIds: string[], companyFields: ICompany) {
-      const { Companies } = models;
+      const { Companies, Customers, ActivityLogs, InternalNotes, Deals } = models;
 
       // Checking duplicated fields of company
       await this.checkDuplication(companyFields, companyIds);
@@ -232,6 +231,7 @@ export const loadClass = (models: IModels) => {
         basicInfos: COMPANY_BASIC_INFOS,
         contentType: 'company',
         create: (doc, userObj) => this.createCompany(doc, userObj),
+        models,
       };
 
       return bulkInsert(params);

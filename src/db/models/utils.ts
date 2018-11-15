@@ -1,5 +1,5 @@
 import * as Random from 'meteor-random';
-import { Fields, ImportHistory } from './';
+import { IModels } from '../../connectionResolver';
 import { ICompany, ICompanyDocument } from './definitions/companies';
 import { ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -36,11 +36,13 @@ export const bulkInsert = async (params: {
   basicInfos: string[];
   contentType: string;
   create: (doc: CocInput, user?: IUserDocument) => Promise<CocDocument>;
+  models: IModels;
 }): Promise<string[]> => {
   const errMsgs: string[] = [];
   const properties: any = [];
 
-  const { fieldNames, fieldValues, user, basicInfos, contentType, create } = params;
+  const { fieldNames, fieldValues, user, basicInfos, contentType, create, models } = params;
+  const { Fields, ImportHistory } = models;
 
   const history: {
     ids: string[];

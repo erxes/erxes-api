@@ -2,7 +2,6 @@ import * as Random from 'meteor-random';
 import { Model } from 'mongoose';
 import { IModels } from '../../connectionResolver';
 import { FIELD_CONTENT_TYPES } from '../../data/constants';
-import { Fields } from './';
 import { formSchema, IForm, IFormDocument } from './definitions/forms';
 
 export interface IFormModel extends Model<IFormDocument> {
@@ -72,7 +71,7 @@ export const loadClass = (models: IModels) => {
      * Remove a form
      */
     public static async removeForm(_id: string) {
-      const { Forms } = models;
+      const { Forms, Fields } = models;
 
       // remove fields
       await Fields.remove({ contentType: 'form', contentTypeId: _id });
@@ -84,7 +83,7 @@ export const loadClass = (models: IModels) => {
      * Duplicates form and form fields of the form
      */
     public static async duplicate(_id: string) {
-      const { Forms } = models;
+      const { Forms, Fields } = models;
 
       const form = await Forms.findOne({ _id });
 
