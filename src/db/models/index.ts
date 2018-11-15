@@ -1,6 +1,5 @@
 import { generateModels } from '../../connectionResolver';
 import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
-import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
 import Forms from './Forms';
 import ImportHistory from './ImportHistory';
@@ -26,6 +25,7 @@ const {
   ConversationMessages,
   Conversations,
   EmailTemplates,
+  EngageMessages,
 } = generateModels();
 
 export {

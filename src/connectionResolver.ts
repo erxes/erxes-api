@@ -19,9 +19,11 @@ import { IMessageDocument as IConversationMessageDocument } from './db/models/de
 import { IConversationDocument } from './db/models/definitions/conversations';
 import { ICustomerDocument } from './db/models/definitions/customers';
 import { IEmailTemplateDocument } from './db/models/definitions/emailTemplates';
+import { IEngageMessageDocument } from './db/models/definitions/engages';
 import { IIntegrationDocument } from './db/models/definitions/integrations';
 import { IUserDocument } from './db/models/definitions/users';
 import { IEmailTemplateModel, loadClass as loadEmailTemplateClass } from './db/models/EmailTemplates';
+import { IEngageMessageModel, loadClass as loadEngageMessageClass } from './db/models/Engages';
 import { IIntegrationModel, loadClass as loadIntegrationClass } from './db/models/Integrations';
 import { IUserModel, loadClass as loadUserClass } from './db/models/Users';
 
@@ -37,6 +39,7 @@ export interface IModels {
   Users: IUserModel;
   Customers: ICustomerModel;
   EmailTemplates: IEmailTemplateModel;
+  EngageMessages: IEngageMessageModel;
 }
 
 export interface IContext {
@@ -72,6 +75,11 @@ export const generateModels = () => {
   models.EmailTemplates = db.model<IEmailTemplateDocument, IEmailTemplateModel>(
     'email_templates',
     loadEmailTemplateClass(models),
+  );
+
+  models.EngageMessages = db.model<IEngageMessageDocument, IEngageMessageModel>(
+    'engage_messages',
+    loadEngageMessageClass(models),
   );
 
   return models;
