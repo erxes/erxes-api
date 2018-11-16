@@ -1,4 +1,4 @@
-import { EngageMessages, Users } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { createSchedule, updateOrRemoveSchedule } from '../../../trackers/engageScheduleTracker';
 import { awsRequests } from '../../../trackers/engageTracker';
@@ -14,7 +14,9 @@ const engageMutations = {
   /**
    * Create new message
    */
-  async engageMessageAdd(_root, doc: IEngageMessage) {
+  async engageMessageAdd(_root, doc: IEngageMessage, { models }: IContext) {
+    const { Users, EngageMessages } = models;
+
     const { method, fromUserId } = doc;
 
     if (method === METHODS.EMAIL) {
@@ -48,7 +50,9 @@ const engageMutations = {
   /**
    * Edit message
    */
-  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit) {
+  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { models }: IContext) {
+    const { EngageMessages } = models;
+
     await EngageMessages.updateEngageMessage(_id, doc);
 
     updateOrRemoveSchedule({ _id }, true);
@@ -59,15 +63,20 @@ const engageMutations = {
   /**
    * Remove message
    */
-  engageMessageRemove(_root, { _id }: { _id: string }) {
+  engageMessageRemove(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { EngageMessages } = models;
+
     updateOrRemoveSchedule({ _id });
+
     return EngageMessages.removeEngageMessage(_id);
   },
 
   /**
    * Engage message set live
    */
-  async engageMessageSetLive(_root, { _id }: { _id: string }) {
+  async engageMessageSetLive(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { EngageMessages } = models;
+
     const engageMessage = await EngageMessages.engageMessageSetLive(_id);
 
     const { kind } = engageMessage;
@@ -82,14 +91,18 @@ const engageMutations = {
   /**
    * Engage message set pause
    */
-  engageMessageSetPause(_root, { _id }: { _id: string }) {
+  engageMessageSetPause(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { EngageMessages } = models;
+
     return EngageMessages.engageMessageSetPause(_id);
   },
 
   /**
    * Engage message set live manual
    */
-  async engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
+  async engageMessageSetLiveManual(_root, { _id }: { _id: string }, { models }: IContext) {
+    const { EngageMessages } = models;
+
     const engageMessage = await EngageMessages.engageMessageSetLive(_id);
 
     await send(engageMessage);
