@@ -1,7 +1,5 @@
-import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from '../../../db/models';
-
+import { IContext } from '../../../connectionResolver';
 import { ITopic } from '../../../db/models/definitions/knowledgebase';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { IArticleCreate, ICategoryCreate } from '../../../db/models/KnowledgeBase';
 import { moduleRequireLogin } from '../../permissions';
 
@@ -9,28 +7,36 @@ const knowledgeBaseMutations = {
   /**
    * Create topic document
    */
-  knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user }: { user: IUserDocument }) {
+  knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user, models: { KnowledgeBaseTopics } }: IContext) {
     return KnowledgeBaseTopics.createDoc(doc, user._id);
   },
 
   /**
    * Update topic document
    */
-  knowledgeBaseTopicsEdit(_root, { _id, doc }: { _id: string; doc: ITopic }, { user }: { user: IUserDocument }) {
+  knowledgeBaseTopicsEdit(
+    _root,
+    { _id, doc }: { _id: string; doc: ITopic },
+    { user, models: { KnowledgeBaseTopics } }: IContext,
+  ) {
     return KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
   },
 
   /**
    * Remove topic document
    */
-  knowledgeBaseTopicsRemove(_root, { _id }: { _id: string }) {
+  knowledgeBaseTopicsRemove(_root, { _id }: { _id: string }, { models: { KnowledgeBaseTopics } }: IContext) {
     return KnowledgeBaseTopics.removeDoc(_id);
   },
 
   /**
    * Create category document
    */
-  knowledgeBaseCategoriesAdd(_root, { doc }: { doc: ICategoryCreate }, { user }: { user: IUserDocument }) {
+  knowledgeBaseCategoriesAdd(
+    _root,
+    { doc }: { doc: ICategoryCreate },
+    { user, models: { KnowledgeBaseCategories } }: IContext,
+  ) {
     return KnowledgeBaseCategories.createDoc(doc, user._id);
   },
 
@@ -40,7 +46,7 @@ const knowledgeBaseMutations = {
   knowledgeBaseCategoriesEdit(
     _root,
     { _id, doc }: { _id: string; doc: ICategoryCreate },
-    { user }: { user: IUserDocument },
+    { user, models: { KnowledgeBaseCategories } }: IContext,
   ) {
     return KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
   },
@@ -48,14 +54,18 @@ const knowledgeBaseMutations = {
   /**
    * Remove category document
    */
-  knowledgeBaseCategoriesRemove(_root, { _id }: { _id: string }) {
+  knowledgeBaseCategoriesRemove(_root, { _id }: { _id: string }, { models: { KnowledgeBaseCategories } }: IContext) {
     return KnowledgeBaseCategories.removeDoc(_id);
   },
 
   /**
    * Create article document
    */
-  knowledgeBaseArticlesAdd(_root, { doc }: { doc: IArticleCreate }, { user }: { user: IUserDocument }) {
+  knowledgeBaseArticlesAdd(
+    _root,
+    { doc }: { doc: IArticleCreate },
+    { user, models: { KnowledgeBaseArticles } }: IContext,
+  ) {
     return KnowledgeBaseArticles.createDoc(doc, user._id);
   },
 
@@ -65,7 +75,7 @@ const knowledgeBaseMutations = {
   knowledgeBaseArticlesEdit(
     _root,
     { _id, doc }: { _id: string; doc: IArticleCreate },
-    { user }: { user: IUserDocument },
+    { user, models: { KnowledgeBaseArticles } }: IContext,
   ) {
     return KnowledgeBaseArticles.updateDoc(_id, doc, user._id);
   },
@@ -73,7 +83,7 @@ const knowledgeBaseMutations = {
   /**
    * Remove article document
    */
-  knowledgeBaseArticlesRemove(_root, { _id }: { _id: string }) {
+  knowledgeBaseArticlesRemove(_root, { _id }: { _id: string }, { models: { KnowledgeBaseArticles } }: IContext) {
     return KnowledgeBaseArticles.removeDoc(_id);
   },
 };
