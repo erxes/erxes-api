@@ -1,4 +1,4 @@
-import { Integrations } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IMessengerIntegration } from '../../../db/models/Integrations';
 import { getGmailUserProfile, sendGmail } from '../../../trackers/gmail';
@@ -18,42 +18,58 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration) {
+  integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration, { models: { Integrations } }: IContext) {
     return Integrations.createMessengerIntegration(doc);
   },
 
   /**
    * Update messenger integration
    */
-  integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditMessengerIntegration) {
+  integrationsEditMessengerIntegration(
+    _root,
+    { _id, ...fields }: IEditMessengerIntegration,
+    { models: { Integrations } }: IContext,
+  ) {
     return Integrations.updateMessengerIntegration(_id, fields);
   },
 
   /**
    * Update/save messenger appearance data
    */
-  integrationsSaveMessengerAppearanceData(_root, { _id, uiOptions }: { _id: string; uiOptions: IUiOptions }) {
+  integrationsSaveMessengerAppearanceData(
+    _root,
+    { _id, uiOptions }: { _id: string; uiOptions: IUiOptions },
+    { models: { Integrations } }: IContext,
+  ) {
     return Integrations.saveMessengerAppearanceData(_id, uiOptions);
   },
 
   /**
    * Update/save messenger data
    */
-  integrationsSaveMessengerConfigs(_root, { _id, messengerData }: { _id: string; messengerData: IMessengerData }) {
+  integrationsSaveMessengerConfigs(
+    _root,
+    { _id, messengerData }: { _id: string; messengerData: IMessengerData },
+    { models: { Integrations } }: IContext,
+  ) {
     return Integrations.saveMessengerConfigs(_id, messengerData);
   },
 
   /**
    * Create a new messenger integration
    */
-  integrationsCreateFormIntegration(_root, doc: IIntegration) {
+  integrationsCreateFormIntegration(_root, doc: IIntegration, { models: { Integrations } }: IContext) {
     return Integrations.createFormIntegration(doc);
   },
 
   /**
    * Create a new twitter integration
    */
-  async integrationsCreateTwitterIntegration(_root, { queryParams, brandId }: { queryParams: any; brandId: string }) {
+  async integrationsCreateTwitterIntegration(
+    _root,
+    { queryParams, brandId }: { queryParams: any; brandId: string },
+    { models: { Integrations } }: IContext,
+  ) {
     const data: any = await socUtils.authenticate(queryParams);
 
     const integration = await Integrations.createTwitterIntegration({
@@ -78,6 +94,7 @@ const integrationMutations = {
   async integrationsCreateFacebookIntegration(
     _root,
     { name, brandId, appId, pageIds }: { name: string; brandId: string; appId: string; pageIds: string[] },
+    { models: { Integrations } }: IContext,
   ) {
     return Integrations.createFacebookIntegration({
       name,
@@ -92,21 +109,29 @@ const integrationMutations = {
   /**
    * Edit a form integration
    */
-  integrationsEditFormIntegration(_root, { _id, ...doc }: IEditFormIntegration) {
+  integrationsEditFormIntegration(
+    _root,
+    { _id, ...doc }: IEditFormIntegration,
+    { models: { Integrations } }: IContext,
+  ) {
     return Integrations.updateFormIntegration(_id, doc);
   },
 
   /**
    * Delete an integration
    */
-  integrationsRemove(_root, { _id }: { _id: string }) {
+  integrationsRemove(_root, { _id }: { _id: string }, { models: { Integrations } }: IContext) {
     return Integrations.removeIntegration(_id);
   },
 
   /**
    * Create gmail integration
    */
-  async integrationsCreateGmailIntegration(_root, { code, brandId }: { code: string; brandId: string }) {
+  async integrationsCreateGmailIntegration(
+    _root,
+    { code, brandId }: { code: string; brandId: string },
+    { models: { Integrations } }: IContext,
+  ) {
     const credentials = await getAccessToken(code, 'gmail');
 
     // get permission granted email address
