@@ -1,4 +1,4 @@
-import { Products } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IProduct } from '../../../db/models/definitions/deals';
 import { moduleRequireLogin } from '../../permissions';
 
@@ -10,21 +10,21 @@ const productMutations = {
   /**
    * Create new product
    */
-  productsAdd(_root, doc: IProduct) {
+  productsAdd(_root, doc: IProduct, { models: { Products } }: IContext) {
     return Products.createProduct(doc);
   },
 
   /**
    * Edit product
    */
-  productsEdit(_root, { _id, ...doc }: IProductsEdit) {
+  productsEdit(_root, { _id, ...doc }: IProductsEdit, { models: { Products } }: IContext) {
     return Products.updateProduct(_id, doc);
   },
 
   /**
    * Remove product
    */
-  productsRemove(_root, { _id }: { _id: string }) {
+  productsRemove(_root, { _id }: { _id: string }, { models: { Products } }: IContext) {
     return Products.removeProduct(_id);
   },
 };

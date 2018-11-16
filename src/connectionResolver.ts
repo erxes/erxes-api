@@ -117,6 +117,7 @@ export interface IModels {
 }
 
 export interface IContext {
+  res: any;
   user: IUserDocument;
   models: IModels;
 }

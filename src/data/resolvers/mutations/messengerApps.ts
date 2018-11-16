@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { ConversationMessages, Conversations, Customers, Forms, MessengerApps } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { IGoogleCredentials } from '../../../db/models/definitions/messengerApps';
 import { createMeetEvent } from '../../../trackers/googleTracker';
 import { requireLogin } from '../../permissions';
@@ -9,7 +9,11 @@ const messengerAppMutations = {
   /*
    * Google meet
    */
-  async messengerAppsAddGoogleMeet(_root, { name, credentials }: { name: string; credentials: IGoogleCredentials }) {
+  async messengerAppsAddGoogleMeet(
+    _root,
+    { name, credentials }: { name: string; credentials: IGoogleCredentials },
+    { models: { MessengerApps } }: IContext,
+  ) {
     return MessengerApps.createApp({
       name,
       kind: 'googleMeet',
@@ -24,6 +28,7 @@ const messengerAppMutations = {
   async messengerAppsAddKnowledgebase(
     _root,
     { name, integrationId, topicId }: { name: string; integrationId: string; topicId: string },
+    { models: { MessengerApps } }: IContext,
   ) {
     return MessengerApps.createApp({
       name,
@@ -42,6 +47,7 @@ const messengerAppMutations = {
   async messengerAppsAddLead(
     _root,
     { name, integrationId, formId }: { name: string; integrationId: string; formId: string },
+    { models: { MessengerApps, Forms } }: IContext,
   ) {
     const form = await Forms.findOne({ _id: formId });
 
@@ -63,14 +69,18 @@ const messengerAppMutations = {
   /*
    * Remove app
    */
-  async messengerAppsRemove(_root, { _id }: { _id: string }) {
+  async messengerAppsRemove(_root, { _id }: { _id: string }, { models: { MessengerApps } }: IContext) {
     return MessengerApps.remove({ _id });
   },
 
   /*
    * Execute google meet
    */
-  async messengerAppsExecuteGoogleMeet(_root, { _id, conversationId }: { _id: string; conversationId: string }) {
+  async messengerAppsExecuteGoogleMeet(
+    _root,
+    { _id, conversationId }: { _id: string; conversationId: string },
+    { models: { Conversations, Customers, MessengerApps, ConversationMessages } }: IContext,
+  ) {
     const conversation = await Conversations.findOne({ _id: conversationId });
 
     if (!conversation) {

@@ -55,7 +55,7 @@ describe('activityLogs', () => {
         contentTypeId: customer._id,
         content: 'test internal note',
       },
-      { user: _user },
+      generateContext({ user: _user }),
     );
 
     expect(await ActivityLogs.find({}).count()).toBe(3);

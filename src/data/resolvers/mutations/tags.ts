@@ -1,4 +1,4 @@
-import { Tags } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { ITag } from '../../../db/models/definitions/tags';
 import { moduleRequireLogin } from '../../permissions';
 import { publishConversationsChanged } from './conversations';
@@ -11,28 +11,32 @@ const tagMutations = {
   /**
    * Create new tag
    */
-  tagsAdd(_root, doc: ITag) {
+  tagsAdd(_root, doc: ITag, { models: { Tags } }: IContext) {
     return Tags.createTag(doc);
   },
 
   /**
    * Edit tag
    */
-  tagsEdit(_root, { _id, ...doc }: ITagsEdit) {
+  tagsEdit(_root, { _id, ...doc }: ITagsEdit, { models: { Tags } }: IContext) {
     return Tags.updateTag(_id, doc);
   },
 
   /**
    * Remove tag
    */
-  tagsRemove(_root, { ids }: { ids: string[] }) {
+  tagsRemove(_root, { ids }: { ids: string[] }, { models: { Tags } }: IContext) {
     return Tags.removeTag(ids);
   },
 
   /**
    * Attach a tag
    */
-  tagsTag(_root, { type, targetIds, tagIds }: { type: string; targetIds: string[]; tagIds: string[] }) {
+  tagsTag(
+    _root,
+    { type, targetIds, tagIds }: { type: string; targetIds: string[]; tagIds: string[] },
+    { models: { Tags } }: IContext,
+  ) {
     if (type === 'conversation') {
       publishConversationsChanged(targetIds, 'tag');
     }

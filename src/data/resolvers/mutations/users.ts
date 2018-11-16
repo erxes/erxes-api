@@ -1,5 +1,5 @@
-import { Channels, Users } from '../../../db/models';
-import { IDetail, IEmailSignature, ILink, IUser, IUserDocument } from '../../../db/models/definitions/users';
+import { IContext } from '../../../connectionResolver';
+import { IDetail, IEmailSignature, ILink, IUser } from '../../../db/models/definitions/users';
 import { requireAdmin, requireLogin } from '../../permissions';
 import utils from '../../utils';
 
@@ -16,7 +16,7 @@ const userMutations = {
   /*
    * Login
    */
-  async login(_root, args: { email: string; password: string }, { res }) {
+  async login(_root, args: { email: string; password: string }, { res, models: { Users } }: IContext) {
     const response = await Users.login(args);
 
     const { token } = response;
@@ -41,7 +41,7 @@ const userMutations = {
     return 'loggedIn';
   },
 
-  async logout(_root, _args, { user, res }) {
+  async logout(_root, _args, { user, res, models: { Users } }: IContext) {
     const response = await Users.logout(user);
 
     res.clearCookie('auth-token');
@@ -52,7 +52,7 @@ const userMutations = {
   /*
    * Send forgot password email
    */
-  async forgotPassword(_root, { email }: { email: string }) {
+  async forgotPassword(_root, { email }: { email: string }, { models: { Users } }: IContext) {
     const token = await Users.forgotPassword(email);
 
     // send email ==============
@@ -77,7 +77,7 @@ const userMutations = {
   /*
    * Reset password
    */
-  resetPassword(_root, args: { token: string; newPassword: string }) {
+  resetPassword(_root, args: { token: string; newPassword: string }, { models: { Users } }: IContext) {
     return Users.resetPassword(args);
   },
 
@@ -87,7 +87,7 @@ const userMutations = {
   usersChangePassword(
     _root,
     args: { currentPassword: string; newPassword: string },
-    { user }: { user: IUserDocument },
+    { user, models: { Users } }: IContext,
   ) {
     return Users.changePassword({ _id: user._id, ...args });
   },
@@ -95,7 +95,7 @@ const userMutations = {
   /*
    * Create new user
    */
-  async usersAdd(_root, args: IUsersAdd) {
+  async usersAdd(_root, args: IUsersAdd, { models: { Users, Channels } }: IContext) {
     const { username, password, passwordConfirmation, email, role, channelIds = [], details, links } = args;
 
     if (password !== passwordConfirmation) {
@@ -135,14 +135,13 @@ const userMutations = {
   /*
    * Update user
    */
-  async usersEdit(_root, args: IUsersEdit) {
+  async usersEdit(_root, args: IUsersEdit, { models: { Users, Channels } }: IContext) {
     const { _id, username, password, passwordConfirmation, email, role, channelIds = [], details, links } = args;
 
     if (password && password !== passwordConfirmation) {
       throw new Error('Incorrect password confirmation');
     }
 
-    // TODO check isOwner
     const updatedUser = await Users.updateUser(_id, {
       username,
       password,
@@ -176,7 +175,7 @@ const userMutations = {
       details: IDetail;
       links: ILink;
     },
-    { user }: { user: IUserDocument },
+    { user, models: { Users } }: IContext,
   ) {
     const userOnDb = await Users.findOne({ _id: user._id });
 
@@ -197,7 +196,7 @@ const userMutations = {
   /*
    * Remove user
    */
-  async usersRemove(_root, { _id }: { _id: string }) {
+  async usersRemove(_root, { _id }: { _id: string }, { models: { Users, Channels } }: IContext) {
     const userToRemove = await Users.findOne({ _id });
 
     if (!userToRemove) {
@@ -228,12 +227,16 @@ const userMutations = {
   usersConfigEmailSignatures(
     _root,
     { signatures }: { signatures: IEmailSignature[] },
-    { user }: { user: IUserDocument },
+    { user, models: { Users } }: IContext,
   ) {
     return Users.configEmailSignatures(user._id, signatures);
   },
 
-  usersConfigGetNotificationByEmail(_root, { isAllowed }: { isAllowed: boolean }, { user }: { user: IUserDocument }) {
+  usersConfigGetNotificationByEmail(
+    _root,
+    { isAllowed }: { isAllowed: boolean },
+    { user, models: { Users } }: IContext,
+  ) {
     return Users.configGetNotificationByEmail(user._id, isAllowed);
   },
 };
