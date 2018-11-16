@@ -1,4 +1,4 @@
-import { Channels } from '../../../db/models';
+import { IContext } from '../../../connectionResolver';
 import { moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';
 
@@ -14,7 +14,11 @@ const channelQueries = {
   /**
    * Channels list
    */
-  channels(_root, { memberIds, ...queryParams }: { page: number; perPage: number; memberIds: string[] }) {
+  channels(
+    _root,
+    { memberIds, ...queryParams }: { page: number; perPage: number; memberIds: string[] },
+    { models: { Channels } }: IContext,
+  ) {
     const query: IChannelQuery = {};
     const sort = { createdAt: -1 };
 
@@ -30,21 +34,21 @@ const channelQueries = {
   /**
    * Get one channel
    */
-  channelDetail(_root, { _id }: { _id: string }) {
+  channelDetail(_root, { _id }: { _id: string }, { models: { Channels } }: IContext) {
     return Channels.findOne({ _id });
   },
 
   /**
    * Get all channels count. We will use it in pager
    */
-  channelsTotalCount() {
+  channelsTotalCount(_root, _args, { models: { Channels } }: IContext) {
     return Channels.find({}).count();
   },
 
   /**
    * Get last channel
    */
-  channelsGetLast() {
+  channelsGetLast(_root, _args, { models: { Channels } }: IContext) {
     return Channels.findOne({}).sort({ createdAt: -1 });
   },
 };

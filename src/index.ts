@@ -22,8 +22,6 @@ import { init } from './startup';
 // load environment variables
 dotenv.config();
 
-const { MAIN_APP_DOMAIN } = process.env;
-
 // connect to mongo database
 connect();
 
@@ -36,7 +34,7 @@ app.use(cookieParser());
 app.use(
   cors({
     credentials: true,
-    origin: MAIN_APP_DOMAIN,
+    origin: true,
   }),
 );
 
@@ -47,7 +45,7 @@ app.use(
   graphqlExpress((req: any, res) => {
     return {
       schema,
-      context: { user: req.user, res, models: generateModels() },
+      context: { user: req.user, res, models: generateModels(req.hostname) },
     };
   }),
 );

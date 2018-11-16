@@ -122,8 +122,17 @@ export interface IContext {
   models: IModels;
 }
 
-export const generateModels = () => {
-  const db = mongoose.createConnection('mongodb://localhost/test');
+export const generateModels = (host = 'localhost') => {
+  const MAPPING = {
+    localhost: 'mongodb://localhost/erxes',
+    '127.0.0.1': 'mongodb://localhost/erxes127',
+  };
+
+  if (!MAPPING[host]) {
+    throw new Error('Invalid host');
+  }
+
+  const db = mongoose.createConnection(MAPPING[host]);
 
   // tslint:disable-next-line:no-object-literal-type-assertion
   const models: IModels = {} as IModels;
