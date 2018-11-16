@@ -122,8 +122,9 @@ export interface IContext {
   models: IModels;
 }
 
-export const generateModels = (host = 'localhost') => {
+export const generateModels = (host = 'test') => {
   const MAPPING = {
+    test: 'mongodb://localhost/test',
     localhost: 'mongodb://localhost/erxes',
     '127.0.0.1': 'mongodb://localhost/erxes127',
   };
