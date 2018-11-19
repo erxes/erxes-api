@@ -30,7 +30,7 @@ import {
 import { awsRequests } from '../trackers/engageTracker';
 
 const toJSON = value => {
-  return JSON.stringify(value);
+  return JSON.stringify(value, Object.keys(value).sort());
 };
 
 describe('engage message mutation tests', () => {

@@ -14,7 +14,7 @@ import { twitMap } from '../trackers/twitter';
 import { twitRequest } from '../trackers/twitterTracker';
 
 const toJSON = value => {
-  return JSON.stringify(value);
+  return JSON.stringify(value, Object.keys(value).sort());
 };
 
 const spy = jest.spyOn(utils, 'sendNotification');
