@@ -60,6 +60,19 @@ export const publishConversationsChanged = (_ids: string[], type: string): strin
 };
 
 /**
+ * Publish admin's typing status
+ * @param conversationId
+ */
+export const publishTypingStatus = (conversationId?: string, typing?: boolean | true): void => {
+  if (!conversationId) {
+    return;
+  }
+
+  pubsub.publish('converstaionTypingStatus', {
+    conversationTypingStatus: { conversationId, typing },
+  });
+};
+/**
  * Publish admin's message
  */
 export const publishMessage = (message?: IMessageDocument | null, customerId?: string) => {
@@ -94,6 +107,13 @@ export const publishClientMessage = (message: IMessageDocument) => {
 
 const conversationMutations = {
   /**
+   * Send typing status into client
+   */
+  async conversationNotifyTypingStatus(_root, { _id, typing }: { _id: string; typing: boolean }) {
+    // notify to client when typing
+    publishTypingStatus(_id, typing);
+  },
+  /**
    * Calling this mutation from widget api run new message subscription
    */
   async conversationPublishClientMessage(_root, { _id }: { _id: string }) {
@@ -109,7 +129,6 @@ const conversationMutations = {
     // notifying to total unread count
     publishClientMessage(message);
   },
-
   /**
    * Create new message in conversation
    */
@@ -365,5 +384,6 @@ requireLogin(conversationMutations, 'conversationsAssign');
 requireLogin(conversationMutations, 'conversationsUnassign');
 requireLogin(conversationMutations, 'conversationsChangeStatus');
 requireLogin(conversationMutations, 'conversationMarkAsRead');
+requireLogin(conversationMutations, 'conversationNotifyTypingStatus');
 
 export default conversationMutations;

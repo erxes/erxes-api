@@ -123,6 +123,12 @@ export const types = `
     type: String!
   }
 
+  type ConversationTypingStatus {
+    _id: String!
+    typing: Boolean
+  }
+
+
   input ConversationMessageParams {
     content: String,
     mentionedUserIds: [String],
@@ -199,4 +205,5 @@ export const mutations = `
   conversationsChangeStatus(_ids: [String]!, status: String!): [Conversation]
   conversationMarkAsRead(_id: String): Conversation
   conversationPublishClientMessage(_id: String!): String
+  conversationNotifyTypingStatus(_id: String!, typing: Boolean): String
 `;
