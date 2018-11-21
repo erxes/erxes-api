@@ -1,6 +1,6 @@
 import { EngageMessages, Users } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
-import { createSchedule, updateOrRemoveSchedule } from '../../../trackers/engageScheduleTracker';
+import { createSchedule, ENGAGE_SCHEDULES } from '../../../trackers/engageScheduleTracker';
 import { awsRequests } from '../../../trackers/engageTracker';
 import { MESSAGE_KINDS, METHODS } from '../../constants';
 import { moduleRequireLogin } from '../../permissions';
@@ -9,6 +9,35 @@ import { send } from './engageUtils';
 interface IEngageMessageEdit extends IEngageMessage {
   _id: string;
 }
+
+/**
+ * Update or Remove selected engage message
+ * @param _id - Engage id
+ * @param update - Action type
+ */
+export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: boolean) => {
+  const selectedIndex = ENGAGE_SCHEDULES.findIndex(engage => engage.id === _id);
+
+  if (selectedIndex === -1) {
+    return;
+  }
+
+  // Remove selected job instance and update tracker
+  ENGAGE_SCHEDULES[selectedIndex].job.cancel();
+  ENGAGE_SCHEDULES.splice(selectedIndex, 1);
+
+  if (!update) {
+    return;
+  }
+
+  const message = await EngageMessages.findOne({ _id });
+
+  if (!message) {
+    return;
+  }
+
+  return createSchedule(message);
+};
 
 const engageMutations = {
   /**

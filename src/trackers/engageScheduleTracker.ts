@@ -1,7 +1,6 @@
 import * as moment from 'moment';
 import * as schedule from 'node-schedule';
 import { send } from '../data/resolvers/mutations/engageUtils';
-import { EngageMessages } from '../db/models';
 import { IEngageMessageDocument, IScheduleDate } from '../db/models/definitions/engages';
 
 interface IEngageSchedules {
@@ -10,7 +9,7 @@ interface IEngageSchedules {
 }
 
 // Track runtime cron job instances
-const ENGAGE_SCHEDULES: IEngageSchedules[] = [];
+export const ENGAGE_SCHEDULES: IEngageSchedules[] = [];
 
 /**
  * Create cron job for an engage message
@@ -73,33 +72,4 @@ export const createScheduleRule = (scheduleDate: IScheduleDate) => {
   */
 
   return `${minute} ${hour} ${day} ${month} ${dayOfWeek}`;
-};
-
-/**
- * Update or Remove selected engage message
- * @param _id - Engage id
- * @param update - Action type
- */
-export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: boolean) => {
-  const selectedIndex = ENGAGE_SCHEDULES.findIndex(engage => engage.id === _id);
-
-  if (selectedIndex === -1) {
-    return;
-  }
-
-  // Remove selected job instance and update tracker
-  ENGAGE_SCHEDULES[selectedIndex].job.cancel();
-  ENGAGE_SCHEDULES.splice(selectedIndex, 1);
-
-  if (!update) {
-    return;
-  }
-
-  const message = await EngageMessages.findOne({ _id });
-
-  if (!message) {
-    return;
-  }
-
-  return createSchedule(message);
 };
