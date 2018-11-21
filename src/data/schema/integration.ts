@@ -13,6 +13,7 @@ export const types = `
     messengerData: JSON
     twitterData: JSON
     facebookData: JSON
+    gmailData: JSON
     uiOptions: JSON
 
     brand: Brand
