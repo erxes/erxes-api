@@ -285,14 +285,11 @@ class Topic {
     }
 
     // remove child items ===========
-    for (const categoryId of topic.categoryIds || []) {
-      const category = await KnowledgeBaseCategories.findOne({
-        _id: categoryId,
-      });
-
-      if (category) {
-        await KnowledgeBaseCategories.removeDoc(categoryId);
-      }
+    const categories = await KnowledgeBaseCategories.find({
+      _id: { $in: topic.categoryIds },
+    });
+    for (const category of categories) {
+      await KnowledgeBaseCategories.removeDoc(category._id);
     }
 
     return KnowledgeBaseTopics.deleteOne({ _id });

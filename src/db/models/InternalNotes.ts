@@ -64,12 +64,12 @@ class InternalNote {
    * Transfers customers' internal notes to another customer
    */
   public static async changeCustomer(newCustomerId: string, customerIds: string[]) {
-    for (const customerId of customerIds) {
+    if (customerIds) {
       // Updating every internal notes of customer
       await InternalNotes.updateMany(
         {
           contentType: COC_CONTENT_TYPES.CUSTOMER,
-          contentTypeId: customerId,
+          contentTypeId: { $in: customerIds },
         },
         { contentTypeId: newCustomerId },
       );
@@ -108,12 +108,12 @@ class InternalNote {
    * Transfers companies' internal notes to another company
    */
   public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
-    for (const companyId of oldCompanyIds) {
+    if (oldCompanyIds) {
       // Updating every internal notes of company
       await InternalNotes.updateMany(
         {
           contentType: COC_CONTENT_TYPES.COMPANY,
-          contentTypeId: companyId,
+          contentTypeId: { $in: oldCompanyIds },
         },
         { contentTypeId: newCompanyId },
       );
