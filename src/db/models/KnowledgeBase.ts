@@ -219,8 +219,8 @@ class Category {
       throw new Error('Category not found');
     }
 
-    for (const articleId of category.articleIds || []) {
-      await KnowledgeBaseArticles.deleteOne({ _id: articleId });
+    if (category.articleIds) {
+      await KnowledgeBaseArticles.deleteMany({ _id: { $in: category.articleIds } });
     }
 
     return KnowledgeBaseCategories.deleteOne({ _id });

@@ -194,12 +194,13 @@ class Conversation {
    * Transfers customers' conversations to another customer
    */
   public static async changeCustomer(newCustomerId: string, customerIds: string) {
-    for (const customerId of customerIds) {
-      // Updating every conversation and conversation messages of new customer
-      await ConversationMessages.updateMany({ customerId }, { $set: { customerId: newCustomerId } });
+    // Updating every conversation and conversation messages of new customer
+    await ConversationMessages.updateMany(
+      { customerId: { $in: customerIds } },
+      { $set: { customerId: newCustomerId } },
+    );
 
-      await Conversations.updateMany({ customerId }, { $set: { customerId: newCustomerId } });
-    }
+    await Conversations.updateMany({ customerId: { $in: customerIds } }, { $set: { customerId: newCustomerId } });
 
     // Returning updated list of conversation of new customer
     return Conversations.find({ customerId: newCustomerId });
@@ -215,11 +216,9 @@ class Conversation {
     });
 
     // Removing conversations and conversation messages
-    for (const conversation of conversations) {
-      // Removing conversation message of conversation
-      await ConversationMessages.deleteMany({ conversationId: conversation._id });
-      await Conversations.deleteMany({ _id: conversation._id });
-    }
+    const conversationIds = conversations.map(conv => conv._id);
+    await ConversationMessages.deleteMany({ conversationId: { $in: conversationIds } });
+    await Conversations.deleteMany({ conversationId: { $in: conversationIds } });
   }
 }
 
