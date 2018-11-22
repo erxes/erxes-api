@@ -27,6 +27,7 @@ interface IConversationModel extends Model<IConversationDocument> {
   newOrOpenConversation(): IConversationDocument[];
 
   addParticipatedUsers(conversationId: string, userId: string): Promise<IConversationDocument>;
+  addManyParticipatedUsers(conversationId: string, userId: string[]): Promise<IConversationDocument>;
 
   changeCustomer(newCustomerId: string, customerIds: string[]): Promise<IConversationDocument[]>;
 
@@ -175,7 +176,19 @@ class Conversation {
       },
     });
   }
-
+  /**
+   * Add participated users
+   */
+  public static addManyParticipatedUsers(conversationId: string, userIds: string[]) {
+    if (conversationId && userIds) {
+      return Conversations.updateOne(
+        { _id: conversationId },
+        {
+          $addToSet: { participatedUserIds: { $each: userIds } },
+        },
+      );
+    }
+  }
   /**
    * Add participated user
    */
@@ -218,7 +231,7 @@ class Conversation {
     // Removing conversations and conversation messages
     const conversationIds = conversations.map(conv => conv._id);
     await ConversationMessages.deleteMany({ conversationId: { $in: conversationIds } });
-    await Conversations.deleteMany({ conversationId: { $in: conversationIds } });
+    await Conversations.deleteMany({ _id: { $in: conversationIds } });
   }
 }
 
