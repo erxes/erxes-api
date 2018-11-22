@@ -29,7 +29,7 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   const bulkOpsPrevEntry: Array<{
     updateOne: {
       filter: { _id: string };
-      update: { $set: { [key: string]: string | number | undefined | Date } };
+      update: { $set: IStage };
     };
   }> = [];
   const prevDealIds = stages.map(stage => stage._id);
