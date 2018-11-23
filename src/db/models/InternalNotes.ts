@@ -64,16 +64,14 @@ class InternalNote {
    * Transfers customers' internal notes to another customer
    */
   public static async changeCustomer(newCustomerId: string, customerIds: string[]) {
-    if (customerIds) {
-      // Updating every internal notes of customer
-      await InternalNotes.updateMany(
-        {
-          contentType: COC_CONTENT_TYPES.CUSTOMER,
-          contentTypeId: { $in: customerIds },
-        },
-        { contentTypeId: newCustomerId },
-      );
-    }
+    // Updating every internal notes of customer
+    await InternalNotes.updateMany(
+      {
+        contentType: COC_CONTENT_TYPES.CUSTOMER,
+        contentTypeId: { $in: customerIds || [] },
+      },
+      { contentTypeId: newCustomerId },
+    );
 
     // Returning updated list of internal notes of new customer
     return InternalNotes.find({
@@ -108,16 +106,14 @@ class InternalNote {
    * Transfers companies' internal notes to another company
    */
   public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
-    if (oldCompanyIds) {
-      // Updating every internal notes of company
-      await InternalNotes.updateMany(
-        {
-          contentType: COC_CONTENT_TYPES.COMPANY,
-          contentTypeId: { $in: oldCompanyIds },
-        },
-        { contentTypeId: newCompanyId },
-      );
-    }
+    // Updating every internal notes of company
+    await InternalNotes.updateMany(
+      {
+        contentType: COC_CONTENT_TYPES.COMPANY,
+        contentTypeId: { $in: oldCompanyIds || [] },
+      },
+      { contentTypeId: newCompanyId },
+    );
 
     // Returning updated list of internal notes of new company
     return InternalNotes.find({
