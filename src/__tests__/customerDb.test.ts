@@ -103,7 +103,7 @@ describe('Customers model tests', () => {
       phones: ['1234567'],
     };
     const invalidEmailObj = await Customers.createCustomer(invalidEmailDoc);
-    expect(invalidEmailObj.isValidEmail).toBeFalsy();
+    expect(invalidEmailObj.hasValidEmail).toBeFalsy();
   });
 
   test('Create customer: with customer fields validation error', async () => {
@@ -150,9 +150,9 @@ describe('Customers model tests', () => {
     }
     // update invalid email address
     await Customers.updateCustomer(previousCustomer._id, { primaryEmail: 'dombo@blabla.mn' });
-    expect(previousCustomer.isValidEmail).toBeFalsy();
+    expect(previousCustomer.hasValidEmail).toBeFalsy();
     const validMailObj = await Customers.updateCustomer(previousCustomer._id, { primaryEmail: 'dombo1@yahoo.com' });
-    expect(validMailObj.isValidEmail).toBeFalsy();
+    expect(validMailObj.hasValidEmail).toBeFalsy();
 
     // remove previous duplicated entry
     await Customers.deleteOne({ _id: previousCustomer._id });

@@ -11,19 +11,19 @@ export const checkMail = async () => {
   connect();
 
   const customersWithoutMailChecks = await Customers.find({
-    isValidEmail: { $exists: false },
+    hasValidEmail: { $exists: false },
     primaryEmail: { $ne: '' },
   });
 
   const bulkOps: Array<{
-    updateOne: { filter: { _id: string }; update: { isValidEmail: boolean } };
+    updateOne: { filter: { _id: string }; update: { hasValidEmail: boolean } };
   }> = [];
   for (const customer of customersWithoutMailChecks) {
     const isValid = await validateEmail(customer.primaryEmail);
     bulkOps.push({
       updateOne: {
         filter: { _id: customer._id },
-        update: { isValidEmail: isValid },
+        update: { hasValidEmail: isValid },
       },
     });
   }

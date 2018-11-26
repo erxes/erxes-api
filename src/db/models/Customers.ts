@@ -1,5 +1,5 @@
-import * as EmailValidator from 'email-deep-validator';
 import { Model, model } from 'mongoose';
+import { validateEmail } from '../../data/utils';
 import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes } from './';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument, IFacebookData, ITwitterData } from './definitions/customers';
@@ -30,18 +30,6 @@ interface ICustomerModel extends Model<ICustomerDocument> {
 
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
 }
-
-const validateEmail = async email => {
-  const emailValidator = new EmailValidator();
-  const { validDomain, validMailbox } = await emailValidator.verify(email);
-  if (!validDomain) {
-    return false;
-  }
-  if (!validMailbox && validMailbox === null) {
-    return false;
-  }
-  return true;
-};
 
 class Customer {
   /**
@@ -139,8 +127,9 @@ class Customer {
     // clean custom field values
     doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
     const isValid = await validateEmail(doc.primaryEmail);
+
     if (doc.primaryEmail && isValid) {
-      doc.isValidEmail = true;
+      doc.hasValidEmail = true;
     }
 
     return Customers.create({
@@ -161,9 +150,10 @@ class Customer {
       // clean custom field values
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
     }
+
     if (doc.primaryEmail) {
       const isValid = await validateEmail(doc.primaryEmail);
-      doc.isValidEmail = isValid;
+      doc.hasValidEmail = isValid;
     }
 
     await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
