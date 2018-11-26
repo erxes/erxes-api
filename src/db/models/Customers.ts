@@ -34,7 +34,13 @@ interface ICustomerModel extends Model<ICustomerDocument> {
 const validateEmail = async email => {
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
-  return validDomain && validMailbox;
+  if (!validDomain) {
+    return false;
+  }
+  if (!validMailbox && validMailbox === null) {
+    return false;
+  }
+  return true;
 };
 
 class Customer {
@@ -154,6 +160,10 @@ class Customer {
     if (doc.customFieldsData) {
       // clean custom field values
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+    }
+    if (doc.primaryEmail) {
+      const isValid = await validateEmail(doc.primaryEmail);
+      doc.isValidEmail = isValid;
     }
 
     await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
