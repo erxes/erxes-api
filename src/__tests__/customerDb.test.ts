@@ -39,7 +39,7 @@ describe('Customers model tests', () => {
   });
 
   test('Create customer', async () => {
-    expect.assertions(13);
+    expect.assertions(14);
 
     // check duplication ===============
     try {
@@ -92,6 +92,18 @@ describe('Customers model tests', () => {
     expect(customerObj.emails).toEqual(expect.arrayContaining(doc.emails));
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
     expect(customerObj.phones).toEqual(expect.arrayContaining(doc.phones));
+
+    // Create customer with invalid email
+    const invalidEmailDoc = {
+      primaryEmail: 'dombo@blabla.mn',
+      emails: ['dombo@blabla.mn'],
+      firstName: 'firstName',
+      lastName: 'lastName',
+      primaryPhone: '1234567',
+      phones: ['1234567'],
+    };
+    const invalidEmailObj = await Customers.createCustomer(invalidEmailDoc);
+    expect(invalidEmailObj.isValidEmail).toBeFalsy();
   });
 
   test('Create customer: with customer fields validation error', async () => {

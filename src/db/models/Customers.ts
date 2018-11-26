@@ -1,3 +1,4 @@
+import * as EmailValidator from 'email-deep-validator';
 import { Model, model } from 'mongoose';
 import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes } from './';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
@@ -29,6 +30,12 @@ interface ICustomerModel extends Model<ICustomerDocument> {
 
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
 }
+
+const validateEmail = async email => {
+  const emailValidator = new EmailValidator();
+  const { validDomain, validMailbox } = await emailValidator.verify(email);
+  return validDomain && validMailbox;
+};
 
 class Customer {
   /**
@@ -125,6 +132,10 @@ class Customer {
 
     // clean custom field values
     doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+    const isValid = await validateEmail(doc.primaryEmail);
+    if (doc.primaryEmail && isValid) {
+      doc.isValidEmail = true;
+    }
 
     return Customers.create({
       createdAt: new Date(),

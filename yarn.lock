@@ -1514,6 +1514,13 @@ elegant-spinner@^1.0.1:
   resolved "https://registry.yarnpkg.com/elegant-spinner/-/elegant-spinner-1.0.1.tgz#db043521c95d7e303fd8f345bedc3349cfb0729e"
   integrity sha1-2wQ1IcldfjA/2PNFvtwzSc+wcp4=
 
+email-deep-validator@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/email-deep-validator/-/email-deep-validator-3.1.0.tgz#87392e13f5372a5ba34b7af018fc4946b703d2e9"
+  integrity sha512-Zk9w0NVjXaS5kzbUeFf++O557FzsUkJKZwRzVFq/NUvQyhSPkgbssspsMQ4F/SeJm3HVchYsi6d0TkLfbLNQ1Q==
+  dependencies:
+    loglevel "^1.6.1"
+
 encodeurl@~1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/encodeurl/-/encodeurl-1.0.2.tgz#ad3ff4c86ec2d029322f5a02c3a9a606c95b3f59"
@@ -3782,6 +3789,11 @@ log-update@^1.0.2:
   dependencies:
     ansi-escapes "^1.0.0"
     cli-cursor "^1.0.2"
+
+loglevel@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.1.tgz#e0fc95133b6ef276cdc8887cdaf24aa6f156f8fa"
+  integrity sha1-4PyVEztu8nbNyIh82vJKpvFW+Po=
 
 lolex@^2.2.0, lolex@^2.3.2:
   version "2.7.5"
