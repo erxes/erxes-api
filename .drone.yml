@@ -11,6 +11,7 @@ pipeline:
       - node -v
       - npm -v
       - yarn --version
+      - yarn config set cache-folder .yarn-cache
       - yarn install
 
   linting:
