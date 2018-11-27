@@ -63,6 +63,7 @@ export const types = `
   }
 
   type ConversationMessageGmailDataAttachment {
+    attachmentId: String
     data: String
     size: Int
   }

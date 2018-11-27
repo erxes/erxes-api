@@ -5,6 +5,7 @@ import { getOauthClient } from './googleTracker';
 import { getGmailUpdates, getOrCreateConversation, parseMessage } from './gmail';
 
 interface IAttachment {
+  attachmentId: string;
   size?: number;
   data?: string;
 }
@@ -70,7 +71,10 @@ const getGmailAttachments = async (credentials, gmailData) => {
     });
 
     if (data) {
-      attachList.push(data);
+      attachList.push({
+        attachmentId: attach.attachmentId,
+        ...data,
+      });
     }
   }
 
