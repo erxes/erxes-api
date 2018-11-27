@@ -42,6 +42,7 @@ export interface IGmailAttachment {
 }
 
 export interface IGmail {
+  threadId?: string;
   messageId?: string;
   headerId?: string;
   from?: string;
@@ -234,6 +235,9 @@ const gmailAttachmentSchema = new Schema(
 const gmailSchema = new Schema(
   {
     messageId: field({
+      type: String,
+    }),
+    threadId: field({
       type: String,
     }),
     headerId: field({

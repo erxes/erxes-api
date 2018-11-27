@@ -33,7 +33,7 @@ export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?:
   });
 };
 
-const sendEmail = async (credentials, raw) => {
+const sendEmail = async (credentials, raw, threadId) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
@@ -44,6 +44,7 @@ const sendEmail = async (credentials, raw) => {
     userId: 'me',
     resource: {
       raw,
+      threadId,
     },
   };
 

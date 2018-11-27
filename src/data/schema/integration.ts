@@ -168,5 +168,8 @@ export const mutations = `
     cc: String,
     bcc: String,
     attachments: [String],
+    headerId: String,
+    references: String,
+    threadId: String
   ): GmailResponseData
 `;

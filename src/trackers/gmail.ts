@@ -13,9 +13,12 @@ interface IMailParams {
   subject: string;
   body: string;
   toEmails: string;
-  cc: string;
-  bcc: string;
-  attachments: string[];
+  cc?: string;
+  bcc?: string;
+  attachments?: string[];
+  references?: string;
+  headerId?: string;
+  threadId?: string;
 }
 
 /**
@@ -40,34 +43,36 @@ export const getAttachIntoBuffer = (url: string) => {
 /**
  * Create string sequence that generates email body encrypted to base64
  */
-const encodeEmail = async (
-  toEmail: string,
-  fromEmail: string,
-  subject: string,
-  body: string,
-  attachments?: string[],
-  ccEmails?: string,
-  bccEmails?: string,
-) => {
+const encodeEmail = async params => {
+  const { toEmails, fromEmail, subject, body, attachments, ccEmails, bccEmails, headerId, references } = params;
+
+  // split header to add reply References
+  let rawHeader = ['Content-Type: multipart/mixed; boundary="erxes"', 'MIME-Version: 1.0'].join('\r\n');
+
+  // if message is reply add follow references
+  if (headerId) {
+    rawHeader += [`References: ${references}`, `In-Reply-To: ${headerId}`].join('\r\n');
+  }
+
   const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
 
-  let rawEmail = [
-    'Content-Type: multipart/mixed; boundary="erxes"',
-    'MIME-Version: 1.0',
-    `From: ${fromEmail}`,
-    `To: ${toEmail}`,
-    `Cc: ${ccEmails || ''}`,
-    `Bcc: ${bccEmails || ''}`,
-    `Subject: ${utf8Subject}`,
-    '',
-    '--erxes',
-    'Content-Type: text/html; charset="UTF-8"',
-    'MIME-Version: 1.0',
-    'Content-Transfer-Encoding: 7bit',
-    '',
-    body,
-    '',
-  ].join('\r\n');
+  let rawEmail =
+    rawHeader +
+    [
+      `From: ${fromEmail}`,
+      `To: ${toEmails}`,
+      `Cc: ${ccEmails || ''}`,
+      `Bcc: ${bccEmails || ''}`,
+      `Subject: ${utf8Subject}`,
+      '',
+      '--erxes',
+      'Content-Type: text/html; charset="UTF-8"',
+      'MIME-Version: 1.0',
+      'Content-Transfer-Encoding: 7bit',
+      '',
+      body,
+      '',
+    ].join('\r\n');
 
   if (attachments) {
     for (const attachmentUrl of attachments) {
@@ -102,7 +107,7 @@ const encodeEmail = async (
  * Send email & create activiy log with gmail kind
  */
 export const sendGmail = async (mailParams: IMailParams, userId: string) => {
-  const { integrationId, subject, body, toEmails, cc, bcc, attachments, cocType, cocId } = mailParams;
+  const { integrationId, cocType, cocId, threadId } = mailParams;
 
   const integration = await Integrations.findOne({ _id: integrationId });
 
@@ -112,19 +117,12 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
 
   const fromEmail = integration.gmailData.email;
   // get raw string encrypted by base64
-  const raw = await encodeEmail(toEmails, fromEmail, subject, body, attachments, cc, bcc);
+  const raw = await encodeEmail({ fromEmail, ...mailParams });
 
-  const response = await utils.sendEmail(integration.gmailData.credentials, raw);
-
-  const activityLogContent = JSON.stringify({
-    toEmails,
-    subject,
-    body,
-    attachments,
-    cc,
-    bcc,
-  });
-
+  const response = await utils.sendEmail(integration.gmailData.credentials, raw, threadId);
+  // convert email params to json string for acvitity content
+  const activityLogContent = JSON.stringify(mailParams);
+  // create activity log
   await ActivityLogs.createGmailLog(activityLogContent, cocType, cocId, userId);
 
   return response;
@@ -144,7 +142,7 @@ export const mapHeaders = headers => {
   }, {});
 };
 
-const getHeaderProperties = (headers, messageId) => {
+const getHeaderProperties = headers => {
   const gmailData: IMsgGmail = {};
 
   for (const headerKey of ['subject', 'from', 'to', 'cc', 'bcc', 'references']) {
@@ -158,8 +156,6 @@ const getHeaderProperties = (headers, messageId) => {
   }
 
   gmailData.headerId = headers['message-id'];
-  gmailData.messageId = messageId;
-
   return gmailData;
 };
 
@@ -208,7 +204,9 @@ export const parseMessage = response => {
   }
 
   let headers = mapHeaders(payload.headers);
-  let gmailData = getHeaderProperties(headers, response.id);
+  let gmailData = getHeaderProperties(headers);
+  gmailData.messageId = response.id;
+  gmailData.threadId = response.threadId;
 
   let parts = [payload];
   let firstPartProcessed = false;
@@ -262,6 +260,7 @@ export const getOrCreateCustomer = async (email, integrationId) => {
   }
 
   return Customers.createCustomer({
+    primaryEmail: email,
     emails: [email],
     integrationId,
   });
