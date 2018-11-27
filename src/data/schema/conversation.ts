@@ -78,12 +78,13 @@ export const types = `
   type ConversationMessageGmailData {
     messageId: String
     headerId: String
+    threadId: String
+    reply: String
+    references: String
     from: String
     to: String
     cc: String
     bcc: String
-    reply: String
-    refrences: String
     subject: String
     textPlain: String
     textHtml: String
