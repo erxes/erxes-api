@@ -27,7 +27,7 @@ export const types = `
 
     senderId: String
     senderName: String
-    }
+  }
 
   type TwitterData {
     id: Float
@@ -60,6 +60,11 @@ export const types = `
 
   type ConversationGmailData {
     messageId: String
+  }
+
+  type ConversationMessageGmailDataAttachment {
+    data: String
+    size: Int
   }
 
   type ConversationMessageGmailAttachmentData {
@@ -141,6 +146,7 @@ export const types = `
     twitterData: TwitterData
     facebookData: ConversationMessageFacebookData
     gmailData: ConversationMessageGmailData
+    gmailDataAttachments: [ConversationMessageGmailDataAttachment]
 
     user: User
     customer: Customer

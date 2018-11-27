@@ -4,6 +4,11 @@ import { getOauthClient } from './googleTracker';
 
 import { getGmailUpdates, getOrCreateConversation, parseMessage } from './gmail';
 
+interface IAttachment {
+  size?: number;
+  data?: string;
+}
+
 /**
  * Get permission granted email information
  */
@@ -47,18 +52,29 @@ const sendEmail = async (credentials, raw) => {
 /**
  * Get attachment by id
  */
-const getAttachment = async (credentials, attachmentId, messageId) => {
+const getGmailAttachments = async (credentials, gmailData) => {
   const gmail = await google.gmail('v1');
   const auth = getOauthClient('gmail');
 
+  const { messageId, attachments } = gmailData;
+  const attachList: IAttachment[] = [];
+
   auth.setCredentials(credentials);
 
-  return gmail.users.messages.attachments.get({
-    auth,
-    id: attachmentId,
-    userId: 'me',
-    messageId,
-  });
+  for (const attach of attachments) {
+    const { data } = await gmail.users.messages.attachments.get({
+      auth,
+      id: attach.attachmentId,
+      userId: 'me',
+      messageId,
+    });
+
+    if (data) {
+      attachList.push(data);
+    }
+  }
+
+  return attachList;
 };
 
 /**
@@ -148,5 +164,5 @@ export const trackGmail = async () => {
 export const utils = {
   getMessagesByHistoryId,
   sendEmail,
-  getAttachment,
+  getGmailAttachments,
 };
