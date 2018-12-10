@@ -1,10 +1,16 @@
-import * as request from 'request';
 import { CONVERSATION_STATUSES } from '../data/constants';
 import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { utils } from './gmailTracker';
+
+interface IAttachmentParams {
+  data: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+}
 
 interface IMailParams {
   integrationId: string;
@@ -15,30 +21,11 @@ interface IMailParams {
   toEmails: string;
   cc?: string;
   bcc?: string;
-  attachments?: string[];
+  attachments?: IAttachmentParams[];
   references?: string;
   headerId?: string;
   threadId?: string;
 }
-
-/**
- * Get file by url into fileStream buffer
- */
-export const getAttachIntoBuffer = (url: string) => {
-  return new Promise((resolve, reject) =>
-    request.get({ url, encoding: null }, (error, response, body) => {
-      if (error) {
-        reject(error);
-      }
-
-      resolve({
-        body,
-        contentLength: response.headers['content-length'],
-        contentType: response.headers['content-type'],
-      });
-    }),
-  );
-};
 
 /**
  * Create string sequence that generates email body encrypted to base64
@@ -75,20 +62,16 @@ const encodeEmail = async params => {
     ].join('\r\n');
 
   if (attachments) {
-    for (const attachmentUrl of attachments) {
-      const attach: any = await getAttachIntoBuffer(attachmentUrl);
-      const splitedUrl = attachmentUrl.split('/');
-      const fileName = splitedUrl[splitedUrl.length - 1];
-
+    for (const attach of attachments) {
       rawEmail += [
         '--erxes',
-        `Content-Type: ${attach.contentType}`,
+        `Content-Type: ${attach.mimeType}`,
         'MIME-Version: 1.0',
-        `Content-Length: ${attach.contentLength}`,
+        `Content-Length: ${attach.size}`,
         'Content-Transfer-Encoding: base64',
-        `Content-Disposition: attachment; filename="${fileName}"`,
+        `Content-Disposition: attachment; filename="${attach.filename}"`,
         '',
-        attach.body.toString('base64'),
+        attach.data,
         '',
       ].join('\r\n');
     }
@@ -120,6 +103,7 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
   const raw = await encodeEmail({ fromEmail, ...mailParams });
 
   const response = await utils.sendEmail(integration.gmailData.credentials, raw, threadId);
+
   // convert email params to json string for acvitity content
   const activityLogContent = JSON.stringify(mailParams);
   // create activity log
@@ -244,7 +228,7 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
   });
 
   if (!integration || !integration.gmailData) {
-    throw new Error('Integration not found');
+    throw new Error(`Integration not found gmailData with ${emailAddress}`);
   }
 
   await utils.getMessagesByHistoryId(integration);
@@ -297,6 +281,16 @@ export const getOrCreateConversation = async value => {
   const { integration, messageId, gmailData } = value;
   const content = gmailData.subject;
 
+  // check if message has arrived true return previous message instance
+  const prevMessage = await ConversationMessages.findOne({
+    'gmailData.messageId': messageId,
+  }).sort({ createdAt: -1 });
+
+  if (prevMessage) {
+    return prevMessage;
+  }
+
+  // check if message is reply save in one conversation
   const conversationMessage = await ConversationMessages.findOne({
     'gmailData.headerId': { $regex: `.*${gmailData.reply}.*` },
   }).sort({ createdAt: -1 });
@@ -335,4 +329,23 @@ export const getOrCreateConversation = async value => {
       ...gmailData,
     },
   });
+};
+
+export const getAttachment = async (conversationMessageId: string, attachmentId: string) => {
+  const message = await ConversationMessages.findOne({ _id: conversationMessageId });
+  if (!message) {
+    throw new Error(`Conversation message not found id with ${conversationMessageId}`);
+  }
+
+  const conversation = await Conversations.findOne({ _id: message.conversationId });
+  if (!conversation) {
+    throw new Error(`Conversation not found id with ${message.conversationId}`);
+  }
+
+  const integration = await Integrations.findOne({ _id: conversation.integrationId });
+  if (!integration || !integration.gmailData) {
+    throw new Error(`Integration gmail data not found id with ${conversation.integrationId}`);
+  }
+
+  return utils.getGmailAttachment(integration.gmailData.credentials, message.gmailData, attachmentId);
 };

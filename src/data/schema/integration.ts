@@ -83,6 +83,13 @@ export const types = `
     wallpaper: String
     logo: String
   }
+
+  input gmailAttachmentData {
+    filename: String
+    size: Int
+    mimeType: String
+    data: String
+  }
 `;
 
 export const queries = `
@@ -167,7 +174,7 @@ export const mutations = `
     toEmails: String!,
     cc: String,
     bcc: String,
-    attachments: [String],
+    attachments: [gmailAttachmentData],
     headerId: String,
     references: String,
     threadId: String

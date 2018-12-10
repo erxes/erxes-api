@@ -62,12 +62,6 @@ export const types = `
     messageId: String
   }
 
-  type ConversationMessageGmailDataAttachment {
-    attachmentId: String
-    data: String
-    size: Int
-  }
-
   type ConversationMessageGmailAttachmentData {
     filename: String
     mimeType: String
@@ -148,8 +142,6 @@ export const types = `
     twitterData: TwitterData
     facebookData: ConversationMessageFacebookData
     gmailData: ConversationMessageGmailData
-    gmailDataAttachments: [ConversationMessageGmailDataAttachment]
-
     user: User
     customer: Customer
   }

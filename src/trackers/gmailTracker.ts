@@ -4,12 +4,6 @@ import { getOauthClient } from './googleTracker';
 
 import { getGmailUpdates, getOrCreateConversation, parseMessage } from './gmail';
 
-interface IAttachment {
-  attachmentId: string;
-  size?: number;
-  data?: string;
-}
-
 /**
  * Get permission granted email information
  */
@@ -52,34 +46,28 @@ const sendEmail = async (credentials, raw, threadId) => {
 };
 
 /**
- * Get attachment by id
+ * Get attachment by attachmentId
  */
-const getGmailAttachments = async (credentials, gmailData) => {
+const getGmailAttachment = async (credentials, gmailData, attachmentId) => {
   const gmail = await google.gmail('v1');
   const auth = getOauthClient('gmail');
 
-  const { messageId, attachments } = gmailData;
-  const attachList: IAttachment[] = [];
+  const { messageId } = gmailData;
 
   auth.setCredentials(credentials);
 
-  for (const attach of attachments) {
-    const { data } = await gmail.users.messages.attachments.get({
-      auth,
-      id: attach.attachmentId,
-      userId: 'me',
-      messageId,
-    });
+  const { data } = await gmail.users.messages.attachments.get({
+    auth,
+    id: attachmentId,
+    userId: 'me',
+    messageId,
+  });
 
-    if (data) {
-      attachList.push({
-        attachmentId: attach.attachmentId,
-        ...data,
-      });
-    }
-  }
-
-  return attachList;
+  const attachment = await gmailData.attachments.find(a => a.attachmentId === attachmentId);
+  return {
+    data: data.data,
+    filename: attachment.filename,
+  };
 };
 
 /**
@@ -95,7 +83,6 @@ const getMessagesByHistoryId = async integration => {
   const response = await gmail.users.history.list({
     auth,
     userId: 'me',
-    historyTypes: 'messageAdded',
     startHistoryId: integration.gmailData.historyId,
   });
 
@@ -168,6 +155,6 @@ export const trackGmail = async () => {
 
 export const utils = {
   getMessagesByHistoryId,
+  getGmailAttachment,
   sendEmail,
-  getGmailAttachments,
 };

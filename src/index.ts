@@ -12,6 +12,7 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { userMiddleware } from './auth';
 import schema from './data';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
+import { getAttachment } from './trackers/gmail';
 import { pubsub } from './data/resolvers/subscriptions';
 import { checkFile, importXlsFile, uploadFile } from './data/utils';
 import { connect } from './db/connection';
@@ -101,6 +102,18 @@ app.post('/import-file', (req: any, res) => {
         res.json(e);
       });
   });
+});
+
+app.get('/read-gmail-attachment', async (req: any, res) => {
+  if (!req.query.message || !req.query.attach) {
+    return res.status(404).send('Not found');
+  }
+
+  const attachment: any = await getAttachment(req.query.message, req.query.attach);
+
+  res.attachment(attachment.filename);
+
+  return res.send(Buffer.from(attachment.data, 'base64'));
 });
 
 // engage unsubscribe
