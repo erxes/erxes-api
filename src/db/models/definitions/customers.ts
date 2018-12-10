@@ -81,6 +81,7 @@ export interface ICustomer {
   hasAuthority?: string;
   description?: string;
   doNotDisturb?: string;
+  hasValidEmail?: boolean;
   links?: ILink;
   isUser?: boolean;
   integrationId?: string;
@@ -213,6 +214,7 @@ export const customerSchema = new Schema({
 
   primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
   emails: field({ type: [String], optional: true }),
+  hasValidEmail: field({ type: Boolean, optional: true }),
 
   primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
   phones: field({ type: [String], optional: true }),
@@ -259,6 +261,6 @@ export const customerSchema = new Schema({
 
   // if customer is not a user then we will contact with this visitor using
   // this information
-  visitorContactInfo: field({ type: visitorContactSchema, optional: true }),
+  visitorContactInfo: field({ type: visitorContactSchema, optional: true, label: 'Visitor contact info' }),
   urlVisits: Object,
 });

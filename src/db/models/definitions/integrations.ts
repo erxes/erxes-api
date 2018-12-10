@@ -15,15 +15,14 @@ export interface ILink {
 }
 
 export interface ITwitterData {
-  info?: any;
-  token?: string;
-  tokenSecret?: string;
+  accountId: string;
+  profileId: string;
 }
 
 export interface ITwitterDataDocument extends ITwitterData, Document {}
 
 export interface IFacebookData {
-  appId: string;
+  accountId?: string;
   pageIds: string[];
 }
 
@@ -127,13 +126,10 @@ export interface IMessengerApp {
 // Mongoose schemas ======================
 const twitterSchema = new Schema(
   {
-    info: {
+    profileId: {
       type: Object,
     },
-    token: {
-      type: String,
-    },
-    tokenSecret: {
+    accountId: {
       type: String,
     },
   },
@@ -142,7 +138,7 @@ const twitterSchema = new Schema(
 
 const facebookSchema = new Schema(
   {
-    appId: {
+    accountId: {
       type: String,
     },
     pageIds: {

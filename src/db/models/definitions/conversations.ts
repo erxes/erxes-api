@@ -78,6 +78,9 @@ export interface IConversation {
   twitterData?: ITwitterResponse;
   facebookData?: IFacebook;
   gmailData?: IGmail;
+
+  firstRespondedUserId?: string;
+  firstRespondedDate?: Date;
 }
 
 // Conversation schema
@@ -206,4 +209,7 @@ export const conversationSchema = new Schema({
   twitterData: field({ type: twitterResponseSchema }),
   facebookData: field({ type: facebookSchema }),
   gmailData: field({ type: gmailSchema }),
+
+  firstRespondedUserId: field({ type: String }),
+  firstRespondedDate: field({ type: Date }),
 });

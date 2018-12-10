@@ -12,6 +12,7 @@ import {
 } from '../data/constants';
 import { IActionPerformer, IActivity, ICoc } from '../db/models/definitions/activityLogs';
 import {
+  Accounts,
   ActivityLogs,
   Brands,
   Channels,
@@ -361,7 +362,7 @@ export const fieldFactory = async (params: IFieldFactoryInput) => {
   });
 
   await field.save();
-  await Fields.update({ _id: field._id }, { $set: { ...params } });
+  await Fields.updateOne({ _id: field._id }, { $set: { ...params } });
 
   return Fields.findOne({ _id: field._id });
 };
@@ -748,7 +749,7 @@ export const fieldGroupFactory = async (params: IFieldGroupFactoryInput) => {
 
   const groupObj = await FieldsGroups.create(doc);
 
-  FieldsGroups.update({ _id: groupObj._id }, { $set: { ...params } });
+  FieldsGroups.updateOne({ _id: groupObj._id }, { $set: { ...params } });
 
   return FieldsGroups.findOne({ _id: groupObj._id });
 };
@@ -788,3 +789,21 @@ export function messengerAppFactory(params: IMessengerApp) {
     credentials: params.credentials,
   });
 }
+
+interface IAccountFactoryInput {
+  kind?: string;
+  uid?: string;
+  token?: string;
+  name?: string;
+}
+
+export const accountFactory = async (params: IAccountFactoryInput) => {
+  const doc = {
+    kind: params.kind || 'facebook',
+    uid: params.uid || faker.random.number,
+    token: params.token || faker.random.word(),
+    name: params.name || faker.random.name,
+  };
+
+  return Accounts.create(doc);
+};
