@@ -12,12 +12,12 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { userMiddleware } from './auth';
 import schema from './data';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { getAttachment } from './trackers/gmail';
 import { pubsub } from './data/resolvers/subscriptions';
 import { checkFile, importXlsFile, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { Customers } from './db/models';
 import { init } from './startup';
+import { getAttachment } from './trackers/gmail';
 
 // load environment variables
 dotenv.config();
