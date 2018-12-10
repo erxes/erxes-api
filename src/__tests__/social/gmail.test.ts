@@ -4,7 +4,6 @@ import { conversationFactory, customerFactory, integrationFactory, userFactory }
 import { ActivityLogs, ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {
   createMessage,
-  getAttachIntoBuffer,
   getGmailUpdates,
   getOrCreateConversation,
   getOrCreateCustomer,
@@ -58,7 +57,7 @@ describe('gmail integration tests', () => {
       headerId: '<EDFED911-13F1-4F6E-A34F-2968435C78C0@gmail.com>',
     };
 
-    await getOrCreateConversation({ integration, messageId: 'messageId', gmailData });
+    await getOrCreateConversation({ integration, messageId: 'secondMessageId', gmailData });
 
     conversation = await Conversations.findOne({});
 
@@ -264,7 +263,7 @@ describe('gmail integration tests', () => {
     try {
       await getGmailUpdates({ emailAddress: email, historyId });
     } catch (e) {
-      expect(e.message).toBe('Integration not found');
+      expect(e.message).toBe(`Integration not found gmailData with ${email}`);
     }
 
     const integration = await integrationFactory({ gmailData: { email, historyId } });
@@ -288,7 +287,14 @@ describe('gmail integration tests', () => {
       toEmails: 'test@gmail.com',
       cc: 'test1@gmail.com',
       bcc: 'test2@gmail.com',
-      attachments: ['https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'],
+      attachments: [
+        {
+          filename: 'ankari-floruss-fall-DSC08890-1600_grande.jpg',
+          mimeType: 'image/jpeg',
+          size: 21354,
+          data: '123',
+        },
+      ],
       cocType: 'customer',
       cocId: 'customerId',
     };
@@ -320,32 +326,11 @@ describe('gmail integration tests', () => {
     if (!al.performedBy) {
       throw new Error('Activity log performer not found');
     }
-    const content = JSON.stringify({
-      toEmails: mailParams.toEmails,
-      subject: mailParams.subject,
-      body: mailParams.body,
-      attachments: mailParams.attachments,
-      cc: mailParams.cc,
-      bcc: mailParams.bcc,
-    });
+    const content = JSON.stringify(mailParams);
 
     expect(al.activity.content).toEqual(content);
     expect(al.performedBy.id).toEqual(user._id);
 
     mock.restore(); // unwraps the spy
-  });
-
-  test('get attach into buffer', async () => {
-    try {
-      await getAttachIntoBuffer('test.png');
-    } catch (e) {
-      expect(e.message).toBe('Invalid URI "test.png"');
-    }
-
-    const attachUrl = 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png';
-    const attachment: any = await getAttachIntoBuffer(attachUrl);
-
-    expect(attachment.contentLength).toBe('13504');
-    expect(attachment.contentType).toBe('image/png');
   });
 });
