@@ -1,7 +1,8 @@
 import { Model, model } from 'mongoose';
 import 'mongoose-type-email';
-import { ConversationMessages, Conversations, Customers, Forms } from '.';
+import { Accounts, ConversationMessages, Conversations, Customers, Forms } from '.';
 import { KIND_CHOICES } from '../../data/constants';
+import { getPageInfo, subscribePage } from '../../trackers/facebookTracker';
 import {
   IFacebookData,
   IFormData,
@@ -108,16 +109,6 @@ class Integration {
     brandId: string;
     twitterData: ITwitterData;
   }) {
-    const prevEntry = await Integrations.findOne({
-      twitterData: { $exists: true },
-      'twitterData.info.id': twitterData.info.id,
-    });
-
-    // check duplication
-    if (prevEntry) {
-      throw new Error('Already added');
-    }
-
     return this.createIntegration({
       name,
       brandId,
@@ -129,7 +120,7 @@ class Integration {
   /**
    * Create facebook integration
    */
-  public static createFacebookIntegration({
+  public static async createFacebookIntegration({
     name,
     brandId,
     facebookData,
@@ -138,6 +129,32 @@ class Integration {
     brandId: string;
     facebookData: IFacebookData;
   }) {
+    const { FACEBOOK_APP_ID, DOMAIN } = process.env;
+
+    if (!FACEBOOK_APP_ID || !DOMAIN) {
+      throw new Error('Invalid configuration');
+    }
+
+    const { pageIds, accountId } = facebookData;
+
+    const account = await Accounts.findOne({ _id: accountId });
+
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    for (const pageId of pageIds) {
+      const pageInfo = await getPageInfo(pageId, account.token);
+
+      const pageToken = pageInfo.access_token;
+
+      const res = await subscribePage(pageId, pageToken);
+
+      if (res.success !== true) {
+        throw new Error('Couldnt subscribe page');
+      }
+    }
+
     return this.createIntegration({
       name,
       brandId,
@@ -150,7 +167,7 @@ class Integration {
    * Update messenger integration document
    */
   public static async updateMessengerIntegration(_id: string, doc: IMessengerIntegration) {
-    await Integrations.update({ _id }, { $set: doc }, { runValidators: true });
+    await Integrations.updateOne({ _id }, { $set: doc }, { runValidators: true });
 
     return Integrations.findOne({ _id });
   }
@@ -159,7 +176,7 @@ class Integration {
    * Save messenger appearance data
    */
   public static async saveMessengerAppearanceData(_id: string, { color, wallpaper, logo }: IUiOptions) {
-    await Integrations.update({ _id }, { $set: { uiOptions: { color, wallpaper, logo } } }, { runValdatiors: true });
+    await Integrations.updateOne({ _id }, { $set: { uiOptions: { color, wallpaper, logo } } }, { runValdatiors: true });
 
     return Integrations.findOne({ _id });
   }
@@ -168,7 +185,7 @@ class Integration {
    * Saves messenger data to integration document
    */
   public static async saveMessengerConfigs(_id: string, messengerData: IMessengerData) {
-    await Integrations.update({ _id }, { $set: { messengerData } });
+    await Integrations.updateOne({ _id }, { $set: { messengerData } });
     return Integrations.findOne({ _id });
   }
 
@@ -191,7 +208,7 @@ class Integration {
   public static async updateFormIntegration(_id: string, { formData = {}, ...mainDoc }: IIntegration) {
     const doc = this.generateFormDoc(mainDoc, formData);
 
-    await Integrations.update({ _id }, { $set: doc }, { runValidators: true });
+    await Integrations.updateOne({ _id }, { $set: doc }, { runValidators: true });
 
     return Integrations.findOne({ _id });
   }
@@ -210,10 +227,10 @@ class Integration {
     const conversations = await Conversations.find({ integrationId: _id }, { _id: true });
     const conversationIds = conversations.map(conv => conv._id);
 
-    await ConversationMessages.remove({
+    await ConversationMessages.deleteMany({
       conversationId: { $in: conversationIds },
     });
-    await Conversations.remove({ integrationId: _id });
+    await Conversations.deleteMany({ integrationId: _id });
 
     // Remove customers ==================
     const customers = await Customers.find({ integrationId: _id });
@@ -228,7 +245,7 @@ class Integration {
       await Forms.removeForm(integration.formId);
     }
 
-    return Integrations.remove({ _id });
+    return Integrations.deleteMany({ _id });
   }
 
   public static async createGmailIntegration({ name, brandId, gmailData }: IGmailParams) {

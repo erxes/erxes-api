@@ -1,3 +1,4 @@
+import accounts from './accounts';
 import activityLogs from './activityLogs';
 import brands from './brands';
 import channels from './channels';
@@ -11,6 +12,7 @@ import engages from './engages';
 import { fieldQueries as fields, fieldsGroupQueries as fieldsgroups } from './fields';
 import forms from './forms';
 import importHistory from './importHistory';
+import insightExport from './insightExport';
 import insights from './insights';
 import integrations from './integrations';
 import internalNotes from './internalNotes';
@@ -24,6 +26,7 @@ import tags from './tags';
 import users from './users';
 
 export default {
+  ...accounts,
   ...users,
   ...channels,
   ...brands,
@@ -40,6 +43,7 @@ export default {
   ...segments,
   ...conversations,
   ...insights,
+  ...insightExport,
   ...knowledgeBase,
   ...notifications,
   ...activityLogs,

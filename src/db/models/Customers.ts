@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { validateEmail } from '../../data/utils';
 import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes } from './';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument, IFacebookData, ITwitterData } from './definitions/customers';
@@ -125,6 +126,11 @@ class Customer {
 
     // clean custom field values
     doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+    const isValid = await validateEmail(doc.primaryEmail);
+
+    if (doc.primaryEmail && isValid) {
+      doc.hasValidEmail = true;
+    }
 
     return Customers.create({
       createdAt: new Date(),
@@ -145,7 +151,12 @@ class Customer {
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
     }
 
-    await Customers.update({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+    if (doc.primaryEmail) {
+      const isValid = await validateEmail(doc.primaryEmail);
+      doc.hasValidEmail = isValid;
+    }
+
+    await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
 
     return Customers.findOne({ _id });
   }
@@ -154,7 +165,7 @@ class Customer {
    * Mark customer as active
    */
   public static async markCustomerAsActive(customerId: string) {
-    await Customers.update({ _id: customerId }, { $set: { 'messengerData.isActive': true } });
+    await Customers.updateOne({ _id: customerId }, { $set: { 'messengerData.isActive': true } });
 
     return Customers.findOne({ _id: customerId });
   }
@@ -197,7 +208,7 @@ class Customer {
     await EngageMessages.removeCustomerEngages(customerId);
     await InternalNotes.removeCustomerInternalNotes(customerId);
 
-    return Customers.remove({ _id: customerId });
+    return Customers.deleteOne({ _id: customerId });
   }
 
   /**
@@ -241,7 +252,7 @@ class Customer {
         phones = [...phones, ...(customerObj.phones || [])];
 
         // Removing Customers
-        await Customers.remove({ _id: customerId });
+        await Customers.deleteOne({ _id: customerId });
       }
     }
 

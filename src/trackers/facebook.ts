@@ -1,4 +1,4 @@
-import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { Accounts, ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 
 import { publishClientMessage, publishMessage } from '../data/resolvers/mutations/conversations';
 
@@ -124,8 +124,8 @@ export class SaveWebhookResponse {
   }
 
   /*
-  * Via page messenger
-  */
+   * Via page messenger
+   */
   public async viaMessengerEvent(entry) {
     for (const messagingEvent of entry.messaging) {
       // someone sent us a message
@@ -226,7 +226,7 @@ export class SaveWebhookResponse {
       count = 1;
     }
 
-    return ConversationMessages.update(
+    return ConversationMessages.updateOne(
       { 'facebookData.postId': postId },
       { $inc: { 'facebookData.commentCount': count } },
     );
@@ -242,7 +242,7 @@ export class SaveWebhookResponse {
       count = 1;
     }
 
-    return ConversationMessages.update(selector, {
+    return ConversationMessages.updateMany(selector, {
       $inc: { 'facebookData.likeCount': count },
     });
   }
@@ -254,12 +254,12 @@ export class SaveWebhookResponse {
     const reactionField = `facebookData.reactions.${reactionType}`;
 
     if (type === 'add') {
-      return ConversationMessages.update(selector, {
+      return ConversationMessages.updateMany(selector, {
         $push: { [reactionField]: from },
       });
     }
 
-    return ConversationMessages.update(selector, {
+    return ConversationMessages.updateMany(selector, {
       $pull: { [reactionField]: { id: from.id } },
     });
   }
@@ -597,7 +597,7 @@ export class SaveWebhookResponse {
     });
 
     // updating conversation content
-    await Conversations.update({ _id: conversation._id }, { $set: { content } });
+    await Conversations.updateOne({ _id: conversation._id }, { $set: { content } });
 
     // notifying conversation inserted
     publishClientMessage(message);
@@ -681,7 +681,7 @@ export class SaveWebhookResponse {
           item: 'comment',
           senderId: comment.from.id,
           senderName: comment.from.name,
-          parentId: comment.parent ? comment.parent.id : null,
+          parentId: comment.parent && comment.parent.id,
         },
       });
     }
@@ -693,17 +693,27 @@ export class SaveWebhookResponse {
 /*
  * Receive per app webhook response
  */
-export const receiveWebhookResponse = async (app, data) => {
-  const selector = {
+export const receiveWebhookResponse = async data => {
+  const integrations = await Integrations.find({
     kind: INTEGRATION_KIND_CHOICES.FACEBOOK,
-    'facebookData.appId': app.id,
-  };
-
-  const integrations = await Integrations.find(selector);
+    'facebookData.accountId': { $exists: true },
+  });
 
   for (const integration of integrations) {
+    const { facebookData } = integration;
+
+    if (!facebookData) {
+      throw new Error('Could not find integrations facebookData');
+    }
+
+    const account = await Accounts.findOne({ _id: facebookData.accountId });
+
+    if (!account) {
+      throw new Error('Could not find account');
+    }
+
     // when new message or other kind of activity in page
-    const saveWebhookResponse = new SaveWebhookResponse(app.accessToken, integration, data);
+    const saveWebhookResponse = new SaveWebhookResponse(account.token, integration, data);
 
     await saveWebhookResponse.start();
   }
@@ -717,7 +727,6 @@ export const facebookReply = async (
   msg: IFacebookReply,
   message: IMessageDocument,
 ) => {
-  const FACEBOOK_APPS = getConfig();
   const { attachment, commentId, text } = msg;
   const msgObj: any = {};
 
@@ -729,18 +738,20 @@ export const facebookReply = async (
     throw new Error('facebookReply: Integration not found');
   }
 
-  const appId = integration.facebookData.appId;
-
-  const app = FACEBOOK_APPS.find(a => a.id === appId);
-
   if (!conversation.facebookData) {
     throw new Error("facebookReply: Conversation doesn't have facebookData");
+  }
+
+  const account = await Accounts.findOne({ _id: integration.facebookData.accountId });
+
+  if (!account) {
+    throw new Error('facebookReply: Account not found');
   }
 
   // page access token
   const response: any = await graphRequest.get(
     `${conversation.facebookData.pageId}/?fields=access_token`,
-    app.accessToken,
+    account.token,
   );
 
   // messenger reply
@@ -768,7 +779,7 @@ export const facebookReply = async (
     });
 
     // save commentId in message object
-    await ConversationMessages.update({ _id: message._id }, { $set: { 'facebookData.messageId': res.message_id } });
+    await ConversationMessages.updateOne({ _id: message._id }, { $set: { 'facebookData.messageId': res.message_id } });
   }
 
   // feed reply
@@ -808,10 +819,10 @@ export const facebookReply = async (
     }
 
     // save commentId and parentId in message object
-    await ConversationMessages.update({ _id: message._id }, { $set: { facebookData } });
+    await ConversationMessages.updateOne({ _id: message._id }, { $set: { facebookData } });
 
     // finding parent post and increasing comment count
-    await ConversationMessages.update(
+    await ConversationMessages.updateMany(
       {
         'facebookData.isPost': true,
         conversationId: message.conversationId,

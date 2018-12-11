@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { Conversations, Integrations, Users } from '../../../db/models';
+import { ConversationMessages, Conversations, Integrations, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 
@@ -46,7 +46,11 @@ interface IGenerateDuration {
 }
 
 interface IResponseUserData {
-  [index: string]: { responseTime: number; count: number; summaries?: number[] };
+  [index: string]: {
+    responseTime: number;
+    count: number;
+    summaries?: number[];
+  };
 }
 
 interface IGenerateResponseData {
@@ -57,6 +61,78 @@ interface IGenerateResponseData {
   };
 }
 
+type ChartDocs = IMessageDocument | IConversationDocument;
+
+interface IChartData {
+  collection?: ChartDocs[];
+  loopCount: number;
+  duration: number;
+  startTime: number;
+  messageSelector?: any;
+}
+
+export interface IListArgs {
+  integrationType: string;
+  brandId: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+}
+/**
+ * Return conversationSelect for aggregation
+ * @param args
+ * @param conversationSelector
+ * @param selectIds
+ */
+export const getConversationSelector = async (args: IIntegrationSelector, conversationSelector: any): Promise<any> => {
+  const integrationSelector: IIntegrationSelector = {};
+  const { kind, brandId } = args;
+
+  if (kind || brandId) {
+    if (brandId) {
+      integrationSelector.brandId = brandId;
+    }
+
+    if (kind) {
+      integrationSelector.kind = kind;
+    }
+
+    conversationSelector.integrationIds = await Integrations.find(integrationSelector).select('_id');
+  }
+
+  return conversationSelector;
+};
+
+/**
+ * Find conversations or conversationIds.
+ */
+export const findConversations = async (
+  args: IIntegrationSelector,
+  conversationSelector: any,
+  selectIds?: boolean,
+): Promise<IConversationDocument[]> => {
+  const integrationSelector: IIntegrationSelector = {};
+  const { kind, brandId } = args;
+
+  if (kind || brandId) {
+    if (brandId) {
+      integrationSelector.brandId = brandId;
+    }
+
+    if (kind) {
+      integrationSelector.kind = kind;
+    }
+
+    conversationSelector.integrationIds = await Integrations.find(integrationSelector).select('_id');
+  }
+
+  if (selectIds) {
+    return Conversations.find(conversationSelector).select('_id');
+  }
+
+  return Conversations.find(conversationSelector).sort({ createdAt: 1 });
+};
+
 /**
  * Builds messages find query selector.
  */
@@ -66,52 +142,39 @@ export const generateMessageSelector = async (
   conversationSelector: any,
   messageSelector: IMessageSelector,
 ): Promise<IMessageSelector> => {
-  const selector = messageSelector;
+  const conversationIds = await findConversations({ brandId, kind: integrationType }, conversationSelector, true);
 
-  const findConversationIds = async (integrationSelector: IIntegrationSelector) => {
-    const integrationIds = await Integrations.find(integrationSelector).select('_id');
-    const conversationIds = await Conversations.find({
-      ...conversationSelector,
-      $or: [
-        {
-          userId: { $exists: true },
-          messageCount: { $gt: 1 },
-        },
-        {
-          userId: { $exists: false },
-        },
-      ],
-      integrationId: { $in: integrationIds },
-    }).select('_id');
+  messageSelector.conversationId = { $in: conversationIds };
 
-    selector.conversationId = { $in: conversationIds };
-  };
-
-  const integSelector: IIntegrationSelector = {};
-
-  if (brandId) {
-    integSelector.brandId = brandId;
-  }
-
-  if (integrationType) {
-    integSelector.kind = integrationType;
-  }
-
-  await findConversationIds(integSelector);
-
-  return selector;
+  return messageSelector;
 };
+/**
+ * Fix trend for missing values because from then aggregation,
+ * it could return missing values for some dates. This method
+ * will assign 0 values for missing x values.
+ * @param startDate
+ * @param endDate
+ * @param data
+ */
+export const fixChartData = async (data: any[], hintX: string, hintY: string): Promise<IGenerateChartData[]> => {
+  const results = {};
+  data.map(row => {
+    results[row[hintX]] = row[hintY];
+  });
 
+  return Object.keys(results)
+    .sort()
+    .map(key => {
+      return { x: formatTime(moment(key), 'MM-DD'), y: results[key] };
+    });
+};
 /**
  * Populates message collection into date range
  * by given duration and loop count for chart data.
  */
-export const generateChartData = (
-  collection: IMessageDocument[],
-  loopCount: number,
-  duration: number,
-  startTime: number,
-): IGenerateChartData[] => {
+export const generateChartData = async (args: IChartData): Promise<IGenerateChartData[]> => {
+  const { collection, loopCount, duration, startTime, messageSelector } = args;
+
   const results = [{ x: formatTime(moment(startTime), 'YYYY-MM-DD'), y: 0 }];
   let begin = 0;
   let end = 0;
@@ -127,8 +190,16 @@ export const generateChartData = (
     dateText = formatTime(moment(end), 'YYYY-MM-DD');
 
     // messages count between begin and end time.
-    count = collection.filter(message => begin < message.createdAt.getTime() && message.createdAt.getTime() < end)
-      .length;
+    if (collection) {
+      count = collection.filter(message => begin < message.createdAt.getTime() && message.createdAt.getTime() < end)
+        .length;
+    }
+    if (messageSelector) {
+      count = await ConversationMessages.countDocuments({
+        ...messageSelector,
+        createdAt: { $gte: begin, $lte: end },
+      });
+    }
 
     results.push({ x: dateText, y: count });
   }
@@ -201,7 +272,12 @@ export const generateUserChartData = async ({
   startTime: number;
 }): Promise<IGenerateUserChartData> => {
   const user = await Users.findOne({ _id: userId });
-  const userData = generateChartData(userMessages, 4, duration, startTime);
+  const userData = await generateChartData({
+    collection: userMessages,
+    loopCount: 4,
+    duration,
+    startTime,
+  });
 
   if (!user) {
     return {
@@ -241,13 +317,13 @@ export const fixDate = (value, defaultValue = new Date()): Date => {
   return defaultValue;
 };
 
-export const fixDates = (startValue: string, endValue: string): IFixDates => {
+export const fixDates = (startValue: string, endValue: string, count?: number): IFixDates => {
   // convert given value or get today
   const endDate = fixDate(endValue);
 
   const startDateDefaultValue = new Date(
     moment(endDate)
-      .add(-7, 'days')
+      .add(count ? count * -1 : -7, 'days')
       .toString(),
   );
 
@@ -268,7 +344,7 @@ export const generateDuration = ({ start, end }: { start: Date; end: Date }): IG
   };
 };
 
-/* 
+/*
  * Determines user or client
  */
 export const generateUserSelector = (type: string): any => {
@@ -292,7 +368,12 @@ export const generateResponseData = async (
   startTime: number,
 ): Promise<IGenerateResponseData> => {
   // preparing trend chart data
-  const trend = generateChartData(responsData, 7, duration, startTime);
+  const trend = await generateChartData({
+    collection: responsData,
+    loopCount: 7,
+    duration,
+    startTime,
+  });
 
   // Average response time for all messages
   const time = Math.floor(allResponseTime / responsData.length);
