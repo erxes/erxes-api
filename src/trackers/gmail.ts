@@ -290,9 +290,11 @@ export const getOrCreateConversation = async value => {
     return prevMessage;
   }
 
+  const replyHeaders = gmailData.reply.match(/\<\S+\>/gi);
+
   // check if message is reply save in one conversation
   const conversationMessage = await ConversationMessages.findOne({
-    'gmailData.headerId': { $regex: `.*${gmailData.reply}.*` },
+    'gmailData.headerId': { $in: replyHeaders },
   }).sort({ createdAt: -1 });
 
   const customer = await getOrCreateCustomer(gmailData.from, integration.id);
