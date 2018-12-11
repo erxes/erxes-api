@@ -290,7 +290,8 @@ export const getOrCreateConversation = async value => {
     return prevMessage;
   }
 
-  const replyHeaders = gmailData.reply.match(/\<\S+\>/gi);
+  const headerValues = gmailData.reply || '';
+  const replyHeaders = headerValues.match(/\<\S+\>/gi);
 
   // check if message is reply save in one conversation
   const conversationMessage = await ConversationMessages.findOne({
