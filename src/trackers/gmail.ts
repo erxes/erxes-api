@@ -143,8 +143,7 @@ const getHeaderProperties = headers => {
   return gmailData;
 };
 
-const getBodyProperties = (headers, part) => {
-  const gmailData: IMsgGmail = {};
+const getBodyProperties = (headers, part, gmailData) => {
   const isHtml = part.mimeType && part.mimeType.includes('text/html');
   const isPlain = part.mimeType && part.mimeType.includes('text/plain');
   const cd = headers['content-disposition'];
@@ -210,7 +209,7 @@ export const parseMessage = response => {
       continue;
     }
 
-    gmailData = Object.assign(getBodyProperties(headers, part), gmailData);
+    gmailData = getBodyProperties(headers, part, gmailData);
 
     firstPartProcessed = true;
   }
