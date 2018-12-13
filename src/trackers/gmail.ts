@@ -1,4 +1,5 @@
 import { CONVERSATION_STATUSES } from '../data/constants';
+import { publishClientMessage, publishMessage } from '../data/resolvers/mutations/conversations';
 import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
@@ -237,14 +238,36 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
 };
 
 export const getOrCreateCustomer = async (email, integrationId) => {
-  const customer = await Customers.findOne({ emails: { $in: [email] } });
+  let primaryEmail;
+  let firstName;
+  let lastName;
+
+  if (email.includes(' ')) {
+    const info = email.split(' ');
+
+    for (const val of info) {
+      if (val.includes('@')) {
+        primaryEmail = val.replace('<', '').replace('>', '');
+      } else if (!firstName) {
+        firstName = val;
+      } else {
+        lastName = val;
+      }
+    }
+  } else {
+    primaryEmail = email;
+  }
+
+  const customer = await Customers.findOne({ emails: { $in: [primaryEmail] } });
   if (customer) {
     return customer;
   }
 
   return Customers.createCustomer({
-    primaryEmail: email,
-    emails: [email],
+    primaryEmail,
+    firstName,
+    lastName,
+    emails: [primaryEmail],
     integrationId,
   });
 };
@@ -272,6 +295,12 @@ export const createMessage = async ({
     gmailData,
     internal: false,
   });
+
+  // notifying conversation inserted
+  publishClientMessage(message);
+
+  // notify subscription server new message
+  publishMessage(message, conversation.customerId);
 
   return message._id;
 };
