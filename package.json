@@ -76,7 +76,7 @@
     "oauth": "^0.9.15",
     "request": "^2.88.0",
     "sha256": "^0.2.0",
-    "sinon": "^4.0.1",
+    "sinon": "^4.5.0",
     "strip": "^3.0.0",
     "subscriptions-transport-ws": "^0.9.6",
     "twit": "^2.2.9",
