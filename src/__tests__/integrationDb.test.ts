@@ -494,10 +494,10 @@ describe('social integration test', () => {
       gmailData: {
         email: 'test@gmail.com',
         historyId: 'historyId',
-        credentials: {
-          token: 'token',
-          refreshToken: 'refreshToken',
-        },
+      },
+      credentials: {
+        token: 'token',
+        refreshToken: 'refreshToken',
       },
     };
 
