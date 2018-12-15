@@ -795,6 +795,8 @@ interface IAccountFactoryInput {
   uid?: string;
   token?: string;
   name?: string;
+  expireDate?: number;
+  scope?: string;
 }
 
 export const accountFactory = async (params: IAccountFactoryInput) => {
@@ -802,6 +804,8 @@ export const accountFactory = async (params: IAccountFactoryInput) => {
     kind: params.kind || 'facebook',
     uid: params.uid || faker.random.number,
     token: params.token || faker.random.word(),
+    expireDate: params.expireDate || faker.random.number,
+    scope: params.scope || faker.random.word(),
     name: params.name || faker.random.name,
   };
 

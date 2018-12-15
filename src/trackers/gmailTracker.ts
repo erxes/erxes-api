@@ -73,10 +73,10 @@ const getGmailAttachment = async (credentials, gmailData, attachmentId) => {
 /**
  * Get new messages by stored history id
  */
-const getMessagesByHistoryId = async integration => {
+const getMessagesByHistoryId = async (integration, credentials) => {
   const auth = getOauthClient('gmail');
 
-  auth.setCredentials(integration.gmailData.credentials);
+  auth.setCredentials(credentials);
 
   const gmail = await google.gmail('v1');
 
@@ -140,6 +140,7 @@ export const trackGmail = async () => {
       try {
         getGmailUpdates(JSON.parse(message.data.toString()));
       } catch (error) {
+        message.stop();
         // test message from pub/sub publish message
         console.log(Buffer.from(message.data, 'base64').toString());
       }

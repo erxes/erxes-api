@@ -32,7 +32,6 @@ export interface IGmailData {
   email: string;
   historyId?: string;
   expiration?: string;
-  credentials?: any;
 }
 
 export interface IGmailDataDocument extends IGmailData, Document {}

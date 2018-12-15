@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import * as schedule from 'node-schedule';
-import { Integrations } from '../db/models';
+import { Accounts, Integrations } from '../db/models';
 import { getOauthClient } from '../trackers/googleTracker';
 
 /**
@@ -20,8 +20,22 @@ export const callGmailUsersWatch = async () => {
   }
 
   for (const integration of integrations) {
-    if (integration.gmailData && integration.gmailData.credentials) {
-      auth.setCredentials(integration.gmailData.credentials);
+    if (integration.gmailData) {
+      const account = await Accounts.findOne({ uid: integration.gmailData.email, kind: 'gmail' });
+
+      if (!account) {
+        throw new Error(`Account not found uid with ${integration.gmailData.email}`);
+      }
+
+      const credentials = {
+        access_token: account.token,
+        refresh_token: account.tokenSecret,
+        scope: account.scope,
+        expire_date: account.expireDate,
+        token_type: 'Bearer',
+      };
+
+      auth.setCredentials(credentials);
       const { data } = await gmail.users.watch({
         auth,
         userId: 'me',
@@ -50,7 +64,7 @@ export const callGmailUsersWatch = async () => {
  * └───────────────────────── second (0 - 59, OPTIONAL)
  */
 
-schedule.scheduleJob('* */1 * * *', () => {
+schedule.scheduleJob('* 45 23 * *', () => {
   callGmailUsersWatch();
 });
 

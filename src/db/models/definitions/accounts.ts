@@ -5,6 +5,8 @@ export interface IAccount {
   kind: string;
   token: string;
   tokenSecret?: string;
+  expireDate?: number;
+  scope?: string;
   name: string;
   uid: string;
 }

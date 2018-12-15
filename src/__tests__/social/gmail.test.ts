@@ -1,6 +1,12 @@
 import * as sinon from 'sinon';
 import { CONVERSATION_STATUSES } from '../../data/constants';
-import { conversationFactory, customerFactory, integrationFactory, userFactory } from '../../db/factories';
+import {
+  accountFactory,
+  conversationFactory,
+  customerFactory,
+  integrationFactory,
+  userFactory,
+} from '../../db/factories';
 import { ActivityLogs, ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {
   createMessage,
@@ -260,6 +266,13 @@ describe('gmail integration tests', () => {
     const email = 'test@gmail.com';
     const historyId = 'historyId';
 
+    await accountFactory({
+      uid: email,
+      name: email,
+      kind: 'gmail',
+      token: 'token',
+    });
+
     try {
       await getGmailUpdates({ emailAddress: email, historyId });
     } catch (e) {
@@ -307,7 +320,18 @@ describe('gmail integration tests', () => {
       expect(e.message).toBe(`Integration not found id with ${mailParams.integrationId}`);
     }
 
-    const integration = await integrationFactory();
+    const integration = await integrationFactory({
+      gmailData: {
+        email: 'test@gmail.com',
+      },
+    });
+    await accountFactory({
+      uid: 'test@gmail.com',
+      name: 'test@gmail.com',
+      kind: 'gmail',
+      token: 'token',
+    });
+
     mailParams.integrationId = integration._id;
     const mock = sinon.stub(utils, 'sendEmail').callsFake();
     await sendGmail(mailParams, user._id);

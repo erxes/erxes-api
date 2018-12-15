@@ -25,6 +25,7 @@ interface IGmailParams {
   name: string;
   brandId: string;
   gmailData: IGmailData;
+  credentials: any;
 }
 
 interface IIntegrationModel extends Model<IIntegrationDocument> {
@@ -248,7 +249,7 @@ class Integration {
     return Integrations.deleteMany({ _id });
   }
 
-  public static async createGmailIntegration({ name, brandId, gmailData }: IGmailParams) {
+  public static async createGmailIntegration({ name, brandId, gmailData, credentials }: IGmailParams) {
     const { email } = gmailData;
 
     const prevEntry = await Integrations.findOne({
@@ -259,6 +260,16 @@ class Integration {
     if (prevEntry) {
       return prevEntry;
     }
+
+    await Accounts.createAccount({
+      name: email,
+      uid: email,
+      kind: 'gmail',
+      token: credentials.access_token,
+      tokenSecret: credentials.refresh_token,
+      expireDate: credentials.expire_date,
+      scope: credentials.scope,
+    });
 
     return this.createIntegration({
       name,

@@ -1,6 +1,6 @@
 import { CONVERSATION_STATUSES } from '../data/constants';
 import { publishClientMessage, publishMessage } from '../data/resolvers/mutations/conversations';
-import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { Accounts, ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -99,11 +99,24 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
     throw new Error(`Integration not found id with ${integrationId}`);
   }
 
+  const account = await Accounts.findOne({ uid: integration.gmailData.email });
+  if (!account) {
+    throw new Error(`Account not found uid with ${integration.gmailData.email}`);
+  }
+
+  const credentials = {
+    access_token: account.token,
+    refresh_token: account.tokenSecret,
+    scope: account.scope,
+    expire_date: account.expireDate,
+    token_type: 'Bearer',
+  };
+
   const fromEmail = integration.gmailData.email;
   // get raw string encrypted by base64
   const raw = await encodeEmail({ fromEmail, ...mailParams });
 
-  const response = await utils.sendEmail(integration.gmailData.credentials, raw, threadId);
+  const response = await utils.sendEmail(credentials, raw, threadId);
 
   // convert email params to json string for acvitity content
   const activityLogContent = JSON.stringify(mailParams);
@@ -231,16 +244,30 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
     throw new Error(`Integration not found gmailData with ${emailAddress}`);
   }
 
-  await utils.getMessagesByHistoryId(integration);
+  const account = await Accounts.findOne({ uid: emailAddress });
+
+  if (!account) {
+    throw new Error(`Account not found uid with ${emailAddress}`);
+  }
+
+  const credentials = {
+    access_token: account.token,
+    refresh_token: account.tokenSecret,
+    scope: account.scope,
+    expire_date: account.expireDate,
+    token_type: 'Bearer',
+  };
+
+  await utils.getMessagesByHistoryId(integration, credentials);
 
   integration.gmailData.historyId = historyId;
   await integration.save();
 };
 
-export const getOrCreateCustomer = async (email, integrationId) => {
-  let primaryEmail;
-  let firstName;
-  let lastName;
+export const getOrCreateCustomer = async (email: string, integrationId: string) => {
+  let primaryEmail: string = '';
+  let firstName: string = '';
+  let lastName: string = '';
 
   if (email.includes(' ')) {
     const info = email.split(' ');
@@ -381,5 +408,19 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
     throw new Error(`Integration gmail data not found id with ${conversation.integrationId}`);
   }
 
-  return utils.getGmailAttachment(integration.gmailData.credentials, message.gmailData, attachmentId);
+  const email = integration.gmailData.email;
+  const account = await Accounts.findOne({ uid: email });
+  if (!account) {
+    throw new Error(`Account not found uid with ${email}`);
+  }
+
+  const credentials = {
+    access_token: account.token,
+    refresh_token: account.tokenSecret,
+    scope: account.scope,
+    expire_date: account.expireDate,
+    token_type: 'Bearer',
+  };
+
+  return utils.getGmailAttachment(credentials, message.gmailData, attachmentId);
 };
