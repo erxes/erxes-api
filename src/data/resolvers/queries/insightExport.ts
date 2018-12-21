@@ -10,7 +10,8 @@ import { findConversations, fixDates, generateMessageSelector, generateUserSelec
 interface IVolumeReportExportArgs {
   date: string;
   count: number;
-  customerCount: string;
+  customerCount: number;
+  customerCountPercentage: string;
   messageCount: number;
   resolvedCount: number;
   averageResponseDuration: string;
@@ -147,10 +148,10 @@ const insightExportQueries = {
       );
 
       const conversationIds = _.pluck(filtered, '_id');
-      const custCount = _.unique(_.pluck(filtered, 'customerId')).length;
-      const customerCount = `${custCount} (${
-        filtered.length !== 0 ? Math.floor((100 * custCount) / filtered.length) : 0
-      }%)`;
+      const customerCount = _.unique(_.pluck(filtered, 'customerId')).length;
+      const customerCountPercentage = `${
+        filtered.length !== 0 ? Math.floor((100 * customerCount) / filtered.length) : 0
+      }%`;
       const messageCount = await ConversationMessages.countDocuments({ conversationId: { $in: conversationIds } });
       const resolvedCount = filtered.filter(conv => (conv.status = 'closed')).length;
       const closedDuration: IDurationWithCount = { duration: 0, count: 0 };
@@ -180,6 +181,7 @@ const insightExportQueries = {
         date: moment(begin).format(timeFormat),
         count: filtered.length,
         customerCount,
+        customerCountPercentage,
         messageCount,
         resolvedCount,
         averageResponseDuration: convertTime(closedDuration),
@@ -435,9 +437,6 @@ const insightExportQueries = {
     const { start, end } = fixDates(startDate, endDate);
 
     const integrationSelector: { brandId?: string; kind?: string } = {};
-    const conversationSelector = {
-      $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
-    };
 
     if (brandId) {
       integrationSelector.brandId = brandId;
@@ -457,6 +456,52 @@ const insightExportQueries = {
     const cols: string[] = [];
 
     let begin = start;
+    const rawIntegrationIds = integrationIds.map(row => row._id);
+
+    const tagIds = tags.map(row => row._id);
+    const tagDictionary = {};
+    const tagData = await Conversations.aggregate([
+      {
+        $match: {
+          $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
+          integrationId: { $in: rawIntegrationIds },
+          createdAt: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $unwind: '$tagIds',
+      },
+      {
+        $match: {
+          tagIds: { $in: tagIds },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            tagId: '$tagIds',
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$createdAt',
+              },
+            },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          tagId: '$_id.tagId',
+          date: '$_id.date',
+          count: 1,
+        },
+      },
+    ]);
+    tagData.map(row => {
+      tagDictionary[`${row.tagId}_${row.date}`] = row.count;
+    });
     const generateData = async () => {
       const next = nextTime(begin);
       rowIndex++;
@@ -472,12 +517,8 @@ const insightExportQueries = {
       // count conversations by each tag
       for (const tag of tags) {
         // find conversation counts of given tag
-        const count = await Conversations.countDocuments({
-          ...conversationSelector,
-          integrationId: { $in: integrationIds },
-          createdAt: { $gte: begin, $lte: next },
-          tagIds: tag._id,
-        });
+        const tagKey = `${tag._id}_${moment(begin).format('YYYY-MM-DD')}`;
+        const count = tagDictionary[tagKey] ? tagDictionary[tagKey] : 0;
 
         addCell({
           sheet,
