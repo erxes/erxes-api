@@ -1,7 +1,7 @@
 import { Accounts, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IMessengerIntegration } from '../../../db/models/Integrations';
-import { sendGmail } from '../../../trackers/gmail';
+import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
 import { getGmailUserProfile } from '../../../trackers/gmailTracker';
 import { getAccessToken } from '../../../trackers/googleTracker';
 import { socUtils } from '../../../trackers/twitterTracker';
@@ -134,7 +134,7 @@ const integrationMutations = {
       throw new Error('Gmail profile not found');
     }
 
-    return Integrations.createGmailIntegration({
+    const integration = await Integrations.createGmailIntegration({
       name: data.emailAddress,
       brandId,
       gmailData: {
@@ -143,6 +143,10 @@ const integrationMutations = {
       },
       credentials,
     });
+
+    await updateHistoryId(integration._id);
+
+    return integration;
   },
 
   /**

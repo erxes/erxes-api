@@ -11,10 +11,10 @@ import { ActivityLogs, ConversationMessages, Conversations, Integrations } from 
 import {
   createMessage,
   getGmailUpdates,
-  getOrCreateConversation,
   getOrCreateCustomer,
   parseMessage,
   sendGmail,
+  syncConversation,
 } from '../../trackers/gmail';
 import { utils } from '../../trackers/gmailTracker';
 
@@ -38,6 +38,7 @@ describe('gmail integration tests', () => {
       from: 'test@gmail.com',
       subject: 'subject',
       headerId: '<A22C0A25-9807-4FEE-B57B-90AF7299E615@gmail.com>',
+      messageId: 'messageId',
       reply: '',
     };
 
@@ -45,7 +46,7 @@ describe('gmail integration tests', () => {
     expect(await Conversations.find({}).count()).toBe(0);
     expect(await ConversationMessages.find({}).count()).toBe(0);
 
-    await getOrCreateConversation({ integration, messageId: 'messageId', gmailData });
+    await syncConversation(integration._id, gmailData);
 
     let conversation = await Conversations.findOne({});
 
@@ -59,11 +60,12 @@ describe('gmail integration tests', () => {
     gmailData = {
       from: 'test@gmail.com',
       subject: 'updated subject',
+      messageId: 'secondMessageId',
       reply: '<A22C0A25-9807-4FEE-B57B-90AF7299E615@gmail.com>',
       headerId: '<EDFED911-13F1-4F6E-A34F-2968435C78C0@gmail.com>',
     };
 
-    await getOrCreateConversation({ integration, messageId: 'secondMessageId', gmailData });
+    await syncConversation(integration._id, gmailData);
 
     conversation = await Conversations.findOne({});
 
@@ -93,6 +95,7 @@ describe('gmail integration tests', () => {
     const gmailData = {
       from: 'test@gmail.com',
       subject: 'updated subject',
+      messageId: 'firstMessageId',
     };
 
     await createMessage({ conversation, content: 'content', customer, gmailData });
@@ -115,7 +118,7 @@ describe('gmail integration tests', () => {
       },
     });
 
-    const customer = await getOrCreateCustomer(email, integration._id);
+    const customer = await getOrCreateCustomer(integration._id, email);
 
     if (!customer) {
       throw new Error('Customer not found');

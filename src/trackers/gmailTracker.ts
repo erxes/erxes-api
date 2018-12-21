@@ -1,13 +1,13 @@
 import * as PubSub from '@google-cloud/pubsub';
 import { google } from 'googleapis';
+import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
+import { getGmailUpdates, parseMessage, syncConversation } from './gmail';
 import { getOauthClient } from './googleTracker';
-
-import { getGmailUpdates, getOrCreateConversation, parseMessage } from './gmail';
 
 /**
  * Get permission granted email information
  */
-export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?: string; historyId?: string }> => {
+export const getGmailUserProfile = async (credentials: any): Promise<{ emailAddress?: string; historyId?: string }> => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
@@ -27,7 +27,10 @@ export const getGmailUserProfile = async (credentials): Promise<{ emailAddress?:
   });
 };
 
-const sendEmail = async (credentials, raw, threadId) => {
+/**
+ * Send email
+ */
+const sendEmail = async (credentials: any, raw: string, threadId?: string) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
@@ -48,7 +51,11 @@ const sendEmail = async (credentials, raw, threadId) => {
 /**
  * Get attachment by attachmentId
  */
-const getGmailAttachment = async (credentials, gmailData, attachmentId) => {
+const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail, attachmentId: string) => {
+  if (!gmailData || !gmailData.attachments) {
+    throw new Error('GmailData not found');
+  }
+
   const gmail = await google.gmail('v1');
   const auth = getOauthClient('gmail');
 
@@ -64,6 +71,11 @@ const getGmailAttachment = async (credentials, gmailData, attachmentId) => {
   });
 
   const attachment = await gmailData.attachments.find(a => a.attachmentId === attachmentId);
+
+  if (!attachment) {
+    throw new Error(`Gmail attachment not found id with ${attachmentId}`);
+  }
+
   return {
     data: data.data,
     filename: attachment.filename,
@@ -73,7 +85,7 @@ const getGmailAttachment = async (credentials, gmailData, attachmentId) => {
 /**
  * Get new messages by stored history id
  */
-const getMessagesByHistoryId = async (integration, credentials) => {
+const getMessagesByHistoryId = async (historyId: string, integrationId: string, credentials: any) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
@@ -83,7 +95,7 @@ const getMessagesByHistoryId = async (integration, credentials) => {
   const response = await gmail.users.history.list({
     auth,
     userId: 'me',
-    startHistoryId: integration.gmailData.historyId,
+    startHistoryId: historyId,
   });
 
   if (!response.data.history) {
@@ -101,15 +113,24 @@ const getMessagesByHistoryId = async (integration, credentials) => {
         userId: 'me',
         id: message.id,
       });
-
+      // get gmailData
       const gmailData = await parseMessage(data);
-      await getOrCreateConversation({ integration, messageId: message.id, gmailData });
+
+      if (!gmailData) {
+        throw new Error('Couldn`t parse users.messages.get response');
+      }
+
+      await syncConversation(integrationId, gmailData);
     }
   }
 };
 
+/**
+ * Listening email that connected with
+ */
 export const trackGmail = async () => {
   const { GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_TOPIC, GOOGLE_SUPSCRIPTION_NAME, GOOGLE_PROJECT_ID } = process.env;
+
   const pubsubClient = PubSub({
     projectId: GOOGLE_PROJECT_ID,
     keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
@@ -130,18 +151,18 @@ export const trackGmail = async () => {
       throw error;
     }
 
-    const errorHandler = err => {
+    const errorHandler = (err: any) => {
       subscription.removeListener('message', messageHandler);
       subscription.removeListener('error', errorHandler);
       throw new Error(err);
     };
 
-    const messageHandler = message => {
+    const messageHandler = async (message: any) => {
       try {
-        getGmailUpdates(JSON.parse(message.data.toString()));
+        const data = JSON.parse(message.data.toString());
+        await getGmailUpdates(data);
       } catch (error) {
-        message.stop();
-        // test message from pub/sub publish message
+        console.log(error.message);
         console.log(Buffer.from(message.data, 'base64').toString());
       }
 
@@ -154,8 +175,37 @@ export const trackGmail = async () => {
   });
 };
 
+export const callWatch = async (credentials: any) => {
+  const auth = getOauthClient('gmail');
+  const gmail: any = await google.gmail('v1');
+  const { GOOGLE_TOPIC } = process.env;
+
+  auth.setCredentials(credentials);
+  const response = await gmail.users.watch({
+    auth,
+    userId: 'me',
+    requestBody: {
+      topicName: GOOGLE_TOPIC,
+    },
+  });
+  return response;
+};
+
+const stopReceivingEmail = async (email: string, credentials: any) => {
+  const auth = getOauthClient('gmail');
+  const gmail: any = await google.gmail('v1');
+
+  auth.setCredentials(credentials);
+  return gmail.users.stop({
+    auth,
+    userId: email,
+  });
+};
+
 export const utils = {
   getMessagesByHistoryId,
   getGmailAttachment,
   sendEmail,
+  stopReceivingEmail,
+  callWatch,
 };

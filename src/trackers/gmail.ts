@@ -26,13 +26,14 @@ interface IMailParams {
   references?: string;
   headerId?: string;
   threadId?: string;
+  fromEmail?: string;
 }
 
 /**
  * Create string sequence that generates email body encrypted to base64
  */
-const encodeEmail = async params => {
-  const { toEmails, fromEmail, subject, body, attachments, ccEmails, bccEmails, headerId, references } = params;
+const encodeEmail = async (params: IMailParams) => {
+  const { toEmails, fromEmail, subject, body, attachments, cc, bcc, headerId, references } = params;
 
   // split header to add reply References
   let rawHeader = ['Content-Type: multipart/mixed; boundary="erxes"', 'MIME-Version: 1.0'].join('\r\n');
@@ -49,8 +50,8 @@ const encodeEmail = async params => {
     [
       `From: ${fromEmail}`,
       `To: ${toEmails}`,
-      `Cc: ${ccEmails || ''}`,
-      `Bcc: ${bccEmails || ''}`,
+      `Cc: ${cc || ''}`,
+      `Bcc: ${bcc || ''}`,
       `Subject: ${utf8Subject}`,
       '',
       '--erxes',
@@ -117,7 +118,6 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
   const raw = await encodeEmail({ fromEmail, ...mailParams });
 
   const response = await utils.sendEmail(credentials, raw, threadId);
-
   // convert email params to json string for acvitity content
   const activityLogContent = JSON.stringify(mailParams);
   // create activity log
@@ -127,9 +127,9 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
 };
 
 /**
- * Get headers values
+ * Set header keys to lower case
  */
-export const mapHeaders = headers => {
+export const mapHeaders = (headers: any) => {
   if (!headers) {
     return {};
   }
@@ -140,24 +140,28 @@ export const mapHeaders = headers => {
   }, {});
 };
 
-const getHeaderProperties = headers => {
-  const gmailData: IMsgGmail = {};
-
-  for (const headerKey of ['subject', 'from', 'to', 'cc', 'bcc', 'references']) {
-    if (headers.hasOwnProperty(headerKey)) {
-      gmailData[headerKey] = headers[headerKey];
-    }
-  }
-
-  if (headers.hasOwnProperty('in-reply-to')) {
-    gmailData.reply = headers['in-reply-to'];
-  }
-
-  gmailData.headerId = headers['message-id'];
-  return gmailData;
+/**
+ * Get headers specific values from gmail.users.messages.get response
+ */
+const getHeaderProperties = (headers: any, messageId: string, threadId: string) => {
+  return {
+    subject: headers.subject,
+    from: headers.from,
+    to: headers.to,
+    cc: headers.cc,
+    bcc: headers.bcc,
+    references: headers.references,
+    headerId: headers['message-id'],
+    reply: headers['in-reply-to'],
+    messageId,
+    threadId,
+  };
 };
 
-const getBodyProperties = (headers, part, gmailData) => {
+/**
+ * Get other parts of gmail.users.messages.get response such us html, plain text, attachment
+ */
+const getBodyProperties = (headers: any, part: any, gmailData: IMsgGmail) => {
   const isHtml = part.mimeType && part.mimeType.includes('text/html');
   const isPlain = part.mimeType && part.mimeType.includes('text/plain');
   const cd = headers['content-disposition'];
@@ -194,16 +198,14 @@ const getBodyProperties = (headers, part, gmailData) => {
 /**
  * Parse result of users.messages.get response
  */
-export const parseMessage = response => {
-  const payload = response.payload;
+export const parseMessage = (response: any) => {
+  const { id, threadId, payload } = response;
   if (!payload) {
-    return {};
+    return;
   }
 
   let headers = mapHeaders(payload.headers);
-  let gmailData = getHeaderProperties(headers);
-  gmailData.messageId = response.id;
-  gmailData.threadId = response.threadId;
+  let gmailData: IMsgGmail = getHeaderProperties(headers, id, threadId);
 
   let parts = [payload];
   let firstPartProcessed = false;
@@ -258,14 +260,20 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
     token_type: 'Bearer',
   };
 
-  await utils.getMessagesByHistoryId(integration, credentials);
+  const storedHistoryId = integration.gmailData.historyId;
+  if (storedHistoryId) {
+    await utils.getMessagesByHistoryId(storedHistoryId, integration._id, credentials);
+  }
 
   integration.gmailData.historyId = historyId;
   await integration.save();
 };
 
-export const getOrCreateCustomer = async (email: string, integrationId: string) => {
-  let primaryEmail: string = '';
+/**
+ * Get or create customer for conversation
+ */
+export const getOrCreateCustomer = async (integrationId: string, email: string) => {
+  let primaryEmail: string = email;
   let firstName: string = '';
   let lastName: string = '';
 
@@ -281,8 +289,6 @@ export const getOrCreateCustomer = async (email: string, integrationId: string) 
         lastName = val;
       }
     }
-  } else {
-    primaryEmail = email;
   }
 
   const customer = await Customers.findOne({ emails: { $in: [primaryEmail] } });
@@ -299,6 +305,9 @@ export const getOrCreateCustomer = async (email: string, integrationId: string) 
   });
 };
 
+/**
+ * Create new message as recieved email
+ */
 export const createMessage = async ({
   conversation,
   content,
@@ -332,9 +341,54 @@ export const createMessage = async ({
   return message._id;
 };
 
-export const getOrCreateConversation = async value => {
-  const { integration, messageId, gmailData } = value;
-  const content = gmailData.subject;
+/**
+ * Create or update conversation defends on new email or reply email
+ */
+const getOrCreateConversation = async (
+  integrationId: string,
+  customerId: string,
+  content: string,
+  messageId: string,
+  reply?: string,
+) => {
+  if (reply) {
+    // new conversation
+    const replyHeaders = reply.match(/\<\S+\>/gi);
+
+    // check if message is reply save in one conversation
+    const conversationMessage = await ConversationMessages.findOne({
+      'gmailData.headerId': { $in: replyHeaders },
+    }).sort({ createdAt: -1 });
+
+    if (conversationMessage) {
+      const conversation = await Conversations.findOne({ _id: conversationMessage.conversationId });
+      if (conversation) {
+        conversation.status = CONVERSATION_STATUSES.OPEN;
+        conversation.content = content;
+        await conversation.save();
+        return conversation;
+      }
+    }
+  }
+
+  return Conversations.createConversation({
+    integrationId,
+    customerId,
+    status: CONVERSATION_STATUSES.NEW,
+    content,
+
+    // save gmail infos
+    gmailData: {
+      messageId,
+    },
+  });
+};
+
+export const syncConversation = async (integrationId: string, gmailData: IMsgGmail) => {
+  const { subject, reply, from, messageId } = gmailData;
+  const content = subject || '';
+  const fromEmail = from || '';
+  const emailMessageId = messageId || '';
 
   // check if message has arrived true return previous message instance
   const prevMessage = await ConversationMessages.findOne({
@@ -344,47 +398,16 @@ export const getOrCreateConversation = async value => {
   if (prevMessage) {
     return prevMessage;
   }
-
-  let conversationMessage;
-
-  if (gmailData.reply) {
-    const replyHeaders = gmailData.reply.match(/\<\S+\>/gi);
-
-    // check if message is reply save in one conversation
-    conversationMessage = await ConversationMessages.findOne({
-      'gmailData.headerId': { $in: replyHeaders },
-    }).sort({ createdAt: -1 });
-  }
-
-  const customer = await getOrCreateCustomer(gmailData.from, integration.id);
-
-  let conversation;
-  if (!conversationMessage) {
-    // new conversation
-    conversation = await Conversations.createConversation({
-      integrationId: integration._id,
-      customerId: customer._id,
-      status: CONVERSATION_STATUSES.NEW,
-      content,
-
-      // save gmail infos
-      gmailData: {
-        messageId,
-      },
-    });
-  } else {
-    // reply message conversation
-    conversation = await Conversations.findOne({ _id: conversationMessage.conversationId });
-    conversation.status = CONVERSATION_STATUSES.OPEN;
-    conversation.content = content;
-    await conversation.save();
-  }
+  // get customer
+  const customer = await getOrCreateCustomer(integrationId, fromEmail);
+  // get conversation
+  const conversation = await getOrCreateConversation(integrationId, customer._id, content, emailMessageId, reply);
 
   // create new message
   return createMessage({
     conversation,
-    content,
     customer,
+    content,
     gmailData: {
       messageId,
       ...gmailData,
@@ -392,9 +415,12 @@ export const getOrCreateConversation = async value => {
   });
 };
 
+/**
+ * Get attachment as a base64 string from gmail.users.attachments.get with help conversation id and attachment id
+ */
 export const getAttachment = async (conversationMessageId: string, attachmentId: string) => {
   const message = await ConversationMessages.findOne({ _id: conversationMessageId });
-  if (!message) {
+  if (!message || !message.gmailData) {
     throw new Error(`Conversation message not found id with ${conversationMessageId}`);
   }
 
@@ -423,4 +449,31 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
   };
 
   return utils.getGmailAttachment(credentials, message.gmailData, attachmentId);
+};
+
+export const updateHistoryId = async (integrationId: string) => {
+  const integration = await Integrations.findOne({ _id: integrationId });
+  if (!integration || !integration.gmailData) {
+    return;
+  }
+
+  const account = await Accounts.findOne({ uid: integration.gmailData.email, kind: 'gmail' });
+
+  if (!account) {
+    throw new Error(`Account not found uid with ${integration.gmailData.email}`);
+  }
+
+  const credentials = {
+    access_token: account.token,
+    refresh_token: account.tokenSecret,
+    scope: account.scope,
+    expire_date: account.expireDate,
+    token_type: 'Bearer',
+  };
+
+  const { data } = await utils.callWatch(credentials);
+
+  integration.gmailData.historyId = data.historyId;
+  integration.gmailData.expiration = data.expiration;
+  await integration.save();
 };
