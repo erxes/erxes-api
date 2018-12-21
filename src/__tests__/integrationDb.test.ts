@@ -493,6 +493,7 @@ describe('social integration test', () => {
       brandId: _brand._id,
       gmailData: {
         email: 'test@gmail.com',
+        accountId: 'accountId',
       },
     };
 
