@@ -386,9 +386,10 @@ const getOrCreateConversation = async (
 
 export const syncConversation = async (integrationId: string, gmailData: IMsgGmail) => {
   const { subject, reply, from, messageId } = gmailData;
-  const content = subject || '';
-  const fromEmail = from || '';
-  const emailMessageId = messageId || '';
+
+  if (!subject || !from || !messageId) {
+    throw new Error('Empty gmail data');
+  }
 
   // check if message has arrived true return previous message instance
   const prevMessage = await ConversationMessages.findOne({
@@ -399,15 +400,15 @@ export const syncConversation = async (integrationId: string, gmailData: IMsgGma
     return prevMessage;
   }
   // get customer
-  const customer = await getOrCreateCustomer(integrationId, fromEmail);
+  const customer = await getOrCreateCustomer(integrationId, from);
   // get conversation
-  const conversation = await getOrCreateConversation(integrationId, customer._id, content, emailMessageId, reply);
+  const conversation = await getOrCreateConversation(integrationId, customer._id, subject, messageId, reply);
 
   // create new message
   return createMessage({
     conversation,
     customer,
-    content,
+    content: subject,
     gmailData: {
       messageId,
       ...gmailData,

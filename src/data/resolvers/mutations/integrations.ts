@@ -2,8 +2,6 @@ import { Accounts, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IMessengerIntegration } from '../../../db/models/Integrations';
 import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
-import { getGmailUserProfile } from '../../../trackers/gmailTracker';
-import { getAccessToken } from '../../../trackers/googleTracker';
 import { socUtils } from '../../../trackers/twitterTracker';
 import { requireAdmin, requireLogin } from '../../permissions';
 import { sendPostRequest } from '../../utils';
@@ -124,24 +122,20 @@ const integrationMutations = {
   /**
    * Create gmail integration
    */
-  async integrationsCreateGmailIntegration(_root, { code, brandId }: { code: string; brandId: string }) {
-    const credentials: any = await getAccessToken(code, 'gmail');
+  async integrationsCreateGmailIntegration(_root, { accountId, brandId }: { accountId: string; brandId: string }) {
+    const account = await Accounts.findOne({ _id: accountId });
 
-    // get permission granted email address
-    const data = await getGmailUserProfile(credentials);
-
-    if (!data.emailAddress || !data.historyId) {
-      throw new Error('Gmail profile not found');
+    if (!account) {
+      throw new Error(`Account not found id with ${accountId}`);
     }
 
     const integration = await Integrations.createGmailIntegration({
-      name: data.emailAddress,
+      name: account.uid,
       brandId,
       gmailData: {
-        email: data.emailAddress,
-        historyId: data.historyId,
+        email: account.uid,
+        accountId,
       },
-      credentials,
     });
 
     await updateHistoryId(integration._id);

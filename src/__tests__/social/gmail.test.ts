@@ -241,6 +241,9 @@ describe('gmail integration tests', () => {
     };
 
     const gmailData = parseMessage(receivedEmail);
+    if (!gmailData) {
+      throw new Error('GmailData not found');
+    }
     expect(gmailData.to).toEqual('Contacts <munkhbold.d@nmtec.co>');
     expect(gmailData.from).toEqual('Munkhbold Dembel <mungehubolud@gmail.com>');
     expect(gmailData.cc).toEqual('test1@gmail.com');

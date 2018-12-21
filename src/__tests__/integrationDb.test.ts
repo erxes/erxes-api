@@ -493,11 +493,6 @@ describe('social integration test', () => {
       brandId: _brand._id,
       gmailData: {
         email: 'test@gmail.com',
-        historyId: 'historyId',
-      },
-      credentials: {
-        token: 'token',
-        refreshToken: 'refreshToken',
       },
     };
 
