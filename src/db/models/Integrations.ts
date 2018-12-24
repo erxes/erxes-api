@@ -256,7 +256,7 @@ export const loadClass = () => {
     public static async createGmailIntegration({ name, brandId, gmailData }: IGmailParams) {
       const prevEntry = await Integrations.findOne({
         gmailData: { $exists: true },
-        'gmailData.email': name,
+        'gmailData.email': gmailData.email,
       });
 
       if (prevEntry) {
