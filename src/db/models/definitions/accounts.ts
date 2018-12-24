@@ -5,7 +5,7 @@ export interface IAccount {
   kind: string;
   token: string;
   tokenSecret?: string;
-  expireDate?: number;
+  expireDate?: string;
   scope?: string;
   name: string;
   uid: string;
@@ -24,6 +24,14 @@ export const accountSchema = new Schema({
     type: String,
   }),
   tokenSecret: field({
+    type: String,
+    optional: true,
+  }),
+  scope: field({
+    type: String,
+    optional: true,
+  }),
+  expireDate: field({
     type: String,
     optional: true,
   }),

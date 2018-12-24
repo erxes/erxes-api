@@ -163,7 +163,6 @@ export const trackGmail = async () => {
         await getGmailUpdates(data);
       } catch (error) {
         console.log(error.message);
-        console.log(Buffer.from(message.data, 'base64').toString());
       }
 
       // All notifications need to be acknowledged as per the Cloud Pub/Sub

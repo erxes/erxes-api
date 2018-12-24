@@ -122,7 +122,10 @@ const integrationMutations = {
   /**
    * Create gmail integration
    */
-  async integrationsCreateGmailIntegration(_root, { accountId, brandId }: { accountId: string; brandId: string }) {
+  async integrationsCreateGmailIntegration(
+    _root,
+    { name, accountId, brandId }: { name: string; accountId: string; brandId: string },
+  ) {
     const account = await Accounts.findOne({ _id: accountId });
 
     if (!account) {
@@ -130,7 +133,7 @@ const integrationMutations = {
     }
 
     const integration = await Integrations.createGmailIntegration({
-      name: account.uid,
+      name,
       brandId,
       gmailData: {
         email: account.uid,
@@ -138,7 +141,7 @@ const integrationMutations = {
       },
     });
 
-    await updateHistoryId(integration._id);
+    await updateHistoryId(integration);
 
     return integration;
   },

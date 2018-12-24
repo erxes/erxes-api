@@ -100,18 +100,7 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
     throw new Error(`Integration not found id with ${integrationId}`);
   }
 
-  const account = await Accounts.findOne({ uid: integration.gmailData.email });
-  if (!account) {
-    throw new Error(`Account not found uid with ${integration.gmailData.email}`);
-  }
-
-  const credentials = {
-    access_token: account.token,
-    refresh_token: account.tokenSecret,
-    scope: account.scope,
-    expire_date: account.expireDate,
-    token_type: 'Bearer',
-  };
+  const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 
   const fromEmail = integration.gmailData.email;
   // get raw string encrypted by base64
@@ -246,19 +235,7 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
     throw new Error(`Integration not found gmailData with ${emailAddress}`);
   }
 
-  const account = await Accounts.findOne({ uid: emailAddress });
-
-  if (!account) {
-    throw new Error(`Account not found uid with ${emailAddress}`);
-  }
-
-  const credentials = {
-    access_token: account.token,
-    refresh_token: account.tokenSecret,
-    scope: account.scope,
-    expire_date: account.expireDate,
-    token_type: 'Bearer',
-  };
+  const credentials = await Accounts.getGmailCredentials(emailAddress);
 
   const storedHistoryId = integration.gmailData.historyId;
   if (storedHistoryId) {
@@ -435,42 +412,13 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
     throw new Error(`Integration gmail data not found id with ${conversation.integrationId}`);
   }
 
-  const email = integration.gmailData.email;
-  const account = await Accounts.findOne({ uid: email });
-  if (!account) {
-    throw new Error(`Account not found uid with ${email}`);
-  }
-
-  const credentials = {
-    access_token: account.token,
-    refresh_token: account.tokenSecret,
-    scope: account.scope,
-    expire_date: account.expireDate,
-    token_type: 'Bearer',
-  };
+  const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 
   return utils.getGmailAttachment(credentials, message.gmailData, attachmentId);
 };
 
-export const updateHistoryId = async (integrationId: string) => {
-  const integration = await Integrations.findOne({ _id: integrationId });
-  if (!integration || !integration.gmailData) {
-    return;
-  }
-
-  const account = await Accounts.findOne({ uid: integration.gmailData.email, kind: 'gmail' });
-
-  if (!account) {
-    throw new Error(`Account not found uid with ${integration.gmailData.email}`);
-  }
-
-  const credentials = {
-    access_token: account.token,
-    refresh_token: account.tokenSecret,
-    scope: account.scope,
-    expire_date: account.expireDate,
-    token_type: 'Bearer',
-  };
+export const updateHistoryId = async integration => {
+  const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 
   const { data } = await utils.callWatch(credentials);
 

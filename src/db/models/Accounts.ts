@@ -4,6 +4,7 @@ import { accountSchema, IAccount, IAccountDocument } from './definitions/account
 export interface IAccountModel extends Model<IAccountDocument> {
   createAccount(doc: IAccount): Promise<IAccountDocument>;
   removeAccount(_id: string): void;
+  getGmailCredentials(uid: string): Promise<IAccountDocument>;
 }
 
 export const loadClass = () => {
@@ -27,6 +28,22 @@ export const loadClass = () => {
      */
     public static removeAccount(_id) {
       return Accounts.remove({ _id });
+    }
+
+    public static async getGmailCredentials(uid) {
+      const account = await Accounts.findOne({ uid, kind: 'gmail' });
+
+      if (!account) {
+        throw new Error(`Account not found uid with ${uid}`);
+      }
+
+      return {
+        access_token: account.token,
+        refresh_token: account.tokenSecret,
+        scope: account.scope,
+        expire_date: account.expireDate,
+        token_type: 'Bearer',
+      };
     }
   }
 
