@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { Integrations } from '.';
 import { accountSchema, IAccount, IAccountDocument } from './definitions/accounts';
 
 export interface IAccountModel extends Model<IAccountDocument> {
@@ -26,7 +27,15 @@ export const loadClass = () => {
     /**
      * Remove integration account
      */
-    public static removeAccount(_id) {
+    public static async removeAccount(_id: string) {
+      const integrations = await Integrations.find({
+        $or: [{ 'facebookData.accountId': _id }, { 'twitterData.accountId': _id }, { 'gmailData.accountId': _id }],
+      });
+
+      for (const integration of integrations) {
+        await Integrations.removeIntegration(integration._id);
+      }
+
       return Accounts.deleteOne({ _id });
     }
 
