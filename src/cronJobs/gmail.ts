@@ -10,10 +10,6 @@ export const callGmailUsersWatch = async () => {
     gmailData: { $exists: true },
   });
 
-  if (!integrations) {
-    return;
-  }
-
   for (const integration of integrations) {
     await updateHistoryId(integration._id);
   }
