@@ -27,7 +27,7 @@ export const loadClass = () => {
      * Remove integration account
      */
     public static removeAccount(_id) {
-      return Accounts.remove({ _id });
+      return Accounts.deleteMany({ _id });
     }
 
     public static async getGmailCredentials(uid) {
