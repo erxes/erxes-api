@@ -32,6 +32,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+app.use(express.static('private'));
+
 app.use(
   cors({
     credentials: true,
@@ -108,7 +110,7 @@ app.get('/unsubscribe', async (req, res) => {
   const unsubscribed = await handleEngageUnSubscribe(req.query);
 
   if (unsubscribed) {
-    res.end('Unsubscribed');
+    res.sendFile(`${process.cwd()}/private/emailTemplates/unsubscribe.html`);
   }
 
   res.end();
