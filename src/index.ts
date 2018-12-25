@@ -4,6 +4,7 @@ import * as cors from 'cors';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as formidable from 'formidable';
+import * as fs from 'fs';
 import { execute, subscribe } from 'graphql';
 import { graphiqlExpress, graphqlExpress } from 'graphql-server-express';
 import { createServer } from 'http';
@@ -110,7 +111,9 @@ app.get('/unsubscribe', async (req, res) => {
   const unsubscribed = await handleEngageUnSubscribe(req.query);
 
   if (unsubscribed) {
-    res.sendFile(`${process.cwd()}/private/emailTemplates/unsubscribe.html`);
+    res.setHeader('Content-Type', 'text/html');
+    const template = fs.readFileSync(__dirname + '/private/emailTemplates/unsubscribe.html');
+    res.send(template);
   }
 
   res.end();
