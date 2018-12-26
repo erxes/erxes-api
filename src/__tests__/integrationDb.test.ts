@@ -489,7 +489,7 @@ describe('social integration test', () => {
 
   test('create gmail integration', async () => {
     const doc = {
-      name: 'test@gmail.com',
+      name: 'name',
       brandId: _brand._id,
       gmailData: {
         email: 'test@gmail.com',

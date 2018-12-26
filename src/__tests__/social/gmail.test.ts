@@ -21,9 +21,9 @@ import { utils } from '../../trackers/gmailTracker';
 describe('gmail integration tests', () => {
   afterEach(async () => {
     // clear
-    await Integrations.remove({});
-    await Conversations.remove({});
-    await ConversationMessages.remove({});
+    await Integrations.deleteMany({});
+    await Conversations.deleteMany({});
+    await ConversationMessages.deleteMany({});
   });
 
   test('Get or create conversation', async () => {
