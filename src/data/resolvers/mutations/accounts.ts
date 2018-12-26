@@ -1,5 +1,5 @@
 import { Accounts } from '../../../db/models';
-import { getGmailUserProfile } from '../../../trackers/gmailTracker';
+import { getGmailUserProfile, stopReceivingEmail } from '../../../trackers/gmailTracker';
 import { getAccessToken } from '../../../trackers/googleTracker';
 import { socUtils } from '../../../trackers/twitterTracker';
 import { moduleRequireLogin } from '../../permissions';
@@ -26,7 +26,18 @@ const accountMutations = {
   /**
    * Remove a history
    */
-  accountsRemove(_root, { _id }: { _id: string }) {
+  async accountsRemove(_root, { _id }: { _id: string }) {
+    const account = await Accounts.findOne({ _id });
+    if (!account) {
+      throw new Error(`Account not found id with ${_id}`);
+    }
+
+    if (account.kind === 'gmail') {
+      const credentials = await Accounts.getGmailCredentials(account.uid);
+      // remove email from google push notification
+      await stopReceivingEmail(account.uid, credentials);
+    }
+
     return Accounts.removeAccount(_id);
   },
 
@@ -65,7 +76,7 @@ const accountMutations = {
       kind: 'gmail',
       token: credentials.access_token,
       tokenSecret: credentials.refresh_token,
-      expireDate: credentials.expire_date,
+      expireDate: credentials.expiry_date,
       scope: credentials.scope,
     });
   },

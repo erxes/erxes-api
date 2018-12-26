@@ -190,7 +190,7 @@ export const callWatch = async (credentials: any) => {
   return response;
 };
 
-const stopReceivingEmail = async (email: string, credentials: any) => {
+export const stopReceivingEmail = async (email: string, credentials: any) => {
   const auth = getOauthClient('gmail');
   const gmail: any = await google.gmail('v1');
 
