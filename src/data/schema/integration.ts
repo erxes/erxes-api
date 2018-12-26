@@ -156,7 +156,7 @@ export const mutations = `
     formId: String!,
     formData: IntegrationFormData!): Integration
 
-  integrationsRemove(_id: String!): String
+  integrationsRemove(_id: String!): JSON
 
   integrationsCreateGmailIntegration(name: String!, accountId: String!, brandId: String!): Integration
 
