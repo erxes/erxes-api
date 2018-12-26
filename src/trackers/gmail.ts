@@ -190,6 +190,7 @@ const getBodyProperties = (headers: any, part: any, gmailData: IMsgGmail) => {
  */
 export const parseMessage = (response: any) => {
   const { id, threadId, payload } = response;
+
   if (!payload) {
     return;
   }
@@ -239,11 +240,13 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
   const credentials = await Accounts.getGmailCredentials(emailAddress);
 
   const storedHistoryId = integration.gmailData.historyId;
+
   if (storedHistoryId) {
     await utils.getMessagesByHistoryId(storedHistoryId, integration._id, credentials);
   }
 
   integration.gmailData.historyId = historyId;
+
   await integration.save();
 };
 
@@ -377,8 +380,10 @@ export const syncConversation = async (integrationId: string, gmailData: IMsgGma
   if (prevMessage) {
     return prevMessage;
   }
+
   // get customer
   const customer = await getOrCreateCustomer(integrationId, from);
+
   // get conversation
   const conversation = await getOrCreateConversation(integrationId, customer._id, subject, messageId, reply);
 
@@ -404,11 +409,13 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
   }
 
   const conversation = await Conversations.findOne({ _id: message.conversationId });
+
   if (!conversation) {
     throw new Error(`Conversation not found id with ${message.conversationId}`);
   }
 
   const integration = await Integrations.findOne({ _id: conversation.integrationId });
+
   if (!integration || !integration.gmailData) {
     throw new Error(`Integration gmail data not found id with ${conversation.integrationId}`);
   }
@@ -418,6 +425,9 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
   return utils.getGmailAttachment(credentials, message.gmailData, attachmentId);
 };
 
+/*
+ * Register new email to push notification
+ */
 export const updateHistoryId = async integration => {
   const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 

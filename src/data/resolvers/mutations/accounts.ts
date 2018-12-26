@@ -28,12 +28,14 @@ const accountMutations = {
    */
   async accountsRemove(_root, { _id }: { _id: string }) {
     const account = await Accounts.findOne({ _id });
+
     if (!account) {
       throw new Error(`Account not found id with ${_id}`);
     }
 
     if (account.kind === 'gmail') {
       const credentials = await Accounts.getGmailCredentials(account.uid);
+
       // remove email from google push notification
       await stopReceivingEmail(account.uid, credentials);
     }
