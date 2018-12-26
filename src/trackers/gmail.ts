@@ -273,6 +273,7 @@ export const getOrCreateCustomer = async (integrationId: string, email: string) 
   }
 
   const customer = await Customers.findOne({ emails: { $in: [primaryEmail] } });
+
   if (customer) {
     return customer;
   }
@@ -343,6 +344,7 @@ const getOrCreateConversation = async (
 
     if (conversationMessage) {
       const conversation = await Conversations.findOne({ _id: conversationMessage.conversationId });
+
       if (conversation) {
         conversation.status = CONVERSATION_STATUSES.OPEN;
         conversation.content = content;
@@ -365,6 +367,9 @@ const getOrCreateConversation = async (
   });
 };
 
+/*
+ * Save google message to database
+ */
 export const syncConversation = async (integrationId: string, gmailData: IMsgGmail) => {
   const { subject, reply, from, messageId } = gmailData;
 

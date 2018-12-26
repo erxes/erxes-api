@@ -36,6 +36,7 @@ const sendEmail = async (credentials: any, raw: string, threadId?: string) => {
   auth.setCredentials(credentials);
 
   const gmail = await google.gmail('v1');
+
   const data = {
     auth,
     userId: 'me',
