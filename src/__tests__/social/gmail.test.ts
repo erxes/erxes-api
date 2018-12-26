@@ -7,7 +7,7 @@ import {
   integrationFactory,
   userFactory,
 } from '../../db/factories';
-import { ActivityLogs, ConversationMessages, Conversations, Integrations } from '../../db/models';
+import { ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {
   createMessage,
   getGmailUpdates,
@@ -321,7 +321,7 @@ describe('gmail integration tests', () => {
     const user = await userFactory({});
 
     try {
-      await sendGmail(mailParams, user._id);
+      await sendGmail(mailParams);
     } catch (e) {
       expect(e.message).toBe(`Integration not found id with ${mailParams.integrationId}`);
     }
@@ -340,26 +340,8 @@ describe('gmail integration tests', () => {
 
     mailParams.integrationId = integration._id;
     const mock = sinon.stub(utils, 'sendEmail').callsFake();
-    await sendGmail(mailParams, user._id);
 
-    const al = await ActivityLogs.findOne({
-      'activity.type': 'email',
-    });
-
-    if (!al) {
-      throw new Error('Activity log not found');
-    }
-
-    expect(al.coc.type).toBe(mailParams.cocType);
-    expect(al.coc.id).toBe(mailParams.cocId);
-
-    if (!al.performedBy) {
-      throw new Error('Activity log performer not found');
-    }
-    const content = JSON.stringify(mailParams);
-
-    expect(al.activity.content).toEqual(content);
-    expect(al.performedBy.id).toEqual(user._id);
+    await sendGmail(mailParams);
 
     mock.restore(); // unwraps the spy
   });

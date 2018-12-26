@@ -195,7 +195,8 @@ export const stopReceivingEmail = async (email: string, credentials: any) => {
   const gmail: any = await google.gmail('v1');
 
   auth.setCredentials(credentials);
-  return gmail.users.stop({
+
+  gmail.users.stop({
     auth,
     userId: email,
   });

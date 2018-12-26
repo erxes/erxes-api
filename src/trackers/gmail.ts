@@ -1,6 +1,6 @@
 import { CONVERSATION_STATUSES } from '../data/constants';
 import { publishClientMessage, publishMessage } from '../data/resolvers/mutations/conversations';
-import { Accounts, ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { Accounts, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -91,8 +91,8 @@ const encodeEmail = async (params: IMailParams) => {
 /**
  * Send email & create activiy log with gmail kind
  */
-export const sendGmail = async (mailParams: IMailParams, userId: string) => {
-  const { integrationId, cocType, cocId, threadId } = mailParams;
+export const sendGmail = async (mailParams: IMailParams) => {
+  const { integrationId, threadId } = mailParams;
 
   const integration = await Integrations.findOne({ _id: integrationId });
 
@@ -106,13 +106,14 @@ export const sendGmail = async (mailParams: IMailParams, userId: string) => {
   // get raw string encrypted by base64
   const raw = await encodeEmail({ fromEmail, ...mailParams });
 
-  const response = await utils.sendEmail(credentials, raw, threadId);
-  // convert email params to json string for acvitity content
-  const activityLogContent = JSON.stringify(mailParams);
-  // create activity log
-  await ActivityLogs.createGmailLog(activityLogContent, cocType, cocId, userId);
+  // TODO: check without try, catch
+  try {
+    await utils.sendEmail(credentials, raw, threadId);
+  } catch (e) {
+    throw new Error(e);
+  }
 
-  return response;
+  return { status: 200, statusText: 'ok ' };
 };
 
 /**
@@ -424,5 +425,6 @@ export const updateHistoryId = async integration => {
 
   integration.gmailData.historyId = data.historyId;
   integration.gmailData.expiration = data.expiration;
+
   await integration.save();
 };

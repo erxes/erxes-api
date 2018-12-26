@@ -149,8 +149,8 @@ const integrationMutations = {
   /**
    * Send mail by gmail api
    */
-  integrationsSendGmail(_root, args, { user }) {
-    return sendGmail(args, user._id);
+  integrationsSendGmail(_root, args) {
+    return sendGmail(args);
   },
 };
 
