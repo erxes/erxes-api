@@ -1,12 +1,6 @@
 import * as sinon from 'sinon';
 import { CONVERSATION_STATUSES } from '../../data/constants';
-import {
-  accountFactory,
-  conversationFactory,
-  customerFactory,
-  integrationFactory,
-  userFactory,
-} from '../../db/factories';
+import { accountFactory, conversationFactory, customerFactory, integrationFactory } from '../../db/factories';
 import { ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {
   createMessage,
@@ -317,8 +311,6 @@ describe('gmail integration tests', () => {
       cocType: 'customer',
       cocId: 'customerId',
     };
-
-    const user = await userFactory({});
 
     try {
       await sendGmail(mailParams);
