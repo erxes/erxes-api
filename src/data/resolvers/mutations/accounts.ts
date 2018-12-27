@@ -63,14 +63,15 @@ const accountMutations = {
    */
   async accountsAddGmail(_root, { code }: { code: string }) {
     const credentials: any = await getAccessToken(code, 'gmail');
-
-    const data = await getGmailUserProfile(credentials);
-
-    if (!data.emailAddress) {
-      throw new Error('Invalid gmail credentials');
+    let email = '';
+    // get email address connected with
+    // TODO: fix try catch
+    try {
+      const { data } = await getGmailUserProfile(credentials);
+      email = data.emailAddress || '';
+    } catch (e) {
+      throw new Error(e.message);
     }
-
-    const email = data.emailAddress;
 
     return Accounts.createAccount({
       name: email,

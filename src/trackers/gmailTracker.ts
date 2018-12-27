@@ -7,35 +7,24 @@ import { getOauthClient } from './googleTracker';
 /**
  * Get permission granted email information
  */
-export const getGmailUserProfile = async (credentials: any): Promise<{ emailAddress?: string; historyId?: string }> => {
+export const getGmailUserProfile = (credentials: any) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
 
-  const gmail = await google.gmail('v1');
-
-  return new Promise((resolve, reject) => {
-    gmail.users.getProfile({ auth, userId: 'me' }, (err, response) => {
-      if (err) {
-        reject(err);
-      }
-
-      if (response) {
-        resolve(response.data);
-      }
-    });
-  });
+  const gmail = google.gmail('v1');
+  return gmail.users.getProfile({ auth, userId: 'me' });
 };
 
 /**
  * Send email
  */
-const sendEmail = async (credentials: any, raw: string, threadId?: string) => {
+const sendEmail = (credentials: any, raw: string, threadId?: string) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
 
-  const gmail = await google.gmail('v1');
+  const gmail = google.gmail('v1');
 
   const data = {
     auth,
@@ -175,25 +164,24 @@ export const trackGmail = async () => {
   });
 };
 
-export const callWatch = async (credentials: any) => {
+export const callWatch = (credentials: any) => {
   const auth = getOauthClient('gmail');
-  const gmail: any = await google.gmail('v1');
+  const gmail: any = google.gmail('v1');
   const { GOOGLE_TOPIC } = process.env;
 
   auth.setCredentials(credentials);
-  const response = await gmail.users.watch({
+  return gmail.users.watch({
     auth,
     userId: 'me',
     requestBody: {
       topicName: GOOGLE_TOPIC,
     },
   });
-  return response;
 };
 
-export const stopReceivingEmail = async (email: string, credentials: any) => {
+export const stopReceivingEmail = (email: string, credentials: any) => {
   const auth = getOauthClient('gmail');
-  const gmail: any = await google.gmail('v1');
+  const gmail: any = google.gmail('v1');
 
   auth.setCredentials(credentials);
 
