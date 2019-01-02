@@ -7,7 +7,6 @@ import {
   fixChartData,
   fixDate,
   fixDates,
-  formatTime,
   generateChartData,
   generateMessageSelector,
   generateResponseData,
@@ -298,15 +297,40 @@ const insightQueries = {
     const summaries = generateTimeIntervals(start, end);
 
     // finds a respective message counts for different time intervals.
+    const facets = {};
     for (const summary of summaries) {
-      conversationSelector.createdAt = {
-        $gt: formatTime(summary.start),
-        $lte: formatTime(summary.end),
-      };
-
+      console.log(summary.title, conversationSelector);
+      facets[summary.title] = [
+        {
+          $match: {
+            createdAt: { $gt: summary.start.toDate(), $lte: summary.end.toDate() },
+            $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            count: 1,
+          },
+        },
+      ];
+    }
+    const data = await Conversations.aggregate([
+      {
+        $facet: facets,
+      },
+    ]);
+    for (const summary of summaries) {
+      const count = data['0'][summary.title][0] ? data['0'][summary.title][0].count : 0;
       insightData.summary.push({
         title: summary.title,
-        count: await Conversations.countDocuments(conversationSelector),
+        count,
       });
     }
 
