@@ -144,7 +144,7 @@ const insightQueries = {
     const start = moment(end).add(-7, 'days');
 
     const conversationIds = await findConversations(
-      { brandId: brandIds, kind: integrationIds },
+      { brandIds: brandIds, kinds: integrationIds },
       {
         createdAt: { $gte: start, $lte: end },
       },
@@ -289,7 +289,7 @@ const insightQueries = {
       $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
     };
 
-    const conversations = await findConversations({ kind: integrationIds, brandId: brandIds }, conversationSelector);
+    const conversations = await findConversations({ kinds: integrationIds, brandIds }, conversationSelector);
     const insightData: any = {
       summary: [],
       trend: await generateChartData({ collection: conversations }),
@@ -337,7 +337,7 @@ const insightQueries = {
 
     let allResponseTime = 0;
 
-    const conversations = await findConversations({ kind: integrationIds, brandId: brandIds }, conversationSelector);
+    const conversations = await findConversations({ kinds: integrationIds, brandIds }, conversationSelector);
 
     if (conversations.length < 1) {
       return insightData;
@@ -405,10 +405,7 @@ const insightQueries = {
       closedUserId: { $ne: null },
     };
 
-    const conversationMatch = await getConversationSelector(
-      { kind: integrationIds, brandId: brandIds },
-      conversationSelector,
-    );
+    const conversationMatch = await getConversationSelector({ kinds: integrationIds, brandIds }, conversationSelector);
     const insightAggregateData = await Conversations.aggregate([
       {
         $match: conversationMatch,
