@@ -31,8 +31,12 @@ interface IGenerateUserChartData {
 }
 
 interface IIntegrationSelector {
-  brandId?: any;
+  brandId?: { $in: string[] };
   kind?: any;
+}
+interface IIntegrationArgSelector {
+  brandId?: string;
+  kind?: string;
 }
 
 interface IFixDates {
@@ -72,7 +76,7 @@ export interface IListArgs {
  * Return integrationSelector for aggregations
  * @param args
  */
-export const getIntegrationSelector = async (args: IIntegrationSelector): Promise<any> => {
+export const getIntegrationSelector = async (args: IIntegrationArgSelector): Promise<any> => {
   const integrationSelector: IIntegrationSelector = {};
   const { kind, brandId } = args;
   if (brandId) {
@@ -90,7 +94,10 @@ export const getIntegrationSelector = async (args: IIntegrationSelector): Promis
  * @param conversationSelector
  * @param selectIds
  */
-export const getConversationSelector = async (args: IIntegrationSelector, conversationSelector: any): Promise<any> => {
+export const getConversationSelector = async (
+  args: IIntegrationArgSelector,
+  conversationSelector: any,
+): Promise<any> => {
   const integrationSelector = await getIntegrationSelector(args);
   const { kind, brandId } = args;
 
@@ -105,7 +112,7 @@ export const getConversationSelector = async (args: IIntegrationSelector, conver
  * Find conversations or conversationIds.
  */
 export const findConversations = async (
-  args: IIntegrationSelector,
+  args: IIntegrationArgSelector,
   conversationSelector: any,
   selectIds?: boolean,
 ): Promise<IConversationDocument[]> => {
