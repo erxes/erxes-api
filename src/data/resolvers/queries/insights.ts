@@ -144,7 +144,7 @@ const insightQueries = {
     const start = moment(end).add(-7, 'days');
 
     const conversationIds = await findConversations(
-      { brandIds: brandIds, kinds: integrationIds },
+      { brandIds, kinds: integrationIds },
       {
         createdAt: { $gte: start, $lte: end },
       },
