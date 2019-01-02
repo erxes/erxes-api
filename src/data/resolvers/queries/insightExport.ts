@@ -131,8 +131,10 @@ const insightExportQueries = {
       $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
     };
     const mainSelector = await getConversationSelector(args, conversationSelector);
+
     const conversations = await Conversations.find(mainSelector);
     const conversationRawIds = conversations.map(row => row._id);
+
     const aggregatedData = await Conversations.aggregate([
       {
         $match: mainSelector,
@@ -185,7 +187,9 @@ const insightExportQueries = {
         },
       },
     ]);
+
     const volumeDictionary = {};
+
     let totalSumCount = 0;
     let totalCustomerCount = 0;
     let totalConversationMessages = 0;
@@ -194,6 +198,7 @@ const insightExportQueries = {
     let totalAverageClosed = 0;
     let totalAverageRespond = 0;
     let totalRowCount = 0;
+
     aggregatedData.map(row => {
       volumeDictionary[row._id] = row;
       totalSumCount += row.totalCount;
@@ -204,7 +209,9 @@ const insightExportQueries = {
       totalPercentage += row.percentage;
       totalRowCount += 1;
     });
+
     const data: IVolumeReportExportArgs[] = [];
+
     const messageAggregationData = await ConversationMessages.aggregate([
       {
         $match: {
@@ -229,7 +236,9 @@ const insightExportQueries = {
         },
       },
     ]);
+
     const conversationDictionary = {};
+
     messageAggregationData.map(row => {
       conversationDictionary[row._id] = row.totalCount;
       totalConversationMessages += row.totalCount;
@@ -269,6 +278,7 @@ const insightExportQueries = {
     };
 
     await generateData();
+
     data.push({
       date: 'Total',
       count: totalSumCount,
