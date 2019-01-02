@@ -32,11 +32,11 @@ interface IGenerateUserChartData {
 
 interface IIntegrationSelector {
   brandId?: { $in: string[] };
-  kind?: any;
+  kind?: { $in: string[] };
 }
 interface IIntegrationArgSelector {
-  brandId?: string;
-  kind?: string;
+  brandIds?: string;
+  kinds?: string;
 }
 
 interface IFixDates {
@@ -66,8 +66,8 @@ interface IChartData {
 }
 
 export interface IListArgs {
-  integrationType: string;
-  brandId: string;
+  integrationIds: string;
+  brandIds: string;
   startDate: string;
   endDate: string;
   type: string;
@@ -78,13 +78,13 @@ export interface IListArgs {
  */
 export const getIntegrationSelector = async (args: IIntegrationArgSelector): Promise<any> => {
   const integrationSelector: IIntegrationSelector = {};
-  const { kind, brandId } = args;
-  if (brandId) {
-    integrationSelector.brandId = { $in: brandId.split(',') };
+  const { kinds, brandIds } = args;
+  if (brandIds) {
+    integrationSelector.brandId = { $in: brandIds.split(',') };
   }
 
-  if (kind) {
-    integrationSelector.kind = { $in: kind.split(',') };
+  if (kinds) {
+    integrationSelector.kind = { $in: kinds.split(',') };
   }
   return integrationSelector;
 };
@@ -99,9 +99,9 @@ export const getConversationSelector = async (
   conversationSelector: any,
 ): Promise<any> => {
   const integrationSelector = await getIntegrationSelector(args);
-  const { kind, brandId } = args;
+  const { kinds, brandIds } = args;
 
-  if (kind || brandId) {
+  if (kinds || brandIds) {
     conversationSelector.integrationIds = await Integrations.find(integrationSelector).select('_id');
   }
 
@@ -117,9 +117,9 @@ export const findConversations = async (
   selectIds?: boolean,
 ): Promise<IConversationDocument[]> => {
   const integrationSelector = await getIntegrationSelector(args);
-  const { kind, brandId } = args;
+  const { kinds, brandIds } = args;
 
-  if (kind || brandId) {
+  if (kinds || brandIds) {
     const integrationIds = await Integrations.find(integrationSelector).select('_id');
     conversationSelector.integrationId = integrationIds.map(row => row._id);
   }
@@ -140,7 +140,11 @@ export const generateMessageSelector = async (
   conversationSelector: any,
   messageSelector: IMessageSelector,
 ): Promise<IMessageSelector> => {
-  const conversationIds = await findConversations({ brandId, kind: integrationType }, conversationSelector, true);
+  const conversationIds = await findConversations(
+    { brandIds: brandId, kinds: integrationType },
+    conversationSelector,
+    true,
+  );
   const rawConversationIds = conversationIds.map(obj => obj._id);
   messageSelector.conversationId = { $in: rawConversationIds };
 
