@@ -73,11 +73,13 @@ export interface IListArgs {
   endDate: string;
   type: string;
 }
+
 /**
  * Return integrationSelector for aggregations
  * @param args
  */
 export const getIntegrationSelector = async (args: IIntegrationArgSelector): Promise<any> => {
+
   const integrationSelector: IIntegrationSelector = {};
   const { kind, brandId } = args;
   if (brandId) {
@@ -89,6 +91,7 @@ export const getIntegrationSelector = async (args: IIntegrationArgSelector): Pro
   }
   return integrationSelector;
 };
+
 /**
  * Return conversationSelect for aggregation
  * @param args
@@ -99,6 +102,7 @@ export const getConversationSelector = async (
   args: IIntegrationArgSelector,
   conversationSelector: any,
 ): Promise<any> => {
+
   const integrationSelector = await getIntegrationSelector(args);
   const { kind, brandId } = args;
 
