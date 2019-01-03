@@ -31,8 +31,8 @@ interface IGenerateUserChartData {
 }
 
 interface IIntegrationSelector {
-  brandId?: any;
-  kind?: any;
+  brandId?: { $in: string[] };
+  kind?: { $in: string[] };
 }
 
 interface IFixDates {
@@ -68,6 +68,7 @@ export interface IListArgs {
   endDate: string;
   type: string;
 }
+
 /**
  * Return integrationSelector for aggregations
  * @param args
@@ -84,6 +85,7 @@ export const getIntegrationSelector = async (args: IIntegrationSelector): Promis
   }
   return integrationSelector;
 };
+
 /**
  * Return conversationSelect for aggregation
  * @param args

@@ -299,7 +299,6 @@ const insightQueries = {
     // finds a respective message counts for different time intervals.
     const facets = {};
     for (const summary of summaries) {
-      console.log(summary.title, conversationSelector);
       facets[summary.title] = [
         {
           $match: {
