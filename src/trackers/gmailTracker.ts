@@ -11,6 +11,7 @@ export const getGmailUserProfile = (credentials: any) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
+
   const gmail = google.gmail('v1');
 
   return gmail.users.getProfile({ auth, userId: 'me' }).catch(({ response }) => {
@@ -48,6 +49,7 @@ const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail, attach
   if (!gmailData || !gmailData.attachments) {
     throw new Error('GmailData not found');
   }
+
   const attachment = await gmailData.attachments.find(a => a.attachmentId === attachmentId);
 
   if (!attachment) {
@@ -173,6 +175,7 @@ export const callWatch = (credentials: any) => {
   const { GOOGLE_TOPIC } = process.env;
 
   auth.setCredentials(credentials);
+
   return gmail.users
     .watch({
       auth,
