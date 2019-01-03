@@ -11,9 +11,11 @@ export const getGmailUserProfile = (credentials: any) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
-
   const gmail = google.gmail('v1');
-  return gmail.users.getProfile({ auth, userId: 'me' });
+
+  return gmail.users.getProfile({ auth, userId: 'me' }).catch(({ response }) => {
+    throw new Error(response.data.error.message);
+  });
 };
 
 /**
@@ -23,7 +25,6 @@ const sendEmail = (credentials: any, raw: string, threadId?: string) => {
   const auth = getOauthClient('gmail');
 
   auth.setCredentials(credentials);
-
   const gmail = google.gmail('v1');
 
   const data = {
@@ -35,7 +36,9 @@ const sendEmail = (credentials: any, raw: string, threadId?: string) => {
     },
   };
 
-  return gmail.users.messages.send(data);
+  return gmail.users.messages.send(data).catch(({ response }) => {
+    throw new Error(response.data.error.message);
+  });
 };
 
 /**
@@ -45,31 +48,35 @@ const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail, attach
   if (!gmailData || !gmailData.attachments) {
     throw new Error('GmailData not found');
   }
-
-  const gmail = await google.gmail('v1');
-  const auth = getOauthClient('gmail');
-
-  const { messageId } = gmailData;
-
-  auth.setCredentials(credentials);
-
-  const { data } = await gmail.users.messages.attachments.get({
-    auth,
-    id: attachmentId,
-    userId: 'me',
-    messageId,
-  });
-
   const attachment = await gmailData.attachments.find(a => a.attachmentId === attachmentId);
 
   if (!attachment) {
     throw new Error(`Gmail attachment not found id with ${attachmentId}`);
   }
 
-  return {
-    data: data.data,
-    filename: attachment.filename,
-  };
+  const { messageId } = gmailData;
+
+  const gmail = await google.gmail('v1');
+  const auth = getOauthClient('gmail');
+
+  auth.setCredentials(credentials);
+
+  return gmail.users.messages.attachments
+    .get({
+      auth,
+      id: attachmentId,
+      userId: 'me',
+      messageId,
+    })
+    .catch(({ response }) => {
+      throw new Error(response.data.error.message);
+    })
+    .then(({ data }) => {
+      return {
+        data: data.data,
+        filename: attachment.filename,
+      };
+    });
 };
 
 /**
@@ -126,12 +133,8 @@ export const trackGmail = async () => {
     keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
   });
 
-  if (!GOOGLE_TOPIC) {
-    throw new Error('GOOGLE_TOPIC not found in env');
-  }
-
-  if (!GOOGLE_SUPSCRIPTION_NAME) {
-    throw new Error('GOOGLE_SUPSCRIPTION_NAME not found in env');
+  if (!GOOGLE_TOPIC || !GOOGLE_SUPSCRIPTION_NAME) {
+    return;
   }
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
@@ -170,13 +173,17 @@ export const callWatch = (credentials: any) => {
   const { GOOGLE_TOPIC } = process.env;
 
   auth.setCredentials(credentials);
-  return gmail.users.watch({
-    auth,
-    userId: 'me',
-    requestBody: {
-      topicName: GOOGLE_TOPIC,
-    },
-  });
+  return gmail.users
+    .watch({
+      auth,
+      userId: 'me',
+      requestBody: {
+        topicName: GOOGLE_TOPIC,
+      },
+    })
+    .catch(({ response }) => {
+      throw new Error(response.data.error.message);
+    });
 };
 
 export const stopReceivingEmail = (email: string, credentials: any) => {

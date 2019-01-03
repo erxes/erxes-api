@@ -35,9 +35,8 @@ const accountMutations = {
 
     if (account.kind === 'gmail') {
       const credentials = await Accounts.getGmailCredentials(account.uid);
-
       // remove email from google push notification
-      await stopReceivingEmail(account.uid, credentials);
+      stopReceivingEmail(account.uid, credentials);
     }
 
     return Accounts.removeAccount(_id);
@@ -63,15 +62,9 @@ const accountMutations = {
    */
   async accountsAddGmail(_root, { code }: { code: string }) {
     const credentials: any = await getAccessToken(code, 'gmail');
-    let email = '';
     // get email address connected with
-    // TODO: fix try catch
-    try {
-      const { data } = await getGmailUserProfile(credentials);
-      email = data.emailAddress || '';
-    } catch (e) {
-      throw new Error(e.message);
-    }
+    const { data } = await getGmailUserProfile(credentials);
+    const email = data.emailAddress || '';
 
     return Accounts.createAccount({
       name: email,
