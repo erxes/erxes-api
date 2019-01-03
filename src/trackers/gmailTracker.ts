@@ -128,14 +128,18 @@ const getMessagesByHistoryId = async (historyId: string, integrationId: string, 
 export const trackGmail = async () => {
   const { GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_TOPIC, GOOGLE_SUPSCRIPTION_NAME, GOOGLE_PROJECT_ID } = process.env;
 
-  const pubsubClient = PubSub({
-    projectId: GOOGLE_PROJECT_ID,
-    keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
-  });
+  if (!GOOGLE_APPLICATION_CREDENTIALS || !GOOGLE_PROJECT_ID) {
+    return;
+  }
 
   if (!GOOGLE_TOPIC || !GOOGLE_SUPSCRIPTION_NAME) {
     return;
   }
+
+  const pubsubClient = PubSub({
+    projectId: GOOGLE_PROJECT_ID,
+    keyFilename: GOOGLE_APPLICATION_CREDENTIALS,
+  });
 
   const topic = pubsubClient.topic(GOOGLE_TOPIC);
 
