@@ -431,6 +431,7 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
 export const updateHistoryId = async integration => {
   const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
   const { data } = await utils.callWatch(credentials);
+
   integration.gmailData.historyId = data.historyId;
   integration.gmailData.expiration = data.expiration;
 
