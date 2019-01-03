@@ -120,10 +120,12 @@ const insightExportQueries = {
     const { startDate, endDate, type } = args;
     let diffCount = 7;
     let timeFormat = 'YYYY-MM-DD';
+    let aggregationTimeFormat = '%Y-%m-%d';
 
     if (type === 'time') {
       diffCount = 1;
       timeFormat = 'YYYY-MM-DD HH';
+      aggregationTimeFormat = '%Y-%m-%d %H';
     }
 
     const { start, end } = fixDates(startDate, endDate, diffCount);
@@ -143,7 +145,7 @@ const insightExportQueries = {
         $project: {
           date: {
             $dateToString: {
-              format: '%Y-%m-%d',
+              format: aggregationTimeFormat,
               date: '$createdAt',
             },
           },
@@ -213,7 +215,7 @@ const insightExportQueries = {
         $project: {
           date: {
             $dateToString: {
-              format: '%Y-%m-%d',
+              format: aggregationTimeFormat,
               date: '$createdAt',
             },
           },
@@ -246,7 +248,14 @@ const insightExportQueries = {
         averageRespondTime,
         uniqueCustomerCount,
         percentage,
-      } = volumeDictionary[dateKey];
+      } = volumeDictionary[dateKey] || {
+        resolvedCount: 0,
+        totalCount: 0,
+        averageCloseTime: 0,
+        averageRespondTime: 0,
+        uniqueCustomerCount: 0,
+        percentage: 0,
+      };
       const messageCount = conversationDictionary[dateKey];
 
       totalSumCount += totalCount;
