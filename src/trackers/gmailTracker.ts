@@ -128,11 +128,7 @@ const getMessagesByHistoryId = async (historyId: string, integrationId: string, 
 export const trackGmail = async () => {
   const { GOOGLE_APPLICATION_CREDENTIALS, GOOGLE_TOPIC, GOOGLE_SUPSCRIPTION_NAME, GOOGLE_PROJECT_ID } = process.env;
 
-  if (!GOOGLE_APPLICATION_CREDENTIALS || !GOOGLE_PROJECT_ID) {
-    return;
-  }
-
-  if (!GOOGLE_TOPIC || !GOOGLE_SUPSCRIPTION_NAME) {
+  if (!GOOGLE_APPLICATION_CREDENTIALS || !GOOGLE_PROJECT_ID || !GOOGLE_TOPIC || !GOOGLE_SUPSCRIPTION_NAME) {
     return;
   }
 
