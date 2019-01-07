@@ -7,7 +7,6 @@ import {
   fixChartData,
   fixDate,
   fixDates,
-  formatTime,
   generateChartData,
   generateMessageSelector,
   generateResponseData,
@@ -119,9 +118,11 @@ const insightQueries = {
       },
     ]);
     const tagDictionaryData = {};
+
     tagData.map(row => {
       tagDictionaryData[row._id] = row.count;
     });
+
     // count conversations by each tag
     for (const tag of tags) {
       // find conversation counts of given tag
@@ -178,6 +179,7 @@ const insightQueries = {
           },
         },
       },
+
       {
         $group: {
           _id: {
@@ -198,7 +200,6 @@ const insightQueries = {
         },
       },
     ]);
-
     return punchData;
   },
 
@@ -234,15 +235,14 @@ const insightQueries = {
     const facets = {};
     // finds a respective message counts for different time intervals.
     for (const summary of summaries) {
-      messageSelector.createdAt = {
-        $gt: summary.start.toDate(),
-        $lte: summary.end.toDate(),
-      };
       facets[summary.title] = [
         {
           $match: {
             userId: generateUserSelector(type),
-            createdAt: { $gte: summary.start.toDate(), $lte: summary.end.toDate() },
+            createdAt: {
+              $gte: summary.start.toDate(),
+              $lte: summary.end.toDate(),
+            },
             // exclude bot messages
             fromBot: { $exists: false },
           },
@@ -296,17 +296,36 @@ const insightQueries = {
     };
 
     const summaries = generateTimeIntervals(start, end);
+    const facets = {};
 
     // finds a respective message counts for different time intervals.
     for (const summary of summaries) {
-      conversationSelector.createdAt = {
-        $gt: formatTime(summary.start),
-        $lte: formatTime(summary.end),
-      };
+      facets[summary.title] = [
+        {
+          $match: {
+            createdAt: {
+              $gt: summary.start.toDate(),
+              $lte: summary.end.toDate(),
+            },
+            $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
+          },
+        },
+        { $group: { _id: null, count: { $sum: 1 } } },
+        { $project: { _id: 0, count: 1 } },
+      ];
+    }
 
+    const data = await Conversations.aggregate([
+      {
+        $facet: facets,
+      },
+    ]);
+
+    for (const summary of summaries) {
+      const count = data['0'][summary.title][0] ? data['0'][summary.title][0].count : 0;
       insightData.summary.push({
         title: summary.title,
-        count: await Conversations.countDocuments(conversationSelector),
+        count,
       });
     }
 
@@ -483,6 +502,7 @@ const insightQueries = {
       // team members gather
       const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
       const user = await Users.findOne({ _id: userData._id });
+      // TODO: use for each instead of map
       userData.chartDatas.map(row => {
         if (row.date in aggregatedTrend) {
           aggregatedTrend[row.date] += row.count;
