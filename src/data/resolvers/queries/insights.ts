@@ -117,10 +117,12 @@ const insightQueries = {
         },
       },
     ]);
+
     const tagDictionaryData = {};
-    tagData.map(row => {
+    tagData.forEach(row => {
       tagDictionaryData[row._id] = row.count;
     });
+
     // count conversations by each tag
     for (const tag of tags) {
       // find conversation counts of given tag
@@ -129,6 +131,7 @@ const insightQueries = {
         insights.tag.push({ id: tag.name, label: tag.name, value });
       }
     }
+
     return insights;
   },
 
