@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { ConversationMessages, Conversations, Integrations, Tags, Users } from '../../../db/models';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
 import { moduleRequireLogin } from '../../permissions';
+import { getDateFieldAsStr } from './aggregationUtils';
 import {
   findConversations,
   fixChartData,
@@ -171,12 +172,7 @@ const insightQueries = {
         $project: {
           hour: { $hour: { date: '$createdAt', timezone: '+08' } },
           day: { $isoDayOfWeek: { date: '$createdAt', timezone: '+08' } },
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$createdAt',
-            },
-          },
+          date: await getDateFieldAsStr({}),
         },
       },
       {
@@ -441,13 +437,7 @@ const insightQueries = {
           responseTime: {
             $divide: [{ $subtract: ['$closedAt', '$createdAt'] }, 1000],
           },
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$createdAt',
-              // timezone: "+08"
-            },
-          },
+          date: await getDateFieldAsStr({}),
           closedUserId: 1,
         },
       },
@@ -504,13 +494,14 @@ const insightQueries = {
       // team members gather
       const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
       const user = await Users.findOne({ _id: userData._id });
-      userData.chartDatas.map(row => {
+      userData.chartDatas.forech(row => {
         if (row.date in aggregatedTrend) {
           aggregatedTrend[row.date] += row.count;
         } else {
           aggregatedTrend[row.date] = row.count;
         }
       });
+
       if (!user) {
         continue;
       }
