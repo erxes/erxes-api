@@ -175,7 +175,6 @@ const insightQueries = {
             $dateToString: {
               format: '%Y-%m-%d',
               date: '$createdAt',
-              // timezone: "+08"
             },
           },
         },
@@ -236,10 +235,6 @@ const insightQueries = {
     const facets = {};
     // finds a respective message counts for different time intervals.
     for (const summary of summaries) {
-      messageSelector.createdAt = {
-        $gt: summary.start.toDate(),
-        $lte: summary.end.toDate(),
-      };
       facets[summary.title] = [
         {
           $match: {
@@ -266,13 +261,15 @@ const insightQueries = {
         },
       ];
     }
-    const data = await ConversationMessages.aggregate([
+
+    const [legend] = await ConversationMessages.aggregate([
       {
         $facet: facets,
       },
     ]);
+
     for (const summary of summaries) {
-      const count = data['0'][summary.title][0] ? data['0'][summary.title][0].count : 0;
+      const count = legend[summary.title][0] ? legend[summary.title][0].count : 0;
       insightData.summary.push({
         title: summary.title,
         count,
@@ -319,14 +316,15 @@ const insightQueries = {
         { $project: { _id: 0, count: 1 } },
       ];
     }
-    const data = await Conversations.aggregate([
+
+    const [legend] = await Conversations.aggregate([
       {
         $facet: facets,
       },
     ]);
 
     for (const summary of summaries) {
-      const count = data['0'][summary.title][0] ? data['0'][summary.title][0].count : 0;
+      const count = legend[summary.title][0] ? legend[summary.title][0].count : 0;
       insightData.summary.push({
         title: summary.title,
         count,
