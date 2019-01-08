@@ -3,15 +3,15 @@
  * @param fieldName
  * @param timeFormat
  */
-export const getDateFieldAsStr = async ({
+export const getDateFieldAsStr = ({
   fieldName = '$createdAt',
   timeFormat = '%Y-%m-%d',
-}): Promise<{
+}): {
   $dateToString: {
     format: string;
     date: string;
   };
-}> => {
+} => {
   return {
     $dateToString: {
       format: timeFormat,

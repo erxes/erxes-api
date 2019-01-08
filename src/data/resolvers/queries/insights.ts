@@ -494,7 +494,7 @@ const insightQueries = {
       // team members gather
       const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
       const user = await Users.findOne({ _id: userData._id });
-      userData.chartDatas.forech(row => {
+      userData.chartDatas.forEach(row => {
         if (row.date in aggregatedTrend) {
           aggregatedTrend[row.date] += row.count;
         } else {
