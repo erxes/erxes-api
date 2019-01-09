@@ -62,14 +62,6 @@ interface IChartData {
 }
 
 export interface IListArgs {
-  integrationType: string;
-  brandId: string;
-  startDate: string;
-  endDate: string;
-  type: string;
-}
-
-export interface IListArgs2 {
   integrationIds: string;
   brandIds: string;
   startDate: string;
@@ -89,7 +81,7 @@ export interface IFilterSelector {
  * Return filterSelector
  * @param args
  */
-export const getFilterSelector = async (args: IListArgs2): Promise<any> => {
+export const getFilterSelector = async (args: IListArgs): Promise<any> => {
   const selector: IFilterSelector = { integration: {} };
   const { startDate, endDate, integrationIds, brandIds } = args;
   const { start, end } = fixDates(startDate, endDate);
@@ -128,13 +120,14 @@ export const getIntegrationSelector = async (args: IIntegrationSelector): Promis
  * @param conversationSelector
  * @param selectIds
  */
-export const getConversationSelector = async (args: IIntegrationSelector, conversationSelector: any): Promise<any> => {
-  const integrationSelector = await getIntegrationSelector(args);
-  const { kind, brandId } = args;
+export const getConversationSelector = async (args: IListArgs, conversationSelector: any): Promise<any> => {
+  const filterSelector = await getFilterSelector(args);
 
-  if (kind || brandId) {
-    conversationSelector.integrationIds = await Integrations.find(integrationSelector).select('_id');
+  if (filterSelector.integration) {
+    const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
+    conversationSelector.integrationId = { $in: integrationIds.map(row => row._id) };
   }
+  conversationSelector.createdAt = filterSelector.createdAt;
 
   return conversationSelector;
 };
@@ -142,7 +135,7 @@ export const getConversationSelector = async (args: IIntegrationSelector, conver
 /**
  * Find conversations or conversationIds.
  */
-export const findConversations2 = async (
+export const findConversations = async (
   filterSelector: IFilterSelector,
   conversationSelector: any,
   selectIds?: boolean,
@@ -209,40 +202,18 @@ export const getSummaryData = async ({ startDate, endDate, selector, collection 
   }
   return summaries;
 };
-/**
- * Find conversations or conversationIds.
- */
-export const findConversations = async (
-  args: IIntegrationSelector,
-  conversationSelector: any,
-  selectIds?: boolean,
-): Promise<IConversationDocument[]> => {
-  const integrationSelector = await getIntegrationSelector(args);
-  const { kind, brandId } = args;
-
-  if (kind || brandId) {
-    const integrationIds = await Integrations.find(integrationSelector).select('_id');
-    conversationSelector.integrationId = integrationIds.map(row => row._id);
-  }
-
-  if (selectIds) {
-    return Conversations.find(conversationSelector).select('_id');
-  }
-
-  return Conversations.find(conversationSelector).sort({ createdAt: 1 });
-};
 
 /**
  * Builds messages find query selector.
  */
 export const generateMessageSelector = async (
-  args: IListArgs2,
+  args: IListArgs,
   messageSelector: IMessageSelector,
 ): Promise<IMessageSelector> => {
   const filterSelector = await getFilterSelector(args);
   messageSelector.createdAt = filterSelector.createdAt;
 
-  const conversationIds = await findConversations2(filterSelector, { ...messageSelector }, true);
+  const conversationIds = await findConversations(filterSelector, { ...messageSelector }, true);
   const rawConversationIds = conversationIds.map(obj => obj._id);
   messageSelector.conversationId = { $in: rawConversationIds };
 
