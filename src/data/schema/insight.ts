@@ -7,10 +7,17 @@ const params = `
   endDate: String
 `;
 
+const params2 = `
+  integrationIds: String,
+  brandIds: String,
+  startDate: String,
+  endDate: String
+`;
+
 export const queries = `
   insights(${params}): JSON
   insightsPunchCard(type: String, integrationType: String, brandId: String, endDate: String): JSON
-  insightsMain(type: String, ${params}): JSON
+  insightsMain(type: String, ${params2}): JSON
   insightsConversation(${params}): JSON
   insightsFirstResponse(${params}): JSON
   insightsResponseClose(${params}): JSON
