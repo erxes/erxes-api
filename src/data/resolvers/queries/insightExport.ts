@@ -443,7 +443,7 @@ const insightExportQueries = {
    */
   async insightFirstResponseReportExport(_root, args: IListArgsWithUserId) {
     const { startDate, endDate, userId, type } = args;
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
     const { start, end } = fixDates(startDate, endDate);
 
     // Reads default template
@@ -574,7 +574,7 @@ const insightExportQueries = {
   async insightTagReportExport(_root, args: IListArgs) {
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
 
     const tags = await Tags.find({ type: TAG_TYPES.CONVERSATION }).select('name');
 

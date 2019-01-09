@@ -31,7 +31,7 @@ const insightQueries = {
    */
   async insights(_root, args: IListArgs) {
     const { startDate, endDate } = args;
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
     const { start, end } = fixDates(startDate, endDate);
 
     const insights: { integration: IPieChartData[]; tag: IPieChartData[] } = {
@@ -126,7 +126,7 @@ const insightQueries = {
    */
   async insightsPunchCard(_root, args: IListArgs) {
     const { type, endDate } = args;
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
 
     // check & convert endDate's value
     const end = moment(fixDate(endDate)).format('YYYY-MM-DD');
@@ -221,7 +221,7 @@ const insightQueries = {
    * Sends combined charting data for trends and summaries.
    */
   async insightsConversation(_root, args: IListArgs) {
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
     const conversationSelector = {
       createdAt: filterSelector.createdAt,
       $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
@@ -249,7 +249,7 @@ const insightQueries = {
    */
   async insightsFirstResponse(_root, args: IListArgs) {
     const { startDate, endDate } = args;
-    const filterSelector = await getFilterSelector(args);
+    const filterSelector = getFilterSelector(args);
     const { start, end } = fixDates(startDate, endDate);
 
     const conversationSelector = {

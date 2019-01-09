@@ -30,11 +30,6 @@ interface IGenerateUserChartData {
   graph: IGenerateChartData[];
 }
 
-interface IIntegrationSelector {
-  brandId?: any;
-  kind?: any;
-}
-
 interface IFixDates {
   start: Date;
   end: Date;
@@ -81,7 +76,7 @@ export interface IFilterSelector {
  * Return filterSelector
  * @param args
  */
-export const getFilterSelector = async (args: IListArgs): Promise<any> => {
+export const getFilterSelector = (args: IListArgs): any => {
   const selector: IFilterSelector = { integration: {} };
   const { startDate, endDate, integrationIds, brandIds } = args;
   const { start, end } = fixDates(startDate, endDate);
@@ -98,22 +93,7 @@ export const getFilterSelector = async (args: IListArgs): Promise<any> => {
 
   return selector;
 };
-/**
- * Return integrationSelector for aggregations
- * @param args
- */
-export const getIntegrationSelector = async (args: IIntegrationSelector): Promise<any> => {
-  const integrationSelector: IIntegrationSelector = {};
-  const { kind, brandId } = args;
-  if (brandId) {
-    integrationSelector.brandId = { $in: brandId.split(',') };
-  }
 
-  if (kind) {
-    integrationSelector.kind = { $in: kind.split(',') };
-  }
-  return integrationSelector;
-};
 /**
  * Return conversationSelect for aggregation
  * @param args
