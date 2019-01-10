@@ -278,7 +278,7 @@ const insightExportQueries = {
       date: 'Total',
       count: totalSumCount,
       customerCount: totalCustomerCount,
-      customerCountPercentage: `${(totalPercentage / totalRowCount).toFixed(0)}%`,
+      customerCountPercentage: `${totalPercentage.toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
       averageResponseDuration: convertTime(totalAverageClosed / totalRowCount),
