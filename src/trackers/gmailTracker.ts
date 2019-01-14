@@ -207,6 +207,7 @@ export const stopReceivingEmail = (email: string, credentials: any) => {
 
 export const utils = {
   getMessagesByHistoryId,
+  getGmailUserProfile,
   getGmailAttachment,
   sendEmail,
   stopReceivingEmail,
