@@ -1,3 +1,4 @@
+import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import {
   accountFactory,
@@ -8,6 +9,7 @@ import {
   userFactory,
 } from '../db/factories';
 import { Accounts, Brands, ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
+import { utils } from '../trackers/gmailTracker';
 
 describe('Accounts mutations', () => {
   let _account;
@@ -68,7 +70,9 @@ describe('Accounts mutations', () => {
       },
     });
 
+    const mock = sinon.stub(utils, 'stopReceivingEmail').callsFake();
     await graphqlRequest(mutation, 'accountsRemove', { _id: _account._id }, context);
+    mock.restore();
 
     expect(await Accounts.findOne({ _id: _account._id })).toBe(null);
     expect(await Integrations.findOne({ 'gmailData.accountId': _account._id })).toBe(null);
