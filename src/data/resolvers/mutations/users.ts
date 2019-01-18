@@ -1,16 +1,7 @@
 import { Channels, Users } from '../../../db/models';
-import { IDetail, IEmailSignature, ILink, IUser, IUserDocument } from '../../../db/models/definitions/users';
+import { IDetail, IEmailSignature, ILink, IUserDocument } from '../../../db/models/definitions/users';
 import { requireAdmin, requireLogin } from '../../permissions';
 import utils from '../../utils';
-
-interface IUsersAdd extends IUser {
-  channelIds?: string[];
-  passwordConfirmation?: string;
-}
-
-interface IUsersEdit extends IUsersAdd {
-  _id: string;
-}
 
 const userMutations = {
   /*
@@ -93,72 +84,6 @@ const userMutations = {
   },
 
   /*
-   * Create new user
-   */
-  async usersAdd(_root, args: IUsersAdd) {
-    const { username, password, passwordConfirmation, email, role, channelIds = [], details, links } = args;
-
-    if (password !== passwordConfirmation) {
-      throw new Error('Incorrect password confirmation');
-    }
-
-    const createdUser = await Users.createUser({
-      username,
-      password,
-      email,
-      role,
-      details,
-      links,
-    });
-
-    // add new user to channels
-    await Channels.updateUserChannels(channelIds, createdUser._id);
-
-    const toEmails = email ? [email] : [];
-
-    // send email ================
-    utils.sendEmail({
-      toEmails,
-      subject: 'Invitation info',
-      template: {
-        name: 'invitation',
-        data: {
-          username,
-          password,
-        },
-      },
-    });
-
-    return createdUser;
-  },
-
-  /*
-   * Update user
-   */
-  async usersEdit(_root, args: IUsersEdit) {
-    const { _id, username, password, passwordConfirmation, email, role, channelIds = [], details, links } = args;
-
-    if (password && password !== passwordConfirmation) {
-      throw new Error('Incorrect password confirmation');
-    }
-
-    // TODO check isOwner
-    const updatedUser = await Users.updateUser(_id, {
-      username,
-      password,
-      email,
-      role,
-      details,
-      links,
-    });
-
-    // add new user to channels
-    await Channels.updateUserChannels(channelIds, _id);
-
-    return updatedUser;
-  },
-
-  /*
    * Edit user profile
    */
   async usersEditProfile(
@@ -225,6 +150,16 @@ const userMutations = {
     return Users.removeUser(_id);
   },
 
+  /*
+   * Invites users to team members
+   */
+  usersInvite(_root, { emails }: { emails: string[] }) {
+    utils.sendEmail({
+      toEmails: emails,
+      title: 'Team member invitation',
+    });
+  },
+
   usersConfigEmailSignatures(
     _root,
     { signatures }: { signatures: IEmailSignature[] },
@@ -238,12 +173,11 @@ const userMutations = {
   },
 };
 
-requireLogin(userMutations, 'usersAdd');
-requireLogin(userMutations, 'usersEdit');
 requireLogin(userMutations, 'usersChangePassword');
 requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
 requireAdmin(userMutations, 'usersRemove');
+requireAdmin(userMutations, 'usersInvite');
 
 export default userMutations;

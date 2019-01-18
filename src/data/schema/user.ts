@@ -65,24 +65,11 @@ export const queries = `
   userConversations(_id: String, perPage: Int): UserConversationListResponse
 `;
 
-const commonParams = `
-  username: String!,
-  email: String!,
-  role: String!
-  details: UserDetails,
-  links: UserLinks,
-  channelIds: [String],
-  password: String!,
-  passwordConfirmation: String!
-`;
-
 export const mutations = `
   login(email: String!, password: String!): String 
   logout: String
   forgotPassword(email: String!): String!
   resetPassword(token: String!, newPassword: String!): JSON
-  usersAdd(${commonParams}): User
-  usersEdit(_id: String!, ${commonParams}): User
 
   usersEditProfile(
     username: String!,
@@ -94,6 +81,8 @@ export const mutations = `
 
   usersChangePassword(currentPassword: String!, newPassword: String!): User
   usersRemove(_id: String!): JSON
+
+  usersInvite(emails: [String]): Boolean
 
   usersConfigEmailSignatures(signatures: [EmailSignature]): User
   usersConfigGetNotificationByEmail(isAllowed: Boolean): User

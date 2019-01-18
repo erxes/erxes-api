@@ -21,7 +21,15 @@ interface IUpdateUser extends IEditProfile {
 }
 
 export interface IUserModel extends Model<IUserDocument> {
-  checkDuplication(email?: string, idsToExclude?: string | string[]): never;
+  checkDuplication({
+    email,
+    idsToExclude,
+    emails,
+  }: {
+    email?: string;
+    idsToExclude?: string | string[];
+    emails?: string[];
+  }): never;
   getSecret(): string;
   createUser(doc: IUser): Promise<IUserDocument>;
   updateUser(_id: string, doc: IUpdateUser): Promise<IUserDocument>;
@@ -53,7 +61,15 @@ export const loadClass = () => {
     /**
      * Checking if user has duplicated properties
      */
-    public static async checkDuplication(email?: string, idsToExclude?: string | string[]) {
+    public static async checkDuplication({
+      email,
+      idsToExclude,
+      emails,
+    }: {
+      email?: string;
+      idsToExclude?: string | string[];
+      emails?: string[];
+    }) {
       const query: { [key: string]: any } = {};
       let previousEntry;
 
@@ -69,6 +85,14 @@ export const loadClass = () => {
         // Checking if duplicated
         if (previousEntry.length > 0) {
           throw new Error('Duplicated email');
+        }
+      }
+
+      if (emails) {
+        previousEntry = await Users.find({ email: { $in: [emails] } });
+
+        if (previousEntry.length > 0) {
+          throw new Error('Duplicated emails');
         }
       }
     }
@@ -87,7 +111,7 @@ export const loadClass = () => {
       }
 
       // Checking duplicated email
-      await Users.checkDuplication(email);
+      await Users.checkDuplication({ email });
 
       return Users.create({
         username,
@@ -102,26 +126,19 @@ export const loadClass = () => {
     }
 
     /**
-     * Update user information
+     * Create new user
      */
-    public static async updateUser(_id: string, { username, email, password, role, details, links }: IUpdateUser) {
-      const doc = { username, email, password, role, details, links };
-
+    public static async createUsers({ emails }: { emails: string[] }) {
       // Checking duplicated email
-      await this.checkDuplication(email, _id);
+      await Users.checkDuplication({ emails });
 
-      // change password
-      if (password) {
-        doc.password = await this.generatePassword(password);
-
-        // if there is no password specified then leave password field alone
-      } else {
-        delete doc.password;
+      for (const email of emails) {
+        await Users.create({
+          email,
+        });
       }
 
-      await Users.updateOne({ _id }, { $set: doc });
-
-      return Users.findOne({ _id });
+      return true;
     }
 
     /*
@@ -129,7 +146,7 @@ export const loadClass = () => {
      */
     public static async editProfile(_id: string, { username, email, details, links }: IEditProfile) {
       // Checking duplicated email
-      await this.checkDuplication(email, _id);
+      await this.checkDuplication({ email, idsToExclude: _id });
 
       await Users.updateOne({ _id }, { $set: { username, email, details, links } });
 
