@@ -4,6 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
 import { Session } from '.';
+import { USER_STATUS_TYPES } from '../../data/constants';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -38,7 +39,18 @@ export interface IUserModel extends Model<IUserDocument> {
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
   removeUser(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
-  createUsers({ emails }: { emails?: string[] }): boolean;
+  createUserWithConfirmation({ email }: { email: string }): string;
+  confirmInvitation({
+    email,
+    token,
+    password,
+    passwordConfirmation,
+  }: {
+    email: string;
+    token: string;
+    password: string;
+    passwordConfirmation: string;
+  }): Promise<IUserDocument>;
   comparePassword(password: string, userPassword: string): boolean;
   resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<IUserDocument>;
   changePassword({
@@ -127,23 +139,58 @@ export const loadClass = () => {
     }
 
     /**
-     * Create new user
+     * Create new user with invitation token
      */
-    public static async createUsers({ emails }: { emails: string[] }) {
+    public static async createUserWithConfirmation({ email }: { email: string }) {
       // Checking duplicated email
-      await Users.checkDuplication({ emails });
+      await Users.checkDuplication({ email });
 
       const buffer = await crypto.randomBytes(20);
       const token = buffer.toString('hex');
 
-      for (const email of emails) {
-        await Users.create({
-          email,
-          confirmationToken: token,
-        });
+      await Users.create({
+        email,
+        status: USER_STATUS_TYPES.PENDING,
+        confirmationToken: token,
+      });
+
+      return token;
+    }
+
+    /**
+     * Confirms user by invitation
+     */
+    public static async confirmInvitation({
+      email,
+      token,
+      password,
+      passwordConfirmation,
+    }: {
+      email: string;
+      token: string;
+      password: string;
+      passwordConfirmation: string;
+    }) {
+      const user = await Users.findOne({ token, email });
+
+      if (!user) {
+        throw new Error('Bad email or token');
       }
 
-      return true;
+      if (password !== passwordConfirmation) {
+        throw new Error('Password does not match');
+      }
+
+      await Users.updateOne(
+        { email },
+        {
+          password: await this.generatePassword(password),
+          status: USER_STATUS_TYPES.VERIFIED,
+          isActive: true,
+        },
+      );
+
+      return user;
     }
 
     /*

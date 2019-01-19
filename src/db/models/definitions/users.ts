@@ -1,4 +1,5 @@
 import { Document, Schema } from 'mongoose';
+import { USER_STATUS_TYPES } from '../../../data/constants';
 import { field } from '../utils';
 import { ROLES } from './constants';
 
@@ -44,6 +45,7 @@ export interface IUser {
   emailSignatures?: IEmailSignature[];
   starredConversationIds?: string[];
   details?: IDetail;
+  status?: string;
   links?: ILink;
   isActive?: boolean;
 }
@@ -96,6 +98,10 @@ export const userSchema = new Schema({
   password: field({ type: String }),
   resetPasswordToken: field({ type: String }),
   resetPasswordExpires: field({ type: Date }),
+  status: field({
+    type: String,
+    enum: [USER_STATUS_TYPES.ALL],
+  }),
   role: field({
     type: String,
     enum: [ROLES.ADMIN, ROLES.CONTRIBUTOR],

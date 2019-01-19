@@ -47,6 +47,7 @@ export const types = `
     role: String
     details: UserDetailsType
     links: UserLinksType
+    status: String
     emailSignatures: JSON
     getNotificationByEmail: Boolean
   }
@@ -95,6 +96,7 @@ export const mutations = `
   usersRemove(_id: String!): JSON
 
   usersInvite(emails: [String]): Boolean
+  usersConfirmInvitation(email: String, token: String, password: String, passwordConfirmation: String): User
 
   usersConfigEmailSignatures(signatures: [EmailSignature]): User
   usersConfigGetNotificationByEmail(isAllowed: Boolean): User

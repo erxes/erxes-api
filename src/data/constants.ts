@@ -328,3 +328,9 @@ export const PROBABILITY = {
 };
 
 export const FACEBOOK_POST_TYPES = ['status', 'video', 'photo', 'post', 'share'];
+
+export const USER_STATUS_TYPES = {
+  PENDING: 'Pending Invitation',
+  VERIFIED: 'Verified',
+  ALL: ['Pending Invitation', 'Verified'],
+};
