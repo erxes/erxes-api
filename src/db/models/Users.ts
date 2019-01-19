@@ -187,7 +187,7 @@ export const loadClass = () => {
       password: string;
       passwordConfirmation: string;
     }) {
-      const user = await Users.findOne({ token, email });
+      const user = await Users.findOne({ confirmationToken: token, email });
 
       if (!user) {
         throw new Error('Bad email or token');
@@ -204,6 +204,7 @@ export const loadClass = () => {
           status: USER_STATUS_TYPES.VERIFIED,
           isActive: true,
           confirmationToken: undefined,
+          username: email,
         },
       );
 

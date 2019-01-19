@@ -119,7 +119,7 @@ export const userSchema = new Schema({
   getNotificationByEmail: field({ type: Boolean }),
   emailSignatures: field({ type: [emailSignatureSchema] }),
   starredConversationIds: field({ type: [String] }),
-  details: field({ type: detailSchema }),
+  details: field({ type: detailSchema, default: {} }),
   links: field({ type: linkSchema, default: {} }),
   isActive: field({ type: Boolean, default: true }),
 });
