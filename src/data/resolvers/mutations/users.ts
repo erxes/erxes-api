@@ -185,8 +185,8 @@ const userMutations = {
     for (const email of emails) {
       const token = await Users.createUserWithConfirmation({ email });
 
-      const { DOMAIN } = process.env;
-      const invitationUrl = `${DOMAIN}/settings/team/invitation?email=${email}&token=${token}`;
+      const { MAIN_APP_DOMAIN } = process.env;
+      const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=${email}&token=${token}`;
 
       utils.sendEmail({
         toEmails: emails,

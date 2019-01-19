@@ -161,7 +161,7 @@ export const loadClass = () => {
     /**
      * User has seen on board set up
      */
-    public static async updateOnBoardSeen({ _id }: { _id }) {
+    public static async updateOnBoardSeen({ _id }: { _id: string }) {
       const user = await Users.findOne({ _id });
 
       if (!user) {
@@ -191,6 +191,10 @@ export const loadClass = () => {
 
       if (!user) {
         throw new Error('Bad email or token');
+      }
+
+      if (password === '') {
+        throw new Error('Password can not be empty');
       }
 
       if (password !== passwordConfirmation) {

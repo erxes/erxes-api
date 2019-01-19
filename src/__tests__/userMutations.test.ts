@@ -150,78 +150,81 @@ describe('User mutations', () => {
     expect(bcrypt.compare(params.newPassword, updatedUser.password)).toBeTruthy();
   });
 
-  test('Add user', async () => {
-    const doc = {
-      ...args,
-      role: 'contributor',
-      passwordConfirmation: 'pass',
-      channelIds: [_channel._id],
-    };
-
+  test('usersInvite', async () => {
     const spyEmail = jest.spyOn(utils, 'sendEmail');
 
     const mutation = `
-      mutation usersAdd(${commonParamDefs}) {
-        usersAdd(${commonParams}) {
-          _id
-          username
-          email
-          role
-          details {
-            fullName
-            avatar
-            location
-            position
-            description
-          }
-          links {
-            linkedIn
-            twitter
-            facebook
-            github
-            youtube
-            website
-          }
-        }
+      mutation usersInvite($emails: [String]) {
+        usersInvite(emails: $emails)
       }
-    `;
+  `;
 
-    const user = await graphqlRequest(mutation, 'usersAdd', doc, context);
+    const params = {
+      emails: ['khangarid.b@nmma.co'],
+    };
 
-    const channel = await Channels.findOne({ _id: _channel._id });
+    const token = await graphqlRequest(mutation, 'usersInvite', params);
 
-    if (!channel) {
-      throw new Error('Channel not found');
-    }
-
-    expect(channel.memberIds).toContain(user._id);
-    expect(user.username).toBe(doc.username);
-    expect(user.email).toBe(doc.email.toLowerCase());
-    expect(user.role).toBe(doc.role);
-    expect(user.details.fullName).toBe(doc.details.fullName);
-    expect(user.details.avatar).toBe(doc.details.avatar);
-    expect(user.details.location).toBe(doc.details.location);
-    expect(user.details.position).toBe(doc.details.position);
-    expect(user.details.description).toBe(doc.details.description);
-    expect(user.links.linkedIn).toBe(doc.links.linkedIn);
-    expect(user.links.twitter).toBe(doc.links.twitter);
-    expect(user.links.facebook).toBe(doc.links.facebook);
-    expect(user.links.github).toBe(doc.links.github);
-    expect(user.links.youtube).toBe(doc.links.youtube);
-    expect(user.links.website).toBe(doc.links.website);
+    const { MAIN_APP_DOMAIN } = process.env;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=khangarid.b@nma.co&token=${token}`;
 
     // send email call
     expect(spyEmail).toBeCalledWith({
-      toEmails: [doc.email],
-      subject: 'Invitation info',
+      toEmails: ['khangarid.b@nmma.co'],
+      title: 'Team member invitation',
       template: {
-        name: 'invitation',
+        name: 'userInvitation',
         data: {
-          username: doc.username,
-          password: doc.password,
+          content: invitationUrl,
         },
       },
     });
+  });
+
+  test('usersSeenOnBoard', async () => {
+    const mutation = `
+      mutation usersSeenOnBoard() {
+        usersSeenOnBoard()
+      }
+  `;
+
+    await graphqlRequest(mutation, 'usersSeenOnBoard', {}, context);
+
+    if (!_user) {
+      throw new Error('User not found');
+    }
+
+    // send email call
+    expect(_user.hasSeenOnBoard).toBeTruthy();
+  });
+
+  test('usersConfirmInvitation', async () => {
+    await userFactory({
+      email: 'khangarid.b@nmma.co',
+      confirmationToken: '123',
+    });
+
+    const mutation = `
+      mutation usersConfirmInvitation($email: String, $token: String, $passwordConfirmation: String, $password: String) {
+        usersConfirmInvitation(email: $email, token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
+          _id
+        }
+      }
+  `;
+
+    const params = {
+      email: 'khangarid.b@nmma.co',
+      token: '123',
+    };
+
+    const userObj = await graphqlRequest(mutation, 'usersConfirmInvitation', params);
+
+    if (!userObj) {
+      throw new Error('User not found');
+    }
+
+    // send email call
+    expect(userObj.status).toBe('Verified');
   });
 
   test('Edit user', async () => {

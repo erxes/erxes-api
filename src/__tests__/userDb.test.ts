@@ -114,6 +114,89 @@ describe('User db utils', () => {
     }
   });
 
+  test('createUserWithConfirmation', async () => {
+    const token = await Users.createUserWithConfirmation({ email: '123@gmail.com' });
+
+    const userObj = await Users.findOne({ token });
+
+    if (!userObj) {
+      throw new Error('User not found');
+    }
+
+    expect(userObj).toBeDefined();
+    expect(userObj._id).toBeDefined();
+    expect(userObj.confirmationToken).toBeDefined();
+    expect(userObj.status).toBe('Pending Invitation');
+  });
+
+  test('updateOnBoardSeen', async () => {
+    const user = await userFactory({});
+
+    await Users.updateOnBoardSeen({ _id: user._id });
+
+    const userObj = await Users.findOne({ _id: user._id });
+
+    if (!userObj) {
+      throw new Error('User not found');
+    }
+
+    expect(userObj.hasSeenOnBoard).toBeTruthy();
+  });
+
+  test('confirmInvitation', async () => {
+    const email = '123@gmail.com';
+    const token = 'token';
+
+    const userObj = await userFactory({
+      email,
+      confirmationToken: token,
+    });
+
+    if (!userObj) {
+      throw new Error('User not found');
+    }
+
+    await Users.confirmInvitation({
+      email,
+      token,
+      password: '123',
+      passwordConfirmation: '123',
+    });
+
+    try {
+      await Users.confirmInvitation({
+        email,
+        token,
+        password: '123',
+        passwordConfirmation: '1234',
+      });
+    } catch (e) {
+      expect(e.message).toBe('Password does not match');
+    }
+
+    try {
+      await Users.confirmInvitation({
+        email,
+        token,
+        password: '',
+        passwordConfirmation: '',
+      });
+    } catch (e) {
+      expect(e.message).toBe('Password can not be empty');
+    }
+
+    try {
+      await Users.confirmInvitation({
+        email,
+        token: '123321312312',
+        password: '',
+        passwordConfirmation: '',
+      });
+    } catch (e) {
+      expect(e.message).toBe('Bad email or token');
+    }
+  });
+
   test('Update user', async () => {
     const updateDoc = await userFactory({});
 
