@@ -117,7 +117,7 @@ describe('User db utils', () => {
   test('createUserWithConfirmation', async () => {
     const token = await Users.createUserWithConfirmation({ email: '123@gmail.com' });
 
-    const userObj = await Users.findOne({ token });
+    const userObj = await Users.findOne({ confirmationToken: token });
 
     if (!userObj) {
       throw new Error('User not found');
@@ -147,7 +147,7 @@ describe('User db utils', () => {
     const email = '123@gmail.com';
     const token = 'token';
 
-    const userObj = await userFactory({
+    let userObj = await userFactory({
       email,
       confirmationToken: token,
     });
@@ -163,15 +163,22 @@ describe('User db utils', () => {
       passwordConfirmation: '123',
     });
 
+    await Users.remove({ _id: userObj._id });
+
+    userObj = await userFactory({
+      email,
+      confirmationToken: token,
+    });
+
     try {
       await Users.confirmInvitation({
         email,
-        token,
-        password: '123',
-        passwordConfirmation: '1234',
+        token: '123321312312',
+        password: '',
+        passwordConfirmation: '',
       });
     } catch (e) {
-      expect(e.message).toBe('Password does not match');
+      expect(e.message).toBe('Bad email or token');
     }
 
     try {
@@ -188,12 +195,12 @@ describe('User db utils', () => {
     try {
       await Users.confirmInvitation({
         email,
-        token: '123321312312',
-        password: '',
-        passwordConfirmation: '',
+        token,
+        password: '123',
+        passwordConfirmation: '1234',
       });
     } catch (e) {
-      expect(e.message).toBe('Bad email or token');
+      expect(e.message).toBe('Password does not match');
     }
   });
 

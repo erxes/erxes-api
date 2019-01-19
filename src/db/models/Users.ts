@@ -140,6 +140,29 @@ export const loadClass = () => {
     }
 
     /**
+     * Update user information
+     */
+    public static async updateUser(_id: string, { username, email, password, role, details, links }: IUpdateUser) {
+      const doc = { username, email, password, role, details, links };
+
+      // Checking duplicated email
+      await this.checkDuplication({ email, idsToExclude: _id });
+
+      // change password
+      if (password) {
+        doc.password = await this.generatePassword(password);
+
+        // if there is no password specified then leave password field alone
+      } else {
+        delete doc.password;
+      }
+
+      await Users.updateOne({ _id }, { $set: doc });
+
+      return Users.findOne({ _id });
+    }
+
+    /**
      * Create new user with invitation token
      */
     public static async createUserWithConfirmation({ email }: { email: string }) {

@@ -163,7 +163,7 @@ describe('User mutations', () => {
       emails: ['khangarid.b@nmma.co'],
     };
 
-    const token = await graphqlRequest(mutation, 'usersInvite', params);
+    const token = await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
 
     const { MAIN_APP_DOMAIN } = process.env;
     const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=khangarid.b@nma.co&token=${token}`;
@@ -183,8 +183,8 @@ describe('User mutations', () => {
 
   test('usersSeenOnBoard', async () => {
     const mutation = `
-      mutation usersSeenOnBoard() {
-        usersSeenOnBoard()
+      mutation usersSeenOnBoard {
+        usersSeenOnBoard
       }
   `;
 
@@ -205,7 +205,7 @@ describe('User mutations', () => {
     });
 
     const mutation = `
-      mutation usersConfirmInvitation($email: String, $token: String, $passwordConfirmation: String, $password: String) {
+      mutation usersConfirmInvitation($email: String, $token: String, $password: String, $passwordConfirmation: String) {
         usersConfirmInvitation(email: $email, token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
           _id
         }
@@ -215,6 +215,8 @@ describe('User mutations', () => {
     const params = {
       email: 'khangarid.b@nmma.co',
       token: '123',
+      password: '123',
+      passwordConfirmation: '123',
     };
 
     const userObj = await graphqlRequest(mutation, 'usersConfirmInvitation', params);
@@ -261,7 +263,7 @@ describe('User mutations', () => {
       }
     `;
 
-    const user = await graphqlRequest(mutation, 'usersEdit', { _id: _user._id, ...doc }, context);
+    const user = await graphqlRequest(mutation, 'usersEdit', { _id: _user._id, ...doc }, { user: _admin });
 
     const channel = await Channels.findOne({ _id: _channel._id });
 
