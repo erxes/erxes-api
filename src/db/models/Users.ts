@@ -38,6 +38,7 @@ export interface IUserModel extends Model<IUserDocument> {
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
   removeUser(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
+  createUsers({ emails }: { emails?: string[] }): boolean;
   comparePassword(password: string, userPassword: string): boolean;
   resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<IUserDocument>;
   changePassword({
@@ -132,9 +133,13 @@ export const loadClass = () => {
       // Checking duplicated email
       await Users.checkDuplication({ emails });
 
+      const buffer = await crypto.randomBytes(20);
+      const token = buffer.toString('hex');
+
       for (const email of emails) {
         await Users.create({
           email,
+          confirmationToken: token,
         });
       }
 

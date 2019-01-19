@@ -153,11 +153,13 @@ const userMutations = {
   /*
    * Invites users to team members
    */
-  usersInvite(_root, { emails }: { emails: string[] }) {
+  async usersInvite(_root, { emails }: { emails: string[] }) {
     utils.sendEmail({
       toEmails: emails,
       title: 'Team member invitation',
     });
+
+    await Users.createUsers({ emails });
   },
 
   usersConfigEmailSignatures(

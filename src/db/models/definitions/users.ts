@@ -36,6 +36,7 @@ export interface IUser {
   password: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  confirmationToken?: string;
   role?: string;
   isOwner?: boolean;
   email?: string;
