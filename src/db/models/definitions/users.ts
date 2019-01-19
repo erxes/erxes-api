@@ -98,10 +98,11 @@ export const userSchema = new Schema({
   username: field({ type: String }),
   password: field({ type: String }),
   resetPasswordToken: field({ type: String }),
+  confirmationToken: field({ type: String }),
   resetPasswordExpires: field({ type: Date }),
   status: field({
     type: String,
-    enum: [USER_STATUS_TYPES.ALL],
+    enum: USER_STATUS_TYPES.ALL,
   }),
   role: field({
     type: String,

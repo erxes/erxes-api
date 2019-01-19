@@ -203,6 +203,7 @@ export const loadClass = () => {
           password: await this.generatePassword(password),
           status: USER_STATUS_TYPES.VERIFIED,
           isActive: true,
+          confirmationToken: undefined,
         },
       );
 
