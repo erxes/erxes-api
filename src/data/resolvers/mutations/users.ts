@@ -1,7 +1,12 @@
 import { Channels, Users } from '../../../db/models';
-import { IDetail, IEmailSignature, ILink, IUserDocument } from '../../../db/models/definitions/users';
+import { IDetail, IEmailSignature, ILink, IUser, IUserDocument } from '../../../db/models/definitions/users';
 import { requireAdmin, requireLogin } from '../../permissions';
 import utils from '../../utils';
+
+interface IUsersEdit extends IUser {
+  channelIds?: string[];
+  _id: string;
+}
 
 const userMutations = {
   /*
@@ -81,6 +86,27 @@ const userMutations = {
     { user }: { user: IUserDocument },
   ) {
     return Users.changePassword({ _id: user._id, ...args });
+  },
+
+  /*
+   * Update user
+   */
+  async usersEdit(_root, args: IUsersEdit) {
+    const { _id, username, email, role, channelIds = [], details, links } = args;
+
+    // TODO check isOwner
+    const updatedUser = await Users.updateUser(_id, {
+      username,
+      email,
+      role,
+      details,
+      links,
+    });
+
+    // add new user to channels
+    await Channels.updateUserChannels(channelIds, _id);
+
+    return updatedUser;
   },
 
   /*
@@ -179,6 +205,7 @@ requireLogin(userMutations, 'usersChangePassword');
 requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
+requireAdmin(userMutations, 'usersEdit');
 requireAdmin(userMutations, 'usersRemove');
 requireAdmin(userMutations, 'usersInvite');
 

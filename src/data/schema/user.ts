@@ -57,6 +57,17 @@ export const types = `
   }
 `;
 
+const commonParams = `	
+  username: String!,	
+  email: String!,	
+  role: String!	
+  details: UserDetails,	
+  links: UserLinks,	
+  channelIds: [String],	
+  password: String!,	
+  passwordConfirmation: String!	
+`;
+
 export const queries = `
   users(page: Int, perPage: Int, searchValue: String): [User]
   userDetail(_id: String): User
@@ -79,6 +90,7 @@ export const mutations = `
     password: String!
   ): User
 
+  usersEdit(_id: String!, ${commonParams}): User
   usersChangePassword(currentPassword: String!, newPassword: String!): User
   usersRemove(_id: String!): JSON
 
