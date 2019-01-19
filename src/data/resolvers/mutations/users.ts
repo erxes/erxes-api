@@ -201,6 +201,13 @@ const userMutations = {
     }
   },
 
+  /*
+   * User has seen onboard
+   */
+  async usersSeenOnBoard(_root, {}, { user }: { user: IUserDocument }) {
+    return Users.updateOnBoardSeen({ _id: user._id });
+  },
+
   async usersConfirmInvitation(
     _root,
     {

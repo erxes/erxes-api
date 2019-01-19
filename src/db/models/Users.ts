@@ -35,6 +35,7 @@ export interface IUserModel extends Model<IUserDocument> {
   createUser(doc: IUser): Promise<IUserDocument>;
   updateUser(_id: string, doc: IUpdateUser): Promise<IUserDocument>;
   editProfile(_id: string, doc: IEditProfile): Promise<IUserDocument>;
+  updateOnBoardSeen({ _id }: { _id: string }): Promise<IUserDocument>;
   configEmailSignatures(_id: string, signatures: IEmailSignature[]): Promise<IUserDocument>;
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
   removeUser(_id: string): Promise<IUserDocument>;
@@ -155,6 +156,21 @@ export const loadClass = () => {
       });
 
       return token;
+    }
+
+    /**
+     * User has seen on board set up
+     */
+    public static async updateOnBoardSeen({ _id }: { _id }) {
+      const user = await Users.findOne({ _id });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await Users.updateOne({ _id }, { $set: { hasSeenOnBoard: true } });
+
+      return user;
     }
 
     /**

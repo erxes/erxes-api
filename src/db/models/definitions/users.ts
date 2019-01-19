@@ -40,6 +40,7 @@ export interface IUser {
   confirmationToken?: string;
   role?: string;
   isOwner?: boolean;
+  hasSeenOnBoard?: boolean;
   email?: string;
   getNotificationByEmail?: boolean;
   emailSignatures?: IEmailSignature[];
@@ -107,6 +108,7 @@ export const userSchema = new Schema({
     enum: [ROLES.ADMIN, ROLES.CONTRIBUTOR],
   }),
   isOwner: field({ type: Boolean }),
+  hasSeenOnBoard: field({ type: Boolean }),
   email: field({
     type: String,
     lowercase: true,

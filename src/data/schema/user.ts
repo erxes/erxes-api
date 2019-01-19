@@ -97,6 +97,7 @@ export const mutations = `
 
   usersInvite(emails: [String]): Boolean
   usersConfirmInvitation(email: String, token: String, password: String, passwordConfirmation: String): User
+  usersSeenOnBoard: User
 
   usersConfigEmailSignatures(signatures: [EmailSignature]): User
   usersConfigGetNotificationByEmail(isAllowed: Boolean): User
