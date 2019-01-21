@@ -174,7 +174,7 @@ describe('User mutations', () => {
     const token = user.confirmationToken || '';
 
     const { MAIN_APP_DOMAIN } = process.env;
-    const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=test@example.com&token=${token}`;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/invitation?email=test@example.com&token=${token}`;
 
     // send email call
     expect(spyEmail).toBeCalledWith({
