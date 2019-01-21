@@ -178,7 +178,7 @@ describe('User mutations', () => {
 
     // send email call
     expect(spyEmail).toBeCalledWith({
-      toEmails: ['khangarid.b@nmma.co'],
+      toEmails: ['test@example.com'],
       title: 'Team member invitation',
       template: {
         name: 'userInvitation',
@@ -201,8 +201,9 @@ describe('User mutations', () => {
   `;
 
     await graphqlRequest(mutation, 'usersSeenOnBoard', {}, context);
+    const userObj = await Users.findOne({ _id: _user._id });
 
-    if (!_user) {
+    if (!userObj) {
       throw new Error('User not found');
     }
 
@@ -212,7 +213,7 @@ describe('User mutations', () => {
 
   test('usersConfirmInvitation', async () => {
     await userFactory({
-      email: 'khangarid.b@nmma.co',
+      email: 'test@example.com',
       confirmationToken: '123',
     });
 
@@ -226,13 +227,15 @@ describe('User mutations', () => {
   `;
 
     const params = {
-      email: 'khangarid.b@nmma.co',
+      email: 'test@example.com',
       token: '123',
       password: '123',
       passwordConfirmation: '123',
     };
 
-    const userObj = await graphqlRequest(mutation, 'usersConfirmInvitation', params);
+    await graphqlRequest(mutation, 'usersConfirmInvitation', params);
+
+    const userObj = await Users.findOne({ email: 'test@example.com' });
 
     if (!userObj) {
       throw new Error('User not found');
