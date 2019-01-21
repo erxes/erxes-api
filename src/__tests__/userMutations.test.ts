@@ -160,10 +160,18 @@ describe('User mutations', () => {
   `;
 
     const params = {
-      emails: ['khangarid.b@nmma.co'],
+      emails: ['test@example.com'],
     };
 
-    const token = await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
+    await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
+
+    const user = await Users.findOne({ email: 'test@example.com' });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const token = user.confirmationToken || '';
 
     const { MAIN_APP_DOMAIN } = process.env;
     const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=khangarid.b@nma.co&token=${token}`;
@@ -176,7 +184,9 @@ describe('User mutations', () => {
         name: 'userInvitation',
         data: {
           content: invitationUrl,
+          domain: MAIN_APP_DOMAIN,
         },
+        isCustom: true,
       },
     });
   });
@@ -184,7 +194,9 @@ describe('User mutations', () => {
   test('usersSeenOnBoard', async () => {
     const mutation = `
       mutation usersSeenOnBoard {
-        usersSeenOnBoard
+        usersSeenOnBoard {
+          _id
+        }
       }
   `;
 
@@ -208,6 +220,7 @@ describe('User mutations', () => {
       mutation usersConfirmInvitation($email: String, $token: String, $password: String, $passwordConfirmation: String) {
         usersConfirmInvitation(email: $email, token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
           _id
+          status
         }
       }
   `;

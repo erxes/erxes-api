@@ -195,7 +195,9 @@ const userMutations = {
           name: 'userInvitation',
           data: {
             content: invitationUrl,
+            domain: MAIN_APP_DOMAIN,
           },
+          isCustom: true,
         },
       });
     }

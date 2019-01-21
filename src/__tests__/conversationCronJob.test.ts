@@ -113,7 +113,7 @@ describe('Cronjob conversation send email', () => {
 
     const calledArgs = spyEmail.mock.calls[0][0];
 
-    expect(expectedArgs.toEmails).toBe(calledArgs.toEmails);
+    expect(expectedArgs.toEmails[0]).toBe(calledArgs.toEmails[0]);
     expect(expectedArgs.title).toBe(calledArgs.title);
     expect(expectedArgs.template.name).toBe(calledArgs.template.name);
     expect(expectedArgs.template.isCustom).toBe(calledArgs.template.isCustom);
