@@ -174,7 +174,7 @@ describe('User mutations', () => {
     const token = user.confirmationToken || '';
 
     const { MAIN_APP_DOMAIN } = process.env;
-    const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=khangarid.b@nma.co&token=${token}`;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/settings/team/invitation?email=test@example.com&token=${token}`;
 
     // send email call
     expect(spyEmail).toBeCalledWith({
@@ -208,7 +208,7 @@ describe('User mutations', () => {
     }
 
     // send email call
-    expect(_user.hasSeenOnBoard).toBeTruthy();
+    expect(userObj.hasSeenOnBoard).toBeTruthy();
   });
 
   test('usersConfirmInvitation', async () => {
