@@ -217,9 +217,18 @@ const userMutations = {
       token,
       password,
       passwordConfirmation,
-    }: { email: string; token: string; password: string; passwordConfirmation: string },
+      fullName,
+      username,
+    }: {
+      email: string;
+      token: string;
+      password: string;
+      passwordConfirmation: string;
+      fullName?: string;
+      username?: string;
+    },
   ) {
-    return Users.confirmInvitation({ email, token, password, passwordConfirmation });
+    return Users.confirmInvitation({ email, token, password, passwordConfirmation, fullName, username });
   },
 
   usersConfigEmailSignatures(

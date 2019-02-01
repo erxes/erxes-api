@@ -97,7 +97,7 @@ export const mutations = `
   usersRemove(_id: String!): JSON
 
   usersInvite(emails: [String]): Boolean
-  usersConfirmInvitation(email: String, token: String, password: String, passwordConfirmation: String): User
+  usersConfirmInvitation(email: String, token: String, password: String, passwordConfirmation: String, fullName: String, username: String): User
   usersSeenOnBoard: User
 
   usersConfigEmailSignatures(signatures: [EmailSignature]): User

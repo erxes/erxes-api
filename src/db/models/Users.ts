@@ -46,11 +46,15 @@ export interface IUserModel extends Model<IUserDocument> {
     token,
     password,
     passwordConfirmation,
+    fullName,
+    username,
   }: {
     email: string;
     token: string;
     password: string;
     passwordConfirmation: string;
+    fullName?: string;
+    username?: string;
   }): Promise<IUserDocument>;
   comparePassword(password: string, userPassword: string): boolean;
   resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<IUserDocument>;
@@ -204,11 +208,15 @@ export const loadClass = () => {
       token,
       password,
       passwordConfirmation,
+      fullName,
+      username,
     }: {
       email: string;
       token: string;
       password: string;
       passwordConfirmation: string;
+      fullName?: string;
+      username?: string;
     }) {
       const user = await Users.findOne({ confirmationToken: token, email });
 
@@ -231,7 +239,10 @@ export const loadClass = () => {
           status: USER_STATUS_TYPES.VERIFIED,
           isActive: true,
           confirmationToken: undefined,
-          username: email,
+          username,
+          details: {
+            fullName,
+          },
         },
       );
 
