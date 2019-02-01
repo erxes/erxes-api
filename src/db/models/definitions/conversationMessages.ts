@@ -296,12 +296,15 @@ const gmailSchema = new Schema(
   { _id: false },
 );
 
-const engageDataRuleSchema = new Schema({
-  kind: field({ type: String }),
-  text: field({ type: String }),
-  condition: field({ type: String }),
-  value: field({ type: String, optional: true }),
-});
+const engageDataRuleSchema = new Schema(
+  {
+    kind: field({ type: String }),
+    text: field({ type: String }),
+    condition: field({ type: String }),
+    value: field({ type: String, optional: true }),
+  },
+  { _id: false },
+);
 
 const engageDataSchema = new Schema(
   {
@@ -321,12 +324,12 @@ export const messageSchema = new Schema({
   content: field({ type: String }),
   attachments: [attachmentSchema],
   mentionedUserIds: field({ type: [String] }),
-  conversationId: field({ type: String }),
+  conversationId: field({ type: String, index: true }),
   internal: field({ type: Boolean }),
   customerId: field({ type: String }),
   fromBot: field({ type: Boolean }),
   userId: field({ type: String }),
-  createdAt: field({ type: Date }),
+  createdAt: field({ type: Date, index: true }),
   isCustomerRead: field({ type: Boolean }),
   formWidgetData: field({ type: Object }),
   messengerAppData: field({ type: Object }),

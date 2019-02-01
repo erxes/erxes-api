@@ -261,6 +261,10 @@ export const customerSchema = new Schema({
 
   // if customer is not a user then we will contact with this visitor using
   // this information
-  visitorContactInfo: field({ type: visitorContactSchema, optional: true, label: 'Visitor contact info' }),
+  visitorContactInfo: field({
+    type: visitorContactSchema,
+    optional: true,
+    label: 'Visitor contact info',
+  }),
   urlVisits: Object,
 });
