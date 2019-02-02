@@ -221,7 +221,6 @@ describe('User mutations', () => {
       mutation usersConfirmInvitation($email: String, $token: String, $password: String, $passwordConfirmation: String) {
         usersConfirmInvitation(email: $email, token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
           _id
-          status
         }
       }
   `;

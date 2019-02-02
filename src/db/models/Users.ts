@@ -4,7 +4,6 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
 import { Session } from '.';
-import { USER_STATUS_TYPES } from '../../data/constants';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -176,7 +175,6 @@ export const loadClass = () => {
 
       await Users.create({
         email,
-        status: USER_STATUS_TYPES.PENDING,
         registrationToken: token,
       });
 
@@ -232,7 +230,6 @@ export const loadClass = () => {
         { _id: user._id },
         {
           password: await this.generatePassword(password),
-          status: USER_STATUS_TYPES.VERIFIED,
           isActive: true,
           registrationToken: undefined,
           username,
