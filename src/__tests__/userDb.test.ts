@@ -117,7 +117,7 @@ describe('User db utils', () => {
   test('createUserWithConfirmation', async () => {
     const token = await Users.createUserWithConfirmation({ email: '123@gmail.com' });
 
-    const userObj = await Users.findOne({ confirmationToken: token });
+    const userObj = await Users.findOne({ registrationToken: token });
 
     if (!userObj) {
       throw new Error('User not found');
@@ -175,7 +175,7 @@ describe('User db utils', () => {
         passwordConfirmation: '',
       });
     } catch (e) {
-      expect(e.message).toBe('Bad email or token');
+      expect(e.message).toBe('Invalid token');
     }
 
     try {

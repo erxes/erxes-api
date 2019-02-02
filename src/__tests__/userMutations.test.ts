@@ -174,7 +174,7 @@ describe('User mutations', () => {
     const token = user.registrationToken || '';
 
     const { MAIN_APP_DOMAIN } = process.env;
-    const invitationUrl = `${MAIN_APP_DOMAIN}/invitation?email=test@example.com&token=${token}`;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/confirmation?token=${token}`;
 
     // send email call
     expect(spyEmail).toBeCalledWith({
@@ -218,15 +218,14 @@ describe('User mutations', () => {
     });
 
     const mutation = `
-      mutation usersConfirmInvitation($email: String, $token: String, $password: String, $passwordConfirmation: String) {
-        usersConfirmInvitation(email: $email, token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
+      mutation usersConfirmInvitation($token: String, $password: String, $passwordConfirmation: String) {
+        usersConfirmInvitation($token, password: $password, passwordConfirmation: $passwordConfirmation) {
           _id
         }
       }
   `;
 
     const params = {
-      email: 'test@example.com',
       token: '123',
       password: '123',
       passwordConfirmation: '123',
@@ -234,7 +233,7 @@ describe('User mutations', () => {
 
     await graphqlRequest(mutation, 'usersConfirmInvitation', params);
 
-    const userObj = await Users.findOne({ email: 'test@example.com' });
+    const userObj = await Users.findOne({ registrationToken: '123' });
 
     if (!userObj) {
       throw new Error('User not found');
