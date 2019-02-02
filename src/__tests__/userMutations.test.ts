@@ -219,7 +219,7 @@ describe('User mutations', () => {
 
     const mutation = `
       mutation usersConfirmInvitation($token: String, $password: String, $passwordConfirmation: String) {
-        usersConfirmInvitation($token, password: $password, passwordConfirmation: $passwordConfirmation) {
+        usersConfirmInvitation(token: $token, password: $password, passwordConfirmation: $passwordConfirmation) {
           _id
         }
       }
@@ -233,7 +233,7 @@ describe('User mutations', () => {
 
     await graphqlRequest(mutation, 'usersConfirmInvitation', params);
 
-    const userObj = await Users.findOne({ registrationToken: '123' });
+    const userObj = await Users.findOne({ email: 'test@example.com' });
 
     if (!userObj) {
       throw new Error('User not found');
