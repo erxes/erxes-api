@@ -125,8 +125,7 @@ describe('User db utils', () => {
 
     expect(userObj).toBeDefined();
     expect(userObj._id).toBeDefined();
-    expect(userObj.confirmationToken).toBeDefined();
-    expect(userObj.status).toBe('Pending Invitation');
+    expect(userObj.registrationToken).toBeDefined();
   });
 
   test('updateOnBoardSeen', async () => {
@@ -149,7 +148,7 @@ describe('User db utils', () => {
 
     let userObj = await userFactory({
       email,
-      confirmationToken: token,
+      registrationToken: token,
     });
 
     if (!userObj) {
@@ -157,7 +156,6 @@ describe('User db utils', () => {
     }
 
     await Users.confirmInvitation({
-      email,
       token,
       password: '123',
       passwordConfirmation: '123',
@@ -167,12 +165,11 @@ describe('User db utils', () => {
 
     userObj = await userFactory({
       email,
-      confirmationToken: token,
+      registrationToken: token,
     });
 
     try {
       await Users.confirmInvitation({
-        email,
         token: '123321312312',
         password: '',
         passwordConfirmation: '',
@@ -183,7 +180,6 @@ describe('User db utils', () => {
 
     try {
       await Users.confirmInvitation({
-        email,
         token,
         password: '',
         passwordConfirmation: '',
@@ -194,7 +190,6 @@ describe('User db utils', () => {
 
     try {
       await Users.confirmInvitation({
-        email,
         token,
         password: '123',
         passwordConfirmation: '1234',
