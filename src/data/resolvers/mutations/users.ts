@@ -186,7 +186,7 @@ const userMutations = {
       const token = await Users.createUserWithConfirmation({ email });
 
       const { MAIN_APP_DOMAIN } = process.env;
-      const invitationUrl = `${MAIN_APP_DOMAIN}/invitation?email=${email}&token=${token}`;
+      const confirmationUrl = `${MAIN_APP_DOMAIN}/confirmation?token=${token}`;
 
       utils.sendEmail({
         toEmails: emails,
@@ -194,7 +194,7 @@ const userMutations = {
         template: {
           name: 'userInvitation',
           data: {
-            content: invitationUrl,
+            content: confirmationUrl,
             domain: MAIN_APP_DOMAIN,
           },
           isCustom: true,
@@ -213,14 +213,12 @@ const userMutations = {
   async usersConfirmInvitation(
     _root,
     {
-      email,
       token,
       password,
       passwordConfirmation,
       fullName,
       username,
     }: {
-      email: string;
       token: string;
       password: string;
       passwordConfirmation: string;
@@ -228,7 +226,7 @@ const userMutations = {
       username?: string;
     },
   ) {
-    return Users.confirmInvitation({ email, token, password, passwordConfirmation, fullName, username });
+    return Users.confirmInvitation({ token, password, passwordConfirmation, fullName, username });
   },
 
   usersConfigEmailSignatures(

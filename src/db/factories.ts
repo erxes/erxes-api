@@ -64,7 +64,7 @@ interface IUserFactoryInput {
   password?: string;
   isOwner?: boolean;
   isActive?: boolean;
-  confirmationToken?: string;
+  registrationToken?: string;
 }
 
 export const userFactory = (params: IUserFactoryInput) => {
@@ -75,7 +75,7 @@ export const userFactory = (params: IUserFactoryInput) => {
       avatar: params.avatar || faker.image.imageUrl(),
       position: params.position || 'admin',
     },
-    confirmationToken: params.confirmationToken || faker.random.word(),
+    registrationToken: params.registrationToken || faker.random.word(),
     links: {
       twitter: params.twitter || faker.random.word(),
       facebook: params.facebook || faker.random.word(),

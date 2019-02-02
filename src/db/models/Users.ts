@@ -42,14 +42,12 @@ export interface IUserModel extends Model<IUserDocument> {
   generatePassword(password: string): string;
   createUserWithConfirmation({ email }: { email: string }): string;
   confirmInvitation({
-    email,
     token,
     password,
     passwordConfirmation,
     fullName,
     username,
   }: {
-    email: string;
     token: string;
     password: string;
     passwordConfirmation: string;
@@ -179,7 +177,7 @@ export const loadClass = () => {
       await Users.create({
         email,
         status: USER_STATUS_TYPES.PENDING,
-        confirmationToken: token,
+        registrationToken: token,
       });
 
       return token;
@@ -204,24 +202,22 @@ export const loadClass = () => {
      * Confirms user by invitation
      */
     public static async confirmInvitation({
-      email,
       token,
       password,
       passwordConfirmation,
       fullName,
       username,
     }: {
-      email: string;
       token: string;
       password: string;
       passwordConfirmation: string;
       fullName?: string;
       username?: string;
     }) {
-      const user = await Users.findOne({ confirmationToken: token, email });
+      const user = await Users.findOne({ registrationToken: token });
 
       if (!user) {
-        throw new Error('Bad email or token');
+        throw new Error('Invalid token');
       }
 
       if (password === '') {
@@ -233,12 +229,12 @@ export const loadClass = () => {
       }
 
       await Users.updateOne(
-        { email },
+        { _id: user._id },
         {
           password: await this.generatePassword(password),
           status: USER_STATUS_TYPES.VERIFIED,
           isActive: true,
-          confirmationToken: undefined,
+          registrationToken: undefined,
           username,
           details: {
             fullName,
