@@ -6,8 +6,8 @@ import { getEnv } from '../../utils';
 // load environment variables
 dotenv.config();
 
-const REDIS_HOST = getEnv({ name: 'REDIS_HOST' });
-const REDIS_PORT = Number(getEnv({ name: 'REDIS_PORT' }));
+const REDIS_HOST = getEnv({ name: 'REDIS_HOST', defaultValue: 'localhost' });
+const REDIS_PORT = Number(getEnv({ name: 'REDIS_PORT', defaultValue: '6379' }));
 const REDIS_PASSWORD = getEnv({ name: 'REDIS_PASSWORD', defaultValue: '' });
 
 // Docs on the different redis options

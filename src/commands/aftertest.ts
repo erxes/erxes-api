@@ -7,7 +7,7 @@ mongoose.Promise = global.Promise;
 // load environment variables
 dotenv.config();
 
-const TEST_MONGO_URL = getEnv({ name: 'TEST_MONGO_URL' });
+const TEST_MONGO_URL = getEnv({ name: 'TEST_MONGO_URL', defaultValue: `mongodb://localhost/test` });
 
 // prevent deprecated warning related findAndModify
 // https://github.com/Automattic/mongoose/issues/6880
