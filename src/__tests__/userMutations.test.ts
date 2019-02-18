@@ -99,6 +99,7 @@ describe('User mutations', () => {
 
   test('Forgot password', async () => {
     process.env.MAIN_APP_DOMAIN = '';
+    process.env.COMPANY_EMAIL_FROM = '';
 
     const mutation = `
       mutation forgotPassword($email: String!) {
@@ -156,6 +157,8 @@ describe('User mutations', () => {
 
   test('usersInvite', async () => {
     process.env.MAIN_APP_DOMAIN = '';
+    process.env.COMPANY_EMAIL_FROM = '';
+
     const spyEmail = jest.spyOn(utils, 'sendEmail');
 
     const mutation = `

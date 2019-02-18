@@ -40,6 +40,7 @@ describe('mutations', () => {
 
   test('Add channel', async () => {
     process.env.DEFAULT_EMAIL_SERIVCE = '';
+    process.env.COMPANY_EMAIL_FROM = '';
 
     const args = {
       name: _channel.name,
@@ -68,6 +69,7 @@ describe('mutations', () => {
   });
 
   test('Edit channel', async () => {
+    process.env.COMPANY_EMAIL_FROM = '';
     const member = await userFactory({});
 
     const args = {

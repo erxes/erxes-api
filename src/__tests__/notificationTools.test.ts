@@ -21,6 +21,7 @@ describe('testings helper methods', () => {
 
   test('testing tools.sendNotification method', async () => {
     process.env.DEFAULT_EMAIL_SERIVCE = '';
+    process.env.COMPANY_EMAIL_FROM = '';
 
     // Try to send notifications when there is config not allowing it =========
     await notificationConfigurationFactory({
