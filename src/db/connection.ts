@@ -10,7 +10,7 @@ import { userFactory } from './factories';
 dotenv.config();
 
 const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+const MONGO_URL = getEnv({ name: 'MONGO_URL', defaultValue: '' });
 
 mongoose.set('useFindAndModify', false);
 
