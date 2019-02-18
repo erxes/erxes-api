@@ -2,6 +2,7 @@ import * as gitRepoInfo from 'git-repo-info';
 import * as path from 'path';
 import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions';
+import { getEnv } from '../../utils';
 
 interface IInfo {
   branch: string; // current branch
@@ -50,7 +51,10 @@ const configQueries = {
   },
 
   configsVersions(_root) {
-    const { ERXES_PATH, API_PATH, WIDGET_PATH, WIDGET_API_PATH } = process.env;
+    const ERXES_PATH = getEnv({ name: 'ERXES_PATH' });
+    const API_PATH = getEnv({ name: 'API_PATH' });
+    const WIDGET_PATH = getEnv({ name: 'WIDGET_PATH' });
+    const WIDGET_API_PATH = getEnv({ name: 'WIDGET_API_PATH' });
 
     const erxesProjectPath = ERXES_PATH || `${process.cwd()}/../erxes`;
     const apiProjectPath = API_PATH || process.cwd();
