@@ -1,4 +1,3 @@
-import { getEnv } from '../../utils';
 import conversations from './conversations';
 import customers from './customers';
 import pubsub from './pubsub';
@@ -10,7 +9,7 @@ let subscriptions: any = {
   ...customers,
 };
 
-const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+const { NODE_ENV } = process.env;
 
 // disable subscriptions in test mode
 if (NODE_ENV === 'test') {
