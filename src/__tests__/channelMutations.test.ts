@@ -39,6 +39,8 @@ describe('mutations', () => {
   `;
 
   test('Add channel', async () => {
+    process.env.DEFAULT_EMAIL_SERIVCE = '';
+
     const args = {
       name: _channel.name,
       description: _channel.description,

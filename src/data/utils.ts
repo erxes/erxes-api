@@ -161,7 +161,7 @@ export const sendEmail = async ({
   template?: { name?: string; data?: any; isCustom?: boolean };
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE' });
+  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' });
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
 
   // do not send email it is running in test mode

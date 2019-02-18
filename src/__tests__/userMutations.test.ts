@@ -81,6 +81,8 @@ describe('User mutations', () => {
   });
 
   test('Login', async () => {
+    process.env.HTTPS = 'false';
+
     const mutation = `
       mutation login($email: String! $password: String!) {
         login(email: $email password: $password)
@@ -96,6 +98,8 @@ describe('User mutations', () => {
   });
 
   test('Forgot password', async () => {
+    process.env.MAIN_APP_DOMAIN = '';
+
     const mutation = `
       mutation forgotPassword($email: String!) {
         forgotPassword(email: $email)
@@ -151,6 +155,7 @@ describe('User mutations', () => {
   });
 
   test('usersInvite', async () => {
+    process.env.MAIN_APP_DOMAIN = '';
     const spyEmail = jest.spyOn(utils, 'sendEmail');
 
     const mutation = `
