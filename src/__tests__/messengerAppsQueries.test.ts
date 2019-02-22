@@ -29,7 +29,7 @@ describe('Import history queries', () => {
     });
 
     const qry = `
-      query messengerApps($kind: String!) {
+      query messengerApps($kind: String) {
         messengerApps(kind: $kind) {
           _id
         }
@@ -64,16 +64,16 @@ describe('Import history queries', () => {
     });
 
     const qry = `
-      query messengerAppsCount($kind: String!) {
+      query messengerAppsCount($kind: String) {
         messengerAppsCount(kind: $kind)
       }
     `;
 
     // customer ===========================
-    const responses = await graphqlRequest(qry, 'messengerAppsCount', {
+    const response = await graphqlRequest(qry, 'messengerAppsCount', {
       kind: 'knowledgebase',
     });
 
-    expect(responses.length).toBe(1);
+    expect(response).toBe(1);
   });
 });
