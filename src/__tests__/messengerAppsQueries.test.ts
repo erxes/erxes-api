@@ -65,9 +65,7 @@ describe('Import history queries', () => {
 
     const qry = `
       query messengerAppsCount($kind: String!) {
-        messengerAppsCount(kind: $kind) {
-          _id
-        }
+        messengerAppsCount(kind: $kind)
       }
     `;
 
