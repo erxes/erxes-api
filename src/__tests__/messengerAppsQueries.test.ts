@@ -70,7 +70,7 @@ describe('Import history queries', () => {
     `;
 
     // customer ===========================
-    const responses = await graphqlRequest(qry, 'messengerApps', {
+    const responses = await graphqlRequest(qry, 'messengerAppsCount', {
       kind: 'knowledgebase',
     });
 
