@@ -24,12 +24,12 @@ pipeline:
     commands:
       - yarn tsc
 
-  testing:
-    image: erxes/runner:latest
-    environment:
-      - TEST_MONGO_URL=mongodb://mongo/test
-    commands:
-      - yarn test
+#  testing:
+#    image: erxes/runner:latest
+#    environment:
+#      - TEST_MONGO_URL=mongodb://mongo/test
+#    commands:
+#      - yarn test
 
   build:
     image: erxes/runner:latest
