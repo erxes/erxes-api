@@ -54,8 +54,8 @@ export const checkFile = async file => {
 export const uploadFile = async (file: { name: string; path: string }): Promise<string> => {
   const AWS_ACCESS_KEY_ID = getEnv({ name: 'AWS_ACCESS_KEY_ID' });
   const AWS_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SECRET_ACCESS_KEY' });
-  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
-  const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX' });
+  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET', defaultValue: '' });
+  const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX', defaultValue: '' });
 
   // initialize s3
   const s3 = new AWS.S3({
