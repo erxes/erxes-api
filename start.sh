@@ -1,13 +1,13 @@
-echo "`jo \`env | grep type\` \
-          \`env | grep project_id\` \
-          \`env | grep private_key_id\` \
-          \`env | grep client_email\` \
-          \`env | grep client_id\` \
-          \`env | grep auth_uri\` \
-          \`env | grep token_uri\` \
-          \`env | grep auth_provider_x509_cert_url\` \
-          \`env | grep client_x509_cert_url\` \
-          private_key="$private_key" \
-          `" > google_cred.json
-echo "`jo -- -s \`env | grep client_id\``" >> google_cred.json
+sed -i 's/$type/'"$type"'/' google_cred.json
+sed -i 's/$project_id/'"$project_id"'/' google_cred.json
+sed -i 's/$private_key_id/'"$private_key_id"'/' google_cred.json
+sed -i 's/$client_email/'"$client_email"'/' google_cred.json
+sed -i 's/$client_id/'"$client_id"'/' google_cred.json
+sed -i 's@$auth_uri@'"$auth_uri"'@' google_cred.json
+sed -i 's@$auth_uri@'"$auth_uri"'@' google_cred.json
+sed -i 's@$token_uri@'"$token_uri"'@' google_cred.json
+sed -i 's@$auth_provider_x509_cert_url@'"$auth_provider_x509_cert_url"'@' google_cred.json
+sed -i 's@$client_x509_cert_url@'"$client_x509_cert_url"'@' google_cred.json
+sed -i 's@$private_key@'"$private_key"'@' google_cred.json
+
 yarn start

@@ -37,17 +37,18 @@ pipeline:
       - yarn build
       - cp .env.sample .env
 
-  docker:
+  publish:
     image: plugins/docker
-    repo: ${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}
+    repo: goharbor.erxes.io/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}
+    registry: goharbor.erxes.io
     dockerfile: Dockerfile
-    secrets:
-      - source: docker_hub_username
-        target: docker_username
-      - source: docker_hub_password
-        target: docker_password
+    secrets: [docker_username, docker_password]
     tags:
       - ${DRONE_BRANCH}-latest
+    when:
+      branch: [fix-google-cred]
+      event: push
+      status: success
 
 services:
   mongo:
