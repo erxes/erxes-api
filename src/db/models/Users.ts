@@ -214,7 +214,7 @@ export const loadClass = () => {
     }) {
       const user = await Users.findOne({ registrationToken: token });
 
-      if (!user) {
+      if (!user || !token) {
         throw new Error('Invalid token');
       }
 
