@@ -159,7 +159,21 @@ describe('User db utils', () => {
       token,
       password: '123',
       passwordConfirmation: '123',
+      fullName: 'fullname',
+      username: 'username',
     });
+
+    const result = await Users.findOne({
+      _id: userObj._id,
+    });
+
+    if (!result || !result.details) {
+      throw new Error('User not found');
+    }
+
+    expect(result.password).toBeDefined();
+    expect(result.details.fullName).toBe('fullname');
+    expect(result.username).toBe('username');
 
     await Users.remove({ _id: userObj._id });
 

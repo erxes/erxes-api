@@ -229,12 +229,14 @@ export const loadClass = () => {
       await Users.updateOne(
         { _id: user._id },
         {
-          password: await this.generatePassword(password),
-          isActive: true,
-          registrationToken: undefined,
-          username,
-          details: {
-            fullName,
+          $set: {
+            password: await this.generatePassword(password),
+            isActive: true,
+            registrationToken: undefined,
+            username,
+            details: {
+              fullName,
+            },
           },
         },
       );
