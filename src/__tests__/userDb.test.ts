@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import * as moment from 'moment';
 import { userFactory } from '../db/factories';
 import { Users } from '../db/models';
 
@@ -149,6 +150,9 @@ describe('User db utils', () => {
     let userObj = await userFactory({
       email,
       registrationToken: token,
+      registrationTokenExpires: moment(Date.now())
+        .add(7, 'days')
+        .toDate(),
     });
 
     if (!userObj) {
@@ -180,6 +184,9 @@ describe('User db utils', () => {
     userObj = await userFactory({
       email,
       registrationToken: token,
+      registrationTokenExpires: moment(Date.now())
+        .add(7, 'days')
+        .toDate(),
     });
 
     try {
@@ -189,7 +196,7 @@ describe('User db utils', () => {
         passwordConfirmation: '',
       });
     } catch (e) {
-      expect(e.message).toBe('Invalid token');
+      expect(e.message).toBe('Token is invalid or has expired');
     }
 
     try {
@@ -210,6 +217,26 @@ describe('User db utils', () => {
       });
     } catch (e) {
       expect(e.message).toBe('Password does not match');
+    }
+
+    await Users.update(
+      { _id: userObj._id },
+      {
+        $set: {
+          registrationTokenExpires: moment(Date.now()).subtract(7, 'days'),
+        },
+      },
+    );
+
+    // Checking expired token
+    try {
+      await Users.confirmInvitation({
+        token,
+        password: '123',
+        passwordConfirmation: '123',
+      });
+    } catch (e) {
+      expect(e.message).toBe('Token is invalid or has expired');
     }
   });
 
