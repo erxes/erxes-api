@@ -127,11 +127,9 @@ const getMessagesByHistoryId = async (historyId: string, integrationId: string, 
 
         // get gmailData
         const gmailData = await parseMessage(data);
-        if (!gmailData) {
-          throw new Error('Couldn`t parse users.messages.get response');
+        if (gmailData) {
+          await syncConversation(integrationId, gmailData);
         }
-
-        await syncConversation(integrationId, gmailData);
       } catch (e) {
         // catch & continue if email doesn't exist with message.id
         if (e.message === 'Not Found') {
@@ -197,6 +195,17 @@ export const callWatch = (credentials: any, integrationId: string) => {
     .watch({
       auth,
       userId: 'me',
+      labelIds: [
+        'CATEGORY_UPDATES',
+        'DRAFT',
+        'CATEGORY_PROMOTIONS',
+        'CATEGORY_SOCIAL',
+        'CATEGORY_FORUMS',
+        'TRASH',
+        'CHAT',
+        'SPAM',
+      ],
+      labelFilterAction: 'exclude',
       requestBody: {
         topicName: GOOGLE_TOPIC,
       },
