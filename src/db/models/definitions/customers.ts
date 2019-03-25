@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
 
-import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES } from './constants';
+import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
 
 import { field } from '../utils';
 
@@ -87,6 +87,8 @@ export interface ICustomer {
   integrationId?: string;
   tagIds?: string[];
   companyIds?: string[];
+  mergedIds?: string[];
+  status?: string;
   customFieldsData?: any;
   messengerData?: IMessengerData;
   twitterData?: ITwitterData;
@@ -230,6 +232,14 @@ export const customerSchema = new Schema({
     label: 'Lead Status',
   }),
 
+  status: field({
+    type: String,
+    enum: STATUSES.ALL,
+    default: STATUSES.ACTIVE,
+    optional: true,
+    label: 'Status',
+  }),
+
   lifecycleState: field({
     type: String,
     enum: CUSTOMER_LIFECYCLE_STATE_TYPES,
@@ -251,6 +261,9 @@ export const customerSchema = new Schema({
   integrationId: field({ type: String, optional: true }),
   tagIds: field({ type: [String], optional: true }),
   companyIds: field({ type: [String], optional: true }),
+
+  // Merged customer ids
+  mergedIds: field({ type: [String], optional: true }),
 
   customFieldsData: field({ type: Object, optional: true }),
   messengerData: field({ type: messengerSchema, optional: true }),

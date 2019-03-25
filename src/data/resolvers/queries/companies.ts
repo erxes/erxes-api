@@ -1,5 +1,6 @@
 import { Brands, Companies, Customers, Integrations, Segments, Tags } from '../../../db/models';
 import { COC_CONTENT_TYPES, COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, TAG_TYPES } from '../../constants';
+import { STATUSES } from '../../../db/models/definitions/constants';
 import { moduleRequireLogin } from '../../permissions';
 import { cocsExport } from './cocExport';
 import QueryBuilder from './segmentQueryBuilder';
@@ -57,7 +58,9 @@ const brandFilter = async (brandId: string): Promise<IBrandFilter> => {
 };
 
 const listQuery = async (params: IListArgs) => {
-  let selector: any = {};
+  let selector: any = {
+    status: { $not: STATUSES.DELETED },
+  };
 
   // Filter by segments
   if (params.segment) {

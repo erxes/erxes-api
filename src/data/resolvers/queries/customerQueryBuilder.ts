@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as _ from 'underscore';
 import { Forms, Integrations, Segments } from '../../../db/models';
 import QueryBuilder from './segmentQueryBuilder';
+import { STATUSES } from '../../../db/models/definitions/constants';
 
 interface IIn {
   $in: string[];
@@ -167,6 +168,7 @@ export default class Builder {
       integration: {},
       form: {},
       integrationType: {},
+      status: { $not: STATUSES.DELETED },
     };
 
     // filter by segment

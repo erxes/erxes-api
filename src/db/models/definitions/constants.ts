@@ -198,6 +198,7 @@ export const ACTIVITY_ACTIONS = {
   CREATE: 'create',
   UPDATE: 'update',
   DELETE: 'delete',
+  MERGE: 'merge',
   SEND: 'send',
 
   ALL: ['create', 'update', 'delete', 'send'],
@@ -388,4 +389,10 @@ export const PROBABILITY = {
   WON: 'Won',
   LOST: 'Lost',
   ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost'],
+};
+
+export const STATUSES = {
+  ACTIVE: 'Active',
+  DELETED: 'Deleted',
+  ALL: ['Active', 'Deleted'],
 };
