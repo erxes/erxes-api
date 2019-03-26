@@ -92,7 +92,7 @@ export const mutations = `
 
   usersEdit(_id: String!, ${commonParams}): User
   usersChangePassword(currentPassword: String!, newPassword: String!): User
-  usersRemove(_id: String!): JSON
+  usersSetActiveStatus(_id: String!): User
 
   usersInvite(emails: [String]): Boolean
   usersConfirmInvitation(token: String, password: String, passwordConfirmation: String, fullName: String, username: String): User

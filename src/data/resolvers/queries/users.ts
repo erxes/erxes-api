@@ -21,8 +21,6 @@ const queryBuilder = async (params: IListArgs) => {
     selector = { $or: fields };
   }
 
-  selector.isActive = { $ne: false };
-
   return selector;
 };
 

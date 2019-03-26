@@ -289,16 +289,24 @@ describe('User db utils', () => {
     expect(bcrypt.compare(testPassword, userObj.password)).toBeTruthy();
   });
 
-  test('Remove user', async () => {
+  test('Set user to active', async () => {
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 } });
 
-    const deactivatedUser = await Users.removeUser(_user._id);
+    const deactivatedUser = await Users.setUserActiveOrInactive(_user._id);
     // ensure deactivated
     expect(deactivatedUser.isActive).toBe(false);
   });
 
+  test('Set user to inactive', async () => {
+    await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 } });
+
+    const activatedUser = await Users.setUserActiveOrInactive(_user._id);
+    // ensure deactivated
+    expect(activatedUser.isActive).toBe(true);
+  });
+
   test('Remove user With pending invitation status', async () => {
-    await Users.removeUser(_user._id);
+    await Users.setUserActiveOrInactive(_user._id);
 
     const user = await Users.findOne({ _id: _user._id });
 

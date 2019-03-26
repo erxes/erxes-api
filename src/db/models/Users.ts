@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { Session } from '.';
+import { Channels, Session } from '.';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -37,7 +37,7 @@ export interface IUserModel extends Model<IUserDocument> {
   updateOnBoardSeen({ _id }: { _id: string }): Promise<IUserDocument>;
   configEmailSignatures(_id: string, signatures: IEmailSignature[]): Promise<IUserDocument>;
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
-  removeUser(_id: string): Promise<IUserDocument>;
+  setUserActiveOrInactive(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
   createUserWithConfirmation({ email }: { email: string }): string;
   confirmInvitation({
@@ -283,17 +283,42 @@ export const loadClass = () => {
     /*
      * Remove user
      */
-    public static async removeUser(_id: string) {
+    public static async setUserActiveOrInactive(_id: string) {
       const user = await Users.findOne({ _id });
 
       if (!user) {
         throw new Error('User not found');
       }
 
+      if (user.isActive === false) {
+        await Users.updateOne({ _id }, { $set: { isActive: true } });
+
+        return Users.findOne({ _id });
+      }
+
       if (user.registrationToken) {
         await Users.remove({ _id });
 
         return user;
+      }
+
+      if (user.isOwner) {
+        throw new Error('Can not remove owner');
+      }
+
+      const channelCount = await Channels.find({ userId: user._id }).countDocuments();
+
+      // if the user involved in any channel then can not delete this user
+      if (channelCount > 0) {
+        throw new Error('You cannot delete this user. This user belongs other channel.');
+      }
+
+      const channelMemberCount = await Channels.find({
+        memberIds: { $in: [user._id] },
+      }).countDocuments();
+
+      if (channelMemberCount > 0) {
+        throw new Error('You cannot delete this user. This user belongs other channel.');
       }
 
       await Users.updateOne({ _id }, { $set: { isActive: false } });
