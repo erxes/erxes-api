@@ -44,10 +44,11 @@ export default class Builder {
     this.params = params;
   }
 
-  public defaultFilters(): { $nor: [{ [index: string]: IIn | any }] } {
+  public defaultFilters(): { status: {}; $nor: [{ [index: string]: IIn | any }] } {
     const emptySelector = { $in: [null, ''] };
 
     return {
+      status: { $ne: STATUSES.DELETED },
       $nor: [
         {
           firstName: emptySelector,
@@ -168,7 +169,6 @@ export default class Builder {
       integration: {},
       form: {},
       integrationType: {},
-      status: { $not: STATUSES.DELETED },
     };
 
     // filter by segment
