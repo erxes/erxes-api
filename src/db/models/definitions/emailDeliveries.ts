@@ -41,22 +41,18 @@ const attachmentSchema = new Schema(
 
 export const emailDeliverySchema = new Schema({
   _id: field({ pkey: true }),
-  cocType: field({ type: String, required: true }),
-  cocId: field({ type: String, required: true }),
+  cocType: field({ type: String }),
+  cocId: field({ type: String }),
   subject: field({ type: String, optional: true }),
-  body: field({ type: String, required: true }),
-  toEmails: field({ type: String, required: true }),
+  body: field({ type: String }),
+  toEmails: field({ type: String }),
   cc: field({ type: String, optional: true }),
   bcc: field({ type: String, optional: true }),
   attachments: field({ type: [attachmentSchema] }),
-  fromEmail: field({ type: String, required: true }),
-  userId: field({ type: String, required: true }),
+  fromEmail: field({ type: String }),
+  userId: field({ type: String }),
 
-  type: { type: String, enum: EMAIL_TYPES.ALL, default: EMAIL_TYPES.GMAIL, required: true },
+  type: { type: String, enum: EMAIL_TYPES.ALL, default: EMAIL_TYPES.GMAIL },
 
-  createdAt: field({
-    type: Date,
-    required: true,
-    default: Date.now,
-  }),
+  createdAt: field({ type: Date, default: Date.now }),
 });
