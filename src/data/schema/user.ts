@@ -45,6 +45,7 @@ export const types = `
     username: String
     email: String
     role: String
+    isActive: Boolean
     details: UserDetailsType
     links: UserLinksType
     status: String

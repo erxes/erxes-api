@@ -310,7 +310,7 @@ export const loadClass = () => {
 
       // if the user involved in any channel then can not delete this user
       if (channelCount > 0) {
-        throw new Error('You cannot delete this user. This user belongs other channel.');
+        throw new Error('You cannot set this user inactive. This user belongs other channel.');
       }
 
       const channelMemberCount = await Channels.find({
@@ -318,7 +318,7 @@ export const loadClass = () => {
       }).countDocuments();
 
       if (channelMemberCount > 0) {
-        throw new Error('You cannot delete this user. This user belongs other channel.');
+        throw new Error('You cannot set this user inactive. This user belongs other channel.');
       }
 
       await Users.updateOne({ _id }, { $set: { isActive: false } });
