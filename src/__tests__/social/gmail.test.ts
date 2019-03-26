@@ -5,8 +5,8 @@ import {
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
-  userFactory,
   integrationFactory,
+  userFactory,
 } from '../../db/factories';
 import { Accounts, ConversationMessages, Conversations, Integrations } from '../../db/models';
 import {

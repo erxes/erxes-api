@@ -1,5 +1,5 @@
 import cronJobs from '../cronJobs';
-import { ACTIVITY_ACTIONS, ACTIVITY_PERFORMER_TYPES, ACTIVITY_TYPES, ACTIVITY_CONTENT_TYPES } from '../data/constants';
+import { ACTIVITY_ACTIONS, ACTIVITY_CONTENT_TYPES, ACTIVITY_PERFORMER_TYPES, ACTIVITY_TYPES } from '../data/constants';
 import { customerFactory, segmentFactory } from '../db/factories';
 import { ActivityLogs } from '../db/models';
 
