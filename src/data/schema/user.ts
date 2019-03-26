@@ -51,6 +51,10 @@ export const types = `
     hasSeenOnBoard: Boolean
     emailSignatures: JSON
     getNotificationByEmail: Boolean
+    groupIds: [String]
+
+    isOwner: Boolean
+    permissionActions: [String]
   }
 
   type UserConversationListResponse {
@@ -66,6 +70,7 @@ const commonParams = `
   details: UserDetails,	
   links: UserLinks,	
   channelIds: [String],	
+  groupIds: [String]
 `;
 
 export const queries = `

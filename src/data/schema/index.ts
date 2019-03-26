@@ -8,6 +8,8 @@ import { mutations as ChannelMutations, queries as ChannelQueries, types as Chan
 
 import { mutations as BrandMutations, queries as BrandQueries, types as BrandTypes } from './brand';
 
+import { mutations as PermissionMutations, queries as PermissionQueries, types as PermissionTypes } from './permission';
+
 import {
   mutations as IntegrationMutations,
   queries as IntegrationQueries,
@@ -130,6 +132,7 @@ export const types = `
   ${ImportHistoryTypes}
   ${MessengerAppTypes}
   ${AccountTypes}
+  ${PermissionTypes}
 `;
 
 export const queries = `
@@ -161,6 +164,7 @@ export const queries = `
     ${ImportHistoryQueries}
     ${MessengerAppQueries}
     ${AccountQueries}
+    ${PermissionQueries}
   }
 `;
 
@@ -192,6 +196,7 @@ export const mutations = `
     ${ImportHistoryMutations}
     ${MessengerAppMutations}
     ${AccountMutations}
+    ${PermissionMutations}
   }
 `;
 

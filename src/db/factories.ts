@@ -39,14 +39,17 @@ import {
   MessengerApps,
   NotificationConfigurations,
   Notifications,
+  Permissions,
   Products,
   ResponseTemplates,
   Segments,
   Tags,
   Users,
+  UsersGroups,
 } from './models';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
+import { IPermission } from './models/definitions/permissions';
 import { IUserDocument } from './models/definitions/users';
 
 interface IUserFactoryInput {
@@ -65,11 +68,12 @@ interface IUserFactoryInput {
   password?: string;
   isOwner?: boolean;
   isActive?: boolean;
+  groupIds?: string[];
   registrationToken?: string;
   registrationTokenExpires?: Date;
 }
 
-export const userFactory = (params: IUserFactoryInput) => {
+export const userFactory = (params: IUserFactoryInput = {}) => {
   const user = new Users({
     username: params.username || faker.internet.userName(),
     details: {
@@ -92,6 +96,7 @@ export const userFactory = (params: IUserFactoryInput) => {
     password: params.password || '$2a$10$qfBFBmWmUjeRcR.nBBfgDO/BEbxgoai5qQhyjsrDUMiZC6dG7sg1q',
     isOwner: params.isOwner || false,
     isActive: params.isActive || true,
+    groupIds: params.groupIds || [],
   });
 
   return user.save();
@@ -831,4 +836,26 @@ export const accountFactory = async (params: IAccountFactoryInput) => {
   };
 
   return Accounts.create(doc);
+};
+
+export const permissionFactory = async (params: IPermission = {}) => {
+  const permission = new Permissions({
+    module: faker.random.word(),
+    action: params.action || faker.random.word(),
+    allowed: params.allowed || false,
+    userId: params.userId || Random.id(),
+    requiredActions: params.requiredActions || [],
+    groupId: params.groupId || faker.random.word(),
+  });
+
+  return permission.save();
+};
+
+export const usersGroupFactory = () => {
+  const usersGroup = new UsersGroups({
+    name: faker.random.word(),
+    description: faker.random.word(),
+  });
+
+  return usersGroup.save();
 };

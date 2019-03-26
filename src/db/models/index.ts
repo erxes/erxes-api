@@ -18,6 +18,7 @@ import InternalNotes from './InternalNotes';
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from './KnowledgeBase';
 import MessengerApps from './MessengerApps';
 import { NotificationConfigurations, Notifications } from './Notifications';
+import { Permissions, UsersGroups } from './Permissions';
 import Products from './Products';
 import ResponseTemplates from './ResponseTemplates';
 import Scripts from './Scripts';
@@ -61,4 +62,6 @@ export {
   FieldsGroups,
   ImportHistory,
   MessengerApps,
+  Permissions,
+  UsersGroups,
 };
