@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { Channels, Session } from '.';
+import { Session } from '.';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -304,21 +304,6 @@ export const loadClass = () => {
 
       if (user.isOwner) {
         throw new Error('Can not remove owner');
-      }
-
-      const channelCount = await Channels.find({ userId: user._id }).countDocuments();
-
-      // if the user involved in any channel then can not delete this user
-      if (channelCount > 0) {
-        throw new Error('You cannot set this user inactive. This user belongs other channel.');
-      }
-
-      const channelMemberCount = await Channels.find({
-        memberIds: { $in: [user._id] },
-      }).countDocuments();
-
-      if (channelMemberCount > 0) {
-        throw new Error('You cannot set this user inactive. This user belongs other channel.');
       }
 
       await Users.updateOne({ _id }, { $set: { isActive: false } });

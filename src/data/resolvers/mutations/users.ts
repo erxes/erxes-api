@@ -133,7 +133,11 @@ const userMutations = {
   /*
    * Set Active or inactive user
    */
-  async usersSetActiveStatus(_root, { _id }: { _id: string }) {
+  async usersSetActiveStatus(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    if (user._id === _id) {
+      throw new Error('You can not delete yourself');
+    }
+
     return Users.setUserActiveOrInactive(_id);
   },
 

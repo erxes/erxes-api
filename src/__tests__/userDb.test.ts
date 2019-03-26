@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as moment from 'moment';
-import { channelFactory, userFactory } from '../db/factories';
+import { userFactory } from '../db/factories';
 import { Users } from '../db/models';
 
 beforeAll(() => {
@@ -303,24 +303,6 @@ describe('User db utils', () => {
       await Users.setUserActiveOrInactive(user._id);
     } catch (e) {
       expect(e.message).toBe('Can not remove owner');
-    }
-
-    // Can not remove user who has involved in channel
-    try {
-      const user = await userFactory({ isOwner: true });
-      await channelFactory({ userId: user._id });
-      await Users.setUserActiveOrInactive(user._id);
-    } catch (e) {
-      expect(e.message).toBe('You cannot set this user inactive. This user belongs other channel.');
-    }
-
-    // Can not remove user who has involved in channel members
-    try {
-      const user = await userFactory({ isOwner: true });
-      await channelFactory({ memberIds: [user._id] });
-      await Users.setUserActiveOrInactive(user._id);
-    } catch (e) {
-      expect(e.message).toBe('You cannot set this user inactive. This user belongs other channel.');
     }
 
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 } });

@@ -70,7 +70,7 @@ const commonParams = `
 `;
 
 export const queries = `
-  users(page: Int, perPage: Int, searchValue: String): [User]
+  users(page: Int, perPage: Int, searchValue: String, isActive: Boolean): [User]
   userDetail(_id: String): User
   usersTotalCount: Int
   currentUser: User
