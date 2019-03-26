@@ -9,16 +9,8 @@ import {
   internalNoteFactory,
   userFactory,
 } from '../db/factories';
-import {
-  ActivityLogs,
-  ConversationMessages,
-  Conversations,
-  Customers,
-  Deals,
-  ImportHistory,
-  InternalNotes,
-} from '../db/models';
-import { COC_CONTENT_TYPES } from '../db/models/definitions/constants';
+import { ConversationMessages, Conversations, Customers, Deals, ImportHistory, InternalNotes } from '../db/models';
+import { COC_CONTENT_TYPES, STATUSES } from '../db/models/definitions/constants';
 
 describe('Customers model tests', () => {
   let _customer;
@@ -254,7 +246,7 @@ describe('Customers model tests', () => {
   });
 
   test('Merge customers', async () => {
-    expect.assertions(25);
+    expect.assertions(23);
 
     const integration = await integrationFactory({});
 
@@ -374,7 +366,9 @@ describe('Customers model tests', () => {
     expect(mergedCustomer.ownerId).toBe('456');
 
     // Checking old customers datas to be deleted
-    expect(await Customers.find({ _id: customerIds[0] })).toHaveLength(0);
+    const oldCustomer = (await Customers.findOne({ _id: customerIds[0] })) || { status: '' };
+
+    expect(oldCustomer.status).toBe(STATUSES.DELETED);
     expect(await Conversations.find({ customerId: customerIds[0] })).toHaveLength(0);
     expect(await ConversationMessages.find({ customerId: customerIds[0] })).toHaveLength(0);
 
@@ -383,15 +377,7 @@ describe('Customers model tests', () => {
       contentTypeId: customerIds[0],
     });
 
-    let activityLog = await ActivityLogs.find({
-      coc: {
-        id: customerIds[0],
-        type: COC_CONTENT_TYPES.CUSTOMER,
-      },
-    });
-
     expect(internalNote).toHaveLength(0);
-    expect(activityLog).toHaveLength(0);
 
     // Checking merged customer datas
     expect(await Conversations.find({ customerId: mergedCustomer._id })).not.toHaveLength(0);
@@ -402,15 +388,7 @@ describe('Customers model tests', () => {
       contentTypeId: mergedCustomer._id,
     });
 
-    activityLog = await ActivityLogs.find({
-      coc: {
-        type: COC_CONTENT_TYPES.CUSTOMER,
-        id: mergedCustomer._id,
-      },
-    });
-
     expect(internalNote).not.toHaveLength(0);
-    expect(activityLog).not.toHaveLength(0);
 
     const deals = await Deals.find({
       customerIds: { $in: customerIds },
