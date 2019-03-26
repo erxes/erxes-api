@@ -396,3 +396,9 @@ export const STATUSES = {
   DELETED: 'Deleted',
   ALL: ['Active', 'Deleted'],
 };
+
+export const EMAIL_TYPES = {
+  GMAIL: 'gmail',
+  OTHER: 'other',
+  ALL: ['gmail', 'other'],
+};

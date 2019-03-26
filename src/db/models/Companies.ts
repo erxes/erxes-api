@@ -37,7 +37,7 @@ export const loadClass = () => {
       },
       idsToExclude?: string[] | string,
     ) {
-      const query: { [key: string]: any } = {};
+      const query: { status: {}; [key: string]: any } = { status: { $ne: STATUSES.DELETED } };
 
       // Adding exclude operator to the query
       if (idsToExclude) {
@@ -168,7 +168,7 @@ export const loadClass = () => {
 
           companyObj.status = STATUSES.DELETED;
 
-          await Companies.updateCompany(companyId, companyObj);
+          await Companies.findByIdAndUpdate(companyId, { $set: { status: STATUSES.DELETED } });
         }
       }
 

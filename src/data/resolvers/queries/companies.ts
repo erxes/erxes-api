@@ -59,7 +59,7 @@ const brandFilter = async (brandId: string): Promise<IBrandFilter> => {
 
 const listQuery = async (params: IListArgs) => {
   let selector: any = {
-    status: { $not: STATUSES.DELETED },
+    status: { $ne: STATUSES.DELETED },
   };
 
   // Filter by segments

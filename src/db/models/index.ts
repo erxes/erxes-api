@@ -3,6 +3,7 @@ import ActivityLogs from './ActivityLogs';
 import Brands from './Brands';
 import Channels from './Channels';
 import Companies from './Companies';
+import EmailDeliveries from './EmailDeliveries';
 import Configs from './Configs';
 import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
@@ -44,6 +45,7 @@ export {
   InternalNotes,
   Customers,
   Companies,
+  EmailDeliveries,
   Conversations,
   ConversationMessages,
   KnowledgeBaseArticles,

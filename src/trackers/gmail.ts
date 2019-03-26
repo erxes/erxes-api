@@ -4,35 +4,15 @@ import { Accounts, ConversationMessages, Conversations, Customers, Integrations 
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
+import { IUserDocument } from '../db/models/definitions/users';
+import { IEmailDeliveries } from '../db/models/definitions/emailDeliveries';
 import { utils } from './gmailTracker';
-
-interface IAttachmentParams {
-  data: string;
-  filename: string;
-  size: number;
-  mimeType: string;
-}
-
-interface IMailParams {
-  integrationId: string;
-  cocType: string;
-  cocId: string;
-  subject: string;
-  body: string;
-  toEmails: string;
-  cc?: string;
-  bcc?: string;
-  attachments?: IAttachmentParams[];
-  references?: string;
-  headerId?: string;
-  threadId?: string;
-  fromEmail?: string;
-}
+import EmailDeliveries from '../db/models/EmailDeliveries';
 
 /**
  * Create string sequence that generates email body encrypted to base64
  */
-const encodeEmail = async (params: IMailParams) => {
+const encodeEmail = async (params: IEmailDeliveries) => {
   const { toEmails, fromEmail, subject, body, attachments, cc, bcc, headerId, references } = params;
 
   // split header to add reply References
@@ -91,7 +71,7 @@ const encodeEmail = async (params: IMailParams) => {
 /**
  * Send email & create activiy log with gmail kind
  */
-export const sendGmail = async (mailParams: IMailParams) => {
+export const sendGmail = async (mailParams: IEmailDeliveries, user: IUserDocument) => {
   let totalSize = 0;
   // 10mb
   const limit = 1000000 * 10;
@@ -115,8 +95,13 @@ export const sendGmail = async (mailParams: IMailParams) => {
   const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 
   const fromEmail = integration.gmailData.email;
+  const doc = { fromEmail, ...mailParams };
+
+  // save delivered email
+  await EmailDeliveries.createEmailDelivery({ ...doc, userId: user._id });
+
   // get raw string encrypted by base64
-  const raw = await encodeEmail({ fromEmail, ...mailParams });
+  const raw = await encodeEmail(doc);
 
   await utils.sendEmail(integration._id, credentials, raw, threadId);
 

@@ -14,7 +14,6 @@ interface ICreateDocInput {
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
   createDoc(doc: ICreateDocInput): Promise<IActivityLogDocument>;
   createSegmentLog(segment: ISegmentDocument, customer?: ICustomerDocument): Promise<IActivityLogDocument>;
-  createGmailLog(content: string, cocType: string, cocId: string, userId: string): Promise<IActivityLogDocument>;
 }
 
 export const loadClass = () => {
@@ -67,25 +66,6 @@ export const loadClass = () => {
         coc: {
           type: segment.contentType,
           id: customer._id,
-        },
-      });
-    }
-
-    public static createGmailLog(content: string, cocType: string, cocId: string, userId: string) {
-      return this.createDoc({
-        activity: {
-          id: Math.random().toString(),
-          type: ACTIVITY_TYPES.EMAIL,
-          action: ACTIVITY_ACTIONS.SEND,
-          content,
-        },
-        performer: {
-          type: ACTIVITY_PERFORMER_TYPES.USER,
-          id: userId,
-        },
-        coc: {
-          type: cocType,
-          id: cocId,
         },
       });
     }

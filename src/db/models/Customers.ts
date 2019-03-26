@@ -37,7 +37,7 @@ export const loadClass = () => {
      * Checking if customer has duplicated unique properties
      */
     public static async checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string) {
-      const query: { [key: string]: any } = {};
+      const query: { status: {}; [key: string]: any } = { status: { $ne: STATUSES.DELETED } };
       let previousEntry;
 
       // Adding exclude operator to the query

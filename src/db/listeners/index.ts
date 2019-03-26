@@ -5,6 +5,7 @@ import CustomerListeners from './Customers';
 import CompanyListeners from './Companies';
 import InternalNoteListeners from './InternalNotes';
 import DealListeners from './Deals';
+import EmailDeliveryListeners from './EmailDeliveries';
 
 export const listen = async () => {
   try {
@@ -19,6 +20,8 @@ export const listen = async () => {
     InternalNoteListeners();
 
     DealListeners();
+
+    EmailDeliveryListeners();
   } catch (error) {
     console.log(error);
   }
