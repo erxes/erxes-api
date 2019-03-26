@@ -46,7 +46,7 @@ describe('userQueries', () => {
 
     const response = await graphqlRequest(qry, 'users', {
       page: 1,
-      perPage: 4,
+      perPage: 20,
     });
 
     expect(response.length).toBe(5);

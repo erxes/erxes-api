@@ -403,7 +403,10 @@ describe('User mutations', () => {
   test('Remove user', async () => {
     const mutation = `
       mutation usersSetActiveStatus($_id: String!) {
-        usersSetActiveStatus(_id: $_id)
+        usersSetActiveStatus(_id: $_id) {
+          _id
+          isActive
+        }
       }
     `;
 
@@ -423,7 +426,9 @@ describe('User mutations', () => {
   test('Remove user with pending invitation status', async () => {
     const mutation = `
       mutation usersSetActiveStatus($_id: String!) {
-        usersSetActiveStatus(_id: $_id)
+        usersSetActiveStatus(_id: $_id) {
+          _id
+        }
       }
     `;
 

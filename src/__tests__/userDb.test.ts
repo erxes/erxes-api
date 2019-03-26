@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as moment from 'moment';
-import { userFactory } from '../db/factories';
+import { channelFactory, userFactory } from '../db/factories';
 import { Users } from '../db/models';
 
 beforeAll(() => {
@@ -290,6 +290,39 @@ describe('User db utils', () => {
   });
 
   test('Set user to active', async () => {
+    // User not found
+    try {
+      await Users.setUserActiveOrInactive('noid');
+    } catch (e) {
+      expect(e.message).toBe('User not found');
+    }
+
+    // Can not remove owner
+    try {
+      const user = await userFactory({ isOwner: true });
+      await Users.setUserActiveOrInactive(user._id);
+    } catch (e) {
+      expect(e.message).toBe('Can not remove owner');
+    }
+
+    // Can not remove user who has involved in channel
+    try {
+      const user = await userFactory({ isOwner: true });
+      await channelFactory({ userId: user._id });
+      await Users.setUserActiveOrInactive(user._id);
+    } catch (e) {
+      expect(e.message).toBe('You cannot set this user inactive. This user belongs other channel.');
+    }
+
+    // Can not remove user who has involved in channel members
+    try {
+      const user = await userFactory({ isOwner: true });
+      await channelFactory({ memberIds: [user._id] });
+      await Users.setUserActiveOrInactive(user._id);
+    } catch (e) {
+      expect(e.message).toBe('You cannot set this user inactive. This user belongs other channel.');
+    }
+
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 } });
 
     const deactivatedUser = await Users.setUserActiveOrInactive(_user._id);
@@ -298,11 +331,12 @@ describe('User db utils', () => {
   });
 
   test('Set user to inactive', async () => {
-    await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 } });
+    await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1 }, $set: { isActive: true } });
 
     const activatedUser = await Users.setUserActiveOrInactive(_user._id);
+
     // ensure deactivated
-    expect(activatedUser.isActive).toBe(true);
+    expect(activatedUser.isActive).toBe(false);
   });
 
   test('Remove user With pending invitation status', async () => {
