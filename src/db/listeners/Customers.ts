@@ -1,13 +1,13 @@
-import { Customers, ActivityLogs } from '../models';
+import { ActivityLogs, Customers } from '../models';
 import {
   ACTIVITY_ACTIONS,
+  ACTIVITY_CONTENT_TYPES,
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
-  COC_CONTENT_TYPES,
 } from '../models/definitions/constants';
 
-const CustomerListeners = () =>
-  Customers.watch().on('change', data => {
+const customerListeners = () =>
+  Customers.watch().on('change', async data => {
     const customer = data.fullDocument;
 
     if (data.operationType === 'insert' && customer) {
@@ -35,13 +35,19 @@ const CustomerListeners = () =>
           content,
           id: customer._id,
         },
-        coc: {
-          type: COC_CONTENT_TYPES.CUSTOMER,
+        contentType: {
+          type: ACTIVITY_CONTENT_TYPES.CUSTOMER,
           id: customer._id,
         },
         performer,
       });
     }
+
+    const customerId = data.documentKey;
+
+    if (data.operationType === 'delete' && customerId) {
+      await ActivityLogs.deleteMany({ 'contentType.id': customerId });
+    }
   });
 
-export default CustomerListeners;
+export default customerListeners;

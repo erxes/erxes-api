@@ -1,11 +1,11 @@
 import * as sinon from 'sinon';
 import { CONVERSATION_STATUSES } from '../../data/constants';
 import {
-  userFactory,
   accountFactory,
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
+  userFactory,
   integrationFactory,
 } from '../../db/factories';
 import { Accounts, ConversationMessages, Conversations, Integrations } from '../../db/models';

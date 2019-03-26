@@ -1,5 +1,11 @@
 import { Model, model } from 'mongoose';
-import { activityLogSchema, IActionPerformer, IActivity, IActivityLogDocument, ICoc } from './definitions/activityLogs';
+import {
+  activityLogSchema,
+  IActionPerformer,
+  IActivity,
+  IActivityLogDocument,
+  IContentType,
+} from './definitions/activityLogs';
 import { ACTIVITY_ACTIONS, ACTIVITY_PERFORMER_TYPES, ACTIVITY_TYPES } from './definitions/constants';
 import { ICustomerDocument } from './definitions/customers';
 import { ISegmentDocument } from './definitions/segments';
@@ -8,7 +14,7 @@ interface ICreateDocInput {
   performer?: IActionPerformer;
   performedBy?: IActionPerformer;
   activity: IActivity;
-  coc: ICoc;
+  contentType: IContentType;
 }
 
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
@@ -47,8 +53,8 @@ export const loadClass = () => {
         'activity.type': ACTIVITY_TYPES.SEGMENT,
         'activity.action': ACTIVITY_ACTIONS.CREATE,
         'activity.id': segment._id,
-        'coc.type': segment.contentType,
-        'coc.id': customer._id,
+        'contentType.type': segment.contentType,
+        'contentType.id': customer._id,
       });
 
       if (foundSegment) {
@@ -63,7 +69,7 @@ export const loadClass = () => {
           content: segment.name,
           id: segment._id,
         },
-        coc: {
+        contentType: {
           type: segment.contentType,
           id: customer._id,
         },

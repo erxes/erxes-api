@@ -1,12 +1,12 @@
-import { Deals, ActivityLogs } from '../models';
+import { ActivityLogs, Deals } from '../models';
 import {
   ACTIVITY_ACTIONS,
+  ACTIVITY_CONTENT_TYPES,
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
-  COC_CONTENT_TYPES,
 } from '../models/definitions/constants';
 
-const DealListeners = () =>
+const dealListeners = () =>
   Deals.watch().on('change', data => {
     const deal = data.fullDocument;
 
@@ -30,8 +30,8 @@ const DealListeners = () =>
           content: deal.name || '',
           id: deal._id,
         },
-        coc: {
-          type: COC_CONTENT_TYPES.DEAL,
+        contentType: {
+          type: ACTIVITY_CONTENT_TYPES.DEAL,
           id: deal._id,
         },
         performer,
@@ -39,4 +39,4 @@ const DealListeners = () =>
     }
   });
 
-export default DealListeners;
+export default dealListeners;

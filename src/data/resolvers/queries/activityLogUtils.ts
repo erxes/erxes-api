@@ -2,7 +2,7 @@ import { ICompanyDocument } from '../../../db/models/definitions/companies';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { COC_CONTENT_TYPES } from '../../constants';
+import { ACTIVITY_CONTENT_TYPES } from '../../constants';
 
 const START_DATE = {
   year: 2017,
@@ -104,7 +104,7 @@ class BaseMonthActivityBuilder {
 export class CustomerMonthActivityLogBuilder extends BaseMonthActivityBuilder {
   constructor(coc) {
     super(coc);
-    this.cocContentType = COC_CONTENT_TYPES.CUSTOMER;
+    this.cocContentType = ACTIVITY_CONTENT_TYPES.CUSTOMER;
   }
 }
 
@@ -112,21 +112,21 @@ export class CustomerMonthActivityLogBuilder extends BaseMonthActivityBuilder {
 export class CompanyMonthActivityLogBuilder extends BaseMonthActivityBuilder {
   constructor(coc) {
     super(coc);
-    this.cocContentType = COC_CONTENT_TYPES.COMPANY;
+    this.cocContentType = ACTIVITY_CONTENT_TYPES.COMPANY;
   }
 }
 
 export class UserMonthActivityLogBuilder extends BaseMonthActivityBuilder {
   constructor(coc) {
     super(coc);
-    this.cocContentType = COC_CONTENT_TYPES.USER;
+    this.cocContentType = ACTIVITY_CONTENT_TYPES.USER;
   }
 }
 
 export class DealMonthActivityLogBuilder extends BaseMonthActivityBuilder {
   constructor(coc) {
     super(coc);
-    this.cocContentType = COC_CONTENT_TYPES.DEAL;
+    this.cocContentType = ACTIVITY_CONTENT_TYPES.DEAL;
   }
 }
 

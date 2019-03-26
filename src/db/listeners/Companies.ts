@@ -1,13 +1,13 @@
-import { Companies, ActivityLogs } from '../models';
+import { ActivityLogs, Companies } from '../models';
 import {
   ACTIVITY_ACTIONS,
+  ACTIVITY_CONTENT_TYPES,
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
-  COC_CONTENT_TYPES,
 } from '../models/definitions/constants';
 
-const CompanyListeners = () =>
-  Companies.watch().on('change', data => {
+const companyListeners = () =>
+  Companies.watch().on('change', async data => {
     const company = data.fullDocument;
 
     if (data.operationType === 'insert' && company) {
@@ -35,13 +35,19 @@ const CompanyListeners = () =>
           content,
           id: company._id,
         },
-        coc: {
-          type: COC_CONTENT_TYPES.COMPANY,
+        contentType: {
+          type: ACTIVITY_CONTENT_TYPES.COMPANY,
           id: company._id,
         },
         performer,
       });
     }
+
+    const companyId = data.documentKey;
+
+    if (data.operationType === 'delete' && companyId) {
+      await ActivityLogs.deleteMany({ 'contentType.id': companyId });
+    }
   });
 
-export default CompanyListeners;
+export default companyListeners;

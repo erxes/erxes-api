@@ -1,10 +1,10 @@
-import { ConversationMessages, Conversations, Customers, ActivityLogs } from '../models';
 import { publishClientMessage, publishMessage } from '../../data/resolvers/mutations/conversations';
+import { ActivityLogs, ConversationMessages, Conversations, Customers } from '../models';
 import {
   ACTIVITY_ACTIONS,
+  ACTIVITY_CONTENT_TYPES,
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
-  COC_CONTENT_TYPES,
 } from '../models/definitions/constants';
 
 const cocFindOne = (conversationId: string, cocId: string, cocType: string) => {
@@ -12,9 +12,9 @@ const cocFindOne = (conversationId: string, cocId: string, cocType: string) => {
     'activity.type': ACTIVITY_TYPES.CONVERSATION,
     'activity.action': ACTIVITY_ACTIONS.CREATE,
     'activity.id': conversationId,
-    'coc.type': cocType,
+    'contentType.type': cocType,
     'performedBy.type': ACTIVITY_PERFORMER_TYPES.CUSTOMER,
-    'coc.id': cocId,
+    'contentType.id': cocId,
   });
 };
 
@@ -30,14 +30,14 @@ const cocCreate = (conversationId: string, content: string, cocId: string, cocTy
       type: ACTIVITY_PERFORMER_TYPES.CUSTOMER,
       id: cocId,
     },
-    coc: {
+    contentType: {
       type: cocType,
       id: cocId,
     },
   });
 };
 
-const ConversationListeners = () => {
+const conversationListeners = () => {
   ConversationMessages.watch().on('change', data => {
     const message = data.fullDocument;
 
@@ -66,23 +66,23 @@ const ConversationListeners = () => {
         if (customer.companyIds && customer.companyIds.length > 0) {
           for (const companyId of customer.companyIds) {
             // check against duplication
-            const log = await cocFindOne(conversation._id, companyId, COC_CONTENT_TYPES.COMPANY);
+            const log = await cocFindOne(conversation._id, companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
 
             if (!log) {
-              await cocCreate(conversation._id, conversation.content || '', companyId, COC_CONTENT_TYPES.COMPANY);
+              await cocCreate(conversation._id, conversation.content || '', companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
             }
           }
         }
 
         // check against duplication ======
-        const foundLog = await cocFindOne(conversation._id, customer._id, COC_CONTENT_TYPES.CUSTOMER);
+        const foundLog = await cocFindOne(conversation._id, customer._id, ACTIVITY_CONTENT_TYPES.CUSTOMER);
 
         if (!foundLog) {
-          return cocCreate(conversation._id, conversation.content || '', customer._id, COC_CONTENT_TYPES.CUSTOMER);
+          return cocCreate(conversation._id, conversation.content || '', customer._id, ACTIVITY_CONTENT_TYPES.CUSTOMER);
         }
       }
     }
   });
 };
 
-export default ConversationListeners;
+export default conversationListeners;

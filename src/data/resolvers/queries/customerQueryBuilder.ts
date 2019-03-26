@@ -1,8 +1,8 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
 import { Forms, Integrations, Segments } from '../../../db/models';
-import QueryBuilder from './segmentQueryBuilder';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import QueryBuilder from './segmentQueryBuilder';
 
 interface IIn {
   $in: string[];

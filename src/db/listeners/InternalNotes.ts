@@ -1,7 +1,7 @@
-import { InternalNotes, ActivityLogs } from '../models';
+import { ActivityLogs, InternalNotes } from '../models';
 import { ACTIVITY_ACTIONS, ACTIVITY_PERFORMER_TYPES, ACTIVITY_TYPES } from '../models/definitions/constants';
 
-const InternalNoteListeners = () =>
+const internalNoteListeners = () =>
   InternalNotes.watch().on('change', data => {
     const internalNote = data.fullDocument;
 
@@ -13,7 +13,7 @@ const InternalNoteListeners = () =>
           content: internalNote.content,
           id: internalNote._id,
         },
-        coc: {
+        contentType: {
           type: internalNote.contentType,
           id: internalNote.contentTypeId,
         },
@@ -25,4 +25,4 @@ const InternalNoteListeners = () =>
     }
   });
 
-export default InternalNoteListeners;
+export default internalNoteListeners;

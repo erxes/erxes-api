@@ -1,7 +1,7 @@
-import { EmailDeliveries, ActivityLogs } from '../models';
+import { ActivityLogs, EmailDeliveries } from '../models';
 import { ACTIVITY_ACTIONS, ACTIVITY_PERFORMER_TYPES, ACTIVITY_TYPES } from '../models/definitions/constants';
 
-const EmailDeliveryListeners = () =>
+const emailDeliveryListeners = () =>
   EmailDeliveries.watch().on('change', data => {
     const email = data.fullDocument;
 
@@ -13,7 +13,7 @@ const EmailDeliveryListeners = () =>
           action: ACTIVITY_ACTIONS.SEND,
           content: email.body,
         },
-        coc: {
+        contentType: {
           type: email.cocType,
           id: email.cocId,
         },
@@ -25,4 +25,4 @@ const EmailDeliveryListeners = () =>
     }
   });
 
-export default EmailDeliveryListeners;
+export default emailDeliveryListeners;

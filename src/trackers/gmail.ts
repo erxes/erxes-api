@@ -4,9 +4,9 @@ import { Accounts, ConversationMessages, Conversations, Customers, Integrations 
 import { IGmail as IMsgGmail } from '../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
-import { utils } from './gmailTracker';
-import EmailDeliveries from '../db/models/EmailDeliveries';
 import { IUserDocument } from '../db/models/definitions/users';
+import EmailDeliveries from '../db/models/EmailDeliveries';
+import { utils } from './gmailTracker';
 
 interface IAttachmentParams {
   data: string;

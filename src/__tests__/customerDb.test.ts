@@ -1,5 +1,4 @@
 import {
-  activityLogFactory,
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
@@ -10,7 +9,7 @@ import {
   userFactory,
 } from '../db/factories';
 import { ConversationMessages, Conversations, Customers, Deals, ImportHistory, InternalNotes } from '../db/models';
-import { COC_CONTENT_TYPES, STATUSES } from '../db/models/definitions/constants';
+import { ACTIVITY_CONTENT_TYPES, STATUSES } from '../db/models/definitions/constants';
 
 describe('Customers model tests', () => {
   let _customer;
@@ -204,7 +203,7 @@ describe('Customers model tests', () => {
     const customer = await customerFactory({});
 
     await internalNoteFactory({
-      contentType: COC_CONTENT_TYPES.CUSTOMER,
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
       contentTypeId: customer._id,
     });
 
@@ -220,7 +219,7 @@ describe('Customers model tests', () => {
     await Customers.removeCustomer(customer._id);
 
     const internalNote = await InternalNotes.find({
-      contentType: COC_CONTENT_TYPES.CUSTOMER,
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
       contentTypeId: customer._id,
     });
 
@@ -296,7 +295,7 @@ describe('Customers model tests', () => {
 
     // Merge without any errors ===========
     await internalNoteFactory({
-      contentType: COC_CONTENT_TYPES.CUSTOMER,
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
       contentTypeId: customerIds[0],
     });
 
@@ -306,13 +305,6 @@ describe('Customers model tests', () => {
 
     await conversationMessageFactory({
       customerId: customerIds[0],
-    });
-
-    await activityLogFactory({
-      coc: {
-        type: COC_CONTENT_TYPES.CUSTOMER,
-        id: customerIds[0],
-      },
     });
 
     await dealFactory({
@@ -373,7 +365,7 @@ describe('Customers model tests', () => {
     expect(await ConversationMessages.find({ customerId: customerIds[0] })).toHaveLength(0);
 
     let internalNote = await InternalNotes.find({
-      contentType: COC_CONTENT_TYPES.CUSTOMER,
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
       contentTypeId: customerIds[0],
     });
 
@@ -384,7 +376,7 @@ describe('Customers model tests', () => {
     expect(await ConversationMessages.find({ customerId: mergedCustomer._id })).not.toHaveLength(0);
 
     internalNote = await InternalNotes.find({
-      contentType: COC_CONTENT_TYPES.CUSTOMER,
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
       contentTypeId: mergedCustomer._id,
     });
 

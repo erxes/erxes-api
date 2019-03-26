@@ -2,18 +2,13 @@ import { dateType } from 'aws-sdk/clients/sts'; // tslint:disable-line
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import {
-  ACTIVITY_ACTIONS,
-  ACTIVITY_PERFORMER_TYPES,
-  ACTIVITY_TYPES,
-  COC_CONTENT_TYPES,
+  ACTIVITY_CONTENT_TYPES,
   FIELDS_GROUPS_CONTENT_TYPES,
   NOTIFICATION_TYPES,
   PRODUCT_TYPES,
 } from '../data/constants';
-import { IActionPerformer, IActivity, ICoc } from '../db/models/definitions/activityLogs';
 import {
   Accounts,
-  ActivityLogs,
   Brands,
   Channels,
   Companies,
@@ -45,10 +40,10 @@ import {
   Tags,
   Users,
 } from './models';
+import { STATUSES } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
-import { STATUSES } from './models/definitions/constants';
 
 interface IUserFactoryInput {
   username?: string;
@@ -224,7 +219,7 @@ export const segmentFactory = (params: ISegmentFactoryInput = {}) => {
   ];
 
   const segment = new Segments({
-    contentType: params.contentType || COC_CONTENT_TYPES.CUSTOMER,
+    contentType: params.contentType || ACTIVITY_CONTENT_TYPES.CUSTOMER,
     name: faker.random.word(),
     description: params.description || faker.random.word(),
     subOf: params.subOf,
@@ -244,7 +239,7 @@ interface IInternalNoteFactoryInput {
 
 export const internalNoteFactory = (params: IInternalNoteFactoryInput) => {
   const internalNote = new InternalNotes({
-    contentType: params.contentType || COC_CONTENT_TYPES.CUSTOMER,
+    contentType: params.contentType || ACTIVITY_CONTENT_TYPES.CUSTOMER,
     contentTypeId: params.contentTypeId || faker.random.uuid().toString(),
     content: params.content || faker.random.word(),
   });
@@ -636,34 +631,6 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
   };
 
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
-};
-
-interface IActivityLogFactoryInput {
-  performer?: IActionPerformer;
-  performedBy?: IActionPerformer;
-  activity?: IActivity;
-  coc?: ICoc;
-}
-
-export const activityLogFactory = (params: IActivityLogFactoryInput) => {
-  const doc = {
-    activity: {
-      type: ACTIVITY_TYPES.INTERNAL_NOTE,
-      action: ACTIVITY_ACTIONS.CREATE,
-      id: faker.random.number(),
-      content: faker.random.word(),
-    },
-    performer: {
-      type: ACTIVITY_PERFORMER_TYPES.USER,
-      id: faker.random.number(),
-    },
-    coc: {
-      type: COC_CONTENT_TYPES.CUSTOMER,
-      id: faker.random.number(),
-    },
-  };
-
-  return ActivityLogs.createDoc({ ...doc, ...params });
 };
 
 export const dealBoardFactory = () => {
