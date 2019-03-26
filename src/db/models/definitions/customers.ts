@@ -106,6 +106,7 @@ export interface ICustomerDocument extends ICustomer, Document {
   location?: ILocationDocument;
   links?: ILinkDocument;
   visitorContactInfo?: IVisitorContactDocument;
+  status?: string;
   createdAt: Date;
   modifiedAt: Date;
 }

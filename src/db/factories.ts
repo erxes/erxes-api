@@ -48,6 +48,7 @@ import {
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
+import { STATUSES } from './models/definitions/constants';
 
 interface IUserFactoryInput {
   username?: string;
@@ -260,6 +261,7 @@ interface ICompanyFactoryInput {
   tagIds?: string[];
   plan?: string;
   leadStatus?: string;
+  status?: string;
   lifecycleState?: string;
   createdAt?: Date;
   modifiedAt?: Date;
@@ -279,6 +281,7 @@ export const companyFactory = (params: ICompanyFactoryInput = {}) => {
     tagIds: params.tagIds || [faker.random.number()],
     plan: params.plan || faker.random.word(),
     leadStatus: params.leadStatus || 'open',
+    status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
     createdAt: params.createdAt || new Date(),
     modifiedAt: params.modifiedAt || new Date(),
@@ -301,6 +304,7 @@ interface ICustomerFactoryInput {
   phones?: string[];
   doNotDisturb?: string;
   leadStatus?: string;
+  status?: string;
   lifecycleState?: string;
   messengerData?: any;
   customFieldsData?: any;
@@ -321,6 +325,7 @@ export const customerFactory = (params: ICustomerFactoryInput = {}) => {
     emails: params.emails || [faker.internet.email()],
     phones: params.phones || [faker.phone.phoneNumber()],
     leadStatus: params.leadStatus || 'open',
+    status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
     messengerData: params.messengerData || {},
     customFieldsData: params.customFieldsData || {},

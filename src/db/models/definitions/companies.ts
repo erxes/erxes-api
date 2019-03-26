@@ -55,6 +55,7 @@ export interface ICompany {
 export interface ICompanyDocument extends ICompany, Document {
   _id: string;
   links?: ILinkDocument;
+  status?: string;
   createdAt: Date;
   modifiedAt: Date;
 }
