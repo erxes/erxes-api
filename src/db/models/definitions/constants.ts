@@ -201,7 +201,7 @@ export const ACTIVITY_ACTIONS = {
   MERGE: 'merge',
   SEND: 'send',
 
-  ALL: ['create', 'update', 'delete', 'send'],
+  ALL: ['create', 'update', 'delete', 'merge', 'send'],
 };
 
 export const ACTIVITY_PERFORMER_TYPES = {
