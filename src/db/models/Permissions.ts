@@ -31,6 +31,10 @@ export const permissionLoadClass = () => {
     public static async createPermission(doc: IPermissionParams) {
       const permissions: IPermissionDocument[] = [];
 
+      if (!doc.actions) {
+        throw new Error('Actions not found');
+      }
+
       for (const action of doc.actions) {
         if (!ActionsMap[action]) {
           throw new Error('Invalid data');
