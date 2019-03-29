@@ -81,29 +81,27 @@ describe('Test permissions mutations', () => {
 
   test('Create permission', async () => {
     const mutation = `
-      permissionsAdd(
+      mutation permissionsAdd(
         $module: String!,
         $actions: [String!]!,
-        $userIds: [String!]!,
-        $groupIds: [String!]!,
+        $userIds: [String!],
+        $groupIds: [String!],
         $allowed: Boolean
       ) {
-        permissionAdd(
+        permissionsAdd(
           module: $module
           actions: $actions
           userIds: $userIds
           groupIds: $groupIds
           allowed: $allowed
         ) {
-          _id: String!
-          module: String
-          action: String
-          userId: String
-          groupId: String
-          requiredActions: [String]
-          allowed: Boolean
-          user: User
-          group: UsersGroup
+          _id
+          module
+          action
+          userId
+          groupId
+          requiredActions
+          allowed
         }
       }
     `;
@@ -117,10 +115,8 @@ describe('Test permissions mutations', () => {
 
   test('Remove permission', async () => {
     const mutation = `
-      permissionsRemove($ids: [String]!) {
-        permissionsRemove(ids: $ids) {
-          _id
-        }
+      mutation permissionsRemove($ids: [String]!) {
+        permissionsRemove(ids: $ids)
       }
     `;
 
@@ -175,7 +171,7 @@ describe('Test permissions mutations', () => {
     const _doc = { name: 'created name', description: 'created description' };
 
     const mutation = `
-      usersGroupsAdd($name: String! $description: String) {
+      mutation usersGroupsAdd($name: String! $description: String) {
         usersGroupsAdd(name: $name description: $description) {
           _id
           name
@@ -194,7 +190,7 @@ describe('Test permissions mutations', () => {
     const _doc: IUserGroup = { name: 'updated name', description: 'updated description' };
 
     const mutation = `
-      mutation usersGroupsEdit($_id: String! $name: String $description: String) {
+      mutation usersGroupsEdit($_id: String! $name: String! $description: String) {
         usersGroupsEdit(_id: $_id name: $name description: $description) {
           _id
           name

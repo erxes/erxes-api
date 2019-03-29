@@ -56,8 +56,8 @@ export const mutations = `
     groupIds: [String!]!,
     allowed: Boolean
   ): [Permission]
-  permissionsRemove(ids: [String]!): String
+  permissionsRemove(ids: [String]!): JSON
   usersGroupsAdd(${commonUserGroupParams}): UsersGroup
   usersGroupsEdit(_id: String!, ${commonUserGroupParams}): UsersGroup
-  usersGroupsRemove(_id: String!): String
+  usersGroupsRemove(_id: String!): JSON 
 `;
