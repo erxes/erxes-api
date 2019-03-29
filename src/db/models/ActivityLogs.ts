@@ -15,6 +15,8 @@ interface ICreateDocInput {
   performedBy?: IActionPerformer;
   activity: IActivity;
   contentType: IContentType;
+  // TODO: remove
+  coc?: IContentType;
 }
 
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
