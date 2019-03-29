@@ -43,11 +43,11 @@ export interface IListArgsWithUserId extends IListArgs {
  * Fix number if it is either NaN or Infinity
  */
 
-const fixNumber = (number: number) => {
-  if (isNaN(number) || number === Infinity) {
+const fixNumber = (num: number) => {
+  if (isNaN(num) || num === Infinity) {
     return 0;
   }
-  return number;
+  return num;
 };
 
 /**
