@@ -1,7 +1,7 @@
 import { ActivityLogs, Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;
@@ -53,6 +53,6 @@ const companyMutations = {
   },
 };
 
-moduleRequireLogin(companyMutations);
+moduleCheckPermission(companyMutations, 'manageCompanies');
 
 export default companyMutations;

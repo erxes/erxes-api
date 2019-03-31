@@ -1,6 +1,6 @@
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from '../../../db/models';
 
-import { moduleRequireLogin } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 import { paginate } from './utils';
 
 /* Articles list & total count helper */
@@ -145,6 +145,6 @@ const knowledgeBaseQueries = {
   },
 };
 
-moduleRequireLogin(knowledgeBaseQueries);
+moduleCheckPermission(knowledgeBaseQueries, 'manageKnowledgeBase');
 
 export default knowledgeBaseQueries;

@@ -1,6 +1,4 @@
 import { registerModule } from '../utils';
-import { moduleObj as brandActions } from './brand';
-import { moduleObj as permissionActions } from './permission';
+import { moduleObjects } from './permission';
 
-registerModule(brandActions);
-registerModule(permissionActions);
+registerModule(moduleObjects);

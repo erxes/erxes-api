@@ -30,44 +30,50 @@ Schema:
 // tslint:disable-next-line
 export const ActionsMap: IActionsMap = {};
 
-export const registerModule = (module: IModulesMap): void => {
-  if (!module.actions) {
-    throw new Error(`Actions not found in module`);
-  }
+export const registerModule = (modules: any): void => {
+  const moduleKeys = Object.keys(modules);
 
-  // check module, actions duplicate
-  if (ModulesMap[module.name]) {
-    throw new Error(`"${module.name}" module has been registered`);
-  }
+  for (const key of moduleKeys) {
+    const module = modules[key];
 
-  if (module.actions) {
-    for (const action of module.actions) {
-      if (!action.name) {
-        throw new Error(`Action name is missing`);
-      }
+    if (!module.actions) {
+      throw new Error(`Actions not found in module`);
+    }
 
-      if (ActionsMap[action.name]) {
-        throw new Error(`"${action.name}" action has been registered`);
+    // check module, actions duplicate
+    if (ModulesMap[module.name]) {
+      throw new Error(`"${module.name}" module has been registered`);
+    }
+
+    if (module.actions) {
+      for (const action of module.actions) {
+        if (!action.name) {
+          throw new Error(`Action name is missing`);
+        }
+
+        if (ActionsMap[action.name]) {
+          throw new Error(`"${action.name}" action has been registered`);
+        }
       }
     }
-  }
 
-  // save
-  ModulesMap[module.name] = module.description;
+    // save
+    ModulesMap[module.name] = module.description;
 
-  if (module.actions) {
-    for (const action of module.actions) {
-      if (!action.name) {
-        throw new Error('Action name is missing');
-      }
+    if (module.actions) {
+      for (const action of module.actions) {
+        if (!action.name) {
+          throw new Error('Action name is missing');
+        }
 
-      ActionsMap[action.name] = {
-        module: module.name,
-        description: action.description,
-      };
+        ActionsMap[action.name] = {
+          module: module.name,
+          description: action.description,
+        };
 
-      if (action.use) {
-        ActionsMap[action.name].use = action.use;
+        if (action.use) {
+          ActionsMap[action.name].use = action.use;
+        }
       }
     }
   }

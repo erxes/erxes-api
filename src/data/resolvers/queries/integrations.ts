@@ -3,7 +3,7 @@ import { getConfig, getPageList } from '../../../trackers/facebook';
 import { getAccessToken, getAuthorizeUrl } from '../../../trackers/googleTracker';
 import { socUtils } from '../../../trackers/twitterTracker';
 import { KIND_CHOICES, TAG_TYPES } from '../../constants';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { paginate } from './utils';
 
 /**
@@ -168,5 +168,8 @@ const integrationQueries = {
 };
 
 moduleRequireLogin(integrationQueries);
+
+checkPermission(integrationQueries, 'integrations', 'showIntegrations');
+checkPermission(integrationQueries, 'integrationDetail', 'showIntegrationDetail');
 
 export default integrationQueries;

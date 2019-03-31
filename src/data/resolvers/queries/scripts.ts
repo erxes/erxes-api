@@ -1,5 +1,5 @@
 import { Scripts } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 import { paginate } from './utils';
 
 const scriptQueries = {
@@ -18,6 +18,6 @@ const scriptQueries = {
   },
 };
 
-moduleRequireLogin(scriptQueries);
+moduleCheckPermission(scriptQueries, 'manageScripts');
 
 export default scriptQueries;

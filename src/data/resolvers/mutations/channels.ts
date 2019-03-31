@@ -2,7 +2,7 @@ import { Channels } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
-import { moduleRequireAdmin } from '../../permissions';
+import { moduleCheckPermission, moduleRequireAdmin } from '../../permissions';
 import utils from '../../utils';
 
 interface IChannelsEdit extends IChannel {
@@ -61,5 +61,6 @@ const channelMutations = {
 };
 
 moduleRequireAdmin(channelMutations);
+moduleCheckPermission(channelMutations, 'manageChannels');
 
 export default channelMutations;

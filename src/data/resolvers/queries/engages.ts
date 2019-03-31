@@ -1,6 +1,6 @@
 import { EngageMessages, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission, requireLogin } from '../../permissions';
 import { paginate } from './utils';
 
 interface IListArgs {
@@ -186,6 +186,10 @@ const engageQueries = {
   },
 };
 
-moduleRequireLogin(engageQueries);
+requireLogin(engageQueries, 'engageMessagesTotalCount');
+requireLogin(engageQueries, 'engageMessageCounts');
+
+checkPermission(engageQueries, 'engageMessages', 'showEngageMessages');
+checkPermission(engageQueries, 'engageMessageDetail', 'showEngageMessageDetail');
 
 export default engageQueries;

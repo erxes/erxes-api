@@ -106,12 +106,13 @@ const usersGroupQueries = {
   },
 };
 
-requireLogin(permissionQueries, 'permissionModules');
 requireLogin(permissionQueries, 'permissionsTotalCount');
+requireLogin(usersGroupQueries, 'usersGroupsTotalCount');
 
-checkPermission(permissionQueries, 'permissions', 'showPermissionList');
-checkPermission(permissionQueries, 'permissionActions', 'showPermissionActionList');
-checkPermission(usersGroupQueries, 'usersGroups', 'showUserGroupList');
-checkPermission(usersGroupQueries, 'usersGroupsTotalCount', 'showUserGroupList');
+checkPermission(permissionQueries, 'permissions', 'showPermissions');
+checkPermission(permissionQueries, 'permissionModules', 'showPermissionModules');
+checkPermission(permissionQueries, 'permissionActions', 'showPermissionActions');
+
+checkPermission(usersGroupQueries, 'usersGroups', 'showUsersGroups');
 
 export { permissionQueries, usersGroupQueries };

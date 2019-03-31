@@ -3,7 +3,7 @@ import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/def
 import { IMessengerIntegration } from '../../../db/models/Integrations';
 import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
 import { socUtils } from '../../../trackers/twitterTracker';
-import { requireAdmin, requireLogin } from '../../permissions';
+import { moduleCheckPermission, requireAdmin } from '../../permissions';
 import { getEnv, sendPostRequest } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
@@ -156,16 +156,8 @@ const integrationMutations = {
   },
 };
 
-requireLogin(integrationMutations, 'integrationsCreateMessengerIntegration');
-requireLogin(integrationMutations, 'integrationsEditMessengerIntegration');
-requireLogin(integrationMutations, 'integrationsSaveMessengerAppearanceData');
-requireLogin(integrationMutations, 'integrationsSaveMessengerConfigs');
-requireLogin(integrationMutations, 'integrationsCreateFormIntegration');
-requireLogin(integrationMutations, 'integrationsEditFormIntegration');
-requireLogin(integrationMutations, 'integrationsCreateTwitterIntegration');
-requireLogin(integrationMutations, 'integrationsCreateFacebookIntegration');
-requireLogin(integrationMutations, 'integrationsCreateGmailIntegration');
-requireLogin(integrationMutations, 'integrationsSendGmail');
 requireAdmin(integrationMutations, 'integrationsRemove');
+
+moduleCheckPermission(integrationMutations, 'manageIntegrations');
 
 export default integrationMutations;

@@ -2,7 +2,7 @@ import { ActivityLogs, DealBoards, DealPipelines, Deals, DealStages } from '../.
 import { IOrderInput } from '../../../db/models/Deals';
 import { IBoard, IDeal, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { moduleRequireLogin } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 
 interface IDealBoardsEdit extends IBoard {
   _id: string;
@@ -160,6 +160,6 @@ const dealMutations = {
   },
 };
 
-moduleRequireLogin(dealMutations);
+moduleCheckPermission(dealMutations, 'manageDeals');
 
 export default dealMutations;

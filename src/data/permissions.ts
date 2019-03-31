@@ -69,6 +69,17 @@ export const moduleRequireAdmin = (mdl: any) => {
 };
 
 /**
+ * Wraps all properties (methods) of a given object with 'Permission action required' permission checker
+ */
+export const moduleCheckPermission = (mdl: any, action: string) => {
+  for (const method in mdl) {
+    if (mdl.hasOwnProperty(method)) {
+      checkPermission(mdl, method, action);
+    }
+  }
+};
+
+/**
  * Checks if user is logged and if user is can action
  * @param {Object} user - User object
  * @throws {Exception} throws Error('Permission required')

@@ -1,6 +1,6 @@
 import { Permissions, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
-import { checkPermission } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 
 const permissionMutations = {
   /**
@@ -56,11 +56,7 @@ const usersGroupMutations = {
   },
 };
 
-checkPermission(permissionMutations, 'permissionsAdd', 'configPermission');
-checkPermission(permissionMutations, 'permissionsRemove', 'configPermission');
-
-checkPermission(usersGroupMutations, 'usersGroupsAdd', 'addUserGroups');
-checkPermission(usersGroupMutations, 'usersGroupsEdit', 'editUserGroups');
-checkPermission(usersGroupMutations, 'usersGroupsRemove', 'removeUserGroups');
+moduleCheckPermission(permissionMutations, 'managePermissions');
+moduleCheckPermission(usersGroupMutations, 'manageUsersGroups');
 
 export { permissionMutations, usersGroupMutations };

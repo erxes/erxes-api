@@ -1,6 +1,6 @@
 import { Conversations, Users } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { requireLogin } from '../../permissions';
+import { checkPermission, requireLogin } from '../../permissions';
 import { paginate } from './utils';
 
 interface IListArgs {
@@ -79,8 +79,9 @@ const userQueries = {
   },
 };
 
-requireLogin(userQueries, 'users');
-requireLogin(userQueries, 'userDetail');
 requireLogin(userQueries, 'usersTotalCount');
+
+checkPermission(userQueries, 'users', 'showUsers');
+checkPermission(userQueries, 'userDetail', 'showUserDetail');
 
 export default userQueries;

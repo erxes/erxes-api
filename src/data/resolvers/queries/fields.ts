@@ -1,6 +1,6 @@
 import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
 import { Companies, Customers, Fields, FieldsGroups } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission, moduleRequireLogin } from '../../permissions';
 
 interface IFieldsQuery {
   contentType: string;
@@ -124,6 +124,8 @@ const fieldQueries = {
 
 moduleRequireLogin(fieldQueries);
 
+checkPermission(fieldQueries, 'fields', 'showFields');
+
 const fieldsGroupQueries = {
   /**
    * Fields group list
@@ -138,6 +140,6 @@ const fieldsGroupQueries = {
   },
 };
 
-moduleRequireLogin(fieldsGroupQueries);
+checkPermission(fieldsGroupQueries, 'fieldsGroups', 'showFieldsGroups');
 
 export { fieldQueries, fieldsGroupQueries };

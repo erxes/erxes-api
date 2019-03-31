@@ -1,6 +1,6 @@
 import { Channels, Users } from '../../../db/models';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument } from '../../../db/models/definitions/users';
-import { requireAdmin, requireLogin } from '../../permissions';
+import { checkPermission, requireAdmin, requireLogin } from '../../permissions';
 import utils, { authCookieOptions, getEnv } from '../../utils';
 
 interface IUsersEdit extends IUser {
@@ -211,8 +211,12 @@ requireLogin(userMutations, 'usersChangePassword');
 requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
+
 requireAdmin(userMutations, 'usersEdit');
 requireAdmin(userMutations, 'usersSetActiveStatus');
 requireAdmin(userMutations, 'usersInvite');
+
+checkPermission(userMutations, 'usersEdit', 'usersEdit');
+checkPermission(userMutations, 'usersInvite', 'usersInvite');
 
 export default userMutations;

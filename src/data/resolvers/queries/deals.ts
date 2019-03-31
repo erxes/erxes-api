@@ -1,5 +1,5 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission, moduleRequireLogin } from '../../permissions';
 
 interface IDate {
   month: number;
@@ -157,5 +157,8 @@ const dealQueries = {
 };
 
 moduleRequireLogin(dealQueries);
+
+checkPermission(dealQueries, 'deals', 'showDeals');
+checkPermission(dealQueries, 'dealDetail', 'showDealDetail');
 
 export default dealQueries;
