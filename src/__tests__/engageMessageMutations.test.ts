@@ -80,7 +80,10 @@ describe('engage message mutation tests', () => {
     _user = await userFactory({});
     _tag = await tagsFactory({});
     _brand = await brandFactory({});
-    _segment = await segmentFactory({});
+    _segment = await segmentFactory({
+      connector: 'any',
+      conditions: [{ field: 'primaryEmail', operator: 'c', value: '@', type: 'string' }],
+    });
     _message = await engageMessageFactory({
       kind: 'auto',
       userId: _user._id,
@@ -249,8 +252,8 @@ describe('engage message mutation tests', () => {
   });
 
   test('Engage utils send via email', async () => {
-    process.env.AWS_SES_ACCESS_KEY_ID = '';
-    process.env.AWS_SES_SECRET_ACCESS_KEY = '';
+    process.env.AWS_SES_ACCESS_KEY_ID = '123';
+    process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
     process.env.MAIL_PORT = '123';
@@ -276,7 +279,6 @@ describe('engage message mutation tests', () => {
     }
 
     const executeSendViaEmail = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
-    executeSendViaEmail.mockImplementation(() => 'sent');
 
     const emessageWithUser = await engageMessageFactory({
       method: 'email',
