@@ -257,7 +257,7 @@ describe('engage message mutation tests', () => {
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
     process.env.MAIL_PORT = '123';
-    process.env.AWS_REGION = 'region';
+    process.env.AWS_REGION = 'us-west-2';
 
     const emailTemplate = await emailTemplateFactory();
     const emessage = await engageMessageFactory({
