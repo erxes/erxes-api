@@ -42,6 +42,7 @@ describe('engage message mutation tests', () => {
   let _emailTemplate;
   let _doc;
   let context;
+  let spy;
 
   const commonParamDefs = `
     $title: String!,
@@ -113,7 +114,6 @@ describe('engage message mutation tests', () => {
         templateId: _emailTemplate._id,
         subject: faker.random.word(),
         content: faker.random.word(),
-        attachments: [{ name: 'document', url: 'documentPath' }, { name: 'image', url: 'imagePath' }],
       },
       scheduleDate: {
         type: 'year',
@@ -139,9 +139,12 @@ describe('engage message mutation tests', () => {
     };
 
     context = { user: _user };
+
+    spy = jest.spyOn(engageUtils, 'send');
   });
 
   afterEach(async () => {
+    spy.mockRestore();
     // Clearing test data
     _doc = null;
     await Users.deleteMany({});
@@ -337,8 +340,8 @@ describe('engage message mutation tests', () => {
   `;
 
   test('Add engage message', async () => {
-    process.env.AWS_SES_ACCESS_KEY_ID = '';
-    process.env.AWS_SES_SECRET_ACCESS_KEY = '';
+    process.env.AWS_SES_ACCESS_KEY_ID = '123';
+    process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
 
@@ -356,13 +359,6 @@ describe('engage message mutation tests', () => {
       });
     });
 
-    sandbox.stub(engageUtils, 'send').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve('sent');
-      });
-    });
-
-    const sendSpy = jest.spyOn(engageUtils, 'send');
     const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
 
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
@@ -391,7 +387,6 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
     awsSpy.mockRestore();
-    sendSpy.mockRestore();
   });
 
   test('Engage add with unverified email', async () => {
@@ -492,8 +487,6 @@ describe('engage message mutation tests', () => {
   });
 
   test('Set live engage message', async () => {
-    const spy = jest.spyOn(engageUtils, 'send');
-
     const mutation = `
       mutation engageMessageSetLive($_id: String!) {
         engageMessageSetLive(_id: $_id) {
@@ -505,7 +498,6 @@ describe('engage message mutation tests', () => {
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
     expect(engageMessage.isLive).toBe(true);
-    spy.mockRestore();
   });
 
   test('Set pause engage message', async () => {
