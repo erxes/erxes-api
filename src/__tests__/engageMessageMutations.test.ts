@@ -492,6 +492,8 @@ describe('engage message mutation tests', () => {
   });
 
   test('Set live engage message', async () => {
+    const spy = jest.spyOn(engageUtils, 'send');
+
     const mutation = `
       mutation engageMessageSetLive($_id: String!) {
         engageMessageSetLive(_id: $_id) {
@@ -503,6 +505,7 @@ describe('engage message mutation tests', () => {
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
     expect(engageMessage.isLive).toBe(true);
+    spy.mockRestore();
   });
 
   test('Set pause engage message', async () => {
