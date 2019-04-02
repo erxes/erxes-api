@@ -69,10 +69,15 @@ const commonParams = `
   channelIds: [String],	
 `;
 
+const commonSelector = `
+  searchValue: String,
+  isActive: String
+`;
+
 export const queries = `
-  users(page: Int, perPage: Int, searchValue: String, isActive: Boolean): [User]
+  users(page: Int, perPage: Int, ${commonSelector}): [User]
   userDetail(_id: String): User
-  usersTotalCount: Int
+  usersTotalCount(${commonSelector}): Int
   currentUser: User
   userConversations(_id: String, perPage: Int): UserConversationListResponse
 `;
