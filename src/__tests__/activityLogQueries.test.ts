@@ -1,4 +1,5 @@
 import * as faker from 'faker';
+import { ACTIVITY_ACTIONS, ACTIVITY_TYPES } from '../data/constants';
 import { graphqlRequest } from '../db/connection';
 import { activityLogFactory } from '../db/factories';
 import { ActivityLogs } from '../db/models';
@@ -46,13 +47,17 @@ describe('activityLogQueries', () => {
 
   test('Activity log list', async () => {
     const contentType = ACTIVITY_CONTENT_TYPES.CUSTOMER;
+    const activityType = ACTIVITY_TYPES.INTERNAL_NOTE;
     const contentId = faker.random.uuid();
 
     for (let i = 0; i < 3; i++) {
-      await activityLogFactory({ contentType: { type: contentType, id: contentId } });
+      await activityLogFactory({
+        activity: { type: activityType, action: ACTIVITY_ACTIONS.CREATE },
+        contentType: { type: contentType, id: contentId },
+      });
     }
 
-    const args = { contentType, contentId };
+    const args = { contentType, activityType, contentId };
 
     const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
 
