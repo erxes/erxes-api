@@ -360,12 +360,14 @@ describe('engage message mutation tests', () => {
     });
 
     const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
+    const sendSpy = jest.spyOn(engageUtils, 'send');
 
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
     expect(spy.mock.calls.length).toBe(1);
+    expect(sendSpy.mock.calls.length).toBe(1);
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
     expect(engageMessage.segmentId).toBe(_doc.segmentId);
@@ -387,6 +389,7 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
     awsSpy.mockRestore();
+    sendSpy.mockRestore();
   });
 
   test('Engage add with unverified email', async () => {
