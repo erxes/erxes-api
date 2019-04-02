@@ -142,6 +142,7 @@ describe('engage message mutation tests', () => {
     context = { user: _user };
 
     spy = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
+    jest.mock('aws-sdk');
   });
 
   afterEach(async () => {
