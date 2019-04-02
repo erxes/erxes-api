@@ -29,11 +29,7 @@ import {
   Users,
 } from '../db/models';
 
-import * as cronJobs from '../cronJobs/engages';
 import { awsRequests } from '../trackers/engageTracker';
-
-jest.mock('aws-sdk');
-jest.mock('nodemailer');
 
 describe('engage message mutation tests', () => {
   let _message;
@@ -144,7 +140,7 @@ describe('engage message mutation tests', () => {
 
     context = { user: _user };
 
-    spy = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
+    spy = jest.spyOn(engageUtils, 'send');
   });
 
   afterEach(async () => {
@@ -265,6 +261,8 @@ describe('engage message mutation tests', () => {
     process.env.AWS_ENDPOINT = '123';
     process.env.MAIL_PORT = '123';
     process.env.AWS_REGION = 'us-west-2';
+
+    sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
 
     const emailTemplate = await emailTemplateFactory();
     const emessage = await engageMessageFactory({
@@ -404,6 +402,7 @@ describe('engage message mutation tests', () => {
 
     const sandbox = sinon.createSandbox();
     const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
+    const mock = sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
 
     sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
       return new Promise(resolve => {
@@ -418,6 +417,7 @@ describe('engage message mutation tests', () => {
     }
 
     awsSpy.mockRestore();
+    mock.mockRestore();
   });
 
   test('Edit engage message', async () => {
@@ -451,8 +451,6 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const scheduleSpy = jest.spyOn(cronJobs, 'updateOrRemoveSchedule');
-
     const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id }, context);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
@@ -479,7 +477,6 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.segment._id).toBe(_doc.segmentId);
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
-    scheduleSpy.mockRestore();
   });
 
   test('Remove engage message', async () => {
@@ -491,12 +488,9 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const scheduleSpy = jest.spyOn(cronJobs, 'updateOrRemoveSchedule');
-
     await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id }, context);
 
     expect(await EngageMessages.findOne({ _id: _message._id })).toBe(null);
-    scheduleSpy.mockRestore();
   });
 
   test('Set live engage message', async () => {
@@ -507,12 +501,9 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
-    const scheduleSpy = jest.spyOn(cronJobs, 'createSchedule');
-
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
     expect(engageMessage.isLive).toBe(true);
-    scheduleSpy.mockRestore();
   });
 
   test('Set pause engage message', async () => {
