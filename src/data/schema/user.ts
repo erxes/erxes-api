@@ -45,8 +45,11 @@ export const types = `
     username: String
     email: String
     role: String
+    isActive: Boolean
     details: UserDetailsType
     links: UserLinksType
+    status: String
+    hasSeenOnBoard: Boolean
     emailSignatures: JSON
     getNotificationByEmail: Boolean
   }
@@ -57,23 +60,21 @@ export const types = `
   }
 `;
 
+const commonParams = `	
+  username: String!,	
+  email: String!,	
+  role: String!	
+  details: UserDetails,	
+  links: UserLinks,	
+  channelIds: [String],	
+`;
+
 export const queries = `
-  users(page: Int, perPage: Int, searchValue: String): [User]
+  users(page: Int, perPage: Int, searchValue: String, isActive: Boolean): [User]
   userDetail(_id: String): User
   usersTotalCount: Int
   currentUser: User
   userConversations(_id: String, perPage: Int): UserConversationListResponse
-`;
-
-const commonParams = `
-  username: String!,
-  email: String!,
-  role: String!
-  details: UserDetails,
-  links: UserLinks,
-  channelIds: [String],
-  password: String!,
-  passwordConfirmation: String!
 `;
 
 export const mutations = `
@@ -81,8 +82,6 @@ export const mutations = `
   logout: String
   forgotPassword(email: String!): String!
   resetPassword(token: String!, newPassword: String!): JSON
-  usersAdd(${commonParams}): User
-  usersEdit(_id: String!, ${commonParams}): User
 
   usersEditProfile(
     username: String!,
@@ -92,8 +91,13 @@ export const mutations = `
     password: String!
   ): User
 
+  usersEdit(_id: String!, ${commonParams}): User
   usersChangePassword(currentPassword: String!, newPassword: String!): User
-  usersRemove(_id: String!): JSON
+  usersSetActiveStatus(_id: String!): User
+
+  usersInvite(emails: [String]): Boolean
+  usersConfirmInvitation(token: String, password: String, passwordConfirmation: String, fullName: String, username: String): User
+  usersSeenOnBoard: User
 
   usersConfigEmailSignatures(signatures: [EmailSignature]): User
   usersConfigGetNotificationByEmail(isAllowed: Boolean): User

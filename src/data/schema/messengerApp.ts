@@ -10,6 +10,7 @@ export const types = `
 
 export const queries = `
   messengerApps(kind: String): [MessengerApp]
+  messengerAppsCount(kind: String): Int
 `;
 
 export const mutations = `
@@ -17,5 +18,5 @@ export const mutations = `
   messengerAppsAddKnowledgebase(name: String!, integrationId: String!, topicId: String!): MessengerApp
   messengerAppsAddLead(name: String!, integrationId: String!, formId: String!): MessengerApp
   messengerAppsRemove(_id: String!): JSON
-  messengerAppsExecuteGoogleMeet(_id: String!, conversationId: String!): String
+  messengerAppsExecuteGoogleMeet(_id: String!, conversationId: String!): MessengerApp
 `;

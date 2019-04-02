@@ -21,15 +21,38 @@ interface IUpdateUser extends IEditProfile {
 }
 
 export interface IUserModel extends Model<IUserDocument> {
-  checkDuplication(email?: string, idsToExclude?: string | string[]): never;
+  checkDuplication({
+    email,
+    idsToExclude,
+    emails,
+  }: {
+    email?: string;
+    idsToExclude?: string | string[];
+    emails?: string[];
+  }): never;
   getSecret(): string;
   createUser(doc: IUser): Promise<IUserDocument>;
   updateUser(_id: string, doc: IUpdateUser): Promise<IUserDocument>;
   editProfile(_id: string, doc: IEditProfile): Promise<IUserDocument>;
+  updateOnBoardSeen({ _id }: { _id: string }): Promise<IUserDocument>;
   configEmailSignatures(_id: string, signatures: IEmailSignature[]): Promise<IUserDocument>;
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
-  removeUser(_id: string): Promise<IUserDocument>;
+  setUserActiveOrInactive(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
+  createUserWithConfirmation({ email }: { email: string }): string;
+  confirmInvitation({
+    token,
+    password,
+    passwordConfirmation,
+    fullName,
+    username,
+  }: {
+    token: string;
+    password: string;
+    passwordConfirmation: string;
+    fullName?: string;
+    username?: string;
+  }): Promise<IUserDocument>;
   comparePassword(password: string, userPassword: string): boolean;
   resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<IUserDocument>;
   changePassword({
@@ -53,7 +76,15 @@ export const loadClass = () => {
     /**
      * Checking if user has duplicated properties
      */
-    public static async checkDuplication(email?: string, idsToExclude?: string | string[]) {
+    public static async checkDuplication({
+      email,
+      idsToExclude,
+      emails,
+    }: {
+      email?: string;
+      idsToExclude?: string | string[];
+      emails?: string[];
+    }) {
       const query: { [key: string]: any } = {};
       let previousEntry;
 
@@ -69,6 +100,14 @@ export const loadClass = () => {
         // Checking if duplicated
         if (previousEntry.length > 0) {
           throw new Error('Duplicated email');
+        }
+      }
+
+      if (emails) {
+        previousEntry = await Users.find({ email: { $in: [emails] } });
+
+        if (previousEntry.length > 0) {
+          throw new Error('Duplicated emails');
         }
       }
     }
@@ -87,7 +126,7 @@ export const loadClass = () => {
       }
 
       // Checking duplicated email
-      await Users.checkDuplication(email);
+      await Users.checkDuplication({ email });
 
       return Users.create({
         username,
@@ -108,7 +147,7 @@ export const loadClass = () => {
       const doc = { username, email, password, role, details, links };
 
       // Checking duplicated email
-      await this.checkDuplication(email, _id);
+      await this.checkDuplication({ email, idsToExclude: _id });
 
       // change password
       if (password) {
@@ -124,12 +163,99 @@ export const loadClass = () => {
       return Users.findOne({ _id });
     }
 
+    /**
+     * Create new user with invitation token
+     */
+    public static async createUserWithConfirmation({ email }: { email: string }) {
+      // Checking duplicated email
+      await Users.checkDuplication({ email });
+
+      const buffer = await crypto.randomBytes(20);
+      const token = buffer.toString('hex');
+
+      await Users.create({
+        email,
+        registrationToken: token,
+        registrationTokenExpires: Date.now() + 86400000,
+      });
+
+      return token;
+    }
+
+    /**
+     * User has seen on board set up
+     */
+    public static async updateOnBoardSeen({ _id }: { _id: string }) {
+      const user = await Users.findOne({ _id });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await Users.updateOne({ _id }, { $set: { hasSeenOnBoard: true } });
+
+      return user;
+    }
+
+    /**
+     * Confirms user by invitation
+     */
+    public static async confirmInvitation({
+      token,
+      password,
+      passwordConfirmation,
+      fullName,
+      username,
+    }: {
+      token: string;
+      password: string;
+      passwordConfirmation: string;
+      fullName?: string;
+      username?: string;
+    }) {
+      const user = await Users.findOne({
+        registrationToken: token,
+        registrationTokenExpires: {
+          $gt: Date.now(),
+        },
+      });
+
+      if (!user || !token) {
+        throw new Error('Token is invalid or has expired');
+      }
+
+      if (password === '') {
+        throw new Error('Password can not be empty');
+      }
+
+      if (password !== passwordConfirmation) {
+        throw new Error('Password does not match');
+      }
+
+      await Users.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            password: await this.generatePassword(password),
+            isActive: true,
+            registrationToken: undefined,
+            username,
+            details: {
+              fullName,
+            },
+          },
+        },
+      );
+
+      return user;
+    }
+
     /*
      * Update user profile
      */
     public static async editProfile(_id: string, { username, email, details, links }: IEditProfile) {
       // Checking duplicated email
-      await this.checkDuplication(email, _id);
+      await this.checkDuplication({ email, idsToExclude: _id });
 
       await Users.updateOne({ _id }, { $set: { username, email, details, links } });
 
@@ -157,7 +283,29 @@ export const loadClass = () => {
     /*
      * Remove user
      */
-    public static async removeUser(_id: string) {
+    public static async setUserActiveOrInactive(_id: string) {
+      const user = await Users.findOne({ _id });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (user.isActive === false) {
+        await Users.updateOne({ _id }, { $set: { isActive: true } });
+
+        return Users.findOne({ _id });
+      }
+
+      if (user.registrationToken) {
+        await Users.remove({ _id });
+
+        return user;
+      }
+
+      if (user.isOwner) {
+        throw new Error('Can not remove owner');
+      }
+
       await Users.updateOne({ _id }, { $set: { isActive: false } });
 
       return Users.findOne({ _id });

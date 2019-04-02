@@ -12,6 +12,7 @@ import {
   generateUserSelector,
   getConversationSelector,
   getFilterSelector,
+  getTimezone,
   IListArgs,
 } from './insightUtils';
 
@@ -39,9 +40,22 @@ export interface IListArgsWithUserId extends IListArgs {
 }
 
 /**
+ * Fix number if it is either NaN or Infinity
+ */
+
+const fixNumber = (num: number) => {
+  if (isNaN(num) || num === Infinity) {
+    return 0;
+  }
+  return num;
+};
+
+/**
  * Time format HH:mm:ii
  */
 const convertTime = (duration: number) => {
+  duration = duration / 1000;
+
   const hours = Math.floor(duration / 3600);
   const minutes = Math.floor((duration % 3600) / 60);
   const seconds = Math.floor((duration % 3600) % 60);
@@ -138,8 +152,9 @@ const insightExportQueries = {
   /*
    * Volume report export
    */
-  async insightVolumeReportExport(_root, args: IListArgs) {
+  async insightVolumeReportExport(_root, args: IListArgs, { user }: { user: IUserDocument }) {
     const { startDate, endDate, type } = args;
+
     let diffCount = 7;
     let timeFormat = 'YYYY-MM-DD';
     let aggregationTimeFormat = '%Y-%m-%d';
@@ -165,7 +180,7 @@ const insightExportQueries = {
       },
       {
         $project: {
-          date: await getDateFieldAsStr({ timeFormat: aggregationTimeFormat }),
+          date: await getDateFieldAsStr({ timeFormat: aggregationTimeFormat, timeZone: getTimezone(user) }),
           customerId: 1,
           status: 1,
           closeTime: getDurationField({ startField: '$closedAt', endField: '$createdAt' }),
@@ -180,10 +195,8 @@ const insightExportQueries = {
             $sum: { $cond: [{ $eq: ['$status', 'closed'] }, 1, 0] },
           },
           totalCount: { $sum: 1 },
-          averageCloseTime: { $avg: '$closeTime' },
           totalResponseTime: { $sum: '$firstRespondTime' },
           totalCloseTime: { $sum: '$closeTime' },
-          averageRespondTime: { $avg: '$firstRespondTime' },
         },
       },
       {
@@ -213,8 +226,12 @@ const insightExportQueries = {
     let totalUniqueCount = 0;
     let totalConversationMessages = 0;
     let totalResolved = 0;
-    let totalClosedTime = 0;
     let totalRespondTime = 0;
+
+    let averageResponseDuration = 0;
+    let firstResponseDuration = 0;
+    let totalAverageResponseDuration = 0;
+    let totalFirstResponseDuration = 0;
 
     aggregatedData.forEach(row => {
       volumeDictionary[row._id] = row;
@@ -224,11 +241,12 @@ const insightExportQueries = {
       {
         $match: {
           conversationId: { $in: conversationRawIds },
+          createdAt: { $gte: start, $lte: end },
         },
       },
       {
         $project: {
-          date: await getDateFieldAsStr({ timeFormat: aggregationTimeFormat }),
+          date: await getDateFieldAsStr({ timeFormat: aggregationTimeFormat, timeZone: getTimezone(user) }),
           status: 1,
         },
       },
@@ -255,8 +273,6 @@ const insightExportQueries = {
       const {
         resolvedCount,
         totalCount,
-        averageCloseTime,
-        averageRespondTime,
         totalResponseTime,
         totalCloseTime,
         uniqueCustomerCount,
@@ -264,30 +280,34 @@ const insightExportQueries = {
       } = volumeDictionary[dateKey] || {
         resolvedCount: 0,
         totalCount: 0,
-        averageCloseTime: 0,
-        averageRespondTime: 0,
         totalResponseTime: 0,
         totalCloseTime: 0,
         uniqueCustomerCount: 0,
         percentage: 0,
       };
-      const messageCount = conversationDictionary[dateKey];
+      const messageCount = conversationDictionary[dateKey] || 0;
 
       totalCustomerCount += totalCount;
       totalResolved += resolvedCount;
-      totalClosedTime += totalCloseTime;
+
       totalRespondTime += totalResponseTime;
       totalUniqueCount += uniqueCustomerCount;
 
+      averageResponseDuration = fixNumber(totalCloseTime / resolvedCount);
+      firstResponseDuration = fixNumber(totalRespondTime / totalCount);
+
+      totalAverageResponseDuration += averageResponseDuration;
+      totalFirstResponseDuration += firstResponseDuration;
+
       data.push({
         date: moment(begin).format(timeFormat),
-        count: totalCount,
-        customerCount: uniqueCustomerCount,
+        count: uniqueCustomerCount,
+        customerCount: totalCount,
         customerCountPercentage: `${percentage.toFixed(0)}%`,
         messageCount,
         resolvedCount,
-        averageResponseDuration: convertTime(averageCloseTime),
-        firstResponseDuration: convertTime(averageRespondTime),
+        averageResponseDuration: convertTime(averageResponseDuration),
+        firstResponseDuration: convertTime(firstResponseDuration),
       });
 
       if (next.getTime() < end.getTime()) {
@@ -306,8 +326,8 @@ const insightExportQueries = {
       customerCountPercentage: `${((totalUniqueCount / totalCustomerCount) * 100).toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
-      averageResponseDuration: convertTime(totalClosedTime / totalConversationMessages),
-      firstResponseDuration: convertTime(totalRespondTime / totalConversationMessages),
+      averageResponseDuration: convertTime(totalAverageResponseDuration),
+      firstResponseDuration: convertTime(totalFirstResponseDuration),
     });
 
     const basicInfos = INSIGHT_BASIC_INFOS;
@@ -341,7 +361,7 @@ const insightExportQueries = {
   /*
    * Operator Activity Report
    */
-  async insightActivityReportExport(_root, args: IListArgs) {
+  async insightActivityReportExport(_root, args: IListArgs, { user }: { user: IUserDocument }) {
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate, 1);
 
@@ -359,7 +379,7 @@ const insightExportQueries = {
       },
       {
         $project: {
-          date: await getDateFieldAsStr({ timeFormat: '%Y-%m-%d %H' }),
+          date: await getDateFieldAsStr({ timeFormat: '%Y-%m-%d %H', timeZone: getTimezone(user) }),
           userId: 1,
         },
       },
@@ -601,7 +621,7 @@ const insightExportQueries = {
   /*
    * Tag Report
    */
-  async insightTagReportExport(_root, args: IListArgs) {
+  async insightTagReportExport(_root, args: IListArgs, { user }: { user: IUserDocument }) {
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
     const filterSelector = getFilterSelector(args);
@@ -642,7 +662,7 @@ const insightExportQueries = {
         $group: {
           _id: {
             tagId: '$tagIds',
-            date: getDateFieldAsStr({}),
+            date: getDateFieldAsStr({ timeZone: getTimezone(user) }),
           },
           count: { $sum: 1 },
         },

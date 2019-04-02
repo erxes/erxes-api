@@ -1,5 +1,6 @@
 import * as moment from 'moment';
-import { ConversationMessages, Conversations, Integrations, Tags, Users } from '../../../db/models';
+import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
+import { IUserDocument } from '../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
 import { moduleRequireLogin } from '../../permissions';
 import { getDateFieldAsStr, getDurationField } from './aggregationUtils';
@@ -15,6 +16,7 @@ import {
   getConversationSelector,
   getFilterSelector,
   getSummaryData,
+  getTimezone,
   IListArgs,
 } from './insightUtils';
 
@@ -56,7 +58,6 @@ const insightQueries = {
         ...conversationSelector,
         integrationId: { $in: integrationIds },
       });
-
       if (kind === INTEGRATION_KIND_CHOICES.FACEBOOK) {
         const { FEED, MESSENGER } = FACEBOOK_DATA_KINDS;
 
@@ -124,7 +125,7 @@ const insightQueries = {
   /**
    * Counts conversations by each hours in each days.
    */
-  async insightsPunchCard(_root, args: IListArgs) {
+  async insightsPunchCard(_root, args: IListArgs, { user }: { user: IUserDocument }) {
     const { type, endDate } = args;
     const filterSelector = getFilterSelector(args);
 
@@ -158,7 +159,7 @@ const insightQueries = {
         $project: {
           hour: { $hour: { date: '$createdAt', timezone: '+08' } },
           day: { $isoDayOfWeek: { date: '$createdAt', timezone: '+08' } },
-          date: await getDateFieldAsStr({}),
+          date: await getDateFieldAsStr({ timeZone: getTimezone(user) }),
         },
       },
       {
@@ -327,7 +328,7 @@ const insightQueries = {
   /**
    * Calculates average response close time for each team members.
    */
-  async insightsResponseClose(_root, args: IListArgs) {
+  async insightsResponseClose(_root, args: IListArgs, { user }: { user: IUserDocument }) {
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
 
@@ -350,7 +351,7 @@ const insightQueries = {
       {
         $project: {
           responseTime: getDurationField({ startField: '$closedAt', endField: '$createdAt' }),
-          date: await getDateFieldAsStr({}),
+          date: await getDateFieldAsStr({ timeZone: getTimezone(user) }),
           closedUserId: 1,
         },
       },
@@ -376,11 +377,24 @@ const insightQueries = {
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'closedUserId',
+          foreignField: '_id',
+          as: 'userDoc',
+        },
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
+      },
+      {
         $group: {
           _id: '$closedUserId',
           responseTime: { $sum: '$totalResponseTime' },
           avgResponseTime: { $avg: '$avgResponseTime' },
           count: { $sum: '$count' },
+          fullName: { $first: '$fullName' },
+          avatar: { $first: '$avatar' },
           chartDatas: {
             $push: {
               date: '$date',
@@ -403,10 +417,11 @@ const insightQueries = {
         responseTime: userData.responseTime,
         count: userData.count,
         avgResponseTime: userData.avgResponseTime,
+        fullName: userData.fullName,
+        avatar: userData.avatar,
       };
       // team members gather
       const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
-      const user = await Users.findOne({ _id: userData._id });
       userData.chartDatas.forEach(row => {
         if (row.date in aggregatedTrend) {
           aggregatedTrend[row.date] += row.count;
@@ -415,14 +430,10 @@ const insightQueries = {
         }
       });
 
-      if (!user) {
-        continue;
-      }
-      const userDetail = user.details;
       teamMembers.push({
         data: {
-          fullName: userDetail ? userDetail.fullName : '',
-          avatar: userDetail ? userDetail.avatar : '',
+          fullName: userData.fullName,
+          avatar: userData.avatar,
           graph: fixedChartData,
         },
       });
