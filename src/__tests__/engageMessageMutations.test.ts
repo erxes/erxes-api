@@ -140,7 +140,7 @@ describe('engage message mutation tests', () => {
 
     context = { user: _user };
 
-    spy = jest.spyOn(engageUtils, 'send');
+    spy = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
   });
 
   afterEach(async () => {
@@ -365,7 +365,7 @@ describe('engage message mutation tests', () => {
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
-    expect(engageUtils.send).toHaveBeenCalled();
+    expect(spy.mock.calls.length).toBe(1);
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
     expect(engageMessage.segmentId).toBe(_doc.segmentId);
