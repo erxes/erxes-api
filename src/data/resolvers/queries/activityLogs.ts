@@ -1,12 +1,20 @@
 import { ActivityLogs } from '../../../db/models';
+import { IActivityLog } from '../../../db/models/definitions/activityLogs';
 import { moduleRequireLogin } from '../../permissions';
 
 const activityLogQueries = {
   /**
    * Get activity log list
    */
-  activityLogs(_root, { contentType, contentId, limit }: { contentType: string; contentId: string; limit: number }) {
+  activityLogs(_root, doc: IActivityLog) {
+    const { contentType, contentId, activityType, limit } = doc;
+
     const query = { 'contentType.type': contentType, 'contentType.id': contentId };
+
+    if (activityType) {
+      query['activity.type'] = activityType;
+    }
+
     const sort = { createdAt: -1 };
 
     return ActivityLogs.find(query)

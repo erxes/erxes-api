@@ -8,12 +8,14 @@ describe('activityLogQueries', () => {
   const commonParamDefs = `
     $contentType: String!,
     $contentId: String!,
+    $activityType: String!,
     $limit: Int,
   `;
 
   const commonParams = `
     contentType: $contentType
     contentId: $contentId
+    activityType: $activityType
     limit: $limit
   `;
 

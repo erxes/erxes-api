@@ -39,6 +39,13 @@ export interface IActivityLogDocument extends Document {
   createdAt: Date;
 }
 
+export interface IActivityLog {
+  contentType: string;
+  contentId: string;
+  activityType: string;
+  limit: number;
+}
+
 // Mongoose schemas ===========
 
 /* Performer of the action:

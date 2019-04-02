@@ -22,5 +22,5 @@ export const types = `
 `;
 
 export const queries = `
-  activityLogs(contentType: String!, contentId: String!, limit: Int): [ActivityLog]
+  activityLogs(contentType: String!, contentId: String!, activityType: String, limit: Int): [ActivityLog]
 `;
