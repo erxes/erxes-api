@@ -125,6 +125,8 @@ export const activityLogSchema = new Schema({
   activity: { type: activitySchema },
   performedBy: { type: actionPerformerSchema, optional: true },
   contentType: { type: contentTypeSchema },
+  // TODO: remove
+  coc: { type: contentTypeSchema, optional: true },
 
   createdAt: field({
     type: Date,
