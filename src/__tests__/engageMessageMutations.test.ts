@@ -29,6 +29,7 @@ import {
   Users,
 } from '../db/models';
 
+import * as cronJobs from '../cronJobs/engages';
 import { awsRequests } from '../trackers/engageTracker';
 
 describe('engage message mutation tests', () => {
@@ -447,6 +448,8 @@ describe('engage message mutation tests', () => {
       }
     `;
 
+    const scheduleSpy = jest.spyOn(cronJobs, 'updateOrRemoveSchedule');
+
     const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id }, context);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
@@ -473,6 +476,7 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.segment._id).toBe(_doc.segmentId);
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
+    scheduleSpy.mockRestore();
   });
 
   test('Remove engage message', async () => {
@@ -484,9 +488,12 @@ describe('engage message mutation tests', () => {
       }
     `;
 
+    const scheduleSpy = jest.spyOn(cronJobs, 'updateOrRemoveSchedule');
+
     await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id }, context);
 
     expect(await EngageMessages.findOne({ _id: _message._id })).toBe(null);
+    scheduleSpy.mockRestore();
   });
 
   test('Set live engage message', async () => {
