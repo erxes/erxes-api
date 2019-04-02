@@ -32,6 +32,9 @@ import {
 import * as cronJobs from '../cronJobs/engages';
 import { awsRequests } from '../trackers/engageTracker';
 
+jest.mock('aws-sdk');
+jest.mock('nodemailer');
+
 describe('engage message mutation tests', () => {
   let _message;
   let _user;
@@ -142,7 +145,6 @@ describe('engage message mutation tests', () => {
     context = { user: _user };
 
     spy = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
-    jest.mock('aws-sdk');
   });
 
   afterEach(async () => {
