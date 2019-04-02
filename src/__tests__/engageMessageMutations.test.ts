@@ -507,7 +507,10 @@ describe('engage message mutation tests', () => {
 
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
+    const scheduleSpy = jest.spyOn(cronJobs, 'createSchedule');
+
     expect(engageMessage.isLive).toBe(true);
+    scheduleSpy.mockRestore();
   });
 
   test('Set pause engage message', async () => {
