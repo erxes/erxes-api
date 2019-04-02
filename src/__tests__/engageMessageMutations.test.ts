@@ -504,10 +504,9 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
+    const scheduleSpy = jest.spyOn(cronJobs, 'createSchedule');
 
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
-
-    const scheduleSpy = jest.spyOn(cronJobs, 'createSchedule');
 
     expect(engageMessage.isLive).toBe(true);
     scheduleSpy.mockRestore();
