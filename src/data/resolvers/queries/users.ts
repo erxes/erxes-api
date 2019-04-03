@@ -7,7 +7,7 @@ interface IListArgs {
   page?: number;
   perPage?: number;
   searchValue?: string;
-  isActive?: string;
+  isActive?: boolean;
 }
 
 const queryBuilder = async (params: IListArgs) => {
@@ -22,8 +22,8 @@ const queryBuilder = async (params: IListArgs) => {
     selector.$or = fields;
   }
 
-  if (params.isActive) {
-    selector.isActive = params.isActive === 'true';
+  if (params.isActive !== undefined) {
+    selector.isActive = params.isActive;
   }
 
   return selector;

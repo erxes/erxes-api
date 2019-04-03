@@ -65,7 +65,7 @@ const commonParams = `
 
 const commonSelector = `
   searchValue: String,
-  isActive: String
+  isActive: Boolean
 `;
 
 export const queries = `
