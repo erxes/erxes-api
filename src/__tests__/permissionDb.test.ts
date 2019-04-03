@@ -1,19 +1,12 @@
-/* eslint-env jest */
-/* eslint-disable no-underscore-dangle */
-
 import { registerModule } from '../data/permissions/utils';
-import { connect, disconnect } from '../db/connection';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, UsersGroups } from '../db/models';
-
-beforeAll(() => connect());
-
-afterAll(() => disconnect());
 
 describe('Test permissions model', () => {
   let _permission;
   let _user;
   let _group;
+
   const docGroup = {
     name: 'New Group',
     description: 'User group',
@@ -26,14 +19,16 @@ describe('Test permissions model', () => {
   };
 
   registerModule({
-    name: 'new module',
-    description: 'd',
-    actions: [
-      { name: 'action', description: 'd', use: [] },
-      { name: 'action1', description: 'd', use: [] },
-      { name: 'action2', description: 'd', use: [] },
-      { name: 'action3', description: 'd', use: [] },
-    ],
+    module: {
+      name: 'new module',
+      description: 'd',
+      actions: [
+        { name: 'action', description: 'd', use: [] },
+        { name: 'action1', description: 'd', use: [] },
+        { name: 'action2', description: 'd', use: [] },
+        { name: 'action3', description: 'd', use: [] },
+      ],
+    },
   });
 
   beforeEach(async () => {

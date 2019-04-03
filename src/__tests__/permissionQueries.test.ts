@@ -1,5 +1,3 @@
-/* eslint-env jest */
-
 import { permissionQueries, usersGroupQueries } from '../data/resolvers/queries/permissions';
 
 describe('permissionQueries', () => {

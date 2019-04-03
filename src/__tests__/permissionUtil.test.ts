@@ -1,14 +1,6 @@
-/* eslint-env jest */
-/* eslint-disable no-underscore-dangle */
-
 import { can, registerModule } from '../data/permissions/utils';
-import { connect, disconnect } from '../db/connection';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
-
-beforeAll(() => connect());
-
-afterAll(() => disconnect());
 
 describe('Test permission utils', () => {
   let _user;
@@ -70,11 +62,11 @@ describe('Test permission utils', () => {
   });
 
   test('Register module check duplicated module', async () => {
-    registerModule(moduleObj);
+    registerModule({ moduleObj });
 
     expect.assertions(1);
     try {
-      registerModule(moduleObj);
+      registerModule({ moduleObj });
     } catch (e) {
       expect(e.message).toEqual(`"${moduleObj.name}" module has been registered`);
     }
@@ -84,22 +76,11 @@ describe('Test permission utils', () => {
     expect.assertions(1);
     try {
       registerModule({
-        name: 'new module',
-        description: 'd',
-        actions: moduleObj.actions,
-      });
-    } catch (e) {
-      expect(e.message).toEqual(`"${moduleObj.actions[0].name}" action has been registered`);
-    }
-  });
-
-  test('Register module check duplicated action', async () => {
-    expect.assertions(1);
-    try {
-      registerModule({
-        name: 'new module',
-        description: 'd',
-        actions: moduleObj.actions,
+        anyModule: {
+          name: 'new module',
+          description: 'd',
+          actions: moduleObj.actions,
+        },
       });
     } catch (e) {
       expect(e.message).toEqual(`"${moduleObj.actions[0].name}" action has been registered`);
