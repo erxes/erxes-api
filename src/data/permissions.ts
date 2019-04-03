@@ -71,10 +71,10 @@ export const moduleRequireAdmin = (mdl: any) => {
 /**
  * Wraps all properties (methods) of a given object with 'Permission action required' permission checker
  */
-export const moduleCheckPermission = (mdl: any, action: string) => {
+export const moduleCheckPermission = (mdl: any, action: string, defaultValue?: any) => {
   for (const method in mdl) {
     if (mdl.hasOwnProperty(method)) {
-      checkPermission(mdl, method, action);
+      checkPermission(mdl, method, action, defaultValue);
     }
   }
 };
@@ -85,15 +85,23 @@ export const moduleCheckPermission = (mdl: any, action: string) => {
  * @throws {Exception} throws Error('Permission required')
  * @return {null}
  */
-export const checkPermission = async (cls: any, methodName: string, actionName: string) => {
+export const checkPermission = async (cls: any, methodName: string, actionName: string, defaultValue?: any) => {
   const oldMethod = cls[methodName];
 
   cls[methodName] = async (root, args, { user }) => {
     checkLogin(user);
 
+    if (user.isOwner) {
+      return true;
+    }
+
     const allowed = await can(actionName, user._id);
 
     if (!allowed) {
+      if (defaultValue) {
+        return defaultValue;
+      }
+
       throw new Error('Permission required');
     }
 
