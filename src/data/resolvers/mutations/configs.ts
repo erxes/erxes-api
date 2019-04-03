@@ -1,6 +1,6 @@
 import { Configs } from '../../../db/models';
 import { IConfig } from '../../../db/models/definitions/configs';
-import { moduleRequireLogin } from '../../permissions';
+import { checkPermission } from '../../permissions';
 
 const configMutations = {
   /**
@@ -11,6 +11,6 @@ const configMutations = {
   },
 };
 
-moduleRequireLogin(configMutations);
+checkPermission(configMutations, 'configsInsert', 'configGeneralSettings');
 
 export default configMutations;

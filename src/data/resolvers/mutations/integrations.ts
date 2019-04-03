@@ -3,7 +3,7 @@ import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/def
 import { IMessengerIntegration } from '../../../db/models/Integrations';
 import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
 import { socUtils } from '../../../trackers/twitterTracker';
-import { moduleCheckPermission, requireAdmin } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions';
 import { getEnv, sendPostRequest } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
@@ -155,8 +155,6 @@ const integrationMutations = {
     return sendGmail(args);
   },
 };
-
-requireAdmin(integrationMutations, 'integrationsRemove');
 
 moduleCheckPermission(integrationMutations, 'manageIntegrations');
 

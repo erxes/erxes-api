@@ -29,6 +29,6 @@ const emailTemplateMutations = {
   },
 };
 
-moduleCheckPermission(emailTemplateMutations, 'manageEmailTemplates');
+moduleCheckPermission(emailTemplateMutations, 'manageEmailTemplate');
 
 export default emailTemplateMutations;

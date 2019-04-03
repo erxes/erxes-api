@@ -1,6 +1,6 @@
 import { Tags } from '../../../db/models';
 import { ITag } from '../../../db/models/definitions/tags';
-import { checkPermission, requireAdmin, requireLogin } from '../../permissions';
+import { checkPermission, requireLogin } from '../../permissions';
 import { publishConversationsChanged } from './conversations';
 
 interface ITagsEdit extends ITag {
@@ -41,8 +41,10 @@ const tagMutations = {
   },
 };
 
-checkPermission(tagMutations, 'tagsAdd', 'addTag');
-checkPermission(tagMutations, 'tagsEdit', 'editTag');
-checkPermission(tagMutations, 'tagsRemove', 'removeTag');
+requireLogin(tagMutations, 'tagsTag');
+
+checkPermission(tagMutations, 'tagsAdd', 'manageTags');
+checkPermission(tagMutations, 'tagsEdit', 'manageTags');
+checkPermission(tagMutations, 'tagsRemove', 'manageTags');
 
 export default tagMutations;
