@@ -7,13 +7,6 @@ const params = `
   endDate: String
 `;
 
-const dealParams = `
-  pipelineIds: String,
-  boardId: String,
-  startDate: String,
-  endDate: String
-`;
-
 export const queries = `
   insights(${params}): JSON
   insightsPunchCard(type: String, ${params}): JSON
@@ -25,7 +18,4 @@ export const queries = `
   insightActivityReportExport(${params}): JSON
   insightFirstResponseReportExport(type: String, userId: String, ${params}): JSON
   insightTagReportExport(${params}): JSON
-
-  dealInsightsMain(${dealParams}): JSON
-  dealInsightsPunchCard(${dealParams}): JSON
 `;

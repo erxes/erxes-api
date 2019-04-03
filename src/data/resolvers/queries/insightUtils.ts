@@ -1,10 +1,9 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Deals, Integrations, Users } from '../../../db/models';
+import { ConversationMessages, Conversations, Integrations, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IUser } from '../../../db/models/definitions/users';
-import { INSIGHT_TYPES } from '../../constants';
 import { getDateFieldAsStr } from './aggregationUtils';
 
 interface IMessageSelector {
@@ -19,13 +18,6 @@ interface IMessageSelector {
 interface IGenerateChartData {
   x: any;
   y: number;
-}
-
-interface IGeneratePunchCard {
-  day: number;
-  hour: number;
-  date: number;
-  count: number;
 }
 
 interface IGenerateTimeIntervals {
@@ -61,19 +53,17 @@ interface IGenerateResponseData {
   };
 }
 
+interface IChartData {
+  collection?: any;
+  messageSelector?: any;
+}
+
 export interface IListArgs {
   integrationIds: string;
   brandIds: string;
   startDate: string;
   endDate: string;
   type: string;
-}
-
-export interface IDealListArgs {
-  pipelineIds: string;
-  boardId: string;
-  startDate: string;
-  endDate: string;
 }
 
 export interface IFilterSelector {
@@ -231,15 +221,16 @@ export const fixChartData = async (data: any[], hintX: string, hintY: string): P
       return { x: formatTime(moment(key), 'MM-DD'), y: results[key] };
     });
 };
-
 /**
  * Populates message collection into date range
  * by given duration and loop count for chart data.
  */
-export const generateChartDataBySelector = async (selector: object, type: string): Promise<IGenerateChartData[]> => {
+export const generateChartData = async (args: IChartData): Promise<IGenerateChartData[]> => {
+  const { collection, messageSelector } = args;
+
   const pipelineStages = [
     {
-      $match: selector,
+      $match: messageSelector,
     },
     {
       $project: {
@@ -266,72 +257,23 @@ export const generateChartDataBySelector = async (selector: object, type: string
     },
   ];
 
-  if (type === INSIGHT_TYPES.DEAL) {
-    return Deals.aggregate([pipelineStages]);
+  if (collection) {
+    const results = {};
+
+    collection.map(obj => {
+      const date = formatTime(moment(obj.createdAt), 'YYYY-MM-DD');
+
+      results[date] = (results[date] || 0) + 1;
+    });
+
+    return Object.keys(results)
+      .sort()
+      .map(key => {
+        return { x: formatTime(moment(key), 'MM-DD'), y: results[key] };
+      });
   }
 
   return ConversationMessages.aggregate([pipelineStages]);
-};
-
-export const generatePunchData = async (
-  collection: any,
-  selector: object,
-  user: IUser,
-): Promise<IGeneratePunchCard> => {
-  const pipelineStages = [
-    {
-      $match: selector,
-    },
-    {
-      $project: {
-        hour: { $hour: { date: '$createdAt', timezone: '+08' } },
-        day: { $isoDayOfWeek: { date: '$createdAt', timezone: '+08' } },
-        date: await getDateFieldAsStr({ timeZone: getTimezone(user) }),
-      },
-    },
-    {
-      $group: {
-        _id: {
-          hour: '$hour',
-          day: '$day',
-          date: '$date',
-        },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        day: '$_id.day',
-        hour: '$_id.hour',
-        date: '$_id.date',
-        count: 1,
-      },
-    },
-  ];
-
-  return collection.aggregate(pipelineStages);
-};
-
-/**
- * Populates message collection into date range
- * by given duration and loop count for chart data.
- */
-
-export const generateChartDataByCollection = async (collection: any): Promise<IGenerateChartData[]> => {
-  const results = {};
-
-  collection.map(obj => {
-    const date = formatTime(moment(obj.createdAt), 'YYYY-MM-DD');
-
-    results[date] = (results[date] || 0) + 1;
-  });
-
-  return Object.keys(results)
-    .sort()
-    .map(key => {
-      return { x: formatTime(moment(key), 'MM-DD'), y: results[key] };
-    });
 };
 
 /**
@@ -395,7 +337,7 @@ export const generateUserChartData = async ({
   userMessages: IMessageDocument[];
 }): Promise<IGenerateUserChartData> => {
   const user = await Users.findOne({ _id: userId });
-  const userData = await generateChartDataByCollection(userMessages);
+  const userData = await generateChartData({ collection: userMessages });
 
   if (!user) {
     return {
@@ -473,7 +415,7 @@ export const generateResponseData = async (
   allResponseTime: number,
 ): Promise<IGenerateResponseData> => {
   // preparing trend chart data
-  const trend = await generateChartDataByCollection(responsData);
+  const trend = await generateChartData({ collection: responsData });
 
   // Average response time for all messages
   const time = Math.floor(allResponseTime / responsData.length);
