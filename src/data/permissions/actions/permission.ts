@@ -6,43 +6,11 @@ export const moduleObjects = {
       {
         name: 'manageBrands',
         description: 'Manage brands',
-        use: [
-          'brandsAdd',
-          'brandsEdit',
-          'brandsRemove',
-          'updateBrandsConfigEmail',
-          'updateBrandIntegration',
-          'showBrands',
-          'showBrandDetail',
-        ],
-      },
-      {
-        name: 'brandsAdd',
-        description: 'Add brand',
-      },
-      {
-        name: 'brandsEdit',
-        description: 'Edit brand',
-      },
-      {
-        name: 'brandsRemove',
-        description: 'Remove brand',
-      },
-      {
-        name: 'updateBrandsConfigEmail',
-        description: 'Update brand config email',
-      },
-      {
-        name: 'updateBrandIntegration',
-        description: 'Brands manager integrations',
+        use: ['showBrands'],
       },
       {
         name: 'showBrands',
         description: 'Show brands',
-      },
-      {
-        name: 'showBrandDetail',
-        description: 'Show brand detail',
       },
     ],
   },
@@ -53,27 +21,11 @@ export const moduleObjects = {
       {
         name: 'manageChannels',
         description: 'Manage channels',
-        use: ['channelsAdd', 'channelsEdit', 'channelsRemove', 'showChannels', 'showChannelDetail'],
-      },
-      {
-        name: 'channelsAdd',
-        description: 'Add channel',
-      },
-      {
-        name: 'channelsEdit',
-        description: 'Edit channel',
-      },
-      {
-        name: 'channelsRemove',
-        description: 'Remove channel',
+        use: ['showChannels'],
       },
       {
         name: 'showChannels',
         description: 'Show channel',
-      },
-      {
-        name: 'showChannelDetail',
-        description: 'Show channel detail',
       },
     ],
   },
@@ -92,7 +44,6 @@ export const moduleObjects = {
           'companiesMerge',
           'showCompanies',
           'showCompaniesMain',
-          'showCompanyDetail',
           'exportCompanies',
         ],
       },
@@ -125,10 +76,6 @@ export const moduleObjects = {
         description: 'Show companies main',
       },
       {
-        name: 'showCompanyDetail',
-        description: 'Show company detail',
-      },
-      {
         name: 'exportCompanies',
         description: 'Export companies to xls file',
       },
@@ -143,7 +90,6 @@ export const moduleObjects = {
         description: 'Manage customers',
         use: [
           'showCustomers',
-          'showCustomerDetail',
           'customersAdd',
           'customersEdit',
           'updateCustomersCompanies',
@@ -159,10 +105,6 @@ export const moduleObjects = {
       {
         name: 'showCustomers',
         description: 'Show customers',
-      },
-      {
-        name: 'showCustomerDetil',
-        description: 'Show customer detail',
       },
       {
         name: 'customersAdd',
@@ -195,7 +137,6 @@ export const moduleObjects = {
         description: 'Manage deals',
         use: [
           'showDeals',
-          'showDealDetail',
           'dealBoardsAdd',
           'dealBoardsEdit',
           'dealBoardsRemove',
@@ -216,10 +157,6 @@ export const moduleObjects = {
       {
         name: 'showDeals',
         description: 'Show deals',
-      },
-      {
-        name: 'showDealDetail',
-        description: 'Show deal detail',
       },
       {
         name: 'dealBoardsAdd',
@@ -291,7 +228,6 @@ export const moduleObjects = {
           'engageMessageSetPause',
           'engageMessageSetLive',
           'showEngagesMessages',
-          'showEngagesMessageDetail',
           'engageMessageAdd',
           'engageMessageEdit',
           'engageMessageRemove',
@@ -325,10 +261,6 @@ export const moduleObjects = {
         name: 'showEngagesMessages',
         description: 'Show engages messages list',
       },
-      {
-        name: 'showEngagesMessageDetail',
-        description: 'Show engages message detail',
-      },
     ],
   },
   insights: {
@@ -336,7 +268,7 @@ export const moduleObjects = {
     description: 'Insights permission config',
     actions: [
       {
-        name: 'manageInsights',
+        name: 'exportInsights',
         description: 'Manage insights',
         use: ['showInsights'],
       },
@@ -353,51 +285,11 @@ export const moduleObjects = {
       {
         name: 'manageKnowledgeBase',
         description: 'Manage knowledge base',
-        use: [
-          'knowledgeBaseTopicsAdd',
-          'knowledgeBaseTopicsEdit',
-          'knowledgeBaseTopicsRemove',
-          'knowledgeBaseCategoriesAdd',
-          'knowledgeBaseCategoriesEdit',
-          'knowledgeBaseArticlesAdd',
-          'knowledgeBaseArticlesEdit',
-          'knowledgeBaseArticlesRemove',
-          'showKnowledgeBase',
-          'showKnowledgeBaseArticles',
-          'showKnowledgeBaseArticleDetail',
-        ],
+        use: ['showKnowledgeBase'],
       },
       {
-        name: 'knowledgeBaseArticlesRemove',
-        description: 'Remove knowledge base article ',
-      },
-      {
-        name: 'knowledgeBaseArticlesEdit',
-        description: 'Edit knowledge base article',
-      },
-      {
-        name: 'knowledgeBaseArticlesAdd',
-        description: 'Add knowledge base article',
-      },
-      {
-        name: 'knowledgeBaseCategoriesAdd',
-        description: 'Add knowledge base category',
-      },
-      {
-        name: 'knowledgeBaseCategoriesEdit',
-        description: 'Edit knowledge base category',
-      },
-      {
-        name: 'knowledgeBaseTopicsAdd',
-        description: 'Add knowledge base topic',
-      },
-      {
-        name: 'knowledgeBaseTopicsEdit',
-        description: 'Edit knowledge base topic',
-      },
-      {
-        name: 'knowledgeBaseTopicsRemove',
-        description: 'Remove knowledge base topic',
+        name: 'showKnowledgeBase',
+        description: 'Show knowledge base',
       },
     ],
   },
@@ -408,21 +300,7 @@ export const moduleObjects = {
       {
         name: 'managePermissions',
         description: 'Manage permissions',
-        use: [
-          'showPermissions',
-          'showPermissionModules',
-          'showPermissionActions',
-          'permissionsAdd',
-          'permissionsRemove',
-        ],
-      },
-      {
-        name: 'permissionsRemove',
-        description: 'Remove permission',
-      },
-      {
-        name: 'permissionsAdd',
-        description: 'Add permission',
+        use: ['showPermissions', 'showPermissionModules', 'showPermissionActions'],
       },
       {
         name: 'showPermissions',
@@ -445,23 +323,11 @@ export const moduleObjects = {
       {
         name: 'manageUsersGroups',
         description: 'Manage users groups',
-        use: ['showUsersGroups', 'usersGroupsAdd', 'usersGroupsEdit', 'usersGroupsRemove'],
+        use: ['showUsersGroups'],
       },
       {
         name: 'showUsersGroups',
         description: 'Show users groups',
-      },
-      {
-        name: 'usersGroupsAdd',
-        description: 'Add user group',
-      },
-      {
-        name: 'usersGroupsEdit',
-        description: 'Edit user group',
-      },
-      {
-        name: 'usersGroupsRemove',
-        description: 'Remove user group',
       },
     ],
   },
@@ -472,19 +338,7 @@ export const moduleObjects = {
       {
         name: 'manageScripts',
         description: 'Manage scripts',
-        use: ['showScripts', 'scriptsAdd', 'scriptsEdit', 'scriptsRemove'],
-      },
-      {
-        name: 'scriptsRemove',
-        description: 'Remove scripts',
-      },
-      {
-        name: 'scriptsEdit',
-        description: 'Edit scripts',
-      },
-      {
-        name: 'scriptsAdd',
-        description: 'Add script',
+        use: ['showScripts'],
       },
       {
         name: 'showScripts',
@@ -499,19 +353,7 @@ export const moduleObjects = {
       {
         name: 'manageProducts',
         description: 'Manage products',
-        use: ['showProducts', 'productsAdd', 'productsEdit', 'productsRemove'],
-      },
-      {
-        name: 'productsAdd',
-        description: 'Add product',
-      },
-      {
-        name: 'productsEdit',
-        description: 'Edit product',
-      },
-      {
-        name: 'productsRemove',
-        description: 'Remove product',
+        use: ['showProducts'],
       },
       {
         name: 'showProducts',
@@ -526,7 +368,11 @@ export const moduleObjects = {
       {
         name: 'manageUsers',
         description: 'Manage users',
-        use: ['showUsers', 'showUserDetail', 'usersEdit', 'usersInvite'],
+        use: ['showUsers', 'usersEdit', 'usersInvite', 'usersSetActiveStatus'],
+      },
+      {
+        name: 'usersSetActiveStatus',
+        description: 'Set active/deactive user',
       },
       {
         name: 'usersEdit',
@@ -535,10 +381,6 @@ export const moduleObjects = {
       {
         name: 'usersInvite',
         description: 'Invite user',
-      },
-      {
-        name: 'showUserDetail',
-        description: 'Show user detail',
       },
     ],
   },
@@ -549,46 +391,22 @@ export const moduleObjects = {
       {
         name: 'manageEmailTemplate',
         description: 'Manage email template',
-        use: ['emailTemplates', 'emailTemplatesAdd', 'emailTemplatesEdit', 'emailTemplatesRemove'],
+        use: ['showEmailTemplates'],
       },
       {
-        name: 'emailTemplatesRemove',
-        description: 'Remove email template',
-      },
-      {
-        name: 'emailTemplatesEdit',
-        description: 'Edit email template',
-      },
-      {
-        name: 'emailTemplatesAdd',
-        description: 'Add email template',
-      },
-      {
-        name: 'emailTemplates',
+        name: 'showEmailTemplates',
         description: 'Show email templates',
       },
     ],
   },
   responseTemplates: {
     name: 'responseTemplates',
-    description: 'Resposne templates permission config',
+    description: 'Response templates permission config',
     actions: [
       {
         name: 'manageResponseTemplate',
-        description: 'Manage resposne template',
-        use: ['showResponseTemplates', 'responseTemplatesAdd', 'responseTemplatesEdit', 'responseTemplatesRemove'],
-      },
-      {
-        name: 'responseTemplatesRemove',
-        description: 'Remove response template',
-      },
-      {
-        name: 'responseTemplatesEdit',
-        description: 'Edit response template',
-      },
-      {
-        name: 'responseTemplatesAdd',
-        description: 'Add response template',
+        description: 'Manage response template',
+        use: ['showResponseTemplates'],
       },
       {
         name: 'showResponseTemplates',
@@ -603,7 +421,11 @@ export const moduleObjects = {
       {
         name: 'manageImportHistories',
         description: 'Manage import histories',
-        use: ['importHistories', 'removeImportHistories'],
+        use: ['importHistories', 'removeImportHistories', 'importXlsFile'],
+      },
+      {
+        name: 'importXlsFile',
+        description: 'Import xls files',
       },
       {
         name: 'removeImportHistories',
@@ -622,27 +444,11 @@ export const moduleObjects = {
       {
         name: 'manageTags',
         description: 'Manage tags',
-        use: ['showTags', 'showTagDetail', 'addTag', 'editTag', 'removeTag'],
+        use: ['showTags'],
       },
       {
         name: 'showTags',
         description: 'Show tags',
-      },
-      {
-        name: 'showTagDetail',
-        description: 'Show tag detail',
-      },
-      {
-        name: 'addTag',
-        description: 'Add tag',
-      },
-      {
-        name: 'editTag',
-        description: 'Edit tag',
-      },
-      {
-        name: 'removeTag',
-        description: 'Remove tag',
       },
     ],
   },
@@ -653,23 +459,11 @@ export const moduleObjects = {
       {
         name: 'manageForms',
         description: 'Manage forms',
-        use: ['formsAdd', 'formsEdit', 'showForms', 'showFormDetail'],
+        use: ['showForms'],
       },
       {
         name: 'showForms',
         description: 'Show forms',
-      },
-      {
-        name: 'showFormDetail',
-        description: 'Show form detail',
-      },
-      {
-        name: 'formsAdd',
-        description: 'Add form',
-      },
-      {
-        name: 'formsEdit',
-        description: 'Edit form',
       },
     ],
   },
@@ -680,27 +474,11 @@ export const moduleObjects = {
       {
         name: 'manageSegments',
         description: 'Manage segments',
-        use: ['showSegments', 'showSegmentDetail', 'segmentsAdd', 'segmentsEdit', 'segmentsRemove'],
-      },
-      {
-        name: 'segmentsAdd',
-        description: 'Add segment',
-      },
-      {
-        name: 'segmentsEdit',
-        description: 'Edit segment',
-      },
-      {
-        name: 'segmentsRemove',
-        description: 'Remove segment',
+        use: ['showSegments'],
       },
       {
         name: 'showSegments',
         description: 'Show segments list',
-      },
-      {
-        name: 'showSegmentDetail',
-        description: 'Show segment detail',
       },
     ],
   },
@@ -713,7 +491,6 @@ export const moduleObjects = {
         description: 'Manage integrations',
         use: [
           'showIntegrations',
-          'integrationDetail',
           'integrationsCreateMessengerIntegration',
           'integrationsEditMessengerIntegration',
           'integrationsSaveMessengerAppearanceData',
@@ -730,10 +507,6 @@ export const moduleObjects = {
       {
         name: 'showIntegrations',
         description: 'Show integrations',
-      },
-      {
-        name: 'integrationDetail',
-        description: 'Show integration detail',
       },
       {
         name: 'integrationsCreateMessengerIntegration',
@@ -788,27 +561,7 @@ export const moduleObjects = {
       {
         name: 'manageFields',
         description: 'Manage fields',
-        use: ['showFields', 'fieldsAdd', 'fieldsEdit', 'fieldsRemove', 'fieldsUpdateOrder', 'fieldsUpdateVisible'],
-      },
-      {
-        name: 'fieldsUpdateVisible',
-        description: 'Update fields visible',
-      },
-      {
-        name: 'fieldsUpdateOrder',
-        description: 'Update fields order',
-      },
-      {
-        name: 'fieldsRemove',
-        description: 'Remove fields',
-      },
-      {
-        name: 'fieldsEdit',
-        description: 'Edit fields',
-      },
-      {
-        name: 'fieldsAdd',
-        description: 'Add fields',
+        use: ['showFields'],
       },
       {
         name: 'showFields',
@@ -823,33 +576,86 @@ export const moduleObjects = {
       {
         name: 'manageFieldsGroups',
         description: 'Manage fields groups',
-        use: [
-          'showFieldsGroups',
-          'fieldsGroupsAdd',
-          'fieldsGroupsEdit',
-          'fieldsGroupsRemove',
-          'fieldsGroupsUpdateVisible',
-        ],
-      },
-      {
-        name: 'fieldsGroupsUpdateVisible',
-        description: 'Update visible fields groups',
-      },
-      {
-        name: 'fieldsGroupsRemove',
-        description: 'Remove fields groups',
-      },
-      {
-        name: 'fieldsGroupsEdit',
-        description: 'Edit fields groups',
-      },
-      {
-        name: 'fieldsGroupsAdd',
-        description: 'Add fields groups',
+        use: ['showFieldsGroups'],
       },
       {
         name: 'showFieldsGroups',
         description: 'Show fields groups',
+      },
+    ],
+  },
+  accounts: {
+    name: 'accounts',
+    description: 'Accounts permission config',
+    actions: [
+      {
+        name: 'manageAccounts',
+        description: 'Manage accounts',
+        use: ['showAccounts'],
+      },
+      {
+        name: 'showAccounts',
+        description: 'Show accounts',
+      },
+    ],
+  },
+  inbox: {
+    name: 'inbox',
+    description: 'Inbox permission config',
+    actions: [
+      {
+        name: 'showConversations',
+        description: 'Show conversations',
+      },
+      {
+        name: 'changeConversationStatus',
+        description: 'Change conversation status',
+      },
+      {
+        name: 'assignConversation',
+        description: 'Assign conversation',
+      },
+      {
+        name: 'conversationMessageAdd',
+        description: 'Add conversation message',
+      },
+    ],
+  },
+  generalSettings: {
+    name: 'generalSettings',
+    description: 'General settings permission config',
+    actions: [
+      {
+        name: 'showGeneralSettings',
+        description: 'Show general settings',
+      },
+      {
+        name: 'configGeneralSettings',
+        description: 'Config general settings',
+      },
+    ],
+  },
+  emailAppearance: {
+    name: 'emailAppearance',
+    description: 'Email appearance permission config',
+    actions: [
+      {
+        name: 'showEmailappearance',
+        description: 'Show email appearance',
+      },
+      {
+        name: 'configEmailAppearance',
+        description: 'Config email appearance',
+      },
+    ],
+  },
+  systemStatus: {
+    name: 'systemStatus',
+    description: 'System status',
+    actions: [
+      {
+        name: 'showSystemStatus',
+        description: 'Show system status',
       },
     ],
   },
