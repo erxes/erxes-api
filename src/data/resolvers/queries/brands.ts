@@ -35,8 +35,8 @@ const brandQueries = {
 
 requireLogin(brandQueries, 'brandsTotalCount');
 requireLogin(brandQueries, 'brandsGetLast');
+requireLogin(brandQueries, 'brandDetail');
 
-checkPermission(brandQueries, 'brands', 'showBrands');
-checkPermission(brandQueries, 'brandDetail', 'showBrandDetail');
+checkPermission(brandQueries, 'brands', 'showBrands', []);
 
 export default brandQueries;

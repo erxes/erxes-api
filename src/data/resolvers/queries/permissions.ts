@@ -109,10 +109,10 @@ const usersGroupQueries = {
 requireLogin(permissionQueries, 'permissionsTotalCount');
 requireLogin(usersGroupQueries, 'usersGroupsTotalCount');
 
-checkPermission(permissionQueries, 'permissions', 'showPermissions');
-checkPermission(permissionQueries, 'permissionModules', 'showPermissionModules');
-checkPermission(permissionQueries, 'permissionActions', 'showPermissionActions');
+checkPermission(permissionQueries, 'permissions', 'showPermissions', []);
+checkPermission(permissionQueries, 'permissionModules', 'showPermissionModules', []);
+checkPermission(permissionQueries, 'permissionActions', 'showPermissionActions', []);
 
-checkPermission(usersGroupQueries, 'usersGroups', 'showUsersGroups');
+checkPermission(usersGroupQueries, 'usersGroups', 'showUsersGroups', []);
 
 export { permissionQueries, usersGroupQueries };

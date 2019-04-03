@@ -169,7 +169,6 @@ const integrationQueries = {
 
 moduleRequireLogin(integrationQueries);
 
-checkPermission(integrationQueries, 'integrations', 'showIntegrations');
-checkPermission(integrationQueries, 'integrationDetail', 'showIntegrationDetail');
+checkPermission(integrationQueries, 'integrations', 'showIntegrations', []);
 
 export default integrationQueries;

@@ -11,6 +11,6 @@ const importHistoryQueries = {
   },
 };
 
-checkPermission(importHistoryQueries, 'importHistories', 'importHistories');
+checkPermission(importHistoryQueries, 'importHistories', 'importHistories', []);
 
 export default importHistoryQueries;

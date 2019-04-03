@@ -251,7 +251,6 @@ const customerQueries = {
 moduleRequireLogin(customerQueries);
 
 checkPermission(customerQueries, 'customers', 'showCustomers');
-checkPermission(customerQueries, 'customerDetail', 'showCustomerDetail');
 checkPermission(customerQueries, 'customersExport', 'exportCustomers');
 
 export default customerQueries;

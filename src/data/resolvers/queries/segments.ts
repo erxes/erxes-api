@@ -25,8 +25,8 @@ const segmentQueries = {
 };
 
 requireLogin(segmentQueries, 'segmentsGetHeads');
+requireLogin(segmentQueries, 'segmentDetail');
 
-checkPermission(segmentQueries, 'segments', 'showSegments');
-checkPermission(segmentQueries, 'segmentDetail', 'showSegmentDetail');
+checkPermission(segmentQueries, 'segments', 'showSegments', []);
 
 export default segmentQueries;

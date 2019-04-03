@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
-import { moduleCheckPermission, moduleRequireLogin } from '../../permissions';
+import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { getDateFieldAsStr, getDurationField } from './aggregationUtils';
 import {
   findConversations,
@@ -462,6 +462,7 @@ const insightQueries = {
 };
 
 moduleRequireLogin(insightQueries);
-moduleCheckPermission(insightQueries, 'manageInsights');
+
+checkPermission(insightQueries, 'insights', 'showInsights');
 
 export default insightQueries;

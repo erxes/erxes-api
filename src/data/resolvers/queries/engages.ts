@@ -188,8 +188,8 @@ const engageQueries = {
 
 requireLogin(engageQueries, 'engageMessagesTotalCount');
 requireLogin(engageQueries, 'engageMessageCounts');
+requireLogin(engageQueries, 'engageMessageDetail');
 
-checkPermission(engageQueries, 'engageMessages', 'showEngageMessages');
-checkPermission(engageQueries, 'engageMessageDetail', 'showEngageMessageDetail');
+checkPermission(engageQueries, 'engageMessages', 'showEngagesMessages', []);
 
 export default engageQueries;

@@ -19,6 +19,6 @@ const emailTemplateQueries = {
 };
 
 requireLogin(emailTemplateQueries, 'emailTemplatesTotalCount');
-checkPermission(emailTemplateQueries, 'emailTemplates', 'emailTemplates');
+checkPermission(emailTemplateQueries, 'emailTemplates', 'showEmailTemplates', []);
 
 export default emailTemplateQueries;

@@ -51,8 +51,8 @@ const channelQueries = {
 
 requireLogin(channelQueries, 'channelsGetLast');
 requireLogin(channelQueries, 'channelsTotalCount');
+requireLogin(channelQueries, 'channelDetail');
 
-checkPermission(channelQueries, 'channels', 'showChannels');
-checkPermission(channelQueries, 'channelDetail', 'showChannelDetail');
+checkPermission(channelQueries, 'channels', 'showChannels', []);
 
 export default channelQueries;

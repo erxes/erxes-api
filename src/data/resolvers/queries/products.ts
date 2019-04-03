@@ -39,6 +39,6 @@ const productQueries = {
 };
 
 requireLogin(productQueries, 'productsTotalCount');
-checkPermission(productQueries, 'products', 'showProducts');
+checkPermission(productQueries, 'products', 'showProducts', []);
 
 export default productQueries;

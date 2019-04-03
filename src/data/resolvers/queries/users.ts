@@ -80,8 +80,8 @@ const userQueries = {
 };
 
 requireLogin(userQueries, 'usersTotalCount');
+requireLogin(userQueries, 'userDetail');
 
-checkPermission(userQueries, 'users', 'showUsers');
-checkPermission(userQueries, 'userDetail', 'showUserDetail');
+checkPermission(userQueries, 'users', 'showUsers', []);
 
 export default userQueries;

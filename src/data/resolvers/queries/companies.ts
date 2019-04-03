@@ -1,6 +1,6 @@
 import { Brands, Companies, Customers, Integrations, Segments, Tags } from '../../../db/models';
 import { COC_CONTENT_TYPES, COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, TAG_TYPES } from '../../constants';
-import { checkPermission, moduleRequireLogin } from '../../permissions';
+import { checkPermission, requireLogin } from '../../permissions';
 import { cocsExport } from './cocExport';
 import QueryBuilder from './segmentQueryBuilder';
 import { paginate } from './utils';
@@ -264,10 +264,11 @@ const companyQueries = {
   },
 };
 
-moduleRequireLogin(companyQueries);
+requireLogin(companyQueries, 'companiesMain');
+requireLogin(companyQueries, 'companyCounts');
+requireLogin(companyQueries, 'companyDetail');
 
-checkPermission(companyQueries, 'companies', 'showCompanies');
-checkPermission(companyQueries, 'companyDetail', 'showCompanyDetail');
+checkPermission(companyQueries, 'companies', 'showCompanies', []);
 checkPermission(companyQueries, 'companiesExport', 'exportCompanies');
 
 export default companyQueries;

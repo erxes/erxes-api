@@ -158,7 +158,6 @@ const dealQueries = {
 
 moduleRequireLogin(dealQueries);
 
-checkPermission(dealQueries, 'deals', 'showDeals');
-checkPermission(dealQueries, 'dealDetail', 'showDealDetail');
+checkPermission(dealQueries, 'deals', 'showDeals', []);
 
 export default dealQueries;

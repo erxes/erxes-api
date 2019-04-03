@@ -19,6 +19,6 @@ const responseTemplateQueries = {
 };
 
 requireLogin(responseTemplateQueries, 'responseTemplatesTotalCount');
-checkPermission(responseTemplateQueries, 'responseTemplates', 'showResponseTemplates');
+checkPermission(responseTemplateQueries, 'responseTemplates', 'showResponseTemplates', []);
 
 export default responseTemplateQueries;
