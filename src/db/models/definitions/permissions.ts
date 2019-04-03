@@ -31,7 +31,7 @@ export const permissionSchema = new Schema({
   action: field({ type: String }),
   userId: field({ type: String }),
   groupId: field({ type: String }),
-  requiredActions: field({ type: [String] }),
+  requiredActions: field({ type: [String], default: [] }),
   allowed: field({ type: Boolean, default: false }),
 });
 
