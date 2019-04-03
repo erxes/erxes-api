@@ -8,6 +8,7 @@ import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Companies, Customers, Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
+import { can } from './permissions/utils';
 
 /*
  * Check that given file is not harmful
@@ -268,6 +269,10 @@ export const sendNotification = async ({
  */
 export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
   return new Promise((resolve, reject) => {
+    if (!can('importXlsFile', user._id)) {
+      return reject('Permission denied!');
+    }
+
     const readStream = fs.createReadStream(file.path);
 
     // Directory to save file
