@@ -14,8 +14,13 @@ export default {
   async permissionActions(user: IUserDocument) {
     const actions = await Permissions.find({
       $or: [{ userId: user._id }, { groupId: { $in: user.groupIds } }],
-    }).select('action');
+    }).select(['action', 'requiredActions']);
 
-    return _.uniq(_.pluck(actions, 'action'));
+    const pluckedActions = _.pluck(actions, 'requiredActions');
+    const requiredActions = [].concat(...pluckedActions);
+
+    const actionNames = [..._.pluck(actions, 'action'), ...requiredActions];
+
+    return _.uniq(actionNames);
   },
 };
