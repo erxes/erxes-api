@@ -52,8 +52,8 @@ export const mutations = `
 	permissionsAdd(
     module: String!,
     actions: [String!]!,
-    userIds: [String!]!,
-    groupIds: [String!]!,
+    userIds: [String!],
+    groupIds: [String!],
     allowed: Boolean
   ): [Permission]
   permissionsRemove(ids: [String]!): JSON
