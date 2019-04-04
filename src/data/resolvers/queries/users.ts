@@ -22,8 +22,8 @@ const queryBuilder = async (params: IListArgs) => {
     selector.$or = fields;
   }
 
-  if (params.isActive) {
-    selector.isActive = params.isActive === 'true';
+  if (params.isActive !== undefined) {
+    selector.isActive = params.isActive;
   }
 
   return selector;
@@ -44,7 +44,7 @@ const userQueries = {
    * Get one user
    */
   userDetail(_root, { _id }: { _id: string }) {
-    return Users.findOne({ _id, isActive: { $ne: false } });
+    return Users.findOne({ _id });
   },
 
   /**
