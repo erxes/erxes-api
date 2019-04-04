@@ -46,7 +46,7 @@ const schema = makeExecutableSchema({
 });
 
 export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context?: any) => {
-  const user = await userFactory({ isOwner: true });
+  const user = await userFactory({});
 
   const rootValue = {};
 
