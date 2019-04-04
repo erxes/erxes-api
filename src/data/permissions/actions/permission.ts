@@ -1,7 +1,7 @@
 export const moduleObjects = {
   brands: {
     name: 'brands',
-    description: 'Brands permission config',
+    description: 'Brands',
     actions: [
       {
         name: 'manageBrands',
@@ -16,7 +16,7 @@ export const moduleObjects = {
   },
   channels: {
     name: 'channels',
-    description: 'Channels permission config',
+    description: 'Channels',
     actions: [
       {
         name: 'manageChannels',
@@ -31,7 +31,7 @@ export const moduleObjects = {
   },
   companies: {
     name: 'companies',
-    description: 'Companies permission config',
+    description: 'Companies',
     actions: [
       {
         name: 'manageCompanies',
@@ -83,7 +83,7 @@ export const moduleObjects = {
   },
   customers: {
     name: 'customers',
-    description: 'Customers permission config',
+    description: 'Customers',
     actions: [
       {
         name: 'manageCustomers',
@@ -130,7 +130,7 @@ export const moduleObjects = {
   },
   deals: {
     name: 'deals',
-    description: 'Deals permission config',
+    description: 'Deals',
     actions: [
       {
         name: 'manageDeals',
@@ -218,7 +218,7 @@ export const moduleObjects = {
   },
   engages: {
     name: 'engages',
-    description: 'Engages permission config',
+    description: 'Engages',
     actions: [
       {
         name: 'manageEngages',
@@ -265,12 +265,16 @@ export const moduleObjects = {
   },
   insights: {
     name: 'insights',
-    description: 'Insights permission config',
+    description: 'Insights',
     actions: [
       {
-        name: 'exportInsights',
+        name: 'manageInsights',
         description: 'Manage insights',
-        use: ['showInsights'],
+        use: ['showInsights', 'exportInsights'],
+      },
+      {
+        name: 'exportInsights',
+        description: 'Export insights',
       },
       {
         name: 'showInsights',
@@ -280,7 +284,7 @@ export const moduleObjects = {
   },
   knowledgeBase: {
     name: 'knowledgeBase',
-    description: 'KnowledgeBase permission config',
+    description: 'KnowledgeBase',
     actions: [
       {
         name: 'manageKnowledgeBase',
@@ -318,7 +322,7 @@ export const moduleObjects = {
   },
   usersGroups: {
     name: 'usersGroups',
-    description: 'Users Groups permission config',
+    description: 'Users Groups',
     actions: [
       {
         name: 'manageUsersGroups',
@@ -333,7 +337,7 @@ export const moduleObjects = {
   },
   scripts: {
     name: 'scripts',
-    description: 'Scripts permission config',
+    description: 'Scripts',
     actions: [
       {
         name: 'manageScripts',
@@ -348,7 +352,7 @@ export const moduleObjects = {
   },
   products: {
     name: 'products',
-    description: 'Products permission config',
+    description: 'Products',
     actions: [
       {
         name: 'manageProducts',
@@ -363,7 +367,7 @@ export const moduleObjects = {
   },
   users: {
     name: 'users',
-    description: 'Users permission config',
+    description: 'Users',
     actions: [
       {
         name: 'manageUsers',
@@ -390,7 +394,7 @@ export const moduleObjects = {
   },
   emailTemplates: {
     name: 'emailTemplates',
-    description: 'Email template permission config',
+    description: 'Email template',
     actions: [
       {
         name: 'manageEmailTemplate',
@@ -405,7 +409,7 @@ export const moduleObjects = {
   },
   responseTemplates: {
     name: 'responseTemplates',
-    description: 'Response templates permission config',
+    description: 'Response templates',
     actions: [
       {
         name: 'manageResponseTemplate',
@@ -420,7 +424,7 @@ export const moduleObjects = {
   },
   importHistories: {
     name: 'importHistories',
-    description: 'Import histories permission config',
+    description: 'Import histories',
     actions: [
       {
         name: 'manageImportHistories',
@@ -443,7 +447,7 @@ export const moduleObjects = {
   },
   tags: {
     name: 'tags',
-    description: 'Tags permission config',
+    description: 'Tags',
     actions: [
       {
         name: 'manageTags',
@@ -458,7 +462,7 @@ export const moduleObjects = {
   },
   forms: {
     name: 'forms',
-    description: 'Form permission config',
+    description: 'Form',
     actions: [
       {
         name: 'manageForms',
@@ -473,7 +477,7 @@ export const moduleObjects = {
   },
   segments: {
     name: 'segments',
-    description: 'Segments permission config',
+    description: 'Segments',
     actions: [
       {
         name: 'manageSegments',
@@ -488,7 +492,7 @@ export const moduleObjects = {
   },
   integrations: {
     name: 'integrations',
-    description: 'Integrations permission config',
+    description: 'Integrations',
     actions: [
       {
         name: 'manageIntegrations',
@@ -560,7 +564,7 @@ export const moduleObjects = {
   },
   fields: {
     name: 'fields',
-    description: 'Fields permission config',
+    description: 'Fields',
     actions: [
       {
         name: 'manageFields',
@@ -575,7 +579,7 @@ export const moduleObjects = {
   },
   fieldsGroups: {
     name: 'fieldsGroups',
-    description: 'Fields groups permission config',
+    description: 'Fields groups',
     actions: [
       {
         name: 'manageFieldsGroups',
@@ -590,7 +594,7 @@ export const moduleObjects = {
   },
   accounts: {
     name: 'accounts',
-    description: 'Accounts permission config',
+    description: 'Accounts',
     actions: [
       {
         name: 'manageAccounts',
@@ -605,7 +609,7 @@ export const moduleObjects = {
   },
   inbox: {
     name: 'inbox',
-    description: 'Inbox permission config',
+    description: 'Inbox',
     actions: [
       {
         name: 'showConversations',
@@ -627,7 +631,7 @@ export const moduleObjects = {
   },
   generalSettings: {
     name: 'generalSettings',
-    description: 'General settings permission config',
+    description: 'General settings',
     actions: [
       {
         name: 'showGeneralSettings',
@@ -641,7 +645,7 @@ export const moduleObjects = {
   },
   emailAppearance: {
     name: 'emailAppearance',
-    description: 'Email appearance permission config',
+    description: 'Email appearance',
     actions: [
       {
         name: 'showEmailappearance',
