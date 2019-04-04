@@ -42,6 +42,7 @@ describe('engage message mutation tests', () => {
   let _emailTemplate;
   let _doc;
   let context;
+  let spy;
 
   const commonParamDefs = `
     $title: String!,
@@ -80,7 +81,10 @@ describe('engage message mutation tests', () => {
     _user = await userFactory({});
     _tag = await tagsFactory({});
     _brand = await brandFactory({});
-    _segment = await segmentFactory({});
+    _segment = await segmentFactory({
+      connector: 'any',
+      conditions: [{ field: 'primaryEmail', operator: 'c', value: '@', type: 'string' }],
+    });
     _message = await engageMessageFactory({
       kind: 'auto',
       userId: _user._id,
@@ -110,7 +114,6 @@ describe('engage message mutation tests', () => {
         templateId: _emailTemplate._id,
         subject: faker.random.word(),
         content: faker.random.word(),
-        attachments: [{ name: 'document', url: 'documentPath' }, { name: 'image', url: 'imagePath' }],
       },
       scheduleDate: {
         type: 'year',
@@ -136,9 +139,12 @@ describe('engage message mutation tests', () => {
     };
 
     context = { user: _user };
+
+    spy = jest.spyOn(engageUtils, 'send');
   });
 
   afterEach(async () => {
+    spy.mockRestore();
     // Clearing test data
     _doc = null;
     await Users.deleteMany({});
@@ -249,11 +255,14 @@ describe('engage message mutation tests', () => {
   });
 
   test('Engage utils send via email', async () => {
-    process.env.AWS_SES_ACCESS_KEY_ID = '';
-    process.env.AWS_SES_SECRET_ACCESS_KEY = '';
+    process.env.AWS_SES_ACCESS_KEY_ID = '123';
+    process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
     process.env.MAIL_PORT = '123';
+    process.env.AWS_REGION = 'us-west-2';
+
+    sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
 
     const emailTemplate = await emailTemplateFactory();
     const emessage = await engageMessageFactory({
@@ -276,7 +285,6 @@ describe('engage message mutation tests', () => {
     }
 
     const executeSendViaEmail = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
-    executeSendViaEmail.mockImplementation(() => 'sent');
 
     const emessageWithUser = await engageMessageFactory({
       method: 'email',
@@ -334,8 +342,8 @@ describe('engage message mutation tests', () => {
   `;
 
   test('Add engage message', async () => {
-    process.env.AWS_SES_ACCESS_KEY_ID = '';
-    process.env.AWS_SES_SECRET_ACCESS_KEY = '';
+    process.env.AWS_SES_ACCESS_KEY_ID = '123';
+    process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
 
@@ -353,20 +361,15 @@ describe('engage message mutation tests', () => {
       });
     });
 
-    sandbox.stub(engageUtils, 'send').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve('sent');
-      });
-    });
-
-    const sendSpy = jest.spyOn(engageUtils, 'send');
     const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
+    const sendSpy = jest.spyOn(engageUtils, 'send');
 
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
-    expect(engageUtils.send).toHaveBeenCalled();
+    expect(spy.mock.calls.length).toBe(1);
+    expect(sendSpy.mock.calls.length).toBe(1);
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
     expect(engageMessage.segmentId).toBe(_doc.segmentId);
@@ -399,6 +402,7 @@ describe('engage message mutation tests', () => {
 
     const sandbox = sinon.createSandbox();
     const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
+    const mock = sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
 
     sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
       return new Promise(resolve => {
@@ -413,6 +417,7 @@ describe('engage message mutation tests', () => {
     }
 
     awsSpy.mockRestore();
+    mock.mockRestore();
   });
 
   test('Edit engage message', async () => {
@@ -496,7 +501,6 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
-
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
     expect(engageMessage.isLive).toBe(true);

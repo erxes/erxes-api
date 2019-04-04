@@ -1,6 +1,5 @@
 import * as permissionActions from '../permissions/actions';
 import ActivityLog from './activityLog';
-import ActivityLogForMonth from './activityLogForMonth';
 import Brand from './brand';
 import Channel from './channel';
 import Company from './company';
@@ -61,7 +60,6 @@ const resolvers: any = {
   Notification,
 
   ActivityLog,
-  ActivityLogForMonth,
   Form,
   FieldsGroup: fieldsGroup,
   Field: field,

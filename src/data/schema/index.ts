@@ -75,11 +75,7 @@ import {
   types as ConversationTypes,
 } from './conversation';
 
-import {
-  mutations as ActivityLogMutations,
-  queries as ActivityLogQueries,
-  types as ActivityLogTypes,
-} from './activityLog';
+import { queries as ActivityLogQueries, types as ActivityLogTypes } from './activityLog';
 
 import { mutations as DealMutations, queries as DealQueries, types as DealTypes } from './deal';
 
@@ -188,7 +184,6 @@ export const mutations = `
     ${IntegrationMutations}
     ${KnowledgeBaseMutations}
     ${NotificationMutations}
-    ${ActivityLogMutations}
     ${DealMutations}
     ${ProductMutations}
     ${ConfigMutations}
