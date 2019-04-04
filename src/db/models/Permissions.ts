@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { ActionsMap, IActionsMap } from '../../data/permissions/utils';
+import { actionsMap, IActionsMap } from '../../data/permissions/utils';
 import {
   IPermission,
   IPermissionDocument,
@@ -36,7 +36,7 @@ export const permissionLoadClass = () => {
       }
 
       for (const action of doc.actions) {
-        if (!ActionsMap[action]) {
+        if (!actionsMap[action]) {
           throw new Error('Invalid data');
         }
       }
@@ -53,7 +53,7 @@ export const permissionLoadClass = () => {
           allowed: doc.allowed,
         };
 
-        actionObj = ActionsMap[action];
+        actionObj = actionsMap[action];
 
         if (actionObj.use) {
           entry.requiredActions = actionObj.use;

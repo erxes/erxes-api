@@ -14,8 +14,7 @@ export interface IActionsMap {
 }
 
 // Schema: {name: description}
-// tslint:disable-next-line
-export const ModulesMap: IModulesMap[] = [];
+export const modulesMap: IModulesMap[] = [];
 
 /*
 Schema:
@@ -27,8 +26,7 @@ Schema:
     }
   }
 */
-// tslint:disable-next-line
-export const ActionsMap: IActionsMap = {};
+export const actionsMap: IActionsMap = {};
 
 export const registerModule = (modules: any): void => {
   const moduleKeys = Object.keys(modules);
@@ -41,7 +39,7 @@ export const registerModule = (modules: any): void => {
     }
 
     // check module, actions duplicate
-    if (ModulesMap[module.name]) {
+    if (modulesMap[module.name]) {
       throw new Error(`"${module.name}" module has been registered`);
     }
 
@@ -51,14 +49,14 @@ export const registerModule = (modules: any): void => {
           throw new Error(`Action name is missing`);
         }
 
-        if (ActionsMap[action.name]) {
+        if (actionsMap[action.name]) {
           throw new Error(`"${action.name}" action has been registered`);
         }
       }
     }
 
     // save
-    ModulesMap[module.name] = module.description;
+    modulesMap[module.name] = module.description;
 
     if (module.actions) {
       for (const action of module.actions) {
@@ -66,13 +64,13 @@ export const registerModule = (modules: any): void => {
           throw new Error('Action name is missing');
         }
 
-        ActionsMap[action.name] = {
+        actionsMap[action.name] = {
           module: module.name,
           description: action.description,
         };
 
         if (action.use) {
-          ActionsMap[action.name].use = action.use;
+          actionsMap[action.name].use = action.use;
         }
       }
     }
