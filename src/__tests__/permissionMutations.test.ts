@@ -1,20 +1,14 @@
-/* eslint-env jest */
-/* eslint-disable no-underscore-dangle */
-
-import { permissionMutations, usersGroupMutations } from '../data/resolvers/mutations/permissions';
-import { connect, disconnect, graphqlRequest } from '../db/connection';
+import { permissionMutations } from '../data/resolvers/mutations/permissions';
+import { graphqlRequest } from '../db/connection';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
 import { IUserGroup } from '../db/models/definitions/permissions';
-
-beforeAll(() => connect());
-
-afterAll(() => disconnect());
 
 describe('Test permissions mutations', () => {
   let _permission;
   let _user;
   let _group;
+  let context;
 
   const doc = {
     actions: ['up', ' test'],
@@ -22,18 +16,13 @@ describe('Test permissions mutations', () => {
     module: 'module name',
   };
 
-  const docGroup = {
-    name: 'User group',
-    description: 'group description',
-  };
-
   beforeEach(async () => {
     // Creating test data
     _permission = await permissionFactory();
     _group = await usersGroupFactory();
-    _user = await userFactory({
-      isOwner: true,
-    });
+    _user = await userFactory({ isOwner: true });
+
+    context = { user: _user };
   });
 
   afterEach(async () => {
@@ -80,6 +69,14 @@ describe('Test permissions mutations', () => {
   });
 
   test('Create permission', async () => {
+    const args = {
+      module: 'module name',
+      actions: ['manageBrands'],
+      userIds: [_user._id],
+      groupIds: [_group._id],
+      allowed: true,
+    };
+
     const mutation = `
       mutation permissionsAdd(
         $module: String!,
@@ -106,72 +103,30 @@ describe('Test permissions mutations', () => {
       }
     `;
 
-    // tslint:disable-next-line
-    const Permission = await graphqlRequest(mutation, 'permissionAdd', doc, { user: _user });
+    const [permission] = await graphqlRequest(mutation, 'permissionsAdd', args, context);
 
-    expect(Permission.createPermission).toBeCalledWith(doc);
-    expect(Permission.module).toEqual('module name');
+    expect(permission.module).toEqual('module name');
   });
 
   test('Remove permission', async () => {
+    const ids = [_permission._id];
+
     const mutation = `
       mutation permissionsRemove($ids: [String]!) {
         permissionsRemove(ids: $ids)
       }
     `;
 
-    await graphqlRequest(mutation, 'permissionsRemove', { ids: [_permission.id] }, { user: _user });
+    await graphqlRequest(mutation, 'permissionsRemove', { ids }, context);
 
-    expect(Permissions.find({ _id: _permission._id })).toBeFalsy();
-  });
-
-  test('Permission login required functions', async () => {
-    const checkLogin = async (fn, args) => {
-      try {
-        await fn({}, args, {});
-      } catch (e) {
-        expect(e.message).toEqual('Login required');
-      }
-    };
-
-    expect.assertions(3);
-
-    // add group
-    checkLogin(usersGroupMutations.usersGroupsAdd, docGroup);
-
-    // edit group
-    checkLogin(usersGroupMutations.usersGroupsEdit, { _id: _group._id, ...docGroup });
-
-    // remove group
-    checkLogin(usersGroupMutations.usersGroupsRemove, { ids: [] });
-  });
-
-  test(`test if Error('Permission required') error is working as intended`, async () => {
-    const checkLogin = async (fn, args) => {
-      try {
-        await fn({}, args, { user: { _id: 'fakeId' } });
-      } catch (e) {
-        expect(e.message).toEqual('Permission required');
-      }
-    };
-
-    expect.assertions(3);
-
-    // add group
-    checkLogin(usersGroupMutations.usersGroupsAdd, docGroup);
-
-    // edit group
-    checkLogin(usersGroupMutations.usersGroupsEdit, { _id: _group._id, ...docGroup });
-
-    // remove group
-    checkLogin(usersGroupMutations.usersGroupsRemove, { _id: _group._id });
+    expect(await Permissions.find({ _id: _permission._id })).toEqual([]);
   });
 
   test('Create group', async () => {
-    const _doc = { name: 'created name', description: 'created description' };
+    const args = { name: 'created name', description: 'created description' };
 
     const mutation = `
-      mutation usersGroupsAdd($name: String! $description: String) {
+      mutation usersGroupsAdd($name: String! $description: String!) {
         usersGroupsAdd(name: $name description: $description) {
           _id
           name
@@ -180,17 +135,17 @@ describe('Test permissions mutations', () => {
       }
     `;
 
-    const createdGroup = await graphqlRequest(mutation, 'usersGroupsAdd', _doc, { user: _user });
+    const createdGroup = await graphqlRequest(mutation, 'usersGroupsAdd', args, context);
 
     expect(createdGroup.name).toEqual('created name');
     expect(createdGroup.description).toEqual('created description');
   });
 
   test('Update group', async () => {
-    const _doc: IUserGroup = { name: 'updated name', description: 'updated description' };
+    const args: IUserGroup = { name: 'updated name', description: 'updated description' };
 
     const mutation = `
-      mutation usersGroupsEdit($_id: String! $name: String! $description: String) {
+      mutation usersGroupsEdit($_id: String! $name: String! $description: String!) {
         usersGroupsEdit(_id: $_id name: $name description: $description) {
           _id
           name
@@ -202,7 +157,7 @@ describe('Test permissions mutations', () => {
     const updatedGroup = await graphqlRequest(
       mutation,
       'usersGroupsEdit',
-      { _id: _group._id, ..._doc },
+      { _id: _group._id, ...args },
       { user: _user },
     );
 
@@ -217,10 +172,8 @@ describe('Test permissions mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'usersGroupsRemove', { _id: _group._id }, { user: _user });
+    await graphqlRequest(mutation, 'usersGroupsRemove', { _id: _group._id }, context);
 
-    const removeGroup = await UsersGroups.findOne({ _id: _group._id });
-
-    expect(removeGroup).toBeNull();
+    expect(await UsersGroups.findOne({ _id: _group._id })).toBe(null);
   });
 });
