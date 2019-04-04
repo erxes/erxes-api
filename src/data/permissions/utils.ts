@@ -1,4 +1,5 @@
 import { Permissions, Users } from '../../db/models';
+import { IUserDocument } from '../../db/models/definitions/users';
 
 export interface IModulesMap {
   name: string;
@@ -95,37 +96,42 @@ export const can = async (action: string, userId: string = ''): Promise<boolean>
     return true;
   }
 
-  let allowed = false;
+  const actionMap: IActionMap = await userAllowedActions(user);
 
-  let entries = await Permissions.find({
-    userId,
-    $or: [{ action }, { requiredActions: action }],
-  }).select('allowed');
+  return actionMap[action] === true;
+};
 
-  entries.every(e => {
-    if (e.allowed) {
-      allowed = true;
-      return false;
+interface IActionMap {
+  [key: string]: boolean | undefined;
+}
+
+export const userAllowedActions = async (user: IUserDocument): Promise<IActionMap> => {
+  const userPermissions = await Permissions.find({ userId: user._id });
+  const groupPermissions = await Permissions.find({ groupId: { $in: user.groupIds } });
+
+  const totalPermissions = [...userPermissions, ...groupPermissions];
+
+  const results: IActionMap = {};
+
+  const check = (name: string, allowed?: boolean) => {
+    if (typeof results[name] === 'undefined') {
+      results[name] = allowed;
     }
 
-    return true;
-  });
+    if (results[name] && !allowed) {
+      results[name] = false;
+    }
+  };
 
-  if (!allowed && user.groupIds) {
-    entries = await Permissions.find({
-      groupId: { $in: user.groupIds },
-      $or: [{ action }, { requiredActions: action }],
-    }).select('allowed');
-
-    entries.every(e => {
-      if (e.allowed) {
-        allowed = true;
-        return false;
+  for (const { requiredActions, allowed, action } of totalPermissions) {
+    if (requiredActions && requiredActions.length > 0) {
+      for (const act of requiredActions) {
+        check(act, allowed);
       }
-
-      return true;
-    });
+    } else {
+      check(action || '', allowed);
+    }
   }
 
-  return allowed;
+  return results;
 };

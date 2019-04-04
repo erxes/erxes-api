@@ -50,7 +50,7 @@ export const types = `
     groupIds: [String]
 
     isOwner: Boolean
-    permissionActions: [String]
+    permissionActions: JSON
   }
   type UserConversationListResponse {
     list: [Conversation],

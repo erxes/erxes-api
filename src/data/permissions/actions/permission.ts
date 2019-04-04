@@ -4,9 +4,13 @@ export const moduleObjects = {
     description: 'Brands',
     actions: [
       {
+        name: 'brandsAll',
+        description: 'All',
+        use: ['showBrands', 'manageBrands'],
+      },
+      {
         name: 'manageBrands',
         description: 'Manage brands',
-        use: ['showBrands'],
       },
       {
         name: 'showBrands',
@@ -19,9 +23,13 @@ export const moduleObjects = {
     description: 'Channels',
     actions: [
       {
+        name: 'channelsAll',
+        description: 'All',
+        use: ['showChannels', 'manageChannels'],
+      },
+      {
         name: 'manageChannels',
         description: 'Manage channels',
-        use: ['showChannels'],
       },
       {
         name: 'showChannels',
@@ -34,8 +42,8 @@ export const moduleObjects = {
     description: 'Companies',
     actions: [
       {
-        name: 'manageCompanies',
-        description: 'Manage companies',
+        name: 'companiesAll',
+        description: 'All',
         use: [
           'companiesAdd',
           'companiesEdit',
@@ -86,8 +94,8 @@ export const moduleObjects = {
     description: 'Customers',
     actions: [
       {
-        name: 'manageCustomers',
-        description: 'Manage customers',
+        name: 'customersAll',
+        description: 'All',
         use: [
           'showCustomers',
           'customersAdd',
@@ -133,8 +141,8 @@ export const moduleObjects = {
     description: 'Deals',
     actions: [
       {
-        name: 'manageDeals',
-        description: 'Manage deals',
+        name: 'dealsAll',
+        description: 'All',
         use: [
           'showDeals',
           'dealBoardsAdd',
@@ -221,8 +229,8 @@ export const moduleObjects = {
     description: 'Engages',
     actions: [
       {
-        name: 'manageEngages',
-        description: 'Manage engages',
+        name: 'engagesAll',
+        description: 'All',
         use: [
           'engageMessageSetLiveManual',
           'engageMessageSetPause',
@@ -268,9 +276,9 @@ export const moduleObjects = {
     description: 'Insights',
     actions: [
       {
-        name: 'manageInsights',
-        description: 'Manage insights',
-        use: ['showInsights', 'exportInsights'],
+        name: 'insightsAll',
+        description: 'All',
+        use: ['exportInsights', 'showInsights'],
       },
       {
         name: 'exportInsights',
@@ -287,9 +295,13 @@ export const moduleObjects = {
     description: 'KnowledgeBase',
     actions: [
       {
+        name: 'knowledgeBaseAll',
+        description: 'All',
+        use: ['showKnowledgeBase', 'manageKnowledgeBase'],
+      },
+      {
         name: 'manageKnowledgeBase',
         description: 'Manage knowledge base',
-        use: ['showKnowledgeBase'],
       },
       {
         name: 'showKnowledgeBase',
@@ -302,9 +314,13 @@ export const moduleObjects = {
     description: 'Permissions config',
     actions: [
       {
+        name: 'permissionsAll',
+        description: 'All',
+        use: ['managePermissions', 'showPermissions', 'showPermissionModules', 'showPermissionActions'],
+      },
+      {
         name: 'managePermissions',
         description: 'Manage permissions',
-        use: ['showPermissions', 'showPermissionModules', 'showPermissionActions'],
       },
       {
         name: 'showPermissions',
@@ -325,9 +341,13 @@ export const moduleObjects = {
     description: 'Users Groups',
     actions: [
       {
+        name: 'usersGroupsAll',
+        description: 'All',
+        use: ['showUsersGroups', 'manageUsersGroups'],
+      },
+      {
         name: 'manageUsersGroups',
         description: 'Manage users groups',
-        use: ['showUsersGroups'],
       },
       {
         name: 'showUsersGroups',
@@ -340,9 +360,13 @@ export const moduleObjects = {
     description: 'Scripts',
     actions: [
       {
+        name: 'scriptsAll',
+        description: 'All',
+        use: ['showScripts', 'manageScripts'],
+      },
+      {
         name: 'manageScripts',
         description: 'Manage scripts',
-        use: ['showScripts'],
       },
       {
         name: 'showScripts',
@@ -354,6 +378,11 @@ export const moduleObjects = {
     name: 'products',
     description: 'Products',
     actions: [
+      {
+        name: 'productsAll',
+        description: 'All',
+        use: ['showProducts', 'manageProducts'],
+      },
       {
         name: 'manageProducts',
         description: 'Manage products',
@@ -370,8 +399,8 @@ export const moduleObjects = {
     description: 'Users',
     actions: [
       {
-        name: 'manageUsers',
-        description: 'Manage users',
+        name: 'usersAll',
+        description: 'All',
         use: ['showUsers', 'usersEdit', 'usersInvite', 'usersSetActiveStatus'],
       },
       {
@@ -397,9 +426,13 @@ export const moduleObjects = {
     description: 'Email template',
     actions: [
       {
+        name: 'emailTemplateAll',
+        description: 'All',
+        use: ['showEmailTemplates', 'manageEmailTemplate'],
+      },
+      {
         name: 'manageEmailTemplate',
         description: 'Manage email template',
-        use: ['showEmailTemplates'],
       },
       {
         name: 'showEmailTemplates',
@@ -412,9 +445,13 @@ export const moduleObjects = {
     description: 'Response templates',
     actions: [
       {
+        name: 'responseTemplatesAll',
+        description: 'All',
+        use: ['manageResponseTemplate', 'showResponseTemplates'],
+      },
+      {
         name: 'manageResponseTemplate',
         description: 'Manage response template',
-        use: ['showResponseTemplates'],
       },
       {
         name: 'showResponseTemplates',
@@ -427,8 +464,8 @@ export const moduleObjects = {
     description: 'Import histories',
     actions: [
       {
-        name: 'manageImportHistories',
-        description: 'Manage import histories',
+        name: 'importHistoriesAll',
+        description: 'All',
         use: ['importHistories', 'removeImportHistories', 'importXlsFile'],
       },
       {
@@ -450,9 +487,13 @@ export const moduleObjects = {
     description: 'Tags',
     actions: [
       {
+        name: 'tagsAll',
+        description: 'All',
+        use: ['showTags', 'manageTags'],
+      },
+      {
         name: 'manageTags',
         description: 'Manage tags',
-        use: ['showTags'],
       },
       {
         name: 'showTags',
@@ -465,9 +506,13 @@ export const moduleObjects = {
     description: 'Form',
     actions: [
       {
+        name: 'formsAll',
+        description: 'All',
+        use: ['showForms', 'manageForms'],
+      },
+      {
         name: 'manageForms',
         description: 'Manage forms',
-        use: ['showForms'],
       },
       {
         name: 'showForms',
@@ -480,9 +525,13 @@ export const moduleObjects = {
     description: 'Segments',
     actions: [
       {
+        name: 'segmentsAll',
+        description: 'All',
+        use: ['showSegments', 'manageSegments'],
+      },
+      {
         name: 'manageSegments',
         description: 'Manage segments',
-        use: ['showSegments'],
       },
       {
         name: 'showSegments',
@@ -495,8 +544,8 @@ export const moduleObjects = {
     description: 'Integrations',
     actions: [
       {
-        name: 'manageIntegrations',
-        description: 'Manage integrations',
+        name: 'integrationsAll',
+        description: 'All',
         use: [
           'showIntegrations',
           'integrationsCreateMessengerIntegration',
@@ -567,9 +616,13 @@ export const moduleObjects = {
     description: 'Fields',
     actions: [
       {
+        name: 'fieldsAll',
+        description: 'All',
+        use: ['showFields', 'manageFields'],
+      },
+      {
         name: 'manageFields',
         description: 'Manage fields',
-        use: ['showFields'],
       },
       {
         name: 'showFields',
@@ -582,9 +635,13 @@ export const moduleObjects = {
     description: 'Fields groups',
     actions: [
       {
+        name: 'fieldsGroupsAll',
+        description: 'All',
+        use: ['showFieldsGroups', 'manageFieldsGroups'],
+      },
+      {
         name: 'manageFieldsGroups',
         description: 'Manage fields groups',
-        use: ['showFieldsGroups'],
       },
       {
         name: 'showFieldsGroups',
@@ -597,9 +654,13 @@ export const moduleObjects = {
     description: 'Accounts',
     actions: [
       {
+        name: 'accountsAll',
+        description: 'All',
+        use: ['manageAccounts', 'showAccounts'],
+      },
+      {
         name: 'manageAccounts',
         description: 'Manage accounts',
-        use: ['showAccounts'],
       },
       {
         name: 'showAccounts',
@@ -611,6 +672,11 @@ export const moduleObjects = {
     name: 'inbox',
     description: 'Inbox',
     actions: [
+      {
+        name: 'inboxAll',
+        description: 'All',
+        use: ['showConversations', 'changeConversationStatus', 'assignConversation', 'conversationMessageAdd'],
+      },
       {
         name: 'showConversations',
         description: 'Show conversations',
@@ -634,12 +700,17 @@ export const moduleObjects = {
     description: 'General settings',
     actions: [
       {
+        name: 'generalSettingsAll',
+        description: 'All',
+        use: ['manageGeneralSettings', 'showGeneralSettings'],
+      },
+      {
         name: 'showGeneralSettings',
         description: 'Show general settings',
       },
       {
-        name: 'configGeneralSettings',
-        description: 'Config general settings',
+        name: 'manageGeneralSettings',
+        description: 'Manage general settings',
       },
     ],
   },
@@ -648,22 +719,17 @@ export const moduleObjects = {
     description: 'Email appearance',
     actions: [
       {
+        name: 'emailAppearanceAll',
+        description: 'All',
+        use: ['manageEmailAppearance', 'showEmailappearance'],
+      },
+      {
         name: 'showEmailappearance',
         description: 'Show email appearance',
       },
       {
-        name: 'configEmailAppearance',
-        description: 'Config email appearance',
-      },
-    ],
-  },
-  systemStatus: {
-    name: 'systemStatus',
-    description: 'System status',
-    actions: [
-      {
-        name: 'showSystemStatus',
-        description: 'Show system status',
+        name: 'manageEmailAppearance',
+        description: 'Manage email appearance',
       },
     ],
   },
