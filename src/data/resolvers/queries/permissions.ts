@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import { Permissions, UsersGroups } from '../../../db/models';
 import { IPermission } from '../../../db/models/definitions/permissions';
 import { checkPermission, requireLogin } from '../../permissions';
-import { ActionsMap, IActionsMap, IModulesMap, ModulesMap } from '../../permissions/utils';
+import { actionsMap, IActionsMap, IModulesMap, modulesMap } from '../../permissions/utils';
 import { paginate } from './utils';
 
 interface IListArgs {
@@ -52,7 +52,7 @@ const permissionQueries = {
   permissionModules() {
     const modules: IModulesMap[] = [];
 
-    for (const m of _.pairs(ModulesMap)) {
+    for (const m of _.pairs(modulesMap)) {
       modules.push({ name: m[0], description: m[1] });
     }
 
@@ -62,7 +62,7 @@ const permissionQueries = {
   permissionActions() {
     const actions: IActionsMap[] = [];
 
-    for (const a of _.pairs(ActionsMap)) {
+    for (const a of _.pairs(actionsMap)) {
       actions.push({
         name: a[0],
         description: a[1].description,
