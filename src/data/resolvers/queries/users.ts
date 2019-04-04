@@ -22,7 +22,7 @@ const queryBuilder = async (params: IListArgs) => {
     selector.$or = fields;
   }
 
-  if (params.isActive !== undefined) {
+  if (params.isActive !== undefined && params.isActive !== null) {
     selector.isActive = params.isActive;
   }
 

@@ -371,6 +371,10 @@ export const moduleObjects = {
         use: ['showUsers', 'usersEdit', 'usersInvite', 'usersSetActiveStatus'],
       },
       {
+        name: 'showUsers',
+        description: 'Show users',
+      },
+      {
         name: 'usersSetActiveStatus',
         description: 'Set active/deactive user',
       },
