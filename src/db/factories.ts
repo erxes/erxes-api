@@ -123,7 +123,7 @@ export const userFactory = (params: IUserFactoryInput = {}) => {
     email: params.email || faker.internet.email(),
     role: params.role || 'contributor',
     password: params.password || '$2a$10$qfBFBmWmUjeRcR.nBBfgDO/BEbxgoai5qQhyjsrDUMiZC6dG7sg1q',
-    isOwner: params.isOwner || false,
+    isOwner: typeof params.isOwner !== 'undefined' ? params.isOwner : true,
     isActive: params.isActive || true,
     groupIds: params.groupIds || [],
   });
