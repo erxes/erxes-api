@@ -50,7 +50,6 @@ import {
 import { STATUSES } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
-import { IPermission } from './models/definitions/permissions';
 import { IUserDocument } from './models/definitions/users';
 
 interface IActivityLogFactoryInput {
@@ -843,7 +842,16 @@ export const accountFactory = async (params: IAccountFactoryInput) => {
   return Accounts.create(doc);
 };
 
-export const permissionFactory = async (params: IPermission = {}) => {
+interface IPermissionParams {
+  module?: string;
+  action?: string;
+  allowed?: boolean;
+  userId?: string;
+  requiredActions?: string[];
+  groupId?: string;
+}
+
+export const permissionFactory = async (params: IPermissionParams = {}) => {
   const permission = new Permissions({
     module: faker.random.word(),
     action: params.action || faker.random.word(),

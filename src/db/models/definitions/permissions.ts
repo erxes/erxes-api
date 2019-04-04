@@ -3,11 +3,11 @@ import { field } from '../utils';
 
 export interface IPermission {
   module?: string;
-  action?: string;
+  action: string;
   userId?: string;
   groupId?: string;
-  requiredActions?: string[];
-  allowed?: boolean;
+  requiredActions: string[];
+  allowed: boolean;
 }
 
 export interface IPermissionParams {

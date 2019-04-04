@@ -42,15 +42,15 @@ export const permissionLoadClass = () => {
       }
 
       let filter = {};
-      let entry: IPermission = {};
 
       let actionObj: IActionsMap = {};
 
       for (const action of doc.actions) {
-        entry = {
+        const entry: IPermission = {
           action,
           module: doc.module,
-          allowed: doc.allowed,
+          allowed: doc.allowed || false,
+          requiredActions: [],
         };
 
         actionObj = actionsMap[action];

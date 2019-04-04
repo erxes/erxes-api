@@ -742,6 +742,6 @@ const insightExportQueries = {
   },
 };
 
-moduleCheckPermission(insightExportQueries, 'exportInsights');
+moduleCheckPermission(insightExportQueries, 'manageExportInsights');
 
 export default insightExportQueries;

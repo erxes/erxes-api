@@ -102,7 +102,7 @@ export const can = async (action: string, userId: string = ''): Promise<boolean>
 };
 
 interface IActionMap {
-  [key: string]: boolean | undefined;
+  [key: string]: boolean;
 }
 
 export const userAllowedActions = async (user: IUserDocument): Promise<IActionMap> => {
@@ -111,27 +111,27 @@ export const userAllowedActions = async (user: IUserDocument): Promise<IActionMa
 
   const totalPermissions = [...userPermissions, ...groupPermissions];
 
-  const results: IActionMap = {};
+  const allowedActions: IActionMap = {};
 
-  const check = (name: string, allowed?: boolean) => {
-    if (typeof results[name] === 'undefined') {
-      results[name] = allowed;
+  const check = (name: string, allowed: boolean) => {
+    if (typeof allowedActions[name] === 'undefined') {
+      allowedActions[name] = allowed;
     }
 
-    if (results[name] && !allowed) {
-      results[name] = false;
+    if (allowedActions[name] && !allowed) {
+      allowedActions[name] = false;
     }
   };
 
   for (const { requiredActions, allowed, action } of totalPermissions) {
     if (requiredActions && requiredActions.length > 0) {
-      for (const act of requiredActions) {
-        check(act, allowed);
+      for (const actionName of requiredActions) {
+        check(actionName, allowed);
       }
     } else {
-      check(action || '', allowed);
+      check(action, allowed);
     }
   }
 
-  return results;
+  return allowedActions;
 };

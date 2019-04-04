@@ -278,11 +278,11 @@ export const moduleObjects = {
       {
         name: 'insightsAll',
         description: 'All',
-        use: ['exportInsights', 'showInsights'],
+        use: ['manageExportInsights', 'showInsights'],
       },
       {
-        name: 'exportInsights',
-        description: 'Export insights',
+        name: 'manageExportInsights',
+        description: 'Manage export insights',
       },
       {
         name: 'showInsights',

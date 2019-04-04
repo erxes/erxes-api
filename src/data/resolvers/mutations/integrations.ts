@@ -4,7 +4,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { IMessengerIntegration } from '../../../db/models/Integrations';
 import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
 import { socUtils } from '../../../trackers/twitterTracker';
-import { moduleCheckPermission } from '../../permissions';
+import { checkPermission } from '../../permissions';
 import { getEnv, sendPostRequest } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
@@ -157,6 +157,23 @@ const integrationMutations = {
   },
 };
 
-moduleCheckPermission(integrationMutations, 'manageIntegrations');
+checkPermission(
+  integrationMutations,
+  'integrationsCreateMessengerIntegration',
+  'integrationsCreateMessengerIntegration',
+);
+checkPermission(
+  integrationMutations,
+  'integrationsSaveMessengerAppearanceData',
+  'integrationsSaveMessengerAppearanceData',
+);
+checkPermission(integrationMutations, 'integrationsSaveMessengerConfigs', 'integrationsSaveMessengerConfigs');
+checkPermission(integrationMutations, 'integrationsCreateFormIntegration', 'integrationsCreateFormIntegration');
+checkPermission(integrationMutations, 'integrationsEditFormIntegration', 'integrationsEditFormIntegration');
+checkPermission(integrationMutations, 'integrationsCreateTwitterIntegration', 'integrationsCreateTwitterIntegration');
+checkPermission(integrationMutations, 'integrationsCreateFacebookIntegration', 'integrationsCreateFacebookIntegration');
+checkPermission(integrationMutations, 'integrationsCreateGmailIntegration', 'integrationsCreateGmailIntegration');
+checkPermission(integrationMutations, 'integrationsSendGmail', 'integrationsSendGmail');
+checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 
 export default integrationMutations;
