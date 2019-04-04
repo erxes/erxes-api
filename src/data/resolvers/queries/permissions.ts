@@ -1,6 +1,5 @@
 import * as _ from 'underscore';
 import { Permissions, UsersGroups } from '../../../db/models';
-import { IPermission } from '../../../db/models/definitions/permissions';
 import { checkPermission, requireLogin } from '../../permissions';
 import { actionsMap, IActionsMap, IModulesMap, modulesMap } from '../../permissions/utils';
 import { paginate } from './utils';
@@ -12,7 +11,7 @@ interface IListArgs {
 }
 
 const generateSelector = ({ module, action, userId, groupId }) => {
-  const filter: IPermission = {};
+  const filter: any = {};
 
   if (module) {
     filter.module = module;
