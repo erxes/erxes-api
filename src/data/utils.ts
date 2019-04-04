@@ -268,8 +268,8 @@ export const sendNotification = async ({
  * and imports customers to the database
  */
 export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
-  return new Promise((resolve, reject) => {
-    if (!can('importXlsFile', user._id)) {
+  return new Promise(async (resolve, reject) => {
+    if (!(await can('importXlsFile', user._id))) {
       return reject('Permission denied!');
     }
 

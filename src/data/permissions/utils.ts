@@ -110,7 +110,6 @@ export const userAllowedActions = async (user: IUserDocument): Promise<IActionMa
   const groupPermissions = await Permissions.find({ groupId: { $in: user.groupIds } });
 
   const totalPermissions = [...userPermissions, ...groupPermissions];
-
   const allowedActions: IActionMap = {};
 
   const check = (name: string, allowed: boolean) => {
@@ -124,7 +123,7 @@ export const userAllowedActions = async (user: IUserDocument): Promise<IActionMa
   };
 
   for (const { requiredActions, allowed, action } of totalPermissions) {
-    if (requiredActions && requiredActions.length > 0) {
+    if (requiredActions.length > 0) {
       for (const actionName of requiredActions) {
         check(actionName, allowed);
       }
