@@ -272,7 +272,7 @@ requireLogin(companyQueries, 'companyCounts');
 requireLogin(companyQueries, 'companyDetail');
 
 checkPermission(companyQueries, 'companies', 'showCompanies', []);
-checkPermission(companyQueries, 'companiesMain', 'showCompanies', []);
+checkPermission(companyQueries, 'companiesMain', 'showCompanies', { list: [], totalCount: 0 });
 checkPermission(companyQueries, 'companiesExport', 'exportCompanies');
 
 export default companyQueries;
