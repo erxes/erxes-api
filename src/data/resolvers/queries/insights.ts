@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { FACEBOOK_DATA_KINDS, INSIGHT_TYPES, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
+import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { getDateFieldAsStr, getDurationField } from './aggregationUtils';
 import {
@@ -9,10 +9,8 @@ import {
   fixChartData,
   fixDate,
   fixDates,
-  generateChartDataByCollection,
-  generateChartDataBySelector,
+  generateChartData,
   generateMessageSelector,
-  generatePunchData,
   generateResponseData,
   generateUserSelector,
   getConversationSelector,
@@ -153,7 +151,37 @@ const insightQueries = {
     };
 
     // TODO: need improvements on timezone calculation.
-    const punchData = await generatePunchData(ConversationMessages, matchMessageSelector, user);
+    const punchData = await ConversationMessages.aggregate([
+      {
+        $match: matchMessageSelector,
+      },
+      {
+        $project: {
+          hour: { $hour: { date: '$createdAt', timezone: '+08' } },
+          day: { $isoDayOfWeek: { date: '$createdAt', timezone: '+08' } },
+          date: await getDateFieldAsStr({ timeZone: getTimezone(user) }),
+        },
+      },
+      {
+        $group: {
+          _id: {
+            hour: '$hour',
+            day: '$day',
+            date: '$date',
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          day: '$_id.day',
+          hour: '$_id.hour',
+          date: '$_id.date',
+          count: 1,
+        },
+      },
+    ]);
 
     return punchData;
   },
@@ -175,7 +203,7 @@ const insightQueries = {
 
     const insightData: any = {
       summary: [],
-      trend: await generateChartDataBySelector(messageSelector, INSIGHT_TYPES.CONVERSATION),
+      trend: await generateChartData({ messageSelector }),
     };
 
     const { startDate, endDate } = args;
@@ -202,7 +230,7 @@ const insightQueries = {
     const conversations = await findConversations(filterSelector, { ...conversationSelector });
     const insightData: any = {
       summary: [],
-      trend: await generateChartDataByCollection({ collection: conversations }),
+      trend: await generateChartData({ collection: conversations }),
     };
 
     const { startDate, endDate } = args;
