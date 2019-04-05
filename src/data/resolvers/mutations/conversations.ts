@@ -190,43 +190,28 @@ const conversationMutations = {
       });
     }
 
-    // console.log('conversation: ', conversation);
-
     if (kind === KIND_CHOICES.GMAIL) {
       const firstMessage = await ConversationMessages.findOne({ conversationId: conversation._id }).sort({
         createdAt: 1,
       });
 
       if (firstMessage && firstMessage.gmailData) {
-        const firstMessageGD = firstMessage.gmailData;
-
-        const subject = `Replying: ${firstMessageGD.subject}`;
+        const gmailData = firstMessage.gmailData;
 
         const args: IMailParams = {
           integrationId: integration._id,
           cocType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
           cocId: conversation.customerId,
-          subject,
+          subject: `Replying: ${gmailData.subject}`,
           body: doc.content,
-          toEmails: firstMessageGD.from || '',
-          cc: firstMessageGD.cc || '',
-          bcc: firstMessageGD.bcc || '',
+          toEmails: gmailData.from || '',
+          cc: gmailData.cc || '',
+          bcc: gmailData.bcc || '',
+          headerId: gmailData.headerId,
+          threadId: gmailData.threadId,
         };
 
-        doc.gmailData = {
-          textHtml: doc.content,
-          subject,
-          from: firstMessageGD.to,
-          to: firstMessageGD.from,
-          cc: firstMessageGD.cc,
-          bcc: firstMessageGD.bcc,
-          attachments: doc.attachments,
-          messageId: firstMessageGD.messageId,
-          headerId: firstMessageGD.headerId,
-          threadId: firstMessageGD.threadId,
-        };
-
-        await sendGmail(args, user);
+        return sendGmail(args, user);
       }
     }
 
