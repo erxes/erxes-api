@@ -7,7 +7,7 @@ import {
   KIND_CHOICES,
   NOTIFICATION_TYPES,
 } from '../../../db/models/definitions/constants';
-import { IGmail, IMessageDocument } from '../../../db/models/definitions/conversationMessages';
+import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
@@ -28,7 +28,6 @@ interface IConversationMessageAdd {
   tweetReplyToId?: string;
   tweetReplyToScreenName?: string;
   commentReplyToId?: string;
-  gmailData: IGmail;
 }
 
 /**
@@ -211,8 +210,10 @@ const conversationMutations = {
           threadId: gmailData.threadId,
         };
 
-        return sendGmail(args, user);
+        await sendGmail(args, user);
       }
+
+      return null;
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
