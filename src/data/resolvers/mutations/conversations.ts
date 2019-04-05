@@ -1,13 +1,20 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
-import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
+import {
+  ACTIVITY_CONTENT_TYPES,
+  CONVERSATION_STATUSES,
+  KIND_CHOICES,
+  NOTIFICATION_TYPES,
+} from '../../../db/models/definitions/constants';
+import { IGmail, IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { facebookReply, IFacebookReply } from '../../../trackers/facebook';
+import { sendGmail } from '../../../trackers/gmail';
 import { favorite, retweet, tweet, tweetReply } from '../../../trackers/twitter';
+import { IMailParams } from '../../../trackers/types';
 import { requireLogin } from '../../permissions';
 import utils from '../../utils';
 import { pubsub } from '../subscriptions';
@@ -21,6 +28,7 @@ interface IConversationMessageAdd {
   tweetReplyToId?: string;
   tweetReplyToScreenName?: string;
   commentReplyToId?: string;
+  gmailData: IGmail;
 }
 
 /**
@@ -180,6 +188,27 @@ const conversationMutations = {
           data: doc.content,
         },
       });
+    }
+
+    if (kind === KIND_CHOICES.GMAIL && email) {
+      const args: IMailParams = {
+        integrationId: integration._id,
+        cocType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
+        cocId: conversation.customerId,
+        subject: 'Reply',
+        body: doc.content,
+        toEmails: email,
+      };
+
+      doc.gmailData = {
+        textHtml: doc.content,
+        subject: 'Reply',
+        from: integration.gmailData ? integration.gmailData.email : undefined,
+        attachments: doc.attachments,
+        to: email,
+      };
+
+      await sendGmail(args, user);
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
