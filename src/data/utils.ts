@@ -6,9 +6,12 @@ import * as fileType from 'file-type';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Notifications, Users } from '../db/models';
+import { Companies, Customers, Notifications, Users } from '../db/models';
+// tslint:disable-next-line
+const { Worker } = require('worker_threads');
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
 
@@ -269,7 +272,7 @@ export const sendNotification = async ({
  * Receives and saves xls file in private/xlsImports folder
  * and imports customers to the database
  */
-export const importXlsFile = async (file: any, _type: string, { user }: { user: IUserDocument }, time) => {
+export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }, time) => {
   return new Promise(async (resolve, reject) => {
     if (!(await can('importXlsFile', user._id))) {
       return reject('Permission denied!');
@@ -310,9 +313,9 @@ export const importXlsFile = async (file: any, _type: string, { user }: { user: 
         const usedSheets = usedRange.value();
 
         // Getting columns
-        // const fieldNames = usedSheets[0];
+        const fieldNames = usedSheets[0];
 
-        // let collection;
+        let collection;
 
         // Removing column
         usedSheets.shift();
@@ -330,26 +333,48 @@ export const importXlsFile = async (file: any, _type: string, { user }: { user: 
           results.push(asd);
         }
 
-        console.log('dis iz result', results);
+        switch (type) {
+          case 'customers':
+            collection = Customers;
+            break;
 
-        // switch (type) {
-        //   case 'customers':
-        //     collection = Customers;
-        //     break;
+          case 'companies':
+            collection = Companies;
+            break;
 
-        //   case 'companies':
-        //     collection = Companies;
-        //     break;
+          default:
+            reject(['Invalid import type']);
+        }
 
-        //   default:
-        //     reject(['Invalid import type']);
-        // }
         const diff = process.hrtime(time);
+
+        const workerPath = path.resolve('./src/data/bulkInsert-worker.js');
+
         console.log(usedSheets.length);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
-        // const response = await collection.bulkInsert(fieldNames, usedSheets, user);
 
-        executeWithThread();
+        console.log(workerPath);
+
+        const worker = new Worker(workerPath, {
+          workerData: {
+            fieldNames,
+            usedSheets,
+            user,
+          },
+        });
+
+        worker.on('message', data => {
+          console.log('wow', data);
+        });
+        worker.on('error', reject);
+        worker.on('exit', code => {
+          if (code !== 0) {
+            console.log(collection);
+            reject(new Error(`Worker stopped with exit code ${code}`));
+          }
+        });
+
+        // const response = await collection.bulkInsert(fieldNames, usedSheets, user);
 
         // resolve(response);
         return resolve(true);
@@ -358,10 +383,6 @@ export const importXlsFile = async (file: any, _type: string, { user }: { user: 
         return reject(e);
       });
   });
-};
-
-const executeWithThread = async () => {
-  return null;
 };
 
 /**

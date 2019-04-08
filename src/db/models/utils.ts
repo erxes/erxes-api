@@ -23,6 +23,36 @@ export const field = options => {
   return options;
 };
 
+// Checking field names, All field names must be configured correctly
+const checkFieldNames = async (basicInfos, fields) => {
+  const properties: any[] = [];
+
+  for (const fieldName of fields) {
+    const property: { [key: string]: any } = {
+      isCustomField: false,
+    };
+
+    const fieldObj = await Fields.findOne({ text: fieldName });
+
+    // Collecting basic fields
+    if (basicInfos.includes(fieldName)) {
+      property.name = fieldName;
+    }
+
+    // Collecting custom fields
+    if (fieldObj) {
+      property.isCustomField = true;
+      property.id = fieldObj._id;
+    }
+
+    properties.push(property);
+
+    if (!basicInfos.includes(fieldName) && !fieldObj) {
+      throw new Error('Bad column name');
+    }
+  }
+};
+
 type CocInput = ICompany | ICustomer;
 type CocDocument = ICompanyDocument | ICustomerDocument;
 
@@ -38,7 +68,7 @@ export const bulkInsert = async (params: {
   create: (doc: CocInput, user?: IUserDocument) => Promise<CocDocument>;
 }): Promise<string[]> => {
   const errMsgs: string[] = [];
-  const properties: any = [];
+  let properties: any = [];
 
   const { fieldNames, fieldValues, user, basicInfos, contentType, create } = params;
 
@@ -56,39 +86,10 @@ export const bulkInsert = async (params: {
     failed: 0,
   };
 
-  // Checking field names, All field names must be configured correctly
-  const checkFieldNames = async fields => {
-    for (const fieldName of fields) {
-      const property: { [key: string]: any } = {
-        isCustomField: false,
-      };
-
-      const fieldObj = await Fields.findOne({ text: fieldName });
-
-      // Collecting basic fields
-      if (basicInfos.includes(fieldName)) {
-        property.name = fieldName;
-      }
-
-      // Collecting custom fields
-      if (fieldObj) {
-        property.isCustomField = true;
-        property.id = fieldObj._id;
-      }
-
-      properties.push(property);
-
-      if (!basicInfos.includes(fieldName) && !fieldObj) {
-        errMsgs.push(`Bad column name ${fieldName}`);
-      }
-    }
-  };
-
-  await checkFieldNames(fieldNames);
-
-  // If field name configured wrong, immediately sending error message
-  if (errMsgs.length > 0) {
-    return errMsgs;
+  try {
+    properties = await checkFieldNames(basicInfos, fieldNames);
+  } catch (e) {
+    return e.message;
   }
 
   let rowIndex = 0;
@@ -133,11 +134,4 @@ export const bulkInsert = async (params: {
   await ImportHistory.createHistory(history, user);
 
   return errMsgs;
-};
-
-export const bulkInsertWorker = () => {
-  // tslint:disable-next-line
-  const { parentPort } = require('worker_threads');
-
-  parentPort.postMessage('Dun');
 };
