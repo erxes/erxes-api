@@ -8,7 +8,7 @@ interface IAttachmentParams {
 export interface IMailParams {
   integrationId: string;
   cocType: string;
-  cocId?: string;
+  cocId: string;
   subject: string;
   body: string;
   toEmails: string;

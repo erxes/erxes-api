@@ -200,7 +200,7 @@ const conversationMutations = {
         const args: IMailParams = {
           integrationId: integration._id,
           cocType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-          cocId: conversation.customerId,
+          cocId: conversation.customerId || '',
           subject: `Re: ${gmailData.subject}`,
           body: doc.content,
           toEmails: gmailData.from,
