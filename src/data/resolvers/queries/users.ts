@@ -7,7 +7,7 @@ interface IListArgs {
   page?: number;
   perPage?: number;
   searchValue?: string;
-  isActive?: string;
+  isActive?: boolean;
 }
 
 const queryBuilder = async (params: IListArgs) => {
