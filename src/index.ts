@@ -216,7 +216,9 @@ app.post('/import-file', (req: any, res) => {
       return res.json(status);
     }
 
-    importXlsFile(response.file, fields.type, { user: req.user })
+    const time = process.hrtime();
+
+    importXlsFile(response.file, fields.type, { user: req.user }, time)
       .then(result => {
         res.json(result);
       })

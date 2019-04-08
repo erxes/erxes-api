@@ -1,5 +1,4 @@
 import * as Random from 'meteor-random';
-import { getEnv } from '../../data/utils';
 import { Fields, ImportHistory } from './';
 import { ICompany, ICompanyDocument } from './definitions/companies';
 import { ICustomer, ICustomerDocument } from './definitions/customers';
@@ -56,12 +55,6 @@ export const bulkInsert = async (params: {
     contentType,
     failed: 0,
   };
-
-  const MAX_IMPORT_SIZE = Number(getEnv({ name: 'MAX_IMPORT_SIZE', defaultValue: '600' }));
-
-  if (fieldValues.length > MAX_IMPORT_SIZE) {
-    return [`You can only import max ${MAX_IMPORT_SIZE} at a time`];
-  }
 
   // Checking field names, All field names must be configured correctly
   const checkFieldNames = async fields => {
@@ -140,4 +133,11 @@ export const bulkInsert = async (params: {
   await ImportHistory.createHistory(history, user);
 
   return errMsgs;
+};
+
+export const bulkInsertWorker = () => {
+  // tslint:disable-next-line
+  const { parentPort } = require('worker_threads');
+
+  parentPort.postMessage('Dun');
 };
