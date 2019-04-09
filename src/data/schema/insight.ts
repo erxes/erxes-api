@@ -12,6 +12,7 @@ const dealParams = `
   boardId: String,
   startDate: String,
   endDate: String
+  status: String
 `;
 
 export const queries = `
@@ -28,4 +29,5 @@ export const queries = `
 
   dealInsightsMain(${dealParams}): JSON
   dealInsightsPunchCard(${dealParams}): JSON
+  dealInsightsByTeamMember(${dealParams}): JSON
 `;

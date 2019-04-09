@@ -1,8 +1,17 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Deals, Integrations, Users } from '../../../db/models';
+import {
+  ConversationMessages,
+  Conversations,
+  DealPipelines,
+  Deals,
+  DealStages,
+  Integrations,
+  Users,
+} from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
+import { IStageDocument } from '../../../db/models/definitions/deals';
 import { IUser } from '../../../db/models/definitions/users';
 import { INSIGHT_TYPES } from '../../constants';
 import { getDateFieldAsStr } from './aggregationUtils';
@@ -74,6 +83,7 @@ export interface IDealListArgs {
   boardId: string;
   startDate: string;
   endDate: string;
+  status: string;
 }
 
 export interface IFilterSelector {
@@ -82,6 +92,16 @@ export interface IFilterSelector {
     kind?: { $in: string[] };
     brandId?: { $in: string[] };
   };
+}
+
+interface IDealSelector {
+  modifiedAt: object;
+  stageId?: object;
+}
+
+interface IStageSelector {
+  probability?: string;
+  pipelineId?: {};
 }
 
 /**
@@ -102,6 +122,49 @@ export const getFilterSelector = (args: IListArgs): any => {
   }
 
   selector.createdAt = { $gte: start, $lte: end };
+
+  return selector;
+};
+
+/**
+ * Return filterSelector
+ * @param args
+ */
+export const getDealSelector = async (args: IDealListArgs): Promise<IDealSelector> => {
+  const { startDate, endDate, boardId, pipelineIds, status } = args;
+  const { start, end } = fixDates(startDate, endDate);
+
+  const selector: IDealSelector = {
+    modifiedAt: {
+      $gte: start,
+      $lte: end,
+    },
+  };
+
+  const stageSelector: IStageSelector = {};
+
+  if (status) {
+    stageSelector.probability = status;
+  }
+
+  let stages: IStageDocument[] = [];
+
+  if (boardId) {
+    if (pipelineIds) {
+      stageSelector.pipelineId = { $in: pipelineIds.split(',') };
+    } else {
+      const pipelines = await DealPipelines.find({ boardId });
+      stageSelector.pipelineId = { $in: pipelines.map(p => p._id) };
+    }
+
+    stages = await DealStages.find(stageSelector);
+    selector.stageId = { $in: stages.map(s => s._id) };
+  } else {
+    if (status) {
+      stages = await DealStages.find(stageSelector);
+      selector.stageId = { $in: stages.map(s => s._id) };
+    }
+  }
 
   return selector;
 };
@@ -237,13 +300,15 @@ export const fixChartData = async (data: any[], hintX: string, hintY: string): P
  * by given duration and loop count for chart data.
  */
 export const generateChartDataBySelector = async (selector: object, type: string): Promise<IGenerateChartData[]> => {
+  const fieldName = type === INSIGHT_TYPES.DEAL ? '$modifiedAt' : '$createdAt';
+
   const pipelineStages = [
     {
       $match: selector,
     },
     {
       $project: {
-        date: getDateFieldAsStr({}),
+        date: getDateFieldAsStr({ fieldName }),
       },
     },
     {

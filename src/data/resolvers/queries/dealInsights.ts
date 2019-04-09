@@ -1,15 +1,18 @@
 import * as moment from 'moment';
-import { DealPipelines, Deals, DealStages } from '../../../db/models';
-import { IStageDocument } from '../../../db/models/definitions/deals';
+import { Deals } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INSIGHT_TYPES } from '../../constants';
 import { moduleRequireLogin } from '../../permissions';
+import { getDateFieldAsStr } from './aggregationUtils';
 import {
+  fixChartData,
   fixDate,
   fixDates,
   generateChartDataBySelector,
   generatePunchData,
+  getDealSelector,
   getSummaryData,
+  getTimezone,
   IDealListArgs,
 } from './insightUtils';
 
@@ -39,32 +42,10 @@ const dealInsightQueries = {
    * Sends combined charting data for trends, summaries and team members.
    */
   async dealInsightsMain(_root, args: IDealListArgs) {
-    const { startDate, endDate, boardId, pipelineIds } = args;
+    const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
 
-    const selector = {
-      createdAt: {
-        $gte: start,
-        $lte: end,
-      },
-      stageId: {},
-    };
-
-    if (boardId) {
-      let stages: IStageDocument[] = [];
-
-      if (pipelineIds) {
-        stages = await DealStages.find({ pipelineId: { $in: pipelineIds.split(',') } });
-      } else {
-        const pipelines = await DealPipelines.find({ boardId });
-
-        stages = await DealStages.find({ pipelineId: { $in: pipelines.map(p => p._id) } });
-      }
-
-      selector.stageId = { $in: stages.map(s => s._id) };
-    } else {
-      delete selector.stageId;
-    }
+    const selector = await getDealSelector(args);
 
     const insightData: any = {
       summary: [],
@@ -79,6 +60,105 @@ const dealInsightQueries = {
     });
 
     return insightData;
+  },
+
+  /**
+   * Calculates average response close time for each team members.
+   */
+  async dealInsightsByTeamMember(_root, args: IDealListArgs, { user }: { user: IUserDocument }) {
+    const dealMatch = await getDealSelector(args);
+
+    const insightAggregateData = await Deals.aggregate([
+      {
+        $match: dealMatch,
+      },
+      {
+        $project: {
+          date: await getDateFieldAsStr({ fieldName: '$modifiedAt', timeZone: getTimezone(user) }),
+          modifiedBy: 1,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            modifiedBy: '$modifiedBy',
+            date: '$date',
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          modifiedBy: '$_id.modifiedBy',
+          date: '$_id.date',
+          count: 1,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'modifiedBy',
+          foreignField: '_id',
+          as: 'userDoc',
+        },
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
+      },
+      {
+        $group: {
+          _id: '$modifiedBy',
+          count: { $sum: '$count' },
+          fullName: { $first: '$fullName' },
+          avatar: { $first: '$avatar' },
+          chartDatas: {
+            $push: {
+              date: '$date',
+              count: '$count',
+            },
+          },
+        },
+      },
+    ]);
+
+    if (insightAggregateData.length < 1) {
+      return [];
+    }
+
+    // Variables holds every user's response time.
+    const teamMembers: any = [];
+    const responseUserData: any = {};
+
+    const aggregatedTrend = {};
+
+    for (const userData of insightAggregateData) {
+      // responseUserData
+      responseUserData[userData._id] = {
+        count: userData.count,
+        fullName: userData.fullName,
+        avatar: userData.avatar,
+      };
+      // team members gather
+      const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
+      userData.chartDatas.forEach(row => {
+        if (row.date in aggregatedTrend) {
+          aggregatedTrend[row.date] += row.count;
+        } else {
+          aggregatedTrend[row.date] = row.count;
+        }
+      });
+
+      teamMembers.push({
+        data: {
+          fullName: userData.fullName,
+          avatar: userData.avatar,
+          graph: fixedChartData,
+        },
+      });
+    }
+
+    return teamMembers;
   },
 };
 
