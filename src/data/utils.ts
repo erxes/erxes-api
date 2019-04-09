@@ -1,19 +1,20 @@
 // tslint:disable-next-line
-const os = require('os');
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as os from 'os';
 import * as path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Companies, Customers, Notifications, Users } from '../db/models';
-// tslint:disable-next-line
-const { Worker } = require('worker_threads');
+import { Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
+
+// tslint:disable-next-line
+const { Worker } = require('worker_threads');
 
 /*
  * Check that given file is not harmful
@@ -315,8 +316,6 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         // Getting columns
         const fieldNames = usedSheets[0];
 
-        let collection;
-
         // Removing column
         usedSheets.shift();
 
@@ -333,48 +332,45 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           results.push(asd);
         }
 
-        switch (type) {
-          case 'customers':
-            collection = Customers;
-            break;
-
-          case 'companies':
-            collection = Companies;
-            break;
-
-          default:
-            reject(['Invalid import type']);
-        }
-
         const diff = process.hrtime(time);
 
-        const workerPath = path.resolve('./src/data/bulkInsert-worker.js');
+        const workerFile =
+          process.env.NODE_ENV === 'production' ? 'bulkInsert.worker.js' : 'bulkInsert.worker.import.js';
 
-        console.log(usedSheets.length);
+        const workerPath = path.resolve(`./src/workerUtils/${workerFile}`);
+
+        console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
+        // const execute = async result => {
+        //   return collection.bulkInsert(fieldNames, result, user);
+        // };
 
-        console.log(workerPath);
+        results.forEach(result => {
+          console.log('creating worker');
+          try {
+            const worker = new Worker(workerPath, {
+              workerData: {
+                type,
+                fieldNames,
+                result,
+                user,
+              },
+            });
 
-        const worker = new Worker(workerPath, {
-          workerData: {
-            fieldNames,
-            usedSheets,
-            user,
-          },
-        });
+            worker.on('message', () => {
+              console.log('wow');
+            });
+            worker.on('error', reject);
 
-        worker.on('message', data => {
-          console.log('wow', data);
-        });
-        worker.on('error', reject);
-        worker.on('exit', code => {
-          if (code !== 0) {
-            console.log(collection);
-            reject(new Error(`Worker stopped with exit code ${code}`));
+            worker.on('exit', code => {
+              if (code !== 0) {
+                reject(new Error(`Worker stopped with exit code ${code}`));
+              }
+            });
+          } catch (e) {
+            console.log(e.message);
           }
         });
-
-        // const response = await collection.bulkInsert(fieldNames, usedSheets, user);
 
         // resolve(response);
         return resolve(true);
