@@ -48,7 +48,7 @@
     "@google-cloud/pubsub": "0.18.0",
     "apollo-server-express": "^2.3.1",
     "aws-sdk": "^2.151.0",
-    "bcrypt": "^3.0.4-napi",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",

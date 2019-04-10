@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Companies, Customers, Notifications, Users } from '../db/models';
+import { Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
 
@@ -321,7 +321,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
 
         const cpuCount = os.cpus().length;
 
-        const results: any = [];
+        const results: string[] = [];
 
         const calc = Math.ceil(usedSheets.length / cpuCount);
 
@@ -338,23 +338,20 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           process.env.NODE_ENV === 'production' ? 'bulkInsert.worker.js' : 'bulkInsert.worker.import.js';
 
         const workerPath = path.resolve(`./workerUtils/${workerFile}`);
-
-        const collection = getCollectionByName(type);
-
-        if (!collection) {
-          throw new Error('Wrong import type');
-        }
-
         console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
         results.forEach(result => {
           try {
-            const worker = new Worker(workerPath, {});
+            const worker = new Worker(workerPath, {
+              fieldNames,
+              result,
+              type,
+              user,
+            });
 
             worker.on('message', async () => {
               console.log('Worker on message');
-              return { result, fieldNames };
             });
 
             worker.on('error', e => {
@@ -377,29 +374,6 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         return reject(e);
       });
   });
-};
-
-/**
- * Returns collection by name
- */
-export const getCollectionByName = (name: string) => {
-  name = name.toLowerCase();
-  let collection: any = null;
-
-  switch (name) {
-    case 'customers':
-      collection = Customers;
-      break;
-
-    case 'companies':
-      collection = Companies;
-      break;
-
-    default:
-      break;
-  }
-
-  return collection;
 };
 
 /**

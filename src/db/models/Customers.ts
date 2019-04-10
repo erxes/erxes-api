@@ -4,7 +4,7 @@ import { Conversations, Deals, EngageMessages, Fields, InternalNotes } from './'
 import { CUSTOMER_BASIC_INFOS, STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument, IFacebookData, ITwitterData } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
-// import { bulkInsert } from './utils';
+import { bulkInsert } from './utils';
 
 interface ICustomerFieldsInput {
   twitterData?: ITwitterData;
@@ -299,9 +299,7 @@ export const loadClass = () => {
         create: this.createCustomer,
       };
 
-      return params;
-
-      // return bulkInsert(params);
+      return bulkInsert(params);
     }
   }
 
