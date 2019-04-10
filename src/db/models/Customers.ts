@@ -299,7 +299,7 @@ export const loadClass = () => {
         create: this.createCustomer,
       };
 
-      console.log(params);
+      return params;
 
       // return bulkInsert(params);
     }

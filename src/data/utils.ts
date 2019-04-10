@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Notifications, Users } from '../db/models';
+import { Companies, Customers, Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
 
@@ -328,8 +328,8 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         for (let index = 0; index < cpuCount; index++) {
           const start = index * calc;
           const end = start + calc;
-          const asd = usedSheets.slice(start, end);
-          results.push(asd);
+          const row = usedSheets.slice(start, end);
+          results.push(row);
         }
 
         const diff = process.hrtime(time);
@@ -337,30 +337,29 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         const workerFile =
           process.env.NODE_ENV === 'production' ? 'bulkInsert.worker.js' : 'bulkInsert.worker.import.js';
 
-        const workerPath = path.resolve(`./src/workerUtils/${workerFile}`);
+        const workerPath = path.resolve(`./workerUtils/${workerFile}`);
+
+        const collection = getCollectionByName(type);
+
+        if (!collection) {
+          throw new Error('Wrong import type');
+        }
 
         console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
-        // const execute = async result => {
-        //   return collection.bulkInsert(fieldNames, result, user);
-        // };
 
         results.forEach(result => {
-          console.log('creating worker');
           try {
-            const worker = new Worker(workerPath, {
-              workerData: {
-                type,
-                fieldNames,
-                result,
-                user,
-              },
+            const worker = new Worker(workerPath, {});
+
+            worker.on('message', async () => {
+              console.log('Worker on message');
+              return { result, fieldNames };
             });
 
-            worker.on('message', () => {
-              console.log('wow');
+            worker.on('error', e => {
+              console.log('worker error', e);
             });
-            worker.on('error', reject);
 
             worker.on('exit', code => {
               if (code !== 0) {
@@ -372,13 +371,35 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           }
         });
 
-        // resolve(response);
         return resolve(true);
       })
       .catch(e => {
         return reject(e);
       });
   });
+};
+
+/**
+ * Returns collection by name
+ */
+export const getCollectionByName = (name: string) => {
+  name = name.toLowerCase();
+  let collection: any = null;
+
+  switch (name) {
+    case 'customers':
+      collection = Customers;
+      break;
+
+    case 'companies':
+      collection = Companies;
+      break;
+
+    default:
+      break;
+  }
+
+  return collection;
 };
 
 /**
