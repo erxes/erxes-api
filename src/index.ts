@@ -4,6 +4,7 @@ import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
+import * as admin from 'firebase-admin';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
@@ -25,6 +26,14 @@ dotenv.config();
 const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
+
+// Initializing Firebase ADMIN SDK
+import serviceAccount from './serviceAccount';
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+  databaseURL: 'https://mandal-cdae4.firebaseio.com',
+});
 
 // connect to mongo database
 connect();
