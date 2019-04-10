@@ -59,6 +59,7 @@ export const types = `
     getMessengerCustomData: JSON
     getTags: [Tag]
     owner: User
+    deviceToken: String
   }
 
   type CustomersListResponse {
@@ -112,6 +113,7 @@ const fields = `
   doNotDisturb: String
   links: JSON
   customFieldsData: JSON
+  deviceTokens: [String]
 `;
 
 export const mutations = `

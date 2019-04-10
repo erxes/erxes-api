@@ -132,6 +132,7 @@ const conversationMutations = {
 
     // send notification =======
     const title = 'You have a new message.';
+    const receivers = conversationNotifReceivers(conversation, user._id);
 
     utils.sendNotification({
       createdUser: user._id,
@@ -139,7 +140,15 @@ const conversationMutations = {
       title,
       content: doc.content,
       link: `/inbox?_id=${conversation._id}`,
-      receivers: conversationNotifReceivers(conversation, user._id),
+      receivers,
+    });
+
+    // send mobile notification ======
+    utils.sendMobileNotification({
+      title,
+      body: strip(doc.content),
+      receivers,
+      customerId: conversation.customerId || '',
     });
 
     // do not send internal message to third service integrations

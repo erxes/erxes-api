@@ -1,12 +1,14 @@
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
+import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Companies, Customers, Notifications, Users } from '../db/models';
+import { INotificationMobile } from '../db/models/definitions/notifications';
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
 
@@ -241,7 +243,7 @@ export const sendNotification = async ({
   // loop through receiver ids
   for (const receiverId of receivers) {
     try {
-      // send notification
+      // send web and mobile notification
       await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
     } catch (e) {
       // Any other error is serious
@@ -423,10 +425,54 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   return value || '';
 };
 
+/**
+ * Send notification to mobile device from inbox conversations
+ * @param {string} - title
+ * @param {string} - body
+ * @param {string} - customerId
+ * @param {array} - receivers
+ */
+export const sendMobileNotification = async ({
+  receivers,
+  customerId,
+  title,
+  body,
+}: {
+  receivers: string[];
+  customerId: string;
+  title: string;
+  body: string;
+}): Promise<void> => {
+  const transporter = admin.messaging();
+  const recipients = await Users.find({ _id: { $in: receivers } });
+  const customerDeviceTokens = await Customers.find({ _id: customerId }).distinct('deviceTokens');
+  const tokens: string[] = [];
+
+  const doc: INotificationMobile = { notification: { title, body } };
+
+  // user device tokens
+  for (const recipient of recipients) {
+    if (!recipient.deviceTokens || recipient.deviceTokens.length === 0) {
+      continue;
+    }
+
+    tokens.push(...recipient.deviceTokens);
+  }
+
+  // customer device tokens
+  tokens.push(...customerDeviceTokens);
+
+  // send notification
+  for (const token of tokens) {
+    await transporter.send({ token, ...doc });
+  }
+};
+
 export default {
   sendEmail,
   validateEmail,
   sendNotification,
+  sendMobileNotification,
   readFile,
   createTransporter,
 };
