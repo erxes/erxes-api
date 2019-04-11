@@ -18,7 +18,7 @@ import {
 
 const dealInsightQueries = {
   /**
-   * Counts conversations by each hours in each days.
+   * Counts deals by each hours in each days.
    */
   async dealInsightsPunchCard(_root, args: IDealListArgs, { user }: { user: IUserDocument }) {
     const { endDate } = args;
@@ -39,31 +39,37 @@ const dealInsightQueries = {
   },
 
   /**
-   * Sends combined charting data for trends, summaries and team members.
+   * Sends combined charting data for trends and summaries.
    */
   async dealInsightsMain(_root, args: IDealListArgs) {
-    const { startDate, endDate } = args;
+    const { startDate, endDate, status } = args;
     const { start, end } = fixDates(startDate, endDate);
 
     const selector = await getDealSelector(args);
 
-    const insightData: any = {
-      summary: [],
-      trend: await generateChartDataBySelector(selector, INSIGHT_TYPES.DEAL),
-    };
+    const dateFieldName = status ? 'modifiedAt' : 'createdAt';
+
+    const insightData: any = {};
+
+    insightData.trend = await generateChartDataBySelector({
+      selector,
+      type: INSIGHT_TYPES.DEAL,
+      dateFieldName: `$${dateFieldName}`,
+    });
 
     insightData.summary = await getSummaryData({
       startDate: start,
       endDate: end,
       collection: Deals,
       selector: { ...selector },
+      dateFieldName,
     });
 
     return insightData;
   },
 
   /**
-   * Calculates average response close time for each team members.
+   * Calculates won or lost deals for each team members.
    */
   async dealInsightsByTeamMember(_root, args: IDealListArgs, { user }: { user: IUserDocument }) {
     const dealMatch = await getDealSelector(args);

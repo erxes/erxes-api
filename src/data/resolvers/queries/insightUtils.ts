@@ -95,7 +95,8 @@ export interface IFilterSelector {
 }
 
 interface IDealSelector {
-  modifiedAt: object;
+  modifiedAt?: object;
+  createdAt?: object;
   stageId?: object;
 }
 
@@ -134,12 +135,18 @@ export const getDealSelector = async (args: IDealListArgs): Promise<IDealSelecto
   const { startDate, endDate, boardId, pipelineIds, status } = args;
   const { start, end } = fixDates(startDate, endDate);
 
-  const selector: IDealSelector = {
-    modifiedAt: {
-      $gte: start,
-      $lte: end,
-    },
+  const selector: IDealSelector = {};
+  const date = {
+    $gte: start,
+    $lte: end,
   };
+
+  // If status is either won or lost, modified date is more important
+  if (status) {
+    selector.modifiedAt = date;
+  } else {
+    selector.createdAt = date;
+  }
 
   const stageSelector: IStageSelector = {};
 
@@ -212,17 +219,24 @@ export const findConversations = async (
  * @param collection
  * @param selector
  */
-export const getSummaryData = async ({ startDate, endDate, selector, collection }): Promise<any> => {
+export const getSummaryData = async ({
+  startDate,
+  endDate,
+  selector,
+  collection,
+  dateFieldName = 'createdAt',
+}): Promise<any> => {
   const summaries: Array<{ title?: string; count?: number }> = [];
   const intervals = generateTimeIntervals(startDate, endDate);
   const facets = {};
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {
     const facetMessageSelector = { ...selector };
-    facetMessageSelector.createdAt = {
+    facetMessageSelector[dateFieldName] = {
       $gte: interval.start.toDate(),
       $lte: interval.end.toDate(),
     };
+
     facets[interval.title] = [
       {
         $match: facetMessageSelector,
@@ -299,16 +313,18 @@ export const fixChartData = async (data: any[], hintX: string, hintY: string): P
  * Populates message collection into date range
  * by given duration and loop count for chart data.
  */
-export const generateChartDataBySelector = async (selector: object, type: string): Promise<IGenerateChartData[]> => {
-  const fieldName = type === INSIGHT_TYPES.DEAL ? '$modifiedAt' : '$createdAt';
-
+export const generateChartDataBySelector = async ({
+  selector,
+  type = INSIGHT_TYPES.CONVERSATION,
+  dateFieldName = '$createdAt',
+}): Promise<IGenerateChartData[]> => {
   const pipelineStages = [
     {
       $match: selector,
     },
     {
       $project: {
-        date: getDateFieldAsStr({ fieldName }),
+        date: getDateFieldAsStr({ fieldName: dateFieldName }),
       },
     },
     {

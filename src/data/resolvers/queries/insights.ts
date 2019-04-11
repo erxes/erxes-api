@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { FACEBOOK_DATA_KINDS, INSIGHT_TYPES, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
+import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { getDateFieldAsStr, getDurationField } from './aggregationUtils';
 import {
@@ -175,7 +175,7 @@ const insightQueries = {
 
     const insightData: any = {
       summary: [],
-      trend: await generateChartDataBySelector(messageSelector, INSIGHT_TYPES.CONVERSATION),
+      trend: await generateChartDataBySelector({ selector: messageSelector }),
     };
 
     const { startDate, endDate } = args;
@@ -202,7 +202,7 @@ const insightQueries = {
     const conversations = await findConversations(filterSelector, { ...conversationSelector });
     const insightData: any = {
       summary: [],
-      trend: await generateChartDataByCollection({ collection: conversations }),
+      trend: await generateChartDataByCollection(conversations),
     };
 
     const { startDate, endDate } = args;
