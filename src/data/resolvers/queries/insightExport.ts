@@ -319,6 +319,8 @@ const insightExportQueries = {
 
     await generateData();
 
+    const messageCount = messageAggregationData.length;
+
     data.push({
       date: 'Total',
       count: totalUniqueCount,
@@ -326,8 +328,8 @@ const insightExportQueries = {
       customerCountPercentage: `${((totalUniqueCount / totalCustomerCount) * 100).toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
-      averageResponseDuration: convertTime(totalAverageResponseDuration),
-      firstResponseDuration: convertTime(totalFirstResponseDuration),
+      averageResponseDuration: convertTime(totalAverageResponseDuration / messageCount),
+      firstResponseDuration: convertTime(totalFirstResponseDuration / messageCount),
     });
 
     const basicInfos = INSIGHT_BASIC_INFOS;
