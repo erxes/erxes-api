@@ -32,10 +32,7 @@ const dealInsightQueries = {
       createdAt: { $gte: start.toDate(), $lte: new Date(end) },
     };
 
-    // TODO: need improvements on timezone calculation.
-    const punchData = await generatePunchData(Deals, matchMessageSelector, user);
-
-    return punchData;
+    return generatePunchData(Deals, matchMessageSelector, user);
   },
 
   /**

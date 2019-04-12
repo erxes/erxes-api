@@ -39,8 +39,8 @@ interface IGeneratePunchCard {
 
 interface IGenerateTimeIntervals {
   title: string;
-  start: any;
-  end: any;
+  start: moment.Moment;
+  end: moment.Moment;
 }
 
 interface IGenerateUserChartData {
@@ -95,8 +95,14 @@ export interface IFilterSelector {
 }
 
 interface IDealSelector {
-  modifiedAt?: object;
-  createdAt?: object;
+  modifiedAt?: {
+    $gte: Date;
+    $lte: Date;
+  };
+  createdAt?: {
+    $gte: Date;
+    $lte: Date;
+  };
   stageId?: object;
 }
 

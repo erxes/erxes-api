@@ -152,10 +152,7 @@ const insightQueries = {
       createdAt: { $gte: start.toDate(), $lte: new Date(end) },
     };
 
-    // TODO: need improvements on timezone calculation.
-    const punchData = await generatePunchData(ConversationMessages, matchMessageSelector, user);
-
-    return punchData;
+    return generatePunchData(ConversationMessages, matchMessageSelector, user);
   },
 
   /**
@@ -173,13 +170,13 @@ const insightQueries = {
       },
     );
 
-    const insightData: any = {
-      summary: [],
-      trend: await generateChartDataBySelector({ selector: messageSelector }),
-    };
+    const insightData: any = {};
+
+    insightData.trend = await generateChartDataBySelector({ selector: messageSelector });
 
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
+
     insightData.summary = await getSummaryData({
       startDate: start,
       endDate: end,
