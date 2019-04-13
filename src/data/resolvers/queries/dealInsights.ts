@@ -142,8 +142,10 @@ const dealInsightQueries = {
         fullName: userData.fullName,
         avatar: userData.avatar,
       };
+
       // team members gather
       const fixedChartData = await fixChartData(userData.chartDatas, 'date', 'count');
+
       userData.chartDatas.forEach(row => {
         if (row.date in aggregatedTrend) {
           aggregatedTrend[row.date] += row.count;
