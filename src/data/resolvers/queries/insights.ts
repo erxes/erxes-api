@@ -13,6 +13,7 @@ import {
   generateMessageSelector,
   generateResponseData,
   generateUserSelector,
+  getConversationDates,
   getConversationSelector,
   getFilterSelector,
   getSummaryData,
@@ -201,6 +202,10 @@ const insightQueries = {
       },
     );
 
+    // messageSelector.userId = generateUserSelector(type);
+
+    console.log('messageSelector: ', messageSelector);
+
     const insightData: any = {
       summary: [],
       trend: await generateChartData({ messageSelector }),
@@ -208,6 +213,9 @@ const insightQueries = {
 
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
+
+    messageSelector.createdAt = getConversationDates(args.endDate);
+
     insightData.summary = await getSummaryData({
       startDate: start,
       endDate: end,

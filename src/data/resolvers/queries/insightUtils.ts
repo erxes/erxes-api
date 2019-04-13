@@ -122,7 +122,7 @@ export const findConversations = async (
   conversationSelector: any,
   selectIds?: boolean,
 ): Promise<IConversationDocument[]> => {
-  if (filterSelector.integration) {
+  if (Object.keys(filterSelector.integration).length > 0) {
     const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
     conversationSelector.integrationId = integrationIds.map(row => row._id);
   }
@@ -196,8 +196,11 @@ export const generateMessageSelector = async (
   messageSelector.createdAt = filterSelector.createdAt;
 
   const conversationIds = await findConversations(filterSelector, { ...messageSelector }, true);
-  const rawConversationIds = conversationIds.map(obj => obj._id);
-  messageSelector.conversationId = { $in: rawConversationIds };
+
+  if (conversationIds.length > 0) {
+    const rawConversationIds = conversationIds.map(obj => obj._id);
+    messageSelector.conversationId = { $in: rawConversationIds };
+  }
 
   return messageSelector;
 };
@@ -391,6 +394,20 @@ export const fixDates = (startValue: string, endValue: string, count?: number): 
   const startDate = fixDate(startValue, startDateDefaultValue);
 
   return { start: startDate, end: endDate };
+};
+
+export const getConversationDates = (endValue: string): any => {
+  // convert given value or get today
+  const endDate = fixDate(endValue);
+
+  const month = moment(endDate).month();
+  const startDate = new Date(
+    moment(month + 1, 'MM')
+      .subtract(1, 'months')
+      .toString(),
+  );
+
+  return { $lte: startDate, $gte: endDate };
 };
 
 /*
