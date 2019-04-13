@@ -9,8 +9,10 @@ import {
   fixChartData,
   fixDate,
   fixDates,
-  generateChartData,
+  generateChartDataByCollection,
+  generateChartDataBySelector,
   generateMessageSelector,
+  generatePunchData,
   generateResponseData,
   generateUserSelector,
   getConversationDates,
@@ -151,40 +153,7 @@ const insightQueries = {
       createdAt: { $gte: start.toDate(), $lte: new Date(end) },
     };
 
-    // TODO: need improvements on timezone calculation.
-    const punchData = await ConversationMessages.aggregate([
-      {
-        $match: matchMessageSelector,
-      },
-      {
-        $project: {
-          hour: { $hour: { date: '$createdAt', timezone: '+08' } },
-          day: { $isoDayOfWeek: { date: '$createdAt', timezone: '+08' } },
-          date: await getDateFieldAsStr({ timeZone: getTimezone(user) }),
-        },
-      },
-      {
-        $group: {
-          _id: {
-            hour: '$hour',
-            day: '$day',
-            date: '$date',
-          },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          day: '$_id.day',
-          hour: '$_id.hour',
-          date: '$_id.date',
-          count: 1,
-        },
-      },
-    ]);
-
-    return punchData;
+    return generatePunchData(ConversationMessages, matchMessageSelector, user);
   },
 
   /**
@@ -208,14 +177,15 @@ const insightQueries = {
 
     const insightData: any = {
       summary: [],
-      trend: await generateChartData({ messageSelector }),
+      trend: await generateChartDataBySelector({ selector: messageSelector }),
     };
+
+    insightData.trend = await generateChartDataBySelector({ selector: messageSelector });
 
     const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
 
     messageSelector.createdAt = getConversationDates(args.endDate);
-
     insightData.summary = await getSummaryData({
       startDate: start,
       endDate: end,
@@ -238,7 +208,7 @@ const insightQueries = {
     const conversations = await findConversations(filterSelector, { ...conversationSelector });
     const insightData: any = {
       summary: [],
-      trend: await generateChartData({ collection: conversations }),
+      trend: await generateChartDataByCollection(conversations),
     };
 
     const { startDate, endDate } = args;
