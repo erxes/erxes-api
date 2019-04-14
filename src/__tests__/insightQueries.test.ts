@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import insightQueries from '../data/resolvers/queries/insights';
+import insightQueries from '../data/resolvers/queries/insights/insights';
 import { graphqlRequest } from '../db/connection';
 import {
   brandFactory,
