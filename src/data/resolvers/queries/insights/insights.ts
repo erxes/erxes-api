@@ -159,8 +159,6 @@ const insightQueries = {
       createdAt: getConversationDates(args.endDate),
     });
 
-    console.log('messageSelector: ', messageSelector);
-
     const { start, end } = fixDates(startDate, endDate);
 
     return getSummaryData({

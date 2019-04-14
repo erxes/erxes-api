@@ -135,8 +135,6 @@ export const findConversations = async (
     conversationSelector.integrationId = integrationIds.map(row => row._id);
   }
 
-  console.log('conversationSelector: ', conversationSelector);
-
   if (selectIds) {
     return Conversations.find(conversationSelector).select('_id');
   }
@@ -224,8 +222,6 @@ export const generateMessageSelector = async ({
   }
 
   const conversationIds = await findConversations(filterSelector, { createdAt: updatedCreatedAt }, true);
-
-  console.log('conversation id length: ', conversationIds.length);
 
   const rawConversationIds = conversationIds.map(obj => obj._id);
   messageSelector.conversationId = { $in: rawConversationIds };
