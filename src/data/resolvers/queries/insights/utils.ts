@@ -130,10 +130,8 @@ export const findConversations = async (
   conversationSelector: any,
   selectIds?: boolean,
 ): Promise<IConversationDocument[]> => {
-  if (Object.keys(filterSelector.integration).length > 0) {
-    const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
-    conversationSelector.integrationId = integrationIds.map(row => row._id);
-  }
+  const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
+  conversationSelector.integrationId = integrationIds.map(row => row._id);
 
   if (selectIds) {
     return Conversations.find(conversationSelector).select('_id');
@@ -221,10 +219,13 @@ export const generateMessageSelector = async ({
     messageSelector.fromBot = { $exists: false };
   }
 
-  const conversationIds = await findConversations(filterSelector, { createdAt: updatedCreatedAt }, true);
+  // While searching by integration
+  if (Object.keys(filterSelector.integration).length > 0) {
+    const conversationIds = await findConversations(filterSelector, { createdAt: updatedCreatedAt }, true);
 
-  const rawConversationIds = conversationIds.map(obj => obj._id);
-  messageSelector.conversationId = { $in: rawConversationIds };
+    const rawConversationIds = conversationIds.map(obj => obj._id);
+    messageSelector.conversationId = { $in: rawConversationIds };
+  }
 
   return messageSelector;
 };
