@@ -11,6 +11,8 @@ import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
+import ImportHistories from '../db/models/ImportHistory';
+import { checkFieldNames } from '../db/models/utils';
 import { can } from './permissions/utils';
 
 // tslint:disable-next-line
@@ -319,6 +321,8 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         // Removing column
         usedSheets.shift();
 
+        const properties = await checkFieldNames(type, fieldNames);
+
         const cpuCount = os.cpus().length;
 
         const results: string[] = [];
@@ -341,31 +345,35 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
-        results.forEach(result => {
-          try {
-            const worker = new Worker(workerPath, {
-              fieldNames,
-              result,
-              type,
-              user,
-            });
+        await ImportHistories.create({ contentType: type, total: usedSheets.range().length });
 
-            worker.on('message', async () => {
-              console.log('Worker on message');
-            });
+        setImmediate(() => {
+          results.forEach(result => {
+            try {
+              const worker = new Worker(workerPath, {
+                result,
+                contentType: type,
+                user,
+                properties,
+              });
 
-            worker.on('error', e => {
-              console.log('worker error', e);
-            });
+              worker.on('message', async () => {
+                console.log('Worker on message');
+              });
 
-            worker.on('exit', code => {
-              if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code ${code}`));
-              }
-            });
-          } catch (e) {
-            console.log(e.message);
-          }
+              worker.on('error', e => {
+                console.log('worker error', e);
+              });
+
+              worker.on('exit', code => {
+                if (code !== 0) {
+                  reject(new Error(`Worker stopped with exit code ${code}`));
+                }
+              });
+            } catch (e) {
+              console.log(e.message);
+            }
+          });
         });
 
         return resolve(true);

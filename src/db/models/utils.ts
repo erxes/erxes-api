@@ -1,8 +1,7 @@
 import * as Random from 'meteor-random';
-import { Fields, ImportHistory } from './';
-import { ICompany, ICompanyDocument } from './definitions/companies';
-import { ICustomer, ICustomerDocument } from './definitions/customers';
-import { IUserDocument } from './definitions/users';
+import { COMPANY_BASIC_INFOS } from '../../data/constants';
+import { Fields } from './';
+import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 
 /*
  * Mongoose field options wrapper
@@ -24,7 +23,13 @@ export const field = options => {
 };
 
 // Checking field names, All field names must be configured correctly
-const checkFieldNames = async (basicInfos, fields) => {
+export const checkFieldNames = async (type: string, fields: string[]) => {
+  let basicInfos = CUSTOMER_BASIC_INFOS;
+
+  if (type === 'company') {
+    basicInfos = COMPANY_BASIC_INFOS;
+  }
+
   const properties: any[] = [];
 
   for (const fieldName of fields) {
@@ -51,87 +56,4 @@ const checkFieldNames = async (basicInfos, fields) => {
       throw new Error('Bad column name');
     }
   }
-};
-
-type CocInput = ICompany | ICustomer;
-type CocDocument = ICompanyDocument | ICustomerDocument;
-
-/*
- * Helper for customer, company bulk insert
- */
-export const bulkInsert = async (params: {
-  fieldNames: string[];
-  fieldValues: string[][];
-  user: IUserDocument;
-  basicInfos: string[];
-  contentType: string;
-  create: (doc: CocInput, user?: IUserDocument) => Promise<CocDocument>;
-}): Promise<string[]> => {
-  const errMsgs: string[] = [];
-  let properties: any = [];
-
-  const { fieldNames, fieldValues, user, basicInfos, contentType, create } = params;
-
-  const history: {
-    ids: string[];
-    success: number;
-    total: number;
-    contentType: string;
-    failed: number;
-  } = {
-    ids: [],
-    success: 0,
-    total: fieldValues.length,
-    contentType,
-    failed: 0,
-  };
-
-  try {
-    properties = await checkFieldNames(basicInfos, fieldNames);
-  } catch (e) {
-    return e.message;
-  }
-
-  let rowIndex = 0;
-
-  // Iterating field values
-  for (const fieldValue of fieldValues) {
-    const coc = {
-      customFieldsData: {},
-    };
-
-    let colIndex = 0;
-
-    // Iterating through detailed properties
-    for (const property of properties) {
-      // Checking if it is basic info field
-      if (property.isCustomField === false) {
-        coc[property.name] = fieldValue[colIndex];
-      } else {
-        coc.customFieldsData[property.id] = fieldValue[colIndex];
-      }
-
-      colIndex++;
-    }
-
-    // Creating coc
-    await create(coc, user)
-      .then(cocObj => {
-        // Increasing success count
-        history.success++;
-        history.ids.push(cocObj._id);
-      })
-      .catch(e => {
-        // Increasing failed count and pushing into error message
-        history.failed++;
-        errMsgs.push(`${e.message} at the row ${rowIndex + 1}`);
-      });
-
-    rowIndex++;
-  }
-
-  // Whether successfull or not creating import history
-  await ImportHistory.createHistory(history, user);
-
-  return errMsgs;
 };
