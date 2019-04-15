@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-import { Companies, Customers } from '../src/db/models';
+import { Companies, Customers, ImportHistory } from '../src/db/models';
 
 /**
  * Returns collection by name
@@ -36,30 +36,24 @@ const { MONGO_URL = '' } = process.env;
 mongoose.connect(
   MONGO_URL,
   { useNewUrlParser: true, useCreateIndex: true },
-  async () => {
-    const errMsgs: string[] = [];
-
-    const { result, contentType, properties, user } = workerData;
-
-    let collection: any = Customers;
-
-    if (contentType === 'company') {
-      collection = Companies;
+  async err => {
+    if (err) {
+      console.log('error', err);
     }
 
-    const history: {
-      ids: string[];
-      success: number;
-      total: number;
-      contentType: string;
-      failed: number;
-    } = {
-      ids: [],
-      success: 0,
-      total: result.length,
-      contentType,
-      failed: 0,
-    };
+    const errors: string[] = [];
+
+    const { result, contentType, properties, user, importHistoryId } = workerData;
+
+    let create: any = Customers.createCustomer;
+
+    if (contentType === 'company') {
+      create = Companies.createCompany;
+    }
+
+    const ids: string[] = [];
+    let success = 0;
+    let failed = 0;
 
     // Iterating field values
     for (const fieldValue of result) {
@@ -82,21 +76,22 @@ mongoose.connect(
       }
 
       // Creating coc
-      await collection
-        .create(coc, user)
+      await create(coc, user)
         .then(cocObj => {
           // Increasing success count
-          history.success++;
-          history.ids.push(cocObj._id);
+          success++;
+          ids.push(cocObj._id);
         })
         .catch(e => {
           // Increasing failed count and pushing into error message
-          history.failed++;
-          errMsgs.push(e.message);
+          failed++;
+          errors.push(e.message);
         });
     }
 
-    return errMsgs;
+    console.log(success, failed, ids);
+
+    await ImportHistory.updateOne({ _id: importHistoryId }, { $addToSet: { ids }, $inc: { success, failed } });
   },
 );
 

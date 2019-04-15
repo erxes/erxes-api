@@ -9,9 +9,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Notifications, Users } from '../db/models';
+import { ImportHistory, Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
-import ImportHistories from '../db/models/ImportHistory';
 import { checkFieldNames } from '../db/models/utils';
 import { can } from './permissions/utils';
 
@@ -310,7 +309,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         const usedRange = workbook.sheet(0).usedRange();
 
         if (!usedRange) {
-          return reject(['Invalid file']);
+          return reject('Invalid file');
         }
 
         const usedSheets = usedRange.value();
@@ -322,6 +321,12 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         usedSheets.shift();
 
         const properties = await checkFieldNames(type, fieldNames);
+
+        const importHistory = await ImportHistory.create({
+          contentType: type,
+          total: usedSheets.length,
+          userId: user._id,
+        });
 
         const cpuCount = os.cpus().length;
 
@@ -345,16 +350,17 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
-        await ImportHistories.create({ contentType: type, total: usedSheets.range().length });
-
         setImmediate(() => {
           results.forEach(result => {
             try {
               const worker = new Worker(workerPath, {
-                result,
-                contentType: type,
-                user,
-                properties,
+                workerData: {
+                  result,
+                  contentType: type,
+                  user,
+                  properties,
+                  importHistoryId: importHistory._id,
+                },
               });
 
               worker.on('message', async () => {

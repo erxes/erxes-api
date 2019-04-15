@@ -56,4 +56,6 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
       throw new Error('Bad column name');
     }
   }
+
+  return properties;
 };
