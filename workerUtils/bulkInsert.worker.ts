@@ -4,6 +4,7 @@ import * as mongoose from 'mongoose';
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
+import { pubsub } from '../src/data/resolvers/subscriptions';
 import { Companies, Customers, ImportHistory } from '../src/db/models';
 
 dotenv.config();
@@ -68,6 +69,20 @@ mongoose.connect(
         });
 
       await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: push });
+
+      const importHistory = await ImportHistory.findOne({ _id: importHistoryId });
+
+      if (!importHistory) {
+        throw new Error('Could not find import history');
+      }
+
+      if (importHistory.failed + importHistory.success === importHistory.total) {
+        await ImportHistory.updateOne({ _id: importHistoryId }, { $set: { status: 'Done' } });
+      }
+
+      pubsub.publish('importHistoryChanged', {
+        importHistoryChanged: importHistory,
+      });
     }
   },
 );

@@ -6,6 +6,9 @@ export const types = `
     total: String
     ids: [String]
     contentType: String
+    errorMsgs: [String]
+    status: String
+    percentage: Int
 
     date: Date
     user: User
@@ -14,6 +17,7 @@ export const types = `
 
 export const queries = `
   importHistories(perPage: Int, page: Int, type: String!): [ImportHistory]
+  importHistoryDetail(_id: String!): ImportHistory
 `;
 
 export const mutations = `

@@ -1,6 +1,7 @@
 import activityLogs from './activityLogs';
 import conversations from './conversations';
 import customers from './customers';
+import importHistory from './importHistory';
 import pubsub from './pubsub';
 
 export { pubsub };
@@ -9,6 +10,7 @@ let subscriptions: any = {
   ...conversations,
   ...customers,
   ...activityLogs,
+  ...importHistory,
 };
 
 const { NODE_ENV } = process.env;
