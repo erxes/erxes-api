@@ -37,7 +37,7 @@ mongoose.connect(
 
       const push: { ids?: string; errorMsgs?: string } = {};
 
-      const coc = {
+      const coc: any = {
         customFieldsData: {},
       };
 
@@ -65,7 +65,21 @@ mongoose.connect(
         .catch(e => {
           inc.failed++;
           // Increasing failed count and pushing into error message
-          push.errorMsgs = e.message;
+
+          switch (e.message) {
+            case 'Duplicated email':
+              push.errorMsgs = `Duplicated email ${coc.primaryEmail}`;
+              break;
+            case 'Duplicated phone':
+              push.errorMsgs = `Duplicated phone ${coc.primaryPhone}`;
+              break;
+            case 'Duplicated name':
+              push.errorMsgs = `Duplicated name ${coc.primaryName}`;
+              break;
+            default:
+              push.errorMsgs = e.message;
+              break;
+          }
         });
 
       await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: push });

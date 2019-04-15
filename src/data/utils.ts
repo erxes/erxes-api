@@ -349,7 +349,6 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
 
         const workerPath = path.resolve(`./workerUtils/${workerFile}`);
         console.log(usedSheets.length, workerPath);
-        console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
         const percentagePerData = Math.floor((1 / usedSheets.length) * 100);
 
@@ -385,6 +384,8 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
             }
           });
         });
+
+        console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
         return resolve({ id: importHistory.id });
       })
