@@ -278,7 +278,6 @@ export const COMPANY_BUSINESS_TYPES = [
 
 export const COMPANY_BASIC_INFOS = [
   'primaryName',
-  'names',
   'size',
   'industry',
   'website',
