@@ -52,6 +52,7 @@ const insightQueries = {
         ...conversationSelector,
         integrationId: { $in: integrationIds },
       });
+
       if (kind === INTEGRATION_KIND_CHOICES.FACEBOOK) {
         const { FEED, MESSENGER } = FACEBOOK_DATA_KINDS;
 
@@ -285,19 +286,15 @@ const insightQueries = {
 
     const conversationSelector = {
       createdAt: { $gte: start, $lte: end },
-      closedAt: { $ne: null },
-      closedUserId: { $ne: null },
+      closedAt: { $exists: true },
+      closedUserId: { $exists: true },
     };
 
     const conversationMatch = await getConversationSelector(args, { ...conversationSelector });
+
     const insightAggregateData = await Conversations.aggregate([
       {
         $match: conversationMatch,
-      },
-      {
-        $match: {
-          closedAt: { $exists: true },
-        },
       },
       {
         $project: {
@@ -355,6 +352,7 @@ const insightQueries = {
         },
       },
     ]);
+
     // Variables holds every user's response time.
     const teamMembers: any = [];
     const responseUserData: any = {};
@@ -362,6 +360,7 @@ const insightQueries = {
     let allResponseTime = 0;
     let totalCount = 0;
     const aggregatedTrend = {};
+
     for (const userData of insightAggregateData) {
       // responseUserData
       responseUserData[userData._id] = {

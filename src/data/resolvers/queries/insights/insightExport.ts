@@ -156,6 +156,7 @@ const insightExportQueries = {
     const data: IVolumeReportExportArgs[] = [];
 
     let begin = start;
+    let dataLength = 0;
     const generateData = async () => {
       const next = nextTime(begin, type);
       const dateKey = moment(begin).format(timeFormat);
@@ -199,6 +200,8 @@ const insightExportQueries = {
         firstResponseDuration: convertTime(firstResponseDuration),
       });
 
+      dataLength++;
+
       if (next.getTime() < end.getTime()) {
         begin = next;
 
@@ -208,8 +211,6 @@ const insightExportQueries = {
 
     await generateData();
 
-    const messageCount = messageAggregationData.length;
-
     data.push({
       date: 'Total',
       count: totalUniqueCount,
@@ -217,8 +218,8 @@ const insightExportQueries = {
       customerCountPercentage: `${((totalUniqueCount / totalCustomerCount) * 100).toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
-      averageResponseDuration: convertTime(totalAverageResponseDuration / messageCount),
-      firstResponseDuration: convertTime(totalFirstResponseDuration / messageCount),
+      averageResponseDuration: convertTime(fixNumber(totalAverageResponseDuration / dataLength)),
+      firstResponseDuration: convertTime(fixNumber(totalFirstResponseDuration / dataLength)),
     });
 
     const basicInfos = INSIGHT_BASIC_INFOS;

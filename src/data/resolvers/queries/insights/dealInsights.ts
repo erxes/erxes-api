@@ -4,10 +4,10 @@ import { IUserDocument } from '../../../../db/models/definitions/users';
 import { INSIGHT_TYPES } from '../../../constants';
 import { moduleRequireLogin } from '../../../permissions';
 import { getDateFieldAsStr } from '../aggregationUtils';
+import { fixDate } from '../utils';
 import { IDealListArgs } from './types';
 import {
   fixChartData,
-  fixDate,
   fixDates,
   generateChartDataBySelector,
   generatePunchData,

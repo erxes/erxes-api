@@ -130,8 +130,10 @@ export const findConversations = async (
   conversationSelector: any,
   selectIds?: boolean,
 ): Promise<IConversationDocument[]> => {
-  const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
-  conversationSelector.integrationId = integrationIds.map(row => row._id);
+  if (Object.keys(filterSelector.integration).length > 0) {
+    const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
+    conversationSelector.integrationId = integrationIds.map(row => row._id);
+  }
 
   if (selectIds) {
     return Conversations.find(conversationSelector).select('_id');

@@ -18,21 +18,11 @@ export const fixNumber = (num: number) => {
  * Time format HH:mm:ii
  */
 export const convertTime = (duration: number) => {
-  duration = duration / 1000;
-
   const hours = Math.floor(duration / 3600);
   const minutes = Math.floor((duration % 3600) / 60);
   const seconds = Math.floor((duration % 3600) % 60);
 
-  const timeFormat = (num: number) => {
-    if (num < 10) {
-      return '0' + num.toString();
-    }
-
-    return num.toString();
-  };
-
-  return timeFormat(hours) + ':' + timeFormat(minutes) + ':' + timeFormat(seconds);
+  return hours.toString() + 'h : ' + minutes.toString() + 'm : ' + seconds.toString() + 's';
 };
 
 /**
