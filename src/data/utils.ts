@@ -434,32 +434,48 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
  */
 export const sendMobileNotification = async ({
   receivers,
-  customerId,
   title,
   body,
+  customerId,
 }: {
   receivers: string[];
-  customerId: string;
+  customerId?: string;
   title: string;
   body: string;
 }): Promise<void> => {
   const transporter = admin.messaging();
-  const recipients = await Users.find({ _id: { $in: receivers } });
-  const customerDeviceTokens = await Customers.find({ _id: customerId }).distinct('deviceTokens');
-  const tokens: string[] = [];
 
+  const tokens: string[] = [];
+  let userDeviceTokens: string[] = [];
+  let customerDeviceTokens: string[] = [];
+
+  if (receivers) {
+    userDeviceTokens = await Users.find({ _id: { $in: receivers } }).distinct('deviceToken');
+  }
+
+  if (customerId) {
+    customerDeviceTokens = await Customers.findOne({ _id: customerId }).distinct('deviceToken');
+  }
+
+  /* Firebase notification message schema
+  {
+    token: string!,
+    notification: {
+      title: string,
+      body: string
+    }
+  }
+  */
   const doc: INotificationMobile = { notification: { title, body } };
 
-  // user device tokens
-  for (const recipient of recipients) {
-    if (!recipient.deviceTokens || recipient.deviceTokens.length === 0) {
+  for (const userDeviceToken of userDeviceTokens) {
+    if (!userDeviceToken) {
       continue;
     }
 
-    tokens.push(...recipient.deviceTokens);
+    tokens.push(userDeviceToken);
   }
 
-  // customer device tokens
   tokens.push(...customerDeviceTokens);
 
   // send notification
