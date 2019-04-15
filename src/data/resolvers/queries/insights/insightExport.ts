@@ -115,7 +115,6 @@ const insightExportQueries = {
     let totalUniqueCount = 0;
     let totalConversationMessages = 0;
     let totalResolved = 0;
-    let totalRespondTime = 0;
 
     let averageResponseDuration = 0;
     let firstResponseDuration = 0;
@@ -180,11 +179,10 @@ const insightExportQueries = {
       totalCustomerCount += totalCount;
       totalResolved += resolvedCount;
 
-      totalRespondTime += totalResponseTime;
       totalUniqueCount += uniqueCustomerCount;
 
       averageResponseDuration = fixNumber(totalCloseTime / resolvedCount);
-      firstResponseDuration = fixNumber(totalRespondTime / totalCount);
+      firstResponseDuration = fixNumber(totalResponseTime / totalCount);
 
       totalAverageResponseDuration += averageResponseDuration;
       totalFirstResponseDuration += firstResponseDuration;
