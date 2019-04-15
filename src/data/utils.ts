@@ -8,14 +8,13 @@ import * as nodemailer from 'nodemailer';
 import * as os from 'os';
 import * as path from 'path';
 import * as requestify from 'requestify';
+// tslint:disable-next-line
+import { Worker } from 'worker_threads';
 import * as xlsxPopulate from 'xlsx-populate';
 import { ImportHistory, Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { checkFieldNames } from '../db/models/utils';
 import { can } from './permissions/utils';
-
-// tslint:disable-next-line
-const { Worker } = require('worker_threads');
 
 /*
  * Check that given file is not harmful
