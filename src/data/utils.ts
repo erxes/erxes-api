@@ -309,7 +309,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         const usedRange = workbook.sheet(0).usedRange();
 
         if (!usedRange) {
-          return reject('Invalid file');
+          return reject(new Error('Invalid file'));
         }
 
         const usedSheets = usedRange.value();
@@ -326,6 +326,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           contentType: type,
           total: usedSheets.length,
           userId: user._id,
+          date: Date.now(),
         });
 
         const cpuCount = os.cpus().length;
@@ -350,6 +351,8 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         console.log(usedSheets.length, workerPath);
         console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
+        const percentagePerData = Math.floor((1 / usedSheets.length) * 100);
+
         setImmediate(() => {
           results.forEach(result => {
             try {
@@ -360,6 +363,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
                   user,
                   properties,
                   importHistoryId: importHistory._id,
+                  percentagePerData,
                 },
               });
 
@@ -382,10 +386,10 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           });
         });
 
-        return resolve(true);
+        return resolve({ id: importHistory.id });
       })
       .catch(e => {
-        return reject(e);
+        return reject({ error: e });
       });
   });
 };

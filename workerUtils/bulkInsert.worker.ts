@@ -6,29 +6,6 @@ const { parentPort, workerData } = require('worker_threads');
 
 import { Companies, Customers, ImportHistory } from '../src/db/models';
 
-/**
- * Returns collection by name
- */
-export const getCollectionByName = (name: string) => {
-  name = name.toLowerCase();
-  let collectionObj: any = null;
-
-  switch (name) {
-    case 'customers':
-      collectionObj = Customers;
-      break;
-
-    case 'companies':
-      collectionObj = Companies;
-      break;
-
-    default:
-      break;
-  }
-
-  return collectionObj;
-};
-
 dotenv.config();
 
 const { MONGO_URL = '' } = process.env;
@@ -41,9 +18,7 @@ mongoose.connect(
       console.log('error', err);
     }
 
-    const errors: string[] = [];
-
-    const { result, contentType, properties, user, importHistoryId } = workerData;
+    const { result, contentType, properties, user, importHistoryId, percentagePerData } = workerData;
 
     let create: any = Customers.createCustomer;
 
@@ -51,12 +26,16 @@ mongoose.connect(
       create = Companies.createCompany;
     }
 
-    const ids: string[] = [];
-    let success = 0;
-    let failed = 0;
-
     // Iterating field values
     for (const fieldValue of result) {
+      const inc: { success: number; failed: number; percentage: number } = {
+        success: 0,
+        failed: 0,
+        percentage: percentagePerData,
+      };
+
+      const push: { ids?: string; errorMsgs?: string } = {};
+
       const coc = {
         customFieldsData: {},
       };
@@ -78,20 +57,18 @@ mongoose.connect(
       // Creating coc
       await create(coc, user)
         .then(cocObj => {
+          inc.success++;
           // Increasing success count
-          success++;
-          ids.push(cocObj._id);
+          push.ids = cocObj._id;
         })
         .catch(e => {
+          inc.failed++;
           // Increasing failed count and pushing into error message
-          failed++;
-          errors.push(e.message);
+          push.errorMsgs = e.message;
         });
+
+      await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: push });
     }
-
-    console.log(success, failed, ids);
-
-    await ImportHistory.updateOne({ _id: importHistoryId }, { $addToSet: { ids }, $inc: { success, failed } });
   },
 );
 
