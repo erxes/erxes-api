@@ -148,7 +148,7 @@ const conversationMutations = {
       title,
       body: strip(doc.content),
       receivers,
-      customerId: conversation.customerId || '',
+      customerId: conversation.customerId,
     });
 
     // do not send internal message to third service integrations
