@@ -84,7 +84,7 @@ mongoose.connect(
 
       await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: push });
 
-      const importHistory = await ImportHistory.findOne({ _id: importHistoryId });
+      let importHistory = await ImportHistory.findOne({ _id: importHistoryId });
 
       if (!importHistory) {
         throw new Error('Could not find import history');
@@ -92,6 +92,8 @@ mongoose.connect(
 
       if (importHistory.failed + importHistory.success === importHistory.total) {
         await ImportHistory.updateOne({ _id: importHistoryId }, { $set: { status: 'Done' } });
+
+        importHistory = await ImportHistory.findOne({ _id: importHistoryId });
       }
 
       pubsub.publish('importHistoryChanged', {
