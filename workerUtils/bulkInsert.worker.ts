@@ -96,8 +96,16 @@ mongoose.connect(
         importHistory = await ImportHistory.findOne({ _id: importHistoryId });
       }
 
+      if (!importHistory) {
+        throw new Error('Could not find import history');
+      }
+
       pubsub.publish('importHistoryChanged', {
-        importHistoryChanged: importHistory,
+        importHistoryChanged: {
+          _id: importHistory._id,
+          status: importHistory.status,
+          percentage: importHistory.percentage,
+        },
       });
     }
   },

@@ -344,12 +344,13 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         const diff = process.hrtime(time);
 
         const workerFile =
-          process.env.NODE_ENV === 'production' ? 'bulkInsert.worker.js' : 'bulkInsert.worker.import.js';
+          process.env.NODE_ENV === 'production'
+            ? `./dist/workerUtils/bulkInsert.worker.js`
+            : './workerUtils/bulkInsert.worker.import.js';
 
-        const workerPath = path.resolve(`./workerUtils/${workerFile}`);
-        console.log(usedSheets.length, workerPath);
+        const workerPath = path.resolve(workerFile);
 
-        const percentagePerData = Math.floor((1 / usedSheets.length) * 100);
+        const percentagePerData = Number(((1 / usedSheets.length) * 100).toFixed(3));
 
         setImmediate(() => {
           results.forEach(result => {
