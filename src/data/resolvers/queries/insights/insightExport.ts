@@ -13,6 +13,7 @@ import {
   getConversationSelector,
   getFilterSelector,
   getTimezone,
+  noConversationSelector,
 } from './utils';
 
 import { addCell, addHeader, convertTime, dateToString, fixNumber, nextTime } from './exportUtils';
@@ -57,7 +58,7 @@ const insightExportQueries = {
     const { start, end } = fixDates(startDate, endDate, diffCount);
     const conversationSelector = {
       createdAt: { $gte: start, $lte: end },
-      $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
+      ...noConversationSelector,
     };
 
     const mainSelector = await getConversationSelector(args, conversationSelector);
@@ -524,7 +525,7 @@ const insightExportQueries = {
     const tagData = await Conversations.aggregate([
       {
         $match: {
-          $or: [{ userId: { $exists: true }, messageCount: { $gt: 1 } }, { userId: { $exists: false } }],
+          ...noConversationSelector,
           integrationId: { $in: rawIntegrationIds },
           createdAt: filterSelector.createdAt,
         },

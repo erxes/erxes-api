@@ -13,7 +13,7 @@ import { IMessageDocument } from '../../../../db/models/definitions/conversation
 import { IConversationDocument } from '../../../../db/models/definitions/conversations';
 import { IStageDocument } from '../../../../db/models/definitions/deals';
 import { IUser } from '../../../../db/models/definitions/users';
-import { INSIGHT_TYPES } from '../../../constants';
+import { CONVERSATION_STATUSES, INSIGHT_TYPES } from '../../../constants';
 import { getDateFieldAsStr } from '../aggregationUtils';
 import { fixDate } from '../utils';
 import {
@@ -538,4 +538,23 @@ export const generateResponseData = async (
 
 export const getTimezone = (user: IUser): string => {
   return (user.details ? user.details.location : '+08') || '+08';
+};
+
+export const noConversationSelector = {
+  $or: [
+    { userId: { $exists: true }, messageCount: { $gt: 1 } },
+    {
+      userId: { $exists: false },
+      $or: [
+        {
+          closedAt: { $exists: true },
+          closedUserId: { $exists: true },
+          status: CONVERSATION_STATUSES.CLOSED,
+        },
+        {
+          status: { $ne: CONVERSATION_STATUSES.CLOSED },
+        },
+      ],
+    },
+  ],
 };
