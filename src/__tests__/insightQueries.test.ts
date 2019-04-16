@@ -76,8 +76,7 @@ describe('insightQueries', () => {
 
     expectError(insightQueries.insights);
     expectError(insightQueries.insightsPunchCard);
-    expectError(insightQueries.insightsTrend);
-    expectError(insightQueries.insightsSummaryData);
+    expectError(insightQueries.insightsMain);
     expectError(insightQueries.insightsFirstResponse);
     expectError(insightQueries.insightsResponseClose);
   });
