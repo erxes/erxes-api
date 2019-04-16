@@ -113,7 +113,6 @@ const fields = `
   doNotDisturb: String
   links: JSON
   customFieldsData: JSON
-  deviceTokens: [String]
 `;
 
 export const mutations = `
