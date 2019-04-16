@@ -230,7 +230,6 @@ export const generateMessageSelector = async ({
   // While searching by integration
   if (Object.keys(filterSelector.integration).length > 0) {
     const conversationIds = await findConversations(filterSelector, { createdAt: updatedCreatedAt }, true);
-
     const rawConversationIds = conversationIds.map(obj => obj._id);
     messageSelector.conversationId = { $in: rawConversationIds };
   }

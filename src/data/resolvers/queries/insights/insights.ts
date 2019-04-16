@@ -153,7 +153,6 @@ const insightQueries = {
    */
   async insightsSummaryData(_root, args: IListArgs) {
     const { startDate, endDate, type } = args;
-
     const messageSelector = await generateMessageSelector({
       args,
       excludeBot: true,

@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { Session } from '.';
+import { Session, UsersGroups } from '.';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -39,7 +39,7 @@ export interface IUserModel extends Model<IUserDocument> {
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
   setUserActiveOrInactive(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
-  createUserWithConfirmation({ email }: { email: string }): string;
+  createUserWithConfirmation({ email, groupId }: { email: string; groupId: string }): string;
   confirmInvitation({
     token,
     password,
@@ -166,15 +166,20 @@ export const loadClass = () => {
     /**
      * Create new user with invitation token
      */
-    public static async createUserWithConfirmation({ email }: { email: string }) {
+    public static async createUserWithConfirmation({ email, groupId }: { email: string; groupId: string }) {
       // Checking duplicated email
       await Users.checkDuplication({ email });
+
+      if (!(await UsersGroups.findOne({ _id: groupId }))) {
+        throw new Error('Invalid group');
+      }
 
       const buffer = await crypto.randomBytes(20);
       const token = buffer.toString('hex');
 
       await Users.create({
         email,
+        groupIds: [groupId],
         registrationToken: token,
         registrationTokenExpires: Date.now() + 86400000,
       });
