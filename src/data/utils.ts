@@ -363,11 +363,11 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
               });
 
               worker.on('message', async () => {
-                console.log('Worker on message');
+                return;
               });
 
               worker.on('error', e => {
-                console.log('worker error', e);
+                reject(new Error(e.message));
               });
 
               worker.on('exit', code => {
@@ -376,7 +376,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
                 }
               });
             } catch (e) {
-              console.log(e.message);
+              reject(new Error(e.message));
             }
           });
         });
