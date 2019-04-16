@@ -8,7 +8,6 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Companies, Customers, Notifications, Users } from '../db/models';
-import { INotificationMobile } from '../db/models/definitions/notifications';
 import { IUserDocument } from '../db/models/definitions/users';
 import { can } from './permissions/utils';
 
@@ -444,43 +443,19 @@ export const sendMobileNotification = async ({
   body: string;
 }): Promise<void> => {
   const transporter = admin.messaging();
-
   const tokens: string[] = [];
-  let userDeviceTokens: string[] = [];
-  let customerDeviceTokens: string[] = [];
 
   if (receivers) {
-    userDeviceTokens = await Users.find({ _id: { $in: receivers } }).distinct('deviceToken');
+    tokens.push(...(await Users.find({ _id: { $in: receivers } }).distinct('deviceToken')));
   }
 
   if (customerId) {
-    customerDeviceTokens = await Customers.findOne({ _id: customerId }).distinct('deviceToken');
+    tokens.push(...(await Customers.findOne({ _id: customerId }).distinct('deviceToken')));
   }
-
-  /* Firebase notification message schema
-  {
-    token: string!,
-    notification: {
-      title: string,
-      body: string
-    }
-  }
-  */
-  const doc: INotificationMobile = { notification: { title, body } };
-
-  for (const userDeviceToken of userDeviceTokens) {
-    if (!userDeviceToken) {
-      continue;
-    }
-
-    tokens.push(userDeviceToken);
-  }
-
-  tokens.push(...customerDeviceTokens);
 
   // send notification
   for (const token of tokens) {
-    await transporter.send({ token, ...doc });
+    await transporter.send({ token, notification: { title, body } });
   }
 };
 
