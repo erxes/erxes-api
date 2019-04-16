@@ -64,7 +64,7 @@ describe('insightQueries', () => {
   });
 
   test(`test if Error('Login required') exception is working as intended`, async () => {
-    expect.assertions(5);
+    expect.assertions(6);
 
     const expectError = async func => {
       try {
@@ -76,7 +76,8 @@ describe('insightQueries', () => {
 
     expectError(insightQueries.insights);
     expectError(insightQueries.insightsPunchCard);
-    expectError(insightQueries.insightsMain);
+    expectError(insightQueries.insightsTrend);
+    expectError(insightQueries.insightsSummaryData);
     expectError(insightQueries.insightsFirstResponse);
     expectError(insightQueries.insightsResponseClose);
   });
