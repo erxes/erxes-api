@@ -78,13 +78,11 @@ const userMutations = {
    * Update user
    */
   async usersEdit(_root, args: IUsersEdit) {
-    const { _id, username, email, role, channelIds = [], groupIds = [], details, links } = args;
+    const { _id, username, email, channelIds = [], groupIds = [], details, links } = args;
 
-    // TODO check isOwner
     const updatedUser = await Users.updateUser(_id, {
       username,
       email,
-      role,
       details,
       links,
       groupIds,
@@ -126,7 +124,7 @@ const userMutations = {
 
     if (!password || !valid) {
       // bad password
-      throw new Error('Invalid password');
+      throw new Error('Invalid password. Try again');
     }
 
     return Users.editProfile(user._id, { username, email, details, links });
