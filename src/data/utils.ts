@@ -1,4 +1,3 @@
-// tslint:disable-next-line
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
@@ -273,7 +272,7 @@ export const sendNotification = async ({
  * Receives and saves xls file in private/xlsImports folder
  * and imports customers to the database
  */
-export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }, time) => {
+export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
   return new Promise(async (resolve, reject) => {
     if (!(await can('importXlsFile', user._id))) {
       return reject('Permission denied!');
@@ -341,8 +340,6 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           results.push(row);
         }
 
-        const diff = process.hrtime(time);
-
         const workerFile =
           process.env.NODE_ENV === 'production'
             ? `./dist/workerUtils/bulkInsert.worker.js`
@@ -367,11 +364,11 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
               });
 
               worker.on('message', async () => {
-                console.log('Worker on message');
+                return;
               });
 
               worker.on('error', e => {
-                console.log('worker error', e);
+                reject(new Error(e));
               });
 
               worker.on('exit', code => {
@@ -380,12 +377,10 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
                 }
               });
             } catch (e) {
-              console.log(e.message);
+              reject(new Error(e));
             }
           });
         });
-
-        console.info('Execution time (hr): %ds %dms', diff[0], diff[1] / 1000000);
 
         return resolve({ id: importHistory.id });
       })
