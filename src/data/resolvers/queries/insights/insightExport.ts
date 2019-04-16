@@ -92,8 +92,6 @@ const insightExportQueries = {
         $project: {
           uniqueCustomerCount: { $size: '$uniqueCustomerIds' },
           totalCount: 1,
-          averageCloseTime: 1,
-          averageRespondTime: 1,
           totalCloseTime: 1,
           totalResponseTime: 1,
           resolvedCount: 1,
@@ -118,8 +116,8 @@ const insightExportQueries = {
 
     let averageResponseDuration = 0;
     let firstResponseDuration = 0;
-    let totalAverageResponseDuration = 0;
-    let totalFirstResponseDuration = 0;
+    let totalClosedTime = 0;
+    let totalRespondTime = 0;
 
     aggregatedData.forEach(row => {
       volumeDictionary[row._id] = row;
@@ -155,7 +153,6 @@ const insightExportQueries = {
     const data: IVolumeReportExportArgs[] = [];
 
     let begin = start;
-    let dataLength = 0;
     const generateData = async () => {
       const next = nextTime(begin, type);
       const dateKey = moment(begin).format(timeFormat);
@@ -181,11 +178,11 @@ const insightExportQueries = {
 
       totalUniqueCount += uniqueCustomerCount;
 
+      totalClosedTime += totalCloseTime;
+      totalRespondTime += totalResponseTime;
+
       averageResponseDuration = fixNumber(totalCloseTime / resolvedCount);
       firstResponseDuration = fixNumber(totalResponseTime / totalCount);
-
-      totalAverageResponseDuration += averageResponseDuration;
-      totalFirstResponseDuration += firstResponseDuration;
 
       data.push({
         date: moment(begin).format(timeFormat),
@@ -197,8 +194,6 @@ const insightExportQueries = {
         averageResponseDuration: convertTime(averageResponseDuration),
         firstResponseDuration: convertTime(firstResponseDuration),
       });
-
-      dataLength++;
 
       if (next.getTime() < end.getTime()) {
         begin = next;
@@ -216,8 +211,8 @@ const insightExportQueries = {
       customerCountPercentage: `${((totalUniqueCount / totalCustomerCount) * 100).toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
-      averageResponseDuration: convertTime(fixNumber(totalAverageResponseDuration / dataLength)),
-      firstResponseDuration: convertTime(fixNumber(totalFirstResponseDuration / dataLength)),
+      averageResponseDuration: convertTime(fixNumber(totalClosedTime / totalResolved)),
+      firstResponseDuration: convertTime(fixNumber(totalRespondTime / totalCustomerCount)),
     });
 
     const basicInfos = INSIGHT_BASIC_INFOS;
