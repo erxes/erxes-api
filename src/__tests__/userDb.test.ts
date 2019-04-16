@@ -40,7 +40,6 @@ describe('User db utils', () => {
     expect(userObj._id).toBeDefined();
     expect(userObj.username).toBe(_user.username);
     expect(userObj.email).toBe('qwerty@qwerty.com');
-    expect(userObj.role).toBe(_user.role);
     expect(bcrypt.compare(testPassword, userObj.password)).toBeTruthy();
     expect(userObj.details.position).toBe(_user.details.position);
     expect(userObj.details.fullName).toBe(_user.details.fullName);
@@ -266,7 +265,6 @@ describe('User db utils', () => {
 
     expect(userObj.username).toBe(updateDoc.username);
     expect(userObj.email).toBe('123@gmail.com');
-    expect(userObj.role).toBe(userObj.role);
     expect(bcrypt.compare(testPassword, userObj.password)).toBeTruthy();
     expect(userObj.details.position).toBe(updateDoc.details.position);
     expect(userObj.details.fullName).toBe(updateDoc.details.fullName);
@@ -302,7 +300,7 @@ describe('User db utils', () => {
       const user = await userFactory({});
       await Users.setUserActiveOrInactive(user._id);
     } catch (e) {
-      expect(e.message).toBe('Can not remove owner');
+      expect(e.message).toBe('Can not deactivate owner');
     }
 
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1, isOwner: false } });
@@ -322,15 +320,6 @@ describe('User db utils', () => {
 
     // ensure deactivated
     expect(activatedUser.isActive).toBe(false);
-  });
-
-  test('Remove user With pending invitation status', async () => {
-    await Users.setUserActiveOrInactive(_user._id);
-
-    const user = await Users.findOne({ _id: _user._id });
-
-    // ensure deactivated
-    expect(user).toBeNull();
   });
 
   test('Edit profile', async () => {

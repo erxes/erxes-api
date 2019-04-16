@@ -196,11 +196,6 @@ export const COC_LIFECYCLE_STATE_TYPES = [
   'other',
 ];
 
-export const ROLES = {
-  ADMIN: 'admin',
-  CONTRIBUTOR: 'contributor',
-};
-
 export const PUBLISH_STATUSES = {
   DRAFT: 'draft',
   PUBLISH: 'publish',
@@ -327,3 +322,9 @@ export const PROBABILITY = {
 };
 
 export const FACEBOOK_POST_TYPES = ['status', 'video', 'photo', 'post', 'share'];
+
+export const INSIGHT_TYPES = {
+  DEAL: 'deal',
+  CONVERSATION: 'conversation',
+  ALL: ['deal', 'conversation'],
+};
