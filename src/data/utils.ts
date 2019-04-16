@@ -1,4 +1,3 @@
-// tslint:disable-next-line
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
