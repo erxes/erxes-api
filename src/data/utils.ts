@@ -453,9 +453,11 @@ export const sendMobileNotification = async ({
     tokens.push(...(await Customers.findOne({ _id: customerId }).distinct('deviceToken')));
   }
 
-  // send notification
-  for (const token of tokens) {
-    await transporter.send({ token, notification: { title, body } });
+  if (tokens.length > 0) {
+    // send notification
+    for (const token of tokens) {
+      await transporter.send({ token, notification: { title, body } });
+    }
   }
 };
 

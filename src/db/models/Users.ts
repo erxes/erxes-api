@@ -517,7 +517,11 @@ export const loadClass = () => {
       const [token, refreshToken] = await this.createTokens(user, this.getSecret());
 
       if (deviceToken) {
-        await user.update({ $push: { deviceToken } });
+        const deviceTokens: any = user.deviceToken || [];
+
+        if (!deviceTokens.includes(deviceToken)) {
+          await user.update({ $push: { deviceToken } });
+        }
       }
 
       return {

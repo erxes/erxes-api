@@ -32,7 +32,6 @@ import serviceAccount from './serviceAccount';
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  databaseURL: 'https://mandal-cdae4.firebaseio.com',
 });
 
 // connect to mongo database
