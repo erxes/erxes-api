@@ -13,4 +13,4 @@ dump.rdb
 .migrate
 
 # Firebase config key
-serviceAccount.json
+src/serviceAccount.json
