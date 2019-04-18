@@ -28,9 +28,9 @@ const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
-const firebaseServiceAccount = serviceAccount as admin.ServiceAccount;
+const firebaseServiceAccount = serviceAccount as any;
 
-if (firebaseServiceAccount.privateKey) {
+if (firebaseServiceAccount.private_key) {
   admin.initializeApp({
     credential: admin.credential.cert(firebaseServiceAccount),
   });
