@@ -522,10 +522,12 @@ export const loadClass = () => {
       const [token, refreshToken] = await this.createTokens(user, this.getSecret());
 
       if (deviceToken) {
-        const deviceTokens: any = user.deviceToken || [];
+        const deviceTokens: string[] = user.deviceTokens || [];
 
         if (!deviceTokens.includes(deviceToken)) {
-          await user.update({ $push: { deviceToken } });
+          deviceTokens.push(deviceToken);
+
+          await user.update({ $set: { deviceTokens } });
         }
       }
 

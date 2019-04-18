@@ -1,4 +1,5 @@
 import * as faker from 'faker';
+import * as admin from 'firebase-admin';
 import * as sinon from 'sinon';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
@@ -10,6 +11,7 @@ import {
   userFactory,
 } from '../db/factories';
 import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
+import serviceAccount from '../serviceAccount';
 import { twitMap } from '../trackers/twitter';
 import { twitRequest } from '../trackers/twitterTracker';
 
@@ -58,6 +60,10 @@ describe('Conversation message mutations', () => {
   });
 
   test('Add conversation message', async () => {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    });
+
     process.env.DEFAULT_EMAIL_SERIVCE = ' ';
     process.env.COMPANY_EMAIL_FROM = ' ';
 
@@ -104,7 +110,15 @@ describe('Conversation message mutations', () => {
       }
     `;
 
+    const spySendMobileNotification = jest.spyOn(utils, 'sendMobileNotification');
     const message = await graphqlRequest(mutation, 'conversationMessageAdd', args);
+
+    const calledArgs = spySendMobileNotification.mock.calls[0][0];
+
+    expect(calledArgs.title).toBe('You have a new message.');
+    expect(calledArgs.body).toBe(args.content);
+    expect(calledArgs.receivers).toEqual([_conversation.assignedUserId]);
+    expect(calledArgs.customerId).toEqual(_conversation.customerId);
 
     expect(message.content).toBe(args.content);
     expect(message.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
