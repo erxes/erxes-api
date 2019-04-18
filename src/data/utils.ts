@@ -442,7 +442,7 @@ export const sendMobileNotification = async ({
   title: string;
   body: string;
 }): Promise<void> => {
-  if (admin.app.length === 0) {
+  if (!admin.apps.length) {
     return;
   }
 
