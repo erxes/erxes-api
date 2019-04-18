@@ -236,7 +236,7 @@ const insightExportQueries = {
       customerCountPercentage: `${((totalUniqueCount / totalCustomerCount) * 100).toFixed(0)}%`,
       messageCount: totalConversationMessages,
       resolvedCount: totalResolved,
-      averageResponseDuration: convertTime(fixNumber(totalClosedTime / totalResolved)),
+      averageResponseDuration: convertTime(fixNumber(totalClosedTime / totalCustomerCount)),
       firstResponseDuration: convertTime(fixNumber(totalRespondTime / totalCustomerCount)),
     });
 
