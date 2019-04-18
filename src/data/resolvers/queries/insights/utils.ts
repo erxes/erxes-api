@@ -37,7 +37,7 @@ import {
  * Return filterSelector
  * @param args
  */
-export const getFilterSelector = (args: IListArgs): any => {
+export const getFilterSelector = (args: IListArgs, fieldName: string = 'createdAt'): any => {
   const selector: IFilterSelector = { integration: {} };
   const { startDate, endDate, integrationIds, brandIds } = args;
   const { start, end } = fixDates(startDate, endDate);
@@ -50,7 +50,7 @@ export const getFilterSelector = (args: IListArgs): any => {
     selector.integration.brandId = { $in: brandIds.split(',') };
   }
 
-  selector.createdAt = { $gte: start, $lte: end };
+  selector[fieldName] = { $gte: start, $lte: end };
 
   return selector;
 };
@@ -110,14 +110,19 @@ export const getDealSelector = async (args: IDealListArgs): Promise<IDealSelecto
  * @param conversationSelector
  * @param selectIds
  */
-export const getConversationSelector = async (args: IListArgs, conversationSelector: any): Promise<any> => {
-  const filterSelector = await getFilterSelector(args);
+export const getConversationSelector = async (
+  args: IListArgs,
+  conversationSelector: any,
+  fieldName: string = 'createdAt',
+): Promise<any> => {
+  const filterSelector = await getFilterSelector(args, fieldName);
 
-  if (filterSelector.integration) {
+  if (Object.keys(filterSelector.integration).length > 0) {
     const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
     conversationSelector.integrationId = { $in: integrationIds.map(row => row._id) };
   }
-  conversationSelector.createdAt = filterSelector.createdAt;
+
+  conversationSelector[fieldName] = filterSelector[fieldName];
 
   return conversationSelector;
 };

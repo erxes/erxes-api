@@ -81,9 +81,6 @@ const insightExportQueries = {
         $group: {
           _id: '$date',
           uniqueCustomerIds: { $addToSet: '$customerId' },
-          resolvedCount: {
-            $sum: { $cond: [{ $eq: ['$status', 'closed'] }, 1, 0] },
-          },
           totalCount: { $sum: 1 },
           totalResponseTime: { $sum: '$firstRespondTime' },
           totalCloseTime: { $sum: '$closeTime' },
@@ -95,7 +92,6 @@ const insightExportQueries = {
           totalCount: 1,
           totalCloseTime: 1,
           totalResponseTime: 1,
-          resolvedCount: 1,
           percentage: {
             $multiply: [
               {
@@ -104,6 +100,35 @@ const insightExportQueries = {
               100,
             ],
           },
+        },
+      },
+    ]);
+
+    const resolvedSelector = {
+      closedAt: { $gte: start, $lte: end },
+      status: 'closed',
+      ...noConversationSelector,
+    };
+
+    const mainResolvedSelector = await getConversationSelector(args, resolvedSelector, 'closedAt');
+
+    const resolvedAggregatedData = await Conversations.aggregate([
+      {
+        $match: mainResolvedSelector,
+      },
+      {
+        $project: {
+          date: await getDateFieldAsStr({
+            fieldName: '$closedAt',
+            timeFormat: aggregationTimeFormat,
+            timeZone: getTimezone(user),
+          }),
+        },
+      },
+      {
+        $group: {
+          _id: '$date',
+          resolvedCount: { $sum: 1 },
         },
       },
     ]);
@@ -134,7 +159,6 @@ const insightExportQueries = {
       {
         $project: {
           date: await getDateFieldAsStr({ timeFormat: aggregationTimeFormat, timeZone: getTimezone(user) }),
-          status: 1,
         },
       },
       {
@@ -151,21 +175,21 @@ const insightExportQueries = {
       totalConversationMessages += row.totalCount;
     });
 
+    const resolvedDictionary = {};
+    resolvedAggregatedData.forEach(row => {
+      resolvedDictionary[row._id] = row.resolvedCount;
+      totalResolved += row.resolvedCount;
+    });
+
     const data: IVolumeReportExportArgs[] = [];
 
     let begin = start;
     const generateData = async () => {
       const next = nextTime(begin, type);
       const dateKey = moment(begin).format(timeFormat);
-      const {
-        resolvedCount,
-        totalCount,
-        totalResponseTime,
-        totalCloseTime,
-        uniqueCustomerCount,
-        percentage,
-      } = volumeDictionary[dateKey] || {
-        resolvedCount: 0,
+      const { totalCount, totalResponseTime, totalCloseTime, uniqueCustomerCount, percentage } = volumeDictionary[
+        dateKey
+      ] || {
         totalCount: 0,
         totalResponseTime: 0,
         totalCloseTime: 0,
@@ -173,16 +197,16 @@ const insightExportQueries = {
         percentage: 0,
       };
       const messageCount = conversationDictionary[dateKey] || 0;
+      const resolvedCount = resolvedDictionary[dateKey] || 0;
 
       totalCustomerCount += totalCount;
-      totalResolved += resolvedCount;
 
       totalUniqueCount += uniqueCustomerCount;
 
       totalClosedTime += totalCloseTime;
       totalRespondTime += totalResponseTime;
 
-      averageResponseDuration = fixNumber(totalCloseTime / resolvedCount);
+      averageResponseDuration = fixNumber(totalCloseTime / totalCount);
       firstResponseDuration = fixNumber(totalResponseTime / totalCount);
 
       data.push({
