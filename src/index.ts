@@ -9,6 +9,7 @@ import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
+import * as serviceAccount from '../serviceAccount.json';
 import { userMiddleware } from './auth';
 import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
@@ -27,12 +28,13 @@ const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
-// tslint:disable-next-line
-const serviceAccount = require('../serviceAccount.json');
+const firebaseServiceAccount = serviceAccount as admin.ServiceAccount;
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-});
+if (firebaseServiceAccount.privateKey) {
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseServiceAccount),
+  });
+}
 
 // connect to mongo database
 connect();
