@@ -446,11 +446,11 @@ export const sendMobileNotification = async ({
   const tokens: string[] = [];
 
   if (receivers) {
-    tokens.push(...(await Users.find({ _id: { $in: receivers } }).distinct('deviceToken')));
+    tokens.push(...(await Users.find({ _id: { $in: receivers } }).distinct('deviceTokens')));
   }
 
   if (customerId) {
-    tokens.push(...(await Customers.findOne({ _id: customerId }).distinct('deviceToken')));
+    tokens.push(...(await Customers.findOne({ _id: customerId }).distinct('deviceTokens')));
   }
 
   if (tokens.length > 0) {

@@ -11,9 +11,11 @@ import {
   userFactory,
 } from '../db/factories';
 import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
-import serviceAccount from '../serviceAccount';
 import { twitMap } from '../trackers/twitter';
 import { twitRequest } from '../trackers/twitterTracker';
+
+// tslint:disable-next-line
+const serviceAccount = require('../../serviceAccount.json');
 
 const toJSON = value => {
   // sometimes object key order is different even though it has same value.
