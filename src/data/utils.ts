@@ -442,6 +442,10 @@ export const sendMobileNotification = async ({
   title: string;
   body: string;
 }): Promise<void> => {
+  if (admin.app.length === 0) {
+    return;
+  }
+
   const transporter = admin.messaging();
   const tokens: string[] = [];
 
