@@ -1,5 +1,4 @@
 import * as faker from 'faker';
-import * as admin from 'firebase-admin';
 import * as sinon from 'sinon';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
@@ -13,9 +12,6 @@ import {
 import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
 import { twitMap } from '../trackers/twitter';
 import { twitRequest } from '../trackers/twitterTracker';
-
-// tslint:disable-next-line
-const serviceAccount = require('../../serviceAccount.json');
 
 const toJSON = value => {
   // sometimes object key order is different even though it has same value.
@@ -62,10 +58,6 @@ describe('Conversation message mutations', () => {
   });
 
   test('Add conversation message', async () => {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    });
-
     process.env.DEFAULT_EMAIL_SERIVCE = ' ';
     process.env.COMPANY_EMAIL_FROM = ' ';
 
@@ -112,7 +104,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const spySendMobileNotification = jest.spyOn(utils, 'sendMobileNotification');
+    const spySendMobileNotification = jest.spyOn(utils, 'sendMobileNotification').mockReturnValueOnce({});
     const message = await graphqlRequest(mutation, 'conversationMessageAdd', args);
 
     const calledArgs = spySendMobileNotification.mock.calls[0][0];
