@@ -4,12 +4,10 @@ import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
-import * as admin from 'firebase-admin';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
-import * as serviceAccount from '../serviceAccount.json';
 import { userMiddleware } from './auth';
 import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
@@ -28,13 +26,18 @@ const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
-const firebaseServiceAccount = serviceAccount as any;
+// firebase app initialization
+fs.exists('../serviceAccount.json', () => {
+  const admin = require('firebase-admin').default;
+  const serviceAccount = require('../serviceAccount.json');
+  const firebaseServiceAccount = serviceAccount;
 
-if (firebaseServiceAccount.private_key) {
-  admin.initializeApp({
-    credential: admin.credential.cert(firebaseServiceAccount),
-  });
-}
+  if (firebaseServiceAccount.private_key) {
+    admin.initializeApp({
+      credential: admin.credential.cert(firebaseServiceAccount),
+    });
+  }
+});
 
 // connect to mongo database
 connect();
