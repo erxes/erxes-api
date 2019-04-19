@@ -61,7 +61,7 @@ export const getFilterSelector = (args: IListArgs, fieldName: string = 'createdA
  */
 export const getDealSelector = async (args: IDealListArgs): Promise<IDealSelector> => {
   const { startDate, endDate, boardId, pipelineIds, status } = args;
-  const { start, end } = fixDates(startDate, endDate);
+  const { start, end } = fixDates(startDate, endDate, 30);
 
   const selector: IDealSelector = {};
   const date = {
