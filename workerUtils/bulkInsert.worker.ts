@@ -111,6 +111,4 @@ mongoose.connect(
   },
 );
 
-// collection.bulkInsert(fieldNames, result, user);
-
 parentPort.postMessage('Successfully created worker');

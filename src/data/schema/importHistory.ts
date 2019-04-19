@@ -8,7 +8,7 @@ export const types = `
     contentType: String
     errorMsgs: [String]
     status: String
-    percentage: Int
+    percentage: Float
 
     date: Date
     user: User
