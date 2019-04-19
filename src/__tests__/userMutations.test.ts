@@ -79,16 +79,25 @@ describe('User mutations', () => {
     process.env.HTTPS = 'false';
 
     const mutation = `
-      mutation login($email: String! $password: String!) {
-        login(email: $email password: $password)
+      mutation login($email: String! $password: String! $deviceToken: String) {
+        login(email: $email password: $password deviceToken: $deviceToken)
       }
     `;
 
     const response = await graphqlRequest(mutation, 'login', {
       email: _user.email,
       password: 'pass',
+      deviceToken: '111',
     });
 
+    const updatedUser = await Users.findOne({ email: _user.email });
+
+    if (!updatedUser || !updatedUser.deviceTokens) {
+      throw new Error('Updated user not found');
+    }
+
+    expect(updatedUser.deviceTokens.length).toBe(1);
+    expect(updatedUser.deviceTokens).toContain('111');
     expect(response).toBe('loggedIn');
   });
 
@@ -194,6 +203,43 @@ describe('User mutations', () => {
         isCustom: true,
       },
     });
+
+    spyEmail.mockRestore();
+  });
+
+  test('usersResendInvitation', async () => {
+    process.env.MAIN_APP_DOMAIN = ' ';
+    process.env.COMPANY_EMAIL_FROM = ' ';
+
+    const spyEmail = jest.spyOn(utils, 'sendEmail');
+
+    const mutation = `
+      mutation usersResendInvitation($email: String!) {
+        usersResendInvitation(email: $email)
+      }
+    `;
+
+    const user = await userFactory({ registrationToken: 'token' });
+    const token = await graphqlRequest(mutation, 'usersResendInvitation', { email: user.email });
+
+    const { MAIN_APP_DOMAIN } = process.env;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/confirmation?token=${token}`;
+
+    // send email call
+    expect(spyEmail).toBeCalledWith({
+      toEmails: [user.email],
+      title: 'Team member invitation',
+      template: {
+        name: 'userInvitation',
+        data: {
+          content: invitationUrl,
+          domain: MAIN_APP_DOMAIN,
+        },
+        isCustom: true,
+      },
+    });
+
+    spyEmail.mockRestore();
   });
 
   test('usersSeenOnBoard', async () => {
