@@ -288,9 +288,9 @@ export const COMPANY_BASIC_INFOS = [
 ];
 
 export const INSIGHT_BASIC_INFOS = {
-  count: 'Customer count',
+  count: 'Conversations by customer count',
   messageCount: 'Conversation message count',
-  customerCount: 'Conversations by customer count',
+  customerCount: 'Customer count',
   customerCountPercentage: 'Customer Count Percentage',
   resolvedCount: 'Resolved conversation',
   averageResponseDuration: 'Average duration of total',
