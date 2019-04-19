@@ -60,8 +60,6 @@ export const types = `
 
     isOwner: Boolean
     permissionActions: JSON
-
-    deviceToken: String
   }
 
   type UserConversationListResponse {
