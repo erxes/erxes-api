@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import * as moment from 'moment';
-import { userFactory } from '../db/factories';
+import { userFactory, usersGroupFactory } from '../db/factories';
 import { Users } from '../db/models';
 
 beforeAll(() => {
@@ -115,9 +115,10 @@ describe('User db utils', () => {
   });
 
   test('createUserWithConfirmation', async () => {
-    const token = await Users.createUserWithConfirmation({ email: '123@gmail.com' });
+    const group = await usersGroupFactory();
+    const token = await Users.createUserWithConfirmation({ email: '123@gmail.com', groupId: group._id });
 
-    const userObj = await Users.findOne({ registrationToken: token });
+    const userObj = await Users.findOne({ registrationToken: token }).lean();
 
     if (!userObj) {
       throw new Error('User not found');
@@ -125,7 +126,38 @@ describe('User db utils', () => {
 
     expect(userObj).toBeDefined();
     expect(userObj._id).toBeDefined();
+    expect(userObj.groupIds).toEqual([group._id]);
     expect(userObj.registrationToken).toBeDefined();
+    expect(userObj.registrationTokenExpires).toBeDefined();
+  });
+
+  test('resendInvitation', async () => {
+    const email = '123@gmail.com';
+    const group = await usersGroupFactory();
+    const token = await Users.createUserWithConfirmation({ email, groupId: group._id });
+    const newToken = await Users.resendInvitation({ email });
+
+    const user = await Users.findOne({ email }).lean();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    expect(user.registrationToken).not.toBe(token);
+    expect(user.registrationToken).toBe(newToken);
+    expect(user.registrationTokenExpires).toBeDefined();
+  });
+
+  test('resendInvitation: invalid', async () => {
+    expect.assertions(1);
+
+    const user = await userFactory({});
+
+    try {
+      await Users.resendInvitation({ email: user.email || 'invalid' });
+    } catch (e) {
+      expect(e.message).toBe('Invalid request');
+    }
   });
 
   test('updateOnBoardSeen', async () => {
@@ -306,6 +338,7 @@ describe('User db utils', () => {
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1, isOwner: false } });
 
     const deactivatedUser = await Users.setUserActiveOrInactive(_user._id);
+
     // ensure deactivated
     expect(deactivatedUser.isActive).toBe(false);
   });

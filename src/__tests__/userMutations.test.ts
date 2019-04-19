@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import * as moment from 'moment';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
-import { brandFactory, channelFactory, userFactory } from '../db/factories';
+import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Brands, Channels, Users } from '../db/models';
 
 /*
@@ -157,13 +157,15 @@ describe('User mutations', () => {
     const spyEmail = jest.spyOn(utils, 'sendEmail');
 
     const mutation = `
-      mutation usersInvite($emails: [String]) {
-        usersInvite(emails: $emails)
+      mutation usersInvite($entries: [InvitationEntry]) {
+        usersInvite(entries: $entries)
       }
-  `;
+    `;
+
+    const group = await usersGroupFactory();
 
     const params = {
-      emails: ['test@example.com'],
+      entries: [{ email: 'test@example.com', groupId: group._id }],
     };
 
     await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
@@ -192,6 +194,43 @@ describe('User mutations', () => {
         isCustom: true,
       },
     });
+
+    spyEmail.mockRestore();
+  });
+
+  test('usersResendInvitation', async () => {
+    process.env.MAIN_APP_DOMAIN = ' ';
+    process.env.COMPANY_EMAIL_FROM = ' ';
+
+    const spyEmail = jest.spyOn(utils, 'sendEmail');
+
+    const mutation = `
+      mutation usersResendInvitation($email: String!) {
+        usersResendInvitation(email: $email)
+      }
+    `;
+
+    const user = await userFactory({ registrationToken: 'token' });
+    const token = await graphqlRequest(mutation, 'usersResendInvitation', { email: user.email });
+
+    const { MAIN_APP_DOMAIN } = process.env;
+    const invitationUrl = `${MAIN_APP_DOMAIN}/confirmation?token=${token}`;
+
+    // send email call
+    expect(spyEmail).toBeCalledWith({
+      toEmails: [user.email],
+      title: 'Team member invitation',
+      template: {
+        name: 'userInvitation',
+        data: {
+          content: invitationUrl,
+          domain: MAIN_APP_DOMAIN,
+        },
+        isCustom: true,
+      },
+    });
+
+    spyEmail.mockRestore();
   });
 
   test('usersSeenOnBoard', async () => {
@@ -416,22 +455,6 @@ describe('User mutations', () => {
     }
 
     expect(deactivedUser.isActive).toBe(false);
-  });
-
-  test('Remove user with pending invitation status', async () => {
-    const mutation = `
-      mutation usersSetActiveStatus($_id: String!) {
-        usersSetActiveStatus(_id: $_id) {
-          _id
-        }
-      }
-    `;
-
-    await graphqlRequest(mutation, 'usersSetActiveStatus', { _id: _user._id }, { user: _admin });
-
-    const removedUser = await Users.findOne({ _id: _user._id });
-
-    expect(removedUser).toBeNull();
   });
 
   test('Config user email signature', async () => {

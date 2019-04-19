@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { Session } from '.';
+import { Session, UsersGroups } from '.';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -31,6 +31,7 @@ export interface IUserModel extends Model<IUserDocument> {
     emails?: string[];
   }): never;
   getSecret(): string;
+  generateToken(): { token: string; expires: Date };
   createUser(doc: IUser): Promise<IUserDocument>;
   updateUser(_id: string, doc: IUpdateUser): Promise<IUserDocument>;
   editProfile(_id: string, doc: IEditProfile): Promise<IUserDocument>;
@@ -39,7 +40,8 @@ export interface IUserModel extends Model<IUserDocument> {
   configGetNotificationByEmail(_id: string, isAllowed: boolean): Promise<IUserDocument>;
   setUserActiveOrInactive(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
-  createUserWithConfirmation({ email }: { email: string }): string;
+  createUserWithConfirmation({ email, groupId }: { email: string; groupId: string }): string;
+  resendInvitation({ email }: { email: string }): string;
   confirmInvitation({
     token,
     password,
@@ -163,21 +165,62 @@ export const loadClass = () => {
       return Users.findOne({ _id });
     }
 
-    /**
-     * Create new user with invitation token
-     */
-    public static async createUserWithConfirmation({ email }: { email: string }) {
-      // Checking duplicated email
-      await Users.checkDuplication({ email });
-
+    public static async generateToken() {
       const buffer = await crypto.randomBytes(20);
       const token = buffer.toString('hex');
 
+      return {
+        token,
+        expires: Date.now() + 86400000,
+      };
+    }
+
+    /**
+     * Create new user with invitation token
+     */
+    public static async createUserWithConfirmation({ email, groupId }: { email: string; groupId: string }) {
+      // Checking duplicated email
+      await Users.checkDuplication({ email });
+
+      if (!(await UsersGroups.findOne({ _id: groupId }))) {
+        throw new Error('Invalid group');
+      }
+
+      const { token, expires } = await User.generateToken();
+
       await Users.create({
         email,
+        groupIds: [groupId],
         registrationToken: token,
-        registrationTokenExpires: Date.now() + 86400000,
+        registrationTokenExpires: expires,
       });
+
+      return token;
+    }
+
+    /**
+     * Resend invitation
+     */
+    public static async resendInvitation({ email }: { email: string }) {
+      const user = await Users.findOne({ email });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!user.registrationToken) {
+        throw new Error('Invalid request');
+      }
+
+      const { token, expires } = await Users.generateToken();
+
+      await Users.updateOne(
+        { email },
+        {
+          registrationToken: token,
+          registrationTokenExpires: expires,
+        },
+      );
 
       return token;
     }
