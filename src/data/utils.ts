@@ -11,7 +11,7 @@ import * as requestify from 'requestify';
 // tslint:disable-next-line
 import { Worker } from 'worker_threads';
 import * as xlsxPopulate from 'xlsx-populate';
-import { ImportHistory, Notifications, Users } from '../db/models';
+import { Customers, ImportHistory, Notifications, Users } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { checkFieldNames } from '../db/models/utils';
 import { can } from './permissions/utils';

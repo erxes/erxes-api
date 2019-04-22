@@ -7,7 +7,7 @@ import { getOauthClient } from './googleTracker';
 /**
  * Send email
  */
-export const sendEmail = (integrationId: string, credentials: any, raw: string, threadId?: string) => {
+const sendEmail = (integrationId: string, credentials: any, raw: string, threadId?: string) => {
   const auth = getOAuth(integrationId, credentials);
   const gmail = google.gmail('v1');
 
@@ -28,7 +28,7 @@ export const sendEmail = (integrationId: string, credentials: any, raw: string, 
 /**
  * Get new messages by stored history id
  */
-export const getMessagesByHistoryId = async (historyId: string, integrationId: string, credentials: any) => {
+const getMessagesByHistoryId = async (historyId: string, integrationId: string, credentials: any) => {
   const auth = getOAuth(integrationId, credentials);
   const gmail = google.gmail('v1');
 
@@ -93,7 +93,7 @@ const getOAuth = (integrationId: string, credentials: any) => {
 /**
  * Get attachment by attachmentId
  */
-export const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail, attachmentId: string) => {
+const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail, attachmentId: string) => {
   if (!gmailData || !gmailData.attachments) {
     throw new Error('GmailData not found');
   }
@@ -129,7 +129,7 @@ export const getGmailAttachment = async (credentials: any, gmailData: IMsgGmail,
     });
 };
 
-export const callWatch = (credentials: any, integrationId: string) => {
+const callWatch = (credentials: any, integrationId: string) => {
   const gmail: any = google.gmail('v1');
   const GOOGLE_TOPIC = getEnv({ name: 'GOOGLE_TOPIC' });
   const auth = getOAuth(integrationId, credentials);
@@ -158,10 +158,4 @@ export const callWatch = (credentials: any, integrationId: string) => {
     });
 };
 
-export default {
-  sendEmail,
-  getMessagesByHistoryId,
-  getOAuth,
-  getGmailAttachment,
-  callWatch,
-};
+export { sendEmail, getMessagesByHistoryId, getOAuth, getGmailAttachment, callWatch };

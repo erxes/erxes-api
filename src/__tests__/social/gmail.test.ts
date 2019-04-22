@@ -19,7 +19,7 @@ import {
   sendGmail,
   syncConversation,
 } from '../../trackers/gmail';
-import gmailUtils from '../../trackers/gmailUtils';
+import * as gmailUtils from '../../trackers/gmailUtils';
 
 describe('gmail integration tests', () => {
   afterEach(async () => {
