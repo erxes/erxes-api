@@ -4,8 +4,8 @@ import * as mongoose from 'mongoose';
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-import { pubsub } from '../src/data/resolvers/subscriptions';
-import { Companies, Customers, ImportHistory } from '../src/db/models';
+import { pubsub } from '../data/resolvers/subscriptions';
+import { Companies, Customers, ImportHistory } from '../db/models';
 
 dotenv.config();
 
