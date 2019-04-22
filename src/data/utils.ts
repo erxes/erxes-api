@@ -343,7 +343,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
 
         const workerFile =
           process.env.NODE_ENV === 'production'
-            ? `./dist/src/workerUtils/bulkInsert.worker.js`
+            ? `./dist/workerUtils/bulkInsert.worker.js`
             : './src/workerUtils/bulkInsert.worker.import.js';
 
         const workerPath = path.resolve(workerFile);
