@@ -19,7 +19,7 @@ import {
   sendGmail,
   syncConversation,
 } from '../../trackers/gmail';
-import { utils } from '../../trackers/gmailTracker';
+import gmailUtils from '../../trackers/gmailUtils';
 
 describe('gmail integration tests', () => {
   afterEach(async () => {
@@ -294,7 +294,7 @@ describe('gmail integration tests', () => {
       throw new Error('Integration not found');
     }
 
-    const mock = sinon.stub(utils, 'getMessagesByHistoryId').callsFake();
+    const mock = sinon.stub(gmailUtils, 'getMessagesByHistoryId').callsFake();
     await getGmailUpdates({ emailAddress: email, historyId });
 
     expect(integration.gmailData.historyId).toBe(historyId);
@@ -342,7 +342,7 @@ describe('gmail integration tests', () => {
     });
 
     mailParams.integrationId = integration._id;
-    const mock = sinon.stub(utils, 'sendEmail').callsFake();
+    const mock = sinon.stub(gmailUtils, 'sendEmail').callsFake();
 
     await sendGmail(mailParams, user);
 
@@ -382,7 +382,7 @@ describe('gmail integration tests', () => {
       },
     });
 
-    const getGmailAttachment = jest.spyOn(utils, 'getGmailAttachment').mockImplementation(() => ({}));
+    const getGmailAttachment = jest.spyOn(gmailUtils, 'getGmailAttachment').mockImplementation(() => ({}));
 
     await getAttachment(message._id, attachmentId);
 
