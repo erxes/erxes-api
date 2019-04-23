@@ -18,7 +18,7 @@ import { connect } from './db/connection';
 import { Conversations, Customers } from './db/models';
 import { init } from './startup';
 import { getAttachment } from './trackers/gmail';
-import { importXlsFile } from './workerUtils/bulkInsert';
+import { importXlsFile } from './workers/bulkInsert';
 
 // load environment variables
 dotenv.config();
