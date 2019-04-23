@@ -31,6 +31,7 @@ export interface IUserModel extends Model<IUserDocument> {
     emails?: string[];
   }): never;
   getSecret(): string;
+  generateToken(): { token: string; expires: Date };
   createUser(doc: IUser): Promise<IUserDocument>;
   updateUser(_id: string, doc: IUpdateUser): Promise<IUserDocument>;
   editProfile(_id: string, doc: IEditProfile): Promise<IUserDocument>;
@@ -40,6 +41,7 @@ export interface IUserModel extends Model<IUserDocument> {
   setUserActiveOrInactive(_id: string): Promise<IUserDocument>;
   generatePassword(password: string): string;
   createUserWithConfirmation({ email, groupId }: { email: string; groupId: string }): string;
+  resendInvitation({ email }: { email: string }): string;
   confirmInvitation({
     token,
     password,
@@ -67,7 +69,15 @@ export interface IUserModel extends Model<IUserDocument> {
   forgotPassword(email: string): string;
   createTokens(_user: IUserDocument, secret: string): string[];
   refreshTokens(refreshToken: string): { token: string; refreshToken: string; user: IUserDocument };
-  login({ email, password }: { email: string; password?: string }): { token: string; refreshToken: string };
+  login({
+    email,
+    password,
+    deviceToken,
+  }: {
+    email: string;
+    password?: string;
+    deviceToken?: string;
+  }): { token: string; refreshToken: string };
   logout(user: IUserDocument): string;
 }
 
@@ -163,6 +173,16 @@ export const loadClass = () => {
       return Users.findOne({ _id });
     }
 
+    public static async generateToken() {
+      const buffer = await crypto.randomBytes(20);
+      const token = buffer.toString('hex');
+
+      return {
+        token,
+        expires: Date.now() + 86400000,
+      };
+    }
+
     /**
      * Create new user with invitation token
      */
@@ -174,15 +194,41 @@ export const loadClass = () => {
         throw new Error('Invalid group');
       }
 
-      const buffer = await crypto.randomBytes(20);
-      const token = buffer.toString('hex');
+      const { token, expires } = await User.generateToken();
 
       await Users.create({
         email,
         groupIds: [groupId],
         registrationToken: token,
-        registrationTokenExpires: Date.now() + 86400000,
+        registrationTokenExpires: expires,
       });
+
+      return token;
+    }
+
+    /**
+     * Resend invitation
+     */
+    public static async resendInvitation({ email }: { email: string }) {
+      const user = await Users.findOne({ email });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!user.registrationToken) {
+        throw new Error('Invalid request');
+      }
+
+      const { token, expires } = await Users.generateToken();
+
+      await Users.updateOne(
+        { email },
+        {
+          registrationToken: token,
+          registrationTokenExpires: expires,
+        },
+      );
 
       return token;
     }
@@ -485,7 +531,15 @@ export const loadClass = () => {
     /*
      * Validates user credentials and generates tokens
      */
-    public static async login({ email, password }: { email: string; password: string }) {
+    public static async login({
+      email,
+      password,
+      deviceToken,
+    }: {
+      email: string;
+      password: string;
+      deviceToken?: string;
+    }) {
       const user = await Users.findOne({
         $or: [{ email: { $regex: new RegExp(email, 'i') } }, { username: { $regex: new RegExp(email, 'i') } }],
       });
@@ -504,6 +558,16 @@ export const loadClass = () => {
 
       // create tokens
       const [token, refreshToken] = await this.createTokens(user, this.getSecret());
+
+      if (deviceToken) {
+        const deviceTokens: string[] = user.deviceTokens || [];
+
+        if (!deviceTokens.includes(deviceToken)) {
+          deviceTokens.push(deviceToken);
+
+          await user.update({ $set: { deviceTokens } });
+        }
+      }
 
       return {
         token,
