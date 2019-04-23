@@ -109,6 +109,8 @@ mongoose.connect(
       });
     }
 
+    mongoose.connection.close();
+
     parentPort.postMessage('Successfully finished job');
   },
 );
