@@ -6,7 +6,7 @@ import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IUserDocument } from '../db/models/definitions/users';
 import EmailDeliveries from '../db/models/EmailDeliveries';
-import { callWatch, getGmailAttachment, getMessagesByHistoryId, sendEmail } from './gmailUtils';
+import { utils } from './gmailTracker';
 import { IMailParams } from './types';
 
 /**
@@ -115,7 +115,7 @@ export const sendGmail = async (mailParams: IMailParams, user: IUserDocument) =>
   // get raw string encrypted by base64
   const raw = await encodeEmail({ fromEmail, ...mailParams });
 
-  await sendEmail(integration._id, credentials, raw, threadId);
+  await utils.sendEmail(integration._id, credentials, raw, threadId);
 
   return { status: 200, statusText: 'ok ' };
 };
@@ -247,7 +247,7 @@ export const getGmailUpdates = async ({ emailAddress, historyId }: { emailAddres
   const storedHistoryId = integration.gmailData.historyId;
 
   if (storedHistoryId) {
-    await getMessagesByHistoryId(storedHistoryId, integration._id, credentials);
+    await utils.getMessagesByHistoryId(storedHistoryId, integration._id, credentials);
   }
 
   integration.gmailData.historyId = historyId;
@@ -277,8 +277,7 @@ export const getOrCreateCustomer = async (integrationId: string, email: string) 
     }
   }
 
-  const customer = await Customers.findOne({ emails: { $in: [primaryEmail] } });
-
+  const customer = await Customers.findOne({ $or: [{ emails: { $in: [primaryEmail] } }, { primaryEmail }] });
   if (customer) {
     return customer;
   }
@@ -433,7 +432,7 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
 
   const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
 
-  return getGmailAttachment(credentials, message.gmailData, attachmentId);
+  return utils.getGmailAttachment(credentials, message.gmailData, attachmentId);
 };
 
 /*
@@ -441,7 +440,7 @@ export const getAttachment = async (conversationMessageId: string, attachmentId:
  */
 export const updateHistoryId = async integration => {
   const credentials = await Accounts.getGmailCredentials(integration.gmailData.email);
-  const { data } = await callWatch(credentials, integration._id);
+  const { data } = await utils.callWatch(credentials, integration._id);
 
   integration.gmailData.historyId = data.historyId;
   integration.gmailData.expiration = data.expiration;
