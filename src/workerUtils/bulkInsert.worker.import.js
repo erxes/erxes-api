@@ -1,7 +1,5 @@
 const path = require('path');
 
-process.env.TS_NODE_FILES = true;
-
 try {
   require('ts-node').register({
     compilerOptions: {
@@ -13,8 +11,6 @@ try {
 } catch (e) {
   console.log('register error', e.message);
 }
-
-module.exports = () => {};
 
 try {
   require(path.resolve(__dirname, './bulkInsert.worker.ts'));

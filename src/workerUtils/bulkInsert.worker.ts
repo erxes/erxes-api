@@ -108,7 +108,7 @@ mongoose.connect(
         },
       });
     }
+
+    parentPort.postMessage('Successfully finished job');
   },
 );
-
-parentPort.postMessage('Successfully created worker');

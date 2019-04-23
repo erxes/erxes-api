@@ -13,11 +13,12 @@ import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import { pubsub } from './data/resolvers/subscriptions';
 import typeDefs from './data/schema';
-import { checkFile, getEnv, importXlsFile, uploadFile } from './data/utils';
+import { checkFile, getEnv, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { Conversations, Customers } from './db/models';
 import { init } from './startup';
 import { getAttachment } from './trackers/gmail';
+import { importXlsFile } from './workerUtils/bulkInsert';
 
 // load environment variables
 dotenv.config();
@@ -238,7 +239,7 @@ app.post('/import-file', (req: any, res) => {
         res.json(result);
       })
       .catch(e => {
-        res.json(e);
+        throw new Error(e.message);
       });
   });
 });
