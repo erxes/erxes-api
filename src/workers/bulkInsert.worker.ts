@@ -21,6 +21,7 @@ mongoose.connect(
 
     const { result, contentType, properties, user, importHistoryId, percentagePerData } = workerData;
 
+    let percentage = '0';
     let create: any = Customers.createCustomer;
 
     if (contentType === 'company') {
@@ -91,7 +92,7 @@ mongoose.connect(
       }
 
       if (importHistory.failed + importHistory.success === importHistory.total) {
-        await ImportHistory.updateOne({ _id: importHistoryId }, { $set: { status: 'Done' } });
+        await ImportHistory.updateOne({ _id: importHistoryId }, { $set: { status: 'Done', percentage: 100 } });
 
         importHistory = await ImportHistory.findOne({ _id: importHistoryId });
       }
@@ -100,13 +101,19 @@ mongoose.connect(
         throw new Error('Could not find import history');
       }
 
-      pubsub.publish('importHistoryChanged', {
-        importHistoryChanged: {
-          _id: importHistory._id,
-          status: importHistory.status,
-          percentage: importHistory.percentage,
-        },
-      });
+      const fixedPercentage = (importHistory.percentage || 0).toFixed(0);
+
+      if (fixedPercentage !== percentage) {
+        percentage = fixedPercentage;
+
+        pubsub.publish('importHistoryChanged', {
+          importHistoryChanged: {
+            _id: importHistory._id,
+            status: importHistory.status,
+            percentage,
+          },
+        });
+      }
     }
 
     mongoose.connection.close();
