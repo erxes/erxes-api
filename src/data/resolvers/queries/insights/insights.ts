@@ -1,11 +1,10 @@
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../../db/models';
 import { IUserDocument } from '../../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
-import { checkPermission, moduleRequireLogin } from '../../../permissions';
+import { moduleRequireLogin } from '../../../permissions';
 import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
 import { IListArgs, IPieChartData } from './types';
 import {
-  findConversations,
   fixChartData,
   fixDates,
   generateChartDataByCollection,
@@ -13,10 +12,10 @@ import {
   generateMessageSelector,
   generatePunchData,
   generateResponseData,
-  getConversationDates,
   getConversationSelector,
   getFilterSelector,
   getSummaryData,
+  getSummaryDates,
   getTimezone,
   noConversationSelector,
 } from './utils';
@@ -26,15 +25,12 @@ const insightQueries = {
    * Builds insights charting data contains
    * count of conversations in various integrations kinds.
    */
-  async insights(_root, args: IListArgs) {
+  async insightsIntegrations(_root, args: IListArgs) {
     const { startDate, endDate } = args;
     const filterSelector = getFilterSelector(args);
     const { start, end } = fixDates(startDate, endDate);
 
-    const insights: { integration: IPieChartData[]; tag: IPieChartData[] } = {
-      integration: [],
-      tag: [],
-    };
+    const integrations: IPieChartData[] = [];
 
     const conversationSelector = {
       createdAt: { $gte: start, $lte: end },
@@ -63,26 +59,47 @@ const insightQueries = {
           'facebookData.kind': FEED,
         });
 
-        insights.integration.push({
+        integrations.push({
           id: `${kind} ${FEED}`,
           label: `${kind} ${FEED}`,
           value: feedCount,
         });
 
-        insights.integration.push({
+        integrations.push({
           id: `${kind} ${MESSENGER}`,
           label: `${kind} ${MESSENGER}`,
           value: value - feedCount,
         });
       } else {
-        insights.integration.push({ id: kind, label: kind, value });
+        integrations.push({ id: kind, label: kind, value });
       }
     }
+
+    return integrations;
+  },
+
+  /**
+   * Builds insights charting data contains
+   * count of conversations in various integrations tags.
+   */
+  async insightsTags(_root, args: IListArgs) {
+    const { startDate, endDate } = args;
+    const filterSelector = getFilterSelector(args);
+    const { start, end } = fixDates(startDate, endDate);
+
+    const tagDatas: IPieChartData[] = [];
+
+    const conversationSelector = {
+      createdAt: { $gte: start, $lte: end },
+      ...noConversationSelector,
+    };
 
     const tags = await Tags.find({ type: TAG_TYPES.CONVERSATION }).select('name');
 
     const integrationIdsByTag = await Integrations.find(filterSelector.integration).select('_id');
+
     const rawIntegrationIdsByTag = integrationIdsByTag.map(row => row._id);
+
     const tagData = await Conversations.aggregate([
       {
         $match: {
@@ -111,11 +128,11 @@ const insightQueries = {
       // find conversation counts of given tag
       const value = tagDictionaryData[tag._id];
       if (tag._id in tagDictionaryData) {
-        insights.tag.push({ id: tag.name, label: tag.name, value });
+        tagDatas.push({ id: tag.name, label: tag.name, value });
       }
     }
 
-    return insights;
+    return tagDatas;
   },
 
   /**
@@ -126,7 +143,6 @@ const insightQueries = {
 
     const messageSelector = await generateMessageSelector({
       args,
-      excludeBot: true,
       type,
     });
 
@@ -141,7 +157,6 @@ const insightQueries = {
 
     const messageSelector = await generateMessageSelector({
       args,
-      excludeBot: true,
       type,
     });
 
@@ -155,9 +170,8 @@ const insightQueries = {
     const { startDate, endDate, type } = args;
     const messageSelector = await generateMessageSelector({
       args,
-      excludeBot: true,
       type,
-      createdAt: getConversationDates(args.endDate),
+      createdAt: getSummaryDates(args.endDate),
     });
 
     const { start, end } = fixDates(startDate, endDate);
@@ -181,7 +195,9 @@ const insightQueries = {
       ...noConversationSelector,
     };
 
-    const conversations = await findConversations(filterSelector, { ...conversationSelector });
+    const selector = await getConversationSelector(filterSelector, { ...conversationSelector });
+
+    const conversations = await Conversations.find(selector);
 
     const insightData: any = {
       summary: [],
@@ -226,7 +242,9 @@ const insightQueries = {
 
     let allResponseTime = 0;
 
-    const conversations = await findConversations(filterSelector, conversationSelector);
+    const selector = await getConversationSelector(filterSelector, conversationSelector);
+
+    const conversations = await Conversations.find(selector);
 
     if (conversations.length < 1) {
       return insightData;
@@ -294,7 +312,7 @@ const insightQueries = {
       closedUserId: { $exists: true },
     };
 
-    const conversationMatch = await getConversationSelector(args, { ...conversationSelector });
+    const conversationMatch = await getConversationSelector(getFilterSelector(args), { ...conversationSelector });
 
     const insightAggregateData = await Conversations.aggregate([
       {
@@ -416,7 +434,5 @@ const insightQueries = {
 };
 
 moduleRequireLogin(insightQueries);
-
-checkPermission(insightQueries, 'insights', 'showInsights');
 
 export default insightQueries;

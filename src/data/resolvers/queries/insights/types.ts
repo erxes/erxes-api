@@ -131,5 +131,4 @@ export interface IGenerateMessage {
     $lte: Date;
   };
   type: string;
-  excludeBot?: boolean;
 }

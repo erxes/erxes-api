@@ -7,7 +7,6 @@ import { createXlsFile, generateXlsx } from '../../../utils';
 import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
 import { IListArgs, IListArgsWithUserId, IVolumeReportExportArgs } from './types';
 import {
-  findConversations,
   fixDates,
   generateMessageSelector,
   getConversationSelector,
@@ -61,7 +60,9 @@ const insightExportQueries = {
       ...noConversationSelector,
     };
 
-    const mainSelector = await getConversationSelector(args, conversationSelector);
+    const filterSelector = await getFilterSelector(args);
+
+    const mainSelector = await getConversationSelector(filterSelector, conversationSelector);
     const conversations = await Conversations.find(mainSelector);
     const conversationRawIds = conversations.map(row => row._id);
     const aggregatedData = await Conversations.aggregate([
@@ -424,7 +425,9 @@ const insightExportQueries = {
         messageCounts.push(0);
       });
 
-      const conversations = await findConversations(filterSelector, conversationSelector);
+      const selector = await getConversationSelector(filterSelector, conversationSelector);
+
+      const conversations = await Conversations.find(selector);
 
       // Processes total first response time for each users.
       for (const conversation of conversations) {

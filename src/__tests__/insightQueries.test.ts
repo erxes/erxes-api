@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { CONVERSATION_STATUSES } from '../data/constants';
+import { CONVERSATION_STATUSES, TAG_TYPES } from '../data/constants';
 import insightQueries from '../data/resolvers/queries/insights/insights';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -7,54 +7,105 @@ import {
   conversationFactory,
   conversationMessageFactory,
   integrationFactory,
+  tagsFactory,
   userFactory,
 } from '../db/factories';
-import { Brands, ConversationMessages, Conversations, Integrations } from '../db/models';
+import { Brands, ConversationMessages, Conversations, Integrations, Tags, Users } from '../db/models';
 
 describe('insightQueries', () => {
-  let brand;
-  let integration;
-  let conversation;
   let doc;
-  const endDate = new Date(
-    moment(new Date())
-      .add(1, 'days')
-      .toString(),
-  );
 
-  const startDate = new Date(
-    moment(endDate)
-      .add(-7, 'days')
-      .toString(),
-  ).toISOString();
+  const paramsDef = `
+    $integrationIds: String,
+    $brandIds: String,
+    $startDate: String,
+    $endDate: String,
+  `;
+
+  const paramsValue = `
+    integrationIds: $integrationIds,
+    brandIds: $brandIds,
+    startDate: $startDate,
+    endDate: $endDate,
+  `;
+
+  const endDate = moment()
+    .add(1, 'days')
+    .format('YYYY-MM-DD HH:mm');
+
+  const startDate = moment(endDate)
+    .add(-7, 'days')
+    .format('YYYY-MM-DD HH:mm');
 
   beforeEach(async () => {
     // Clearing test data
-    brand = await brandFactory();
-    integration = await integrationFactory({
+    const brand = await brandFactory();
+    const tag = await tagsFactory({ type: TAG_TYPES.CONVERSATION });
+
+    const integration = await integrationFactory({
       brandId: brand._id,
       kind: 'gmail',
     });
+
+    const formIntegration = await integrationFactory({
+      brandId: brand._id,
+      kind: 'form',
+    });
+
+    const user = await userFactory({});
 
     doc = {
       integrationIds: 'gmail',
       brandIds: brand._id,
       startDate,
-      endDate: endDate.toISOString(),
+      endDate,
     };
 
-    conversation = await conversationFactory({
+    // conversation that is closed automatically (no conversation)
+    await conversationFactory({
+      status: CONVERSATION_STATUSES.CLOSED,
       integrationId: integration._id,
+      closedAt: undefined,
+      closedUserId: undefined,
     });
 
-    await conversationMessageFactory({
-      conversationId: conversation._id,
-      userId: null,
+    // conversation that is a welcome message from engage (no conversation)
+    await conversationFactory({ userId: user._id, messageCount: 1 });
+
+    const formConversation = await conversationFactory({ integrationId: formIntegration._id });
+
+    await conversationMessageFactory({ conversationId: formConversation._id, userId: null });
+
+    const conversation = await conversationFactory({
+      integrationId: integration._id,
+      tagIds: [tag._id],
     });
+
+    const closedConversation = await conversationFactory({
+      integrationId: integration._id,
+      firstRespondedUserId: user._id,
+      firstRespondedDate: moment()
+        .add(1, 'days')
+        .toDate(),
+      closedAt: moment()
+        .add(2, 'days')
+        .toDate(),
+      closedUserId: user._id,
+      status: 'closed',
+      messageCount: 2,
+      tagIds: [tag._id],
+    });
+
+    await conversationMessageFactory({ conversationId: conversation._id, userId: null });
+    await conversationMessageFactory({ conversationId: conversation._id, userId: null });
+    await conversationMessageFactory({ conversationId: closedConversation._id, userId: null });
+    await conversationMessageFactory({ conversationId: closedConversation._id, userId: null });
   });
 
   afterEach(async () => {
     // Clearing test data
+    await Tags.deleteMany({});
+    await Users.deleteMany({});
     await Brands.deleteMany({});
     await Integrations.deleteMany({});
     await Conversations.deleteMany({});
@@ -62,7 +113,7 @@ describe('insightQueries', () => {
   });
 
   test(`test if Error('Login required') exception is working as intended`, async () => {
-    expect.assertions(6);
+    expect.assertions(8);
 
     const expectError = async func => {
       try {
@@ -72,159 +123,115 @@ describe('insightQueries', () => {
       }
     };
 
-    expectError(insightQueries.insights);
+    expectError(insightQueries.insightsTags);
+    expectError(insightQueries.insightsIntegrations);
     expectError(insightQueries.insightsPunchCard);
     expectError(insightQueries.insightsTrend);
+    expectError(insightQueries.insightsConversation);
     expectError(insightQueries.insightsSummaryData);
     expectError(insightQueries.insightsFirstResponse);
     expectError(insightQueries.insightsResponseClose);
   });
 
-  test('Insights', async () => {
+  test('insightsIntegrations', async () => {
     const qry = `
-      query insights($integrationIds: String,
-        $brandIds: String,
-        $startDate: String,
-        $endDate: String
-        ) {
-        insights(integrationIds: $integrationIds,
-          brandIds: $brandIds,
-          startDate: $startDate,
-          endDate: $endDate)
+      query insightsIntegrations(${paramsDef}) {
+          insightsIntegrations(${paramsValue})
       }
     `;
 
-    const jsonResponseBefore = await graphqlRequest(qry, 'insights', doc);
-    expect(jsonResponseBefore.integration[5].value).toEqual(1);
+    const response = await graphqlRequest(qry, 'insightsIntegrations', doc);
+    expect(response[1].value).toEqual(1);
+    expect(response[5].value).toEqual(2);
+  });
 
-    // conversation that is closed automatically
-    await conversationFactory({
-      status: CONVERSATION_STATUSES.CLOSED,
-      integrationId: integration._id,
-      closedAt: undefined,
-      closedUserId: undefined,
-    });
+  test('insightsTags', async () => {
+    const qry = `
+      query insightsTags(${paramsDef}) {
+          insightsTags(${paramsValue})
+      }
+    `;
 
-    const jsonResponseAfter = await graphqlRequest(qry, 'insights', doc);
-    // don't count an automatically closed conversation
-    expect(jsonResponseAfter.integration[5].value).toEqual(1);
+    const response = await graphqlRequest(qry, 'insightsTags', doc);
+    expect(response[0].value).toEqual(2);
   });
 
   test('insightsPunchCard', async () => {
     const qry = `
-      query insightsPunchCard(
-        $integrationIds: String,
-        $brandIds: String,
-        $startDate: String,
-        $endDate: String
-        ) {
-        insightsPunchCard(
-          integrationIds: $integrationIds,
-          brandIds: $brandIds,
-          startDate: $startDate,
-          endDate: $endDate
-        )
+      query insightsPunchCard($type: String, ${paramsDef}) {
+        insightsPunchCard(type: $type, ${paramsValue})
       }
     `;
 
     const response = await graphqlRequest(qry, 'insightsPunchCard', doc);
     expect(response.length).toBe(1);
+    expect(response[0].count).toBe(4);
   });
 
   test('insightsConversation', async () => {
     const qry = `
-      query insightsConversation($integrationIds: String,
-        $brandIds: String,
-        $startDate: String,
-        $endDate: String
-        ) {
-        insightsConversation(integrationIds: $integrationIds,
-          brandIds: $brandIds,
-          startDate: $startDate,
-          endDate: $endDate)
+      query insightsConversation(${paramsDef}) {
+        insightsConversation(${paramsValue})
       }
     `;
 
-    const responseBefore = await graphqlRequest(qry, 'insightsConversation', doc);
+    const response = await graphqlRequest(qry, 'insightsConversation', doc);
 
-    expect(responseBefore.trend[0].y).toBe(1);
-
-    // conversation that is closed automatically
-    await conversationFactory({
-      status: CONVERSATION_STATUSES.CLOSED,
-      closedAt: undefined,
-      closedUserId: undefined,
-    });
-
-    const responseAfter = await graphqlRequest(qry, 'insightsConversation', doc);
-    // don't count an automatically closed conversation
-    expect(responseAfter.trend[0].y).toBe(1);
+    expect(response.trend[0].y).toBe(2);
   });
 
   test('insightsFirstResponse', async () => {
-    const user = await userFactory({});
-    const _conv = await conversationFactory({
-      integrationId: integration._id,
-      firstRespondedUserId: user._id,
-      firstRespondedDate: new Date(),
-      messageCount: 2,
-    });
-
-    await conversationMessageFactory({
-      conversationId: _conv._id,
-    });
-    await conversationMessageFactory({
-      conversationId: _conv._id,
-    });
-
     const qry = `
-      query insightsFirstResponse(
-        $integrationIds: String,
-        $brandIds: String,
-        $startDate: String,
-        $endDate: String
-        ) {
-        insightsFirstResponse(integrationIds: $integrationIds,
-          brandIds: $brandIds,
-          startDate: $startDate,
-          endDate: $endDate)
+      query insightsFirstResponse(${paramsDef}) {
+        insightsFirstResponse(${paramsValue})
       }
     `;
 
     const response = await graphqlRequest(qry, 'insightsFirstResponse', doc);
-    expect(response.trend.length).toBe(1);
+
+    expect(response.trend[0].y).toBe(1);
     expect(response.teamMembers.length).toBe(1);
+    expect(response.summaries[3]).toBe(1);
   });
 
   test('insightsResponseClose', async () => {
-    const user = await userFactory({});
-    const _conv = await conversationFactory({
-      closedAt: new Date(),
-      closedUserId: user._id,
-      integrationId: integration._id,
-    });
-
-    await conversationMessageFactory({
-      conversationId: _conv._id,
-    });
-
     const qry = `
-      query insightsResponseClose(
-        $integrationIds: String,
-        $brandIds: String,
-        $startDate: String,
-        $endDate: String
-        ) {
-        insightsResponseClose(
-          integrationIds: $integrationIds,
-          brandIds: $brandIds,
-          startDate: $startDate,
-          endDate: $endDate)
+      query insightsResponseClose(${paramsDef}) {
+        insightsResponseClose(${paramsValue})
       }
     `;
 
     const response = await graphqlRequest(qry, 'insightsResponseClose', doc);
     expect(response.trend.length).toBe(1);
     expect(response.teamMembers.length).toBe(1);
+  });
+
+  test('insightsSummaryData', async () => {
+    const qry = `
+      query insightsSummaryData($type: String, ${paramsDef}) {
+          insightsSummaryData(type: $type, ${paramsValue})
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'insightsSummaryData', doc);
+
+    expect(response[0]).toBe(4); // In time range
+    expect(response[1]).toBe(4); // This month
+    expect(response[2]).toBe(4); // This week
+    expect(response[3]).toBe(4); // Today
+    expect(response[4]).toBe(4); // Last 30 days
+  });
+
+  test('insightsTrend', async () => {
+    const qry = `
+      query insightsTrend($type: String, ${paramsDef}) {
+          insightsTrend(type: $type, ${paramsValue})
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'insightsTrend', doc);
+
+    expect(response.length).toBe(1);
+    expect(response[0].y).toBe(4);
   });
 });

@@ -4,14 +4,18 @@ import { graphqlRequest } from '../db/connection';
 import { brandFactory, conversationFactory, conversationMessageFactory, integrationFactory } from '../db/factories';
 import { Brands, ConversationMessages, Conversations, Integrations } from '../db/models';
 
-const dateToString = (date: Date) => {
-  return moment(date).format('YYYY-MM-DD HH:mm');
-};
-
 describe('insightExportQueries', () => {
   let brand;
   let integration;
   let conversation;
+
+  const endDate = moment()
+    .add(1, 'days')
+    .format('YYYY-MM-DD HH:mm');
+
+  const startDate = moment(endDate)
+    .add(-7, 'days')
+    .format('YYYY-MM-DD HH:mm');
 
   beforeEach(async () => {
     process.env.DOMAIN = 'http://localhost:3000';
@@ -60,22 +64,11 @@ describe('insightExportQueries', () => {
   });
 
   test('insightVolumeReportExport', async () => {
-    const endDate = new Date(
-      moment(new Date())
-        .add(1, 'days')
-        .toString(),
-    );
-    const startDate = new Date(
-      moment(endDate)
-        .add(-7, 'days')
-        .toString(),
-    );
-
     const args = {
       integrationIds: 'gmail',
       brandIds: brand._id,
-      startDate: dateToString(startDate),
-      endDate: dateToString(endDate),
+      startDate,
+      endDate,
     };
 
     const qry = `
@@ -106,22 +99,11 @@ describe('insightExportQueries', () => {
   });
 
   test('insightActivityReportExport', async () => {
-    const endDate = new Date(
-      moment(new Date())
-        .add(1, 'days')
-        .toString(),
-    );
-    const startDate = new Date(
-      moment(endDate)
-        .add(-7, 'days')
-        .toString(),
-    );
-
     const args = {
       integrationIds: 'gmail',
       brandIds: brand._id,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toString(),
+      startDate,
+      endDate,
     };
 
     const qry = `
@@ -150,22 +132,11 @@ describe('insightExportQueries', () => {
   });
 
   test('insightFirstResponseReportExport', async () => {
-    const endDate = new Date(
-      moment(new Date())
-        .add(1, 'days')
-        .toString(),
-    );
-    const startDate = new Date(
-      moment(endDate)
-        .add(-7, 'days')
-        .toString(),
-    );
-
     const args = {
       integrationIds: integration._id,
       brandIds: brand._id,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toString(),
+      startDate,
+      endDate,
     };
 
     const qry = `
@@ -186,28 +157,15 @@ describe('insightExportQueries', () => {
 
     const DOMAIN = process.env.DOMAIN;
     const response = await graphqlRequest(qry, 'insightFirstResponseReportExport', args);
-    expect(response).toBe(
-      `${DOMAIN}/static/xlsTemplateOutputs/First Response - ${dateToString(startDate)} - ${dateToString(endDate)}.xlsx`,
-    );
+    expect(response).toBe(`${DOMAIN}/static/xlsTemplateOutputs/First Response - ${startDate} - ${endDate}.xlsx`);
   });
 
   test('insightTagReportExport', async () => {
-    const endDate = new Date(
-      moment(new Date())
-        .add(1, 'days')
-        .toString(),
-    );
-    const startDate = new Date(
-      moment(endDate)
-        .add(-7, 'days')
-        .toString(),
-    );
-
     const args = {
       integrationIds: 'gmail',
       brandIds: brand._id,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toString(),
+      startDate,
+      endDate,
     };
 
     const qry = `
@@ -228,8 +186,6 @@ describe('insightExportQueries', () => {
 
     const DOMAIN = process.env.DOMAIN;
     const response = await graphqlRequest(qry, 'insightTagReportExport', args);
-    expect(response).toBe(
-      `${DOMAIN}/static/xlsTemplateOutputs/Tag report - ${dateToString(startDate)} - ${dateToString(endDate)}.xlsx`,
-    );
+    expect(response).toBe(`${DOMAIN}/static/xlsTemplateOutputs/Tag report - ${startDate} - ${endDate}.xlsx`);
   });
 });
