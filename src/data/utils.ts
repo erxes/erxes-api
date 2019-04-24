@@ -98,17 +98,17 @@ export const uploadFileAWS = async (file: { name: string; path: string; type: st
  * Save file to google cloud storage
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
-  const GOOGLE_CLOUD_PROJECT_ID = getEnv({ name: 'GOOGLE_CLOUD_PROJECT_ID' });
+  const GOOGLE_PROJECT_ID = getEnv({ name: 'GOOGLE_PROJECT_ID' });
   const GOOGLE_CLOUD_KEYFILE = getEnv({ name: 'GOOGLE_CLOUD_KEYFILE' });
   const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
 
-  if (!GOOGLE_CLOUD_PROJECT_ID || !GOOGLE_CLOUD_KEYFILE || !BUCKET) {
+  if (!GOOGLE_PROJECT_ID || !GOOGLE_CLOUD_KEYFILE || !BUCKET) {
     throw new Error('Google Cloud Storage config missing');
   }
 
   // initializing Google Cloud Storage
   const storage = new Storage({
-    projectId: GOOGLE_CLOUD_PROJECT_ID,
+    projectId: GOOGLE_PROJECT_ID,
     keyFilename: GOOGLE_CLOUD_KEYFILE,
   });
 
