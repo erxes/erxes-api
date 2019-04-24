@@ -146,7 +146,7 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
  * Save binary data to amazon s3
  */
 export const uploadFile = async (file): Promise<string> => {
-  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE' });
+  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
   if (!UPLOAD_SERVICE_TYPE) {
     throw new Error('Please specify your upload service in .env');
