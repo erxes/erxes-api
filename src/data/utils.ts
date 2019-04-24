@@ -1,3 +1,4 @@
+import { Storage } from '@google-cloud/storage';
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
@@ -50,10 +51,10 @@ export const checkFile = async file => {
   return 'ok';
 };
 
-/*
- * Save binary data to amazon s3
+/**
+ * Save binary data to AWS
  */
-export const uploadFile = async (file: { name: string; path: string }): Promise<string> => {
+export const uploadFileAWS = async (file: { name: string; path: string; type: string }) => {
   const AWS_ACCESS_KEY_ID = getEnv({ name: 'AWS_ACCESS_KEY_ID' });
   const AWS_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SECRET_ACCESS_KEY' });
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
@@ -91,6 +92,71 @@ export const uploadFile = async (file: { name: string; path: string }): Promise<
   });
 
   return response.Location;
+};
+
+/*
+ * Save file to google cloud storage
+ */
+export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
+  const GOOGLE_CLOUD_PROJECT_ID = getEnv({ name: 'GOOGLE_CLOUD_PROJECT_ID' });
+  const GOOGLE_CLOUD_KEYFILE = getEnv({ name: 'GOOGLE_CLOUD_KEYFILE' });
+  const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+
+  if (!GOOGLE_CLOUD_PROJECT_ID || !GOOGLE_CLOUD_KEYFILE || !BUCKET) {
+    throw new Error('Google Cloud Storage config missing');
+  }
+
+  // initializing Google Cloud Storage
+  const storage = new Storage({
+    projectId: GOOGLE_CLOUD_PROJECT_ID,
+    keyFilename: GOOGLE_CLOUD_KEYFILE,
+  });
+
+  // select bucket
+  const bucket = storage.bucket(BUCKET);
+
+  // generate unique name
+  const fileName = `${Math.random()}${file.name}`;
+
+  bucket.file(fileName);
+
+  const response: any = await new Promise((resolve, reject) => {
+    bucket.upload(
+      file.path,
+      {
+        metadata: { contentType: file.type },
+        public: true,
+      },
+      (err, res) => {
+        if (err) {
+          return reject(err);
+        }
+
+        if (res) {
+          return resolve(res);
+        }
+      },
+    );
+  });
+
+  return `https://storage.googleapis.com/${BUCKET}/${response.name}`;
+};
+
+/*
+ * Save binary data to amazon s3
+ */
+export const uploadFile = async (file): Promise<string> => {
+  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE' });
+
+  if (!UPLOAD_SERVICE_TYPE) {
+    throw new Error('Please specify your upload service in .env');
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'AWS') {
+    return uploadFileAWS(file);
+  }
+
+  return uploadFileGCS(file);
 };
 
 /**
