@@ -17,6 +17,8 @@ const importHistoryQueries = {
       throw new Error('Import history not found');
     }
 
+    importHistory.errorMsgs = (importHistory.errorMsgs || []).slice(0, 100);
+
     return importHistory;
   },
 };
