@@ -13,7 +13,7 @@ import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import { pubsub } from './data/resolvers/subscriptions';
 import typeDefs from './data/schema';
-import { checkFile, getEnv, importXlsFile, uploadFile } from './data/utils';
+import { checkFile, getEnv, importXlsFile, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { Conversations, Customers } from './db/models';
 import { init } from './startup';
@@ -194,6 +194,25 @@ app.use('/static', express.static(path.join(__dirname, 'private')));
 // for health check
 app.get('/status', async (_req, res) => {
   res.end('ok');
+});
+
+// read file
+app.get('/read-file', async (req: any, res) => {
+  const key = req.query.key;
+
+  if (!key) {
+    return res.send('Invalid key');
+  }
+
+  try {
+    const response = await readFileRequest(key);
+
+    res.attachment(key);
+
+    return res.send(response);
+  } catch (e) {
+    return res.end(e.message);
+  }
 });
 
 // file upload
