@@ -36,7 +36,7 @@ export const checkFile = async file => {
   const { mime } = ft;
 
   if (
-    ![
+    [
       'image/png',
       'image/jpeg',
       'image/jpg',
@@ -53,10 +53,10 @@ export const checkFile = async file => {
       return 'Infected file';
     }
 
-    return 'Invalid file';
+    return 'ok';
   }
 
-  return 'ok';
+  return 'Invalid file';
 };
 
 /*
