@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk';
+import clamav from 'clamav.js';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
@@ -44,10 +45,45 @@ export const checkFile = async file => {
       'application/pdf',
     ].includes(mime)
   ) {
+    // check virus
+    try {
+      const stream = await fs.createReadStream(file.path);
+      await virusDetector(stream);
+    } catch (e) {
+      return 'Infected file';
+    }
+
     return 'Invalid file';
   }
 
   return 'ok';
+};
+
+/*
+ * First install clamav service https://www.clamav.net/documents/installation-on-macos-mac-os-x
+ * And using clamav.js connector for clamav service
+ * For mac install clamav from source and use call clamd command from this folder
+ */
+const virusDetector = (stream: fs.ReadStream): Promise<string> => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+
+  return new Promise((resolve, reject) => {
+    if (NODE_ENV === 'development') {
+      return resolve('ok');
+    }
+
+    const { CLAMAV_PORT = 3310, CLAMAV_HOST = '127.0.0.1' } = process.env;
+
+    clamav.createScanner(CLAMAV_PORT, CLAMAV_HOST).scan(stream, (err, _, malicious) => {
+      if (err) {
+        reject(err);
+      } else if (malicious) {
+        reject(malicious);
+      } else {
+        resolve('ok');
+      }
+    });
+  });
 };
 
 /*
