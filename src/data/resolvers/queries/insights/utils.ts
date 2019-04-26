@@ -196,23 +196,25 @@ export const generateMessageSelector = async ({
   createdAt,
   type,
 }: IGenerateMessage): Promise<IMessageSelector> => {
-  const filterSelector = getFilterSelector(args);
-  const updatedCreatedAt = createdAt || filterSelector.createdAt;
-
   const messageSelector: any = {
     fromBot: { $exists: false },
-    createdAt: updatedCreatedAt,
     userId: type === 'response' ? { $ne: null } : null,
   };
 
-  // While searching by integration
-  if (Object.keys(filterSelector.integration).length > 0) {
-    const selector = await getConversationSelector(filterSelector, { createdAt: updatedCreatedAt });
+  if (args) {
+    const filterSelector = getFilterSelector(args);
+    const updatedCreatedAt = createdAt || filterSelector.createdAt;
+    messageSelector.createdAt = updatedCreatedAt;
 
-    const conversationIds = await Conversations.find(selector).select('_id');
+    // While searching by integration
+    if (Object.keys(filterSelector.integration).length > 0) {
+      const selector = await getConversationSelector(filterSelector, { createdAt: updatedCreatedAt });
 
-    const rawConversationIds = conversationIds.map(obj => obj._id);
-    messageSelector.conversationId = { $in: rawConversationIds };
+      const conversationIds = await Conversations.find(selector).select('_id');
+
+      const rawConversationIds = conversationIds.map(obj => obj._id);
+      messageSelector.conversationId = { $in: rawConversationIds };
+    }
   }
 
   return messageSelector;
@@ -515,4 +517,34 @@ export const noConversationSelector = {
       ],
     },
   ],
+};
+
+export const timeIntervals: any[] = [
+  { name: '0-5 second', count: 5 },
+  { name: '6-10 second', count: 10 },
+  { name: '11-15 second', count: 15 },
+  { name: '16-20 second', count: 20 },
+  { name: '21-25 second', count: 25 },
+  { name: '26-30 second', count: 30 },
+  { name: '31-35 second', count: 35 },
+  { name: '36-40 second', count: 40 },
+  { name: '41-45 second', count: 45 },
+  { name: '46-50 second', count: 50 },
+  { name: '51-55 second', count: 55 },
+  { name: '56-60 second', count: 60 },
+  { name: '1-2 min', count: 120 },
+  { name: '2-3 min', count: 180 },
+  { name: '3-4 min', count: 240 },
+  { name: '4-5 min', count: 300 },
+  { name: '5+ min' },
+];
+
+export const timeIntervalBranches = () => {
+  const copyTimeIntervals = [...timeIntervals];
+  copyTimeIntervals.pop();
+
+  return copyTimeIntervals.map(t => ({
+    case: { $lte: ['$firstRespondTime', t.count] },
+    then: t.name,
+  }));
 };
