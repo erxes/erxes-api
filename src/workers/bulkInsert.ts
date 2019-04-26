@@ -1,13 +1,11 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
-// tslint:disable-next-line
-import { Worker } from 'worker_threads';
 import * as xlsxPopulate from 'xlsx-populate';
 import { can } from '../data/permissions/utils';
 import { ImportHistory } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { checkFieldNames } from '../db/models/utils';
+import { createWorkers, splitToCore } from './utils';
 
 /**
  * Receives and saves xls file in private/xlsImports folder
@@ -68,18 +66,7 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           date: Date.now(),
         });
 
-        const cpuCount = os.cpus().length;
-
-        const results: string[] = [];
-
-        const calc = Math.ceil(usedSheets.length / cpuCount);
-
-        for (let index = 0; index < cpuCount; index++) {
-          const start = index * calc;
-          const end = start + calc;
-          const row = usedSheets.slice(start, end);
-          results.push(row);
-        }
+        const results: string[] = splitToCore(usedSheets);
 
         const workerFile =
           process.env.NODE_ENV === 'production'
@@ -90,38 +77,15 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
 
         const percentagePerData = Number(((1 / usedSheets.length) * 100).toFixed(3));
 
-        setImmediate(() => {
-          results.forEach(result => {
-            try {
-              const worker = new Worker(workerPath, {
-                workerData: {
-                  result,
-                  contentType: type,
-                  user,
-                  properties,
-                  importHistoryId: importHistory._id,
-                  percentagePerData,
-                },
-              });
+        const workerData = {
+          contentType: type,
+          user,
+          properties,
+          importHistoryId: importHistory._id,
+          percentagePerData,
+        };
 
-              worker.on('message', () => {
-                worker.terminate();
-              });
-
-              worker.on('error', e => {
-                reject(new Error(e));
-              });
-
-              worker.on('exit', code => {
-                if (code !== 0) {
-                  reject(new Error(`Worker stopped with exit code ${code}`));
-                }
-              });
-            } catch (e) {
-              reject(new Error(e));
-            }
-          });
-        });
+        await createWorkers(workerPath, workerData, results);
 
         return resolve({ id: importHistory.id });
       })
