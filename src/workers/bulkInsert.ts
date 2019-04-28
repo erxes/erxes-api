@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as Random from 'meteor-random';
 import * as path from 'path';
 import * as xlsxPopulate from 'xlsx-populate';
 import { can } from '../data/permissions/utils';
@@ -6,6 +7,8 @@ import { ImportHistory } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { checkFieldNames } from '../db/models/utils';
 import { createWorkers, splitToCore } from './utils';
+
+export const intervals = {};
 
 /**
  * Receives and saves xls file in private/xlsImports folder
@@ -85,7 +88,17 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           percentagePerData,
         };
 
-        await createWorkers(workerPath, workerData, results);
+        const interval = setImmediate(async () => {
+          const threadIds = await createWorkers(workerPath, workerData, results);
+
+          await ImportHistory.update({ _id: importHistory._id }, { $set: { threadIds } });
+        });
+
+        const intervalId = Random.id();
+
+        intervals[intervalId] = interval;
+
+        await ImportHistory.update({ _id: importHistory._id }, { $set: { intervalId } });
 
         return resolve({ id: importHistory.id });
       })

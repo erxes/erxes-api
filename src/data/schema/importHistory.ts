@@ -22,4 +22,5 @@ export const queries = `
 
 export const mutations = `
   importHistoriesRemove(_id: String!): JSON
+  importHistoriesCancel(_id: String!): Boolean
 `;

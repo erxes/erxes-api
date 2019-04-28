@@ -10,6 +10,8 @@ export interface IImportHistory {
   errorMsgs?: string[];
   status?: string;
   percentage?: number;
+  intervalId?: string;
+  threadIds: number[];
 }
 
 export interface IImportHistoryDocument extends IImportHistory, Document {
@@ -30,4 +32,6 @@ export const importHistorySchema = new Schema({
   errorMsgs: field({ type: [String], default: [] }),
   status: field({ type: String, default: 'In Progress' }),
   percentage: field({ type: Number, default: 0 }),
+  intervalId: field({ type: String }),
+  threadIds: field({ type: [Number] }),
 });
