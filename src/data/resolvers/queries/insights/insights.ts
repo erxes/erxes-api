@@ -50,28 +50,30 @@ const insightQueries = {
         integrationId: { $in: integrationIds },
       });
 
-      if (kind === INTEGRATION_KIND_CHOICES.FACEBOOK) {
-        const { FEED, MESSENGER } = FACEBOOK_DATA_KINDS;
+      if (value > 0) {
+        if (kind === INTEGRATION_KIND_CHOICES.FACEBOOK) {
+          const { FEED, MESSENGER } = FACEBOOK_DATA_KINDS;
 
-        const feedCount = await Conversations.countDocuments({
-          ...conversationSelector,
-          integrationId: { $in: integrationIds },
-          'facebookData.kind': FEED,
-        });
+          const feedCount = await Conversations.countDocuments({
+            ...conversationSelector,
+            integrationId: { $in: integrationIds },
+            'facebookData.kind': FEED,
+          });
 
-        integrations.push({
-          id: `${kind} ${FEED}`,
-          label: `${kind} ${FEED}`,
-          value: feedCount,
-        });
+          integrations.push({
+            id: `${kind} ${FEED}`,
+            label: `${kind} ${FEED}`,
+            value: feedCount,
+          });
 
-        integrations.push({
-          id: `${kind} ${MESSENGER}`,
-          label: `${kind} ${MESSENGER}`,
-          value: value - feedCount,
-        });
-      } else {
-        integrations.push({ id: kind, label: kind, value });
+          integrations.push({
+            id: `${kind} ${MESSENGER}`,
+            label: `${kind} ${MESSENGER}`,
+            value: value - feedCount,
+          });
+        } else {
+          integrations.push({ id: kind, label: kind, value });
+        }
       }
     }
 
