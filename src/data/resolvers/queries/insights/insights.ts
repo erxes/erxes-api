@@ -26,16 +26,11 @@ const insightQueries = {
    * count of conversations in various integrations kinds.
    */
   async insightsIntegrations(_root, args: IListArgs) {
-    const { startDate, endDate } = args;
     const filterSelector = getFilterSelector(args);
-    const { start, end } = fixDates(startDate, endDate);
+
+    const conversationSelector = await getConversationSelector(filterSelector);
 
     const integrations: IPieChartData[] = [];
-
-    const conversationSelector = {
-      createdAt: { $gte: start, $lte: end },
-      ...noConversationSelector,
-    };
 
     // count conversations by each integration kind
     for (const kind of INTEGRATION_KIND_CHOICES.ALL) {
@@ -85,16 +80,14 @@ const insightQueries = {
    * count of conversations in various integrations tags.
    */
   async insightsTags(_root, args: IListArgs) {
-    const { startDate, endDate } = args;
     const filterSelector = getFilterSelector(args);
-    const { start, end } = fixDates(startDate, endDate);
-
-    const tagDatas: IPieChartData[] = [];
 
     const conversationSelector = {
-      createdAt: { $gte: start, $lte: end },
+      createdAt: filterSelector.createdAt,
       ...noConversationSelector,
     };
+
+    const tagDatas: IPieChartData[] = [];
 
     const tags = await Tags.find({ type: TAG_TYPES.CONVERSATION }).select('name');
 
@@ -192,12 +185,7 @@ const insightQueries = {
   async insightsConversation(_root, args: IListArgs) {
     const filterSelector = getFilterSelector(args);
 
-    const conversationSelector = {
-      createdAt: filterSelector.createdAt,
-      ...noConversationSelector,
-    };
-
-    const selector = await getConversationSelector(filterSelector, { ...conversationSelector });
+    const selector = await getConversationSelector(filterSelector);
 
     const conversations = await Conversations.find(selector);
 
@@ -213,7 +201,7 @@ const insightQueries = {
       startDate: start,
       endDate: end,
       collection: Conversations,
-      selector: { ...conversationSelector },
+      selector,
     });
 
     return insightData;
