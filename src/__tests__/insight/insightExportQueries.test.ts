@@ -14,7 +14,7 @@ describe('insightExportQueries', () => {
   let secondUser;
   let args;
 
-  const DOMAIN = process.env.DOMAIN;
+  const DOMAIN = process.env.DOMAIN || '';
 
   beforeEach(async () => {
     const response = await beforeEachTest();
