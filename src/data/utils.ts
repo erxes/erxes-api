@@ -6,7 +6,6 @@ import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
-import * as rawBody from 'raw-body';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Companies, Customers, Notifications, Users } from '../db/models';
@@ -96,6 +95,7 @@ const createGCS = () => {
 export const uploadFileAWS = async (file: { name: string; path: string }): Promise<string> => {
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
   const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX', defaultValue: '' });
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC' });
 
   // initialize s3
   const s3 = createAWS();
@@ -107,12 +107,13 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
   const buffer = await fs.readFileSync(file.path);
 
   // upload to s3
-  await new Promise((resolve, reject) => {
+  const response: any = await new Promise((resolve, reject) => {
     s3.upload(
       {
         Bucket: AWS_BUCKET,
         Key: fileName,
         Body: buffer,
+        ACL: IS_PUBLIC === 'true' ? 'public-read' : undefined,
       },
       (err, res) => {
         if (err) {
@@ -124,7 +125,7 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
     );
   });
 
-  return fileName;
+  return IS_PUBLIC === 'true' ? response.Location : fileName;
 };
 
 /*
@@ -132,6 +133,7 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
   const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC' });
 
   // initialize GCS
   const storage = createGCS();
@@ -149,6 +151,7 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
       file.path,
       {
         metadata: { contentType: file.type },
+        public: IS_PUBLIC === 'true',
       },
       (err, res) => {
         if (err) {
@@ -162,7 +165,9 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
     );
   });
 
-  return response.name;
+  const { metadata, name } = response;
+
+  return IS_PUBLIC === 'true' ? metadata.mediaLink : name;
 };
 
 /**
@@ -179,7 +184,10 @@ export const readFileRequest = async (key: string): Promise<any> => {
 
     const file = bucket.file(key);
 
-    return rawBody(file.createReadStream());
+    // get a file buffer
+    const [contents] = await file.download({});
+
+    return contents;
   }
 
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
