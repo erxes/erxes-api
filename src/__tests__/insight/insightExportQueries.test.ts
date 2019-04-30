@@ -8,14 +8,14 @@ import {
 import insightExportQueries from '../../data/resolvers/queries/insights/insightExport';
 import { getEnv } from '../../data/utils';
 import { graphqlRequest } from '../../db/connection';
-import { afterEachTest, beforeEachTest, endDate, paramsDef, paramsValue, startDate } from './common';
+import { afterEachTest, beforeEachTest, endDate, paramsDef, paramsValue, startDate } from './insightQueries.test';
 
 describe('insightExportQueries', () => {
   let user;
   let secondUser;
   let args;
 
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const DOMAIN = getEnv({ name: 'DOMAIN', defaultValue: 'http://localhost:3300' });
 
   beforeEach(async () => {
     const response = await beforeEachTest();

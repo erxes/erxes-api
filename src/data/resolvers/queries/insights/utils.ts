@@ -36,7 +36,7 @@ import {
  * Return filterSelector
  * @param args
  */
-export const getFilterSelector = (args: IListArgs, fieldName: string = 'createdAt'): any => {
+export const getFilterSelector = (args: IListArgs): any => {
   const selector: IFilterSelector = { integration: {} };
   const { startDate, endDate, integrationIds, brandIds } = args;
   const { start, end } = fixDates(startDate, endDate);
@@ -49,7 +49,7 @@ export const getFilterSelector = (args: IListArgs, fieldName: string = 'createdA
     selector.integration.brandId = { $in: brandIds.split(',') };
   }
 
-  selector[fieldName] = { $gte: start, $lte: end };
+  selector.createdAt = { $gte: start, $lte: end };
 
   return selector;
 };
@@ -111,7 +111,7 @@ export const getDealSelector = async (args: IDealListArgs): Promise<IDealSelecto
  */
 export const getConversationSelector = async (
   filterSelector: any,
-  conversationSelector: any,
+  conversationSelector: any = {},
   fieldName: string = 'createdAt',
 ): Promise<any> => {
   if (Object.keys(filterSelector.integration).length > 0) {
@@ -119,7 +119,9 @@ export const getConversationSelector = async (
     conversationSelector.integrationId = { $in: integrationIds.map(row => row._id) };
   }
 
-  conversationSelector[fieldName] = filterSelector[fieldName];
+  if (!conversationSelector[fieldName]) {
+    conversationSelector[fieldName] = filterSelector[fieldName];
+  }
 
   return { ...conversationSelector, ...noConversationSelector };
 };
