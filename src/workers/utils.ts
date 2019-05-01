@@ -67,10 +67,12 @@ export const splitToCore = (datas: any[]) => {
 
 export const removeWorker = threadIds => {
   workers = workers.filter(worker => {
+    const threadId = worker.threadId;
+
     if (threadIds.includes(worker.threadId)) {
       worker.terminate();
     }
 
-    return !threadIds.includes(worker.threadId);
+    return !threadIds.includes(threadId);
   });
 };
