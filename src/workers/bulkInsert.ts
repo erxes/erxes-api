@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as Random from 'meteor-random';
 import * as path from 'path';
 import * as xlsxPopulate from 'xlsx-populate';
 import { can } from '../data/permissions/utils';
@@ -8,7 +7,7 @@ import { IUserDocument } from '../db/models/definitions/users';
 import { checkFieldNames } from '../db/models/utils';
 import { createWorkers, splitToCore } from './utils';
 
-export const intervals = {};
+export const intervals: any[] = [];
 
 /**
  * Receives and saves xls file in private/xlsImports folder
@@ -17,7 +16,7 @@ export const intervals = {};
 export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
   return new Promise(async (resolve, reject) => {
     if (!(await can('importXlsFile', user._id))) {
-      return reject('Permission denied!');
+      return reject(new Error('Permission denied!'));
     }
 
     const readStream = fs.createReadStream(file.path);
@@ -88,22 +87,14 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
           percentagePerData,
         };
 
-        const interval = setImmediate(async () => {
-          const threadIds = await createWorkers(workerPath, workerData, results);
-
-          await ImportHistory.update({ _id: importHistory._id }, { $set: { threadIds } });
+        await createWorkers(workerPath, workerData, results).catch(e => {
+          return reject(e);
         });
-
-        const intervalId = Random.id();
-
-        intervals[intervalId] = interval;
-
-        await ImportHistory.update({ _id: importHistory._id }, { $set: { intervalId } });
 
         return resolve({ id: importHistory.id });
       })
       .catch(e => {
-        return reject({ error: e });
+        return reject(e);
       });
   });
 };

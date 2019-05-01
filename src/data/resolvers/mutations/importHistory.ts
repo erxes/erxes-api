@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { ImportHistory } from '../../../db/models';
-import { intervals } from '../../../workers/bulkInsert';
-import { createWorkers, removeWorker, splitToCore } from '../../../workers/utils';
+import { clearIntervals, createWorkers, removeWorkers, splitToCore } from '../../../workers/utils';
 import { checkPermission } from '../../permissions';
 
 const importHistoryMutations = {
@@ -45,13 +44,9 @@ const importHistoryMutations = {
       throw new Error('History not found');
     }
 
-    if (importHistory.intervalId && intervals[importHistory.intervalId]) {
-      clearImmediate(intervals[importHistory.intervalId]);
+    clearIntervals();
 
-      delete intervals[importHistory.intervalId];
-    }
-
-    removeWorker(importHistory.threadIds || []);
+    removeWorkers();
 
     return true;
   },

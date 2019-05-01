@@ -236,10 +236,10 @@ app.post('/import-file', (req: any, res) => {
 
     importXlsFile(response.file, fields.type, { user: req.user })
       .then(result => {
-        res.json(result);
+        return res.json(result);
       })
       .catch(e => {
-        throw new Error(e.message);
+        return res.json({ status: 'error', message: e.message });
       });
   });
 });
