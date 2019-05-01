@@ -3,7 +3,7 @@ import * as os from 'os';
 // tslint:disable-next-line
 import { Worker } from 'worker_threads';
 
-let workers: any[] = ['asd'];
+let workers: any[] = [];
 let intervals: any[] = [];
 
 export const createWorkers = (workerPath: string, workerData: any, results: string[]) => {
