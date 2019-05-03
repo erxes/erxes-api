@@ -283,11 +283,15 @@ export const moduleObjects = {
       {
         name: 'insightsAll',
         description: 'All',
-        use: ['manageExportInsights'],
+        use: ['manageExportInsights', 'showInsights'],
       },
       {
         name: 'manageExportInsights',
         description: 'Manage export insights',
+      },
+      {
+        name: 'showInsights',
+        description: 'Show insights',
       },
     ],
   },

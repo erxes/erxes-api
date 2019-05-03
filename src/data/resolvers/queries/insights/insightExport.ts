@@ -2,21 +2,17 @@ import * as moment from 'moment';
 import { Users } from '../../../../db/models';
 import { IUserDocument } from '../../../../db/models/definitions/users';
 import { INSIGHT_BASIC_INFOS } from '../../../constants';
-import { moduleCheckPermission } from '../../../permissions';
+import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
 import { createXlsFile, generateXlsx } from '../../../utils';
-import { IListArgs, IListArgsWithUserId, IResponseFirstResponseExport } from './types';
-import { fixDates, timeIntervals } from './utils';
-
 import {
-  addCell,
-  addHeader,
-  dateToString,
   generateActivityReport,
   generateFirstResponseReport,
   generateTagReport,
   generateVolumeReport,
-  nextTime,
-} from './exportUtils';
+} from './exportData';
+import { addCell, addHeader, dateToString, nextTime } from './exportUtils';
+import { IListArgs, IListArgsWithUserId, IResponseFirstResponseExport } from './types';
+import { fixDates, timeIntervals } from './utils';
 
 const insightExportQueries = {
   /*
@@ -62,21 +58,25 @@ const insightExportQueries = {
     const userDataDictionary = {};
     const rawUserIds = {};
     const userTotals = {};
+
     data.forEach(row => {
       userDataDictionary[`${row.userId}_${row.date}`] = row.count;
       rawUserIds[row.userId] = 1;
     });
-    const userIds = Object.keys(rawUserIds);
 
+    const userIds = Object.keys(rawUserIds);
     const users: any = {};
 
     // Reads default template
     const { workbook, sheet } = await createXlsFile();
+
     await addHeader('Operator Activity report', args, sheet);
+
     let rowIndex = 3;
+    let begin = start;
+
     const cols: string[] = [];
 
-    let begin = start;
     const generateData = async () => {
       const next = nextTime(begin, 'time');
       rowIndex++;
@@ -151,8 +151,9 @@ const insightExportQueries = {
 
     // Reads default template
     const { workbook, sheet } = await createXlsFile();
-    let rowIndex = 3;
     const cols: string[] = [];
+
+    let rowIndex = 3;
 
     for (const interval of timeIntervals) {
       rowIndex++;
@@ -289,6 +290,8 @@ const insightExportQueries = {
     return generateXlsx(workbook, `Tag report - ${dateToString(start)} - ${dateToString(end)}`);
   },
 };
+
+moduleRequireLogin(insightExportQueries);
 
 moduleCheckPermission(insightExportQueries, 'manageExportInsights');
 

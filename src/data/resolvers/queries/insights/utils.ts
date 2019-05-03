@@ -132,24 +132,25 @@ export const getConversationSelector = async (
  * @param selector
  */
 export const getSummaryData = async ({
-  startDate,
-  endDate,
+  start,
+  end,
   selector,
   collection,
   dateFieldName = 'createdAt',
 }: {
-  startDate: Date;
-  endDate: Date;
+  start: Date;
+  end: Date;
   selector: any;
   collection: any;
   dateFieldName?: string;
 }): Promise<any> => {
-  const summaries: Array<{ title?: string; count?: number }> = [];
-  const intervals = generateTimeIntervals(startDate, endDate);
+  const intervals = generateTimeIntervals(start, end);
   const facets = {};
+
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {
     const facetMessageSelector = { ...selector };
+
     facetMessageSelector[dateFieldName] = {
       $gte: interval.start.toDate(),
       $lte: interval.end.toDate(),
@@ -180,43 +181,40 @@ export const getSummaryData = async ({
     },
   ]);
 
+  const summaries: Array<{ title?: string; count?: number }> = [];
+
   for (const interval of intervals) {
     const count = legend[interval.title][0] ? legend[interval.title][0].count : 0;
+
     summaries.push({
       title: interval.title,
       count,
     });
   }
+
   return summaries;
 };
 
 /**
  * Builds messages find query selector.
  */
-export const generateMessageSelector = async ({
-  args,
-  createdAt,
-  type,
-}: IGenerateMessage): Promise<IMessageSelector> => {
+export const getMessageSelector = async ({ args, createdAt }: IGenerateMessage): Promise<IMessageSelector> => {
   const messageSelector: any = {
     fromBot: { $exists: false },
-    userId: type === 'response' ? { $ne: null } : null,
+    userId: args.type === 'response' ? { $ne: null } : null,
   };
 
-  if (args) {
-    const filterSelector = getFilterSelector(args);
-    const updatedCreatedAt = createdAt || filterSelector.createdAt;
-    messageSelector.createdAt = updatedCreatedAt;
+  const filterSelector = getFilterSelector(args);
+  messageSelector.createdAt = filterSelector.createdAt;
 
-    // While searching by integration
-    if (Object.keys(filterSelector.integration).length > 0) {
-      const selector = await getConversationSelector(filterSelector, { createdAt: updatedCreatedAt });
+  // While searching by integration
+  if (Object.keys(filterSelector.integration).length > 0) {
+    const selector = await getConversationSelector(filterSelector, { createdAt });
 
-      const conversationIds = await Conversations.find(selector).select('_id');
+    const conversationIds = await Conversations.find(selector).select('_id');
 
-      const rawConversationIds = conversationIds.map(obj => obj._id);
-      messageSelector.conversationId = { $in: rawConversationIds };
-    }
+    const rawConversationIds = conversationIds.map(obj => obj._id);
+    messageSelector.conversationId = { $in: rawConversationIds };
   }
 
   return messageSelector;

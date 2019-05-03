@@ -1,7 +1,7 @@
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../../db/models';
 import { IUserDocument } from '../../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
-import { moduleRequireLogin } from '../../../permissions';
+import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
 import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
 import { IListArgs, IPieChartData } from './types';
 import {
@@ -9,11 +9,11 @@ import {
   fixDates,
   generateChartDataByCollection,
   generateChartDataBySelector,
-  generateMessageSelector,
   generatePunchData,
   generateResponseData,
   getConversationSelector,
   getFilterSelector,
+  getMessageSelector,
   getSummaryData,
   getSummaryDates,
   getTimezone,
@@ -114,6 +114,7 @@ const insightQueries = {
     ]);
 
     const tagDictionaryData = {};
+
     tagData.forEach(row => {
       tagDictionaryData[row._id] = row.count;
     });
@@ -134,12 +135,7 @@ const insightQueries = {
    * Counts conversations by each hours in each days.
    */
   async insightsPunchCard(_root, args: IListArgs, { user }: { user: IUserDocument }) {
-    const { type } = args;
-
-    const messageSelector = await generateMessageSelector({
-      args,
-      type,
-    });
+    const messageSelector = await getMessageSelector({ args });
 
     return generatePunchData(ConversationMessages, messageSelector, user);
   },
@@ -148,12 +144,7 @@ const insightQueries = {
    * Sends combined charting data for trends.
    */
   async insightsTrend(_root, args: IListArgs) {
-    const { type } = args;
-
-    const messageSelector = await generateMessageSelector({
-      args,
-      type,
-    });
+    const messageSelector = await getMessageSelector({ args });
 
     return generateChartDataBySelector({ selector: messageSelector });
   },
@@ -162,20 +153,19 @@ const insightQueries = {
    * Sends summary datas.
    */
   async insightsSummaryData(_root, args: IListArgs) {
-    const { startDate, endDate, type } = args;
-    const messageSelector = await generateMessageSelector({
+    const selector = await getMessageSelector({
       args,
-      type,
       createdAt: getSummaryDates(args.endDate),
     });
 
+    const { startDate, endDate } = args;
     const { start, end } = fixDates(startDate, endDate);
 
     return getSummaryData({
-      startDate: start,
-      endDate: end,
+      start,
+      end,
       collection: ConversationMessages,
-      selector: { ...messageSelector },
+      selector,
     });
   },
 
@@ -198,8 +188,8 @@ const insightQueries = {
     const { start, end } = fixDates(startDate, endDate);
 
     insightData.summary = await getSummaryData({
-      startDate: start,
-      endDate: end,
+      start,
+      end,
       collection: Conversations,
       selector,
     });
@@ -424,5 +414,7 @@ const insightQueries = {
 };
 
 moduleRequireLogin(insightQueries);
+
+moduleCheckPermission(insightQueries, 'showInsights');
 
 export default insightQueries;

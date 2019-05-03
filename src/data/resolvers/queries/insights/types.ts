@@ -125,12 +125,11 @@ export interface IListArgsWithUserId extends IListArgs {
 }
 
 export interface IGenerateMessage {
-  args?: IListArgs;
+  args: IListArgs;
   createdAt?: {
     $gte: Date;
     $lte: Date;
   };
-  type: string;
 }
 
 export interface IResponseFirstResponseExport {
