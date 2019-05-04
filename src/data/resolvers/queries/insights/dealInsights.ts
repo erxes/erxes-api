@@ -44,8 +44,8 @@ const dealInsightQueries = {
     });
 
     insightData.summary = await getSummaryData({
-      startDate: start,
-      endDate: end,
+      start,
+      end,
       collection: Deals,
       selector: { ...selector },
       dateFieldName,
