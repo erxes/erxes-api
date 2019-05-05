@@ -1,5 +1,5 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.13.1
+version: v1.13.3
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   'npm:chownr:20180731':
@@ -12,4 +12,44 @@ ignore:
     - bcrypt > node-pre-gyp > tar > chownr:
         reason: Development only
         expires: '2018-12-13T02:45:09.866Z'
-patch: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-AXIOS-174505:
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > googleapis-common > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > google-auth-library > gcp-metadata > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > googleapis-common > google-auth-library > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > google-auth-library > gtoken > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > google-auth-library > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > googleapis-common > google-auth-library > gtoken > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - googleapis > googleapis-common > google-auth-library > gcp-metadata > axios:
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-05-05T21:26:09.721Z'
