@@ -92,10 +92,7 @@ mongoose.connect(
       }
 
       if (importHistory.failed + importHistory.success === importHistory.total) {
-        await ImportHistory.updateOne(
-          { _id: importHistoryId },
-          { $set: { status: 'Done', percentage: 100 }, $unset: { threadIds: 1, intervalId: 1 } },
-        );
+        await ImportHistory.updateOne({ _id: importHistoryId }, { $set: { status: 'Done', percentage: 100 } });
 
         importHistory = await ImportHistory.findOne({ _id: importHistoryId });
       }
