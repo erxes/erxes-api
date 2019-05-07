@@ -120,7 +120,7 @@ export const getConversationSelector = async (
   }
 
   if (!conversationSelector[fieldName]) {
-    conversationSelector[fieldName] = filterSelector[fieldName];
+    conversationSelector[fieldName] = filterSelector.createdAt;
   }
 
   return { ...conversationSelector, ...noConversationSelector };
