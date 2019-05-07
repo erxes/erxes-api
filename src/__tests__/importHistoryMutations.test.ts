@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import { customerFactory, importHistoryFactory, userFactory } from '../db/factories';
-import { Customers, ImportHistory, Users } from '../db/models';
+import { ImportHistory, Users } from '../db/models';
 import * as workerUtils from '../workers/utils';
 
 describe('Import history mutations', () => {
@@ -38,7 +38,6 @@ describe('Import history mutations', () => {
     await graphqlRequest(mutation, 'importHistoriesRemove', { _id: importHistory._id }, context);
 
     expect(await ImportHistory.findOne({ _id: importHistory._id })).toBeNull();
-    expect(await Customers.findOne({ _id: customer._id })).toBeNull();
 
     mock.restore();
   });
