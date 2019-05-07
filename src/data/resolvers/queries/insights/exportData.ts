@@ -32,8 +32,6 @@ export const generateVolumeReport = async (args: IListArgs, user: IUserDocument)
 
   const conversationSelector = await getConversationSelector(filterSelector);
 
-  console.log('conversationSelector: ', conversationSelector);
-
   const aggregatedData = await Conversations.aggregate([
     {
       $match: conversationSelector,
@@ -76,8 +74,6 @@ export const generateVolumeReport = async (args: IListArgs, user: IUserDocument)
 
   const resolvedSelector = await getConversationSelector(filterSelector, { status: 'closed' }, 'closedAt');
 
-  console.log('resolvedSelector: ', resolvedSelector);
-
   const resolvedAggregatedData = await Conversations.aggregate([
     {
       $match: resolvedSelector,
@@ -116,8 +112,6 @@ export const generateVolumeReport = async (args: IListArgs, user: IUserDocument)
   });
 
   const messageSelector = await getMessageSelector({ args: { ...args, type: 'volume' } });
-
-  console.log('messageSelector: ', messageSelector);
 
   const messageAggregationData = await ConversationMessages.aggregate([
     {
