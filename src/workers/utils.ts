@@ -1,13 +1,19 @@
 import * as os from 'os';
 
-// tslint:disable-next-line
-import { Worker } from 'worker_threads';
-
 let workers: any[] = [];
 let intervals: any[] = [];
 
 export const createWorkers = (workerPath: string, workerData: any, results: string[]) => {
   return new Promise((resolve, reject) => {
+    // tslint:disable
+    let Worker;
+
+    try {
+      Worker = require('worker_threads').Worker;
+    } catch (e) {
+      return Promise.reject('Please upgrade node version above 10.5.0 support worker_threads!');
+    }
+
     if (workers.length > 0) {
       return reject(new Error('Workers are busy'));
     }
