@@ -31,14 +31,14 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
           workers.push(worker);
 
           worker.on('message', () => {
-            workers = workers.filter(workerObj => {
-              return worker.threadId !== workerObj.threadId;
-            });
+            removeWorker(worker);
 
             worker.terminate();
           });
 
           worker.on('error', e => {
+            worker.terminate();
+            removeWorker(worker);
             reject(new Error(e));
           });
 
@@ -77,6 +77,12 @@ export const splitToCore = (datas: any[]) => {
   }
 
   return results;
+};
+
+export const removeWorker = worker => {
+  workers = workers.filter(workerObj => {
+    return worker.threadId !== workerObj.threadId;
+  });
 };
 
 export const removeWorkers = () => {

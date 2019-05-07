@@ -27,11 +27,14 @@ const importHistoryMutations = {
 
     const workerData = {
       contentType: importHistory.contentType,
+      importHistoryId: importHistory._id,
     };
 
     await createWorkers(workerPath, workerData, results);
 
-    return ImportHistory.removeHistory(_id);
+    await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
+
+    return ImportHistory.findOne({ _id: importHistory._id });
   },
 
   /**

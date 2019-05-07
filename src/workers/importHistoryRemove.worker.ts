@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-import { Companies, Customers } from '../db/models';
+import { Companies, Customers, ImportHistory } from '../db/models';
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ mongoose.connect(
       console.log('error', err);
     }
 
-    const { result, contentType } = workerData;
+    const { result, contentType, importHistoryId } = workerData;
 
     let collection: any = Companies;
 
@@ -26,7 +26,17 @@ mongoose.connect(
       collection = Customers;
     }
 
-    await collection.deleteMany({ _id: { $in: result } });
+    for (const id of result) {
+      await collection.deleteOne({ _id: id });
+
+      await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: id } });
+    }
+
+    const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
+
+    if (historyObj && (historyObj.ids || []).length === 0) {
+      await ImportHistory.deleteOne({ _id: importHistoryId });
+    }
 
     mongoose.connection.close();
 
