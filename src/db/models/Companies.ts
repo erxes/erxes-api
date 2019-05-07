@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Customers, Deals, Fields, InternalNotes } from './';
+import { ActivityLogs, Customers, Deals, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
@@ -80,11 +80,16 @@ export const loadClass = () => {
       // clean custom field values
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
-      return Companies.create({
+      const company = await Companies.create({
         ...doc,
         createdAt: new Date(),
         modifiedAt: new Date(),
       });
+
+      // create log
+      await ActivityLogs.createCompanyLog(company);
+
+      return company;
     }
 
     /**
@@ -201,6 +206,9 @@ export const loadClass = () => {
       // Removing modules associated with current companies
       await InternalNotes.changeCompany(company._id, companyIds);
       await Deals.changeCompany(company._id, companyIds);
+
+      // create log
+      await ActivityLogs.createCompanyLog(company);
 
       return company;
     }

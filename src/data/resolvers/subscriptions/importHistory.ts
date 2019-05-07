@@ -1,5 +1,5 @@
 import { withFilter } from 'apollo-server-express';
-import pubsub from './pubsub';
+import { graphqlPubsub } from '../../../pubsub';
 
 export default {
   /*
@@ -7,7 +7,7 @@ export default {
    */
   importHistoryChanged: {
     subscribe: withFilter(
-      () => pubsub.asyncIterator('importHistoryChanged'),
+      () => graphqlPubsub.asyncIterator('importHistoryChanged'),
       // filter by importHistoryId
       (payload, variables) => {
         return payload.importHistoryChanged._id === variables._id;

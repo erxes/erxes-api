@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
+import { graphqlPubsub } from '../pubsub';
 
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-import { pubsub } from '../data/resolvers/subscriptions';
 import { Companies, Customers, ImportHistory } from '../db/models';
 
 dotenv.config();
@@ -106,7 +106,7 @@ mongoose.connect(
       if (fixedPercentage !== percentage) {
         percentage = fixedPercentage;
 
-        pubsub.publish('importHistoryChanged', {
+        graphqlPubsub.publish('importHistoryChanged', {
           importHistoryChanged: {
             _id: importHistory._id,
             status: importHistory.status,
