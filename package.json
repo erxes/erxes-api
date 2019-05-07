@@ -14,8 +14,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "NODE_OPTIONS=--experimental-worker node dist",
-    "dev": "NODE_ENV=development node_modules/.bin/ts-node-dev --experimental-worker --respawn src",
+    "start": "node dist",
+    "dev": "NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src",
     "build": "tsc -p tsconfig.prod.json && cp -rf src/private dist/private",
     "lint": "tslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
