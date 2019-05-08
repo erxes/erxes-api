@@ -11,6 +11,7 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
     try {
       Worker = require('worker_threads').Worker;
     } catch (e) {
+      console.log(e);
       return reject(new Error('Please upgrade node version above 10.5.0 support worker_threads!'));
     }
 
