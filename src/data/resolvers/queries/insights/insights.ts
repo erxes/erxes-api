@@ -413,6 +413,15 @@ const insightQueries = {
 
     return { trend, teamMembers, time };
   },
+
+  async insightsConversationSummary(_root) {
+    return [
+      { title: 'Blafasffas', count: 100 },
+      { title: 'Bla 2', count: 0.412 },
+      { title: 'rwqrwqrqw', count: 50 },
+      { title: 'jlkhkjhl 2', count: 0.235 },
+    ];
+  },
 };
 
 moduleRequireLogin(insightQueries);
