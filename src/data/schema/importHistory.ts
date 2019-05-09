@@ -13,10 +13,15 @@ export const types = `
     date: Date
     user: User
   }
+
+  type ListQuery {
+    list: [ImportHistory]
+    count: Int 
+  }
 `;
 
 export const queries = `
-  importHistories(perPage: Int, page: Int, type: String!): [ImportHistory]
+  importHistories(perPage: Int, page: Int, type: String!): ListQuery
   importHistoryDetail(_id: String!): ImportHistory
 `;
 

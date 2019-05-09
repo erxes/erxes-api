@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
+import { graphqlPubsub } from '../pubsub';
 
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
@@ -35,6 +36,14 @@ mongoose.connect(
     const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
 
     if (historyObj && (historyObj.ids || []).length === 0) {
+      graphqlPubsub.publish('importHistoryChanged', {
+        importHistoryChanged: {
+          _id: historyObj._id,
+          status: 'Removed',
+          percentage: 100,
+        },
+      });
+
       await ImportHistory.deleteOne({ _id: importHistoryId });
     }
 

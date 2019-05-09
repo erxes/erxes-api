@@ -37,7 +37,13 @@ describe('Import history mutations', () => {
 
     await graphqlRequest(mutation, 'importHistoriesRemove', { _id: importHistory._id }, context);
 
-    expect(await ImportHistory.findOne({ _id: importHistory._id })).toBeNull();
+    const historyObj = await ImportHistory.findOne({ _id: importHistory._id });
+
+    if (!historyObj) {
+      throw new Error('History not found');
+    }
+
+    expect(historyObj.status).toBe('Removing');
 
     mock.restore();
   });

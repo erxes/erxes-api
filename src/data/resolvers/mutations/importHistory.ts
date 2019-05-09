@@ -14,6 +14,8 @@ const importHistoryMutations = {
       throw new Error('History not found');
     }
 
+    await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
+
     const ids: any = importHistory.ids || [];
 
     const results = splitToCore(ids);
@@ -31,8 +33,6 @@ const importHistoryMutations = {
     };
 
     await createWorkers(workerPath, workerData, results);
-
-    await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
     return ImportHistory.findOne({ _id: importHistory._id });
   },
