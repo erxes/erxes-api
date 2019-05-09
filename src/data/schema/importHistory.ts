@@ -14,14 +14,14 @@ export const types = `
     user: User
   }
 
-  type ListQuery {
+  type ImportHistoryList {
     list: [ImportHistory]
     count: Int 
   }
 `;
 
 export const queries = `
-  importHistories(perPage: Int, page: Int, type: String!): ListQuery
+  importHistories(perPage: Int, page: Int, type: String!): ImportHistoryList
   importHistoryDetail(_id: String!): ImportHistory
 `;
 
