@@ -19,6 +19,15 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
       return reject(new Error('Permission denied!'));
     }
 
+    const versionNumber = process.version
+      .toString()
+      .slice(1)
+      .split('.');
+
+    if (Number(versionNumber) < 10) {
+      return reject(new Error('Please upgrade node version above 10.5.0 support worker_threads!'));
+    }
+
     const readStream = fs.createReadStream(file.path);
 
     // Directory to save file
