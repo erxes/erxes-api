@@ -59,6 +59,10 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         // Removing column
         usedSheets.shift();
 
+        if (usedSheets.length === 0) {
+          return reject(new Error('Please import more atleast one row of data'));
+        }
+
         const properties = await checkFieldNames(type, fieldNames);
 
         const importHistory = await ImportHistory.create({
