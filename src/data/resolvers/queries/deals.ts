@@ -1,20 +1,19 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { dealsCommonFilter } from './utils';
-
 interface IDate {
   month: number;
   year: number;
 }
-
 interface IDealListParams {
   pipelineId?: string;
   stageId: string;
-  customerIds: [string];
-  companyIds: [string];
   skip?: number;
   date?: IDate;
   search?: string;
+  customerIds?: [string];
+  companyIds?: [string];
+  assignedUserIds?: [string];
 }
 
 const dateSelector = (date: IDate) => {
@@ -28,6 +27,10 @@ const dateSelector = (date: IDate) => {
     $gte: new Date(start),
     $lte: new Date(end),
   };
+};
+
+const contains = (values: string[] = []) => {
+  return { $in: values };
 };
 
 const dealQueries = {
@@ -83,7 +86,10 @@ const dealQueries = {
   /**
    * Deals list
    */
-  async deals(_root, { pipelineId, stageId, customerIds, companyIds, date, skip, search }: IDealListParams) {
+  async deals(
+    _root,
+    { pipelineId, stageId, date, skip, search, assignedUserIds, customerIds, companyIds }: IDealListParams,
+  ) {
     const filter: any = dealsCommonFilter({}, { search });
     const sort = { order: 1, createdAt: -1 };
 
@@ -91,12 +97,16 @@ const dealQueries = {
       filter.stageId = stageId;
     }
 
-    if (companyIds) {
-      filter.customerIds = { $in: customerIds };
+    if (assignedUserIds) {
+      filter.assignedUserIds = contains(assignedUserIds);
     }
 
     if (companyIds) {
-      filter.companyIds = { $in: companyIds };
+      filter.customerIds = contains(customerIds);
+    }
+
+    if (companyIds) {
+      filter.companyIds = contains(companyIds);
     }
 
     // Calendar monthly date
