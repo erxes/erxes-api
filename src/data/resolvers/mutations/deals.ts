@@ -1,8 +1,10 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/Deals';
-import { IBoard, IDeal, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/deals';
+import { IBoard, IDeal, IDealDocument, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions';
+import utils from '../../utils';
 
 interface IDealBoardsEdit extends IBoard {
   _id: string;
@@ -23,6 +25,31 @@ interface IDealStagesEdit extends IStage {
 interface IDealsEdit extends IDeal {
   _id: string;
 }
+
+/**
+ * Send notification to all members of this deal except the sender
+ */
+export const sendDealNotifications = async (deal: IDealDocument, user: IUserDocument, content: string) => {
+  const stage = await DealStages.findOne({ _id: deal.stageId });
+  if (!stage) {
+    throw new Error('Stage not found');
+  }
+  const pipeline = await DealPipelines.findOne({ _id: stage.pipelineId });
+  if (!pipeline) {
+    throw new Error('Pipeline not found');
+  }
+
+  return utils.sendNotification({
+    createdUser: user._id,
+    notifType: NOTIFICATION_TYPES.DEAL_CHANGE,
+    title: content,
+    content,
+    link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+
+    // exclude current user
+    receivers: (deal.assignedUserIds || []).filter(id => id !== user._id),
+  });
+};
 
 const dealMutations = {
   /**
@@ -112,33 +139,42 @@ const dealMutations = {
   /**
    * Create new deal
    */
-  dealsAdd(_root, doc: IDeal, { user }: { user: IUserDocument }) {
-    return Deals.createDeal({
+  async dealsAdd(_root, doc: IDeal, { user }: { user: IUserDocument }) {
+    const deal = await Deals.createDeal({
       ...doc,
       modifiedBy: user._id,
     });
+
+    await sendDealNotifications(deal, user, `You have invited to '${deal.name}' deal.`);
+    return deal;
   },
 
   /**
    * Edit deal
    */
-  dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
-    return Deals.updateDeal(_id, {
+  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
+    const deal = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
+
+    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has edited.`);
+    return deal;
   },
 
   /**
    * Change deal
    */
-  dealsChange(_root, { _id, ...doc }: { _id: string }, { user }: { user: IUserDocument }) {
-    return Deals.updateDeal(_id, {
+  async dealsChange(_root, { _id, ...doc }: { _id: string }, { user }: { user: IUserDocument }) {
+    const deal = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
+
+    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has changed.`);
+    return deal;
   },
 
   /**
