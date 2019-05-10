@@ -17,6 +17,29 @@ interface IDealListParams {
   productIds?: [string];
 }
 
+export const generateCommonFilters = (args: any) => {
+  const { assignedUserIds, customerIds, companyIds, productIds } = args;
+  const filter: any = {};
+
+  if (assignedUserIds) {
+    filter.assignedUserIds = contains(assignedUserIds);
+  }
+
+  if (customerIds) {
+    filter.customerIds = contains(customerIds);
+  }
+
+  if (companyIds) {
+    filter.companyIds = contains(companyIds);
+  }
+
+  if (productIds) {
+    filter['productsData.productId'] = contains(productIds);
+  }
+
+  return filter;
+};
+
 const dateSelector = (date: IDate) => {
   const { year, month } = date;
   const currentDate = new Date();
@@ -87,31 +110,16 @@ const dealQueries = {
   /**
    * Deals list
    */
-  async deals(
-    _root,
-    { pipelineId, stageId, date, skip, search, assignedUserIds, customerIds, companyIds, productIds }: IDealListParams,
-  ) {
-    const filter: any = dealsCommonFilter({}, { search });
+  async deals(_root, args: IDealListParams) {
+    const { pipelineId, stageId, date, skip, search } = args;
+
+    const commonFilters = generateCommonFilters(args);
+    const filter: any = dealsCommonFilter(commonFilters, { search });
+
     const sort = { order: 1, createdAt: -1 };
 
     if (stageId) {
       filter.stageId = stageId;
-    }
-
-    if (assignedUserIds) {
-      filter.assignedUserIds = contains(assignedUserIds);
-    }
-
-    if (customerIds) {
-      filter.customerIds = contains(customerIds);
-    }
-
-    if (companyIds) {
-      filter.companyIds = contains(companyIds);
-    }
-
-    if (productIds) {
-      filter['productsData.productId'] = contains(productIds);
     }
 
     // Calendar monthly date
@@ -121,6 +129,7 @@ const dealQueries = {
       filter.closeDate = dateSelector(date);
       filter.stageId = { $in: stageIds };
     }
+
     return Deals.find(filter)
       .sort(sort)
       .skip(skip || 0)
@@ -130,9 +139,12 @@ const dealQueries = {
   /**
    *  Deal total amounts
    */
-  async dealsTotalAmounts(_root, { pipelineId, date }: { date: IDate; pipelineId: string }) {
+  async dealsTotalAmounts(_root, { pipelineId, date, ...args }: { date: IDate; pipelineId: string }) {
     const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
-    const filter = { stageId: { $in: stageIds }, closeDate: dateSelector(date) };
+    const filter = generateCommonFilters(args);
+
+    filter.stageId = { $in: stageIds };
+    filter.closeDate = dateSelector(date);
 
     const dealCount = await Deals.find(filter).countDocuments();
     const amountList = await Deals.aggregate([

@@ -76,7 +76,14 @@ export const queries = `
   dealBoardDetail(_id: String!): DealBoard
   dealPipelines(boardId: String!): [DealPipeline]
   dealPipelineDetail(_id: String!): DealPipeline
-  dealStages(pipelineId: String!, search: String): [DealStage]
+  dealStages(
+    pipelineId: String!, 
+    search: String
+    companyIds: [String]
+    customerIds: [String]
+    assignedUserIds: [String]
+    productIds: [String]
+  ): [DealStage]
   dealStageDetail(_id: String!): DealStage
   dealDetail(_id: String!): Deal
   deals(
@@ -90,7 +97,14 @@ export const queries = `
     assignedUserIds: [String]
     productIds: [String]
   ): [Deal]
-  dealsTotalAmounts(date: DealDate pipelineId: String): DealTotalAmounts
+  dealsTotalAmounts(
+    date: DealDate 
+    pipelineId: String 
+    customerIds: [String]
+    companyIds: [String]
+    assignedUserIds: [String]
+    productIds: [String]
+  ): DealTotalAmounts
 `;
 
 const dealMutationParams = `
