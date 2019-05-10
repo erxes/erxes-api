@@ -14,6 +14,7 @@ interface IDealListParams {
   customerIds?: [string];
   companyIds?: [string];
   assignedUserIds?: [string];
+  productIds?: [string];
 }
 
 const dateSelector = (date: IDate) => {
@@ -88,7 +89,7 @@ const dealQueries = {
    */
   async deals(
     _root,
-    { pipelineId, stageId, date, skip, search, assignedUserIds, customerIds, companyIds }: IDealListParams,
+    { pipelineId, stageId, date, skip, search, assignedUserIds, customerIds, companyIds, productIds }: IDealListParams,
   ) {
     const filter: any = dealsCommonFilter({}, { search });
     const sort = { order: 1, createdAt: -1 };
@@ -101,7 +102,7 @@ const dealQueries = {
       filter.assignedUserIds = contains(assignedUserIds);
     }
 
-    if (companyIds) {
+    if (customerIds) {
       filter.customerIds = contains(customerIds);
     }
 
@@ -115,6 +116,10 @@ const dealQueries = {
 
       filter.closeDate = dateSelector(date);
       filter.stageId = { $in: stageIds };
+    }
+
+    if (productIds) {
+      // filter.productsData._id = contains(productIds);
     }
 
     return Deals.find(filter)

@@ -87,6 +87,8 @@ export const queries = `
     search: String,
     customerIds: [String]
     companyIds: [String]
+    assignedUserIds: [String]
+    productIds: [String]
   ): [Deal]
   dealsTotalAmounts(date: DealDate pipelineId: String): DealTotalAmounts
 `;
