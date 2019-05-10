@@ -82,11 +82,11 @@ export const queries = `
   deals(
     pipelineId: String,
     stageId: String, 
-    customerId: String, 
-    companyId: String,
     date: DealDate,
     skip: Int
     search: String,
+    customerIds: [String]
+    companyIds: [String]
   ): [Deal]
   dealsTotalAmounts(date: DealDate pipelineId: String): DealTotalAmounts
 `;

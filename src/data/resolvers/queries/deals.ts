@@ -10,8 +10,8 @@ interface IDate {
 interface IDealListParams {
   pipelineId?: string;
   stageId: string;
-  customerId: string;
-  companyId: string;
+  customerIds: [string];
+  companyIds: [string];
   skip?: number;
   date?: IDate;
   search?: string;
@@ -83,7 +83,7 @@ const dealQueries = {
   /**
    * Deals list
    */
-  async deals(_root, { pipelineId, stageId, customerId, companyId, date, skip, search }: IDealListParams) {
+  async deals(_root, { pipelineId, stageId, customerIds, companyIds, date, skip, search }: IDealListParams) {
     const filter: any = dealsCommonFilter({}, { search });
     const sort = { order: 1, createdAt: -1 };
 
@@ -91,14 +91,15 @@ const dealQueries = {
       filter.stageId = stageId;
     }
 
-    if (customerId) {
-      filter.customerIds = { $in: [customerId] };
+    if (companyIds) {
+      filter.customerIds = { $in: customerIds };
     }
 
-    if (companyId) {
-      filter.companyIds = { $in: [companyId] };
+    if (companyIds) {
+      filter.companyIds = { $in: companyIds };
     }
 
+    // Calendar monthly date
     if (date) {
       const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
 
