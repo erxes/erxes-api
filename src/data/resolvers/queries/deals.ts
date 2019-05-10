@@ -110,6 +110,10 @@ const dealQueries = {
       filter.companyIds = contains(companyIds);
     }
 
+    if (productIds) {
+      filter['productsData.productId'] = contains(productIds);
+    }
+
     // Calendar monthly date
     if (date) {
       const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
@@ -117,11 +121,6 @@ const dealQueries = {
       filter.closeDate = dateSelector(date);
       filter.stageId = { $in: stageIds };
     }
-
-    if (productIds) {
-      // filter.productsData._id = contains(productIds);
-    }
-
     return Deals.find(filter)
       .sort(sort)
       .skip(skip || 0)
