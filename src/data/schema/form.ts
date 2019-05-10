@@ -39,7 +39,8 @@ const commonFields = `
   description: String,
   buttonText: String,
   themeColor: String,
-  callout: JSON
+  callout: JSON,
+  rules: [JSON]
 `;
 
 export const queries = `
