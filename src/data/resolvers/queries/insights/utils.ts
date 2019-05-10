@@ -562,3 +562,7 @@ export const noConversationSelector = {
     },
   ],
 };
+
+export const summaryAverageCalculator = (conversations: []) => {
+  return {};
+};

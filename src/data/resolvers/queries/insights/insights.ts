@@ -19,6 +19,7 @@ import {
   getSummaryData,
   getTimezone,
   noConversationSelector,
+  summaryAverageCalculator,
 } from './utils';
 
 const insightQueries = {
@@ -414,12 +415,29 @@ const insightQueries = {
     return { trend, teamMembers, time };
   },
 
-  async insightsConversationSummary(_root) {
+  async insightsConversationSummary(_root, args: IListArgs) {
+    const { startDate, endDate } = args;
+    const filterSelector = getFilterSelector(args);
+    const { start, end } = fixDates(startDate, endDate);
+
+    const conversationSelector = {
+      firstRespondedUserId: { $exists: true },
+      firstRespondedDate: { $exists: true },
+      messageCount: { $gt: 1 },
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    const averageResponseData: any = [];
+
+    const conversations = await findConversations(filterSelector, conversationSelector);
+
+    summaryAverageCalculator(conversations);
+
     return [
-      { title: 'Blafasffas', count: 100 },
-      { title: 'Bla 2', count: 0.412 },
-      { title: 'rwqrwqrqw', count: 50 },
-      { title: 'jlkhkjhl 2', count: 0.235 },
+      { title: 'Average all operator response time', count: 100 },
+      { title: 'Average all customer response time', count: 0.412 },
+      { title: 'Average internal response time', count: 50 },
+      { title: 'All average', count: 0.235 },
     ];
   },
 };
