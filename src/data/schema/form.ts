@@ -7,6 +7,14 @@ export const types = `
     skip: Boolean
   }
 
+  type FormRule {
+    _id : String!,
+    kind: String!,
+    text: String!,
+    condition: String!,
+    value: String,
+  }
+
   type Form {
     _id: String!
     title: String
@@ -19,6 +27,7 @@ export const types = `
     createdUser: User
     createdDate: Date
     viewCount: Int
+    rules: [FormRule]
     contactsGathered: Int
     tagIds: [String]
     getTags: [Tag]
