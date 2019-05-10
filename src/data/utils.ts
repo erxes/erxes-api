@@ -1,4 +1,3 @@
-import { Storage } from '@google-cloud/storage';
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
@@ -79,6 +78,9 @@ const createGCS = () => {
   if (!GOOGLE_PROJECT_ID || !GOOGLE_APPLICATION_CREDENTIALS || !BUCKET) {
     throw new Error('Google Cloud Storage credentials are not configured');
   }
+
+  // tslint:disable
+  const Storage = require('@google-cloud/storage').Storage;
 
   // initializing Google Cloud Storage
   return new Storage({
