@@ -17,7 +17,7 @@ interface IDealListParams {
   productIds?: [string];
 }
 
-export const generateCommonFilters = (args: any, isCalendar?) => {
+export const generateCommonFilters = (args: any) => {
   const { assignedUserIds, customerIds, companyIds, productIds, startDate, endDate } = args;
   const filter: any = {};
 
@@ -35,10 +35,6 @@ export const generateCommonFilters = (args: any, isCalendar?) => {
 
   if (productIds) {
     filter['productsData.productId'] = contains(productIds);
-  }
-
-  if (isCalendar) {
-    return filter;
   }
 
   if (startDate || endDate) {
@@ -152,7 +148,7 @@ const dealQueries = {
    */
   async dealsTotalAmounts(_root, { pipelineId, date, ...args }: { date: IDate; pipelineId: string }) {
     const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
-    const filter = generateCommonFilters(args, false);
+    const filter = generateCommonFilters(args);
 
     filter.stageId = { $in: stageIds };
     filter.closeDate = dateSelector(date);

@@ -5,11 +5,9 @@ import { dealsCommonFilter } from './queries/utils';
 
 export default {
   async amount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
-    const filter = generateCommonFilters(args);
-
     const amountList = await Deals.aggregate([
       {
-        $match: dealsCommonFilter({ ...filter, stageId: stage._id }, { search }),
+        $match: dealsCommonFilter({ ...generateCommonFilters(args), stageId: stage._id }, { search }),
       },
       {
         $unwind: '$productsData',
@@ -40,8 +38,7 @@ export default {
   },
 
   dealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
-    const filter = generateCommonFilters(args);
-    return Deals.find(dealsCommonFilter(filter, { search })).count({ stageId: stage._id });
+    return Deals.find(dealsCommonFilter(generateCommonFilters(args), { search })).count({ stageId: stage._id });
   },
 
   deals(stage: IStageDocument) {
