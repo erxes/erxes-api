@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 
-import { types as CommonTypes } from './common/types';
+import { types as CommonTypes } from './common';
 
 import { mutations as UserMutations, queries as UserQueries, types as UserTypes } from './user';
 

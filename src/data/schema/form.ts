@@ -32,7 +32,7 @@ const commonFields = `
   buttonText: String,
   themeColor: String,
   callout: JSON,
-  rules: [JSON]
+  rules: [InputRule]
 `;
 
 export const queries = `
