@@ -48,7 +48,16 @@ mongoose.connect(
       for (const property of properties) {
         // Checking if it is basic info field
         if (property.isCustomField === false) {
-          coc[property.name] = fieldValue[colIndex];
+          const value = fieldValue[colIndex];
+          coc[property.name] = value;
+
+          if (property.name === 'primaryEmail' && value) {
+            coc.emails = value;
+          }
+
+          if (property.name === 'primaryPhone' && value) {
+            coc.phones = value;
+          }
         } else {
           coc.customFieldsData[property.id] = fieldValue[colIndex];
         }
