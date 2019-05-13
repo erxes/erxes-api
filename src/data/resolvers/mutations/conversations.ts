@@ -132,7 +132,7 @@ const conversationMutations = {
       notifType: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
       title,
       content: doc.content,
-      link: `/inbox?_id=${conversation._id}`,
+      link: `/inbox/index?_id=${conversation._id}`,
       receivers: conversationNotifReceivers(conversation, user._id),
     });
 

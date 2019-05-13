@@ -89,10 +89,21 @@ export const KIND_CHOICES = {
 // module constants
 export const NOTIFICATION_TYPES = {
   CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
+  DEAL_USER_MENTIONED: 'dealUserMentioned',
+  CUSTOMER_USER_MENTIONED: 'customerUserMentioned',
+  COMPANY_USER_MENTIONED: 'companyUserMentioned',
   CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
   CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
   CONVERSATION_STATE_CHANGE: 'conversationStateChange',
-  ALL: ['channelMembersChange', 'conversationAddMessage', 'conversationAssigneeChange', 'conversationStateChange'],
+  ALL: [
+    'channelMembersChange',
+    'dealUserMentioned',
+    'customerUserMentioned',
+    'companyUserMentioned',
+    'conversationAddMessage',
+    'conversationAssigneeChange',
+    'conversationStateChange',
+  ],
 };
 
 export const NOTIFICATION_MODULES = [
