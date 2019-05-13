@@ -88,7 +88,7 @@ export const removeWorker = worker => {
 
 export const removeWorkers = () => {
   workers.forEach(worker => {
-    worker.terminate();
+    worker.postMessage('cancelImmediately');
   });
 
   workers = [];

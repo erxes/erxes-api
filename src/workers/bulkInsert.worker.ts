@@ -11,6 +11,12 @@ dotenv.config();
 
 const { MONGO_URL = '' } = process.env;
 
+parentPort.once('message', message => {
+  if (message === 'cancelImmediately') {
+    process.exit(22);
+  }
+});
+
 mongoose.connect(
   MONGO_URL,
   { useNewUrlParser: true, useCreateIndex: true },
