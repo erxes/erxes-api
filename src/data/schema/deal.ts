@@ -15,6 +15,8 @@ export const types = `
     _id: String!
     name: String!
     boardId: String!
+    type: String
+    memberIds: [String]
     ${commonTypes}
   }
 

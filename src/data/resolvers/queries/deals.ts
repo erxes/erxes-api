@@ -1,7 +1,7 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
+import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { dealsCommonFilter } from './utils';
-
 interface IDate {
   month: number;
   year: number;
@@ -45,9 +45,8 @@ const dealQueries = {
     return DealBoards.findOne({ _id });
   },
 
-  /**
-   * Get last board
-   */
+  /** * Get last board*/
+
   dealBoardGetLast() {
     return DealBoards.findOne().sort({ createdAt: -1 });
   },
@@ -55,10 +54,15 @@ const dealQueries = {
   /**
    * Deal Pipelines list
    */
-  dealPipelines(_root, { boardId }: { boardId: string }) {
-    return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
-  },
+  dealPipelines(_root, { boardId }: { boardId: string }, { user }: { user: IUserDocument }) {
+    if (user.isOwner) {
+      return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
+    }
 
+    return DealPipelines.find({
+      $and: [{ boardId }, { $or: [{ type: 'public' }, { type: { $exists: false } }, { memberIds: user._id }] }],
+    }).sort({ order: 1, createdAt: -1 });
+  },
   /**
    * Deal pipeline detail
    */

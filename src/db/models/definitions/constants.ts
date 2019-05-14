@@ -214,6 +214,12 @@ export const PRODUCT_TYPES = {
   ALL: ['product', 'service'],
 };
 
+export const PIPELINE_TYPES = {
+  PUBLIC: 'public',
+  PRIVATE: 'private',
+  ALL: ['public', 'private'],
+};
+
 export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
