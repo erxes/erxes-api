@@ -20,9 +20,17 @@ import { init } from './startup';
 import { getAttachment } from './trackers/gmail';
 
 // load environment variables
+import * as apm from 'elastic-apm-node';
+
+// load environment variables
 dotenv.config();
 
-const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+const { NODE_ENV } = process.env;
+
+if (NODE_ENV === 'production') {
+  apm.start({});
+}
+
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
