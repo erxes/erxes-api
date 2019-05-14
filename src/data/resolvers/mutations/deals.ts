@@ -178,7 +178,7 @@ const dealMutations = {
   },
 
   /**
-   * Update deal orders
+   * Update deal orders (not sendNotifaction, ordered card to change)
    */
   dealsUpdateOrder(_root, { stageId, orders }: { stageId: string; orders: IOrderInput[] }) {
     return Deals.updateOrder(stageId, orders);
@@ -187,7 +187,15 @@ const dealMutations = {
   /**
    * Remove deal
    */
-  dealsRemove(_root, { _id }: { _id: string }) {
+  async dealsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const deal = await Deals.findOne({ _id });
+
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has removed`);
+
     return Deals.removeDeal(_id);
   },
 };
