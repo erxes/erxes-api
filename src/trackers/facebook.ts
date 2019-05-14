@@ -44,6 +44,7 @@ interface ICommentParams {
   photo?: string;
   verb: string;
 }
+
 interface IReactionParams {
   verb: string;
   post_id?: string;
