@@ -42,6 +42,12 @@ const internalNoteMutations = {
 
           break;
         }
+        case ACTIVITY_CONTENT_TYPES.USER: {
+          notifType = NOTIFICATION_TYPES.TEAM_MEMBER_MENTIONED;
+          link = `/settings/team/details/${internalNote.contentTypeId}`;
+
+          break;
+        }
         default:
       }
 
