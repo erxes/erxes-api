@@ -148,11 +148,13 @@ const facebookSchema = new Schema(
     postId: field({
       type: String,
       optional: true,
+      index: true,
     }),
 
     commentId: field({
       type: String,
       optional: true,
+      index: true,
     }),
 
     // parent comment id
@@ -216,6 +218,7 @@ const facebookSchema = new Schema(
     senderId: field({
       type: String,
       optional: true,
+      index: true,
     }),
 
     senderName: field({
@@ -327,7 +330,7 @@ export const messageSchema = new Schema({
   mentionedUserIds: field({ type: [String] }),
   conversationId: field({ type: String, index: true }),
   internal: field({ type: Boolean }),
-  customerId: field({ type: String }),
+  customerId: field({ type: String, index: true }),
   fromBot: field({ type: Boolean }),
   userId: field({ type: String }),
   createdAt: field({ type: Date, index: true }),
