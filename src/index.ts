@@ -1,8 +1,20 @@
+// load environment variables
+import * as dotenv from 'dotenv';
+import * as apm from 'elastic-apm-node';
+
+// load environment variables
+dotenv.config();
+
+const { NODE_ENV } = process.env;
+
+if (NODE_ENV === 'production') {
+  apm.start({});
+}
+
 import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
-import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
@@ -18,18 +30,6 @@ import { Conversations, Customers } from './db/models';
 import { graphqlPubsub } from './pubsub';
 import { init } from './startup';
 import { getAttachment } from './trackers/gmail';
-
-// load environment variables
-import * as apm from 'elastic-apm-node';
-
-// load environment variables
-dotenv.config();
-
-const { NODE_ENV } = process.env;
-
-if (NODE_ENV === 'production') {
-  apm.start({});
-}
 
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
