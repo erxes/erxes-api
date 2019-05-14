@@ -37,12 +37,12 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
 
           worker.on('error', e => {
             removeWorker(worker);
-            reject(new Error(e));
+            console.log(e);
           });
 
           worker.on('exit', code => {
             if (code !== 0) {
-              reject(new Error(`Worker stopped with exit code ${code}`));
+              console.log(`Worker stopped with exit code ${code}`);
             }
           });
         } catch (e) {
@@ -85,7 +85,7 @@ export const removeWorker = worker => {
 
 export const removeWorkers = () => {
   workers.forEach(worker => {
-    worker.postMessage('cancelImmediately');
+    worker.postMessage('cancel');
   });
 };
 

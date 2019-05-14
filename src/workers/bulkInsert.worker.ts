@@ -6,11 +6,13 @@ import { graphqlPubsub } from '../pubsub';
 const { parentPort, workerData } = require('worker_threads');
 
 parentPort.once('message', message => {
-  if (message === 'cancelImmediately') {
-    parentPort.postMessage('cancelImmediately');
-    process.exit(0);
+  if (message === 'cancel') {
+    parentPort.postMessage('Cancelled');
+    cancel = true;
   }
 });
+
+let cancel = false;
 
 import { Companies, Customers, ImportHistory } from '../db/models';
 
@@ -26,6 +28,10 @@ mongoose.connect(
       console.log('error', err);
     }
 
+    if (cancel) {
+      return;
+    }
+
     const { result, contentType, properties, user, importHistoryId, percentagePerData } = workerData;
 
     let percentage = '0';
@@ -37,6 +43,10 @@ mongoose.connect(
 
     // Iterating field values
     for (const fieldValue of result) {
+      if (cancel) {
+        return;
+      }
+
       const inc: { success: number; failed: number; percentage: number } = {
         success: 0,
         failed: 0,
