@@ -147,6 +147,7 @@ const facebookSchema = new Schema(
     }),
     senderId: field({
       type: String,
+      index: true,
     }),
     recipientId: field({
       type: String,
