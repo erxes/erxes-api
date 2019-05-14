@@ -5,17 +5,18 @@ import { graphqlPubsub } from '../pubsub';
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
+parentPort.once('message', message => {
+  if (message === 'cancelImmediately') {
+    parentPort.postMessage('cancelImmediately');
+    process.exit(0);
+  }
+});
+
 import { Companies, Customers, ImportHistory } from '../db/models';
 
 dotenv.config();
 
 const { MONGO_URL = '' } = process.env;
-
-parentPort.once('message', message => {
-  if (message === 'cancelImmediately') {
-    process.exit(22);
-  }
-});
 
 mongoose.connect(
   MONGO_URL,
@@ -42,7 +43,7 @@ mongoose.connect(
         percentage: percentagePerData,
       };
 
-      const push: { ids?: string; errorMsgs?: string } = {};
+      const errorMsgs: string[] = [];
 
       const coc: any = {
         customFieldsData: {},
@@ -73,10 +74,10 @@ mongoose.connect(
 
       // Creating coc
       await create(coc, user)
-        .then(cocObj => {
-          inc.success++;
+        .then(async cocObj => {
+          await ImportHistory.updateOne({ _id: importHistoryId }, { $push: { ids: [cocObj._id] } });
           // Increasing success count
-          push.ids = cocObj._id;
+          inc.success++;
         })
         .catch(e => {
           inc.failed++;
@@ -84,21 +85,21 @@ mongoose.connect(
 
           switch (e.message) {
             case 'Duplicated email':
-              push.errorMsgs = `Duplicated email ${coc.primaryEmail}`;
+              errorMsgs.push(`Duplicated email ${coc.primaryEmail}`);
               break;
             case 'Duplicated phone':
-              push.errorMsgs = `Duplicated phone ${coc.primaryPhone}`;
+              errorMsgs.push(`Duplicated phone ${coc.primaryPhone}`);
               break;
             case 'Duplicated name':
-              push.errorMsgs = `Duplicated name ${coc.primaryName}`;
+              errorMsgs.push(`Duplicated name ${coc.primaryName}`);
               break;
             default:
-              push.errorMsgs = e.message;
+              errorMsgs.push(e.message);
               break;
           }
         });
 
-      await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: push });
+      await ImportHistory.updateOne({ _id: importHistoryId }, { $inc: inc, $push: { errorMsgs } });
 
       let importHistory = await ImportHistory.findOne({ _id: importHistoryId });
 

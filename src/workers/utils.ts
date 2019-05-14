@@ -33,12 +33,9 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
 
           worker.on('message', () => {
             removeWorker(worker);
-
-            worker.terminate();
           });
 
           worker.on('error', e => {
-            worker.terminate();
             removeWorker(worker);
             reject(new Error(e));
           });
@@ -90,8 +87,6 @@ export const removeWorkers = () => {
   workers.forEach(worker => {
     worker.postMessage('cancelImmediately');
   });
-
-  workers = [];
 };
 
 export const clearIntervals = () => {
