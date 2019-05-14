@@ -45,7 +45,9 @@ const dealQueries = {
     return DealBoards.findOne({ _id });
   },
 
-  /** * Get last board*/
+  /**
+   * Get last board
+   */
 
   dealBoardGetLast() {
     return DealBoards.findOne().sort({ createdAt: -1 });
