@@ -150,6 +150,7 @@ const facebookSchema = new Schema(
     }),
     recipientId: field({
       type: String,
+      index: true,
     }),
 
     // when wall post
