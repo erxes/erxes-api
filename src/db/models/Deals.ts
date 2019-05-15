@@ -137,6 +137,7 @@ export const loadPipelineClass = () => {
      * Create a pipeline
      */
     public static async createPipeline(doc: IPipeline, stages: IPipelineStage[]) {
+      console.log(doc);
       const pipeline = await DealPipelines.create(doc);
 
       if (stages) {

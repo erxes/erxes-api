@@ -116,8 +116,8 @@ export const mutations = `
   dealBoardsEdit(_id: String!, name: String!): DealBoard
   dealBoardsRemove(_id: String!): JSON
 
-  dealPipelinesAdd(name: String!, boardId: String!, stages: JSON): DealPipeline
-  dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON): DealPipeline
+  dealPipelinesAdd(name: String!, boardId: String!, stages: JSON, type: String!, memberIds: [String]): DealPipeline
+  dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON, type: String!, memberIds: [String]): DealPipeline
   dealPipelinesUpdateOrder(orders: [OrderItem]): [DealPipeline]
   dealPipelinesRemove(_id: String!): JSON
 

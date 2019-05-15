@@ -62,7 +62,10 @@ const dealQueries = {
     }
 
     return DealPipelines.find({
-      $and: [{ boardId }, { $or: [{ type: 'public' }, { type: { $exists: false } }, { memberIds: user._id }] }],
+      $and: [
+        { boardId },
+        { $or: [{ type: 'public' }, { type: { $exists: false } }, { memberIds: user._id }, { userId: user._id }] },
+      ],
     }).sort({ order: 1, createdAt: -1 });
   },
   /**

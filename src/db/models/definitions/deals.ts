@@ -109,7 +109,7 @@ export const pipelineSchema = new Schema({
     enum: PIPELINE_TYPES.ALL,
     default: PIPELINE_TYPES.PUBLIC,
   }),
-  companyIds: field({ type: [String] }),
+  memberIds: field({ type: [String] }),
   ...commonFieldsSchema,
 });
 
