@@ -33,6 +33,7 @@ export const sendDealNotifications = async (
   deal: IDealDocument,
   user: IUserDocument,
   type: string,
+  assignedUsers: string[],
   content: string,
 ) => {
   const stage = await DealStages.findOne({ _id: deal.stageId });
@@ -52,7 +53,7 @@ export const sendDealNotifications = async (
     link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user
-    receivers: (deal.assignedUserIds || []).filter(id => id !== user._id),
+    receivers: (assignedUsers || []).filter(id => id !== user._id),
   });
 };
 
@@ -150,7 +151,13 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_ADD, `A member invited you to the '${deal.name}'.`);
+    await sendDealNotifications(
+      deal,
+      user,
+      NOTIFICATION_TYPES.DEAL_ADD,
+      deal.assignedUserIds || [],
+      `A member invited you to the '${deal.name}'.`,
+    );
     return deal;
   },
 
@@ -158,13 +165,58 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
+    const savedDeal = await Deals.findOne({ _id });
+    const savedAssignedUserIds: string[] = savedDeal ? savedDeal.assignedUserIds || [] : [];
+
     const deal = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_EDIT, `A user added you to the '${deal.name}'.`);
+    const newInvite: any = [];
+    for (const userId of deal.assignedUserIds || []) {
+      if (!savedAssignedUserIds.includes(userId)) {
+        newInvite.push(userId);
+      }
+    }
+    if (newInvite.length > 0) {
+      await sendDealNotifications(
+        deal,
+        user,
+        NOTIFICATION_TYPES.DEAL_ADD,
+        newInvite,
+        `A member invited you to the deal: '${deal.name}'.`,
+      );
+    }
+
+    const delInvite: any = [];
+    const assignedUsers = deal.assignedUserIds || [];
+    for (const userId of savedAssignedUserIds) {
+      if (!assignedUsers.includes(userId)) {
+        delInvite.push(userId);
+      }
+    }
+    if (delInvite.length > 0) {
+      await sendDealNotifications(
+        deal,
+        user,
+        NOTIFICATION_TYPES.DEAL_REMOVE_ASSIGN,
+        delInvite,
+        `A removed you from deal: '${deal.name}'.`,
+      );
+    }
+
+    if (delInvite.length === 0 && newInvite.length === 0) {
+      await sendDealNotifications(
+        deal,
+        user,
+        NOTIFICATION_TYPES.DEAL_EDIT,
+        deal.assignedUserIds || [],
+        `Your '${deal.name}' deal has edited.`,
+      );
+    }
+
     return deal;
   },
 
@@ -182,6 +234,7 @@ const dealMutations = {
       deal,
       user,
       NOTIFICATION_TYPES.DEAL_CHANGE,
+      deal.assignedUserIds || [],
       `Your '${deal.name}' deal has changed(moved).`,
     );
     return deal;
@@ -204,7 +257,13 @@ const dealMutations = {
       throw new Error('Deal not found');
     }
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_REMOVE, `A deleted deal: '${deal.name}'`);
+    await sendDealNotifications(
+      deal,
+      user,
+      NOTIFICATION_TYPES.DEAL_DELETE,
+      deal.assignedUserIds || [],
+      `A deleted deal: '${deal.name}'`,
+    );
 
     return Deals.removeDeal(_id);
   },

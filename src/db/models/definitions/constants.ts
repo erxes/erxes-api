@@ -94,20 +94,21 @@ export const NOTIFICATION_TYPES = {
   CONVERSATION_STATE_CHANGE: 'conversationStateChange',
   DEAL_ADD: 'dealAdd',
   DEAL_EDIT: 'dealEdit',
+  DEAL_REMOVE_ASSIGN: 'dealRemoveAssign',
   DEAL_CHANGE: 'dealChange',
-  DEAL_REMOVE: 'dealRemove',
   DEAL_DUE_DATE: 'dealDueDate',
+  DEAL_DELETE: 'dealDelete',
   ALL: [
     'channelMembersChange',
     'conversationAddMessage',
     'conversationAssigneeChange',
     'conversationStateChange',
-    'dealChange',
     'dealAdd',
     'dealEdit',
+    'dealRemoveAssign',
     'dealChange',
-    'dealRemove',
     'dealDueDate',
+    'dealDelete',
   ],
 };
 
@@ -148,23 +149,27 @@ export const NOTIFICATION_MODULES = [
     types: [
       {
         name: 'dealAdd',
-        text: 'Create',
+        text: 'Add/Assignee',
       },
       {
         name: 'dealEdit',
         text: 'Edit',
       },
       {
+        name: 'dealRemoveAssign',
+        text: 'Remove Assign',
+      },
+      {
         name: 'dealChange',
         text: 'Move',
       },
       {
-        name: 'dealRemove',
-        text: 'Delete',
-      },
-      {
         name: 'dealDueDate',
         text: 'Due date',
+      },
+      {
+        name: 'dealDelete',
+        text: 'Delete',
       },
     ],
   },
