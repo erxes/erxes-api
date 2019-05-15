@@ -150,7 +150,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_ADD, `You have invited to '${deal.name}' deal.`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_ADD, `A member invited you to the '${deal.name}'.`);
     return deal;
   },
 
@@ -164,7 +164,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_EDIT, `Your '${deal.name}' deal has edited.`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_EDIT, `A user added you to the '${deal.name}'.`);
     return deal;
   },
 
@@ -178,7 +178,12 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_CHANGE, `Your '${deal.name}' deal has changed.`);
+    await sendDealNotifications(
+      deal,
+      user,
+      NOTIFICATION_TYPES.DEAL_CHANGE,
+      `Your '${deal.name}' deal has changed(moved).`,
+    );
     return deal;
   },
 
@@ -199,7 +204,7 @@ const dealMutations = {
       throw new Error('Deal not found');
     }
 
-    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_REMOVE, `Your '${deal.name}' deal has removed`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_REMOVE, `A deleted deal: '${deal.name}'`);
 
     return Deals.removeDeal(_id);
   },

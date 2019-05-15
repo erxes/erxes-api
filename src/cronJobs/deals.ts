@@ -30,7 +30,7 @@ export const sendNotifications = async () => {
       throw new Error('Pipeline not found');
     }
 
-    const content = `Your '${deal.name}' deal was due date`;
+    const content = `Reminder: '${deal.name}' deal is due in oncoming`;
 
     utils.sendNotification({
       createdUser: deal.modifiedBy || '1',
