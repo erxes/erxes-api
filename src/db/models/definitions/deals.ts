@@ -20,8 +20,8 @@ export interface IBoardDocument extends IBoard, Document {
 export interface IPipeline extends ICommonFields {
   name?: string;
   boardId?: string;
-  type: string;
-  memberIds: string[];
+  type?: string;
+  memberIds?: string[];
 }
 
 export interface IPipelineDocument extends IPipeline, Document {
