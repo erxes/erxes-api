@@ -29,7 +29,12 @@ interface IDealsEdit extends IDeal {
 /**
  * Send notification to all members of this deal except the sender
  */
-export const sendDealNotifications = async (deal: IDealDocument, user: IUserDocument, content: string) => {
+export const sendDealNotifications = async (
+  deal: IDealDocument,
+  user: IUserDocument,
+  type: string,
+  content: string,
+) => {
   const stage = await DealStages.findOne({ _id: deal.stageId });
   if (!stage) {
     throw new Error('Stage not found');
@@ -41,7 +46,7 @@ export const sendDealNotifications = async (deal: IDealDocument, user: IUserDocu
 
   return utils.sendNotification({
     createdUser: user._id,
-    notifType: NOTIFICATION_TYPES.DEAL_CHANGE,
+    notifType: type,
     title: content,
     content,
     link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
@@ -145,7 +150,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, `You have invited to '${deal.name}' deal.`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_ADD, `You have invited to '${deal.name}' deal.`);
     return deal;
   },
 
@@ -159,7 +164,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has edited.`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_EDIT, `Your '${deal.name}' deal has edited.`);
     return deal;
   },
 
@@ -173,7 +178,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has changed.`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_CHANGE, `Your '${deal.name}' deal has changed.`);
     return deal;
   },
 
@@ -194,7 +199,7 @@ const dealMutations = {
       throw new Error('Deal not found');
     }
 
-    await sendDealNotifications(deal, user, `Your '${deal.name}' deal has removed`);
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_REMOVE, `Your '${deal.name}' deal has removed`);
 
     return Deals.removeDeal(_id);
   },

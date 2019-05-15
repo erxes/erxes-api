@@ -89,17 +89,25 @@ export const KIND_CHOICES = {
 
 // module constants
 export const NOTIFICATION_TYPES = {
-  DEAL_CHANGE: 'dealChange',
   CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
   CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
   CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
   CONVERSATION_STATE_CHANGE: 'conversationStateChange',
+  DEAL_ADD: 'dealAdd',
+  DEAL_EDIT: 'dealEdit',
+  DEAL_CHANGE: 'dealChange',
+  DEAL_REMOVE: 'dealRemove',
+  DEAL_DUE_DATE: 'dealDueDate',
   ALL: [
     'channelMembersChange',
     'conversationAddMessage',
     'conversationAssigneeChange',
     'conversationStateChange',
+    'dealAdd',
+    'dealEdit',
     'dealChange',
+    'dealRemove',
+    'dealDueDate',
   ],
 };
 
@@ -139,8 +147,24 @@ export const NOTIFICATION_MODULES = [
     description: 'Deals',
     types: [
       {
+        name: 'dealAdd',
+        text: 'Create',
+      },
+      {
+        name: 'dealEdit',
+        text: 'Edit',
+      },
+      {
         name: 'dealChange',
-        text: 'deal change',
+        text: 'Move',
+      },
+      {
+        name: 'dealRemove',
+        text: 'Delete',
+      },
+      {
+        name: 'dealDueDate',
+        text: 'Due date',
       },
     ],
   },

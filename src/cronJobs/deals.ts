@@ -34,7 +34,7 @@ export const sendNotifications = async () => {
 
     utils.sendNotification({
       createdUser: deal.modifiedBy || '1',
-      notifType: NOTIFICATION_TYPES.DEAL_CHANGE,
+      notifType: NOTIFICATION_TYPES.DEAL_DUE_DATE,
       title: content,
       content,
       link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
