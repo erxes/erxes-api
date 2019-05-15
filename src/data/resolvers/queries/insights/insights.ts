@@ -18,7 +18,6 @@ import {
   getSummaryDates,
   getTimezone,
   noConversationSelector,
-  summaryAverageCalculator,
 } from './utils';
 
 const insightQueries = {
@@ -413,24 +412,7 @@ const insightQueries = {
     return { trend, teamMembers, time };
   },
 
-  async insightsConversationSummary(_root, args: IListArgs) {
-    const { startDate, endDate } = args;
-    const filterSelector = getFilterSelector(args);
-    const { start, end } = fixDates(startDate, endDate);
-
-    const conversationSelector = {
-      firstRespondedUserId: { $exists: true },
-      firstRespondedDate: { $exists: true },
-      messageCount: { $gt: 1 },
-      createdAt: { $gte: start, $lte: end },
-    };
-
-    const averageResponseData: any = [];
-
-    const conversations = await findConversations(filterSelector, conversationSelector);
-
-    summaryAverageCalculator(conversations);
-
+  async insightsConversationSummary(_root) {
     return [
       { title: 'Average all operator response time', count: 100 },
       { title: 'Average all customer response time', count: 0.412 },
