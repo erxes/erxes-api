@@ -2,7 +2,8 @@ export const types = `
   type EngageMessage {
     _id: String!
     kind: String
-    segmentId: String
+    segmentIds: [String]
+    brandIds: [String]
     customerIds: [String]
     title: String
     fromUserId: String
@@ -83,7 +84,8 @@ const commonParams = `
   stopDate: Date,
   scheduleDate: Date,
   type: String
-  segmentId: String,
+  segmentIds: [String],
+  brandIds: [String],
   customerIds: [String],
   tagIds: [String],
   email: EngageMessageEmail,
