@@ -33,7 +33,6 @@ export const sendNotifications = async () => {
     const content = `Reminder: '${deal.name}' deal is due in oncoming`;
 
     utils.sendNotification({
-      createdUser: deal.modifiedBy || '1',
       notifType: NOTIFICATION_TYPES.DEAL_DUE_DATE,
       title: content,
       content,
