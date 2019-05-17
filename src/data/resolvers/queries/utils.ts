@@ -53,3 +53,13 @@ export const nextWeekdayDate = (dayInWeek: number, date?: Date): Date => {
 export const getToday = (date: Date): Date => {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
 };
+
+export const getNextMonth = (date: Date): { start: number; end: number } => {
+  const today = getToday(date);
+
+  const month = (new Date().getMonth() + 1) % 12;
+  const start = today.setMonth(month, 1);
+  const end = today.setMonth(month + 1, 0);
+
+  return { start, end };
+};
