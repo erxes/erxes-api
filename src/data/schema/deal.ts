@@ -86,6 +86,7 @@ export const queries = `
     nextDay: String
     nextWeek: String
     noCloseDate: String
+    overdue: String
   ): [DealStage]
   dealStageDetail(_id: String!): DealStage
   dealDetail(_id: String!): Deal
@@ -102,6 +103,7 @@ export const queries = `
     nextDay: String
     nextWeek: String
     noCloseDate: String
+    overdue: String
   ): [Deal]
   dealsTotalAmounts(
     date: DealDate 
@@ -113,6 +115,7 @@ export const queries = `
     nextDay: String
     nextWeek: String
     noCloseDate: String
+    overdue: String
   ): DealTotalAmounts
 `;
 

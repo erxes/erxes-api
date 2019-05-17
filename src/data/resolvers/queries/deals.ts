@@ -1,6 +1,6 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
-import { dealsCommonFilter, getDate, nextWeekdayDate } from './utils';
+import { dealsCommonFilter, getDate, getToday, nextWeekdayDate } from './utils';
 interface IDate {
   month: number;
   year: number;
@@ -26,7 +26,7 @@ const contains = (values: string[] = [], empty = false) => {
 };
 
 export const generateCommonFilters = (args: any) => {
-  const { nextDay, nextWeek, noCloseDate, assignedUserIds, customerIds, companyIds, productIds } = args;
+  const { overdue, nextDay, nextWeek, noCloseDate, assignedUserIds, customerIds, companyIds, productIds } = args;
 
   const filter: any = {};
 
@@ -70,6 +70,13 @@ export const generateCommonFilters = (args: any) => {
 
   if (noCloseDate) {
     filter.closeDate = { $exists: false };
+  }
+
+  if (overdue) {
+    const date = new Date();
+    const today = getToday(date);
+
+    filter.closeDate = { $lte: today };
   }
 
   return filter;

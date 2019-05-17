@@ -32,7 +32,7 @@ export const fixDate = (value, defaultValue = new Date()): Date => {
   return defaultValue;
 };
 
-export const getDate = (date: Date, day: number) => {
+export const getDate = (date: Date, day: number): Date => {
   const currentDate = new Date();
 
   date.setDate(currentDate.getDate() + day);
@@ -41,11 +41,15 @@ export const getDate = (date: Date, day: number) => {
   return date;
 };
 
-export const nextWeekdayDate = (dayInWeek: number, date?: Date) => {
+export const nextWeekdayDate = (dayInWeek: number, date?: Date): Date => {
   const weekDate = date ? new Date(date.getTime()) : new Date();
 
   weekDate.setDate(weekDate.getDate() + ((dayInWeek - 1 - weekDate.getDay() + 7) % 7) + 1);
   weekDate.setHours(0, 0, 0, 0);
 
   return weekDate;
+};
+
+export const getToday = (date: Date): Date => {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
 };
