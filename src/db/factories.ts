@@ -14,6 +14,7 @@ import { IActionPerformer, IActivity, IContentType } from '../db/models/definiti
 import {
   Accounts,
   ActivityLogs,
+  Boards,
   Brands,
   Channels,
   Companies,
@@ -21,10 +22,7 @@ import {
   ConversationMessages,
   Conversations,
   Customers,
-  DealBoards,
-  DealPipelines,
   Deals,
-  DealStages,
   EmailTemplates,
   EngageMessages,
   Fields,
@@ -40,14 +38,16 @@ import {
   NotificationConfigurations,
   Notifications,
   Permissions,
+  Pipelines,
   Products,
   ResponseTemplates,
   Segments,
+  Stages,
   Tags,
   Users,
   UsersGroups,
 } from './models';
-import { STATUSES } from './models/definitions/constants';
+import { BOARD_TYPES, STATUSES } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
@@ -668,36 +668,45 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
 };
 
-export const dealBoardFactory = () => {
-  const board = new DealBoards({
+interface IBoardFactoryInput {
+  type?: string;
+}
+
+export const boardFactory = (params: IBoardFactoryInput = {}) => {
+  const board = new Boards({
     name: faker.random.word(),
     userId: Random.id(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return board.save();
 };
 
-interface IDealPipelineFactoryInput {
+interface IPipelineFactoryInput {
   boardId?: string;
+  type?: string;
 }
 
-export const dealPipelineFactory = (params: IDealPipelineFactoryInput = {}) => {
-  const pipeline = new DealPipelines({
+export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
+  const pipeline = new Pipelines({
     name: faker.random.word(),
     boardId: params.boardId || faker.random.word(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return pipeline.save();
 };
 
-interface IDealStageFactoryInput {
+interface IStageFactoryInput {
   pipelineId?: string;
+  type?: string;
 }
 
-export const dealStageFactory = (params: IDealStageFactoryInput = {}) => {
-  const stage = new DealStages({
+export const stageFactory = (params: IStageFactoryInput = {}) => {
+  const stage = new Stages({
     name: faker.random.word(),
     pipelineId: params.pipelineId || faker.random.word(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return stage.save();

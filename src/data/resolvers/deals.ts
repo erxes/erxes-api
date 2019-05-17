@@ -1,4 +1,4 @@
-import { Companies, Customers, DealBoards, DealPipelines, DealStages, Products, Users } from '../../db/models';
+import { Boards, Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 
 export default {
@@ -52,29 +52,29 @@ export default {
   },
 
   async pipeline(deal: IDealDocument) {
-    const stage = await DealStages.findOne({ _id: deal.stageId });
+    const stage = await Stages.findOne({ _id: deal.stageId });
 
     if (!stage) {
       return null;
     }
 
-    return DealPipelines.findOne({ _id: stage.pipelineId });
+    return Pipelines.findOne({ _id: stage.pipelineId });
   },
 
   async boardId(deal: IDealDocument) {
-    const stage = await DealStages.findOne({ _id: deal.stageId });
+    const stage = await Stages.findOne({ _id: deal.stageId });
 
     if (!stage) {
       return null;
     }
 
-    const pipeline = await DealPipelines.findOne({ _id: stage.pipelineId });
+    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
 
     if (!pipeline) {
       return null;
     }
 
-    const board = await DealBoards.findOne({ _id: pipeline.boardId });
+    const board = await Boards.findOne({ _id: pipeline.boardId });
 
     if (!board) {
       return null;
@@ -84,6 +84,6 @@ export default {
   },
 
   async stage(deal: IDealDocument) {
-    return DealStages.findOne({ _id: deal.stageId });
+    return Stages.findOne({ _id: deal.stageId });
   },
 };

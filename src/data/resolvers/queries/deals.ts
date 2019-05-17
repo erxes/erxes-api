@@ -1,4 +1,4 @@
-import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
+import { Deals, Stages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { dealsCommonFilter } from './utils';
 
@@ -32,55 +32,6 @@ const dateSelector = (date: IDate) => {
 
 const dealQueries = {
   /**
-   * Deal Boards list
-   */
-  dealBoards() {
-    return DealBoards.find({}).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal Board detail
-   */
-  dealBoardDetail(_root, { _id }: { _id: string }) {
-    return DealBoards.findOne({ _id });
-  },
-
-  /**
-   * Get last board
-   */
-  dealBoardGetLast() {
-    return DealBoards.findOne().sort({ createdAt: -1 });
-  },
-
-  /**
-   * Deal Pipelines list
-   */
-  dealPipelines(_root, { boardId }: { boardId: string }) {
-    return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal pipeline detail
-   */
-  dealPipelineDetail(_root, { _id }: { _id: string }) {
-    return DealPipelines.findOne({ _id });
-  },
-
-  /**
-   * Deal Stages list
-   */
-  dealStages(_root, { pipelineId }: { pipelineId: string }) {
-    return DealStages.find({ pipelineId }).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal stage detail
-   */
-  dealStageDetail(_root, { _id }: { _id: string }) {
-    return DealStages.findOne({ _id });
-  },
-
-  /**
    * Deals list
    */
   async deals(_root, { pipelineId, stageId, customerId, companyId, date, skip, search }: IDealListParams) {
@@ -100,7 +51,7 @@ const dealQueries = {
     }
 
     if (date) {
-      const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
+      const stageIds = await Stages.find({ pipelineId }).distinct('_id');
 
       filter.closeDate = dateSelector(date);
       filter.stageId = { $in: stageIds };
@@ -116,7 +67,7 @@ const dealQueries = {
    *  Deal total amounts
    */
   async dealsTotalAmounts(_root, { pipelineId, date }: { date: IDate; pipelineId: string }) {
-    const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
+    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
     const filter = { stageId: { $in: stageIds }, closeDate: dateSelector(date) };
 
     const dealCount = await Deals.find(filter).countDocuments();

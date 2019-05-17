@@ -79,6 +79,8 @@ import {
 
 import { queries as ActivityLogQueries, types as ActivityLogTypes } from './activityLog';
 
+import { mutations as BoardMutations, queries as BoardQueries, types as BoardTypes } from './board';
+
 import { mutations as DealMutations, queries as DealQueries, types as DealTypes } from './deal';
 
 import { mutations as ProductMutations, queries as ProductQueries, types as ProductTypes } from './product';
@@ -123,6 +125,7 @@ export const types = `
   ${InsightTypes}
   ${KnowledgeBaseTypes}
   ${NotificationTypes}
+  ${BoardTypes}
   ${DealTypes}
   ${ProductTypes}
   ${ConfigTypes}
@@ -138,6 +141,7 @@ export const queries = `
     ${UserQueries}
     ${ChannelQueries}
     ${BrandQueries}
+    ${BoardQueries}
     ${IntegrationQueries}
     ${ResponseTemplateQueries}
     ${ScriptQueries}
@@ -173,6 +177,7 @@ export const mutations = `
     ${ConversationMutations}
     ${EngageMutations}
     ${TagMutations}
+    ${BoardMutations}
     ${BrandMutations}
     ${ResponseTemplateMutations}
     ${ScriptMutations}

@@ -397,3 +397,9 @@ export const EMAIL_TYPES = {
   OTHER: 'other',
   ALL: ['gmail', 'other'],
 };
+
+export const BOARD_TYPES = {
+  DEAL: 'deal',
+  TICKET: 'ticket',
+  ALL: ['deal', 'ticket'],
+};

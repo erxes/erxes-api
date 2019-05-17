@@ -1,4 +1,5 @@
 import accounts from './accounts';
+import boards from './boards';
 import brands from './brands';
 import channels from './channels';
 import companies from './companies';
@@ -45,6 +46,7 @@ export default {
   ...notifications,
   ...knowledgeBase,
   ...deals,
+  ...boards,
   ...products,
   ...configs,
   ...fieldsgroups,

@@ -1,5 +1,5 @@
 import { Deals } from '../../db/models';
-import { IStageDocument } from '../../db/models/definitions/deals';
+import { IStageDocument } from '../../db/models/definitions/boards';
 import { dealsCommonFilter } from './queries/utils';
 
 export default {
@@ -36,11 +36,11 @@ export default {
     return amountsMap;
   },
 
-  dealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search } }) {
+  itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search } }) {
     return Deals.find(dealsCommonFilter({}, { search })).count({ stageId: stage._id });
   },
 
-  deals(stage: IStageDocument) {
-    return Deals.find({ stageId: stage._id }).sort({ order: 1, createdAt: -1 });
-  },
+  // deals(stage: IStageDocument) {
+  //   return Deals.find({ stageId: stage._id }).sort({ order: 1, createdAt: -1 });
+  // },
 };

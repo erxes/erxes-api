@@ -1,0 +1,68 @@
+const commonTypes = `
+  order: Int
+  createdAt: Date
+  type: String
+`;
+
+export const types = `
+  type Board {
+    _id: String!
+    name: String!
+    ${commonTypes}
+    pipelines: [Pipeline]
+  }
+
+  type Pipeline {
+    _id: String!
+    name: String!
+    boardId: String!
+    ${commonTypes}
+  }
+
+  type Stage {
+    _id: String!
+    name: String!
+    probability: String
+    pipelineId: String!
+    amount: JSON
+    itemsTotalCount: Int
+    ${commonTypes}
+  }
+
+  input ItemDate {
+    month: Int
+    year: Int
+  }
+`;
+
+export const queries = `
+  boards(type: String!): [Board]
+  boardGetLast(type: String!): Board
+  boardDetail(_id: String!): Board
+  pipelines(boardId: String!): [Pipeline]
+  pipelineDetail(_id: String!): Pipeline
+  stages(pipelineId: String!, search: String): [Stage]
+  stageDetail(_id: String!): Stage
+`;
+
+const commonParams = `
+  name: String!,
+  type: String!
+`;
+
+export const mutations = `
+  boardsAdd(${commonParams}): Board
+  boardsEdit(_id: String!, ${commonParams}): Board
+  boardsRemove(_id: String!): JSON
+
+  pipelinesAdd(${commonParams}, boardId: String!, stages: JSON): Pipeline
+  pipelinesEdit(_id: String!, ${commonParams},, boardId: String!, stages: JSON): Pipeline
+  pipelinesUpdateOrder(orders: [OrderItem]): [Pipeline]
+  pipelinesRemove(_id: String!): JSON
+
+  stagesAdd(${commonParams}, probability: String, pipelineId: String!): Stage
+  stagesEdit(_id: String!, ${commonParams}, probability: String, pipelineId: String!): Stage
+  stagesChange(_id: String!, pipelineId: String!): Stage
+  stagesUpdateOrder(orders: [OrderItem]): [Stage]
+  stagesRemove(_id: String!): JSON
+`;
