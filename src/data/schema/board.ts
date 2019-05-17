@@ -62,7 +62,6 @@ export const mutations = `
 
   stagesAdd(${commonParams}, probability: String, pipelineId: String!): Stage
   stagesEdit(_id: String!, ${commonParams}, probability: String, pipelineId: String!): Stage
-  stagesChange(_id: String!, pipelineId: String!): Stage
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON
 `;

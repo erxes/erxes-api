@@ -266,26 +266,6 @@ describe('Test boards mutations', () => {
     expect(updatedStage.pipelineId).toEqual(pipeline._id);
   });
 
-  test('Change stage', async () => {
-    const args = {
-      _id: stage._id,
-      pipelineId: 'fakePipelineId',
-    };
-
-    const mutation = `
-      mutation stagesChange($_id: String!, $pipelineId: String!) {
-        stagesChange(_id: $_id, pipelineId: $pipelineId) {
-          _id
-          pipelineId
-        }
-      }
-    `;
-
-    const updatedStage = await graphqlRequest(mutation, 'stagesChange', args, context);
-
-    expect(updatedStage.pipelineId).toEqual(args.pipelineId);
-  });
-
   test('Stage update orders', async () => {
     const stageToUpdate = await stageFactory({});
 

@@ -154,7 +154,6 @@ export const moduleObjects = {
           'dealPipelinesRemove',
           'dealStagesAdd',
           'dealStagesEdit',
-          'dealStagesChange',
           'dealStagesUpdateOrder',
           'dealStagesRemove',
           'dealsAdd',
@@ -198,10 +197,6 @@ export const moduleObjects = {
       {
         name: 'dealStagesEdit',
         description: 'Edit deal stage',
-      },
-      {
-        name: 'dealStagesChange',
-        description: 'Change deal stages',
       },
       {
         name: 'dealStagesUpdateOrder',

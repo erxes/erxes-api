@@ -85,13 +85,6 @@ const boardMutations = {
   },
 
   /**
-   * Change stage
-   */
-  stagesChange(_root, { _id, pipelineId }: { _id: string; pipelineId: string }) {
-    return Stages.changeStage(_id, pipelineId);
-  },
-
-  /**
    * Update stage orders
    */
   stagesUpdateOrder(_root, { orders }: { orders: IOrderInput[] }) {
@@ -114,7 +107,6 @@ checkPermission(boardMutations, 'pipelinesEdit', 'pipelinesEdit');
 checkPermission(boardMutations, 'pipelinesUpdateOrder', 'pipelinesUpdateOrder');
 checkPermission(boardMutations, 'pipelinesRemove', 'pipelinesRemove');
 checkPermission(boardMutations, 'stagesAdd', 'stagesAdd');
-checkPermission(boardMutations, 'stagesChange', 'stagesChange');
 checkPermission(boardMutations, 'stagesUpdateOrder', 'stagesUpdateOrder');
 checkPermission(boardMutations, 'stagesRemove', 'stagesRemove');
 
