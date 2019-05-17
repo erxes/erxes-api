@@ -26,7 +26,8 @@ const contains = (values: string[] = [], empty = false) => {
 };
 
 export const generateCommonFilters = (args: any) => {
-  const { nextDay, nextWeek, assignedUserIds, customerIds, companyIds, productIds } = args;
+  const { nextDay, nextWeek, noCloseDate, assignedUserIds, customerIds, companyIds, productIds } = args;
+
   const filter: any = {};
 
   const assignedToNoOne = value => {
@@ -65,6 +66,10 @@ export const generateCommonFilters = (args: any) => {
       $gte: new Date(nextMonday),
       $lte: new Date(nextSunday),
     };
+  }
+
+  if (noCloseDate) {
+    filter.closeDate = { $exists: false };
   }
 
   return filter;
