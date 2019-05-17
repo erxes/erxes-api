@@ -17,12 +17,27 @@ interface IDealListParams {
   productIds?: [string];
 }
 
+const contains = (values: string[] = [], empty = false) => {
+  if (empty) {
+    return [];
+  }
+
+  return { $in: values };
+};
+
 export const generateCommonFilters = (args: any) => {
   const { assignedUserIds, customerIds, companyIds, productIds, startDate, endDate } = args;
   const filter: any = {};
 
+  const assignedToNoOne = value => {
+    return value.length === 1 && value[0].length === 0;
+  };
+
   if (assignedUserIds) {
-    filter.assignedUserIds = contains(assignedUserIds);
+    // Filter by assigned to no one
+    const notAssigned = assignedToNoOne(assignedUserIds);
+
+    filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
   }
 
   if (customerIds) {
@@ -58,10 +73,6 @@ const dateSelector = (date: IDate) => {
     $gte: new Date(start),
     $lte: new Date(end),
   };
-};
-
-const contains = (values: string[] = []) => {
-  return { $in: values };
 };
 
 const dealQueries = {
