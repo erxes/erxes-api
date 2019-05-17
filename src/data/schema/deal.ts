@@ -83,8 +83,8 @@ export const queries = `
     customerIds: [String]
     assignedUserIds: [String]
     productIds: [String]
-    startDate: String
-    endDate: String
+    nextDay: String
+    nextWeek: String
   ): [DealStage]
   dealStageDetail(_id: String!): DealStage
   dealDetail(_id: String!): Deal
@@ -98,8 +98,8 @@ export const queries = `
     companyIds: [String]
     assignedUserIds: [String]
     productIds: [String]
-    startDate: String
-    endDate: String
+    nextDay: String
+    nextWeek: String
   ): [Deal]
   dealsTotalAmounts(
     date: DealDate 
@@ -108,8 +108,8 @@ export const queries = `
     companyIds: [String]
     assignedUserIds: [String]
     productIds: [String]
-    startDate: String
-    endDate: String
+    nextDay: String
+    nextWeek: String
   ): DealTotalAmounts
 `;
 

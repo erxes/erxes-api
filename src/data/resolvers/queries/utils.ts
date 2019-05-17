@@ -31,3 +31,21 @@ export const fixDate = (value, defaultValue = new Date()): Date => {
 
   return defaultValue;
 };
+
+export const getDate = (date: Date, day: number) => {
+  const currentDate = new Date();
+
+  date.setDate(currentDate.getDate() + day);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+};
+
+export const nextWeekdayDate = (dayInWeek: number, date?: Date) => {
+  const weekDate = date ? new Date(date.getTime()) : new Date();
+
+  weekDate.setDate(weekDate.getDate() + ((dayInWeek - 1 - weekDate.getDay() + 7) % 7) + 1);
+  weekDate.setHours(0, 0, 0, 0);
+
+  return weekDate;
+};
