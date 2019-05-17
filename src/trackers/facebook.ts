@@ -293,11 +293,15 @@ export class SaveWebhookResponse {
    * Wall post
    */
   public async viaFeedEvent(entry) {
+    const promises: Array<Promise<any>> = [];
+
     for (const event of entry.changes) {
-      // someone posted on our wall
       console.log('blabla:', this.bulkOperations);
-      await this.getOrCreateConversationByFeed(event.value);
+      // someone posted on our wall
+      promises.push(this.getOrCreateConversationByFeed(event.value));
     }
+
+    return Promise.all(promises);
   }
 
   /**
