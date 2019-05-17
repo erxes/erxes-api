@@ -95,11 +95,13 @@ const messengerProcessingMap = {};
 export class SaveWebhookResponse {
   public currentPageId?: string | null;
   public data: any;
+  public bulkOperations: any[];
   private userAccessToken: string;
   private integration: IIntegrationDocument;
 
   constructor(userAccessToken: string, integration: IIntegrationDocument, data?: any) {
     this.userAccessToken = userAccessToken;
+    this.bulkOperations = [];
 
     this.integration = integration;
 
@@ -118,6 +120,7 @@ export class SaveWebhookResponse {
     }
 
     if (data.object === 'page') {
+      console.log('start');
       for (const entry of data.entry) {
         // check receiving page is in integration's page list
         if (!integration.facebookData.pageIds.includes(entry.id)) {
@@ -133,9 +136,12 @@ export class SaveWebhookResponse {
 
         // receive new feed
         if (entry.changes) {
+          console.log('changes');
           await this.viaFeedEvent(entry);
         }
       }
+
+      console.log('at last:', this.bulkOperations);
     }
   }
 
@@ -289,6 +295,7 @@ export class SaveWebhookResponse {
   public async viaFeedEvent(entry) {
     for (const event of entry.changes) {
       // someone posted on our wall
+      console.log('blabla:', this.bulkOperations);
       await this.getOrCreateConversationByFeed(event.value);
     }
   }
@@ -369,15 +376,16 @@ export class SaveWebhookResponse {
    */
   public async updateCommentCount(type: string, postId: string) {
     let count = -1;
-
     if (type === 'add') {
       count = 1;
     }
-
-    return ConversationMessages.updateOne(
-      { 'facebookData.postId': postId },
-      { $inc: { 'facebookData.commentCount': count } },
-    );
+    this.bulkOperations.push({
+      updateOne: {
+        filter: { 'facebookData.postId': postId },
+        update: { $inc: { 'facebookData.commentCount': count } },
+      },
+    });
+    console.log('updateCommentCount:', this.bulkOperations);
   }
 
   /**
@@ -389,9 +397,11 @@ export class SaveWebhookResponse {
     if (type === 'add') {
       count = 1;
     }
-
-    return ConversationMessages.updateMany(selector, {
-      $inc: { 'facebookData.likeCount': count },
+    this.bulkOperations.push({
+      updateMany: {
+        filter: selector,
+        update: { $inc: { 'facebookData.likeCount': count } },
+      },
     });
   }
 
@@ -807,6 +817,7 @@ export const receiveWebhookResponse = async data => {
     const saveWebhookResponse = new SaveWebhookResponse(account.token, integration, data);
 
     await saveWebhookResponse.start();
+    console.log('sd:', await saveWebhookResponse.bulkOperations);
   }
 };
 
