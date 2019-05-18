@@ -149,20 +149,29 @@ export const getSummaryData = async ({
 
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {
-    const facetMessageSelector = { ...selector };
+    const messageSelector = { ...selector };
 
-    facetMessageSelector[dateFieldName] = {
+    messageSelector[dateFieldName] = {
       $gte: interval.start.toDate(),
       $lte: interval.end.toDate(),
     };
+
+    // Hence fromBot handled in aggregation, delete from messageSelector
+    delete messageSelector.fromBot;
+
     const [intervalCount] = await collection.aggregate([
       {
-        $match: facetMessageSelector,
+        $match: messageSelector,
       },
       {
         $group: {
-          _id: null,
+          _id: '$fromBot',
           count: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          _id: null,
         },
       },
       {
