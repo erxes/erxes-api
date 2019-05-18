@@ -99,15 +99,15 @@ const boardMutations = {
   },
 };
 
-checkPermission(boardMutations, 'boardsAdd', 'boardsAdd');
-checkPermission(boardMutations, 'boardsEdit', 'boardsEdit');
-checkPermission(boardMutations, 'boardsRemove', 'boardsRemove');
-checkPermission(boardMutations, 'pipelinesAdd', 'pipelinesAdd');
-checkPermission(boardMutations, 'pipelinesEdit', 'pipelinesEdit');
-checkPermission(boardMutations, 'pipelinesUpdateOrder', 'pipelinesUpdateOrder');
-checkPermission(boardMutations, 'pipelinesRemove', 'pipelinesRemove');
-checkPermission(boardMutations, 'stagesAdd', 'stagesAdd');
-checkPermission(boardMutations, 'stagesUpdateOrder', 'stagesUpdateOrder');
-checkPermission(boardMutations, 'stagesRemove', 'stagesRemove');
+checkPermission(boardMutations, 'boardsAdd', 'dealBoardsAdd');
+checkPermission(boardMutations, 'boardsEdit', 'dealBoardsEdit');
+checkPermission(boardMutations, 'boardsRemove', 'dealBoardsRemove');
+checkPermission(boardMutations, 'pipelinesAdd', 'dealPipelinesAdd');
+checkPermission(boardMutations, 'pipelinesEdit', 'dealPipelinesEdit');
+checkPermission(boardMutations, 'pipelinesUpdateOrder', 'dealPipelinesUpdateOrder');
+checkPermission(boardMutations, 'pipelinesRemove', 'dealPipelinesRemove');
+checkPermission(boardMutations, 'stagesAdd', 'dealStagesAdd');
+checkPermission(boardMutations, 'stagesUpdateOrder', 'dealStagesUpdateOrder');
+checkPermission(boardMutations, 'stagesRemove', 'dealStagesRemove');
 
 export default boardMutations;
