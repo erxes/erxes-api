@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import './cronJobs';
 import { trackEngages } from './trackers/engageTracker';
-import { trackFbLogin, trackIntegrations as trackFacebooks } from './trackers/facebookTracker';
+import { trackFbLogin } from './trackers/facebookTracker';
 import { trackGmail, trackGmailLogin } from './trackers/gmailTracker';
 import { trackIntegrations as trackTwitters } from './trackers/twitterTracker';
 
@@ -20,7 +20,6 @@ export const init = async app => {
   try {
     trackTwitters();
     trackEngages(app);
-    trackFacebooks(app);
     trackGmail();
     trackFbLogin(app);
     trackGmailLogin(app);
