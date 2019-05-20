@@ -214,7 +214,7 @@ export const PRODUCT_TYPES = {
   ALL: ['product', 'service'],
 };
 
-export const PIPELINE_TYPES = {
+export const PIPELINE_VISIBLITIES = {
   PUBLIC: 'public',
   PRIVATE: 'private',
   ALL: ['public', 'private'],

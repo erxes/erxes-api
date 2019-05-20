@@ -56,7 +56,12 @@ const dealQueries = {
   /**
    * Deal Pipelines list
    */
-  dealPipelines(_root, { boardId }: { boardId: string }, { user }: { user: IUserDocument }) {
+
+  dealPipelines(_root, { boardId }: { boardId: string }) {
+    return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
+  },
+
+  dealPipelinesVisiblity(_root, { boardId }: { boardId: string }, { user }: { user: IUserDocument }) {
     if (user.isOwner) {
       return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
     }
@@ -64,7 +69,12 @@ const dealQueries = {
     return DealPipelines.find({
       $and: [
         { boardId },
-        { $or: [{ type: 'public' }, { type: { $exists: false } }, { memberIds: user._id }, { userId: user._id }] },
+        {
+          $or: [
+            { visiblity: 'public' },
+            { visiblity: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] },
+          ],
+        },
       ],
     }).sort({ order: 1, createdAt: -1 });
   },

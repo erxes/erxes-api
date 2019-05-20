@@ -15,7 +15,7 @@ export const types = `
     _id: String!
     name: String!
     boardId: String!
-    type: String
+    visiblity: String!
     memberIds: [String]
     ${commonTypes}
   }
@@ -77,6 +77,7 @@ export const queries = `
   dealBoardGetLast: DealBoard
   dealBoardDetail(_id: String!): DealBoard
   dealPipelines(boardId: String!): [DealPipeline]
+  dealPipelinesVisiblity(boardId: String!): [DealPipeline]
   dealPipelineDetail(_id: String!): DealPipeline
   dealStages(pipelineId: String!, search: String): [DealStage]
   dealStageDetail(_id: String!): DealStage
@@ -116,8 +117,8 @@ export const mutations = `
   dealBoardsEdit(_id: String!, name: String!): DealBoard
   dealBoardsRemove(_id: String!): JSON
 
-  dealPipelinesAdd(name: String!, boardId: String!, stages: JSON, type: String!, memberIds: [String]): DealPipeline
-  dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON, type: String!, memberIds: [String]): DealPipeline
+  dealPipelinesAdd(name: String!, boardId: String!, stages: JSON, visiblity: String!, memberIds: [String]): DealPipeline
+  dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON, visiblity: String!, memberIds: [String]): DealPipeline
   dealPipelinesUpdateOrder(orders: [OrderItem]): [DealPipeline]
   dealPipelinesRemove(_id: String!): JSON
 
