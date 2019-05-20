@@ -1,6 +1,6 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
-import { dealsCommonFilter, getDate, getNextMonth, getToday, nextWeekdayDate } from './utils';
+import { dealsCommonFilter, getDate, getNextMonth, getToday, nextMonday, nextWeekdayDate } from './utils';
 interface IDate {
   month: number;
   year: number;
@@ -69,11 +69,11 @@ export const generateCommonFilters = (args: any) => {
   }
 
   if (nextWeek) {
-    const nextMonday = nextWeekdayDate(2);
-    const nextSunday = nextWeekdayDate(8, nextMonday);
+    const monday = nextMonday();
+    const nextSunday = nextWeekdayDate(8);
 
     filter.closeDate = {
-      $gte: new Date(nextMonday),
+      $gte: new Date(monday),
       $lte: new Date(nextSunday),
     };
   }
