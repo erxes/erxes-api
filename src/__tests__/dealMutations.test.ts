@@ -14,7 +14,7 @@ describe('Test deals mutations', () => {
     $name: String!,
     $boardId: String!,
     $stages: JSON
-    $type: String!,
+    $visiblity: String!,
     $memberIds: [String],
   `;
 
@@ -22,7 +22,7 @@ describe('Test deals mutations', () => {
     name: $name
     boardId: $boardId
     stages: $stages
-    type: $type
+    visiblity: $visiblity
     memberIds: $memberIds
   `;
 
