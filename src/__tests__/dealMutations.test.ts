@@ -117,7 +117,7 @@ describe('Test deals mutations', () => {
       name: 'deal pipeline',
       boardId: board._id,
       stages: [stage.toJSON()],
-      type: 'public',
+      visiblity: 'public',
     };
 
     const mutation = `
@@ -150,7 +150,7 @@ describe('Test deals mutations', () => {
       name: 'deal pipeline',
       boardId: board._id,
       stages: [stage.toJSON()],
-      type: 'public',
+      visiblity: 'public',
     };
 
     const mutation = `
