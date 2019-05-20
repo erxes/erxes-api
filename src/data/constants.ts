@@ -94,8 +94,8 @@ export const NOTIFICATION_TYPES = {
   CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
   CONVERSATION_STATE_CHANGE: 'conversationStateChange',
   DEAL_ADD: 'dealAdd',
-  DEAL_EDIT: 'dealEdit',
   DEAL_REMOVE_ASSIGN: 'dealRemoveAssign',
+  DEAL_EDIT: 'dealEdit',
   DEAL_CHANGE: 'dealChange',
   DEAL_DUE_DATE: 'dealDueDate',
   DEAL_DELETE: 'dealDelete',
@@ -105,8 +105,8 @@ export const NOTIFICATION_TYPES = {
     'conversationAssigneeChange',
     'conversationStateChange',
     'dealAdd',
-    'dealEdit',
     'dealRemoveAssign',
+    'dealEdit',
     'dealChange',
     'dealDueDate',
     'dealDelete',
@@ -150,27 +150,27 @@ export const NOTIFICATION_MODULES = [
     types: [
       {
         name: 'dealAdd',
-        text: 'Add/Assignee',
-      },
-      {
-        name: 'dealEdit',
-        text: 'Edit',
+        text: 'Assigned a new deal  card',
       },
       {
         name: 'dealRemoveAssign',
-        text: 'Remove assign',
+        text: 'Removed from the deal card',
+      },
+      {
+        name: 'dealEdit',
+        text: 'Deal card edited',
       },
       {
         name: 'dealChange',
-        text: 'Move',
+        text: 'Moved between stages',
       },
       {
         name: 'dealDueDate',
-        text: 'Due date',
+        text: 'Due date is near',
       },
       {
         name: 'dealDelete',
-        text: 'Delete',
+        text: 'Deal card deleted',
       },
     ],
   },

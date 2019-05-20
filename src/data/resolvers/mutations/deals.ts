@@ -156,7 +156,7 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_ADD,
       deal.assignedUserIds || [],
-      `A member invited you to the '${deal.name}'.`,
+      `'${user.details ? user.details.fullName : user.email}' invited you to the '${deal.name}'.`,
     );
     return deal;
   },
@@ -186,7 +186,7 @@ const dealMutations = {
         user,
         NOTIFICATION_TYPES.DEAL_ADD,
         newInvite,
-        `A member invited you to the deal: '${deal.name}'.`,
+        `'${user.details ? user.details.fullName : user.email}' invited you to the deal: '${deal.name}'.`,
       );
     }
 
@@ -203,7 +203,7 @@ const dealMutations = {
         user,
         NOTIFICATION_TYPES.DEAL_REMOVE_ASSIGN,
         delInvite,
-        `A removed you from deal: '${deal.name}'.`,
+        `'${user.details ? user.details.fullName : user.email}' removed you from deal: '${deal.name}'.`,
       );
     }
 
@@ -213,7 +213,7 @@ const dealMutations = {
         user,
         NOTIFICATION_TYPES.DEAL_EDIT,
         deal.assignedUserIds || [],
-        `Your '${deal.name}' deal has edited.`,
+        `'${user.details ? user.details.fullName : user.email}' edited your deal '${deal.name}'`,
       );
     }
 
@@ -235,7 +235,7 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_CHANGE,
       deal.assignedUserIds || [],
-      `Your '${deal.name}' deal has changed(moved).`,
+      `'${user.details ? user.details.fullName : user.email}' changed(moved) order your deal:'${deal.name}'`,
     );
     return deal;
   },
@@ -262,7 +262,7 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_DELETE,
       deal.assignedUserIds || [],
-      `A deleted deal: '${deal.name}'`,
+      `'${user.details ? user.details.fullName : user.email}' deleted deal: '${deal.name}'`,
     );
 
     return Deals.removeDeal(_id);
