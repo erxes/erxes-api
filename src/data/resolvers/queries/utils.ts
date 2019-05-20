@@ -31,7 +31,7 @@ export const fixDate = (value, defaultValue = new Date()): Date => {
 export const getDate = (date: Date, day: number): Date => {
   const currentDate = new Date();
 
-  date.setDate(currentDate.getDate() + day);
+  date.setDate(currentDate.getDate() + day + 1);
   date.setHours(0, 0, 0, 0);
 
   return date;

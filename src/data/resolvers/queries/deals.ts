@@ -64,8 +64,8 @@ export const generateCommonFilters = (args: any) => {
   }
 
   if (nextDay) {
-    const tomorrow = new Date();
-    filter.closeDate = { $eq: new Date(getDate(tomorrow, 1)) };
+    const date = new Date();
+    filter.closeDate = { $eq: new Date(getDate(date, 1)) };
   }
 
   if (nextWeek) {
@@ -86,8 +86,6 @@ export const generateCommonFilters = (args: any) => {
       $gte: new Date(start),
       $lte: new Date(end),
     };
-
-    console.log(filter);
   }
 
   if (noCloseDate) {
