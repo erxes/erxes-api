@@ -86,6 +86,8 @@ export const generateCommonFilters = (args: any) => {
       $gte: new Date(start),
       $lte: new Date(end),
     };
+
+    console.log(filter);
   }
 
   if (noCloseDate) {
@@ -96,7 +98,7 @@ export const generateCommonFilters = (args: any) => {
     const date = new Date();
     const today = getToday(date);
 
-    filter.closeDate = { $lte: today };
+    filter.closeDate = { $lt: today };
   }
 
   return filter;
