@@ -110,6 +110,7 @@ export interface IMessageDocument extends IMessage, Document {
   gmailData?: IGmailDataDocument;
   twitterData?: ITwitterResponseDocument;
   createdAt: Date;
+  date: Date;
 }
 
 const attachmentSchema = new Schema(
@@ -333,7 +334,8 @@ export const messageSchema = new Schema({
   customerId: field({ type: String, index: true }),
   fromBot: field({ type: Boolean }),
   userId: field({ type: String }),
-  createdAt: field({ type: Date, index: true }),
+  createdAt: field({ type: Date }),
+  date: field({ type: Date, index: true }),
   isCustomerRead: field({ type: Boolean }),
   formWidgetData: field({ type: Object }),
   messengerAppData: field({ type: Object }),
