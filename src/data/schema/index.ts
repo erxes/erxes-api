@@ -101,6 +101,8 @@ import {
 
 import { mutations as AccountMutations, queries as AccountQueries, types as AccountTypes } from './accounts';
 
+import { queries as TicketQueries, types as TicketTypes } from './ticket';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -134,6 +136,7 @@ export const types = `
   ${MessengerAppTypes}
   ${AccountTypes}
   ${PermissionTypes}
+  ${TicketTypes}
 `;
 
 export const queries = `
@@ -167,6 +170,7 @@ export const queries = `
     ${MessengerAppQueries}
     ${AccountQueries}
     ${PermissionQueries}
+    ${TicketQueries}
   }
 `;
 

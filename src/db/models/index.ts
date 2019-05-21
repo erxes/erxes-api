@@ -27,6 +27,7 @@ import Scripts from './Scripts';
 import Segments from './Segments';
 import Session from './Session';
 import Tags from './Tags';
+import Tickets from './Tickets';
 import Users from './Users';
 
 export {
@@ -67,4 +68,5 @@ export {
   MessengerApps,
   Permissions,
   UsersGroups,
+  Tickets,
 };

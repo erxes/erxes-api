@@ -27,6 +27,7 @@ import responseTemplates from './responseTemplates';
 import scripts from './scripts';
 import segments from './segments';
 import tags from './tags';
+import tickets from './tickets';
 import users from './users';
 
 export default {
@@ -62,4 +63,5 @@ export default {
   ...messengerApps,
   ...permissions,
   ...usersGroups,
+  ...tickets,
 };
