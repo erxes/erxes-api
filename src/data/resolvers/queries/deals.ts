@@ -1,6 +1,7 @@
+import moment = require('moment');
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
-import { dealsCommonFilter, getDate, getNextMonth, getToday, nextMonday, nextWeekdayDate } from './utils';
+import { dealsCommonFilter, getNextMonth, getToday, nextMonday, nextWeekdayDate } from './utils';
 interface IDate {
   month: number;
   year: number;
@@ -64,8 +65,12 @@ export const generateCommonFilters = (args: any) => {
   }
 
   if (nextDay) {
-    const date = new Date();
-    filter.closeDate = { $eq: new Date(getDate(date, 1)) };
+    const tommorrow = moment().add(1, 'days');
+
+    filter.closeDate = {
+      $gte: tommorrow.startOf('day').toDate(),
+      $lte: tommorrow.endOf('day').toDate(),
+    };
   }
 
   if (nextWeek) {
