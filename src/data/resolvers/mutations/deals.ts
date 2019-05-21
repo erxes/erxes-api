@@ -177,14 +177,10 @@ const dealMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
+    const assignedUserIds = deal.assignedUserIds || [];
 
-    const newInvite: any = [];
-
-    for (const userId of deal.assignedUserIds || []) {
-      if (!oldAssignedUserIds.includes(userId)) {
-        newInvite.push(userId);
-      }
-    }
+    // new assignee users
+    const newInvite = assignedUserIds.filter(userId => oldAssignedUserIds.indexOf(userId) < 0);
 
     if (newInvite.length > 0) {
       await sendDealNotifications(
@@ -196,14 +192,8 @@ const dealMutations = {
       );
     }
 
-    const delInvite: any = [];
-    const assignedUsers = deal.assignedUserIds || [];
-
-    for (const userId of oldAssignedUserIds) {
-      if (!assignedUsers.includes(userId)) {
-        delInvite.push(userId);
-      }
-    }
+    // remove from assignee users
+    const delInvite = oldAssignedUserIds.filter(userId => assignedUserIds.indexOf(userId) < 0);
 
     if (delInvite.length > 0) {
       await sendDealNotifications(
@@ -215,12 +205,13 @@ const dealMutations = {
       );
     }
 
+    // dont assignee change and other edit
     if (delInvite.length === 0 && newInvite.length === 0) {
       await sendDealNotifications(
         deal,
         user,
         NOTIFICATION_TYPES.DEAL_EDIT,
-        deal.assignedUserIds || [],
+        assignedUserIds,
         `'{userName}' edited your deal '${deal.name}'`,
       );
     }
