@@ -1,14 +1,14 @@
 import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
 import {
+  companyFactory,
+  customerFactory,
   dealBoardFactory,
   dealFactory,
   dealPipelineFactory,
   dealStageFactory,
   productFactory,
   userFactory,
-  customerFactory,
-  companyFactory,
 } from '../db/factories';
 import { DealBoards, DealPipelines, Deals, DealStages } from '../db/models';
 
