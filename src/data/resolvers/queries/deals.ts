@@ -1,5 +1,4 @@
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
 import { dealsCommonFilter } from './utils';
 interface IDate {
@@ -61,23 +60,6 @@ const dealQueries = {
     return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
   },
 
-  dealPipelinesVisiblity(_root, { boardId }: { boardId: string }, { user }: { user: IUserDocument }) {
-    if (user.isOwner) {
-      return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
-    }
-
-    return DealPipelines.find({
-      $and: [
-        { boardId },
-        {
-          $or: [
-            { visiblity: 'public' },
-            { visiblity: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] },
-          ],
-        },
-      ],
-    }).sort({ order: 1, createdAt: -1 });
-  },
   /**
    * Deal pipeline detail
    */

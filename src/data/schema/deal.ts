@@ -77,7 +77,6 @@ export const queries = `
   dealBoardGetLast: DealBoard
   dealBoardDetail(_id: String!): DealBoard
   dealPipelines(boardId: String!): [DealPipeline]
-  dealPipelinesVisiblity(boardId: String!): [DealPipeline]
   dealPipelineDetail(_id: String!): DealPipeline
   dealStages(pipelineId: String!, search: String): [DealStage]
   dealStageDetail(_id: String!): DealStage
