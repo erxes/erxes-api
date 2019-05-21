@@ -81,8 +81,8 @@ export const queries = `
   dealDetail(_id: String!): Deal
   deals(
     pipelineId: String,
-    stageId: String, 
-    customerId: String, 
+    stageId: String,
+    customerId: String,
     companyId: String,
     date: DealDate,
     skip: Int
@@ -127,7 +127,7 @@ export const mutations = `
 
   dealsAdd(${dealMutationParams}): Deal
   dealsEdit(_id: String!, ${dealMutationParams}): Deal
-  dealsChange( _id: String!): Deal
+  dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
 `;

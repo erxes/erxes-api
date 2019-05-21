@@ -37,10 +37,13 @@ export const sendDealNotifications = async (
   content: string,
 ) => {
   const stage = await DealStages.findOne({ _id: deal.stageId });
+
   if (!stage) {
     throw new Error('Stage not found');
   }
+
   const pipeline = await DealPipelines.findOne({ _id: stage.pipelineId });
+
   if (!pipeline) {
     throw new Error('Pipeline not found');
   }
@@ -156,8 +159,9 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_ADD,
       deal.assignedUserIds || [],
-      `'${user.details ? user.details.fullName : user.email}' invited you to the '${deal.name}'.`,
+      `'{userName}' invited you to the '${deal.name}'.`,
     );
+
     return deal;
   },
 
@@ -165,8 +169,8 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
-    const savedDeal = await Deals.findOne({ _id });
-    const savedAssignedUserIds: string[] = savedDeal ? savedDeal.assignedUserIds || [] : [];
+    const oldDeal = await Deals.findOne({ _id });
+    const oldAssignedUserIds = oldDeal ? oldDeal.assignedUserIds || [] : [];
 
     const deal = await Deals.updateDeal(_id, {
       ...doc,
@@ -175,35 +179,39 @@ const dealMutations = {
     });
 
     const newInvite: any = [];
+
     for (const userId of deal.assignedUserIds || []) {
-      if (!savedAssignedUserIds.includes(userId)) {
+      if (!oldAssignedUserIds.includes(userId)) {
         newInvite.push(userId);
       }
     }
+
     if (newInvite.length > 0) {
       await sendDealNotifications(
         deal,
         user,
         NOTIFICATION_TYPES.DEAL_ADD,
         newInvite,
-        `'${user.details ? user.details.fullName : user.email}' invited you to the deal: '${deal.name}'.`,
+        `'{userName}' invited you to the deal: '${deal.name}'.`,
       );
     }
 
     const delInvite: any = [];
     const assignedUsers = deal.assignedUserIds || [];
-    for (const userId of savedAssignedUserIds) {
+
+    for (const userId of oldAssignedUserIds) {
       if (!assignedUsers.includes(userId)) {
         delInvite.push(userId);
       }
     }
+
     if (delInvite.length > 0) {
       await sendDealNotifications(
         deal,
         user,
         NOTIFICATION_TYPES.DEAL_REMOVE_ASSIGN,
         delInvite,
-        `'${user.details ? user.details.fullName : user.email}' removed you from deal: '${deal.name}'.`,
+        `'{userName}' removed you from deal: '${deal.name}'.`,
       );
     }
 
@@ -213,7 +221,7 @@ const dealMutations = {
         user,
         NOTIFICATION_TYPES.DEAL_EDIT,
         deal.assignedUserIds || [],
-        `'${user.details ? user.details.fullName : user.email}' edited your deal '${deal.name}'`,
+        `'{userName}' edited your deal '${deal.name}'`,
       );
     }
 
@@ -223,20 +231,32 @@ const dealMutations = {
   /**
    * Change deal
    */
-  async dealsChange(_root, { _id, ...doc }: { _id: string }, { user }: { user: IUserDocument }) {
+  async dealsChange(
+    _root,
+    { _id, destinationStageId }: { _id: string; destinationStageId?: string },
+    { user }: { user: IUserDocument },
+  ) {
+    const oldDeal = await Deals.findOne({ _id });
+    const oldStageId = oldDeal ? oldDeal.stageId || '' : '';
+
     const deal = await Deals.updateDeal(_id, {
-      ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await sendDealNotifications(
-      deal,
-      user,
-      NOTIFICATION_TYPES.DEAL_CHANGE,
-      deal.assignedUserIds || [],
-      `'${user.details ? user.details.fullName : user.email}' changed(moved) order your deal:'${deal.name}'`,
-    );
+    let content = `'{userName}' changed(moved) order your deal:'${deal.name}'`;
+
+    if (oldStageId !== destinationStageId) {
+      const stage = await DealStages.findOne({ _id: destinationStageId });
+
+      if (!stage) {
+        throw new Error('Stage not found');
+      }
+
+      content = `'{userName}' changed(moved) your deal '${deal.name}' to the '${stage.name}'.`;
+    }
+
+    await sendDealNotifications(deal, user, NOTIFICATION_TYPES.DEAL_CHANGE, deal.assignedUserIds || [], content);
     return deal;
   },
 
@@ -262,7 +282,7 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_DELETE,
       deal.assignedUserIds || [],
-      `'${user.details ? user.details.fullName : user.email}' deleted deal: '${deal.name}'`,
+      `'{userName}' deleted deal: '${deal.name}'`,
     );
 
     return Deals.removeDeal(_id);
