@@ -162,9 +162,9 @@ export const getSummaryData = async ({
     };
     delete messageSelector.createdAt;
     delete messageSelector.fromBot;
+    const userId = messageSelector.userId || null;
     delete messageSelector.userId;
 
-    // const intervalCount = await collection.countDocuments(facetMessageSelector);
     const [intervalCount] = await collection.aggregate([
       {
         $match: messageSelector,
@@ -173,7 +173,7 @@ export const getSummaryData = async ({
         $group: {
           _id: {
             fromBot: '$fromBot',
-            userId: 'userId',
+            userId: '$userId',
           },
           count: { $sum: 1 },
         },
@@ -183,8 +183,7 @@ export const getSummaryData = async ({
       {
         $match: {
           _id: {
-            fromBot: null,
-            userId: null,
+            userId,
           },
         },
       },
