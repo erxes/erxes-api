@@ -1,41 +1,51 @@
+import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
-import { connect } from '../db/connection';
 import { Companies, Customers, ImportHistory } from '../db/models';
 import { graphqlPubsub } from '../pubsub';
 
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-connect().then(async () => {
-  const { result, contentType, importHistoryId } = workerData;
+dotenv.config();
 
-  let collection: any = Companies;
+const { MONGO_URL = '' } = process.env;
 
-  if (contentType === 'customer') {
-    collection = Customers;
-  }
+mongoose.connect(
+  MONGO_URL,
+  { useNewUrlParser: true, useCreateIndex: true },
+  async err => {
+    if (err) {
+      console.log('error', err);
+    }
 
-  for (const id of result) {
-    await collection.deleteOne({ _id: id });
+    const { result, contentType, importHistoryId } = workerData;
 
-    await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: id } });
-  }
+    let collection: any = Companies;
 
-  const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
+    if (contentType === 'customer') {
+      collection = Customers;
+    }
 
-  if (historyObj && (historyObj.ids || []).length === 0) {
-    graphqlPubsub.publish('importHistoryChanged', {
-      importHistoryChanged: {
-        _id: historyObj._id,
-        status: 'Removed',
-        percentage: 100,
-      },
-    });
+    await collection.deleteMany({ _id: { $in: result } });
 
-    await ImportHistory.deleteOne({ _id: importHistoryId });
-  }
+    await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: { $in: result } } });
 
-  mongoose.connection.close();
+    const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
 
-  parentPort.postMessage('Successfully finished job');
-});
+    if (historyObj && (historyObj.ids || []).length === 0) {
+      graphqlPubsub.publish('importHistoryChanged', {
+        importHistoryChanged: {
+          _id: historyObj._id,
+          status: 'Removed',
+          percentage: 100,
+        },
+      });
+
+      await ImportHistory.deleteOne({ _id: importHistoryId });
+    }
+
+    mongoose.connection.close();
+
+    parentPort.postMessage('Successfully finished job');
+  },
+);
