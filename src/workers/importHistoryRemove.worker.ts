@@ -27,7 +27,6 @@ mongoose.connect(
     }
 
     await collection.deleteMany({ _id: { $in: result } });
-
     await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: { $in: result } } });
 
     const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
