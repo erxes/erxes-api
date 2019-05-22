@@ -185,6 +185,7 @@ const facebookSchema = new Schema(
     id: field({
       type: String,
       label: 'Facebook ID',
+      index: true,
     }),
     profilePic: field({
       type: String,
@@ -241,6 +242,7 @@ export const customerSchema = new Schema({
     default: STATUSES.ACTIVE,
     optional: true,
     label: 'Status',
+    index: true,
   }),
 
   lifecycleState: field({
@@ -262,7 +264,7 @@ export const customerSchema = new Schema({
   isUser: field({ type: Boolean, label: 'Is user', optional: true }),
 
   integrationId: field({ type: String, optional: true }),
-  tagIds: field({ type: [String], optional: true }),
+  tagIds: field({ type: [String], optional: true, index: true }),
   companyIds: field({ type: [String], optional: true }),
 
   // Merged customer ids

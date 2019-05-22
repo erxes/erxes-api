@@ -96,10 +96,10 @@ function convertConditionToQuery(condition: ICondition) {
       };
     case 'wow':
       return {
-        $lte: moment()
+        $lte: moment(Date.now())
           .add(transformedValue, dateUnit)
           .toDate(),
-        $gte: new Date(),
+        $gte: moment(Date.now()).toDate(),
       };
     case 'woa':
       return {

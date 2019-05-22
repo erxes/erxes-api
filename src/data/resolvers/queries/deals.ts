@@ -138,6 +138,7 @@ const dealQueries = {
   /**
    * Get last board
    */
+
   dealBoardGetLast() {
     return DealBoards.findOne().sort({ createdAt: -1 });
   },
@@ -145,6 +146,7 @@ const dealQueries = {
   /**
    * Deal Pipelines list
    */
+
   dealPipelines(_root, { boardId }: { boardId: string }) {
     return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
   },
