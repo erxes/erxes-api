@@ -79,7 +79,6 @@ const createGCS = () => {
     throw new Error('Google Cloud Storage credentials are not configured');
   }
 
-  // tslint:disable
   const Storage = require('@google-cloud/storage').Storage;
 
   // initializing Google Cloud Storage

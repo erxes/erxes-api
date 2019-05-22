@@ -88,7 +88,7 @@ mongoose.connect(
           // Increasing success count
           inc.success++;
         })
-        .catch(e => {
+        .catch((e: Error) => {
           inc.failed++;
           // Increasing failed count and pushing into error message
 
