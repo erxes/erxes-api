@@ -1,4 +1,8 @@
+import * as dotenv from 'dotenv';
+import * as mongoose from 'mongoose';
 import * as os from 'os';
+
+dotenv.config();
 
 let workers: any[] = [];
 let intervals: any[] = [];
@@ -89,3 +93,11 @@ export const clearIntervals = () => {
 
   intervals = [];
 };
+
+const { MONGO_URL = '' } = process.env;
+
+export const connect = () =>
+  mongoose.connect(
+    MONGO_URL,
+    { useNewUrlParser: true, useCreateIndex: true },
+  );

@@ -1,50 +1,38 @@
-import * as dotenv from 'dotenv';
 import * as mongoose from 'mongoose';
 import { Companies, Customers, ImportHistory } from '../db/models';
 import { graphqlPubsub } from '../pubsub';
+import { connect } from './utils';
 
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
 
-dotenv.config();
+connect().then(async () => {
+  const { result, contentType, importHistoryId } = workerData;
 
-const { MONGO_URL = '' } = process.env;
+  let collection: any = Companies;
 
-mongoose.connect(
-  MONGO_URL,
-  { useNewUrlParser: true, useCreateIndex: true },
-  async err => {
-    if (err) {
-      console.log('error', err);
-    }
+  if (contentType === 'customer') {
+    collection = Customers;
+  }
 
-    const { result, contentType, importHistoryId } = workerData;
+  await collection.deleteMany({ _id: { $in: result } });
+  await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: { $in: result } } });
 
-    let collection: any = Companies;
+  const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
 
-    if (contentType === 'customer') {
-      collection = Customers;
-    }
+  if (historyObj && (historyObj.ids || []).length === 0) {
+    graphqlPubsub.publish('importHistoryChanged', {
+      importHistoryChanged: {
+        _id: historyObj._id,
+        status: 'Removed',
+        percentage: 100,
+      },
+    });
 
-    await collection.deleteMany({ _id: { $in: result } });
-    await ImportHistory.updateOne({ _id: importHistoryId }, { $pull: { ids: { $in: result } } });
+    await ImportHistory.deleteOne({ _id: importHistoryId });
+  }
 
-    const historyObj = await ImportHistory.findOne({ _id: importHistoryId });
+  mongoose.connection.close();
 
-    if (historyObj && (historyObj.ids || []).length === 0) {
-      graphqlPubsub.publish('importHistoryChanged', {
-        importHistoryChanged: {
-          _id: historyObj._id,
-          status: 'Removed',
-          percentage: 100,
-        },
-      });
-
-      await ImportHistory.deleteOne({ _id: importHistoryId });
-    }
-
-    mongoose.connection.close();
-
-    parentPort.postMessage('Successfully finished job');
-  },
-);
+  parentPort.postMessage('Successfully finished job');
+});
