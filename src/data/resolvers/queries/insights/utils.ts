@@ -136,7 +136,7 @@ export const getSummaryData = async ({
   end,
   selector,
   collection,
-  dateFieldName = 'createdAt',
+  dateFieldName = 'date',
 }: {
   start: Date;
   end: Date;
@@ -149,20 +149,43 @@ export const getSummaryData = async ({
 
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {
-    const facetMessageSelector = { ...selector };
+    const messageSelector = { ...selector };
 
-    facetMessageSelector[dateFieldName] = {
-      $gte: interval.start.toDate(),
-      $lte: interval.end.toDate(),
+    const startDate = interval.start.toDate();
+    const endDate = interval.end.toDate();
+    const startDateInt = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
+    const endDateInt = endDate.getFullYear() * 10000 + (endDate.getMonth() + 1) * 100 + endDate.getDate();
+
+    messageSelector[dateFieldName] = {
+      $gte: startDateInt,
+      $lte: endDateInt,
     };
+    delete messageSelector.createdAt;
+    delete messageSelector.fromBot;
+    delete messageSelector.userId;
+
+    // const intervalCount = await collection.countDocuments(facetMessageSelector);
     const [intervalCount] = await collection.aggregate([
       {
-        $match: facetMessageSelector,
+        $match: messageSelector,
       },
       {
         $group: {
-          _id: null,
+          _id: {
+            fromBot: '$fromBot',
+            userId: 'userId',
+          },
           count: { $sum: 1 },
+        },
+      },
+      // the following two pipelines will do the trick for
+      // fromBot: {$exists: false} and userId: null
+      {
+        $match: {
+          _id: {
+            fromBot: null,
+            userId: null,
+          },
         },
       },
       {

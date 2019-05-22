@@ -3,7 +3,6 @@ import * as mongoose from 'mongoose';
 import { ConversationMessages } from '../src/db/models';
 
 dotenv.config();
-
 /**
  * Update dateField using createdAt value
  * createdAt.setHours(0, 0, 0, 0)
@@ -20,26 +19,25 @@ module.exports.up = next => {
       console.log('Ensuring indexes complete');
       let bulkOps: any = [];
       console.log('Counting date:null fields');
-      let messageCount = await ConversationMessages.find({ date: null }).countDocuments();
+      let messageCount = await ConversationMessages.countDocuments();
       while (messageCount > 0) {
-        for (const convMessage of await ConversationMessages.find({ date: null })
+        for (const convMessage of await ConversationMessages.find({})
           .select('createdAt')
           .limit(200)) {
           const date = await convMessage.createdAt;
-          await date.setHours(0, 0, 0, 0);
+          const dateInt = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
           bulkOps.push({
-            updateOne: {
+            updateMany: {
               filter: {
                 _id: convMessage._id,
               },
               update: {
-                $set: { date },
+                $set: { date: dateInt },
               },
             },
           });
         }
         messageCount -= 200;
-        console.log(messageCount);
         await ConversationMessages.bulkWrite(bulkOps);
         bulkOps = [];
       }

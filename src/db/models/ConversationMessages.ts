@@ -18,11 +18,12 @@ export const loadClass = () => {
      */
     public static async createMessage(doc: IMessage) {
       const now = new Date();
+      const dateInt = now.getFullYear() * 1000 + now.getMonth() * 10 + now.getDate();
       const message = await Messages.create({
         internal: false,
         ...doc,
         createdAt: now,
-        date: now.setHours(0, 0, 0, 0),
+        date: dateInt,
       });
 
       await Conversations.updateOne(
