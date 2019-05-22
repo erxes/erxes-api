@@ -5,15 +5,8 @@ let intervals: any[] = [];
 
 export const createWorkers = (workerPath: string, workerData: any, results: string[]) => {
   return new Promise((resolve, reject) => {
-    // tslint:disable
-    let Worker;
-
-    try {
-      Worker = require('worker_threads').Worker;
-    } catch (e) {
-      console.log(e);
-      return reject(new Error('Please upgrade node version above 10.5.0 support worker_threads!'));
-    }
+    // tslint:disable-next-line
+    const Worker = require('worker_threads').Worker;
 
     if (workers.length > 0) {
       return reject(new Error('Workers are busy'));
@@ -36,8 +29,8 @@ export const createWorkers = (workerPath: string, workerData: any, results: stri
           });
 
           worker.on('error', e => {
-            removeWorker(worker);
             console.log(e);
+            removeWorker(worker);
           });
 
           worker.on('exit', code => {
