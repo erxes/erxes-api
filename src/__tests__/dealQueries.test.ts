@@ -206,7 +206,7 @@ describe('dealQueries', () => {
   test('Filter by next day', async () => {
     const tommorrow = moment()
       .utc()
-      .add(2, 'days')
+      .add(1, 'days')
       .startOf('days')
       .toDate();
 
