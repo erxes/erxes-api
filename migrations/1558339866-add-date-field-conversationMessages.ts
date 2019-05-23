@@ -21,7 +21,9 @@ module.exports.up = next => {
       console.log('Counting date:null fields');
       let messageCount = await ConversationMessages.countDocuments();
       while (messageCount > 0) {
-        for (const convMessage of await ConversationMessages.find({})
+        console.log(messageCount);
+
+        for (const convMessage of await ConversationMessages.find({ date: { $exists: false } })
           .select('createdAt')
           .limit(200)) {
           const date = await convMessage.createdAt;
@@ -38,7 +40,11 @@ module.exports.up = next => {
           });
         }
         messageCount -= 200;
-        await ConversationMessages.bulkWrite(bulkOps);
+
+        if (bulkOps.length > 0) {
+          await ConversationMessages.bulkWrite(bulkOps);
+        }
+
         bulkOps = [];
       }
       next();

@@ -335,7 +335,10 @@ export const messageSchema = new Schema({
   fromBot: field({ type: Boolean }),
   userId: field({ type: String }),
   createdAt: field({ type: Date }),
+
+  // createdAt field as number. Useful for effective insights calculation
   date: field({ type: Number, index: true }),
+
   isCustomerRead: field({ type: Boolean }),
   formWidgetData: field({ type: Object }),
   messengerAppData: field({ type: Object }),
