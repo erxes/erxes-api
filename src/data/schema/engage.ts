@@ -2,6 +2,7 @@ export const types = `
   type EngageMessage {
     _id: String!
     kind: String
+    tagIds: [String]
     segmentIds: [String]
     brandIds: [String]
     customerIds: [String]
@@ -14,7 +15,6 @@ export const types = `
     createdDate: Date
     type: String
     messengerReceivedCustomerIds: [String]
-    tagIds: [String]
     stats: JSON
     brand: Brand
 
@@ -23,7 +23,9 @@ export const types = `
     deliveryReports: JSON
 
     scheduleDate: EngageScheduleDate
-    segment: Segment
+    segments: [Segment]
+    tags: [Tag]
+    brands: [Brand]
     fromUser: User
     getTags: [Tag]
   }
@@ -85,9 +87,9 @@ const commonParams = `
   scheduleDate: Date,
   type: String
   segmentIds: [String],
+  tagIds: [String],
   brandIds: [String],
   customerIds: [String],
-  tagIds: [String],
   email: EngageMessageEmail,
   scheduleDate: EngageScheduleDateInput,
   messenger: EngageMessageMessenger,
