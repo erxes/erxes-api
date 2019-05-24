@@ -136,7 +136,7 @@ export const getSummaryData = async ({
   end,
   selector,
   collection,
-  dateFieldName = 'date',
+  dateFieldName = 'createdAt',
 }: {
   start: Date;
   end: Date;
@@ -151,20 +151,11 @@ export const getSummaryData = async ({
   for (const interval of intervals) {
     const messageSelector = { ...selector };
 
-    const startDate = interval.start.toDate();
-    const endDate = interval.end.toDate();
-    const startDateInt = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
-    const endDateInt = endDate.getFullYear() * 10000 + (endDate.getMonth() + 1) * 100 + endDate.getDate();
-
     messageSelector[dateFieldName] = {
-      $gte: startDateInt,
-      $lte: endDateInt,
+      $gte: interval.start.toDate(),
+      $lte: interval.end.toDate(),
     };
-    delete messageSelector.createdAt;
-    // Hence fromBot and userId is already handled in date field, so we just query with date field
-    delete messageSelector.userId;
-    delete messageSelector.fromBot;
-    const intervalCount = await collection.countDocuments(messageSelector);
+    const intervalCount = await collection.countDocuments(getDateSelector(messageSelector));
 
     summaries.push({
       title: interval.title,
@@ -174,7 +165,33 @@ export const getSummaryData = async ({
 
   return summaries;
 };
-
+/**
+ * Convert date into integer
+ * NOTE: we only interest date part as integer
+ * 2018-09-21 12:23:23 -> 20180921
+ * @param date
+ */
+export const convertDateToInt = (date: Date) => {
+  return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+};
+/**
+ * Converts message selector using date field
+ * in date field, fromBot and userId is already handled
+ * then, we can just query using date field only
+ * @param selector
+ */
+export const getDateSelector = (selector: IMessageSelector) => {
+  const { createdAt } = selector;
+  if (!createdAt) {
+    return {};
+  }
+  return {
+    date: {
+      $gte: convertDateToInt(createdAt.$gte),
+      $lte: convertDateToInt(createdAt.$lte),
+    },
+  };
+};
 /**
  * Builds messages find query selector.
  */
@@ -235,7 +252,7 @@ export const generateChartDataBySelector = async ({
 }): Promise<IGenerateChartData[]> => {
   const pipelineStages = [
     {
-      $match: selector,
+      $match: getDateSelector(selector),
     },
     {
       $project: {
