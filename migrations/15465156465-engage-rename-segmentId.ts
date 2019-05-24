@@ -15,18 +15,14 @@ module.exports.up = next => {
     MONGO_URL,
     { useNewUrlParser: true, useCreateIndex: true },
     async () => {
-      await EngageMessages.collection.updateMany(
-        { segmentId: { $exists: true } },
-        { $rename: { segmentId: 'segmentIds' } },
-      );
       await EngageMessages.find()
         .cursor()
         .eachAsync((e: any) => {
-          if (!e.segmentIds) {
+          if (!e.segmentId) {
             return;
           }
 
-          e.segmentIds = [e.segmentIds];
+          e.segmentIds = [e.segmentId];
           e.save();
         });
 

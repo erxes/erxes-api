@@ -14,6 +14,7 @@ import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { EMAIL_CONTENT_PLACEHOLDER, INTEGRATION_KIND_CHOICES, MESSAGE_KINDS, METHODS } from '../../constants';
 import { createTransporter, getEnv } from '../../utils';
+import BuilderQuery from '../queries/customerQueryBuilder';
 import QueryBuilder from '../queries/segmentQueryBuilder';
 
 /**
@@ -51,12 +52,33 @@ export const replaceKeys = ({
 const findCustomers = async ({
   customerIds,
   segmentIds,
+  tagIds,
+  brandIds,
 }: {
   customerIds: string[];
   segmentIds?: string[];
+  tagIds?: string[];
+  brandIds?: string[];
 }): Promise<ICustomerDocument[]> => {
   // find matched customers
   let customerQuery: any = { _id: { $in: customerIds || [] } };
+
+  if (tagIds) {
+    customerQuery = { tagIds: { $in: tagIds || [] } };
+  }
+
+  if (brandIds) {
+    const brandQueries: any = [];
+    const qb = new BuilderQuery({});
+
+    await qb.buildAllQueries();
+
+    for (const brandId of brandIds) {
+      brandQueries.push(qb.brandFilter(brandId));
+    }
+
+    customerQuery = brandQueries;
+  }
 
   if (segmentIds) {
     const segmentQueries: any = [];

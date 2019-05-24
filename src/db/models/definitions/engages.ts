@@ -132,6 +132,7 @@ const statsSchema = new Schema(
 export const engageMessageSchema = new Schema({
   _id: field({ pkey: true }),
   kind: field({ type: String }),
+  segmentId: field({ type: String, optional: true }), // TODO Remove
   segmentIds: field({
     type: [String],
     optional: true,
