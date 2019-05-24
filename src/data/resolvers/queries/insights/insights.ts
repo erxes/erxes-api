@@ -1,4 +1,4 @@
-import { ConversationMessages, Conversations, Integrations, Tags } from '../../../../db/models';
+import { ConversationMessages, Conversations, Integrations, Tags, Users } from '../../../../db/models';
 import { IUserDocument } from '../../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
 import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
@@ -412,12 +412,114 @@ const insightQueries = {
     return { trend, teamMembers, time };
   },
 
-  async insightsConversationSummary(_root) {
+  async insightsConversationSummary(_root, args: IListArgs) {
+    // const { startDate, endDate } = args;
+    // const { start, end } = fixDates(startDate, endDate);
+    const { start, end } = fixDates('2019-4-10', '2019-4-17');
+
+    const messageSelector = {
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    const conversationMatch = await getConversationSelector(getFilterSelector(args));
+
+    console.log(start, end);
+    console.log(conversationMatch);
+    console.log(messageSelector);
+
+    const insightAggregateData = await ConversationMessages.aggregate([
+      {
+        $lookup: {
+          from: 'conversations',
+          localField: 'conversationId',
+          foreignField: '_id',
+          as: 'conversation',
+        },
+      },
+      {
+        $match: {
+          $and: [
+            // conversationMatch,
+            messageSelector,
+            { internal: false },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'conversation_messages',
+          let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+                },
+              },
+            },
+            {
+              $project: { conversationId: 1, createdAt: 1, internal: 1, userId: 1, customerId: 1, mentionedUserIds: 1 },
+            },
+          ],
+          as: 'prevMsgs',
+        },
+      },
+      { $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } } },
+      { $project: { conversationId: 1, createdAt: 1, internal: 1, userId: 1, customerId: 1, prevMsg: 1 } },
+      // hasnt prevmsg exclude
+      { $unwind: '$prevMsg' },
+      {
+        $match: {
+          $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }],
+        },
+      },
+      { $addFields: { diffSec: { $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000] } } },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } },
+            user: '$userId',
+          },
+          userId: { $first: '$userId' },
+          date: { $first: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } } },
+          avgSecond: { $avg: '$diffSec' },
+        },
+      },
+    ]);
+
+    if (insightAggregateData.length === 0) {
+      return [
+        { title: 'Average all operator response time', count: 0 },
+        { title: 'Average all customer response time', count: 0 },
+        { title: 'Average internal response time', count: 0 },
+        { title: 'All average', count: 0 },
+      ];
+    }
+
+    const averageTotal =
+      insightAggregateData.reduce((preVal, currVal) => ({ avgSecond: preVal.avgSecond + currVal.avgSecond }))
+        .avgSecond / insightAggregateData.length;
+    console.log(averageTotal);
+
+    const summaryChart = await fixChartData(insightAggregateData, 'date', 'avgSecond');
+    console.log(summaryChart);
+
+    const userIds = await insightAggregateData.map(item => item.userId).filter((v, i, a) => a.indexOf(v) === i);
+
+    const needUsers = await Users.find({ _id: { $in: userIds } });
+    const perUserChart: object[] = [];
+
+    for (const user of needUsers) {
+      const perData = insightAggregateData.filter(item => item.userId === user._id);
+      const perChart = await fixChartData(perData, 'date', 'avgSecond');
+      perUserChart.push({ user, chart: perChart });
+    }
+
     return [
-      { title: 'Average all operator response time', count: 100 },
-      { title: 'Average all customer response time', count: 0.412 },
-      { title: 'Average internal response time', count: 50 },
-      { title: 'All average', count: 0.235 },
+      { title: 'Average all operator response time', count: averageTotal },
+      { title: 'Average all customer response time', count: 0 },
+      { title: 'Average internal response time', count: 0 },
+      { title: 'All average', count: 0 },
     ];
   },
 };
