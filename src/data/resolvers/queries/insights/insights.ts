@@ -488,12 +488,16 @@ const insightQueries = {
     ]);
 
     if (insightAggregateData.length === 0) {
-      return [
-        { title: 'Average all operator response time', count: 0 },
-        { title: 'Average all customer response time', count: 0 },
-        { title: 'Average internal response time', count: 0 },
-        { title: 'All average', count: 0 },
-      ];
+      return {
+        avg: [
+          { title: 'Average all operator response time', count: 0 },
+          { title: 'Average all customer response time', count: 0 },
+          { title: 'Average internal response time', count: 0 },
+          { title: 'All average', count: 0 },
+        ],
+        trend: [],
+        teamMembers: [],
+      };
     }
 
     const averageTotal =
@@ -515,12 +519,16 @@ const insightQueries = {
       perUserChart.push({ user, chart: perChart });
     }
 
-    return [
-      { title: 'Average all operator response time', count: averageTotal },
-      { title: 'Average all customer response time', count: 0 },
-      { title: 'Average internal response time', count: 0 },
-      { title: 'All average', count: 0 },
-    ];
+    return {
+      avg: [
+        { title: 'Average all operator response time', count: averageTotal },
+        { title: 'Average all customer response time', count: 0 },
+        { title: 'Average internal response time', count: 0 },
+        { title: 'All average', count: 0 },
+      ],
+      trend: summaryChart,
+      teamMembers: perUserChart,
+    };
   },
 };
 
