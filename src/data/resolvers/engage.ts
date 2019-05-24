@@ -3,15 +3,15 @@ import { IEngageMessageDocument } from '../../db/models/definitions/engages';
 
 export default {
   segments(engageMessage: IEngageMessageDocument) {
-    return Segments.findOne({ _id: { $in: engageMessage.segmentIds } });
+    return Segments.find({ _id: { $in: engageMessage.segmentIds } });
   },
 
   brands(engageMessage: IEngageMessageDocument) {
-    return Brands.findOne({ _id: { $in: engageMessage.brandIds } });
+    return Brands.find({ _id: { $in: engageMessage.brandIds } });
   },
 
   tags(engageMessage: IEngageMessageDocument) {
-    return Tags.findOne({ _id: { $in: engageMessage.tagIds } });
+    return Tags.find({ _id: { $in: engageMessage.tagIds } });
   },
 
   fromUser(engageMessage: IEngageMessageDocument) {

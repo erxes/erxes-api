@@ -48,8 +48,8 @@ export interface IEngageMessage {
   kind?: string;
   segmentIds?: string[];
   brandIds?: string[];
-  customerIds?: string[];
   tagIds?: string[];
+  customerIds?: string[];
   title?: string;
   fromUserId?: string;
   method?: string;

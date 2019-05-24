@@ -63,7 +63,7 @@ const findCustomers = async ({
     const segments = await Segments.find({ _id: { $in: segmentIds } });
 
     for (const segment of segments) {
-      segmentQueries.push(await QueryBuilder.segments(segment));
+      segmentQueries.push(...(await QueryBuilder.segments(segment)));
     }
 
     customerQuery = segmentQueries;
