@@ -24,12 +24,13 @@ import { userMiddleware } from './auth';
 import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import typeDefs from './data/schema';
-import { checkFile, getEnv, importXlsFile, readFileRequest, uploadFile } from './data/utils';
+import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { Conversations, Customers } from './db/models';
 import { graphqlPubsub } from './pubsub';
 import { init } from './startup';
 import { getAttachment } from './trackers/gmail';
+import { importXlsFile } from './workers/bulkInsert';
 
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
@@ -262,10 +263,10 @@ app.post('/import-file', (req: any, res) => {
 
     importXlsFile(response.file, fields.type, { user: req.user })
       .then(result => {
-        res.json(result);
+        return res.json(result);
       })
       .catch(e => {
-        res.json(e);
+        return res.json({ status: 'error', message: e.message });
       });
   });
 });

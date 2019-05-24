@@ -149,39 +149,49 @@ export const getSummaryData = async ({
 
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {
-    const facetMessageSelector = { ...selector };
+    const messageSelector = { ...selector };
 
-    facetMessageSelector[dateFieldName] = {
+    messageSelector[dateFieldName] = {
       $gte: interval.start.toDate(),
       $lte: interval.end.toDate(),
     };
-    const [intervalCount] = await collection.aggregate([
-      {
-        $match: facetMessageSelector,
-      },
-      {
-        $group: {
-          _id: null,
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          count: 1,
-        },
-      },
-    ]);
+    const intervalCount = await collection.countDocuments(getDateSelector(messageSelector));
 
     summaries.push({
       title: interval.title,
-      count: intervalCount ? intervalCount.count : 0,
+      count: intervalCount || 0,
     });
   }
 
   return summaries;
 };
-
+/**
+ * Convert date into integer
+ * NOTE: we only interest date part as integer
+ * 2018-09-21 12:23:23 -> 20180921
+ * @param date
+ */
+export const convertDateToInt = (date: Date) => {
+  return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+};
+/**
+ * Converts message selector using date field
+ * in date field, fromBot and userId is already handled
+ * then, we can just query using date field only
+ * @param selector
+ */
+export const getDateSelector = (selector: IMessageSelector) => {
+  const { createdAt } = selector;
+  if (!createdAt) {
+    return {};
+  }
+  return {
+    date: {
+      $gte: convertDateToInt(createdAt.$gte),
+      $lte: convertDateToInt(createdAt.$lte),
+    },
+  };
+};
 /**
  * Builds messages find query selector.
  */
@@ -242,7 +252,7 @@ export const generateChartDataBySelector = async ({
 }): Promise<IGenerateChartData[]> => {
   const pipelineStages = [
     {
-      $match: selector,
+      $match: getDateSelector(selector),
     },
     {
       $project: {

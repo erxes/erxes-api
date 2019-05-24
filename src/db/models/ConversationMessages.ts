@@ -17,25 +17,23 @@ export const loadClass = () => {
      * Create a message
      */
     public static async createMessage(doc: IMessage) {
+      const now = new Date();
+      let dateInt = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+      if (doc.userId || doc.fromBot) {
+        dateInt = 0;
+      }
       const message = await Messages.create({
         internal: false,
         ...doc,
-        createdAt: new Date(),
+        createdAt: now,
+        date: dateInt,
       });
-
-      const messageCount = await Messages.find({
-        conversationId: message.conversationId,
-      }).countDocuments();
 
       await Conversations.updateOne(
         { _id: message.conversationId },
         {
-          $set: {
-            messageCount,
-
-            // updating updatedAt
-            updatedAt: new Date(),
-          },
+          $inc: { messageCount: 1 },
+          $set: { updatedAt: now },
         },
       );
 

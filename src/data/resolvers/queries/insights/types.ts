@@ -2,7 +2,8 @@ import * as moment from 'moment';
 
 export interface IMessageSelector {
   userId?: string;
-  createdAt?: { $gte: Date; $lte: Date };
+  createdAt?: { $lte: Date; $gte: Date };
+  date?: { $lte: number; $gte: number };
   fromBot?: { $exists: boolean };
   conversationId?: {
     $in: string[];
@@ -129,6 +130,10 @@ export interface IGenerateMessage {
   createdAt?: {
     $gte: Date;
     $lte: Date;
+  };
+  date?: {
+    $lte: number;
+    $gte: number;
   };
 }
 
