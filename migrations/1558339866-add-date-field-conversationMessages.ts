@@ -19,15 +19,21 @@ module.exports.up = next => {
       console.log('Ensuring indexes complete');
       let bulkOps: any = [];
       console.log('Counting date:null fields');
-      let messageCount = await ConversationMessages.countDocuments();
+      await ConversationMessages.updateMany({}, { $set: { date: 1 } });
+      let messageCount = await ConversationMessages.countDocuments({ date: 1 });
       while (messageCount > 0) {
         console.log(messageCount);
 
-        for (const convMessage of await ConversationMessages.find({ date: { $exists: false } })
-          .select('createdAt')
+        for (const convMessage of await ConversationMessages.find({ date: 1 })
+          .select({ createdAt: 1, userId: 1, fromBot: 1 })
           .limit(200)) {
           const date = await convMessage.createdAt;
-          const dateInt = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+          let dateInt = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+          const userId = await convMessage.userId;
+          const fromBot = await convMessage.fromBot;
+          if (userId || fromBot) {
+            dateInt = 0;
+          }
           bulkOps.push({
             updateMany: {
               filter: {

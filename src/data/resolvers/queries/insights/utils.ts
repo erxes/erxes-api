@@ -161,43 +161,14 @@ export const getSummaryData = async ({
       $lte: endDateInt,
     };
     delete messageSelector.createdAt;
-    delete messageSelector.fromBot;
-    const userId = messageSelector.userId || null;
+    // Hence fromBot and userId is already handled in date field, so we just query with date field
     delete messageSelector.userId;
-
-    const [intervalCount] = await collection.aggregate([
-      {
-        $match: messageSelector,
-      },
-      {
-        $group: {
-          _id: {
-            fromBot: '$fromBot',
-            userId: '$userId',
-          },
-          count: { $sum: 1 },
-        },
-      },
-      // the following two pipelines will do the trick for
-      // fromBot: {$exists: false} and userId: null
-      {
-        $match: {
-          _id: {
-            userId,
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          count: 1,
-        },
-      },
-    ]);
+    delete messageSelector.fromBot;
+    const intervalCount = await collection.countDocuments(messageSelector);
 
     summaries.push({
       title: interval.title,
-      count: intervalCount ? intervalCount.count : 0,
+      count: intervalCount || 0,
     });
   }
 

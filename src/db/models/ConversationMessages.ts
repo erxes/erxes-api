@@ -18,7 +18,10 @@ export const loadClass = () => {
      */
     public static async createMessage(doc: IMessage) {
       const now = new Date();
-      const dateInt = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+      let dateInt = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+      if (doc.userId || doc.fromBot) {
+        dateInt = 0;
+      }
       const message = await Messages.create({
         internal: false,
         ...doc,
