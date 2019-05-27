@@ -219,6 +219,29 @@ describe('Test deals mutations', () => {
     expect(await DealPipelines.findOne({ _id: pipeline._id })).toBe(null);
   });
 
+  test('Change pipeline background color', async () => {
+    const args = {
+      _id: pipeline._id,
+      backgroundColor: 'green',
+    };
+
+    const mutation = `
+      mutation dealPipelinesChangeBackground($_id: String! $backgroundColor: String) {
+        dealPipelinesChangeBackground(_id: $_id backgroundColor: $backgroundColor)
+      }
+    `;
+
+    await graphqlRequest(mutation, 'dealPipelinesChangeBackground', args);
+
+    const response = await DealPipelines.findOne({ _id: pipeline._id });
+
+    if (!response) {
+      throw new Error('Change pipeline background color mutation failed');
+    }
+
+    expect(response.backgroundColor).toBe(args.backgroundColor);
+  });
+
   test('Create stage', async () => {
     const args = {
       name: 'deal stage',

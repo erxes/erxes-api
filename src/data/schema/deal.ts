@@ -15,6 +15,7 @@ export const types = `
     _id: String!
     name: String!
     boardId: String!
+    backgroundColor: String
     visiblity: String!
     memberIds: [String]
     ${commonTypes}
@@ -151,6 +152,7 @@ export const mutations = `
   dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON, visiblity: String!, memberIds: [String]): DealPipeline
   dealPipelinesUpdateOrder(orders: [OrderItem]): [DealPipeline]
   dealPipelinesRemove(_id: String!): JSON
+  dealPipelinesChangeBackground(_id: String!, backgroundColor: String): JSON
 
   dealStagesAdd(${dealStageMutationParams}): DealStage
   dealStagesEdit(_id: String!, ${dealStageMutationParams}): DealStage

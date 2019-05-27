@@ -20,6 +20,7 @@ export interface IBoardDocument extends IBoard, Document {
 export interface IPipeline extends ICommonFields {
   name?: string;
   boardId?: string;
+  backgroundColor?: string;
   visiblity?: string;
   memberIds?: string[];
 }
@@ -105,6 +106,7 @@ export const pipelineSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
   boardId: field({ type: String }),
+  backgroundColor: field({ type: String, optional: true }),
   visiblity: field({
     type: String,
     enum: PIPELINE_VISIBLITIES.ALL,

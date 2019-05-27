@@ -111,6 +111,13 @@ const dealMutations = {
   },
 
   /**
+   *  Change pipeline background color
+   */
+  dealPipelinesChangeBackground(_root, { _id, backgroundColor }: { _id: string; backgroundColor: string }) {
+    return DealPipelines.changeBackground(_id, backgroundColor);
+  },
+
+  /**
    * Create new stage
    */
   dealStagesAdd(_root, doc: IStage, { user }: { user: IUserDocument }) {

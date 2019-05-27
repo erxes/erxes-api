@@ -129,6 +129,7 @@ export interface IPipelineModel extends Model<IPipelineDocument> {
   updatePipeline(_id: string, doc: IPipeline, stages: IPipelineStage[]): Promise<IPipelineDocument>;
   updateOrder(orders: IOrderInput[]): Promise<IPipelineDocument[]>;
   removePipeline(_id: string): void;
+  changeBackground(_id: string, backgroundColor: string): void;
 }
 
 export const loadPipelineClass = () => {
@@ -203,6 +204,13 @@ export const loadPipelineClass = () => {
       }
 
       return DealPipelines.deleteOne({ _id });
+    }
+
+    /*
+     * Change background color
+     */
+    public static async changeBackground(_id: string, backgroundColor: string) {
+      return DealPipelines.updateOne({ _id }, { $set: { backgroundColor } });
     }
   }
 
