@@ -43,15 +43,36 @@ export const types = `
 export const queries = `
   dealDetail(_id: String!): Deal
   deals(
-    pipelineId: String,
-    stageId: String, 
-    customerId: String, 
-    companyId: String,
-    date: ItemDate,
+    pipelineId: String
+    stageId: String
+    customerIds: [String]
+    companyIds: [String]
+    date: ItemDate
     skip: Int
     search: String,
+    customerIds: [String]
+    companyIds: [String]
+    assignedUserIds: [String]
+    productIds: [String]
+    nextDay: String
+    nextWeek: String
+    nextMonth: String
+    noCloseDate: String
+    overdue: String
   ): [Deal]
-  dealsTotalAmounts(date: ItemDate pipelineId: String): DealTotalAmounts
+  dealsTotalAmounts(
+    date: ItemDate 
+    pipelineId: String 
+    customerIds: [String]
+    companyIds: [String]
+    assignedUserIds: [String]
+    productIds: [String]
+    nextDay: String
+    nextWeek: String
+    nextMonth: String
+    noCloseDate: String
+    overdue: String
+  ): DealTotalAmounts
 `;
 
 const commonParams = `

@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
 import { field } from '../utils';
-import { BOARD_TYPES, PROBABILITY } from './constants';
+import { BOARD_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 
 interface ICommonFields {
   userId?: string;
@@ -66,6 +66,11 @@ export const pipelineSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
   boardId: field({ type: String }),
+  visiblity: field({
+    type: String,
+    enum: PIPELINE_VISIBLITIES.ALL,
+    default: PIPELINE_VISIBLITIES.PUBLIC,
+  }),
   ...commonFieldsSchema,
 });
 

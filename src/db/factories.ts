@@ -692,6 +692,7 @@ export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
     name: faker.random.word(),
     boardId: params.boardId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
+    visiblity: 'public',
   });
 
   return pipeline.save();
@@ -715,8 +716,11 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
 interface IDealFactoryInput {
   stageId?: string;
   productsData?: any;
+  closeDate?: Date;
   customerIds?: string[];
   companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
 }
 
 export const dealFactory = (params: IDealFactoryInput = {}) => {
@@ -727,9 +731,9 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
     companyIds: params.companyIds || [faker.random.word()],
     customerIds: params.customerIds || [faker.random.word()],
     amount: faker.random.objectElement(),
-    closeDate: new Date(),
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
-    assignedUserIds: [faker.random.word()],
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
   });
 
   return deal.save();

@@ -1,8 +1,23 @@
 import { Pipelines } from '../../db/models';
 import { IBoardDocument } from '../../db/models/definitions/boards';
+import { IUserDocument } from '../../db/models/definitions/users';
 
 export default {
-  pipelines(board: IBoardDocument) {
-    return Pipelines.find({ boardId: board._id });
+  pipelines(board: IBoardDocument, {}, { user }: { user: IUserDocument }) {
+    if (user.isOwner) {
+      return Pipelines.find({ boardId: board._id });
+    }
+
+    return Pipelines.find({
+      $and: [
+        { boardId: board._id },
+        {
+          $or: [
+            { visiblity: 'public' },
+            { visiblity: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] },
+          ],
+        },
+      ],
+    });
   },
 };
