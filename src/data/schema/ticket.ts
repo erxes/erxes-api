@@ -9,8 +9,14 @@ export const types = `
     name: String!
     stageId: String
     boardId: String
+    companyIds: [String]
+    customerIds: [String]
+    assignedUserIds: [String]
     closeDate: Date
     description: String
+    companies: [Company]
+    customers: [Customer]
+    assignedUsers: [User]
     modifiedAt: Date
     modifiedBy: String
     ${commonTypes}

@@ -1,16 +1,17 @@
-import { Deals } from '../../db/models';
+import { Deals, Tickets } from '../../db/models';
 import { IStageDocument } from '../../db/models/definitions/boards';
 import { BOARD_TYPES } from '../../db/models/definitions/constants';
+import { generateCommonFilters } from './queries/deals';
 import { dealsCommonFilter } from './queries/utils';
 
 export default {
-  async amount(stage: IStageDocument, _args, _context, { variableValues: { search } }) {
+  async amount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
     const amountsMap = {};
 
     if (stage.type === BOARD_TYPES.DEAL) {
       const amountList = await Deals.aggregate([
         {
-          $match: dealsCommonFilter({ stageId: stage._id }, { search }),
+          $match: dealsCommonFilter({ ...generateCommonFilters(args), stageId: stage._id }, { search }),
         },
         {
           $unwind: '$productsData',
@@ -39,10 +40,13 @@ export default {
     return amountsMap;
   },
 
-  itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search } }) {
+  itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
     switch (stage.type) {
       case BOARD_TYPES.DEAL: {
-        return Deals.find(dealsCommonFilter({}, { search })).count({ stageId: stage._id });
+        return Deals.find(dealsCommonFilter(generateCommonFilters(args), { search })).count({ stageId: stage._id });
+      }
+      case BOARD_TYPES.TICKET: {
+        return Tickets.find(dealsCommonFilter({}, { search })).count({ stageId: stage._id });
       }
     }
   },

@@ -9,6 +9,8 @@ interface ICommonFields {
 
 export interface ITicket extends ICommonFields {
   name?: string;
+  companyIds?: string[];
+  customerIds?: string[];
   closeDate?: Date;
   description?: string;
   assignedUserIds?: string[];
