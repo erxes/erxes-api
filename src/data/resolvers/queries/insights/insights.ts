@@ -1,9 +1,9 @@
-import { ConversationMessages, Conversations, Integrations, Tags, Users } from '../../../../db/models';
+import { ConversationMessages, Conversations, Integrations, Tags } from '../../../../db/models';
 import { IUserDocument } from '../../../../db/models/definitions/users';
 import { FACEBOOK_DATA_KINDS, INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
 import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
 import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
-import { IListArgs, IPieChartData } from './types';
+import { IFilterSelector, IListArgs, IPieChartData } from './types';
 import {
   fixChartData,
   fixDates,
@@ -12,6 +12,7 @@ import {
   generatePunchData,
   generateResponseData,
   getConversationSelector,
+  getConversationSelectoryByMsg,
   getFilterSelector,
   getMessageSelector,
   getSummaryData,
@@ -413,36 +414,29 @@ const insightQueries = {
   },
 
   async insightsConversationSummary(_root, args: IListArgs) {
-    // const { startDate, endDate } = args;
-    // const { start, end } = fixDates(startDate, endDate);
-    const { start, end } = fixDates('2019-4-10', '2019-4-17');
+    const { startDate, endDate, integrationIds, brandIds } = args;
+    const { start, end } = fixDates(startDate, endDate);
 
     const messageSelector = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    const conversationMatch = await getConversationSelector(getFilterSelector(args));
+    const filterSelector: IFilterSelector = { integration: {} };
 
-    console.log(start, end);
-    console.log(conversationMatch);
-    console.log(messageSelector);
+    if (integrationIds) {
+      filterSelector.integration.kind = { $in: integrationIds.split(',') };
+    }
+
+    if (brandIds) {
+      filterSelector.integration.brandId = { $in: brandIds.split(',') };
+    }
+
+    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
 
     const insightAggregateData = await ConversationMessages.aggregate([
       {
-        $lookup: {
-          from: 'conversations',
-          localField: 'conversationId',
-          foreignField: '_id',
-          as: 'conversation',
-        },
-      },
-      {
         $match: {
-          $and: [
-            // conversationMatch,
-            messageSelector,
-            { internal: false },
-          ],
+          $and: [conversationSelector, messageSelector, { internal: false }],
         },
       },
       {
@@ -475,12 +469,25 @@ const insightQueries = {
       },
       { $addFields: { diffSec: { $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000] } } },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userDoc',
+        },
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
+      },
+      {
         $group: {
           _id: {
             date: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } },
             user: '$userId',
           },
           userId: { $first: '$userId' },
+          fullName: { $first: '$fullName' },
+          avatar: { $first: '$avatar' },
           date: { $first: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } } },
           avgSecond: { $avg: '$diffSec' },
         },
@@ -501,22 +508,25 @@ const insightQueries = {
     }
 
     const averageTotal =
-      insightAggregateData.reduce((preVal, currVal) => ({ avgSecond: preVal.avgSecond + currVal.avgSecond }))
-        .avgSecond / insightAggregateData.length;
-    console.log(averageTotal);
+      insightAggregateData.reduce((preVal, currVal) => ({
+        avgSecond: preVal.avgSecond + currVal.avgSecond,
+      })).avgSecond / insightAggregateData.length;
 
     const summaryChart = await fixChartData(insightAggregateData, 'date', 'avgSecond');
-    console.log(summaryChart);
 
     const userIds = await insightAggregateData.map(item => item.userId).filter((v, i, a) => a.indexOf(v) === i);
 
-    const needUsers = await Users.find({ _id: { $in: userIds } });
     const perUserChart: object[] = [];
 
-    for (const user of needUsers) {
-      const perData = insightAggregateData.filter(item => item.userId === user._id);
+    for (const userId of userIds) {
+      const perData = insightAggregateData.filter(item => item.userId === userId);
       const perChart = await fixChartData(perData, 'date', 'avgSecond');
-      perUserChart.push({ user, chart: perChart });
+
+      perUserChart.push({
+        avatar: perData[0].avatar,
+        fullName: perData[0].fullName,
+        graph: perChart,
+      });
     }
 
     return {

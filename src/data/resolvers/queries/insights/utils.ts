@@ -532,3 +532,27 @@ export const timeIntervalBranches = () => {
     then: t.name,
   }));
 };
+
+/**
+ * Return conversationSelect for aggregation
+ * @param filterSelector
+ * @param conversationSelector
+ * @param messageSelector
+ */
+export const getConversationSelectoryByMsg = async (
+  filterSelector: any,
+  conversationSelector: any = {},
+  messageSelector: any = {},
+): Promise<any> => {
+  if (Object.keys(filterSelector.integration).length > 0) {
+    const integrationIds = await Integrations.find(filterSelector.integration).select('_id');
+    conversationSelector.integrationId = { $in: integrationIds.map(row => row._id) };
+
+    const conversationIds = await Conversations.find(conversationSelector).select('_id');
+
+    const rawConversationIds = await conversationIds.map(obj => obj._id);
+    messageSelector.conversationId = { $in: rawConversationIds };
+  }
+
+  return { ...messageSelector };
+};
