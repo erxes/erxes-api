@@ -14,7 +14,6 @@ import {
   getConversationSelector,
   getConversationSelectoryByMsg,
   getFilterSelector,
-  getMessagesAggregateData,
   getMessageSelector,
   getSummaryData,
   getSummaryDates,
@@ -434,7 +433,94 @@ const insightQueries = {
 
     const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
 
-    const insightAggregateData = await getMessagesAggregateData(messageSelector, conversationSelector);
+    const lookupPrevMsg = {
+      $lookup: {
+        from: 'conversation_messages',
+        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+              },
+            },
+          },
+          {
+            $project: {
+              conversationId: 1,
+              createdAt: 1,
+              internal: 1,
+              userId: 1,
+              customerId: 1,
+              mentionedUserIds: 1,
+            },
+          },
+        ],
+        as: 'prevMsgs',
+      },
+    };
+    const prevMsgSlice = {
+      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
+    };
+    const diffSecondCalc = {
+      $addFields: {
+        diffSec: {
+          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
+        },
+      },
+    };
+    const firstProject = {
+      $project: {
+        conversationId: 1,
+        createdAt: 1,
+        internal: 1,
+        userId: 1,
+        customerId: 1,
+        prevMsg: 1,
+      },
+    };
+
+    const insightAggregateData = await ConversationMessages.aggregate([
+      {
+        $match: {
+          $and: [conversationSelector, messageSelector, { internal: false }],
+        },
+      },
+      lookupPrevMsg,
+      prevMsgSlice,
+      firstProject,
+      { $unwind: '$prevMsg' },
+      {
+        $match: {
+          $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }],
+        },
+      },
+      diffSecondCalc,
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userDoc',
+        },
+      },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } },
+            user: '$userId',
+          },
+          userId: { $first: '$userId' },
+          fullName: { $first: '$fullName' },
+          avatar: { $first: '$avatar' },
+          date: { $first: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } } },
+          avgSecond: { $avg: '$diffSec' },
+        },
+      },
+    ]);
 
     if (insightAggregateData.length === 0) {
       return {
@@ -471,12 +557,93 @@ const insightQueries = {
       });
     }
 
+    const insightAggregateCustomer = await ConversationMessages.aggregate([
+      {
+        $match: {
+          $and: [conversationSelector, messageSelector, { internal: false }],
+        },
+      },
+      lookupPrevMsg,
+      prevMsgSlice,
+      firstProject,
+      { $unwind: '$prevMsg' },
+      {
+        $match: {
+          $and: [{ customerId: { $exists: true } }, { 'prevMsg.userId': { $exists: true } }],
+        },
+      },
+      diffSecondCalc,
+      {
+        $group: {
+          _id: 'customerId',
+          avgSecond: { $avg: '$diffSec' },
+        },
+      },
+    ]);
+
+    const insightAggregateInternal = await ConversationMessages.aggregate([
+      {
+        $match: {
+          $and: [conversationSelector, messageSelector, { internal: true }],
+        },
+      },
+      lookupPrevMsg,
+      prevMsgSlice,
+      firstProject,
+      { $unwind: '$prevMsg' },
+      {
+        $match: {
+          userId: { $exists: true },
+        },
+      },
+      diffSecondCalc,
+      {
+        $group: {
+          _id: '',
+          avgSecond: { $avg: '$diffSec' },
+        },
+      },
+    ]);
+
+    const insightAggregateAllAvg = await ConversationMessages.aggregate([
+      {
+        $match: {
+          $and: [conversationSelector, messageSelector],
+        },
+      },
+      lookupPrevMsg,
+      prevMsgSlice,
+      firstProject,
+      { $unwind: '$prevMsg' },
+      {
+        $match: {
+          $or: [
+            { $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }] },
+            { $and: [{ customerId: { $exists: true } }, { 'prevMsg.userId': { $exists: true } }] },
+          ],
+        },
+      },
+      diffSecondCalc,
+      {
+        $group: {
+          _id: '',
+          avgSecond: { $avg: '$diffSec' },
+        },
+      },
+    ]);
+
     return {
       avg: [
         { title: 'Average all operator response time', count: averageTotal },
-        { title: 'Average all customer response time', count: 0 },
-        { title: 'Average internal response time', count: 0 },
-        { title: 'All average', count: 0 },
+        {
+          title: 'Average all customer response time',
+          count: insightAggregateCustomer ? insightAggregateCustomer[0].avgSecond : 0,
+        },
+        {
+          title: 'Average internal response time',
+          count: insightAggregateInternal ? insightAggregateInternal[0].avgSecond : 0,
+        },
+        { title: 'All average', count: insightAggregateAllAvg ? insightAggregateAllAvg[0].avgSecond : 0 },
       ],
       trend: summaryChart,
       teamMembers: perUserChart,
