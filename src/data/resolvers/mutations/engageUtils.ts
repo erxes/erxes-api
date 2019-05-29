@@ -14,7 +14,6 @@ import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { EMAIL_CONTENT_PLACEHOLDER, INTEGRATION_KIND_CHOICES, MESSAGE_KINDS, METHODS } from '../../constants';
 import { createTransporter, getEnv } from '../../utils';
-import BuilderQuery from '../queries/customerQueryBuilder';
 import QueryBuilder from '../queries/segmentQueryBuilder';
 
 /**
@@ -51,9 +50,9 @@ export const replaceKeys = ({
  */
 const findCustomers = async ({
   customerIds,
-  segmentIds,
-  tagIds,
-  brandIds,
+  segmentIds = [],
+  tagIds = [],
+  brandIds = [],
 }: {
   customerIds: string[];
   segmentIds?: string[];
@@ -63,24 +62,17 @@ const findCustomers = async ({
   // find matched customers
   let customerQuery: any = { _id: { $in: customerIds || [] } };
 
-  if (tagIds) {
+  if (tagIds.length > 0) {
     customerQuery = { tagIds: { $in: tagIds || [] } };
   }
 
-  if (brandIds) {
-    const brandQueries: any = [];
-    const qb = new BuilderQuery({});
+  if (brandIds.length > 0) {
+    const integrationIds = await Integrations.find({ brandId: { $in: brandIds } }).distinct('_id');
 
-    await qb.buildAllQueries();
-
-    for (const brandId of brandIds) {
-      brandQueries.push(qb.brandFilter(brandId));
-    }
-
-    customerQuery = brandQueries;
+    customerQuery = { integrationId: { $in: integrationIds } };
   }
 
-  if (segmentIds) {
+  if (segmentIds.length > 0) {
     const segmentQueries: any = [];
     const segments = await Segments.find({ _id: { $in: segmentIds } });
 
@@ -134,7 +126,7 @@ const executeSendViaEmail = async (
  * Send via email
  */
 const sendViaEmail = async (message: IEngageMessageDocument) => {
-  const { fromUserId, segmentIds, customerIds = [] } = message;
+  const { fromUserId, tagIds, brandIds, segmentIds, customerIds = [] } = message;
 
   if (!message.email) {
     return;
@@ -159,7 +151,7 @@ const sendViaEmail = async (message: IEngageMessageDocument) => {
   const template = await EmailTemplates.findOne({ _id: templateId });
 
   // find matched customers
-  const customers = await findCustomers({ customerIds, segmentIds });
+  const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
 
   // save matched customer ids
   EngageMessages.setCustomerIds(message._id, customers);
@@ -204,7 +196,7 @@ const sendViaEmail = async (message: IEngageMessageDocument) => {
  * Send via messenger
  */
 const sendViaMessenger = async (message: IEngageMessageDocument) => {
-  const { fromUserId, segmentIds, customerIds = [] } = message;
+  const { fromUserId, tagIds, brandIds, segmentIds, customerIds = [] } = message;
 
   if (!message.messenger) {
     return;
@@ -229,7 +221,7 @@ const sendViaMessenger = async (message: IEngageMessageDocument) => {
   }
 
   // find matched customers
-  const customers = await findCustomers({ customerIds, segmentIds });
+  const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
 
   // save matched customer ids
   EngageMessages.setCustomerIds(message._id, customers);
