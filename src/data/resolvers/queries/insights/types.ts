@@ -137,3 +137,12 @@ export interface IResponseFirstResponseExport {
   title: string;
   _id: string;
 }
+
+export interface IConversationMessagesAggregatedData {
+  _id: any;
+  avatar: any;
+  avgSecond: any;
+  date: string;
+  fullName: string;
+  userId: string;
+}

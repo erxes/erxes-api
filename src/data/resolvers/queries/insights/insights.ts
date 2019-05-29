@@ -14,6 +14,7 @@ import {
   getConversationSelector,
   getConversationSelectoryByMsg,
   getFilterSelector,
+  getMessagesAggregateData,
   getMessageSelector,
   getSummaryData,
   getSummaryDates,
@@ -433,66 +434,7 @@ const insightQueries = {
 
     const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
 
-    const insightAggregateData = await ConversationMessages.aggregate([
-      {
-        $match: {
-          $and: [conversationSelector, messageSelector, { internal: false }],
-        },
-      },
-      {
-        $lookup: {
-          from: 'conversation_messages',
-          let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
-                },
-              },
-            },
-            {
-              $project: { conversationId: 1, createdAt: 1, internal: 1, userId: 1, customerId: 1, mentionedUserIds: 1 },
-            },
-          ],
-          as: 'prevMsgs',
-        },
-      },
-      { $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } } },
-      { $project: { conversationId: 1, createdAt: 1, internal: 1, userId: 1, customerId: 1, prevMsg: 1 } },
-      // hasnt prevmsg exclude
-      { $unwind: '$prevMsg' },
-      {
-        $match: {
-          $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }],
-        },
-      },
-      { $addFields: { diffSec: { $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000] } } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'userDoc',
-        },
-      },
-      {
-        $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
-      },
-      {
-        $group: {
-          _id: {
-            date: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } },
-            user: '$userId',
-          },
-          userId: { $first: '$userId' },
-          fullName: { $first: '$fullName' },
-          avatar: { $first: '$avatar' },
-          date: { $first: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } } },
-          avgSecond: { $avg: '$diffSec' },
-        },
-      },
-    ]);
+    const insightAggregateData = await getMessagesAggregateData(messageSelector, conversationSelector);
 
     if (insightAggregateData.length === 0) {
       return {

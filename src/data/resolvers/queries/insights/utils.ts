@@ -16,6 +16,7 @@ import { CONVERSATION_STATUSES, INSIGHT_TYPES } from '../../../constants';
 import { getDateFieldAsStr } from '../aggregationUtils';
 import { fixDate } from '../utils';
 import {
+  IConversationMessagesAggregatedData,
   IDealListArgs,
   IDealSelector,
   IFilterSelector,
@@ -555,4 +556,94 @@ export const getConversationSelectoryByMsg = async (
   }
 
   return { ...messageSelector };
+};
+
+export const getMessagesAggregateData = async (
+  messageSelector: any,
+  conversationSelector: any,
+  groupBy: any = {
+    _id: {
+      date: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } },
+      user: '$userId',
+    },
+    userId: { $first: '$userId' },
+    fullName: { $first: '$fullName' },
+    avatar: { $first: '$avatar' },
+    date: { $first: { $dateToString: { date: '$createdAt', format: '%Y-%m-%d' } } },
+    avgSecond: { $avg: '$diffSec' },
+  },
+  internal: any = { internal: false },
+  condition: any = { $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }] },
+): Promise<IConversationMessagesAggregatedData[]> => {
+  const data = await ConversationMessages.aggregate([
+    {
+      $match: {
+        $and: [conversationSelector, messageSelector, internal],
+      },
+    },
+    {
+      $lookup: {
+        from: 'conversation_messages',
+        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+              },
+            },
+          },
+          {
+            $project: {
+              conversationId: 1,
+              createdAt: 1,
+              internal: 1,
+              userId: 1,
+              customerId: 1,
+              mentionedUserIds: 1,
+            },
+          },
+        ],
+        as: 'prevMsgs',
+      },
+    },
+    { $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } } },
+    {
+      $project: {
+        conversationId: 1,
+        createdAt: 1,
+        internal: 1,
+        userId: 1,
+        customerId: 1,
+        prevMsg: 1,
+      },
+    },
+    { $unwind: '$prevMsg' },
+    {
+      $match: condition,
+    },
+    {
+      $addFields: {
+        diffSec: {
+          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'userDoc',
+      },
+    },
+    {
+      $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$userDoc.details', 0] }, '$$ROOT'] } },
+    },
+    {
+      $group: groupBy,
+    },
+  ]);
+
+  return data;
 };
