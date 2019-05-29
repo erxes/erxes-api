@@ -27,6 +27,7 @@ import Script from './script';
 import Segment from './segment';
 import Stage from './stages';
 import Subscription from './subscriptions';
+import Ticket from './tickets';
 import User from './user';
 
 const resolvers: any = {
@@ -66,6 +67,7 @@ const resolvers: any = {
   User,
   ImportHistory,
   Permission,
+  Ticket,
 };
 
 export default resolvers;

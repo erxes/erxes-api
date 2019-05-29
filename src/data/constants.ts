@@ -99,6 +99,12 @@ export const NOTIFICATION_TYPES = {
   DEAL_CHANGE: 'dealChange',
   DEAL_DUE_DATE: 'dealDueDate',
   DEAL_DELETE: 'dealDelete',
+  TICKET_ADD: 'ticketAdd',
+  TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
+  TICKET_EDIT: 'ticketEdit',
+  TICKET_CHANGE: 'ticketChange',
+  TICKET_DUE_DATE: 'ticketDueDate',
+  TICKET_DELETE: 'ticketDelete',
   ALL: [
     'channelMembersChange',
     'conversationAddMessage',
@@ -110,6 +116,12 @@ export const NOTIFICATION_TYPES = {
     'dealChange',
     'dealDueDate',
     'dealDelete',
+    'ticketAdd',
+    'ticketRemoveAssign',
+    'ticketEdit',
+    'ticketChange',
+    'ticketDueDate',
+    'ticketDelete',
   ],
 };
 

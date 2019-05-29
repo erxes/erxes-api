@@ -101,7 +101,7 @@ import {
 
 import { mutations as AccountMutations, queries as AccountQueries, types as AccountTypes } from './accounts';
 
-import { queries as TicketQueries, types as TicketTypes } from './ticket';
+import { mutations as TicketMutations, queries as TicketQueries, types as TicketTypes } from './ticket';
 
 export const types = `
   scalar JSON
@@ -203,6 +203,7 @@ export const mutations = `
     ${MessengerAppMutations}
     ${AccountMutations}
     ${PermissionMutations}
+    ${TicketMutations}
   }
 `;
 

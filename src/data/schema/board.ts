@@ -41,7 +41,19 @@ export const queries = `
   boardDetail(_id: String!): Board
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
-  stages(pipelineId: String!, search: String): [Stage]
+  stages(
+    pipelineId: String!,
+    search: String,
+    companyIds: [String],
+    customerIds: [String],
+    assignedUserIds: [String],
+    productIds: [String],
+    nextDay: String,
+    nextWeek: String,
+    nextMonth: String,
+    noCloseDate: String,
+    overdue: String
+  ): [Stage]
   stageDetail(_id: String!): Stage
 `;
 

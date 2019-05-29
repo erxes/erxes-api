@@ -49,9 +49,7 @@ export const queries = `
     companyIds: [String]
     date: ItemDate
     skip: Int
-    search: String,
-    customerIds: [String]
-    companyIds: [String]
+    search: String
     assignedUserIds: [String]
     productIds: [String]
     nextDay: String
@@ -90,7 +88,7 @@ const commonParams = `
 export const mutations = `
   dealsAdd(${commonParams}): Deal
   dealsEdit(_id: String!, ${commonParams}): Deal
-  dealsChange( _id: String!): Deal
+  dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
 `;
