@@ -8,6 +8,7 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
+import { Deals } from '../db/models';
 
 describe('dealQueries', () => {
   const commonDealTypes = `
@@ -62,6 +63,11 @@ describe('dealQueries', () => {
       }
     }
   `;
+
+  afterEach(async () => {
+    // Clearing test data
+    await Deals.deleteMany({});
+  });
 
   test('Filter by next day', async () => {
     const tommorrow = moment()

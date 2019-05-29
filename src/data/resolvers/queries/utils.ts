@@ -163,7 +163,7 @@ export const getDate = (date: Date, day: number): Date => {
   return date;
 };
 
-export const nextMonday = () => {
+const nextMonday = () => {
   const date = new Date();
 
   date.setHours(0, 0, 0, 0);
@@ -172,7 +172,7 @@ export const nextMonday = () => {
   return date;
 };
 
-export const nextWeekdayDate = (dayInWeek: number): Date => {
+const nextWeekdayDate = (dayInWeek: number): Date => {
   const monday = nextMonday();
 
   const weekDate = new Date(monday.getTime());
@@ -183,11 +183,11 @@ export const nextWeekdayDate = (dayInWeek: number): Date => {
   return weekDate;
 };
 
-export const getToday = (date: Date): Date => {
+const getToday = (date: Date): Date => {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
 };
 
-export const getNextMonth = (date: Date): { start: number; end: number } => {
+const getNextMonth = (date: Date): { start: number; end: number } => {
   const today = getToday(date);
 
   const month = (new Date().getMonth() + 1) % 12;
