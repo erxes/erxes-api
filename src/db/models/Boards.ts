@@ -31,9 +31,9 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
       update: { $set: IStage };
     };
   }> = [];
-  const prevDealIds = stages.map(stage => stage._id);
+  const prevItemIds = stages.map(stage => stage._id);
   // fetch stage from database
-  const prevEntries = await Stages.find({ _id: { $in: prevDealIds } });
+  const prevEntries = await Stages.find({ _id: { $in: prevItemIds } });
   const prevEntriesIds = prevEntries.map(entry => entry._id);
 
   for (const stage of stages) {

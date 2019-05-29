@@ -71,6 +71,7 @@ export const pipelineSchema = new Schema({
     enum: PIPELINE_VISIBLITIES.ALL,
     default: PIPELINE_VISIBLITIES.PUBLIC,
   }),
+  memberIds: field({ type: [String] }),
   ...commonFieldsSchema,
 });
 

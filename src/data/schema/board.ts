@@ -16,6 +16,8 @@ export const types = `
     _id: String!
     name: String!
     boardId: String!
+    visiblity: String!
+    memberIds: [String]
     ${commonTypes}
   }
 
@@ -62,13 +64,22 @@ const commonParams = `
   type: String!
 `;
 
+const pipelineParams = `
+  name: String!,
+  boardId: String!,
+  type: String!,
+  stages: JSON,
+  visiblity: String!,
+  memberIds: [String]
+`;
+
 export const mutations = `
   boardsAdd(${commonParams}): Board
   boardsEdit(_id: String!, ${commonParams}): Board
   boardsRemove(_id: String!): JSON
 
-  pipelinesAdd(${commonParams}, boardId: String!, stages: JSON): Pipeline
-  pipelinesEdit(_id: String!, ${commonParams},, boardId: String!, stages: JSON): Pipeline
+  pipelinesAdd(${commonParams}, ${pipelineParams}): Pipeline
+  pipelinesEdit(_id: String!, ${commonParams}, ${pipelineParams}): Pipeline
   pipelinesUpdateOrder(orders: [OrderItem]): [Pipeline]
   pipelinesRemove(_id: String!): JSON
 
