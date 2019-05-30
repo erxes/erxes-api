@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { ActivityLogs } from '.';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
 
 export interface IOrderInput {
@@ -28,6 +29,9 @@ export const loadTicketClass = () => {
         order: ticketsCount,
         modifiedAt: new Date(),
       });
+
+      // create log
+      await ActivityLogs.createTicketLog(ticket);
 
       return ticket;
     }

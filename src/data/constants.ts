@@ -229,7 +229,9 @@ export const ACTIVITY_CONTENT_TYPES = {
   COMPANY: 'company',
   USER: 'user',
   DEAL: 'deal',
-  ALL: ['customer', 'company', 'user', 'deal'],
+  TICKET: 'ticket',
+
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket'],
 };
 
 export const COC_LEAD_STATUS_TYPES = [
@@ -269,8 +271,9 @@ export const ACTIVITY_TYPES = {
   CONVERSATION: 'conversation',
   SEGMENT: 'segment',
   DEAL: 'deal',
+  TICKET: 'ticket',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal'],
+  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'ticket'],
 };
 
 export const ACTIVITY_ACTIONS = {

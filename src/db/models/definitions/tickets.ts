@@ -36,6 +36,8 @@ const commonFieldsSchema = {
 export const ticketSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
+  companyIds: field({ type: [String] }),
+  customerIds: field({ type: [String] }),
   closeDate: field({ type: Date }),
   description: field({ type: String, optional: true }),
   assignedUserIds: field({ type: [String] }),
