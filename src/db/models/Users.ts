@@ -531,13 +531,28 @@ export const loadClass = () => {
     /*
      * Validates user credentials and generates tokens
      */
-    public static async login({ email, deviceToken }: { email: string; password: string; deviceToken?: string }) {
+    public static async login({
+      email,
+      password,
+      deviceToken,
+    }: {
+      email: string;
+      password: string;
+      deviceToken?: string;
+    }) {
       const user = await Users.findOne({
         $or: [{ email: { $regex: new RegExp(email, 'i') } }, { username: { $regex: new RegExp(email, 'i') } }],
       });
 
       if (!user || !user.password) {
         // user with provided email not found
+        throw new Error('Invalid login');
+      }
+
+      const valid = await this.comparePassword(password, user.password);
+
+      if (!valid) {
+        // bad password
         throw new Error('Invalid login');
       }
 
