@@ -110,4 +110,15 @@ checkPermission(boardMutations, 'stagesAdd', 'dealStagesAdd');
 checkPermission(boardMutations, 'stagesUpdateOrder', 'dealStagesUpdateOrder');
 checkPermission(boardMutations, 'stagesRemove', 'dealStagesRemove');
 
+// checkPermission(boardMutations, 'boardsAdd', 'ticketBoardsAdd');
+// checkPermission(boardMutations, 'boardsEdit', 'ticketBoardsEdit');
+// checkPermission(boardMutations, 'boardsRemove', 'ticketBoardsRemove');
+// checkPermission(boardMutations, 'pipelinesAdd', 'ticketPipelinesAdd');
+// checkPermission(boardMutations, 'pipelinesEdit', 'ticketPipelinesEdit');
+// checkPermission(boardMutations, 'pipelinesUpdateOrder', 'ticketPipelinesUpdateOrder');
+// checkPermission(boardMutations, 'pipelinesRemove', 'ticketPipelinesRemove');
+// checkPermission(boardMutations, 'stagesAdd', 'ticketStagesAdd');
+// checkPermission(boardMutations, 'stagesUpdateOrder', 'ticketStagesUpdateOrder');
+// checkPermission(boardMutations, 'stagesRemove', 'ticketStagesRemove');
+
 export default boardMutations;

@@ -29,6 +29,7 @@ import Stage from './stages';
 import Subscription from './subscriptions';
 import Ticket from './tickets';
 import User from './user';
+import UsersGroup from './usersGroup';
 
 const resolvers: any = {
   ...customScalars,
@@ -68,6 +69,7 @@ const resolvers: any = {
   ImportHistory,
   Permission,
   Ticket,
+  UsersGroup,
 };
 
 export default resolvers;
