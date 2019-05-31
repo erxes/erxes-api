@@ -452,7 +452,7 @@ const insightQueries = {
               internal: 1,
               userId: 1,
               customerId: 1,
-              mentionedUserIds: 1,
+              sizeMentionedIds: { $size: '$mentionedUserIds' },
             },
           },
         ],
@@ -483,7 +483,7 @@ const insightQueries = {
     const insightAggregateData = await ConversationMessages.aggregate([
       {
         $match: {
-          $and: [conversationSelector, messageSelector, { internal: false }],
+          $and: [conversationSelector, messageSelector, { internal: false }, { userId: { $exists: true } }],
         },
       },
       lookupPrevMsg,
@@ -492,7 +492,7 @@ const insightQueries = {
       { $unwind: '$prevMsg' },
       {
         $match: {
-          $and: [{ userId: { $exists: true } }, { 'prevMsg.customerId': { $exists: true } }],
+          'prevMsg.customerId': { $exists: true },
         },
       },
       diffSecondCalc,
@@ -560,7 +560,7 @@ const insightQueries = {
     const insightAggregateCustomer = await ConversationMessages.aggregate([
       {
         $match: {
-          $and: [conversationSelector, messageSelector, { internal: false }],
+          $and: [conversationSelector, messageSelector, { internal: false }, { customerId: { $exists: true } }],
         },
       },
       lookupPrevMsg,
@@ -569,13 +569,13 @@ const insightQueries = {
       { $unwind: '$prevMsg' },
       {
         $match: {
-          $and: [{ customerId: { $exists: true } }, { 'prevMsg.userId': { $exists: true } }],
+          'prevMsg.userId': { $exists: true },
         },
       },
       diffSecondCalc,
       {
         $group: {
-          _id: 'customerId',
+          _id: '',
           avgSecond: { $avg: '$diffSec' },
         },
       },
@@ -584,7 +584,7 @@ const insightQueries = {
     const insightAggregateInternal = await ConversationMessages.aggregate([
       {
         $match: {
-          $and: [conversationSelector, messageSelector, { internal: true }],
+          $and: [conversationSelector, messageSelector, { userId: { $exists: true } }],
         },
       },
       lookupPrevMsg,
@@ -593,7 +593,7 @@ const insightQueries = {
       { $unwind: '$prevMsg' },
       {
         $match: {
-          userId: { $exists: true },
+          'prevMsg.sizeMentionedIds': { $gt: 0 },
         },
       },
       diffSecondCalc,
@@ -634,16 +634,19 @@ const insightQueries = {
 
     return {
       avg: [
-        { title: 'Average all operator response time', count: averageTotal },
+        { title: 'Бүх операторуудын харилцагчид хариулах дундаж хурд', count: averageTotal },
         {
-          title: 'Average all customer response time',
-          count: insightAggregateCustomer ? insightAggregateCustomer[0].avgSecond : 0,
+          title: 'Бүх харилцагчийн давтан асуулт асуух дундаж хурд',
+          count: insightAggregateCustomer.length ? insightAggregateCustomer[0].avgSecond : 0,
         },
         {
-          title: 'Average internal response time',
-          count: insightAggregateInternal ? insightAggregateInternal[0].avgSecond : 0,
+          title: 'Бүх дотоод харилцааны дундаж хурд',
+          count: insightAggregateInternal.length ? insightAggregateInternal[0].avgSecond : 0,
         },
-        { title: 'All average', count: insightAggregateAllAvg ? insightAggregateAllAvg[0].avgSecond : 0 },
+        {
+          title: 'Ерөнхий дундаж(Оператор харилцагчийн харилцан мессежний)',
+          count: insightAggregateAllAvg.length ? insightAggregateAllAvg[0].avgSecond : 0,
+        },
       ],
       trend: summaryChart,
       teamMembers: perUserChart,
