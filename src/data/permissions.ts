@@ -82,6 +82,46 @@ export const checkPermission = async (cls: any, methodName: string, actionName: 
   };
 };
 
+/**
+ * Checks if user is logged and if user is can action
+ * @param {Object} user - User object
+ * @throws {Exception} throws Error('Permission required')
+ * @return {null}
+ */
+export const checkMultiplePermission = async (
+  cls: any,
+  methodName: string,
+  actionNames: string[],
+  callback: (actionName: string, args: any, defaultValue: boolean) => boolean,
+) => {
+  const oldMethod = cls[methodName];
+
+  cls[methodName] = async (root, args, { user }) => {
+    checkLogin(user);
+
+    if (user.isOwner) {
+      return oldMethod(root, args, { user });
+    }
+
+    const allowedList = Array.from({ length: actionNames.length }, () => false);
+
+    let index = 0;
+    for (const actionName of actionNames) {
+      allowedList[index] = await can(actionName, user._id);
+
+      allowedList[index] = callback(actionName, args, allowedList[index]);
+
+      index++;
+    }
+
+    if (!allowedList.find(allowed => allowed === true)) {
+      throw new Error('Permission required');
+    }
+
+    return oldMethod(root, args, { user });
+  };
+};
+
 export default {
   requireLogin,
   moduleRequireLogin,

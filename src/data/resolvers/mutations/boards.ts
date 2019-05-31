@@ -2,7 +2,7 @@ import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/deals';
 import { IBoard, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { checkPermission } from '../../permissions';
+import { checkMultiplePermission } from '../../permissions';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -99,26 +99,34 @@ const boardMutations = {
   },
 };
 
-checkPermission(boardMutations, 'boardsAdd', 'dealBoardsAdd');
-checkPermission(boardMutations, 'boardsEdit', 'dealBoardsEdit');
-checkPermission(boardMutations, 'boardsRemove', 'dealBoardsRemove');
-checkPermission(boardMutations, 'pipelinesAdd', 'dealPipelinesAdd');
-checkPermission(boardMutations, 'pipelinesEdit', 'dealPipelinesEdit');
-checkPermission(boardMutations, 'pipelinesUpdateOrder', 'dealPipelinesUpdateOrder');
-checkPermission(boardMutations, 'pipelinesRemove', 'dealPipelinesRemove');
-checkPermission(boardMutations, 'stagesAdd', 'dealStagesAdd');
-checkPermission(boardMutations, 'stagesUpdateOrder', 'dealStagesUpdateOrder');
-checkPermission(boardMutations, 'stagesRemove', 'dealStagesRemove');
+const checkType = (actionName: string, args: any, defaultValue: boolean) => {
+  // restrict to add an another type of board
+  if (!actionName.startsWith(args.type)) {
+    return false;
+  }
 
-// checkPermission(boardMutations, 'boardsAdd', 'ticketBoardsAdd');
-// checkPermission(boardMutations, 'boardsEdit', 'ticketBoardsEdit');
-// checkPermission(boardMutations, 'boardsRemove', 'ticketBoardsRemove');
-// checkPermission(boardMutations, 'pipelinesAdd', 'ticketPipelinesAdd');
-// checkPermission(boardMutations, 'pipelinesEdit', 'ticketPipelinesEdit');
-// checkPermission(boardMutations, 'pipelinesUpdateOrder', 'ticketPipelinesUpdateOrder');
-// checkPermission(boardMutations, 'pipelinesRemove', 'ticketPipelinesRemove');
-// checkPermission(boardMutations, 'stagesAdd', 'ticketStagesAdd');
-// checkPermission(boardMutations, 'stagesUpdateOrder', 'ticketStagesUpdateOrder');
-// checkPermission(boardMutations, 'stagesRemove', 'ticketStagesRemove');
+  return defaultValue;
+};
+
+checkMultiplePermission(boardMutations, 'boardsAdd', ['dealBoardsAdd', 'ticketBoardsAdd'], checkType);
+checkMultiplePermission(boardMutations, 'boardsEdit', ['dealBoardsEdit', 'ticketBoardsEdit'], checkType);
+checkMultiplePermission(boardMutations, 'boardsRemove', ['dealBoardsRemove', 'ticketBoardsRemove'], checkType);
+checkMultiplePermission(boardMutations, 'pipelinesAdd', ['dealPipelinesAdd', 'ticketPipelinesAdd'], checkType);
+checkMultiplePermission(boardMutations, 'pipelinesEdit', ['dealPipelinesEdit', 'ticketPipelinesEdit'], checkType);
+checkMultiplePermission(
+  boardMutations,
+  'pipelinesUpdateOrder',
+  ['dealPipelinesUpdateOrder', 'ticketPipelinesUpdateOrder'],
+  checkType,
+);
+checkMultiplePermission(boardMutations, 'pipelinesRemove', ['dealPipelinesRemove', 'ticketPipelinesRemove'], checkType);
+checkMultiplePermission(boardMutations, 'stagesAdd', ['dealStagesAdd', 'ticketStagesAdd'], checkType);
+checkMultiplePermission(
+  boardMutations,
+  'stagesUpdateOrder',
+  ['dealStagesUpdateOrder', 'ticketStagesUpdateOrder'],
+  checkType,
+);
+checkMultiplePermission(boardMutations, 'stagesRemove', ['dealStagesRemove', 'ticketStagesRemove'], checkType);
 
 export default boardMutations;
