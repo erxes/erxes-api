@@ -68,14 +68,18 @@ export const generateCommonFilters = (args: any) => {
     const tommorrow = moment().add(1, 'days');
 
     filter.closeDate = {
-      $gte: tommorrow.startOf('day').toDate(),
-      $lte: tommorrow.endOf('day').toDate(),
+      $gte: new Date(tommorrow.startOf('day').format('YYYY-MM-DD')),
+      $lte: new Date(tommorrow.endOf('day').format('YYYY-MM-DD')),
     };
   }
 
   if (nextWeek) {
-    const monday = nextMonday();
-    const nextSunday = nextWeekdayDate(8);
+    const monday = moment()
+      .day(1 + 7)
+      .format('YYYY-MM-DD');
+    const nextSunday = moment()
+      .day(7 + 7)
+      .format('YYYY-MM-DD');
 
     filter.closeDate = {
       $gte: new Date(monday),
