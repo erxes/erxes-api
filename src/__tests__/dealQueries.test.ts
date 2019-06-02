@@ -219,12 +219,10 @@ describe('dealQueries', () => {
 
   test('Deal filter by next week', async () => {
     const nextWeek = moment()
-      .utc()
-      .day(4 + 7)
-      .startOf('days')
-      .toDate();
+      .day(7)
+      .format('YYYY-MM-DD');
 
-    await dealFactory({ closeDate: nextWeek });
+    await dealFactory({ closeDate: new Date(nextWeek) });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { nextWeek: 'true' });
 
