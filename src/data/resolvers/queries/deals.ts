@@ -1,7 +1,7 @@
 import moment = require('moment');
 import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions';
-import { dealsCommonFilter, getNextMonth, getToday, nextMonday, nextWeekdayDate } from './utils';
+import { dealsCommonFilter, getNextMonth, getToday } from './utils';
 interface IDate {
   month: number;
   year: number;
