@@ -1,5 +1,4 @@
 import { withFilter } from 'apollo-server-express';
-import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { graphqlPubsub } from '../../../pubsub';
 
 export const subscriptionWrapper = (name: string) => ({
@@ -9,7 +8,7 @@ export const subscriptionWrapper = (name: string) => ({
 export const subscriptionWrapperWithFilter = (
   name: string,
   callback: (
-    message: IMessageDocument,
+    message: any,
     variables: { _id?: string; customerId?: string; userId?: string },
   ) => Promise<boolean> | boolean,
 ) => ({
