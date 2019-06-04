@@ -14,6 +14,8 @@ export const types = `
     assignedUserIds: [String]
     closeDate: Date
     description: String
+    priority: String
+    source: String
     companies: [Company]
     customers: [Customer]
     assignedUsers: [User]
@@ -53,6 +55,8 @@ const commonParams = `
   closeDate: Date,
   description: String,
   order: Int,
+  priority: String,
+  source: String
 `;
 
 export const mutations = `

@@ -13,6 +13,8 @@ export interface ITicket extends ICommonFields {
   customerIds?: string[];
   closeDate?: Date;
   description?: string;
+  priority?: string;
+  source?: string;
   assignedUserIds?: string[];
   stageId?: string;
   modifiedAt?: Date;
@@ -47,5 +49,7 @@ export const ticketSchema = new Schema({
     default: new Date(),
   }),
   modifiedBy: field({ type: String }),
+  priority: field({ type: String }),
+  source: field({ type: String }),
   ...commonFieldsSchema,
 });
