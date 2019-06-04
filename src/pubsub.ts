@@ -59,7 +59,7 @@ const redisOptions = {
 
 // Google pubsub message handler
 const commonMessageHandler = payload => {
-  convertPubSubBuffer(payload.data);
+  return convertPubSubBuffer(payload.data);
 };
 
 const configGooglePubsub = (): IGoogleOptions => {
