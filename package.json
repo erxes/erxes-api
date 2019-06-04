@@ -24,6 +24,7 @@
     "loadInitialData": "mongorestore --db erxes ./initialData",
     "initProject": "ts-node ./src/commands/initProject.ts",
     "engageSubscriptions": "ts-node ./src/commands/engageSubscriptions.ts",
+    "googlePubsub": "ts-node ./src/commands/googlePubsub.ts",
     "migrate": "migrate --compiler='ts:./ts-node-compiler.js' up"
   },
   "lint-staged": {
@@ -45,6 +46,7 @@
     ]
   },
   "dependencies": {
+    "@axelspringer/graphql-google-pubsub": "^1.2.1",
     "@google-cloud/pubsub": "0.18.0",
     "@google-cloud/storage": "^2.5.0",
     "apollo-server-express": "^2.3.1",
@@ -75,6 +77,7 @@
     "node-schedule": "^1.2.5",
     "nodemailer": "^4.1.3",
     "oauth": "^0.9.15",
+    "ora": "^3.4.0",
     "request": "^2.88.0",
     "requestify": "^0.2.5",
     "sha256": "^0.2.0",
