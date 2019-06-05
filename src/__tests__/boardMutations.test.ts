@@ -14,6 +14,7 @@ describe('Test boards mutations', () => {
     $boardId: String!,
     $stages: JSON,
     $type: String!
+    $visibility: String!
   `;
 
   const commonPipelineParams = `
@@ -21,6 +22,7 @@ describe('Test boards mutations', () => {
     boardId: $boardId
     stages: $stages
     type: $type
+    visibility: $visibility
   `;
 
   const commonStageParamDefs = `
@@ -110,6 +112,7 @@ describe('Test boards mutations', () => {
       type: 'deal',
       boardId: board._id,
       stages: [stage.toJSON()],
+      visibility: 'public',
     };
 
     const mutation = `
@@ -119,6 +122,7 @@ describe('Test boards mutations', () => {
           name
           type
           boardId
+          visibility
         }
       }
     `;
@@ -135,6 +139,7 @@ describe('Test boards mutations', () => {
     expect(createdPipeline._id).toEqual(stageToPipeline.pipelineId);
     expect(createdPipeline.name).toEqual(args.name);
     expect(createdPipeline.type).toEqual(args.type);
+    expect(createdPipeline.visibility).toEqual(args.visibility);
     expect(createdPipeline.boardId).toEqual(board._id);
   });
 
@@ -145,6 +150,7 @@ describe('Test boards mutations', () => {
       type: 'deal',
       boardId: board._id,
       stages: [stage.toJSON()],
+      visibility: 'public',
     };
 
     const mutation = `
@@ -154,6 +160,7 @@ describe('Test boards mutations', () => {
           name
           type
           boardId
+          visibility
         }
       }
     `;
@@ -170,6 +177,7 @@ describe('Test boards mutations', () => {
     expect(updatedPipeline._id).toEqual(stageToPipeline.pipelineId);
     expect(updatedPipeline.name).toEqual(args.name);
     expect(updatedPipeline.type).toEqual(args.type);
+    expect(updatedPipeline.visibility).toEqual(args.visibility);
     expect(updatedPipeline.boardId).toEqual(board._id);
   });
 
