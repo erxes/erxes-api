@@ -43,6 +43,11 @@ const conditionSchema = new Schema(
       type: String,
       optional: true,
     }),
+
+    brandId: field({
+      type: String,
+      optional: true,
+    }),
   },
   { _id: false },
 );
