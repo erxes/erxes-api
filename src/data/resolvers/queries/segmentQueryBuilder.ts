@@ -3,7 +3,11 @@ import { Segments } from '../../../db/models';
 import { ICondition, ISegment, ISegmentDocument } from '../../../db/models/definitions/segments';
 
 export default {
-  async segments(segment?: ISegment | null, headSegment?: ISegmentDocument | null): Promise<any> {
+  async segments(
+    segment?: ISegment | null,
+    headSegment?: ISegmentDocument | null,
+    mapping?: { [key: string]: string[] },
+  ): Promise<any> {
     const query: any = { $and: [] };
 
     if (!segment || !segment.connector || !segment.conditions) {
@@ -11,9 +15,19 @@ export default {
     }
 
     const childQuery = {
-      [segment.connector === 'any' ? '$or' : '$and']: segment.conditions.map(condition => ({
-        [condition.field]: convertConditionToQuery(condition),
-      })),
+      [segment.connector === 'any' ? '$or' : '$and']: segment.conditions.map(condition => {
+        const conditionFilter = { [condition.field]: convertConditionToQuery(condition) };
+        if (condition.brandId && mapping) {
+          return {
+            $and: {
+              ...conditionFilter,
+              integrationIds: mapping[condition.brandId] || [],
+            },
+          };
+        }
+
+        return conditionFilter;
+      }),
     };
 
     if (segment.conditions.length) {

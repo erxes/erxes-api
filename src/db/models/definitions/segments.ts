@@ -7,6 +7,7 @@ export interface ICondition {
   operator: string;
   type: string;
   value?: string;
+  brandId?: string;
   dateUnit?: string;
 }
 
