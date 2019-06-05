@@ -1,6 +1,6 @@
 import { Pipelines, Stages, Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
-import { ITicket, ITicketDocument } from '../../../db/models/definitions/Tickets';
+import { ITicket, ITicketDocument } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions';
