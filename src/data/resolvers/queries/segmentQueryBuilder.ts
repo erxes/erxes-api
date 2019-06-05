@@ -19,10 +19,7 @@ export default {
         const conditionFilter = { [condition.field]: convertConditionToQuery(condition) };
         if (condition.brandId && mapping) {
           return {
-            $and: {
-              ...conditionFilter,
-              integrationIds: mapping[condition.brandId] || [],
-            },
+            $and: [conditionFilter, { integrationId: { $in: mapping[condition.brandId] || [] } }],
           };
         }
 
