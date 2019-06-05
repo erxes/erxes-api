@@ -1,5 +1,5 @@
 import { Deals, Pipelines, Stages } from '../../../db/models';
-import { IOrderInput } from '../../../db/models/Deals';
+import { IOrderInput } from '../../../db/models/definitions/boards';
 import { IDeal, IDealDocument } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';

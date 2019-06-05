@@ -1,11 +1,7 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { IOrderInput } from './definitions/boards';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
-
-export interface IOrderInput {
-  _id: string;
-  order: number;
-}
 
 export interface IDealModel extends Model<IDealDocument> {
   createDeal(doc: IDeal): Promise<IDealDocument>;

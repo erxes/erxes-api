@@ -1,6 +1,5 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
-import { IOrderInput } from '../../../db/models/deals';
-import { IBoard, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
+import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkMultiplePermission } from '../../permissions';
 

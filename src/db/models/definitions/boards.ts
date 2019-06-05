@@ -37,6 +37,11 @@ export interface IStageDocument extends IStage, Document {
   _id: string;
 }
 
+export interface IOrderInput {
+  _id: string;
+  order: number;
+}
+
 // Mongoose schemas =======================
 const commonFieldsSchema = {
   userId: field({ type: String }),
