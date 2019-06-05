@@ -20,6 +20,11 @@ export const types = `
     ${commonTypes}
   }
 
+  type DealStageInfo {
+    count: Int
+    percent: Int
+  }
+
   type DealStage {
     _id: String!
     name: String!
@@ -27,7 +32,10 @@ export const types = `
     pipelineId: String!
     amount: JSON
     deals: [Deal]
+    primaryDeals: [Deal]
+    stageLostInfo: JSON
     dealsTotalCount: Int
+    primaryDealsTotalCount: Int
     ${commonTypes}
   }
 

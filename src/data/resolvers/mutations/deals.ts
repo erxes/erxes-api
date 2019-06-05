@@ -149,6 +149,7 @@ const dealMutations = {
    * Create new deal
    */
   async dealsAdd(_root, doc: IDeal, { user }: { user: IUserDocument }) {
+    doc.primaryStageId = doc.stageId;
     const deal = await Deals.createDeal({
       ...doc,
       modifiedBy: user._id,
