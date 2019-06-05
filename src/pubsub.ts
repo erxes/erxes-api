@@ -4,9 +4,7 @@ import * as fs from 'fs';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
 import * as path from 'path';
-import { convertPubSubBuffer } from './data/resolvers/subscriptions/util';
 import { ActivityLogs } from './db/models';
-import { IMessageDocument } from './db/models/definitions/conversationMessages';
 
 // load environment variables
 dotenv.config();
@@ -16,7 +14,7 @@ interface IPubsubMessage {
   data: {
     trigger: string;
     type: string;
-    payload: IMessageDocument;
+    payload: any;
   };
 }
 
@@ -129,6 +127,10 @@ const publishMessage = ({ action, data }: IPubsubMessage) => {
   if (action === 'activityLog') {
     ActivityLogs.createLogFromWidget(data.type, data.payload);
   }
+};
+
+const convertPubSubBuffer = (data: Buffer) => {
+  return JSON.parse(data.toString());
 };
 
 initBroker();
