@@ -1,8 +1,10 @@
-import { subscriptionWrapper } from './util';
+import { graphqlPubsub } from '../../../pubsub';
 
 export default {
   /*
    * Listen for activity log connection
    */
-  activityLogsChanged: subscriptionWrapper('activityLogsChanged'),
+  activityLogsChanged: {
+    subscribe: () => (graphqlPubsub as any).asyncIterator('activityLogsChanged'),
+  },
 };

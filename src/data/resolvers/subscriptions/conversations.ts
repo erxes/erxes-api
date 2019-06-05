@@ -1,58 +1,75 @@
+import { withFilter } from 'apollo-server-express';
 import { Channels, Conversations, Integrations } from '../../../db/models';
-import { subscriptionWrapperWithFilter } from './util';
+import { graphqlPubsub } from '../../../pubsub';
 
 export default {
   /*
    * Listen for conversation changes like status, assignee, read state
    */
-  conversationChanged: subscriptionWrapperWithFilter('conversationChanged', ({ conversationId }, variables) => {
-    return conversationId === variables._id;
-  }),
+  conversationChanged: {
+    subscribe: withFilter(
+      () => (graphqlPubsub as any).asyncIterator('conversationChanged'),
+      // filter by conversationId
+      (payload, variables) => {
+        return payload.conversationChanged.conversationId === variables._id;
+      },
+    ),
+  },
 
   /*
    * Listen for new message insertion
    */
-  conversationMessageInserted: subscriptionWrapperWithFilter(
-    'conversationMessageInserted',
-    ({ conversationId }, variables) => {
-      return conversationId === variables._id;
-    },
-  ),
+  conversationMessageInserted: {
+    subscribe: withFilter(
+      () => (graphqlPubsub as any).asyncIterator('conversationMessageInserted'),
+      // filter by conversationId
+      (payload, variables) => {
+        return payload.conversationMessageInserted.conversationId === variables._id;
+      },
+    ),
+  },
 
   /*
    * Admin is listening for this subscription to show unread notification
    */
-  conversationClientMessageInserted: subscriptionWrapperWithFilter(
-    'conversationClientMessageInserted',
-    async ({ conversationId }, variables) => {
-      const conversation = await Conversations.findOne({ _id: conversationId }, { integrationId: 1 });
+  conversationClientMessageInserted: {
+    subscribe: withFilter(
+      () => (graphqlPubsub as any).asyncIterator('conversationClientMessageInserted'),
+      async (payload, variables) => {
+        const message = payload.conversationClientMessageInserted;
 
-      if (!conversation) {
-        return false;
-      }
+        const conversation = await Conversations.findOne({ _id: message.conversationId }, { integrationId: 1 });
 
-      const integration = await Integrations.findOne({ _id: conversation.integrationId }, { _id: 1 });
+        if (!conversation) {
+          return false;
+        }
 
-      if (!integration) {
-        return false;
-      }
+        const integration = await Integrations.findOne({ _id: conversation.integrationId }, { _id: 1 });
 
-      const availableChannelsCount = await Channels.count({
-        integrationIds: { $in: [integration._id] },
-        memberIds: { $in: [variables.userId] },
-      });
+        if (!integration) {
+          return false;
+        }
 
-      return availableChannelsCount > 0;
-    },
-  ),
+        const availableChannelsCount = await Channels.count({
+          integrationIds: { $in: [integration._id] },
+          memberIds: { $in: [variables.userId] },
+        });
+
+        return availableChannelsCount > 0;
+      },
+    ),
+  },
 
   /*
    * Widget is listening for this subscription to show unread notification
    */
-  conversationAdminMessageInserted: subscriptionWrapperWithFilter(
-    'conversationAdminMessageInserted',
-    ({ customerId }, variables) => {
-      return customerId === variables.customerId;
-    },
-  ),
+  conversationAdminMessageInserted: {
+    subscribe: withFilter(
+      () => (graphqlPubsub as any).asyncIterator('conversationAdminMessageInserted'),
+      // filter by conversationId
+      (payload, variables) => {
+        return payload.conversationAdminMessageInserted.customerId === variables.customerId;
+      },
+    ),
+  },
 };

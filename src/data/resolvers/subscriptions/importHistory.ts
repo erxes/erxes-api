@@ -1,10 +1,17 @@
-import { subscriptionWrapperWithFilter } from './util';
+import { withFilter } from 'apollo-server-express';
+import { graphqlPubsub } from '../../../pubsub';
 
 export default {
   /*
    * Listen for import history updates
    */
-  importHistoryChanged: subscriptionWrapperWithFilter('importHistoryChanged', ({ _id }, variables) => {
-    return _id === variables._id;
-  }),
+  importHistoryChanged: {
+    subscribe: withFilter(
+      () => (graphqlPubsub as any).asyncIterator('importHistoryChanged'),
+      // filter by importHistoryId
+      (payload, variables) => {
+        return payload.importHistoryChanged._id === variables._id;
+      },
+    ),
+  },
 };
