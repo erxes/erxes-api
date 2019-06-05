@@ -13,8 +13,8 @@ export default {
         { boardId: board._id },
         {
           $or: [
-            { visiblity: 'public' },
-            { visiblity: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] },
+            { visibility: 'public' },
+            { visibility: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] },
           ],
         },
       ],

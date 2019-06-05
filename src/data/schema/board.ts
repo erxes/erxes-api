@@ -16,7 +16,7 @@ export const types = `
     _id: String!
     name: String!
     boardId: String!
-    visiblity: String!
+    visibility: String!
     memberIds: [String]
     ${commonTypes}
   }
@@ -69,7 +69,7 @@ const pipelineParams = `
   boardId: String!,
   type: String!,
   stages: JSON,
-  visiblity: String!,
+  visibility: String!,
   memberIds: [String]
 `;
 

@@ -66,7 +66,7 @@ export const pipelineSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
   boardId: field({ type: String }),
-  visiblity: field({
+  visibility: field({
     type: String,
     enum: PIPELINE_VISIBLITIES.ALL,
     default: PIPELINE_VISIBLITIES.PUBLIC,

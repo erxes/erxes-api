@@ -11,7 +11,7 @@ module.exports.up = next => {
     MONGO_URL,
     { useNewUrlParser: true, useCreateIndex: true },
     async () => {
-      await Pipelines.updateMany({}, { $set: { visiblity: 'public' } });
+      await Pipelines.updateMany({}, { $set: { visibility: 'public' } });
 
       next();
     },

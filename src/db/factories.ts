@@ -693,7 +693,7 @@ export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
     name: faker.random.word(),
     boardId: params.boardId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
-    visiblity: 'public',
+    visibility: 'public',
   });
 
   return pipeline.save();
