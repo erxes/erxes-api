@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail } from '../../data/utils';
-import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes } from './';
+import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes, Tickets } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument, IFacebookData, ITwitterData } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -286,6 +286,7 @@ export const loadClass = () => {
       await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);
       await Deals.changeCustomer(customer._id, customerIds);
+      await Tickets.changeCustomer(customer._id, customerIds);
 
       // create log
       await ActivityLogs.createCustomerLog(customer);

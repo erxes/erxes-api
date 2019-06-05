@@ -12,6 +12,8 @@ export interface ITicketModel extends Model<ITicketDocument> {
   updateTicket(_id: string, doc: ITicket): Promise<ITicketDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITicketDocument[]>;
   removeTicket(_id: string): void;
+  changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<ITicketDocument>;
+  changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<ITicketDocument>;
 }
 
 export const loadTicketClass = () => {
@@ -87,6 +89,37 @@ export const loadTicketClass = () => {
       }
 
       return ticket.remove();
+    }
+
+    /**
+     * Change customer
+     */
+    public static async changeCustomer(newCustomerId: string, oldCustomerIds: string[]) {
+      if (oldCustomerIds) {
+        await Tickets.updateMany(
+          { customerIds: { $in: oldCustomerIds } },
+          { $addToSet: { customerIds: newCustomerId } },
+        );
+        await Tickets.updateMany(
+          { customerIds: { $in: oldCustomerIds } },
+          { $pullAll: { customerIds: oldCustomerIds } },
+        );
+      }
+
+      return Tickets.find({ customerIds: { $in: oldCustomerIds } });
+    }
+
+    /**
+     * Change company
+     */
+    public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
+      if (oldCompanyIds) {
+        await Tickets.updateMany({ companyIds: { $in: oldCompanyIds } }, { $addToSet: { companyIds: newCompanyId } });
+
+        await Tickets.updateMany({ companyIds: { $in: oldCompanyIds } }, { $pullAll: { companyIds: oldCompanyIds } });
+      }
+
+      return Tickets.find({ customerIds: { $in: oldCompanyIds } });
     }
   }
 
