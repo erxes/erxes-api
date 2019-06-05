@@ -1,7 +1,7 @@
-import { Tickets, Pipelines, Stages } from '../../../db/models';
-import { IOrderInput } from '../../../db/models/Tickets';
+import { Pipelines, Stages, Tickets } from '../../../db/models';
 import { ITicket, ITicketDocument } from '../../../db/models/definitions/Tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { IOrderInput } from '../../../db/models/Tickets';
 import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions';
 import utils from '../../utils';
