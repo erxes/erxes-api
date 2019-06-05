@@ -44,6 +44,7 @@ import {
   Segments,
   Stages,
   Tags,
+  Tickets,
   Users,
   UsersGroups,
 } from './models';
@@ -713,7 +714,7 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
   return stage.save();
 };
 
-interface IDealFactoryInput {
+interface ITicketFactoryInput {
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -723,7 +724,7 @@ interface IDealFactoryInput {
   assignedUserIds?: string[];
 }
 
-export const dealFactory = (params: IDealFactoryInput = {}) => {
+export const dealFactory = (params: ITicketFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     name: faker.random.word(),
@@ -737,6 +738,30 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
   });
 
   return deal.save();
+};
+
+interface ITicketFactoryInput {
+  stageId?: string;
+  closeDate?: Date;
+  customerIds?: string[];
+  companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
+}
+
+export const ticketFactory = (params: ITicketFactoryInput = {}) => {
+  const ticket = new Tickets({
+    ...params,
+    name: faker.random.word(),
+    stageId: params.stageId || faker.random.word(),
+    companyIds: params.companyIds || [faker.random.word()],
+    customerIds: params.customerIds || [faker.random.word()],
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
+    description: faker.random.word(),
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+  });
+
+  return ticket.save();
 };
 
 interface IProductFactoryInput {
