@@ -206,13 +206,12 @@ describe('dealQueries', () => {
   });
 
   test('Filter by next day', async () => {
-    const tommorrow = moment()
-      .utc()
-      .add(1, 'days')
-      .startOf('days')
-      .toDate();
+    const tomorrow = moment()
+      .add(1, 'day')
+      .endOf('day')
+      .format('YYYY-MM-DD');
 
-    await dealFactory({ closeDate: tommorrow });
+    await dealFactory({ closeDate: new Date(tomorrow) });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { nextDay: 'true' });
 
@@ -221,7 +220,7 @@ describe('dealQueries', () => {
 
   test('Deal filter by next week', async () => {
     const nextWeek = moment()
-      .day(7)
+      .day(8)
       .format('YYYY-MM-DD');
 
     await dealFactory({ closeDate: new Date(nextWeek) });
