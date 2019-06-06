@@ -26,7 +26,6 @@ module.exports.up = next => {
           const updatedCondition: any = condition;
 
           if (condition.field.startsWith('messengerData.customData')) {
-            console.log('Looking for customer');
             const lastCustomers = await Customers.find({
               $and: [
                 { [condition.field]: { $exists: true } },
