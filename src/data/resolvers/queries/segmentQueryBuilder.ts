@@ -14,16 +14,21 @@ export default {
       return {};
     }
 
+    const generateFilter = (condition: ICondition) => {
+      const conditionFilter = { [condition.field]: convertConditionToQuery(condition) };
+
+      if (condition.brandId && mapping) {
+        return {
+          $and: [conditionFilter, { integrationId: { $in: mapping[condition.brandId] || [] } }],
+        };
+      }
+
+      return conditionFilter;
+    };
+
     const childQuery = {
       [segment.connector === 'any' ? '$or' : '$and']: segment.conditions.map(condition => {
-        const conditionFilter = { [condition.field]: convertConditionToQuery(condition) };
-        if (condition.brandId && mapping) {
-          return {
-            $and: [conditionFilter, { integrationId: { $in: mapping[condition.brandId] || [] } }],
-          };
-        }
-
-        return conditionFilter;
+        return generateFilter(condition);
       }),
     };
 
@@ -37,9 +42,9 @@ export default {
 
     if (parentSegment) {
       const parentQuery = {
-        [parentSegment.connector === 'any' ? '$or' : '$and']: parentSegment.conditions.map(condition => ({
-          [condition.field]: convertConditionToQuery(condition),
-        })),
+        [parentSegment.connector === 'any' ? '$or' : '$and']: parentSegment.conditions.map(condition => {
+          return generateFilter(condition);
+        }),
       };
 
       if (parentSegment.conditions.length) {
