@@ -2,6 +2,8 @@ import { graphqlRequest } from '../db/connection';
 import { brandFactory, engageMessageFactory, segmentFactory, tagsFactory, userFactory } from '../db/factories';
 import { Brands, EngageMessages, Segments, Tags, Users } from '../db/models';
 
+import './setup.ts';
+
 describe('engageQueries', () => {
   const qryEngageMessages = `
     query engageMessages(

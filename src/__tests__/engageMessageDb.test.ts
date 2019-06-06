@@ -9,6 +9,8 @@ import {
 } from '../db/factories';
 import { Brands, Customers, EngageMessages, Segments, Tags, Users } from '../db/models';
 
+import './setup.ts';
+
 describe('engage messages model tests', () => {
   let _user;
   let _segment;
