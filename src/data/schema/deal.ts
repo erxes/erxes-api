@@ -20,11 +20,6 @@ export const types = `
     ${commonTypes}
   }
 
-  type DealStageInfo {
-    count: Int
-    percent: Int
-  }
-
   type DealStage {
     _id: String!
     name: String!
