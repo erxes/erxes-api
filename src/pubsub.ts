@@ -101,22 +101,36 @@ const initBroker = () => {
   });
 };
 
-const createPubsubInstance = (): GooglePubSub | RedisPubSub => {
+interface IPubSub {
+  asyncIterator: <T>(str: string, options?: any) => AsyncIterator<T>;
+}
+
+const createPubsubInstance = (): IPubSub => {
+  let asyncIterator;
+
   if (PUBSUB_TYPE === 'GOOGLE') {
     const googleOptions = configGooglePubsub();
 
-    return new GooglePubSub(googleOptions, undefined, commonMessageHandler);
+    const googlePubsub = new GooglePubSub(googleOptions, undefined, commonMessageHandler);
+
+    asyncIterator = googlePubsub.asyncIterator;
+  } else {
+    const redisPubSub = new RedisPubSub({
+      connectionListener: error => {
+        if (error) {
+          console.error(error);
+        }
+      },
+      publisher: new Redis(redisOptions),
+      subscriber: new Redis(redisOptions),
+    });
+
+    asyncIterator = redisPubSub.asyncIterator;
   }
 
-  return new RedisPubSub({
-    connectionListener: error => {
-      if (error) {
-        console.error(error);
-      }
-    },
-    publisher: new Redis(redisOptions),
-    subscriber: new Redis(redisOptions),
-  });
+  return {
+    asyncIterator,
+  };
 };
 
 const publishMessage = ({ action, data }: IPubsubMessage) => {
