@@ -65,7 +65,7 @@ export default class Builder {
   // filter by segment
   public async segmentFilter(segmentId: string) {
     const segment = await Segments.findOne({ _id: segmentId });
-    const mapping = {};
+    const brandsMapping = {};
 
     const brands = await Brands.find({});
 
@@ -74,10 +74,10 @@ export default class Builder {
 
       const integrationIds = integrations.map(integration => integration._id);
 
-      mapping[brand._id] = integrationIds;
+      brandsMapping[brand._id] = integrationIds;
     }
 
-    return QueryBuilder.segments(segment, null, mapping);
+    return QueryBuilder.segments(segment, null, brandsMapping);
   }
 
   // filter by brand
