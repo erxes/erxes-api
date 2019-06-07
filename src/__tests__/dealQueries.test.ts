@@ -10,6 +10,8 @@ import {
 } from '../db/factories';
 import { Deals } from '../db/models';
 
+import './setup.ts';
+
 describe('dealQueries', () => {
   const commonDealTypes = `
     _id
@@ -70,13 +72,12 @@ describe('dealQueries', () => {
   });
 
   test('Filter by next day', async () => {
-    const tommorrow = moment()
-      .utc()
-      .add(1, 'days')
-      .startOf('days')
-      .toDate();
+    const tomorrow = moment()
+      .add(1, 'day')
+      .endOf('day')
+      .format('YYYY-MM-DD');
 
-    await dealFactory({ closeDate: tommorrow });
+    await dealFactory({ closeDate: new Date(tomorrow) });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { nextDay: 'true' });
 
@@ -85,12 +86,10 @@ describe('dealQueries', () => {
 
   test('Deal filter by next week', async () => {
     const nextWeek = moment()
-      .utc()
-      .day(4 + 7)
-      .startOf('days')
-      .toDate();
+      .day(8)
+      .format('YYYY-MM-DD');
 
-    await dealFactory({ closeDate: nextWeek });
+    await dealFactory({ closeDate: new Date(nextWeek) });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { nextWeek: 'true' });
 

@@ -64,14 +64,18 @@ export const generateCommonFilters = async (args: any) => {
     const tommorrow = moment().add(1, 'days');
 
     filter.closeDate = {
-      $gte: tommorrow.startOf('day').toDate(),
-      $lte: tommorrow.endOf('day').toDate(),
+      $gte: new Date(tommorrow.startOf('day').format('YYYY-MM-DD')),
+      $lte: new Date(tommorrow.endOf('day').format('YYYY-MM-DD')),
     };
   }
 
   if (nextWeek) {
-    const monday = nextMonday();
-    const nextSunday = nextWeekdayDate(8);
+    const monday = moment()
+      .day(1 + 7)
+      .format('YYYY-MM-DD');
+    const nextSunday = moment()
+      .day(7 + 7)
+      .format('YYYY-MM-DD');
 
     filter.closeDate = {
       $gte: new Date(monday),
@@ -161,26 +165,6 @@ export const getDate = (date: Date, day: number): Date => {
   date.setHours(0, 0, 0, 0);
 
   return date;
-};
-
-const nextMonday = () => {
-  const date = new Date();
-
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + ((7 - date.getDay()) % 7) + 2);
-
-  return date;
-};
-
-const nextWeekdayDate = (dayInWeek: number): Date => {
-  const monday = nextMonday();
-
-  const weekDate = new Date(monday.getTime());
-
-  weekDate.setDate(weekDate.getDate() + ((dayInWeek - 1 - weekDate.getDay() + 7) % 7) + 1);
-  weekDate.setHours(0, 0, 0, 0);
-
-  return weekDate;
 };
 
 const getToday = (date: Date): Date => {

@@ -5,6 +5,8 @@ import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import { IDealDocument } from '../db/models/definitions/deals';
 
+import './setup.ts';
+
 describe('Test deals mutations', () => {
   let board: IBoardDocument;
   let pipeline: IPipelineDocument;
