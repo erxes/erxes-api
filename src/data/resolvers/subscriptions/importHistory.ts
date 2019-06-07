@@ -7,7 +7,7 @@ export default {
    */
   importHistoryChanged: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('importHistoryChanged'),
+      () => graphqlPubsub.asyncIterator('importHistoryChanged'),
       // filter by importHistoryId
       (payload, variables) => {
         return payload.importHistoryChanged._id === variables._id;

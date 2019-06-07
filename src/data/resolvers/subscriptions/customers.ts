@@ -7,7 +7,7 @@ export default {
    */
   customerConnectionChanged: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('customerConnectionChanged'),
+      () => graphqlPubsub.asyncIterator('customerConnectionChanged'),
       // filter by customerId
       (payload, variables) => {
         return payload.customerConnectionChanged._id === variables._id;

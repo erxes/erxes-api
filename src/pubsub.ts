@@ -9,6 +9,11 @@ import { ActivityLogs } from './db/models';
 // load environment variables
 dotenv.config();
 
+interface IPubSub {
+  asyncIterator: <T>(trigger: string, options?: any) => AsyncIterator<T>;
+  publish(trigger: string, payload: any, options?: any): any;
+}
+
 interface IPubsubMessage {
   action: string;
   data: {
@@ -87,33 +92,29 @@ const initBroker = () => {
     googleBroker.subscribe('widgetNotification', message => {
       publishMessage(message);
     });
+  } else {
+    const redisBroker = new Redis(redisOptions);
+
+    redisBroker.subscribe('widgetNotification');
+    redisBroker.on('message', (channel: string, message: string) => {
+      const data = JSON.parse(message);
+
+      if (channel === 'widgetNotification') {
+        return publishMessage(data);
+      }
+    });
   }
-
-  const redisBroker = new Redis(redisOptions);
-
-  redisBroker.subscribe('widgetNotification');
-  redisBroker.on('message', (channel: string, message: string) => {
-    const data = JSON.parse(message);
-
-    if (channel === 'widgetNotification') {
-      return publishMessage(data);
-    }
-  });
 };
 
-interface IPubSub {
-  asyncIterator: <T>(str: string, options?: any) => AsyncIterator<T>;
-}
-
 const createPubsubInstance = (): IPubSub => {
-  let asyncIterator;
+  let pubsub;
 
   if (PUBSUB_TYPE === 'GOOGLE') {
     const googleOptions = configGooglePubsub();
 
     const googlePubsub = new GooglePubSub(googleOptions, undefined, commonMessageHandler);
 
-    asyncIterator = googlePubsub.asyncIterator;
+    pubsub = googlePubsub;
   } else {
     const redisPubSub = new RedisPubSub({
       connectionListener: error => {
@@ -125,12 +126,10 @@ const createPubsubInstance = (): IPubSub => {
       subscriber: new Redis(redisOptions),
     });
 
-    asyncIterator = redisPubSub.asyncIterator;
+    pubsub = redisPubSub;
   }
 
-  return {
-    asyncIterator,
-  };
+  return pubsub;
 };
 
 const publishMessage = ({ action, data }: IPubsubMessage) => {

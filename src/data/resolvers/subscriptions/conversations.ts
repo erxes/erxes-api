@@ -8,7 +8,7 @@ export default {
    */
   conversationChanged: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('conversationChanged'),
+      () => graphqlPubsub.asyncIterator('conversationChanged'),
       // filter by conversationId
       (payload, variables) => {
         return payload.conversationChanged.conversationId === variables._id;
@@ -21,7 +21,7 @@ export default {
    */
   conversationMessageInserted: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('conversationMessageInserted'),
+      () => graphqlPubsub.asyncIterator('conversationMessageInserted'),
       // filter by conversationId
       (payload, variables) => {
         return payload.conversationMessageInserted.conversationId === variables._id;
@@ -34,7 +34,7 @@ export default {
    */
   conversationClientMessageInserted: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('conversationClientMessageInserted'),
+      () => graphqlPubsub.asyncIterator('conversationClientMessageInserted'),
       async (payload, variables) => {
         const message = payload.conversationClientMessageInserted;
 
@@ -65,7 +65,7 @@ export default {
    */
   conversationAdminMessageInserted: {
     subscribe: withFilter(
-      () => (graphqlPubsub as any).asyncIterator('conversationAdminMessageInserted'),
+      () => graphqlPubsub.asyncIterator('conversationAdminMessageInserted'),
       // filter by conversationId
       (payload, variables) => {
         return payload.conversationAdminMessageInserted.customerId === variables.customerId;
