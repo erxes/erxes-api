@@ -165,8 +165,16 @@ const dealQueries = {
   /**
    * Deal Stages list
    */
-  dealStages(_root, { pipelineId }: { pipelineId: string }) {
-    return DealStages.find({ pipelineId }).sort({ order: 1, createdAt: -1 });
+  dealStages(_root, { pipelineId, type }: { pipelineId: string; type: string }) {
+    const filter: any = {};
+
+    filter.pipelineId = pipelineId;
+
+    if (type === 'notLost') {
+      filter.probability = { $ne: 'Lost' };
+    }
+
+    return DealStages.find(filter).sort({ order: 1, createdAt: -1 });
   },
 
   /**

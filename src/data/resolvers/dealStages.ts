@@ -45,23 +45,16 @@ export default {
     return Deals.find(dealsCommonFilter(generateCommonFilters(args), { search })).count({ primaryStageId: stage._id });
   },
 
-  deals(stage: IStageDocument) {
-    return Deals.find({ stageId: stage._id }).sort({ order: 1, createdAt: -1 });
-  },
-
-  primaryDeals(stage: IStageDocument) {
-    return Deals.find({ primaryStageId: stage._id }).sort({ order: 1, createdAt: -1 });
-  },
-
-  async stageLostInfo(stage: IStageDocument) {
-    const result: { count?: number; percent?: number } = {};
-
-    const stages = await DealStages.aggregate([
+  async inProcessDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
+    const deals = await DealStages.aggregate([
       {
-        $match: {
-          order: { $in: [stage.order, stage.order ? stage.order + 1 : 1] },
-          pipelineId: stage.pipelineId,
-        },
+        $match: dealsCommonFilter(
+          {
+            ...generateCommonFilters(args),
+            $and: [{ pipelineId: stage.pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stage._id } }],
+          },
+          { search },
+        ),
       },
       {
         $lookup: {
@@ -73,14 +66,71 @@ export default {
       },
       {
         $project: {
-          dealCount: { $size: '$deals' },
+          name: 1,
+          deals: 1,
+        },
+      },
+      {
+        $unwind: '$deals',
+      },
+      {
+        $match: {
+          'deals.primaryStageId': stage._id,
         },
       },
     ]);
 
+    return deals.length;
+  },
+
+  deals(stage: IStageDocument) {
+    return Deals.find({ stageId: stage._id }).sort({ order: 1, createdAt: -1 });
+  },
+
+  async stageInfo(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
+    const result: { count?: number; percent?: number } = {};
+
+    const stages = await DealStages.aggregate([
+      {
+        $match: dealsCommonFilter(
+          {
+            ...generateCommonFilters(args),
+            order: { $in: [stage.order, stage.order ? stage.order + 1 : 1] },
+            pipelineId: stage.pipelineId,
+            probability: { $ne: 'Lost' },
+          },
+          { search },
+        ),
+      },
+      {
+        $lookup: {
+          from: 'deals',
+          localField: '_id',
+          foreignField: 'stageId',
+          as: 'currentDeals',
+        },
+      },
+      {
+        $lookup: {
+          from: 'deals',
+          localField: '_id',
+          foreignField: 'primaryStageId',
+          as: 'primaryDeals',
+        },
+      },
+      {
+        $project: {
+          order: 1,
+          currentDealCount: { $size: '$currentDeals' },
+          primaryDealCount: { $size: '$primaryDeals' },
+        },
+      },
+      { $sort: { order: 1 } },
+    ]);
+
     if (stages.length === 2) {
-      result.count = stages[0].dealCount - stages[1].dealCount;
-      result.percent = (stages[1].dealCount * 100) / stages[0].dealCount;
+      result.count = stages[0].currentDealCount - stages[1].currentDealCount;
+      result.percent = (stages[1].primaryDealCount * 100) / stages[0].primaryDealCount;
     }
 
     return result;
