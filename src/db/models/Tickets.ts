@@ -48,7 +48,7 @@ export const loadTicketClass = () => {
      * Update given tickets orders
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      updateOrder(stageId, orders, Tickets);
+      return updateOrder(stageId, orders, Tickets);
     }
 
     /**

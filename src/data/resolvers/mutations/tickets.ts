@@ -20,16 +20,14 @@ const ticketMutations = {
       modifiedBy: user._id,
     });
 
-    if (ticket) {
-      await sendNotifications(
-        ticket.stageId || '',
-        user,
-        NOTIFICATION_TYPES.TICKET_ADD,
-        ticket.assignedUserIds || [],
-        `'{userName}' invited you to the '${ticket.name}'.`,
-        'ticket',
-      );
-    }
+    await sendNotifications(
+      ticket.stageId || '',
+      user,
+      NOTIFICATION_TYPES.TICKET_ADD,
+      ticket.assignedUserIds || [],
+      `'{userName}' invited you to the '${ticket.name}'.`,
+      'ticket',
+    );
 
     return ticket;
   },

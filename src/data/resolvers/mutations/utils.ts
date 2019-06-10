@@ -28,7 +28,7 @@ export const sendNotifications = async (
     throw new Error('Pipeline not found');
   }
 
-  return utils.sendNotification({
+  await utils.sendNotification({
     createdUser: user._id,
     notifType: type,
     title: content,

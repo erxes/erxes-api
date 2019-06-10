@@ -48,7 +48,7 @@ export const loadDealClass = () => {
      * Update given deals orders
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      updateOrder(stageId, orders, Deals);
+      return updateOrder(stageId, orders, Deals);
     }
 
     /**
