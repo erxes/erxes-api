@@ -25,18 +25,6 @@ describe('Test boards mutations', () => {
     visibility: $visibility
   `;
 
-  const commonStageParamDefs = `
-    $name: String!,
-    $pipelineId: String!
-    $type: String!
-  `;
-
-  const commonStageParams = `
-    name: $name
-    pipelineId: $pipelineId
-    type: $type
-  `;
-
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory();
