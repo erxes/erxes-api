@@ -1,38 +1,44 @@
-import * as gitRepoInfo from 'git-repo-info';
+import * as fetch from 'node-fetch';
 import * as path from 'path';
-import * as request from 'request';
 import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions';
 import { getEnv } from '../../utils';
 
-interface IInfo {
-  branch: string; // current branch
-  sha: string; // current sha
-  abbreviatedSha: string; // first 10 chars of the current sha
-  tag: string; // tag for the current sha (or `null` if no tag exists)
-  lastTag: string; // tag for the closest tagged ancestor
-  //   (or `null` if no ancestor is tagged)
-  commitsSinceLastTag: string; // number of commits since the closest tagged ancestor
-  //   (`0` if this commit is tagged, or `Infinity` if no ancestor is tagged)
-  committer: string; // committer for the current sha
-  committerDate: string; // commit date for the current sha
-  author: string; // author for the current sha
-  authorDate: string; // authored date for the current sha
-  commitMessage: string; // commit message for the current sha
+interface IGithubInfo {
+  abbreviatedOid: string;
+  oid: string;
+  message: string;
+  committedDate: string;
+  committer: {
+    name: string;
+    date: string;
+  };
+  author: {
+    name: string;
+    date: string;
+  };
 }
 
-const lastCommitQuery = `
-  query { 
-    repository(owner: "erxes", name: "erxes") { 
-      object(expression: "develop") {
-        ...on Commit {
-          history(first: 1) {
-            edges {
-              node {
-                message
-                committedDate
-                author {
-                  name
+const repoQuery = (repoName: string): string => {
+  return `
+    query { 
+      repository(owner: "erxes", name: "${repoName}") { 
+        object(expression: "develop") {
+          ...on Commit {
+            history(first: 1) {
+              edges {
+                node {
+                  abbreviatedOid
+                  oid
+                  message
+                  committedDate
+                  committer {
+                    name
+                    date
+                  }
+                  author {
+                    name
+                  }
                 }
               }
             }
@@ -40,10 +46,10 @@ const lastCommitQuery = `
         }
       }
     }
-  }
-`;
+  `;
+};
 
-const getGitInfos = async (projectPath: string) => {
+const getGitInfos = async (repoName: string, projectPath: string) => {
   let packageVersion: string = 'N/A';
 
   try {
@@ -52,28 +58,54 @@ const getGitInfos = async (projectPath: string) => {
     return;
   }
 
-  request(
-    'https://api.github.com/graphql',
-    {
-      headers: {
-        Authorization: '5faefae2aac30df1bef9a2617cbe5a6526dda698',
-        'User-Agent': 'erxes',
-      },
-      json: lastCommitQuery,
-    },
-    (e, res, body) => console.log(e, res, body),
-  );
+  const GITHUB_ACCESS_TOKEN = getEnv({ name: 'GITHUB_ACCESS_TOKEN', defaultValue: '' });
+  const GITHUB_GRAPHQL_URL = getEnv({ name: 'GITHUB_GRAPHQL_URL', defaultValue: '' });
 
-  const info: IInfo = gitRepoInfo(projectPath);
+  if (!GITHUB_ACCESS_TOKEN) {
+    throw new Error('Github access token not defined.');
+  }
+
+  if (!GITHUB_GRAPHQL_URL) {
+    throw new Error('Github graphql endpoint not defined.');
+  }
+
+  const options = {
+    headers: { Authorization: `Bearer ${GITHUB_ACCESS_TOKEN}` },
+    method: 'POST',
+  };
+
+  const query = JSON.stringify({ query: repoQuery(repoName) });
+  const fetchOptions = { ...options, body: query };
+
+  const qryResponse = await new Promise((resolve, reject) => {
+    return fetch(GITHUB_GRAPHQL_URL, fetchOptions)
+      .then(res => res.json())
+      .then(res => {
+        const { data = {} } = res;
+        const { repository = {} } = data;
+        const { object = {} } = repository;
+        const { history = {} } = object;
+        const { edges = [] } = history;
+        const [firstNode = {}] = edges;
+        const { node = {} } = firstNode;
+
+        resolve(node);
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+
+  const info = qryResponse as IGithubInfo;
 
   return {
     packageVersion,
-    lastCommittedUser: info.committer || info.author || 'N/A',
-    lastCommittedDate: info.committerDate || info.authorDate || 'N/A',
-    lastCommitMessage: info.commitMessage || 'N/A',
-    branch: info.branch,
-    sha: info.sha,
-    abbreviatedSha: info.abbreviatedSha,
+    lastCommittedUser: info.committer.name || info.author.name || 'N/A',
+    lastCommittedDate: info.committer.date || info.author.date || 'N/A',
+    lastCommitMessage: info.message || 'N/A',
+    branch: 'develop',
+    sha: info.oid,
+    abbreviatedSha: info.abbreviatedOid,
   };
 };
 
@@ -95,10 +127,10 @@ const configQueries = {
     });
 
     const response = {
-      erxesVersion: await getGitInfos(erxesProjectPath),
-      apiVersion: await getGitInfos(apiProjectPath),
-      widgetVersion: await getGitInfos(widgetProjectPath),
-      widgetApiVersion: await getGitInfos(widgetApiProjectPath),
+      erxesVersion: await getGitInfos('erxes', erxesProjectPath),
+      apiVersion: await getGitInfos('erxes-api', apiProjectPath),
+      widgetVersion: await getGitInfos('erxes-widgets', widgetProjectPath),
+      widgetApiVersion: await getGitInfos('erxes-widgets-api', widgetApiProjectPath),
     };
 
     return response;
