@@ -11,6 +11,7 @@ interface IDealListParams {
   stageId: string;
   skip?: number;
   date?: IDate;
+  type?: string;
   search?: string;
   customerIds?: [string];
   companyIds?: [string];
@@ -188,7 +189,7 @@ const dealQueries = {
    * Deals list
    */
   async deals(_root, args: IDealListParams) {
-    const { pipelineId, stageId, date, skip, search } = args;
+    const { pipelineId, stageId, date, skip, search, type } = args;
 
     const commonFilters = generateCommonFilters(args);
     const filter: any = dealsCommonFilter(commonFilters, { search });
@@ -205,6 +206,15 @@ const dealQueries = {
 
       filter.closeDate = dateSelector(date);
       filter.stageId = { $in: stageIds };
+    }
+
+    if (type && type === 'inProcess') {
+      const stageIds = await DealStages.find({
+        $and: [{ pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stageId } }],
+      }).distinct('_id');
+
+      filter.stageId = { $in: stageIds };
+      filter.primaryStageId = stageId;
     }
 
     return Deals.find(filter)

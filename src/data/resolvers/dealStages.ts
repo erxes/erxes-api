@@ -83,6 +83,13 @@ export default {
     return deals.length;
   },
 
+  async stayedDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: { search, ...args } }) {
+    return Deals.find(dealsCommonFilter(generateCommonFilters(args), { search })).count({
+      primaryStageId: stage._id,
+      stageId: stage._id,
+    });
+  },
+
   deals(stage: IStageDocument) {
     return Deals.find({ stageId: stage._id }).sort({ order: 1, createdAt: -1 });
   },

@@ -29,6 +29,7 @@ export const types = `
     deals: [Deal]
     stageInfo: JSON
     dealsTotalCount: Int
+    stayedDealsTotalCount: Int
     primaryDealsTotalCount: Int
     inProcessDealsTotalCount: Int
     ${commonTypes}
@@ -101,6 +102,7 @@ export const queries = `
     pipelineId: String,
     stageId: String, 
     date: DealDate,
+    type: String,
     skip: Int
     search: String,
     customerIds: [String]
