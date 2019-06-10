@@ -49,6 +49,9 @@ const repoQuery = (repoName: string): string => {
   `;
 };
 
+const GITHUB_ACCESS_TOKEN = getEnv({ name: 'GITHUB_ACCESS_TOKEN', defaultValue: '' });
+const GITHUB_GRAPHQL_URL = getEnv({ name: 'GITHUB_GRAPHQL_URL', defaultValue: '' });
+
 const getGitInfos = async (repoName: string, projectPath: string) => {
   let packageVersion: string = 'N/A';
 
@@ -56,17 +59,6 @@ const getGitInfos = async (repoName: string, projectPath: string) => {
     packageVersion = require(path.join(projectPath, 'package.json')).version;
   } catch (e) {
     return;
-  }
-
-  const GITHUB_ACCESS_TOKEN = getEnv({ name: 'GITHUB_ACCESS_TOKEN', defaultValue: '' });
-  const GITHUB_GRAPHQL_URL = getEnv({ name: 'GITHUB_GRAPHQL_URL', defaultValue: '' });
-
-  if (!GITHUB_ACCESS_TOKEN) {
-    throw new Error('Github access token not defined.');
-  }
-
-  if (!GITHUB_GRAPHQL_URL) {
-    throw new Error('Github graphql endpoint not defined.');
   }
 
   const options = {
@@ -125,6 +117,14 @@ const configQueries = {
       name: 'WIDGET_API_PATH',
       defaultValue: `${process.cwd()}/../erxes-widgets-api`,
     });
+
+    if (!GITHUB_ACCESS_TOKEN) {
+      throw new Error('Github access token not defined.');
+    }
+
+    if (!GITHUB_GRAPHQL_URL) {
+      throw new Error('Github graphql endpoint not defined.');
+    }
 
     const response = {
       erxesVersion: await getGitInfos('erxes', erxesProjectPath),
