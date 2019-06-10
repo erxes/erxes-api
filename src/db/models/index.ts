@@ -1,4 +1,3 @@
-import Accounts from './Accounts';
 import ActivityLogs from './ActivityLogs';
 import { Boards, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
@@ -39,7 +38,6 @@ export {
   EmailTemplates,
   Brands,
   Integrations,
-  Accounts,
   Forms,
   EngageMessages,
   Tags,

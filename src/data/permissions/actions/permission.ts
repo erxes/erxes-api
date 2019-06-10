@@ -642,10 +642,6 @@ export const moduleObjects = {
           'integrationsSaveMessengerConfigs',
           'integrationsCreateFormIntegration',
           'integrationsEditFormIntegration',
-          'integrationsCreateTwitterIntegration',
-          'integrationsCreateFacebookIntegration',
-          'integrationsCreateGmailIntegration',
-          'integrationsSendGmail',
           'integrationsRemove',
         ],
       },
@@ -676,22 +672,6 @@ export const moduleObjects = {
       {
         name: 'integrationsEditFormIntegration',
         description: 'Edit form integration',
-      },
-      {
-        name: 'integrationsCreateTwitterIntegration',
-        description: 'Create twitter integration',
-      },
-      {
-        name: 'integrationsCreateFacebookIntegration',
-        description: 'Create facebook integration',
-      },
-      {
-        name: 'integrationsCreateGmailIntegration',
-        description: 'Create gmail integration',
-      },
-      {
-        name: 'integrationsSendGmail',
-        description: 'Send gmail',
       },
       {
         name: 'integrationsRemove',
@@ -734,25 +714,6 @@ export const moduleObjects = {
       {
         name: 'showFieldsGroups',
         description: 'Show fields groups',
-      },
-    ],
-  },
-  accounts: {
-    name: 'accounts',
-    description: 'Accounts',
-    actions: [
-      {
-        name: 'accountsAll',
-        description: 'All',
-        use: ['manageAccounts', 'showAccounts'],
-      },
-      {
-        name: 'manageAccounts',
-        description: 'Manage accounts',
-      },
-      {
-        name: 'showAccounts',
-        description: 'Show accounts',
       },
     ],
   },

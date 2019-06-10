@@ -99,8 +99,6 @@ import {
   types as MessengerAppTypes,
 } from './messengerApp';
 
-import { mutations as AccountMutations, queries as AccountQueries, types as AccountTypes } from './accounts';
-
 import { mutations as TicketMutations, queries as TicketQueries, types as TicketTypes } from './ticket';
 
 export const types = `
@@ -134,7 +132,6 @@ export const types = `
   ${FieldGroupTypes}
   ${ImportHistoryTypes}
   ${MessengerAppTypes}
-  ${AccountTypes}
   ${PermissionTypes}
   ${TicketTypes}
 `;
@@ -168,7 +165,6 @@ export const queries = `
     ${FieldGroupQueries}
     ${ImportHistoryQueries}
     ${MessengerAppQueries}
-    ${AccountQueries}
     ${PermissionQueries}
     ${TicketQueries}
   }
@@ -201,7 +197,6 @@ export const mutations = `
     ${FieldGroupMutations}
     ${ImportHistoryMutations}
     ${MessengerAppMutations}
-    ${AccountMutations}
     ${PermissionMutations}
     ${TicketMutations}
   }

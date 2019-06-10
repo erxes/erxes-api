@@ -12,7 +12,6 @@ import {
 } from '../data/constants';
 import { IActionPerformer, IActivity, IContentType } from '../db/models/definitions/activityLogs';
 import {
-  Accounts,
   ActivityLogs,
   Boards,
   Brands,
@@ -341,7 +340,6 @@ interface ICustomerFactoryInput {
   customFieldsData?: any;
   companyIds?: string[];
   tagIds?: string[] | string;
-  twitterData?: any;
   ownerId?: string;
   hasValidEmail?: boolean;
 }
@@ -362,7 +360,6 @@ export const customerFactory = (params: ICustomerFactoryInput = {}) => {
     customFieldsData: params.customFieldsData || {},
     companyIds: params.companyIds || [faker.random.number(), faker.random.number()],
     tagIds: params.tagIds || [faker.random.number(), faker.random.number()],
-    twitterData: params.twitterData || { id: faker.random.number() },
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || null,
   });
@@ -419,9 +416,6 @@ interface IConversationFactoryInput {
   userId?: string;
   content?: string;
   participatedUserIds?: string[];
-  facebookData?: any;
-  twitterData?: any;
-  gmailData?: any;
   status?: string;
   closedAt?: dateType;
   closedUserId?: string;
@@ -456,8 +450,6 @@ interface IConversationMessageFactoryInput {
   isCustomerRead?: boolean;
   engageData?: any;
   formWidgetData?: any;
-  facebookData?: any;
-  gmailData?: any;
 }
 
 export const conversationMessageFactory = async (params: IConversationMessageFactoryInput) => {
@@ -484,8 +476,6 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     isCustomerRead: params.isCustomerRead || true,
     engageData: params.engageData || {},
     formWidgetData: params.formWidgetData || {},
-    facebookData: params.facebookData || {},
-    gmailData: params.gmailData || {},
   });
 };
 
@@ -494,9 +484,6 @@ interface IIntegrationFactoryInput {
   kind?: string;
   brandId?: string;
   formId?: string;
-  twitterData?: any;
-  facebookData?: any;
-  gmailData?: any;
   formData?: any | string;
   tagIds?: string[];
 }
@@ -510,9 +497,6 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     brandId: params.brandId || Random.id(),
     formId: params.formId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
-    twitterData: params.twitterData || {},
-    facebookData: params.facebookData || {},
-    gmailData: params.gmailData || {},
     formData: params.formData === 'form' ? params.formData : kind === 'form' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
   };
@@ -855,28 +839,6 @@ export function messengerAppFactory(params: IMessengerApp) {
     credentials: params.credentials,
   });
 }
-
-interface IAccountFactoryInput {
-  kind?: string;
-  uid?: string;
-  token?: string;
-  name?: string;
-  expireDate?: number;
-  scope?: string;
-}
-
-export const accountFactory = async (params: IAccountFactoryInput) => {
-  const doc = {
-    kind: params.kind || 'facebook',
-    uid: params.uid || faker.random.number,
-    token: params.token || faker.random.word(),
-    expireDate: params.expireDate || faker.random.number,
-    scope: params.scope || faker.random.word(),
-    name: params.name || faker.random.name,
-  };
-
-  return Accounts.create(doc);
-};
 
 interface IPermissionParams {
   module?: string;

@@ -1,4 +1,3 @@
-import accounts from './accounts';
 import activityLogs from './activityLogs';
 import boards from './boards';
 import brands from './brands';
@@ -31,7 +30,6 @@ import tickets from './tickets';
 import users from './users';
 
 export default {
-  ...accounts,
   ...users,
   ...channels,
   ...brands,
