@@ -1,6 +1,7 @@
 import * as Random from 'meteor-random';
 import { COMPANY_BASIC_INFOS } from '../../data/constants';
 import { Fields } from './';
+import { IOrderInput } from './definitions/boards';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 
 /*
@@ -63,4 +64,32 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
   }
 
   return properties;
+};
+
+export const updateOrder = async (stageId: string, orders: IOrderInput[], collection: any) => {
+  const ids: string[] = [];
+  const bulkOps: Array<{
+    updateOne: {
+      filter: { _id: string };
+      update: { stageId: string; order: number };
+    };
+  }> = [];
+
+  for (const { _id, order } of orders) {
+    ids.push(_id);
+    bulkOps.push({
+      updateOne: {
+        filter: { _id },
+        update: { stageId, order },
+      },
+    });
+
+    // update each tickets order
+  }
+
+  if (bulkOps) {
+    await collection.bulkWrite(bulkOps);
+  }
+
+  return collection.find({ _id: { $in: ids } }).sort({ order: 1 });
 };

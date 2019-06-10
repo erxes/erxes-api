@@ -44,6 +44,7 @@ export const queries = `
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
   stages(
+    modelName: String!,
     pipelineId: String!,
     search: String,
     companyIds: [String],
@@ -54,9 +55,9 @@ export const queries = `
     nextWeek: String,
     nextMonth: String,
     noCloseDate: String,
-    overdue: String
+    overdue: String,
   ): [Stage]
-  stageDetail(_id: String!): Stage
+  stageDetail(modelName: String!, _id: String!): Stage
 `;
 
 const commonParams = `
@@ -83,8 +84,6 @@ export const mutations = `
   pipelinesUpdateOrder(orders: [OrderItem]): [Pipeline]
   pipelinesRemove(_id: String!): JSON
 
-  stagesAdd(${commonParams}, probability: String, pipelineId: String!): Stage
-  stagesEdit(_id: String!, ${commonParams}, probability: String, pipelineId: String!): Stage
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON
 `;

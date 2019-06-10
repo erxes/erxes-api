@@ -1,5 +1,5 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
-import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
+import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkMultiplePermission } from '../../permissions';
 
@@ -12,10 +12,6 @@ interface IPipelinesAdd extends IPipeline {
 }
 
 interface IPipelinesEdit extends IPipelinesAdd {
-  _id: string;
-}
-
-interface IStagesEdit extends IStage {
   _id: string;
 }
 
@@ -70,31 +66,10 @@ const boardMutations = {
   },
 
   /**
-   * Create new stage
-   */
-  stagesAdd(_root, doc: IStage, { user }: { user: IUserDocument }) {
-    return Stages.createStage({ userId: user._id, ...doc });
-  },
-
-  /**
-   * Edit stage
-   */
-  stagesEdit(_root, { _id, ...doc }: IStagesEdit) {
-    return Stages.updateStage(_id, doc);
-  },
-
-  /**
    * Update stage orders
    */
   stagesUpdateOrder(_root, { orders }: { orders: IOrderInput[] }) {
     return Stages.updateOrder(orders);
-  },
-
-  /**
-   * Remove stage
-   */
-  stagesRemove(_root, { _id }: { _id: string }) {
-    return Stages.removeStage(_id);
   },
 };
 
@@ -119,13 +94,11 @@ checkMultiplePermission(
   checkType,
 );
 checkMultiplePermission(boardMutations, 'pipelinesRemove', ['dealPipelinesRemove', 'ticketPipelinesRemove'], checkType);
-checkMultiplePermission(boardMutations, 'stagesAdd', ['dealStagesAdd', 'ticketStagesAdd'], checkType);
 checkMultiplePermission(
   boardMutations,
   'stagesUpdateOrder',
   ['dealStagesUpdateOrder', 'ticketStagesUpdateOrder'],
   checkType,
 );
-checkMultiplePermission(boardMutations, 'stagesRemove', ['dealStagesRemove', 'ticketStagesRemove'], checkType);
 
 export default boardMutations;

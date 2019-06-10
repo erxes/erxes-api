@@ -2,6 +2,7 @@ import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { IOrderInput } from './definitions/boards';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
+import { updateOrder } from './utils';
 
 export interface IDealModel extends Model<IDealDocument> {
   createDeal(doc: IDeal): Promise<IDealDocument>;
@@ -47,31 +48,7 @@ export const loadDealClass = () => {
      * Update given deals orders
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      const ids: string[] = [];
-      const bulkOps: Array<{
-        updateOne: {
-          filter: { _id: string };
-          update: { stageId: string; order: number };
-        };
-      }> = [];
-
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-        bulkOps.push({
-          updateOne: {
-            filter: { _id },
-            update: { stageId, order },
-          },
-        });
-
-        // update each deals order
-      }
-
-      if (bulkOps) {
-        await Deals.bulkWrite(bulkOps);
-      }
-
-      return Deals.find({ _id: { $in: ids } }).sort({ order: 1 });
+      updateOrder(stageId, orders, Deals);
     }
 
     /**

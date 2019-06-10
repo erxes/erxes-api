@@ -1,11 +1,8 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
-
-export interface IOrderInput {
-  _id: string;
-  order: number;
-}
+import { updateOrder } from './utils';
 
 export interface ITicketModel extends Model<ITicketDocument> {
   createTicket(doc: ITicket): Promise<ITicketDocument>;
@@ -51,31 +48,7 @@ export const loadTicketClass = () => {
      * Update given tickets orders
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      const ids: string[] = [];
-      const bulkOps: Array<{
-        updateOne: {
-          filter: { _id: string };
-          update: { stageId: string; order: number };
-        };
-      }> = [];
-
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-        bulkOps.push({
-          updateOne: {
-            filter: { _id },
-            update: { stageId, order },
-          },
-        });
-
-        // update each tickets order
-      }
-
-      if (bulkOps) {
-        await Tickets.bulkWrite(bulkOps);
-      }
-
-      return Tickets.find({ _id: { $in: ids } }).sort({ order: 1 });
+      updateOrder(stageId, orders, Tickets);
     }
 
     /**

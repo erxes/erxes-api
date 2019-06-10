@@ -223,57 +223,6 @@ describe('Test boards mutations', () => {
     expect(await Pipelines.findOne({ _id: pipeline._id })).toBe(null);
   });
 
-  test('Create stage', async () => {
-    const args = {
-      name: 'deal stage',
-      type: 'deal',
-      pipelineId: pipeline._id,
-    };
-
-    const mutation = `
-      mutation stagesAdd(${commonStageParamDefs}) {
-        stagesAdd(${commonStageParams}) {
-          _id
-          name
-          type
-          pipelineId
-        }
-      }
-    `;
-
-    const createdStage = await graphqlRequest(mutation, 'stagesAdd', args, context);
-
-    expect(createdStage.name).toEqual(args.name);
-    expect(createdStage.type).toEqual(args.type);
-    expect(createdStage.pipelineId).toEqual(pipeline._id);
-  });
-
-  test('Update stage', async () => {
-    const args = {
-      _id: stage._id,
-      name: 'deal stage',
-      type: 'deal',
-      pipelineId: pipeline._id,
-    };
-
-    const mutation = `
-      mutation stagesEdit($_id: String!, ${commonStageParamDefs}) {
-        stagesEdit(_id: $_id, ${commonStageParams}) {
-          _id
-          name
-          type
-          pipelineId
-        }
-      }
-    `;
-
-    const updatedStage = await graphqlRequest(mutation, 'stagesEdit', args, context);
-
-    expect(updatedStage.name).toEqual(args.name);
-    expect(updatedStage.type).toEqual(args.type);
-    expect(updatedStage.pipelineId).toEqual(pipeline._id);
-  });
-
   test('Stage update orders', async () => {
     const stageToUpdate = await stageFactory({});
 
@@ -294,20 +243,5 @@ describe('Test boards mutations', () => {
 
     expect(updatedStage.order).toBe(3);
     expect(updatedStageToOrder.order).toBe(9);
-  });
-
-  test('Remove stage', async () => {
-    // disconnect deals connected to stage
-    await Deals.updateMany({}, { $set: { stageId: 'fakeStageId' } });
-
-    const mutation = `
-      mutation stagesRemove($_id: String!) {
-        stagesRemove(_id: $_id)
-      }
-    `;
-
-    await graphqlRequest(mutation, 'stagesRemove', { _id: stage._id }, context);
-
-    expect(await Stages.findOne({ _id: stage._id })).toBe(null);
   });
 });
