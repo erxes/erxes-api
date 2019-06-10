@@ -1,5 +1,6 @@
 import * as gitRepoInfo from 'git-repo-info';
 import * as path from 'path';
+import * as request from 'request';
 import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions';
 import { getEnv } from '../../utils';
@@ -20,7 +21,29 @@ interface IInfo {
   commitMessage: string; // commit message for the current sha
 }
 
-const getGitInfos = (projectPath: string) => {
+const lastCommitQuery = `
+  query { 
+    repository(owner: "erxes", name: "erxes") { 
+      object(expression: "develop") {
+        ...on Commit {
+          history(first: 1) {
+            edges {
+              node {
+                message
+                committedDate
+                author {
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const getGitInfos = async (projectPath: string) => {
   let packageVersion: string = 'N/A';
 
   try {
@@ -28,6 +51,18 @@ const getGitInfos = (projectPath: string) => {
   } catch (e) {
     return;
   }
+
+  request(
+    'https://api.github.com/graphql',
+    {
+      headers: {
+        Authorization: '5faefae2aac30df1bef9a2617cbe5a6526dda698',
+        'User-Agent': 'erxes',
+      },
+      json: lastCommitQuery,
+    },
+    (e, res, body) => console.log(e, res, body),
+  );
 
   const info: IInfo = gitRepoInfo(projectPath);
 
@@ -50,7 +85,7 @@ const configQueries = {
     return Configs.findOne({ code });
   },
 
-  configsVersions(_root) {
+  async configsVersions(_root) {
     const erxesProjectPath = getEnv({ name: 'ERXES_PATH', defaultValue: `${process.cwd()}/../erxes` });
     const apiProjectPath = getEnv({ name: 'API_PATH', defaultValue: process.cwd() });
     const widgetProjectPath = getEnv({ name: 'WIDGET_PATH', defaultValue: `${process.cwd()}/../erxes-widgets` });
@@ -60,10 +95,10 @@ const configQueries = {
     });
 
     const response = {
-      erxesVersion: getGitInfos(erxesProjectPath),
-      apiVersion: getGitInfos(apiProjectPath),
-      widgetVersion: getGitInfos(widgetProjectPath),
-      widgetApiVersion: getGitInfos(widgetApiProjectPath),
+      erxesVersion: await getGitInfos(erxesProjectPath),
+      apiVersion: await getGitInfos(apiProjectPath),
+      widgetVersion: await getGitInfos(widgetProjectPath),
+      widgetApiVersion: await getGitInfos(widgetApiProjectPath),
     };
 
     return response;
