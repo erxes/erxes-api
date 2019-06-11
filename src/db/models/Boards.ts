@@ -12,6 +12,7 @@ import {
   stageSchema,
 } from './definitions/boards';
 import { BOARD_TYPES } from './definitions/constants';
+import { updateOrder } from './utils';
 
 export interface IOrderInput {
   _id: string;
@@ -161,27 +162,7 @@ export const loadPipelineClass = () => {
      * Update given pipelines orders
      */
     public static async updateOrder(orders: IOrderInput[]) {
-      const ids: string[] = [];
-
-      const bulkOps: Array<{
-        updateOne: { filter: { _id: string }; update: { order: number } };
-      }> = [];
-
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-
-        bulkOps.push({
-          updateOne: {
-            filter: { _id },
-            update: { order },
-          },
-        });
-      }
-      if (bulkOps) {
-        await Pipelines.bulkWrite(bulkOps);
-      }
-
-      return Pipelines.find({ _id: { $in: ids } }).sort({ order: 1 });
+      return updateOrder(Pipelines, orders);
     }
 
     /**
@@ -254,24 +235,7 @@ export const loadStageClass = () => {
      * Update given stages orders
      */
     public static async updateOrder(orders: IOrderInput[]) {
-      const ids: string[] = [];
-      const bulkOps: Array<{
-        updateOne: { filter: { _id: string }; update: { order: number } };
-      }> = [];
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-        bulkOps.push({
-          updateOne: {
-            filter: { _id },
-            update: { order },
-          },
-        });
-      }
-      if (bulkOps) {
-        await Stages.bulkWrite(bulkOps);
-      }
-
-      return Stages.find({ _id: { $in: ids } }).sort({ order: 1 });
+      return updateOrder(Stages, orders);
     }
 
     /**

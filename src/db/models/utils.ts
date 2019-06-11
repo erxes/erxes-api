@@ -66,21 +66,28 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
   return properties;
 };
 
-export const updateOrder = async (stageId: string, orders: IOrderInput[], collection: any) => {
+export const updateOrder = async (collection: any, orders: IOrderInput[], stageId?: string) => {
   const ids: string[] = [];
   const bulkOps: Array<{
     updateOne: {
       filter: { _id: string };
-      update: { stageId: string; order: number };
+      update: { stageId?: string; order: number };
     };
   }> = [];
 
   for (const { _id, order } of orders) {
     ids.push(_id);
+
+    const selector: { order: number; stageId?: string } = { order };
+
+    if (stageId) {
+      selector.stageId = stageId;
+    }
+
     bulkOps.push({
       updateOne: {
         filter: { _id },
-        update: { stageId, order },
+        update: selector,
       },
     });
 
