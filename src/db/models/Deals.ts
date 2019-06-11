@@ -2,7 +2,7 @@ import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { IOrderInput } from './definitions/boards';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
-import { updateOrder } from './utils';
+import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface IDealModel extends Model<IDealDocument> {
   createDeal(doc: IDeal): Promise<IDealDocument>;
@@ -68,25 +68,14 @@ export const loadDealClass = () => {
      * Change customer
      */
     public static async changeCustomer(newCustomerId: string, oldCustomerIds: string[]) {
-      if (oldCustomerIds) {
-        await Deals.updateMany({ customerIds: { $in: oldCustomerIds } }, { $addToSet: { customerIds: newCustomerId } });
-        await Deals.updateMany({ customerIds: { $in: oldCustomerIds } }, { $pullAll: { customerIds: oldCustomerIds } });
-      }
-
-      return Deals.find({ customerIds: { $in: oldCustomerIds } });
+      return changeCustomer(Deals, newCustomerId, oldCustomerIds);
     }
 
     /**
      * Change company
      */
     public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
-      if (oldCompanyIds) {
-        await Deals.updateMany({ companyIds: { $in: oldCompanyIds } }, { $addToSet: { companyIds: newCompanyId } });
-
-        await Deals.updateMany({ companyIds: { $in: oldCompanyIds } }, { $pullAll: { companyIds: oldCompanyIds } });
-      }
-
-      return Deals.find({ customerIds: { $in: oldCompanyIds } });
+      return changeCompany(Deals, newCompanyId, oldCompanyIds);
     }
   }
 

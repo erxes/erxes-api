@@ -2,7 +2,7 @@ import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
-import { updateOrder } from './utils';
+import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface ITicketModel extends Model<ITicketDocument> {
   createTicket(doc: ITicket): Promise<ITicketDocument>;
@@ -68,31 +68,14 @@ export const loadTicketClass = () => {
      * Change customer
      */
     public static async changeCustomer(newCustomerId: string, oldCustomerIds: string[]) {
-      if (oldCustomerIds) {
-        await Tickets.updateMany(
-          { customerIds: { $in: oldCustomerIds } },
-          { $addToSet: { customerIds: newCustomerId } },
-        );
-        await Tickets.updateMany(
-          { customerIds: { $in: oldCustomerIds } },
-          { $pullAll: { customerIds: oldCustomerIds } },
-        );
-      }
-
-      return Tickets.find({ customerIds: { $in: oldCustomerIds } });
+      return changeCustomer(Tickets, newCustomerId, oldCustomerIds);
     }
 
     /**
      * Change company
      */
     public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
-      if (oldCompanyIds) {
-        await Tickets.updateMany({ companyIds: { $in: oldCompanyIds } }, { $addToSet: { companyIds: newCompanyId } });
-
-        await Tickets.updateMany({ companyIds: { $in: oldCompanyIds } }, { $pullAll: { companyIds: oldCompanyIds } });
-      }
-
-      return Tickets.find({ customerIds: { $in: oldCompanyIds } });
+      return changeCompany(Tickets, newCompanyId, oldCompanyIds);
     }
   }
 
