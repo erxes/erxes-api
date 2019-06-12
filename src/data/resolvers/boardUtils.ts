@@ -170,7 +170,7 @@ export const checkPermission = async (type: string, user: IUserDocument, mutatio
     allowed = true;
   }
 
-  if (allowed) {
+  if (!allowed) {
     throw new Error('Permission required');
   }
 
