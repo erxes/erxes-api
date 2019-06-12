@@ -4,7 +4,7 @@ import { ITicket } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions';
-import { itemsChange, manageNotifications, sendNotifications } from './utils';
+import { itemsChange, manageNotifications, sendNotifications } from './boardUtils';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
