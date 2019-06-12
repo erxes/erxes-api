@@ -42,7 +42,7 @@ export const types = `
   }
 
   input EngageMessageEmail {
-    templateId: String,
+    content: String,
     subject: String!,
     attachments: [JSON]
   }

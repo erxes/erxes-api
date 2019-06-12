@@ -266,14 +266,12 @@ describe('engage message mutation tests', () => {
 
     sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
 
-    const emailTemplate = await emailTemplateFactory();
     const emessage = await engageMessageFactory({
       method: 'email',
       title: 'Send via email',
       userId: 'fromUserId',
       segmentId: _segment._id,
       email: {
-        templateId: emailTemplate._id,
         subject: 'subject',
         content: 'content',
         attachments: [],
@@ -294,7 +292,6 @@ describe('engage message mutation tests', () => {
       userId: _user._id,
       segmentId: _segment._id,
       email: {
-        templateId: emailTemplate._id,
         subject: 'subject',
         content: 'content',
         attachments: [],
