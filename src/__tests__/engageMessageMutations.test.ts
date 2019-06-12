@@ -9,7 +9,6 @@ import {
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
-  emailTemplateFactory,
   engageMessageFactory,
   integrationFactory,
   segmentFactory,
@@ -41,7 +40,6 @@ describe('engage message mutation tests', () => {
   let _segment;
   let _customer;
   let _integration;
-  let _emailTemplate;
   let _doc;
   let context;
   let spy;
@@ -95,7 +93,6 @@ describe('engage message mutation tests', () => {
         brandId: _brand.id,
       },
     });
-    _emailTemplate = await emailTemplateFactory({});
     _customer = await customerFactory({
       hasValidEmail: true,
     });
@@ -113,7 +110,6 @@ describe('engage message mutation tests', () => {
       customerIds: [_customer._id],
       tagIds: [_tag._id],
       email: {
-        templateId: _emailTemplate._id,
         subject: faker.random.word(),
         content: faker.random.word(),
       },
