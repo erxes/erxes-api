@@ -208,12 +208,8 @@ const dealQueries = {
       filter.stageId = { $in: stageIds };
     }
 
-    if (type && type === 'inProcess') {
-      const stageIds = await DealStages.find({
-        $and: [{ pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stageId } }],
-      }).distinct('_id');
-
-      filter.stageId = { $in: stageIds };
+    if (type && type === 'primary') {
+      delete filter.stageId;
       filter.primaryStageId = stageId;
     }
 
