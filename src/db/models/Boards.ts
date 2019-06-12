@@ -12,6 +12,7 @@ import {
   stageSchema,
 } from './definitions/boards';
 import { BOARD_TYPES } from './definitions/constants';
+import Tickets from './Tickets';
 import { updateOrder } from './utils';
 
 export interface IOrderInput {
@@ -226,6 +227,9 @@ export const loadStageClass = () => {
         case BOARD_TYPES.DEAL: {
           await Deals.updateMany({ stageId: _id }, { $set: { pipelineId } });
         }
+        case BOARD_TYPES.TICKET: {
+          await Tickets.updateMany({ stageId: _id }, { $set: { pipelineId } });
+        }
       }
 
       return Stages.findOne({ _id });
@@ -253,6 +257,9 @@ export const loadStageClass = () => {
       switch (stage.type) {
         case BOARD_TYPES.DEAL: {
           count = await Deals.find({ stageId: _id }).countDocuments();
+        }
+        case BOARD_TYPES.TICKET: {
+          count = await Tickets.find({ stageId: _id }).countDocuments();
         }
       }
 
