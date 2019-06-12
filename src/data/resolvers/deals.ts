@@ -1,4 +1,4 @@
-import { Boards, Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
+import { Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { boardId } from './boardUtils';
 
