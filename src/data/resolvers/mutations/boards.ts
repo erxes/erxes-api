@@ -1,7 +1,6 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
-// import { checkMultiplePermission } from '../../permissions';
 import { checkPermission } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
