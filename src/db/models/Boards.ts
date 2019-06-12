@@ -226,9 +226,13 @@ export const loadStageClass = () => {
       switch (stage.type) {
         case BOARD_TYPES.DEAL: {
           await Deals.updateMany({ stageId: _id }, { $set: { pipelineId } });
+
+          break;
         }
         case BOARD_TYPES.TICKET: {
           await Tickets.updateMany({ stageId: _id }, { $set: { pipelineId } });
+
+          break;
         }
       }
 
@@ -257,9 +261,13 @@ export const loadStageClass = () => {
       switch (stage.type) {
         case BOARD_TYPES.DEAL: {
           count = await Deals.find({ stageId: _id }).countDocuments();
+
+          break;
         }
         case BOARD_TYPES.TICKET: {
           count = await Tickets.find({ stageId: _id }).countDocuments();
+
+          break;
         }
       }
 
