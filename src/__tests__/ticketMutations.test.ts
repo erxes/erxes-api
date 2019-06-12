@@ -5,6 +5,8 @@ import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import { ITicketDocument } from '../db/models/definitions/tickets';
 
+import './setup.ts';
+
 describe('Test tickets mutations', () => {
   let board: IBoardDocument;
   let pipeline: IPipelineDocument;

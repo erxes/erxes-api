@@ -12,6 +12,8 @@ import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/
 import { ITicketDocument } from '../db/models/definitions/tickets';
 import { IUserDocument } from '../db/models/definitions/users';
 
+import './setup.ts';
+
 describe('Test Tickets model', () => {
   let board: IBoardDocument;
   let pipeline: IPipelineDocument;

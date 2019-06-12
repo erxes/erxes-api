@@ -2,6 +2,8 @@ import { graphqlRequest } from '../db/connection';
 import { boardFactory, pipelineFactory, stageFactory } from '../db/factories';
 import { Boards, Pipelines, Stages } from '../db/models';
 
+import './setup.ts';
+
 describe('boardQueries', () => {
   const commonBoardTypes = `
     _id

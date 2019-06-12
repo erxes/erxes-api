@@ -3,6 +3,8 @@ import { graphqlRequest } from '../db/connection';
 import { companyFactory, customerFactory, stageFactory, ticketFactory, userFactory } from '../db/factories';
 import { Tickets } from '../db/models';
 
+import './setup.ts';
+
 describe('ticketQueries', () => {
   const commonTicketTypes = `
     _id

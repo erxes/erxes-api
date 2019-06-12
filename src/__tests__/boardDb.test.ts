@@ -3,6 +3,8 @@ import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IUserDocument } from '../db/models/definitions/users';
 
+import './setup.ts';
+
 describe('Test board model', () => {
   let board: IBoardDocument;
   let pipeline: IPipelineDocument;

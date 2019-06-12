@@ -3,6 +3,8 @@ import { boardFactory, pipelineFactory, stageFactory, userFactory } from '../db/
 import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 
+import './setup.ts';
+
 describe('Test boards mutations', () => {
   let board: IBoardDocument;
   let pipeline: IPipelineDocument;
