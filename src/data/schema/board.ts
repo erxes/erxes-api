@@ -44,7 +44,6 @@ export const queries = `
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
   stages(
-    modelName: String!,
     pipelineId: String!,
     search: String,
     companyIds: [String],
@@ -57,7 +56,7 @@ export const queries = `
     noCloseDate: String,
     overdue: String,
   ): [Stage]
-  stageDetail(modelName: String!, _id: String!): Stage
+  stageDetail(_id: String!): Stage
 `;
 
 const commonParams = `

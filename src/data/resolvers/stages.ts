@@ -1,15 +1,16 @@
-import * as Models from '../../db/models';
+import { Deals, Tickets } from '../../db/models';
 import { IStageDocument } from '../../db/models/definitions/boards';
+import { BOARD_TYPES } from '../../db/models/definitions/constants';
 import { generateCommonFilters } from './queries/utils';
 
 export default {
   async amount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const amountsMap = {};
 
-    if (args.modelName) {
-      const filter = await generateCommonFilters({ ...args, stageId: stage._id });
+    const filter = await generateCommonFilters({ ...args, stageId: stage._id });
 
-      const amountList = await Models[args.modelName].aggregate([
+    if (stage.type === BOARD_TYPES.DEAL) {
+      const amountList = await Deals.aggregate([
         {
           $match: filter,
         },
@@ -41,12 +42,15 @@ export default {
   },
 
   async itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
-    if (args.modelName) {
-      const filter = await generateCommonFilters({ ...args, stageId: stage._id });
+    const filter = await generateCommonFilters({ ...args, stageId: stage._id });
 
-      return Models[args.modelName].find(filter).count();
+    switch (stage.type) {
+      case BOARD_TYPES.DEAL: {
+        return Deals.find(filter).count();
+      }
+      case BOARD_TYPES.TICKET: {
+        return Tickets.find(filter).count();
+      }
     }
-
-    return 0;
   },
 };
