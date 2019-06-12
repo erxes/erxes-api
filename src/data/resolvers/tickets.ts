@@ -1,5 +1,6 @@
-import { Boards, Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
+import { boardId } from './boardUtils';
 
 export default {
   companies(ticket: ITicketDocument) {
@@ -24,26 +25,8 @@ export default {
     return Pipelines.findOne({ _id: stage.pipelineId });
   },
 
-  async boardId(ticket: ITicketDocument) {
-    const stage = await Stages.findOne({ _id: ticket.stageId });
-
-    if (!stage) {
-      return null;
-    }
-
-    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-
-    if (!pipeline) {
-      return null;
-    }
-
-    const board = await Boards.findOne({ _id: pipeline.boardId });
-
-    if (!board) {
-      return null;
-    }
-
-    return board._id;
+  boardId(ticket: ITicketDocument) {
+    return boardId(ticket);
   },
 
   async stage(ticket: ITicketDocument) {

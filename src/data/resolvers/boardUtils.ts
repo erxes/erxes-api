@@ -1,9 +1,9 @@
-import { Pipelines, Stages } from '../../../db/models';
-import { IDealDocument } from '../../../db/models/definitions/deals';
-import { ITicketDocument } from '../../../db/models/definitions/tickets';
-import { IUserDocument } from '../../../db/models/definitions/users';
-import { NOTIFICATION_TYPES } from '../../constants';
-import utils from '../../utils';
+import { Boards, Pipelines, Stages } from '../../db/models';
+import { IDealDocument } from '../../db/models/definitions/deals';
+import { ITicketDocument } from '../../db/models/definitions/tickets';
+import { IUserDocument } from '../../db/models/definitions/users';
+import { NOTIFICATION_TYPES } from '../constants';
+import utils from '../utils';
 
 /**
  * Send notification to all members of this content except the sender
@@ -114,4 +114,26 @@ export const itemsChange = async (
   }
 
   return content;
+};
+
+export const boardId = async (item: IDealDocument | ITicketDocument) => {
+  const stage = await Stages.findOne({ _id: item.stageId });
+
+  if (!stage) {
+    return null;
+  }
+
+  const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
+
+  if (!pipeline) {
+    return null;
+  }
+
+  const board = await Boards.findOne({ _id: pipeline.boardId });
+
+  if (!board) {
+    return null;
+  }
+
+  return board._id;
 };

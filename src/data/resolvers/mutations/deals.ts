@@ -4,7 +4,7 @@ import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions';
-import { itemsChange, manageNotifications, sendNotifications } from './boardUtils';
+import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;

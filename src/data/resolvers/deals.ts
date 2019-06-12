@@ -1,5 +1,6 @@
 import { Boards, Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
+import { boardId } from './boardUtils';
 
 export default {
   companies(deal: IDealDocument) {
@@ -61,26 +62,8 @@ export default {
     return Pipelines.findOne({ _id: stage.pipelineId });
   },
 
-  async boardId(deal: IDealDocument) {
-    const stage = await Stages.findOne({ _id: deal.stageId });
-
-    if (!stage) {
-      return null;
-    }
-
-    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-
-    if (!pipeline) {
-      return null;
-    }
-
-    const board = await Boards.findOne({ _id: pipeline.boardId });
-
-    if (!board) {
-      return null;
-    }
-
-    return board._id;
+  boardId(deal: IDealDocument) {
+    return boardId(deal);
   },
 
   async stage(deal: IDealDocument) {
