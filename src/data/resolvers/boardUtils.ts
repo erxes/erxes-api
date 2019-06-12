@@ -3,6 +3,8 @@ import { IDealDocument } from '../../db/models/definitions/deals';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../constants';
+import { checkLogin } from '../permissions';
+import { can } from '../permissions/utils';
 import utils from '../utils';
 
 /**
@@ -136,4 +138,41 @@ export const boardId = async (item: IDealDocument | ITicketDocument) => {
   }
 
   return board._id;
+};
+
+const PERMISSION_MAP = {
+  deal: {
+    boardsAdd: 'dealBoardsAdd',
+    boardsEdit: 'dealBoardsEdit',
+    boardsRemove: 'dealBoardsRemove',
+    pipelinesAdd: 'dealPipelinesAdd',
+    pipelinesEdit: 'dealPipelinesEdit',
+    pipelinesRemove: 'dealPipelinesRemove',
+  },
+  ticket: {
+    boardsAdd: 'ticketBoardsAdd',
+    boardsEdit: 'ticketBoardsEdit',
+    boardsRemove: 'ticketBoardsRemove',
+    pipelinesAdd: 'ticketPipelinesAdd',
+    pipelinesEdit: 'ticketPipelinesEdit',
+    pipelinesRemove: 'ticketPipelinesRemove',
+  },
+};
+
+export const checkPermission = async (type: string, user: IUserDocument, mutationName: string) => {
+  checkLogin(user);
+
+  const actionName = PERMISSION_MAP[type][mutationName];
+
+  let allowed = await can(actionName, user._id);
+
+  if (user.isOwner) {
+    allowed = true;
+  }
+
+  if (allowed) {
+    throw new Error('Permission required');
+  }
+
+  return;
 };
