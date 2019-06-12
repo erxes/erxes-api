@@ -15,17 +15,21 @@ module.exports.up = next => {
     MONGO_URL,
     { useNewUrlParser: true, useCreateIndex: true },
     async () => {
-      await mongoose.connection.db.collection('deal_boards').rename('boards');
+      try {
+        await mongoose.connection.db.collection('deal_boards').rename('boards');
 
-      await Boards.updateMany({}, { $set: { type: 'deal' } });
-
-      await mongoose.connection.db.collection('deal_pipelines').rename('pipelines');
-
-      await Pipelines.updateMany({}, { $set: { type: 'deal' } });
-
-      await mongoose.connection.db.collection('deal_stages').rename('stages');
-
-      await Stages.updateMany({}, { $set: { type: 'deal' } });
+        await Boards.updateMany({}, { $set: { type: 'deal' } });
+  
+        await mongoose.connection.db.collection('deal_pipelines').rename('pipelines');
+  
+        await Pipelines.updateMany({}, { $set: { type: 'deal' } });
+  
+        await mongoose.connection.db.collection('deal_stages').rename('stages');
+  
+        await Stages.updateMany({}, { $set: { type: 'deal' } });
+      } catch(e) {
+        console.log('board migration: ', e); 
+      }
 
       next();
     },
