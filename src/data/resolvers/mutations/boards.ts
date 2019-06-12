@@ -39,7 +39,7 @@ const boardMutations = {
    * Remove board
    */
   async boardsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const board = await Boards.findOne(_id);
+    const board = await Boards.findOne({ _id });
 
     if (board) {
       await checkPermission(board.type, user, 'boardsRemove');
@@ -77,7 +77,7 @@ const boardMutations = {
    * Remove pipeline
    */
   async pipelinesRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const pipeline = await Pipelines.findOne(_id);
+    const pipeline = await Pipelines.findOne({ _id });
 
     if (pipeline) {
       await checkPermission(pipeline.type, user, 'pipelinesRemove');
