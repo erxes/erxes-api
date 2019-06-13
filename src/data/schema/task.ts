@@ -14,6 +14,7 @@ export const types = `
     assignedUserIds: [String]
     closeDate: Date
     description: String
+    priority: String
     companies: [Company]
     customers: [Customer]
     assignedUsers: [User]
@@ -52,6 +53,7 @@ const commonParams = `
   customerIds: [String],
   closeDate: Date,
   description: String,
+  priority: String,
   order: Int,
 `;
 

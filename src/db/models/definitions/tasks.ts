@@ -15,6 +15,7 @@ export interface ITask extends ICommonFields {
   description?: string;
   assignedUserIds?: string[];
   stageId?: string;
+  priority?: string;
   modifiedAt?: Date;
   modifiedBy?: string;
 }
@@ -42,6 +43,7 @@ export const taskSchema = new Schema({
   description: field({ type: String, optional: true }),
   assignedUserIds: field({ type: [String] }),
   stageId: field({ type: String, optional: true }),
+  priority: field({ type: String, optional: true }),
   modifiedAt: field({
     type: Date,
     default: new Date(),
