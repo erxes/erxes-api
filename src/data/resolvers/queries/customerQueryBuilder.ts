@@ -56,6 +56,8 @@ export default class Builder {
           lastName: emptySelector,
           primaryEmail: emptySelector,
           primaryPhone: emptySelector,
+          emails: { $size: 0 },
+          phones: { $size: 0 },
           visitorContactInfo: null,
         },
       ],
