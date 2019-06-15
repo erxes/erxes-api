@@ -47,6 +47,7 @@ export default class Builder {
 
   public defaultFilters(): { status: {}; $nor: [{ [index: string]: IIn | any }] } {
     const emptySelector = { $in: [null, ''] };
+    const emptyArraySelector = { $size: 0 };
 
     return {
       status: { $ne: STATUSES.DELETED },
@@ -56,8 +57,8 @@ export default class Builder {
           lastName: emptySelector,
           primaryEmail: emptySelector,
           primaryPhone: emptySelector,
-          emails: { $size: 0 },
-          phones: { $size: 0 },
+          emails: emptyArraySelector,
+          phones: emptyArraySelector,
           visitorContactInfo: null,
         },
       ],
