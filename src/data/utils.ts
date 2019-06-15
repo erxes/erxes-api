@@ -424,6 +424,8 @@ interface IRequestParams {
  * Sends post request to specific url
  */
 export const sendRequest = async ({ url, method, body, params }: IRequestParams) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
   debugIntegrationsApi(`
     Sending request to integrations api with
     url: ${url}
@@ -434,7 +436,7 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
   try {
     const response = await requestify.request(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN },
       body,
       params,
     });
@@ -448,17 +450,16 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
 
     return responseBody;
   } catch (e) {
-    let error = { message: 'Failed to connect integration api' };
-    let debugMessage =
-      'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
+    if (e.code === 'ECONNREFUSED') {
+      const message =
+        'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
 
-    if (!e.message.includes('ECONNREFUSED')) {
-      debugMessage = `Failed to connect integration api: ${e.message}`;
-      error = e;
+      debugIntegrationsApi(message);
+      throw new Error(message);
+    } else {
+      debugIntegrationsApi(`Error occurred in integrations api: ${e.body}`);
+      throw new Error(e.body);
     }
-
-    debugIntegrationsApi(debugMessage);
-    throw new Error(error.message);
   }
 };
 
