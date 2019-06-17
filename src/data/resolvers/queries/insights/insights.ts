@@ -3,7 +3,7 @@ import { IUserDocument } from '../../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
 import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
 import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
-import { IFilterSelector, IListArgs, IPieChartData } from './types';
+import { IListArgs, IPieChartData } from './types';
 import {
   fixChartData,
   fixDates,
@@ -11,6 +11,7 @@ import {
   generateChartDataBySelector,
   generatePunchData,
   generateResponseData,
+  getConversationReportLookup,
   getConversationSelector,
   getConversationSelectoryByMsg,
   getFilterSelector,
@@ -402,64 +403,9 @@ const insightQueries = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    const filterSelector: IFilterSelector = { integration: {} };
+    const conversationSelector = await getConversationSelectoryByMsg(integrationIds, brandIds);
 
-    if (integrationIds) {
-      filterSelector.integration.kind = { $in: integrationIds.split(',') };
-    }
-
-    if (brandIds) {
-      filterSelector.integration.brandId = { $in: brandIds.split(',') };
-    }
-
-    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
-
-    const lookupPrevMsg = {
-      $lookup: {
-        from: 'conversation_messages',
-        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
-              },
-            },
-          },
-          {
-            $project: {
-              conversationId: 1,
-              createdAt: 1,
-              internal: 1,
-              userId: 1,
-              customerId: 1,
-              sizeMentionedIds: { $size: '$mentionedUserIds' },
-            },
-          },
-        ],
-        as: 'prevMsgs',
-      },
-    };
-    const prevMsgSlice = {
-      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
-    };
-    const diffSecondCalc = {
-      $addFields: {
-        diffSec: {
-          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
-        },
-      },
-    };
-    const firstProject = {
-      $project: {
-        conversationId: 1,
-        createdAt: 1,
-        internal: 1,
-        userId: 1,
-        customerId: 1,
-        prevMsg: 1,
-      },
-    };
+    const lookupHelper = await getConversationReportLookup();
 
     const insightAggregateData = await ConversationMessages.aggregate([
       {
@@ -467,16 +413,16 @@ const insightQueries = {
           $and: [conversationSelector, messageSelector, { internal: false }, { userId: { $exists: true } }],
         },
       },
-      lookupPrevMsg,
-      prevMsgSlice,
-      firstProject,
+      lookupHelper.lookupPrevMsg,
+      lookupHelper.prevMsgSlice,
+      lookupHelper.firstProject,
       { $unwind: '$prevMsg' },
       {
         $match: {
           'prevMsg.customerId': { $exists: true },
         },
       },
-      diffSecondCalc,
+      lookupHelper.diffSecondCalc,
       {
         $lookup: {
           from: 'users',
@@ -551,64 +497,9 @@ const insightQueries = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    const filterSelector: IFilterSelector = { integration: {} };
+    const conversationSelector = await getConversationSelectoryByMsg(integrationIds, brandIds);
 
-    if (integrationIds) {
-      filterSelector.integration.kind = { $in: integrationIds.split(',') };
-    }
-
-    if (brandIds) {
-      filterSelector.integration.brandId = { $in: brandIds.split(',') };
-    }
-
-    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
-
-    const lookupPrevMsg = {
-      $lookup: {
-        from: 'conversation_messages',
-        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
-              },
-            },
-          },
-          {
-            $project: {
-              conversationId: 1,
-              createdAt: 1,
-              internal: 1,
-              userId: 1,
-              customerId: 1,
-              sizeMentionedIds: { $size: '$mentionedUserIds' },
-            },
-          },
-        ],
-        as: 'prevMsgs',
-      },
-    };
-    const prevMsgSlice = {
-      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
-    };
-    const diffSecondCalc = {
-      $addFields: {
-        diffSec: {
-          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
-        },
-      },
-    };
-    const firstProject = {
-      $project: {
-        conversationId: 1,
-        createdAt: 1,
-        internal: 1,
-        userId: 1,
-        customerId: 1,
-        prevMsg: 1,
-      },
-    };
+    const lookupHelper = await getConversationReportLookup();
 
     const insightAggregateCustomer = await ConversationMessages.aggregate([
       {
@@ -616,16 +507,16 @@ const insightQueries = {
           $and: [conversationSelector, messageSelector, { internal: false }, { customerId: { $exists: true } }],
         },
       },
-      lookupPrevMsg,
-      prevMsgSlice,
-      firstProject,
+      lookupHelper.lookupPrevMsg,
+      lookupHelper.prevMsgSlice,
+      lookupHelper.firstProject,
       { $unwind: '$prevMsg' },
       {
         $match: {
           'prevMsg.userId': { $exists: true },
         },
       },
-      diffSecondCalc,
+      lookupHelper.diffSecondCalc,
       {
         $group: {
           _id: '',
@@ -642,6 +533,9 @@ const insightQueries = {
     ];
   },
 
+  /**
+   * Calculates average ConversationMessages spec InternalMsgsAvg
+   */
   async insightsConversationInternalAvg(_root, args: IListArgs) {
     const { startDate, endDate, integrationIds, brandIds } = args;
     const { start, end } = fixDates(startDate, endDate);
@@ -650,64 +544,9 @@ const insightQueries = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    const filterSelector: IFilterSelector = { integration: {} };
+    const conversationSelector = await getConversationSelectoryByMsg(integrationIds, brandIds);
 
-    if (integrationIds) {
-      filterSelector.integration.kind = { $in: integrationIds.split(',') };
-    }
-
-    if (brandIds) {
-      filterSelector.integration.brandId = { $in: brandIds.split(',') };
-    }
-
-    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
-
-    const lookupPrevMsg = {
-      $lookup: {
-        from: 'conversation_messages',
-        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
-              },
-            },
-          },
-          {
-            $project: {
-              conversationId: 1,
-              createdAt: 1,
-              internal: 1,
-              userId: 1,
-              customerId: 1,
-              sizeMentionedIds: { $size: '$mentionedUserIds' },
-            },
-          },
-        ],
-        as: 'prevMsgs',
-      },
-    };
-    const prevMsgSlice = {
-      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
-    };
-    const diffSecondCalc = {
-      $addFields: {
-        diffSec: {
-          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
-        },
-      },
-    };
-    const firstProject = {
-      $project: {
-        conversationId: 1,
-        createdAt: 1,
-        internal: 1,
-        userId: 1,
-        customerId: 1,
-        prevMsg: 1,
-      },
-    };
+    const lookupHelper = await getConversationReportLookup();
 
     const insightAggregateInternal = await ConversationMessages.aggregate([
       {
@@ -715,16 +554,16 @@ const insightQueries = {
           $and: [conversationSelector, messageSelector, { userId: { $exists: true } }],
         },
       },
-      lookupPrevMsg,
-      prevMsgSlice,
-      firstProject,
+      lookupHelper.lookupPrevMsg,
+      lookupHelper.prevMsgSlice,
+      lookupHelper.firstProject,
       { $unwind: '$prevMsg' },
       {
         $match: {
           'prevMsg.sizeMentionedIds': { $gt: 0 },
         },
       },
-      diffSecondCalc,
+      lookupHelper.diffSecondCalc,
       {
         $group: {
           _id: '',
@@ -740,6 +579,10 @@ const insightQueries = {
       },
     ];
   },
+
+  /**
+   * Calculates average ConversationMessages spec Overall
+   */
   async insightsConversationOverallAvg(_root, args: IListArgs) {
     const { startDate, endDate, integrationIds, brandIds } = args;
     const { start, end } = fixDates(startDate, endDate);
@@ -748,64 +591,9 @@ const insightQueries = {
       createdAt: { $gte: start, $lte: end },
     };
 
-    const filterSelector: IFilterSelector = { integration: {} };
+    const conversationSelector = await getConversationSelectoryByMsg(integrationIds, brandIds);
 
-    if (integrationIds) {
-      filterSelector.integration.kind = { $in: integrationIds.split(',') };
-    }
-
-    if (brandIds) {
-      filterSelector.integration.brandId = { $in: brandIds.split(',') };
-    }
-
-    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
-
-    const lookupPrevMsg = {
-      $lookup: {
-        from: 'conversation_messages',
-        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
-              },
-            },
-          },
-          {
-            $project: {
-              conversationId: 1,
-              createdAt: 1,
-              internal: 1,
-              userId: 1,
-              customerId: 1,
-              sizeMentionedIds: { $size: '$mentionedUserIds' },
-            },
-          },
-        ],
-        as: 'prevMsgs',
-      },
-    };
-    const prevMsgSlice = {
-      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
-    };
-    const diffSecondCalc = {
-      $addFields: {
-        diffSec: {
-          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
-        },
-      },
-    };
-    const firstProject = {
-      $project: {
-        conversationId: 1,
-        createdAt: 1,
-        internal: 1,
-        userId: 1,
-        customerId: 1,
-        prevMsg: 1,
-      },
-    };
+    const lookupHelper = await getConversationReportLookup();
 
     const insightAggregateAllAvg = await ConversationMessages.aggregate([
       {
@@ -813,9 +601,9 @@ const insightQueries = {
           $and: [conversationSelector, messageSelector],
         },
       },
-      lookupPrevMsg,
-      prevMsgSlice,
-      firstProject,
+      lookupHelper.lookupPrevMsg,
+      lookupHelper.prevMsgSlice,
+      lookupHelper.firstProject,
       { $unwind: '$prevMsg' },
       {
         $match: {
@@ -825,7 +613,7 @@ const insightQueries = {
           ],
         },
       },
-      diffSecondCalc,
+      lookupHelper.diffSecondCalc,
       {
         $group: {
           _id: '',
