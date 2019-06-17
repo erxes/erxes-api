@@ -506,7 +506,7 @@ const insightQueries = {
           { title: 'Average all operator response time', count: 0 },
           { title: 'Average all customer response time', count: 0 },
           { title: 'Average internal response time', count: 0 },
-          { title: 'All average', count: 0 },
+          { title: 'Overall average', count: 0 },
         ],
         trend: [],
         teamMembers: [],
@@ -612,17 +612,17 @@ const insightQueries = {
 
     return {
       avg: [
-        { title: 'Бүх операторуудын харилцагчид хариулах дундаж хурд', count: averageTotal },
+        { title: 'Average all operator response time', count: averageTotal },
         {
-          title: 'Бүх харилцагчийн давтан асуулт асуух дундаж хурд',
+          title: 'Average all customer response time',
           count: insightAggregateCustomer.length ? insightAggregateCustomer[0].avgSecond : 0,
         },
         {
-          title: 'Бүх дотоод харилцааны дундаж хурд',
+          title: 'Average internal response time',
           count: insightAggregateInternal.length ? insightAggregateInternal[0].avgSecond : 0,
         },
         {
-          title: 'Ерөнхий дундаж(Оператор харилцагчийн харилцан мессежний)',
+          title: 'Overall average',
           count: insightAggregateAllAvg.length ? insightAggregateAllAvg[0].avgSecond : 0,
         },
       ],
