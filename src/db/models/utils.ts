@@ -1,6 +1,7 @@
 import * as Random from 'meteor-random';
 import { COMPANY_BASIC_INFOS } from '../../data/constants';
 import { Fields } from './';
+import { IOrderInput } from './definitions/boards';
 import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 
 /*
@@ -33,29 +34,94 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
   const properties: any[] = [];
 
   for (const fieldName of fields) {
-    const property: { [key: string]: any } = {
-      isCustomField: false,
-    };
+    const property: { [key: string]: any } = {};
 
     const fieldObj = await Fields.findOne({ text: fieldName });
 
     // Collecting basic fields
     if (basicInfos.includes(fieldName)) {
       property.name = fieldName;
+      property.type = 'basic';
+    }
+
+    // Collecting messengerData.customData fields
+    if (fieldName.startsWith('messengerData.customData')) {
+      property.name = fieldName;
+      property.type = 'customData';
     }
 
     // Collecting custom fields
     if (fieldObj) {
-      property.isCustomField = true;
+      property.type = 'customProperty';
       property.id = fieldObj._id;
     }
 
-    properties.push(property);
-
-    if (!basicInfos.includes(fieldName) && !fieldObj) {
+    if (!property.type) {
       throw new Error('Bad column name');
     }
+
+    properties.push(property);
   }
 
   return properties;
+};
+
+export const updateOrder = async (collection: any, orders: IOrderInput[], stageId?: string) => {
+  const ids: string[] = [];
+  const bulkOps: Array<{
+    updateOne: {
+      filter: { _id: string };
+      update: { stageId?: string; order: number };
+    };
+  }> = [];
+
+  for (const { _id, order } of orders) {
+    ids.push(_id);
+
+    const selector: { order: number; stageId?: string } = { order };
+
+    if (stageId) {
+      selector.stageId = stageId;
+    }
+
+    bulkOps.push({
+      updateOne: {
+        filter: { _id },
+        update: selector,
+      },
+    });
+
+    // update each tickets order
+  }
+
+  if (bulkOps) {
+    await collection.bulkWrite(bulkOps);
+  }
+
+  return collection.find({ _id: { $in: ids } }).sort({ order: 1 });
+};
+
+export const changeCustomer = async (collection: any, newCustomerId: string, oldCustomerIds: string[]) => {
+  if (oldCustomerIds) {
+    await collection.updateMany(
+      { customerIds: { $in: oldCustomerIds } },
+      { $addToSet: { customerIds: newCustomerId } },
+    );
+    await collection.updateMany(
+      { customerIds: { $in: oldCustomerIds } },
+      { $pullAll: { customerIds: oldCustomerIds } },
+    );
+  }
+
+  return collection.find({ customerIds: { $in: oldCustomerIds } });
+};
+
+export const changeCompany = async (collection: any, newCompanyId: string, oldCompanyIds: string[]) => {
+  if (oldCompanyIds) {
+    await collection.updateMany({ companyIds: { $in: oldCompanyIds } }, { $addToSet: { companyIds: newCompanyId } });
+
+    await collection.updateMany({ companyIds: { $in: oldCompanyIds } }, { $pullAll: { companyIds: oldCompanyIds } });
+  }
+
+  return collection.find({ customerIds: { $in: oldCompanyIds } });
 };

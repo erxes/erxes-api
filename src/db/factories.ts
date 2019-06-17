@@ -12,8 +12,8 @@ import {
 } from '../data/constants';
 import { IActionPerformer, IActivity, IContentType } from '../db/models/definitions/activityLogs';
 import {
-  Accounts,
   ActivityLogs,
+  Boards,
   Brands,
   Channels,
   Companies,
@@ -21,10 +21,7 @@ import {
   ConversationMessages,
   Conversations,
   Customers,
-  DealBoards,
-  DealPipelines,
   Deals,
-  DealStages,
   EmailTemplates,
   EngageMessages,
   Fields,
@@ -40,14 +37,18 @@ import {
   NotificationConfigurations,
   Notifications,
   Permissions,
+  Pipelines,
   Products,
   ResponseTemplates,
   Segments,
+  Stages,
   Tags,
+  Tasks,
+  Tickets,
   Users,
   UsersGroups,
 } from './models';
-import { STATUSES } from './models/definitions/constants';
+import { BOARD_TYPES, STATUSES } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
@@ -147,7 +148,8 @@ export const tagsFactory = (params: ITagFactoryInput = {}) => {
 interface IEngageMessageFactoryInput {
   kind?: string;
   userId?: string;
-  segmentId?: string;
+  segmentIds?: string[];
+  brandIds?: string[];
   tagIds?: string[] | string;
   isLive?: boolean;
   isDraft?: boolean;
@@ -164,7 +166,8 @@ export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) =>
     method: params.method || 'messenger',
     title: params.title || faker.random.word(),
     fromUserId: params.userId || faker.random.uuid(),
-    segmentId: params.segmentId || faker.random.word(),
+    segmentIds: params.segmentIds || [],
+    brandIds: params.brandIds || [],
     tagIds: params.tagIds || [],
     isLive: params.isLive || false,
     isDraft: params.isDraft || false,
@@ -340,7 +343,6 @@ interface ICustomerFactoryInput {
   customFieldsData?: any;
   companyIds?: string[];
   tagIds?: string[] | string;
-  twitterData?: any;
   ownerId?: string;
   hasValidEmail?: boolean;
 }
@@ -361,7 +363,6 @@ export const customerFactory = (params: ICustomerFactoryInput = {}) => {
     customFieldsData: params.customFieldsData || {},
     companyIds: params.companyIds || [faker.random.number(), faker.random.number()],
     tagIds: params.tagIds || [faker.random.number(), faker.random.number()],
-    twitterData: params.twitterData || { id: faker.random.number() },
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || null,
   });
@@ -418,9 +419,6 @@ interface IConversationFactoryInput {
   userId?: string;
   content?: string;
   participatedUserIds?: string[];
-  facebookData?: any;
-  twitterData?: any;
-  gmailData?: any;
   status?: string;
   closedAt?: dateType;
   closedUserId?: string;
@@ -455,8 +453,6 @@ interface IConversationMessageFactoryInput {
   isCustomerRead?: boolean;
   engageData?: any;
   formWidgetData?: any;
-  facebookData?: any;
-  gmailData?: any;
 }
 
 export const conversationMessageFactory = async (params: IConversationMessageFactoryInput) => {
@@ -483,8 +479,6 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     isCustomerRead: params.isCustomerRead || true,
     engageData: params.engageData || {},
     formWidgetData: params.formWidgetData || {},
-    facebookData: params.facebookData || {},
-    gmailData: params.gmailData || {},
   });
 };
 
@@ -493,9 +487,6 @@ interface IIntegrationFactoryInput {
   kind?: string;
   brandId?: string;
   formId?: string;
-  twitterData?: any;
-  facebookData?: any;
-  gmailData?: any;
   formData?: any | string;
   tagIds?: string[];
 }
@@ -509,9 +500,6 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     brandId: params.brandId || Random.id(),
     formId: params.formId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
-    twitterData: params.twitterData || {},
-    facebookData: params.facebookData || {},
-    gmailData: params.gmailData || {},
     formData: params.formData === 'form' ? params.formData : kind === 'form' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
   };
@@ -668,43 +656,52 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
 };
 
-export const dealBoardFactory = () => {
-  const board = new DealBoards({
+interface IBoardFactoryInput {
+  type?: string;
+}
+
+export const boardFactory = (params: IBoardFactoryInput = {}) => {
+  const board = new Boards({
     name: faker.random.word(),
     userId: Random.id(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return board.save();
 };
 
-interface IDealPipelineFactoryInput {
+interface IPipelineFactoryInput {
   boardId?: string;
+  type?: string;
 }
 
-export const dealPipelineFactory = (params: IDealPipelineFactoryInput = {}) => {
-  const pipeline = new DealPipelines({
+export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
+  const pipeline = new Pipelines({
     name: faker.random.word(),
     boardId: params.boardId || faker.random.word(),
-    visiblity: 'public',
+    type: params.type || BOARD_TYPES.DEAL,
+    visibility: 'public',
   });
 
   return pipeline.save();
 };
 
-interface IDealStageFactoryInput {
+interface IStageFactoryInput {
   pipelineId?: string;
+  type?: string;
 }
 
-export const dealStageFactory = (params: IDealStageFactoryInput = {}) => {
-  const stage = new DealStages({
+export const stageFactory = (params: IStageFactoryInput = {}) => {
+  const stage = new Stages({
     name: faker.random.word(),
     pipelineId: params.pipelineId || faker.random.word(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return stage.save();
 };
 
-interface IDealFactoryInput {
+interface ITicketFactoryInput {
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -714,7 +711,7 @@ interface IDealFactoryInput {
   assignedUserIds?: string[];
 }
 
-export const dealFactory = (params: IDealFactoryInput = {}) => {
+export const dealFactory = (params: ITicketFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     name: faker.random.word(),
@@ -728,6 +725,54 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
   });
 
   return deal.save();
+};
+
+interface ITaskFactoryInput {
+  stageId?: string;
+  closeDate?: Date;
+  customerIds?: string[];
+  companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
+}
+
+export const taskFactory = (params: ITaskFactoryInput = {}) => {
+  const task = new Tasks({
+    ...params,
+    name: faker.random.word(),
+    stageId: params.stageId || faker.random.word(),
+    companyIds: params.companyIds || [faker.random.word()],
+    customerIds: params.customerIds || [faker.random.word()],
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
+    description: faker.random.word(),
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+  });
+
+  return task.save();
+};
+
+interface ITicketFactoryInput {
+  stageId?: string;
+  closeDate?: Date;
+  customerIds?: string[];
+  companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
+}
+
+export const ticketFactory = (params: ITicketFactoryInput = {}) => {
+  const ticket = new Tickets({
+    ...params,
+    name: faker.random.word(),
+    stageId: params.stageId || faker.random.word(),
+    companyIds: params.companyIds || [faker.random.word()],
+    customerIds: params.customerIds || [faker.random.word()],
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
+    description: faker.random.word(),
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+  });
+
+  return ticket.save();
 };
 
 interface IProductFactoryInput {
@@ -821,28 +866,6 @@ export function messengerAppFactory(params: IMessengerApp) {
     credentials: params.credentials,
   });
 }
-
-interface IAccountFactoryInput {
-  kind?: string;
-  uid?: string;
-  token?: string;
-  name?: string;
-  expireDate?: number;
-  scope?: string;
-}
-
-export const accountFactory = async (params: IAccountFactoryInput) => {
-  const doc = {
-    kind: params.kind || 'facebook',
-    uid: params.uid || faker.random.number,
-    token: params.token || faker.random.word(),
-    expireDate: params.expireDate || faker.random.number,
-    scope: params.scope || faker.random.word(),
-    name: params.name || faker.random.name,
-  };
-
-  return Accounts.create(doc);
-};
 
 interface IPermissionParams {
   module?: string;

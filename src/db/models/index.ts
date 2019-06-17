@@ -1,5 +1,5 @@
-import Accounts from './Accounts';
 import ActivityLogs from './ActivityLogs';
+import { Boards, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
 import Channels from './Channels';
 import Companies from './Companies';
@@ -7,7 +7,7 @@ import Configs from './Configs';
 import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
 import Customers from './Customers';
-import { DealBoards, DealPipelines, Deals, DealStages } from './Deals';
+import Deals from './Deals';
 import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
 import EngageMessages from './Engages';
@@ -26,6 +26,8 @@ import Scripts from './Scripts';
 import Segments from './Segments';
 import Session from './Session';
 import Tags from './Tags';
+import Tasks from './Tasks';
+import Tickets from './Tickets';
 import Users from './Users';
 
 export {
@@ -37,7 +39,6 @@ export {
   EmailTemplates,
   Brands,
   Integrations,
-  Accounts,
   Forms,
   EngageMessages,
   Tags,
@@ -55,9 +56,9 @@ export {
   Notifications,
   NotificationConfigurations,
   ActivityLogs,
-  DealBoards,
-  DealPipelines,
-  DealStages,
+  Boards,
+  Pipelines,
+  Stages,
   Deals,
   Products,
   Configs,
@@ -66,4 +67,6 @@ export {
   MessengerApps,
   Permissions,
   UsersGroups,
+  Tickets,
+  Tasks,
 };
