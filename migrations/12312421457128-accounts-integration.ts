@@ -9,23 +9,19 @@ const options = {
 };
 
 module.exports.up = async () => {
-  const { MONGO_URL = '' } = process.env;
+  const { MONGO_URL = '', INTEGRATIONS_DB_NAME = '' } = process.env;
 
   const apiMongoClient = await mongoose.createConnection(MONGO_URL, options);
 
   const apiAccounts = apiMongoClient.db.collection('accounts');
   const apiIntegrations = apiMongoClient.db.collection('integrations');
 
-  const accounts = await apiAccounts
-    .find()
-    .project({ _id: 0 })
-    .toArray();
+  const accounts = await apiAccounts.find().toArray();
   const integrations = await apiIntegrations
     .aggregate([
       { $match: { facebookData: { $exists: true } } },
       {
         $project: {
-          _id: 0,
           kind: 1,
           erxesApiId: '$_id',
           facebookPageIds: '$facebookData.pageIds',
@@ -36,7 +32,7 @@ module.exports.up = async () => {
     .toArray();
 
   // Switch to erxes-integrations database
-  const integrationMongoClient = apiMongoClient.useDb('erxes-integrations');
+  const integrationMongoClient = apiMongoClient.useDb(INTEGRATIONS_DB_NAME);
 
   await integrationMongoClient.db.collection('accounts').insertMany(accounts);
   await integrationMongoClient.db.collection('integrations').insertMany(integrations);
