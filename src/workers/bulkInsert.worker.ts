@@ -35,14 +35,17 @@ connect().then(async () => {
       return;
     }
 
+    // Import history result statistics
     const inc: { success: number; failed: number; percentage: number } = {
       success: 0,
       failed: 0,
       percentage: percentagePerData,
     };
 
+    // Collecting errors
     const errorMsgs: string[] = [];
 
+    // Customer or company object to import
     const coc: any = {
       customFieldsData: {},
     };
@@ -51,20 +54,34 @@ connect().then(async () => {
 
     // Iterating through detailed properties
     for (const property of properties) {
-      // Checking if it is basic info field
-      if (property.isCustomField === false) {
-        const value = fieldValue[colIndex];
-        coc[property.name] = value;
+      const value = fieldValue[colIndex] || '';
 
-        if (property.name === 'primaryEmail' && value) {
-          coc.emails = value;
-        }
+      switch (property.type) {
+        case 'customProperty':
+          {
+            coc.customFieldsData[property.id] = fieldValue[colIndex];
+          }
+          break;
 
-        if (property.name === 'primaryPhone' && value) {
-          coc.phones = value;
-        }
-      } else {
-        coc.customFieldsData[property.id] = fieldValue[colIndex];
+        case 'customData':
+          {
+            coc[property.name] = value.toString();
+          }
+          break;
+
+        case 'basic':
+          {
+            coc[property.name] = value.toString();
+
+            if (property.name === 'primaryEmail' && value) {
+              coc.emails = [value];
+            }
+
+            if (property.name === 'primaryPhone' && value) {
+              coc.phones = [value];
+            }
+          }
+          break;
       }
 
       colIndex++;

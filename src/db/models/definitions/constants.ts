@@ -13,9 +13,8 @@ export const CONVERSATION_STATUSES = {
 export const INTEGRATION_KIND_CHOICES = {
   MESSENGER: 'messenger',
   FORM: 'form',
-  TWITTER: 'twitter',
   FACEBOOK: 'facebook',
-  ALL: ['messenger', 'form', 'twitter', 'facebook'],
+  ALL: ['messenger', 'form', 'facebook'],
 };
 
 export const TAG_TYPES = {
@@ -25,12 +24,6 @@ export const TAG_TYPES = {
   COMPANY: 'company',
   INTEGRATION: 'integration',
   ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration'],
-};
-
-export const FACEBOOK_DATA_KINDS = {
-  FEED: 'feed',
-  MESSENGER: 'messenger',
-  ALL: ['feed', 'messenger'],
 };
 
 export const MESSENGER_KINDS = {
@@ -80,36 +73,8 @@ export const FORM_SUCCESS_ACTIONS = {
 export const KIND_CHOICES = {
   MESSENGER: 'messenger',
   FORM: 'form',
-  TWITTER: 'twitter',
   FACEBOOK: 'facebook',
-  GMAIL: 'gmail',
-  ALL: ['messenger', 'form', 'twitter', 'facebook', 'gmail'],
-};
-
-// module constants
-export const NOTIFICATION_TYPES = {
-  CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
-  CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
-  CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
-  CONVERSATION_STATE_CHANGE: 'conversationStateChange',
-  DEAL_ADD: 'dealAdd',
-  DEAL_REMOVE_ASSIGN: 'dealRemoveAssign',
-  DEAL_EDIT: 'dealEdit',
-  DEAL_CHANGE: 'dealChange',
-  DEAL_DUE_DATE: 'dealDueDate',
-  DEAL_DELETE: 'dealDelete',
-  ALL: [
-    'channelMembersChange',
-    'conversationAddMessage',
-    'conversationAssigneeChange',
-    'conversationStateChange',
-    'dealAdd',
-    'dealRemoveAssign',
-    'dealEdit',
-    'dealChange',
-    'dealDueDate',
-    'dealDelete',
-  ],
+  ALL: ['messenger', 'form', 'facebook'],
 };
 
 export const NOTIFICATION_MODULES = [
@@ -173,6 +138,68 @@ export const NOTIFICATION_MODULES = [
       },
     ],
   },
+
+  {
+    name: 'tickets',
+    description: 'Tickets',
+    types: [
+      {
+        name: 'ticketAdd',
+        text: 'Assigned a new ticket  card',
+      },
+      {
+        name: 'ticketRemoveAssign',
+        text: 'Removed from the ticket card',
+      },
+      {
+        name: 'ticketEdit',
+        text: 'Ticket card edited',
+      },
+      {
+        name: 'ticketChange',
+        text: 'Moved between stages',
+      },
+      {
+        name: 'ticketDueDate',
+        text: 'Due date is near',
+      },
+      {
+        name: 'ticketDelete',
+        text: 'Ticket card deleted',
+      },
+    ],
+  },
+
+  {
+    name: 'tasks',
+    description: 'Tasks',
+    types: [
+      {
+        name: 'taskAdd',
+        text: 'Assigned a new task  card',
+      },
+      {
+        name: 'taskRemoveAssign',
+        text: 'Removed from the task card',
+      },
+      {
+        name: 'taskEdit',
+        text: 'Task card edited',
+      },
+      {
+        name: 'taskChange',
+        text: 'Moved between stages',
+      },
+      {
+        name: 'taskDueDate',
+        text: 'Due date is near',
+      },
+      {
+        name: 'taskDelete',
+        text: 'Task card deleted',
+      },
+    ],
+  },
 ];
 
 export const FORM_FIELDS = {
@@ -216,7 +243,10 @@ export const ACTIVITY_CONTENT_TYPES = {
   COMPANY: 'company',
   USER: 'user',
   DEAL: 'deal',
-  ALL: ['customer', 'company', 'user', 'deal'],
+  TICKET: 'ticket',
+  TASK: 'task',
+
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task'],
 };
 
 export const PUBLISH_STATUSES = {
@@ -233,8 +263,10 @@ export const ACTIVITY_TYPES = {
   SEGMENT: 'segment',
   DEAL: 'deal',
   EMAIL: 'email',
+  TICKET: 'ticket',
+  TASK: 'task',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email'],
+  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task'],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -446,8 +478,9 @@ export const STATUSES = {
   ALL: ['Active', 'Deleted'],
 };
 
-export const EMAIL_TYPES = {
-  GMAIL: 'gmail',
-  OTHER: 'other',
-  ALL: ['gmail', 'other'],
+export const BOARD_TYPES = {
+  DEAL: 'deal',
+  TICKET: 'ticket',
+  TASK: 'task',
+  ALL: ['deal', 'ticket', 'task'],
 };

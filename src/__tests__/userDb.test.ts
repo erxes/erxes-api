@@ -4,6 +4,8 @@ import * as moment from 'moment';
 import { userFactory, usersGroupFactory } from '../db/factories';
 import { Users } from '../db/models';
 
+import './setup.ts';
+
 beforeAll(() => {
   Users.collection.createIndex({ email: 1 }, { unique: true });
 });
@@ -210,7 +212,7 @@ describe('User db utils', () => {
     expect(result.details.fullName).toBe('fullname');
     expect(result.username).toBe('username');
 
-    await Users.remove({ _id: userObj._id });
+    await Users.deleteMany({ _id: userObj._id });
 
     userObj = await userFactory({
       email,

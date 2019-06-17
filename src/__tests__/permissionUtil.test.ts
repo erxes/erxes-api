@@ -2,6 +2,8 @@ import { can, registerModule } from '../data/permissions/utils';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
 
+import './setup.ts';
+
 describe('Test permission utils', () => {
   let _user;
   let _user2;
@@ -56,9 +58,9 @@ describe('Test permission utils', () => {
 
   afterEach(async () => {
     // Clearing test data
-    await Users.remove({});
-    await Permissions.remove({});
-    await UsersGroups.remove({});
+    await Users.deleteMany({});
+    await Permissions.deleteMany({});
+    await UsersGroups.deleteMany({});
   });
 
   test('Register module check duplicated module', async () => {

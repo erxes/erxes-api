@@ -13,10 +13,8 @@ export const CONVERSATION_STATUSES = {
 export const INTEGRATION_KIND_CHOICES = {
   MESSENGER: 'messenger',
   FORM: 'form',
-  TWITTER: 'twitter',
   FACEBOOK: 'facebook',
-  GMAIL: 'gmail',
-  ALL: ['messenger', 'form', 'twitter', 'facebook', 'gmail'],
+  ALL: ['messenger', 'form', 'facebook'],
 };
 
 export const TAG_TYPES = {
@@ -26,12 +24,6 @@ export const TAG_TYPES = {
   COMPANY: 'company',
   INTEGRATION: 'integration',
   ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration'],
-};
-
-export const FACEBOOK_DATA_KINDS = {
-  FEED: 'feed',
-  MESSENGER: 'messenger',
-  ALL: ['feed', 'messenger'],
 };
 
 export const MESSENGER_KINDS = {
@@ -81,10 +73,8 @@ export const FORM_SUCCESS_ACTIONS = {
 export const KIND_CHOICES = {
   MESSENGER: 'messenger',
   FORM: 'form',
-  TWITTER: 'twitter',
   FACEBOOK: 'facebook',
-  GMAIL: 'gmail',
-  ALL: ['messenger', 'form', 'twitter', 'facebook', 'gmail'],
+  ALL: ['messenger', 'form', 'facebook'],
 };
 
 // module constants
@@ -99,6 +89,18 @@ export const NOTIFICATION_TYPES = {
   DEAL_CHANGE: 'dealChange',
   DEAL_DUE_DATE: 'dealDueDate',
   DEAL_DELETE: 'dealDelete',
+  TICKET_ADD: 'ticketAdd',
+  TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
+  TICKET_EDIT: 'ticketEdit',
+  TICKET_CHANGE: 'ticketChange',
+  TICKET_DUE_DATE: 'ticketDueDate',
+  TICKET_DELETE: 'ticketDelete',
+  TASK_ADD: 'taskAdd',
+  TASK_REMOVE_ASSIGN: 'taskRemoveAssign',
+  TASK_EDIT: 'taskEdit',
+  TASK_CHANGE: 'taskChange',
+  TASK_DUE_DATE: 'taskDueDate',
+  TASK_DELETE: 'taskDelete',
   ALL: [
     'channelMembersChange',
     'conversationAddMessage',
@@ -110,6 +112,18 @@ export const NOTIFICATION_TYPES = {
     'dealChange',
     'dealDueDate',
     'dealDelete',
+    'ticketAdd',
+    'ticketRemoveAssign',
+    'ticketEdit',
+    'ticketChange',
+    'ticketDueDate',
+    'ticketDelete',
+    'taskAdd',
+    'taskRemoveAssign',
+    'taskEdit',
+    'taskChange',
+    'taskDueDate',
+    'taskDelete',
   ],
 };
 
@@ -217,7 +231,9 @@ export const ACTIVITY_CONTENT_TYPES = {
   COMPANY: 'company',
   USER: 'user',
   DEAL: 'deal',
-  ALL: ['customer', 'company', 'user', 'deal'],
+  TICKET: 'ticket',
+
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket'],
 };
 
 export const COC_LEAD_STATUS_TYPES = [
@@ -257,8 +273,9 @@ export const ACTIVITY_TYPES = {
   CONVERSATION: 'conversation',
   SEGMENT: 'segment',
   DEAL: 'deal',
+  TICKET: 'ticket',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal'],
+  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'ticket'],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -368,8 +385,6 @@ export const PROBABILITY = {
   LOST: 'Lost',
   ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost'],
 };
-
-export const FACEBOOK_POST_TYPES = ['status', 'video', 'photo', 'post', 'share'];
 
 export const INSIGHT_TYPES = {
   DEAL: 'deal',

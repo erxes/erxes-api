@@ -2,6 +2,8 @@ import { registerModule } from '../data/permissions/utils';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
 
+import './setup.ts';
+
 describe('Test permissions model', () => {
   let _permission;
   let _user;
@@ -40,8 +42,8 @@ describe('Test permissions model', () => {
 
   afterEach(async () => {
     // Clearing test data
-    await Permissions.remove({});
-    await UsersGroups.remove({});
+    await Permissions.deleteMany({});
+    await UsersGroups.deleteMany({});
   });
 
   test('Create permission invalid action', async () => {

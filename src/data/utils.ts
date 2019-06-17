@@ -8,6 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
+import { debugBase, debugEmail, debugIntegrationsApi } from '../debuggers';
 
 /*
  * Check that given file is not harmful
@@ -94,7 +95,7 @@ const createGCS = () => {
 export const uploadFileAWS = async (file: { name: string; path: string }): Promise<string> => {
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
   const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX', defaultValue: '' });
-  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: '' });
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
 
   // initialize s3
   const s3 = createAWS();
@@ -132,7 +133,7 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
   const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
-  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: '' });
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
 
   // initialize GCS
   const storage = createGCS();
@@ -308,7 +309,7 @@ export const sendEmail = async ({
   try {
     transporter = createTransporter({ ses: DEFAULT_EMAIL_SERVICE === 'SES' });
   } catch (e) {
-    return console.log(e.message); // eslint-disable-line
+    return debugEmail(e.message);
   }
 
   const { isCustom, data, name } = template;
@@ -329,8 +330,8 @@ export const sendEmail = async ({
     };
 
     return transporter.sendMail(mailOptions, (error, info) => {
-      console.log(error); // eslint-disable-line
-      console.log(info); // eslint-disable-line
+      debugEmail(error);
+      debugEmail(info);
     });
   });
 };
@@ -410,15 +411,66 @@ export const generateXlsx = async (workbook: any, name: string): Promise<string>
 
   return `${DOMAIN}/static/${url}`;
 };
+
+interface IRequestParams {
+  url?: string;
+  path?: string;
+  method: string;
+  params?: { [key: string]: string };
+  body?: { [key: string]: string };
+}
+
 /**
  * Sends post request to specific url
  */
-export const sendPostRequest = (url: string, params: { [key: string]: string }) =>
-  requestify.request(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: { ...params },
-  });
+export const sendRequest = async ({ url, method, body, params }: IRequestParams) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
+  debugIntegrationsApi(`
+    Sending request to integrations api with
+    url: ${url}
+    method: ${method}
+    params: ${JSON.stringify(params)}
+  `);
+
+  try {
+    const response = await requestify.request(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN },
+      body,
+      params,
+    });
+
+    const responseBody = response.getBody();
+
+    debugIntegrationsApi(`
+      Success from integrations api: ${url}
+      responseBody: ${JSON.stringify(responseBody)}
+    `);
+
+    return responseBody;
+  } catch (e) {
+    if (e.code === 'ECONNREFUSED') {
+      const message =
+        'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
+
+      debugIntegrationsApi(message);
+      throw new Error(message);
+    } else {
+      debugIntegrationsApi(`Error occurred in integrations api: ${e.body}`);
+      throw new Error(e.body);
+    }
+  }
+};
+
+/**
+ * Send request to integrations api
+ */
+export const fetchIntegrationApi = ({ path, method, body, params }: IRequestParams) => {
+  const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
+
+  return sendRequest({ url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params });
+};
 
 /**
  * Validates email using MX record resolver
@@ -466,7 +518,7 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   }
 
   if (!value) {
-    console.log(`Missing environment variable configuration for ${name}`);
+    debugBase(`Missing environment variable configuration for ${name}`);
   }
 
   return value || '';

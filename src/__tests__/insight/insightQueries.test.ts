@@ -13,6 +13,8 @@ import {
 } from '../../db/factories';
 import { Brands, ConversationMessages, Conversations, Integrations, Tags, Users } from '../../db/models';
 
+import '../setup';
+
 export const paramsDef = `
   $integrationIds: String,
   $brandIds: String,
@@ -64,30 +66,6 @@ const generateFormConversation = async (integrationId: string, userId: string) =
 
   // For response
   await conversationMessageFactory({ conversationId: secondFormConversation._id, userId });
-};
-
-const generateGmailConversation = async (integrationId: string, userId: string, tagId: string) => {
-  const conversation = await conversationFactory({
-    integrationId,
-    tagIds: [tagId],
-  });
-
-  // For request
-  await conversationMessageFactory({ conversationId: conversation._id, userId: null });
-
-  // For response
-  await conversationMessageFactory({ conversationId: conversation._id, userId });
-
-  const secondConversation = await conversationFactory({
-    integrationId,
-    tagIds: [tagId],
-  });
-
-  // For request
-  await conversationMessageFactory({ conversationId: secondConversation._id, userId: null });
-
-  // For response
-  await conversationMessageFactory({ conversationId: secondConversation._id, userId });
 };
 
 const generateClosedConversation = async (integrationId: string, userId: string, tagId: string) => {
@@ -177,19 +155,19 @@ export const beforeEachTest = async () => {
 
   const integration = await integrationFactory({
     brandId: brand._id,
-    kind: 'gmail',
+    kind: 'facebook',
   });
 
   const formIntegration = await integrationFactory({
     brandId: brand._id,
-    kind: 'form',
+    kind: 'facebook',
   });
 
   const user = await userFactory({});
   const secondUser = await userFactory({});
 
   const args = {
-    integrationIds: 'gmail',
+    integrationIds: 'facebook',
     brandIds: brand._id,
     startDate,
     endDate,
@@ -201,13 +179,10 @@ export const beforeEachTest = async () => {
   // 2 form conversation with two request and two response message respectively
   await generateFormConversation(formIntegration._id, user._id);
 
-  // 2 gmail conversation with tag, two request and two response message respectively
-  await generateGmailConversation(integration._id, user._id, tag._id);
-
-  // 2 closed gmail conversation with tag, two request and two response message respectively
+  // 2 closed facebook conversation with tag, two request and two response message respectively
   await generateClosedConversation(integration._id, user._id, tag._id);
 
-  // 4 first responded gmail conversation and two request and two response message
+  // 4 first responded facebook conversation and two request and two response message
   await generateFirstRespondedConversation(integration._id, user._id, secondUser._id);
 
   return { args, user, secondUser };
@@ -257,19 +232,6 @@ describe('insightQueries', () => {
     expectError(insightQueries.insightsResponseClose);
   });
 
-  test('insightsIntegrations', async () => {
-    const qry = `
-      query insightsIntegrations(${paramsDef}) {
-          insightsIntegrations(${paramsValue})
-      }
-    `;
-
-    const responses = await graphqlRequest(qry, 'insightsIntegrations', args);
-
-    expect(responses.find(r => r.id === 'form').value).toEqual(2); // form
-    expect(responses.find(r => r.id === 'gmail').value).toEqual(8); // gmail
-  });
-
   test('insightsTags', async () => {
     const qry = `
       query insightsTags(${paramsDef}) {
@@ -278,7 +240,7 @@ describe('insightQueries', () => {
     `;
 
     const response = await graphqlRequest(qry, 'insightsTags', args);
-    expect(response[0].value).toEqual(4);
+    expect(response[0].value).toEqual(2);
   });
 
   test('insightsPunchCard', async () => {
@@ -333,22 +295,6 @@ describe('insightQueries', () => {
     const response = await graphqlRequest(qry, 'insightsResponseClose', args);
     expect(response.trend.length).toBe(1);
     expect(response.teamMembers.length).toBe(1);
-  });
-
-  test('insightsSummaryData', async () => {
-    const qry = `
-      query insightsSummaryData($type: String, ${paramsDef}) {
-          insightsSummaryData(type: $type, ${paramsValue})
-      }
-    `;
-
-    const response = await graphqlRequest(qry, 'insightsSummaryData', args);
-
-    expect(response[0].count).toBe(6); // In time range
-    expect(response[1].count).toBe(6); // This month
-    expect(response[2].count).toBe(6); // This week
-    expect(response[3].count).toBe(6); // Today
-    expect(response[4].count).toBe(6); // Last 30 days
   });
 
   test('insightsTrend', async () => {
