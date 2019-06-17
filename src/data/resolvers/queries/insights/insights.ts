@@ -391,6 +391,9 @@ const insightQueries = {
     return { trend, teamMembers, time };
   },
 
+  /**
+   * Calculates average ConversationMessages frequency time for second
+   */
   async insightsConversationSummary(_root, args: IListArgs) {
     const { startDate, endDate, integrationIds, brandIds } = args;
     const { start, end } = fixDates(startDate, endDate);
@@ -502,12 +505,7 @@ const insightQueries = {
 
     if (insightAggregateData.length === 0) {
       return {
-        avg: [
-          { title: 'Average all operator response time', count: 0 },
-          { title: 'Average all customer response time', count: 0 },
-          { title: 'Average internal response time', count: 0 },
-          { title: 'Overall average', count: 0 },
-        ],
+        avg: [{ title: 'Average all operator response time', count: 0 }],
         trend: [],
         teamMembers: [],
       };
@@ -535,6 +533,83 @@ const insightQueries = {
       });
     }
 
+    return {
+      avg: [{ title: 'Average all operator response time', count: averageTotal }],
+      trend: summaryChart,
+      teamMembers: perUserChart,
+    };
+  },
+
+  /**
+   * Calculates average ConversationMessages spec CustomerAvg
+   */
+  async insightsConversationCustomerAvg(_root, args: IListArgs) {
+    const { startDate, endDate, integrationIds, brandIds } = args;
+    const { start, end } = fixDates(startDate, endDate);
+
+    const messageSelector = {
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    const filterSelector: IFilterSelector = { integration: {} };
+
+    if (integrationIds) {
+      filterSelector.integration.kind = { $in: integrationIds.split(',') };
+    }
+
+    if (brandIds) {
+      filterSelector.integration.brandId = { $in: brandIds.split(',') };
+    }
+
+    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
+
+    const lookupPrevMsg = {
+      $lookup: {
+        from: 'conversation_messages',
+        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+              },
+            },
+          },
+          {
+            $project: {
+              conversationId: 1,
+              createdAt: 1,
+              internal: 1,
+              userId: 1,
+              customerId: 1,
+              sizeMentionedIds: { $size: '$mentionedUserIds' },
+            },
+          },
+        ],
+        as: 'prevMsgs',
+      },
+    };
+    const prevMsgSlice = {
+      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
+    };
+    const diffSecondCalc = {
+      $addFields: {
+        diffSec: {
+          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
+        },
+      },
+    };
+    const firstProject = {
+      $project: {
+        conversationId: 1,
+        createdAt: 1,
+        internal: 1,
+        userId: 1,
+        customerId: 1,
+        prevMsg: 1,
+      },
+    };
+
     const insightAggregateCustomer = await ConversationMessages.aggregate([
       {
         $match: {
@@ -559,6 +634,81 @@ const insightQueries = {
       },
     ]);
 
+    return [
+      {
+        title: 'Average all customer response time',
+        count: insightAggregateCustomer.length ? insightAggregateCustomer[0].avgSecond : 0,
+      },
+    ];
+  },
+
+  async insightsConversationInternalAvg(_root, args: IListArgs) {
+    const { startDate, endDate, integrationIds, brandIds } = args;
+    const { start, end } = fixDates(startDate, endDate);
+
+    const messageSelector = {
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    const filterSelector: IFilterSelector = { integration: {} };
+
+    if (integrationIds) {
+      filterSelector.integration.kind = { $in: integrationIds.split(',') };
+    }
+
+    if (brandIds) {
+      filterSelector.integration.brandId = { $in: brandIds.split(',') };
+    }
+
+    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
+
+    const lookupPrevMsg = {
+      $lookup: {
+        from: 'conversation_messages',
+        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+              },
+            },
+          },
+          {
+            $project: {
+              conversationId: 1,
+              createdAt: 1,
+              internal: 1,
+              userId: 1,
+              customerId: 1,
+              sizeMentionedIds: { $size: '$mentionedUserIds' },
+            },
+          },
+        ],
+        as: 'prevMsgs',
+      },
+    };
+    const prevMsgSlice = {
+      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
+    };
+    const diffSecondCalc = {
+      $addFields: {
+        diffSec: {
+          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
+        },
+      },
+    };
+    const firstProject = {
+      $project: {
+        conversationId: 1,
+        createdAt: 1,
+        internal: 1,
+        userId: 1,
+        customerId: 1,
+        prevMsg: 1,
+      },
+    };
+
     const insightAggregateInternal = await ConversationMessages.aggregate([
       {
         $match: {
@@ -582,6 +732,80 @@ const insightQueries = {
         },
       },
     ]);
+
+    return [
+      {
+        title: 'Average internal response time',
+        count: insightAggregateInternal.length ? insightAggregateInternal[0].avgSecond : 0,
+      },
+    ];
+  },
+  async insightsConversationOverallAvg(_root, args: IListArgs) {
+    const { startDate, endDate, integrationIds, brandIds } = args;
+    const { start, end } = fixDates(startDate, endDate);
+
+    const messageSelector = {
+      createdAt: { $gte: start, $lte: end },
+    };
+
+    const filterSelector: IFilterSelector = { integration: {} };
+
+    if (integrationIds) {
+      filterSelector.integration.kind = { $in: integrationIds.split(',') };
+    }
+
+    if (brandIds) {
+      filterSelector.integration.brandId = { $in: brandIds.split(',') };
+    }
+
+    const conversationSelector = await getConversationSelectoryByMsg(filterSelector);
+
+    const lookupPrevMsg = {
+      $lookup: {
+        from: 'conversation_messages',
+        let: { checkConversation: '$conversationId', checkAt: '$createdAt' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ['$conversationId', '$$checkConversation'] }, { $lt: ['$createdAt', '$$checkAt'] }],
+              },
+            },
+          },
+          {
+            $project: {
+              conversationId: 1,
+              createdAt: 1,
+              internal: 1,
+              userId: 1,
+              customerId: 1,
+              sizeMentionedIds: { $size: '$mentionedUserIds' },
+            },
+          },
+        ],
+        as: 'prevMsgs',
+      },
+    };
+    const prevMsgSlice = {
+      $addFields: { prevMsg: { $slice: ['$prevMsgs', -1] } },
+    };
+    const diffSecondCalc = {
+      $addFields: {
+        diffSec: {
+          $divide: [{ $subtract: ['$createdAt', '$prevMsg.createdAt'] }, 1000],
+        },
+      },
+    };
+    const firstProject = {
+      $project: {
+        conversationId: 1,
+        createdAt: 1,
+        internal: 1,
+        userId: 1,
+        customerId: 1,
+        prevMsg: 1,
+      },
+    };
 
     const insightAggregateAllAvg = await ConversationMessages.aggregate([
       {
@@ -610,25 +834,12 @@ const insightQueries = {
       },
     ]);
 
-    return {
-      avg: [
-        { title: 'Average all operator response time', count: averageTotal },
-        {
-          title: 'Average all customer response time',
-          count: insightAggregateCustomer.length ? insightAggregateCustomer[0].avgSecond : 0,
-        },
-        {
-          title: 'Average internal response time',
-          count: insightAggregateInternal.length ? insightAggregateInternal[0].avgSecond : 0,
-        },
-        {
-          title: 'Overall average',
-          count: insightAggregateAllAvg.length ? insightAggregateAllAvg[0].avgSecond : 0,
-        },
-      ],
-      trend: summaryChart,
-      teamMembers: perUserChart,
-    };
+    return [
+      {
+        title: 'Overall average',
+        count: insightAggregateAllAvg.length ? insightAggregateAllAvg[0].avgSecond : 0,
+      },
+    ];
   },
 };
 
