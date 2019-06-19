@@ -31,7 +31,7 @@ interface IGoogleOptions {
   };
 }
 
-const { PUBSUB_TYPE }: { PUBSUB_TYPE?: string } = process.env;
+const { PUBSUB_TYPE, NODE_ENV }: { PUBSUB_TYPE?: string; NODE_ENV?: string } = process.env;
 
 // Google pubsub message handler
 const commonMessageHandler = payload => {
@@ -58,6 +58,15 @@ const configGooglePubsub = (): IGoogleOptions => {
 
 const createPubsubInstance = (): IPubSub => {
   let pubsub;
+
+  if (NODE_ENV === 'test') {
+    pubsub = {
+      asyncIterator: () => null,
+      publish: () => null,
+    };
+
+    return pubsub;
+  }
 
   if (PUBSUB_TYPE === 'GOOGLE') {
     const googleOptions = configGooglePubsub();
@@ -93,6 +102,10 @@ const createPubsubInstance = (): IPubSub => {
 };
 
 const publishMessage = ({ action, data }: IPubsubMessage) => {
+  if (NODE_ENV === 'test') {
+    return;
+  }
+
   if (action === 'callPublish') {
     graphqlPubsub.publish(data.trigger, { [data.trigger]: data.payload });
   }

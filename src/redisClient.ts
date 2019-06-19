@@ -8,10 +8,12 @@ const {
   REDIS_HOST = 'localhost',
   REDIS_PORT = 6379,
   REDIS_PASSWORD,
+  NODE_ENV,
 }: {
   REDIS_HOST?: string;
   REDIS_PORT?: number;
   REDIS_PASSWORD?: string;
+  NODE_ENV?: string;
 } = process.env;
 
 /**
@@ -31,13 +33,26 @@ export const redisOptions = {
   },
 };
 
-const client = redis.createClient(redisOptions);
+let client;
+
+if (NODE_ENV === 'test') {
+  client = {
+    get: (_key, _callback) => true,
+    set: (_key, _value) => true,
+  };
+} else {
+  client = redis.createClient(redisOptions);
+}
 
 /*
  * Get item
  */
-export const get = (key: string): Promise<any> =>
-  new Promise((resolve, reject) => {
+export const get = (key: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    if (NODE_ENV === 'test') {
+      return resolve('');
+    }
+
     client.get(key, (error, reply) => {
       if (error) {
         return reject(error);
@@ -46,8 +61,15 @@ export const get = (key: string): Promise<any> =>
       return resolve(reply);
     });
   });
+};
 
 /*
  * Set item
  */
-export const set = (key: string, value: any) => client.set(key, value);
+export const set = (key: string, value: any) => {
+  if (NODE_ENV === 'test') {
+    return;
+  }
+
+  client.set(key, value);
+};
