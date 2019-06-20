@@ -1,8 +1,8 @@
 import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../constants';
-import { getDateFieldAsStr, getDurationField } from '../../insights/aggregationUtils';
-import { IListArgs, IPieChartData } from '../../insights/types';
+import { getDateFieldAsStr, getDurationField } from '../../modules/insights/aggregationUtils';
+import { IListArgs, IPieChartData } from '../../modules/insights/types';
 import {
   fixChartData,
   fixDates,
@@ -19,7 +19,7 @@ import {
   getSummaryDates,
   getTimezone,
   noConversationSelector,
-} from '../../insights/utils';
+} from '../../modules/insights/utils';
 import { moduleCheckPermission, moduleRequireLogin } from '../../permissions';
 
 const insightQueries = {

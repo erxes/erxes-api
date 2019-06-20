@@ -1,9 +1,9 @@
 import * as moment from 'moment';
-import { Users } from '../../db/models';
-import { IUserDocument } from '../../db/models/definitions/users';
-import { INSIGHT_BASIC_INFOS } from '../constants';
-import { can } from '../permissions/utils';
-import { createXlsFile, generateXlsx } from '../utils';
+import { Users } from '../../../db/models';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { INSIGHT_BASIC_INFOS } from '../../constants';
+import { can } from '../../permissions/utils';
+import { createXlsFile, generateXlsx } from '../../utils';
 import {
   generateActivityReport,
   generateFirstResponseReport,

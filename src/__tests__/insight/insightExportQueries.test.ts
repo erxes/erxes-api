@@ -1,10 +1,10 @@
-import { generateActivityReport, generateTagReport } from '../../data/insights/exportData';
+import { generateActivityReport, generateTagReport } from '../../data/modules/insights/exportData';
 import {
   insightActivityReportExport,
   insightFirstResponseReportExport,
   insightTagReportExport,
   insightVolumeReportExport,
-} from '../../data/insights/insightExports';
+} from '../../data/modules/insights/insightExports';
 import { afterEachTest, beforeEachTest, endDate, startDate } from './utils';
 
 import '../setup.ts';

@@ -1,11 +1,11 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Deals, Integrations, Pipelines, Stages, Users } from '../../db/models';
-import { IStageDocument } from '../../db/models/definitions/boards';
-import { IMessageDocument } from '../../db/models/definitions/conversationMessages';
-import { IUser } from '../../db/models/definitions/users';
-import { CONVERSATION_STATUSES, INSIGHT_TYPES } from '../constants';
-import { fixDate } from '../utils';
+import { ConversationMessages, Conversations, Deals, Integrations, Pipelines, Stages, Users } from '../../../db/models';
+import { IStageDocument } from '../../../db/models/definitions/boards';
+import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
+import { IUser } from '../../../db/models/definitions/users';
+import { CONVERSATION_STATUSES, INSIGHT_TYPES } from '../../constants';
+import { fixDate } from '../../utils';
 import { getDateFieldAsStr } from './aggregationUtils';
 import {
   IDealListArgs,
