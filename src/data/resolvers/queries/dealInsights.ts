@@ -1,9 +1,8 @@
-import { Deals } from '../../../../db/models';
-import { IUserDocument } from '../../../../db/models/definitions/users';
-import { INSIGHT_TYPES } from '../../../constants';
-import { moduleRequireLogin } from '../../../permissions';
-import { getDateFieldAsStr } from '../aggregationUtils';
-import { IDealListArgs } from './types';
+import { Deals } from '../../../db/models';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { INSIGHT_TYPES } from '../../constants';
+import { getDateFieldAsStr } from '../../insights/aggregationUtils';
+import { IDealListArgs } from '../../insights/types';
 import {
   fixChartData,
   fixDates,
@@ -12,7 +11,8 @@ import {
   getDealSelector,
   getSummaryData,
   getTimezone,
-} from './utils';
+} from '../../insights/utils';
+import { moduleRequireLogin } from '../../permissions';
 
 const dealInsightQueries = {
   /**

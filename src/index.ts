@@ -8,6 +8,7 @@ import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
+import insightExports from './data/insights/insightExports';
 import resolvers from './data/resolvers';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import typeDefs from './data/schema';
@@ -199,6 +200,19 @@ app.use('/static', express.static(path.join(__dirname, 'private')));
 // for health check
 app.get('/status', async (_req, res) => {
   res.end('ok');
+});
+
+// export insights
+app.get('/insights-export', async (req: any, res) => {
+  try {
+    const { name, response } = await insightExports(req.query, req.user);
+
+    res.attachment(`${name}.xlsx`);
+
+    return res.send(response);
+  } catch (e) {
+    return res.end(e.message);
+  }
 });
 
 // read file
