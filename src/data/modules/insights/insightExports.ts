@@ -92,6 +92,7 @@ export const insightActivityReportExport = async (args: IListArgs, user: IUserDo
 
   const generateData = async () => {
     const next = nextTime(begin, 'time');
+
     rowIndex++;
 
     addCell({
@@ -110,9 +111,12 @@ export const insightActivityReportExport = async (args: IListArgs, user: IUserDo
 
         users[userId] = (details && details.fullName) || email;
       }
+
       const key = moment(begin).format('YYYY-MM-DD HH');
       const count = userDataDictionary[`${userId}_${key}`] || 0;
+
       userTotals[userId] = (userTotals[userId] || 0) + count;
+
       addCell({
         sheet,
         rowIndex,
@@ -133,6 +137,7 @@ export const insightActivityReportExport = async (args: IListArgs, user: IUserDo
 
   // add total
   rowIndex++;
+
   addCell({
     sheet,
     rowIndex,
