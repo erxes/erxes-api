@@ -548,6 +548,7 @@ const insightQueries = {
     const conversationSelector = await getConversationSelectorByMsg(integrationIds, brandIds);
 
     const lookupHelper = await getConversationReportLookup();
+    lookupHelper.lookupPrevMsg.$lookup.pipeline[1].$project.sizeMentionedIds = { $size: '$mentionedUserIds' };
 
     const insightAggregateInternal = await ConversationMessages.aggregate([
       {

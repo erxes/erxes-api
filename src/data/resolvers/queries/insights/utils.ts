@@ -597,7 +597,6 @@ export const getConversationReportLookup = async (): Promise<any> => {
               internal: 1,
               userId: 1,
               customerId: 1,
-              sizeMentionedIds: { $size: '$mentionedUserIds' },
             },
           },
         ],
