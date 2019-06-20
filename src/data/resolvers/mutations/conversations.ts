@@ -18,9 +18,6 @@ interface IConversationMessageAdd {
   mentionedUserIds?: string[];
   internal?: boolean;
   attachments?: any;
-  tweetReplyToId?: string;
-  tweetReplyToScreenName?: string;
-  commentReplyToId?: string;
 }
 
 /**
@@ -72,6 +69,7 @@ export const publishMessage = (message?: IMessageDocument | null, customerId?: s
   if (!message) {
     return;
   }
+
   graphqlPubsub.publish('conversationMessageInserted', {
     conversationMessageInserted: message,
   });
