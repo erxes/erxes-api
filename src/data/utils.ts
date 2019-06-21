@@ -433,6 +433,7 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
     Sending request to integrations api with
     url: ${url}
     method: ${method}
+    body: ${JSON.stringify(body)}
     params: ${JSON.stringify(params)}
   `);
 
@@ -473,6 +474,15 @@ export const fetchIntegrationApi = ({ path, method, body, params }: IRequestPara
   const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
 
   return sendRequest({ url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params });
+};
+
+/**
+ * Send request to crons api
+ */
+export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
+  const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
+
+  return sendRequest({ url: `${CRONS_API_DOMAIN}${path}`, method, body, params });
 };
 
 /**

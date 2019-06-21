@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
-import './cronJobs';
 import { trackEngages } from './trackers/engageTracker';
 
 dotenv.config();
