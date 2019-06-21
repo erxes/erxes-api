@@ -15,9 +15,9 @@
   "private": true,
   "scripts": {
     "start": "node dist",
-    "start-cron": "node dist/cronJobs",
+    "start-crons": "node dist/cronJobs",
     "dev": "DEBUG=erxes-api:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src",
-    "dev-cron": "DEBUG=erxes-cron:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src/cronJobs",
+    "dev-crons": "DEBUG=erxes-cron:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src/cronJobs",
     "build": "tsc -p tsconfig.prod.json && cp -rf src/private dist/",
     "lint": "tslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
