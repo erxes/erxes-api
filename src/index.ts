@@ -156,13 +156,19 @@ app.post('/import-file', async (req: any, res, next) => {
   debugExternalApi(`Pipeing request to ${WORKERS_API_DOMAIN}`);
 
   return req.pipe(
-    request.post(`${WORKERS_API_DOMAIN}/import-file`).on('response', response => {
-      if (response.statusCode !== 200) {
-        return next(response.statusMessage);
-      }
+    request
+      .post(`${WORKERS_API_DOMAIN}/import-file`)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
 
-      return response.pipe(res);
-    }),
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
   );
 });
 
