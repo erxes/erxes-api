@@ -98,10 +98,10 @@ export const itemsChange = async (
   collection: any,
   item: IDealDocument | ITicketDocument,
   type: string,
-  destinationStageId?: string,
+  destinationStageId: string,
 ) => {
-  const oldTicket = await collection.findOne({ _id: item._id });
-  const oldStageId = oldTicket ? oldTicket.stageId || '' : '';
+  const oldItem = await collection.findOne({ _id: item._id });
+  const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
   let content = `'{userName}' changed order your ${type}:'${item.name}'`;
 
