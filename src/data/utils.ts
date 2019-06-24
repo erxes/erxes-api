@@ -8,7 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
-import { debugBase, debugEmail, debugIntegrationsApi } from '../debuggers';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
  * Check that given file is not harmful
@@ -419,18 +419,23 @@ interface IRequestParams {
   url?: string;
   path?: string;
   method: string;
+  headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
+  form?: { [key: string]: string };
 }
 
 /**
  * Sends post request to specific url
  */
-export const sendRequest = async ({ url, method, body, params }: IRequestParams) => {
+export const sendRequest = async (
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage: string,
+) => {
   const DOMAIN = getEnv({ name: 'DOMAIN' });
 
-  debugIntegrationsApi(`
-    Sending request to integrations api with
+  debugExternalApi(`
+    Sending request to
     url: ${url}
     method: ${method}
     body: ${JSON.stringify(body)}
@@ -440,28 +445,26 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
   try {
     const response = await requestify.request(url, {
       method,
-      headers: { 'Content-Type': 'application/json', origin: DOMAIN },
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN, ...(headers || {}) },
+      form,
       body,
       params,
     });
 
     const responseBody = response.getBody();
 
-    debugIntegrationsApi(`
-      Success from integrations api: ${url}
+    debugExternalApi(`
+      Success from : ${url}
       responseBody: ${JSON.stringify(responseBody)}
     `);
 
     return responseBody;
   } catch (e) {
     if (e.code === 'ECONNREFUSED') {
-      const message =
-        'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
-
-      debugIntegrationsApi(message);
-      throw new Error(message);
+      debugExternalApi(errorMessage);
+      throw new Error(errorMessage);
     } else {
-      debugIntegrationsApi(`Error occurred in integrations api: ${e.body}`);
+      debugExternalApi(`Error occurred : ${e.body}`);
       throw new Error(e.body);
     }
   }
@@ -473,7 +476,10 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
 export const fetchIntegrationApi = ({ path, method, body, params }: IRequestParams) => {
   const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
 
-  return sendRequest({ url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params });
+  return sendRequest(
+    { url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running',
+  );
 };
 
 /**
@@ -482,7 +488,22 @@ export const fetchIntegrationApi = ({ path, method, body, params }: IRequestPara
 export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
   const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
 
-  return sendRequest({ url: `${CRONS_API_DOMAIN}${path}`, method, body, params });
+  return sendRequest(
+    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+  );
+};
+
+/**
+ * Send request to workers api
+ */
+export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
 };
 
 /**
