@@ -9,6 +9,7 @@ import { connect } from '../db/connection';
 import { debugRequest, debugResponse, debugWorkers } from '../debuggers';
 import userMiddleware from '../middlewares/userMiddleware';
 import { importXlsFile } from './bulkInsert';
+import { init } from './startup';
 import { clearIntervals, createWorkers, removeWorkers, splitToCore } from './utils';
 
 // load environment variables
@@ -100,5 +101,7 @@ app.use((error, _req, res, _next) => {
 const { PORT_WORKERS } = process.env;
 
 app.listen(PORT_WORKERS, () => {
+  init();
+
   debugWorkers(`Workers server is now running on ${PORT_WORKERS}`);
 });

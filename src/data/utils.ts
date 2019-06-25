@@ -401,17 +401,7 @@ export const createXlsFile = async () => {
 /**
  * Generates downloadable xls file on the url
  */
-export const generateXlsx = async (workbook: any, name: string, output = 'file'): Promise<string> => {
-  // Url to download xls file
-  const url = `xlsTemplateOutputs/${name}.xlsx`;
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  if (output === 'file') {
-    // Saving xls workbook to the directory
-    await workbook.toFileAsync(`${__dirname}/../private/${url}`);
-    return `${DOMAIN}/static/${url}`;
-  }
-
+export const generateXlsx = async (workbook: any): Promise<string> => {
   return workbook.outputAsync();
 };
 
