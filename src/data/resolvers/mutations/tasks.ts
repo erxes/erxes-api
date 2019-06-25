@@ -3,7 +3,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { NOTIFICATION_TYPES } from '../../constants';
-import { checkPermission } from '../../permissions';
+import { checkPermission } from '../../permissions/wrappers';
 import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
 
 interface ITasksEdit extends ITask {
@@ -52,12 +52,13 @@ const taskMutations = {
    */
   async tasksChange(
     _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId?: string },
+    { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: { user: IUserDocument },
   ) {
     const task = await Tasks.updateTask(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
+      stageId: destinationStageId,
     });
 
     const content = await itemsChange(Tasks, task, 'task', destinationStageId);

@@ -12,8 +12,8 @@ import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, MESSAGE_KINDS, METHODS } from '../../constants';
+import QueryBuilder from '../../modules/segments/queryBuilder';
 import { createTransporter, getEnv } from '../../utils';
-import QueryBuilder from '../queries/segmentQueryBuilder';
 
 /**
  * Dynamic content tags
@@ -160,7 +160,7 @@ const sendViaEmail = async (message: IEngageMessageDocument) => {
   EngageMessages.setCustomerIds(message._id, customers);
 
   for (const customer of customers) {
-    let replacedContent = content;
+    let replacedContent = replaceKeys({ content, customer, user });
 
     // Add unsubscribe link ========
     const unSubscribeUrl = `${AWS_ENDPOINT}/unsubscribe/?cid=${customer._id}`;
