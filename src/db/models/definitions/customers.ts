@@ -51,6 +51,7 @@ export interface ICustomer {
   avatar?: string;
   primaryPhone?: string;
   phones?: string[];
+  profileScore: number;
 
   ownerId?: string;
   position?: string;
@@ -163,6 +164,7 @@ export const customerSchema = new Schema({
 
   primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
   phones: field({ type: [String], optional: true }),
+  profileScore: field({ type: Number, index: true }),
 
   ownerId: field({ type: String, optional: true }),
   position: field({ type: String, optional: true, label: 'Position' }),
