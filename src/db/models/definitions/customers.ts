@@ -51,7 +51,7 @@ export interface ICustomer {
   avatar?: string;
   primaryPhone?: string;
   phones?: string[];
-  profileScore: number;
+  profileScore?: number;
 
   ownerId?: string;
   position?: string;
