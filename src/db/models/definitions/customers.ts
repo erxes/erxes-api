@@ -51,7 +51,6 @@ export interface ICustomer {
   avatar?: string;
   primaryPhone?: string;
   phones?: string[];
-  profileScore?: number;
 
   ownerId?: string;
   position?: string;
@@ -83,6 +82,7 @@ export interface ICustomerDocument extends ICustomer, Document {
   location?: ILocationDocument;
   links?: ILinkDocument;
   visitorContactInfo?: IVisitorContactDocument;
+  profileScore?: number;
   status?: string;
   createdAt: Date;
   modifiedAt: Date;
