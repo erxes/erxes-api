@@ -1,8 +1,7 @@
 import * as Random from 'meteor-random';
-import { COMPANY_BASIC_INFOS } from '../../data/constants';
+import { COMPANY_BASIC_INFOS, CUSTOMER_BASIC_INFOS } from '../../data/constants';
 import { Fields } from './';
 import { IOrderInput } from './definitions/boards';
-import { CUSTOMER_BASIC_INFOS } from './definitions/constants';
 
 /*
  * Mongoose field options wrapper
@@ -67,6 +66,10 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
 };
 
 export const updateOrder = async (collection: any, orders: IOrderInput[], stageId?: string) => {
+  if (orders.length === 0) {
+    return [];
+  }
+
   const ids: string[] = [];
   const bulkOps: Array<{
     updateOne: {
@@ -90,8 +93,6 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
         update: selector,
       },
     });
-
-    // update each tickets order
   }
 
   if (bulkOps) {
