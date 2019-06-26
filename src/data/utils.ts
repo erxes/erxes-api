@@ -497,6 +497,19 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
 };
 
 /**
+ * Sends request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogsApi = ({ path, method, body, params }: IRequestParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}${path}`, method, body, params },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
+};
+
+/**
  * Validates email using MX record resolver
  * @param email as String
  */
@@ -633,6 +646,54 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   const end = today.setMonth(month + 1, 0);
 
   return { start, end };
+};
+
+/**
+ * Finds only changed fields in document
+ * @param {Object} row Actual db row
+ * @param {Object} doc Doc to be changed
+ * @returns {Object} Object specifying changed & unchanged fields
+ */
+export const getChangedFields = (row: any, doc: any) => {
+  const unchanged = {};
+  const changed = {};
+
+  if (row && doc) {
+    const fieldNames = Object.getOwnPropertyNames(doc);
+
+    for (const name of fieldNames) {
+      if (row[name] === doc[name]) {
+        unchanged[name] = doc[name];
+      } else {
+        changed[name] = doc[name];
+      }
+    }
+  }
+
+  return {
+    changed,
+    unchanged,
+  };
+};
+
+/**
+ * Prepares document to be sent to log server
+ * @param {Object} doc Object
+ */
+export const prepareLogRequest = doc => {
+  return {
+    path: `/logs/create`,
+    method: 'POST',
+    body: {
+      createdBy: doc.createdBy,
+      type: doc.type,
+      action: doc.action,
+      oldData: doc.oldData,
+      content: JSON.stringify(doc.content),
+      objectId: doc.objectId,
+      objectName: doc.objectName,
+    },
+  };
 };
 
 export default {
