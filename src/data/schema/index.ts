@@ -2,6 +2,8 @@ import { gql } from 'apollo-server-express';
 
 import { types as CommonTypes } from './common';
 
+import { queries as LogQueries, types as LogTypes } from './log';
+
 import { mutations as UserMutations, queries as UserQueries, types as UserTypes } from './user';
 
 import { mutations as CompanyMutations, queries as CompanyQueries, types as CompanyTypes } from './company';
@@ -137,6 +139,7 @@ export const types = `
   ${PermissionTypes}
   ${TicketTypes}
   ${TaskTypes}
+  ${LogTypes}
 `;
 
 export const queries = `
@@ -171,6 +174,7 @@ export const queries = `
     ${PermissionQueries}
     ${TicketQueries}
     ${TaskQueries}
+    ${LogQueries}
   }
 `;
 
