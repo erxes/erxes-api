@@ -25,7 +25,7 @@ const customerMutations = {
         action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: customer._id,
-        unicode: user.username || user._id,
+        unicode: user.username || user.email || user._id,
         description: `${customer.firstName} has been created`,
       },
     });
@@ -50,7 +50,7 @@ const customerMutations = {
           oldData: JSON.stringify(customer),
           newData: JSON.stringify(doc),
           objectId: _id,
-          unicode: user.username || user._id,
+          unicode: user.username || user.email || user._id,
           description: `${updated.firstName} has been updated`,
         },
       });
@@ -91,7 +91,7 @@ const customerMutations = {
             action: LOG_ACTIONS.DELETE,
             oldData: JSON.stringify(found),
             objectId: customerId,
-            unicode: user.username || user._id,
+            unicode: user.username || user.email || user._id,
             description: `${found.firstName} has been deleted`,
           },
         });

@@ -25,7 +25,7 @@ const brandMutations = {
         action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: brand._id,
-        unicode: user.username || user._id,
+        unicode: user.username || user.email || user._id,
         description: `${doc.name} has been created`,
       },
     });
@@ -52,7 +52,7 @@ const brandMutations = {
           oldData: JSON.stringify(brand),
           newData: JSON.stringify(fields),
           objectId: _id,
-          unicode: user.username || user._id,
+          unicode: user.username || user.email || user._id,
           description: `${fields.name} has been edited`,
         },
       });
@@ -78,7 +78,7 @@ const brandMutations = {
           action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(found),
           objectId: _id,
-          unicode: user.username || user._id,
+          unicode: user.username || user.email || user._id,
           description: `${found.name} has been removed`,
         },
       });
