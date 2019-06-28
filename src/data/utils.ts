@@ -14,6 +14,10 @@ import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
  * Check that given file is not harmful
  */
 export const checkFile = async file => {
+  if (!file) {
+    throw new Error('Invalid file');
+  }
+
   const { size } = file;
 
   // 20mb
@@ -408,7 +412,7 @@ export const generateXlsx = async (workbook: any): Promise<string> => {
 interface IRequestParams {
   url?: string;
   path?: string;
-  method?: string;
+  method: string;
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
@@ -422,7 +426,12 @@ export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
   errorMessage: string,
 ) => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
+
+  if (NODE_ENV === 'test') {
+    return;
+  }
 
   debugExternalApi(`
     Sending request to

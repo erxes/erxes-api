@@ -126,6 +126,13 @@ const apolloServer = new ApolloServer({
               graphqlPubsub.publish('conversationMessageInserted', {
                 conversationMessageInserted: message,
               });
+
+              graphqlPubsub.publish('conversationClientTypingStatusChanged', {
+                conversationClientTypingStatusChanged: {
+                  conversationId: message.conversationId,
+                  text: '',
+                },
+              });
             }
           }
 
