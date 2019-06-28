@@ -56,7 +56,7 @@ module.exports.up = next => {
           updatedConditions.push(updatedCondition);
         }
 
-        await Segments.update({ _id: segment._id }, { $set: { conditions: updatedConditions } });
+        await Segments.updateOne({ _id: segment._id }, { $set: { conditions: updatedConditions } });
       }
 
       next();
