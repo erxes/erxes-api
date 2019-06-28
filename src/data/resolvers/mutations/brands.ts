@@ -18,13 +18,15 @@ const brandMutations = {
     const brand = await Brands.createBrand({ userId: user._id, ...doc });
 
     await fetchLogsApi({
+      method: 'post',
       body: {
         createdBy: user._id,
         type: 'brand',
         action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: brand._id,
-        unicode: doc.name || '',
+        unicode: user.username || user._id,
+        description: `${doc.name} has been created`,
       },
     });
 
@@ -42,6 +44,7 @@ const brandMutations = {
 
     if (updated && updated._id) {
       await fetchLogsApi({
+        method: 'post',
         body: {
           createdBy: user._id,
           type: 'brand',
@@ -49,7 +52,8 @@ const brandMutations = {
           oldData: JSON.stringify(brand),
           newData: JSON.stringify(fields),
           objectId: _id,
-          unicode: updated.name || '',
+          unicode: user.username || user._id,
+          description: `${fields.name} has been edited`,
         },
       });
     }
@@ -67,13 +71,15 @@ const brandMutations = {
 
     if (found && removed) {
       await fetchLogsApi({
+        method: 'post',
         body: {
           createdBy: user._id,
           type: 'brand',
           action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(found),
           objectId: _id,
-          unicode: found.name || '',
+          unicode: user.username || user._id,
+          description: `${found.name} has been removed`,
         },
       });
     }
