@@ -500,11 +500,16 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
  * Sends a request to logs api
  * @param {Object} param0 Request
  */
-export const fetchLogsApi = ({ body, params }: IRequestParams) => {
+export const fetchLogsApi = ({ body, params, method }: IRequestParams) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+  let path = '/logs';
+
+  if (method && method.toLocaleLowerCase() === 'post') {
+    path = '/logs/create';
+  }
 
   return sendRequest(
-    { url: `${LOGS_DOMAIN}/logs/create`, method: 'POST', body, params },
+    { url: `${LOGS_DOMAIN}${path}`, method, body, params },
     'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };
