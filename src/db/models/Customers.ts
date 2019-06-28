@@ -109,6 +109,7 @@ export const loadClass = () => {
 
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
+
       // create log
       await ActivityLogs.createCustomerLog(customer);
 
@@ -131,6 +132,9 @@ export const loadClass = () => {
         const isValid = await validateEmail(doc.primaryEmail);
         doc.hasValidEmail = isValid;
       }
+
+      // calculateProfileScore
+      await Customers.updateProfileScore(_id, true);
 
       await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
 
@@ -179,26 +183,34 @@ export const loadClass = () => {
      */
     public static async updateProfileScore(customerId: string, save: boolean) {
       let score = 0;
+
       const nullValues = ['', null];
       const customer = await Customers.findOne({ _id: customerId });
+
       if (!customer) {
         return 0;
       }
-      if (nullValues.includes(customer.firstName || '')) {
+
+      if (!nullValues.includes(customer.firstName || '')) {
         score += 10;
       }
-      if (nullValues.includes(customer.lastName || '')) {
+
+      if (!nullValues.includes(customer.lastName || '')) {
         score += 5;
       }
-      if (nullValues.includes(customer.primaryEmail || '')) {
+
+      if (!nullValues.includes(customer.primaryEmail || '')) {
         score += 15;
       }
-      if (nullValues.includes(customer.primaryPhone || '')) {
+
+      if (!nullValues.includes(customer.primaryPhone || '')) {
         score += 10;
       }
+
       if (customer.visitorContactInfo != null) {
         score += 5;
       }
+
       if (!save) {
         return {
           updateOne: {
@@ -207,6 +219,7 @@ export const loadClass = () => {
           },
         };
       }
+
       await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score } });
     }
     /**
