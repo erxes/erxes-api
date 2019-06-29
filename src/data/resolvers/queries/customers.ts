@@ -1,4 +1,4 @@
-import { Brands, Customers, Forms, Segments, Tags } from '../../../db/models';
+import { Brands, Customers, Forms, Integrations, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, INTEGRATION_KIND_CHOICES } from '../../constants';
@@ -59,15 +59,79 @@ const countByBrand = async (qb: any, mainQuery: any): Promise<ICountBy> => {
   return counts;
 };
 
-const countByTag = async (qb: any, mainQuery: any): Promise<ICountBy> => {
+const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+  const integrationIds = await Integrations.find({ kind: { $in: INTEGRATION_KIND_CHOICES.ALL } }).select({
+    _id: 1,
+    name: 1,
+    kind: 1,
+  });
+  const integrationMap = {};
+  const rawIntegrationIds: any = [];
+  integrationIds.forEach(element => {
+    rawIntegrationIds.push(element._id);
+    integrationMap[element._id] = element.kind;
+    if (element.kind) {
+      counts[element.kind] = 0;
+    }
+  });
+
+  const query = { integrationId: { $in: rawIntegrationIds } };
+  const findQuery = { $and: [mainQuery, query] };
+  const countData = await Customers.aggregate([
+    {
+      $match: findQuery,
+    },
+    {
+      $group: {
+        _id: '$integrationId',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  countData.forEach(element => {
+    const kind = integrationMap[element._id];
+    counts[kind] += element.count;
+  });
+
+  return counts;
+};
+
+const countByTag = async (mainQuery: any): Promise<ICountBy> => {
   const counts: ICountBy = {};
 
   // Count customers by tag
-  const tags = await Tags.find({ type: TAG_TYPES.CUSTOMER });
+  const tags = await Tags.find({ type: TAG_TYPES.CUSTOMER }).select('_id');
+  const tagRawIds = tags.map(row => row._id);
 
-  for (const tag of tags) {
-    counts[tag._id] = await count(qb.tagFilter(tag._id), mainQuery);
-  }
+  const tagCountData = await Customers.aggregate([
+    {
+      $match: mainQuery,
+    },
+    {
+      $project: {
+        tagIds: 1,
+        _id: 0,
+      },
+    },
+    {
+      $unwind: '$tagIds',
+    },
+    {
+      $match: { tagIds: { $in: tagRawIds } },
+    },
+    {
+      $group: {
+        _id: '$tagIds',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  tagCountData.forEach(row => {
+    counts[row._id] = row.count;
+  });
 
   return counts;
 };
@@ -157,7 +221,7 @@ const customerQueries = {
         break;
 
       case 'byTag':
-        counts.byTag = await countByTag(qb, mainQuery);
+        counts.byTag = await countByTag(mainQuery);
         break;
 
       case 'byForm':
@@ -180,11 +244,7 @@ const customerQueries = {
         break;
 
       case 'byIntegrationType':
-        {
-          for (const kind of INTEGRATION_KIND_CHOICES.ALL) {
-            counts.byIntegrationType[kind] = await count(await qb.integrationTypeFilter(kind), mainQuery);
-          }
-        }
+        counts.byIntegrationType = await countByIntegration(mainQuery);
         break;
     }
 
