@@ -41,7 +41,7 @@ export const loadNotificationClass = () => {
       });
 
       // receiver disabled this notification
-      if (config && !config.isAllowed) {
+      if (!config || !config.isAllowed) {
         throw new Error('Configuration does not exist');
       }
 
