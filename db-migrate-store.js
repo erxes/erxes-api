@@ -1,12 +1,7 @@
-const mongodb = require('mongodb')
-const Bluebird = require('bluebird')
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 dotenv.config();
-
-const MongoClient = mongodb.MongoClient
-
-Bluebird.promisifyAll(MongoClient)
 
 class dbStore {
   constructor() {
@@ -16,10 +11,9 @@ class dbStore {
   }
 
   connect() {
-    return MongoClient.connect(this.url, { useNewUrlParser: true })
-      .then(client => {
-        return client.db()
-      })
+    return mongoose.createConnection(this.url, { useNewUrlParser: true }).then(client => {
+      return client.db;
+    })
   }
 
   load(fn) {
@@ -29,9 +23,11 @@ class dbStore {
         if (!data.length) return fn(null, {})
 
         const store = data[0]
+
         // Check if old format and convert if needed
         if (!Object.prototype.hasOwnProperty.call(store, 'lastRun') &&
           Object.prototype.hasOwnProperty.call(store, 'pos')) {
+
           if (store.pos === 0) {
             store.lastRun = null
           } else {
@@ -60,20 +56,9 @@ class dbStore {
   save(set, fn) {
     return this.connect()
       .then(db => db.collection('migrations')
-        .updateMany({},
-          {
-            $set: {
-              lastRun: set.lastRun,
-            },
-            $push: {
-              migrations: { $each: set.migrations },
-            },
-          },
-          {
-            upsert: true,
-          }
-        ))
-      .then(result => fn(null, result))
+        .replaceOne({}, { migrations: set.migrations, lastRun: set.lastRun }, { upsert: true })
+        .then(result => fn(null, result))
+      )
       .catch(fn)
   }
 }
