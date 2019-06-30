@@ -372,6 +372,17 @@ export const sendNotification = async ({
     try {
       // send web and mobile notification
       await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
+
+      await sendEmail({
+        toEmails,
+        title: 'Notification',
+        template: {
+          name: 'notification',
+          data: {
+            notification: doc,
+          },
+        },
+      });
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
@@ -380,16 +391,7 @@ export const sendNotification = async ({
     }
   }
 
-  return sendEmail({
-    toEmails,
-    title: 'Notification',
-    template: {
-      name: 'notification',
-      data: {
-        notification: doc,
-      },
-    },
-  });
+  return true;
 };
 
 /**
