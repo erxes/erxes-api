@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { connect } from '../src/db/connection';
 import { Boards, Pipelines, Stages } from '../src/db/models';
 
 /**
@@ -7,18 +6,21 @@ import { Boards, Pipelines, Stages } from '../src/db/models';
  *
  */
 module.exports.up = async () => {
-  await connect();
+  const mongoClient = await mongoose.createConnection(process.env.MONGO_URL || '', {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+  });
 
   try {
-    await mongoose.connection.db.collection('deal_boards').rename('boards');
+    await mongoClient.db.collection('deal_boards').rename('boards');
 
     await Boards.updateMany({}, { $set: { type: 'deal' } });
 
-    await mongoose.connection.db.collection('deal_pipelines').rename('pipelines');
+    await mongoClient.db.collection('deal_pipelines').rename('pipelines');
 
     await Pipelines.updateMany({}, { $set: { type: 'deal' } });
 
-    await mongoose.connection.db.collection('deal_stages').rename('stages');
+    await mongoClient.db.collection('deal_stages').rename('stages');
 
     await Stages.updateMany({}, { $set: { type: 'deal' } });
   } catch (e) {
