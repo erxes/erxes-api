@@ -15,6 +15,10 @@ module.exports.up = async () => {
         return;
       }
 
+      if (e.segmentIds) {
+        return;
+      }
+
       e.segmentIds = [e.segmentId];
       e.save();
     });
