@@ -8,9 +8,9 @@ import { moduleRequireLogin } from '../../permissions/wrappers';
  * Check user ids whether its added or removed from array of ids
  */
 export const checkUserIds = (oldUserIds: string[], newUserIds: string[]) => {
-  const addedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
+  const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
 
-  const removedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
+  const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
 
   return { addedUserIds, removedUserIds };
 };

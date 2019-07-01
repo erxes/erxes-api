@@ -46,32 +46,32 @@ export const sendNotifications = async ({
   }
 
   if (!content) {
-    content = `'${getUserDetail(user)}' has updated your ${type} '${item.name}'`;
+    content = `'${getUserDetail(user)}' has updated your ${contentType} '${item.name}'`;
   }
 
   if (removedUsers && removedUsers.length > 0) {
+    content = `'${getUserDetail(user)}' removed you from ${contentType}: '${item.name}'.`;
+
     await utils.sendNotification({
       createdUser: user._id,
-      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase}_ADD`],
+      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       title: content,
-      content: `'${getUserDetail(user)}' removed you from ${type}: '${item.name}'.`,
+      content,
       link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
-
-      // exclude current user
-      receivers: (assignedUsers || []).filter(id => id !== user._id),
+      receivers: removedUsers,
     });
   }
 
   if (invitedUsers && invitedUsers.length > 0) {
+    content = `'${getUserDetail(user)}' invited you to the ${contentType}: '${item.name}'.`;
+
     await utils.sendNotification({
       createdUser: user._id,
-      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase}_REMOVE_ASSIGN`],
+      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       title: content,
-      content: `'${getUserDetail(user)}' invited you to the ${type}: '${item.name}'.`,
+      content,
       link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
-
-      // exclude current user
-      receivers: (assignedUsers || []).filter(id => id !== user._id),
+      receivers: invitedUsers,
     });
   }
 
@@ -82,8 +82,10 @@ export const sendNotifications = async ({
     content,
     link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
-    // exclude current user
-    receivers: (assignedUsers || []).filter(id => id !== user._id),
+    // exclude current user, invited user and removed users
+    receivers: (assignedUsers || []).filter(
+      (id, index) => [...(removedUsers || []), ...(invitedUsers || []), user._id].indexOf(id) === index,
+    ),
   });
 };
 
