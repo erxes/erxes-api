@@ -125,13 +125,14 @@ const sendNotifications = async ({
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
-        doc.content += `${getUserDetail(user)} has assigned you to conversation </br> ${conversation.content}`;
+        doc.content = `${getUserDetail(user)} has assigned you to conversation </br> ${conversation.content}`;
         break;
-      case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_REMOVE:
-        doc.content += `${getUserDetail(user)} has removed you from conversation </br> ${conversation.content}`;
+      case 'unassign':
+        doc.notifType = NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE;
+        doc.content = `${getUserDetail(user)} has removed you from conversation </br> ${conversation.content}`;
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.content += `${getUserDetail(user)} changed conversation status to ${(
+        doc.content = `${getUserDetail(user)} changed conversation status to ${(
           conversation.status || ''
         ).toUpperCase()} </br> ${conversation.content}`;
         break;
@@ -265,14 +266,19 @@ const conversationMutations = {
    * Unassign employee from conversation
    */
   async conversationsUnassign(_root, { _ids }: { _ids: string[] }, { user }: { user: IUserDocument }) {
-    const conversations = await Conversations.unassignUserConversation(_ids);
+    const oldConversations = await Conversations.find({ _id: { $in: _ids } });
+    const updatedConversations = await Conversations.unassignUserConversation(_ids);
 
-    await sendNotifications({ user, conversations, type: NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_REMOVE });
+    await sendNotifications({
+      user,
+      conversations: oldConversations,
+      type: 'unassign',
+    });
 
     // notify graphl subscription
     publishConversationsChanged(_ids, 'assigneeChanged');
 
-    return conversations;
+    return updatedConversations;
   },
 
   /**
