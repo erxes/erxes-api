@@ -4,7 +4,8 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
+import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { checkUserIds } from './notifications';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
@@ -21,11 +22,11 @@ const ticketMutations = {
     });
 
     await sendNotifications({
-      stageId: ticket.stageId || '',
+      item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_ADD,
       assignedUsers: ticket.assignedUserIds || [],
-      content: `'{userName}' invited you to the '${ticket.name}'.`,
+      content: `'${getUserDetail(user)}' invited you to the '${ticket.name}'.`,
       contentType: 'ticket',
     });
 
@@ -36,15 +37,31 @@ const ticketMutations = {
    * Edit ticket
    */
   async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }) {
-    const ticket = await Tickets.updateTicket(_id, {
+    const oldTicket = await Tickets.findOne({ _id });
+
+    if (!oldTicket) {
+      throw new Error('Ticket not found');
+    }
+
+    const updatedTicket = await Tickets.updateTicket(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await manageNotifications(Tickets, ticket, user, 'ticket');
+    const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds || [], doc.assignedUserIds || []);
 
-    return ticket;
+    await sendNotifications({
+      item: updatedTicket,
+      user,
+      type: NOTIFICATION_TYPES.TICKET_EDIT,
+      assignedUsers: updatedTicket.assignedUserIds || [],
+      invitedUsers: addedUserIds,
+      removedUsers: removedUserIds,
+      contentType: 'ticket',
+    });
+
+    return updatedTicket;
   },
 
   /**
@@ -64,7 +81,7 @@ const ticketMutations = {
     const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId, user);
 
     await sendNotifications({
-      stageId: ticket.stageId || '',
+      item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_CHANGE,
       assignedUsers: ticket.assignedUserIds || [],
@@ -93,11 +110,11 @@ const ticketMutations = {
     }
 
     await sendNotifications({
-      stageId: ticket.stageId || '',
+      item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_DELETE,
       assignedUsers: ticket.assignedUserIds || [],
-      content: `'{userName}' deleted ticket: '${ticket.name}'`,
+      content: `'${getUserDetail(user)}' deleted ticket: '${ticket.name}'`,
       contentType: 'ticket',
     });
 

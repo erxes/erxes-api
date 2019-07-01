@@ -4,7 +4,8 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
+import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { checkUserIds } from './notifications';
 
 interface ITasksEdit extends ITask {
   _id: string;
@@ -21,11 +22,11 @@ const taskMutations = {
     });
 
     await sendNotifications({
-      stageId: task.stageId || '',
+      item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_ADD,
       assignedUsers: task.assignedUserIds || [],
-      content: `'{userName}' invited you to the '${task.name}'.`,
+      content: `'${getUserDetail(user)}' invited you to the '${task.name}'.`,
       contentType: 'task',
     });
 
@@ -36,15 +37,31 @@ const taskMutations = {
    * Edit task
    */
   async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }) {
-    const task = await Tasks.updateTask(_id, {
+    const oldTask = await Tasks.findOne({ _id });
+
+    if (!oldTask) {
+      throw new Error('Task not found');
+    }
+
+    const updatedTask = await Tasks.updateTask(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await manageNotifications(Tasks, task, user, 'task');
+    const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds || [], doc.assignedUserIds || []);
 
-    return task;
+    await sendNotifications({
+      item: updatedTask,
+      user,
+      type: NOTIFICATION_TYPES.TASK_EDIT,
+      assignedUsers: updatedTask.assignedUserIds || [],
+      invitedUsers: addedUserIds,
+      removedUsers: removedUserIds,
+      contentType: 'task',
+    });
+
+    return updatedTask;
   },
 
   /**
@@ -64,7 +81,7 @@ const taskMutations = {
     const content = await itemsChange(Tasks, task, 'task', destinationStageId, user);
 
     await sendNotifications({
-      stageId: task.stageId || '',
+      item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_CHANGE,
       assignedUsers: task.assignedUserIds || [],
@@ -93,11 +110,11 @@ const taskMutations = {
     }
 
     await sendNotifications({
-      stageId: task.stageId || '',
+      item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_DELETE,
       assignedUsers: task.assignedUserIds || [],
-      content: `'{userName}' deleted task: '${task.name}'`,
+      content: `'${getUserDetail(user)}' deleted task: '${task.name}'`,
       contentType: 'task',
     });
 

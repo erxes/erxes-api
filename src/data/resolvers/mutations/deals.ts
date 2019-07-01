@@ -4,7 +4,8 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { getUserDetail, itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
+import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { checkUserIds } from './notifications';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -21,7 +22,7 @@ const dealMutations = {
     });
 
     await sendNotifications({
-      stageId: deal.stageId || '',
+      item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_ADD,
       assignedUsers: deal.assignedUserIds || [],
@@ -36,21 +37,31 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
-    const deal = await Deals.findOne({ _id });
+    const oldDeal = await Deals.findOne({ _id });
 
-    if (!deal) {
+    if (!oldDeal) {
       throw new Error('Deal not found');
     }
 
-    await Deals.updateDeal(_id, {
+    const updatedDeal = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await manageNotifications(Deals, deal, user, 'deal');
+    const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds || []);
 
-    return deal;
+    await sendNotifications({
+      item: updatedDeal,
+      user,
+      type: NOTIFICATION_TYPES.DEAL_EDIT,
+      assignedUsers: updatedDeal.assignedUserIds || [],
+      invitedUsers: addedUserIds,
+      removedUsers: removedUserIds,
+      contentType: 'deal',
+    });
+
+    return updatedDeal;
   },
 
   /**
@@ -76,7 +87,7 @@ const dealMutations = {
     const content = await itemsChange(Deals, deal, 'deal', destinationStageId, user);
 
     await sendNotifications({
-      stageId: deal.stageId || '',
+      item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_CHANGE,
       assignedUsers: deal.assignedUserIds || [],
@@ -105,7 +116,7 @@ const dealMutations = {
     }
 
     await sendNotifications({
-      stageId: deal.stageId || '',
+      item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_DELETE,
       assignedUsers: deal.assignedUserIds || [],

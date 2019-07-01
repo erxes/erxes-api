@@ -6,7 +6,6 @@ import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
-import { checkUserIds } from './mutations/notifications';
 
 export const getUserDetail = user => {
   return (user.details && user.details.fullName) || user.email;
@@ -16,21 +15,25 @@ export const getUserDetail = user => {
  * Send notification to all members of this content except the sender
  */
 export const sendNotifications = async ({
-  stageId,
+  item,
   user,
   type,
   assignedUsers,
   content,
   contentType,
+  invitedUsers,
+  removedUsers,
 }: {
-  stageId: string;
+  item: IDealDocument;
   user: IUserDocument;
   type: string;
   assignedUsers: string[];
-  content: string;
+  content?: string;
   contentType: string;
+  invitedUsers?: string[];
+  removedUsers?: string[];
 }) => {
-  const stage = await Stages.findOne({ _id: stageId });
+  const stage = await Stages.findOne({ _id: item.stageId });
 
   if (!stage) {
     throw new Error('Stage not found');
@@ -40,6 +43,36 @@ export const sendNotifications = async ({
 
   if (!pipeline) {
     throw new Error('Pipeline not found');
+  }
+
+  if (!content) {
+    content = `'${getUserDetail(user)}' has updated your ${type} '${item.name}'`;
+  }
+
+  if (removedUsers && removedUsers.length > 0) {
+    await utils.sendNotification({
+      createdUser: user._id,
+      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase}_ADD`],
+      title: content,
+      content: `'${getUserDetail(user)}' removed you from ${type}: '${item.name}'.`,
+      link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+
+      // exclude current user
+      receivers: (assignedUsers || []).filter(id => id !== user._id),
+    });
+  }
+
+  if (invitedUsers && invitedUsers.length > 0) {
+    await utils.sendNotification({
+      createdUser: user._id,
+      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase}_REMOVE_ASSIGN`],
+      title: content,
+      content: `'${getUserDetail(user)}' invited you to the ${type}: '${item.name}'.`,
+      link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+
+      // exclude current user
+      receivers: (assignedUsers || []).filter(id => id !== user._id),
+    });
   }
 
   await utils.sendNotification({
@@ -52,56 +85,6 @@ export const sendNotifications = async ({
     // exclude current user
     receivers: (assignedUsers || []).filter(id => id !== user._id),
   });
-};
-
-export const manageNotifications = async (
-  collection: any,
-  item: IDealDocument | ITicketDocument,
-  user: IUserDocument,
-  type: string,
-) => {
-  const { _id } = item;
-  const oldItem = await collection.findOne({ _id });
-  const oldAssignedUserIds = oldItem ? oldItem.assignedUserIds || [] : [];
-  const assignedUserIds = item.assignedUserIds || [];
-
-  const { addedUserIds, removedUserIds } = checkUserIds(oldAssignedUserIds, assignedUserIds);
-
-  const notificationDoc = {
-    stageId: item.stageId || '',
-    user,
-    contentType: type,
-  };
-
-  // Sending notification to invited users
-  if (addedUserIds.length > 0) {
-    await sendNotifications({
-      ...notificationDoc,
-      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_ADD`],
-      assignedUsers: addedUserIds,
-      content: `'${getUserDetail(user)}' invited you to the ${type}: '${item.name}'.`,
-    });
-  }
-
-  // Sending notification to removed users
-  if (removedUserIds.length > 0) {
-    await sendNotifications({
-      ...notificationDoc,
-      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_REMOVE_ASSIGN`],
-      assignedUsers: removedUserIds,
-      content: `'${getUserDetail(user)}' removed you from ${type}: '${item.name}'.`,
-    });
-  }
-
-  // Other updates
-  if (removedUserIds.length === 0 && addedUserIds.length === 0) {
-    await sendNotifications({
-      ...notificationDoc,
-      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_EDIT`],
-      assignedUsers: assignedUserIds,
-      content: `'${getUserDetail(user)}' edited your ${type} '${item.name}'`,
-    });
-  }
 };
 
 export const itemsChange = async (
