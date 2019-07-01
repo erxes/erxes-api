@@ -5,7 +5,7 @@ import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
-import utils from '../utils';
+import utils, { getEnv } from '../utils';
 
 export const getUserDetail = user => {
   return (user.details && user.details.fullName) || user.email;
@@ -47,6 +47,14 @@ export const sendNotifications = async ({
     content = `'${getUserDetail(user)}' has updated your ${contentType} '${item.name}'`;
   }
 
+  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
+  let route = '';
+
+  if (contentType === 'ticket') {
+    route = '/inbox';
+  }
+
   if (removedUsers && removedUsers.length > 0) {
     content = `'${getUserDetail(user)}' removed you from ${contentType}: '${item.name}'.`;
 
@@ -55,7 +63,7 @@ export const sendNotifications = async ({
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       title: content,
       content,
-      link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: removedUsers,
     });
   }
@@ -68,7 +76,7 @@ export const sendNotifications = async ({
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       title: content,
       content,
-      link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: invitedUsers,
     });
   }
@@ -80,7 +88,7 @@ export const sendNotifications = async ({
     notifType: type,
     title: content,
     content,
-    link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+    link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user, invited user and removed users
     receivers: (item.assignedUserIds || []).filter(id => {
