@@ -20,14 +20,14 @@ const taskMutations = {
       modifiedBy: user._id,
     });
 
-    await sendNotifications(
-      task.stageId || '',
+    await sendNotifications({
+      stageId: task.stageId || '',
       user,
-      NOTIFICATION_TYPES.TASK_ADD,
-      task.assignedUserIds || [],
-      `'{userName}' invited you to the '${task.name}'.`,
-      'task',
-    );
+      type: NOTIFICATION_TYPES.TASK_ADD,
+      assignedUsers: task.assignedUserIds || [],
+      content: `'{userName}' invited you to the '${task.name}'.`,
+      contentType: 'task',
+    });
 
     return task;
   },
@@ -61,16 +61,16 @@ const taskMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Tasks, task, 'task', destinationStageId);
+    const content = await itemsChange(Tasks, task, 'task', destinationStageId, user);
 
-    await sendNotifications(
-      task.stageId || '',
+    await sendNotifications({
+      stageId: task.stageId || '',
       user,
-      NOTIFICATION_TYPES.TASK_CHANGE,
-      task.assignedUserIds || [],
+      type: NOTIFICATION_TYPES.TASK_CHANGE,
+      assignedUsers: task.assignedUserIds || [],
       content,
-      'task',
-    );
+      contentType: 'task',
+    });
 
     return task;
   },
@@ -92,14 +92,14 @@ const taskMutations = {
       throw new Error('Task not found');
     }
 
-    await sendNotifications(
-      task.stageId || '',
+    await sendNotifications({
+      stageId: task.stageId || '',
       user,
-      NOTIFICATION_TYPES.TASK_DELETE,
-      task.assignedUserIds || [],
-      `'{userName}' deleted task: '${task.name}'`,
-      'task',
-    );
+      type: NOTIFICATION_TYPES.TASK_DELETE,
+      assignedUsers: task.assignedUserIds || [],
+      content: `'{userName}' deleted task: '${task.name}'`,
+      contentType: 'task',
+    });
 
     return Tasks.removeTask(_id);
   },

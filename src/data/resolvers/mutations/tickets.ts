@@ -20,14 +20,14 @@ const ticketMutations = {
       modifiedBy: user._id,
     });
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      stageId: ticket.stageId || '',
       user,
-      NOTIFICATION_TYPES.TICKET_ADD,
-      ticket.assignedUserIds || [],
-      `'{userName}' invited you to the '${ticket.name}'.`,
-      'ticket',
-    );
+      type: NOTIFICATION_TYPES.TICKET_ADD,
+      assignedUsers: ticket.assignedUserIds || [],
+      content: `'{userName}' invited you to the '${ticket.name}'.`,
+      contentType: 'ticket',
+    });
 
     return ticket;
   },
@@ -61,16 +61,16 @@ const ticketMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId);
+    const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId, user);
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      stageId: ticket.stageId || '',
       user,
-      NOTIFICATION_TYPES.TICKET_CHANGE,
-      ticket.assignedUserIds || [],
+      type: NOTIFICATION_TYPES.TICKET_CHANGE,
+      assignedUsers: ticket.assignedUserIds || [],
       content,
-      'ticket',
-    );
+      contentType: 'ticket',
+    });
 
     return ticket;
   },
@@ -92,14 +92,14 @@ const ticketMutations = {
       throw new Error('ticket not found');
     }
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      stageId: ticket.stageId || '',
       user,
-      NOTIFICATION_TYPES.TICKET_DELETE,
-      ticket.assignedUserIds || [],
-      `'{userName}' deleted ticket: '${ticket.name}'`,
-      'ticket',
-    );
+      type: NOTIFICATION_TYPES.TICKET_DELETE,
+      assignedUsers: ticket.assignedUserIds || [],
+      content: `'{userName}' deleted ticket: '${ticket.name}'`,
+      contentType: 'ticket',
+    });
 
     return Tickets.removeTicket(_id);
   },
