@@ -4,6 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import utils from '../../utils';
+import { checkUserIds } from './notifications';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -35,17 +36,6 @@ export const sendChannelNotifications = async (
   });
 };
 
-/**
- * Filters the channel members by invited or removed
- */
-const checkMembers = (newMemberIds, oldMemberIds) => {
-  const invitedMembers = oldMemberIds.filter(e => !newMemberIds.includes(e));
-
-  const removedMembers = newMemberIds.filter(e => !oldMemberIds.includes(e));
-
-  return { invitedMembers, removedMembers };
-};
-
 const channelMutations = {
   /**
    * Create a new channel and send notifications to its members bar the creator
@@ -70,10 +60,10 @@ const channelMutations = {
 
     const { memberIds } = doc;
 
-    const { invitedMembers, removedMembers } = checkMembers(memberIds || [], channel.memberIds || []);
+    const { addedUserIds, removedUserIds } = checkUserIds(memberIds || [], channel.memberIds || []);
 
-    await sendChannelNotifications(channel, 'invited', invitedMembers);
-    await sendChannelNotifications(channel, 'removed', removedMembers);
+    await sendChannelNotifications(channel, 'invited', addedUserIds);
+    await sendChannelNotifications(channel, 'removed', removedUserIds);
 
     return Channels.updateChannel(_id, doc);
   },

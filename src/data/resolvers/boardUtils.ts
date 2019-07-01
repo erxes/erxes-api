@@ -6,18 +6,30 @@ import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
+import { checkUserIds } from './mutations/notifications';
+
+export const getUserDetail = user => {
+  return (user.details && user.details.fullName) || user.email;
+};
 
 /**
  * Send notification to all members of this content except the sender
  */
-export const sendNotifications = async (
-  stageId: string,
-  user: IUserDocument,
-  type: string,
-  assignedUsers: string[],
-  content: string,
-  contentType: string,
-) => {
+export const sendNotifications = async ({
+  stageId,
+  user,
+  type,
+  assignedUsers,
+  content,
+  contentType,
+}: {
+  stageId: string;
+  user: IUserDocument;
+  type: string;
+  assignedUsers: string[];
+  content: string;
+  contentType: string;
+}) => {
   const stage = await Stages.findOne({ _id: stageId });
 
   if (!stage) {
@@ -53,44 +65,42 @@ export const manageNotifications = async (
   const oldAssignedUserIds = oldItem ? oldItem.assignedUserIds || [] : [];
   const assignedUserIds = item.assignedUserIds || [];
 
-  // new assignee users
-  const newUserIds = assignedUserIds.filter(userId => oldAssignedUserIds.indexOf(userId) < 0);
+  const { addedUserIds, removedUserIds } = checkUserIds(oldAssignedUserIds, assignedUserIds);
 
-  if (newUserIds.length > 0) {
-    await sendNotifications(
-      item.stageId || '',
-      user,
-      NOTIFICATION_TYPES[`${type.toUpperCase()}_ADD`],
-      newUserIds,
-      `'{userName}' invited you to the ${type}: '${item.name}'.`,
-      type,
-    );
+  const notificationDoc = {
+    stageId: item.stageId || '',
+    user,
+    contentType: type,
+  };
+
+  // Sending notification to invited users
+  if (addedUserIds.length > 0) {
+    await sendNotifications({
+      ...notificationDoc,
+      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_ADD`],
+      assignedUsers: addedUserIds,
+      content: `'${getUserDetail(user)}' invited you to the ${type}: '${item.name}'.`,
+    });
   }
 
-  // remove from assignee users
-  const removedUserIds = oldAssignedUserIds.filter(userId => assignedUserIds.indexOf(userId) < 0);
-
+  // Sending notification to removed users
   if (removedUserIds.length > 0) {
-    await sendNotifications(
-      item.stageId || '',
-      user,
-      NOTIFICATION_TYPES[`${type.toUpperCase()}_REMOVE_ASSIGN`],
-      removedUserIds,
-      `'{userName}' removed you from ${type}: '${item.name}'.`,
-      type,
-    );
+    await sendNotifications({
+      ...notificationDoc,
+      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_REMOVE_ASSIGN`],
+      assignedUsers: removedUserIds,
+      content: `'${getUserDetail(user)}' removed you from ${type}: '${item.name}'.`,
+    });
   }
 
-  // dont assignee change and other edit
-  if (removedUserIds.length === 0 && newUserIds.length === 0) {
-    await sendNotifications(
-      item.stageId || '',
-      user,
-      NOTIFICATION_TYPES[`${type.toUpperCase()}_EDIT`],
-      assignedUserIds,
-      `'{userName}' edited your ${type} '${item.name}'`,
-      type,
-    );
+  // Other updates
+  if (removedUserIds.length === 0 && addedUserIds.length === 0) {
+    await sendNotifications({
+      ...notificationDoc,
+      type: NOTIFICATION_TYPES[`${type.toUpperCase()}_EDIT`],
+      assignedUsers: assignedUserIds,
+      content: `'${getUserDetail(user)}' edited your ${type} '${item.name}'`,
+    });
   }
 };
 
@@ -99,11 +109,12 @@ export const itemsChange = async (
   item: IDealDocument | ITicketDocument,
   type: string,
   destinationStageId: string,
+  user: IUserDocument,
 ) => {
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
-  let content = `'{userName}' changed order your ${type}:'${item.name}'`;
+  let content = `'${getUserDetail(user)}' changed order your ${type}:'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
@@ -112,7 +123,7 @@ export const itemsChange = async (
       throw new Error('Stage not found');
     }
 
-    content = `'{userName}' moved your ${type} '${item.name}' to the '${stage.name}'.`;
+    content = `'${getUserDetail(user)}' moved your ${type} '${item.name}' to the '${stage.name}'.`;
   }
 
   return content;
