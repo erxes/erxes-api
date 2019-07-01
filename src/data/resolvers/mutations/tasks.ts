@@ -25,7 +25,6 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_ADD,
-      assignedUsers: task.assignedUserIds || [],
       content: `'${getUserDetail(user)}' invited you to the '${task.name}'.`,
       contentType: 'task',
     });
@@ -55,7 +54,6 @@ const taskMutations = {
       item: updatedTask,
       user,
       type: NOTIFICATION_TYPES.TASK_EDIT,
-      assignedUsers: updatedTask.assignedUserIds || [],
       invitedUsers: addedUserIds,
       removedUsers: removedUserIds,
       contentType: 'task',
@@ -84,7 +82,6 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_CHANGE,
-      assignedUsers: task.assignedUserIds || [],
       content,
       contentType: 'task',
     });
@@ -113,12 +110,11 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_DELETE,
-      assignedUsers: task.assignedUserIds || [],
       content: `'${getUserDetail(user)}' deleted task: '${task.name}'`,
       contentType: 'task',
     });
 
-    return Tasks.removeTask(_id);
+    return task.remove();
   },
 };
 

@@ -8,7 +8,6 @@ export interface IDealModel extends Model<IDealDocument> {
   createDeal(doc: IDeal): Promise<IDealDocument>;
   updateDeal(_id: string, doc: IDeal): Promise<IDealDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<IDealDocument[]>;
-  removeDeal(_id: string): void;
   changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<IDealDocument>;
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<IDealDocument>;
 }
@@ -49,19 +48,6 @@ export const loadDealClass = () => {
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
       return updateOrder(Deals, orders, stageId);
-    }
-
-    /**
-     * Remove Deal
-     */
-    public static async removeDeal(_id: string) {
-      const deal = await Deals.findOne({ _id });
-
-      if (!deal) {
-        throw new Error('Deal not found');
-      }
-
-      return deal.remove();
     }
 
     /**

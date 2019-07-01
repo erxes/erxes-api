@@ -25,7 +25,6 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_ADD,
-      assignedUsers: deal.assignedUserIds || [],
       content: `'${getUserDetail(user)}' invited you to the '${deal.name}'.`,
       contentType: 'deal',
     });
@@ -55,7 +54,6 @@ const dealMutations = {
       item: updatedDeal,
       user,
       type: NOTIFICATION_TYPES.DEAL_EDIT,
-      assignedUsers: updatedDeal.assignedUserIds || [],
       invitedUsers: addedUserIds,
       removedUsers: removedUserIds,
       contentType: 'deal',
@@ -90,7 +88,6 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_CHANGE,
-      assignedUsers: deal.assignedUserIds || [],
       content,
       contentType: 'deal',
     });
@@ -119,12 +116,11 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_DELETE,
-      assignedUsers: deal.assignedUserIds || [],
       content: `'${getUserDetail(user)}' deleted deal: '${deal.name}'`,
       contentType: 'deal',
     });
 
-    return Deals.removeDeal(_id);
+    return deal.remove();
   },
 };
 

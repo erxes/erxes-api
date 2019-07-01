@@ -18,7 +18,6 @@ export const sendNotifications = async ({
   item,
   user,
   type,
-  assignedUsers,
   content,
   contentType,
   invitedUsers,
@@ -27,7 +26,6 @@ export const sendNotifications = async ({
   item: IDealDocument;
   user: IUserDocument;
   type: string;
-  assignedUsers: string[];
   content?: string;
   contentType: string;
   invitedUsers?: string[];
@@ -75,6 +73,8 @@ export const sendNotifications = async ({
     });
   }
 
+  const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
+
   await utils.sendNotification({
     createdUser: user._id,
     notifType: type,
@@ -83,9 +83,9 @@ export const sendNotifications = async ({
     link: `/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user, invited user and removed users
-    receivers: (assignedUsers || []).filter(
-      (id, index) => [...(removedUsers || []), ...(invitedUsers || []), user._id].indexOf(id) === index,
-    ),
+    receivers: (item.assignedUserIds || []).filter(id => {
+      return usersToExclude.indexOf(id) < 0;
+    }),
   });
 };
 

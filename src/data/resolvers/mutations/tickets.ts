@@ -25,7 +25,6 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_ADD,
-      assignedUsers: ticket.assignedUserIds || [],
       content: `'${getUserDetail(user)}' invited you to the '${ticket.name}'.`,
       contentType: 'ticket',
     });
@@ -55,7 +54,6 @@ const ticketMutations = {
       item: updatedTicket,
       user,
       type: NOTIFICATION_TYPES.TICKET_EDIT,
-      assignedUsers: updatedTicket.assignedUserIds || [],
       invitedUsers: addedUserIds,
       removedUsers: removedUserIds,
       contentType: 'ticket',
@@ -84,7 +82,6 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_CHANGE,
-      assignedUsers: ticket.assignedUserIds || [],
       content,
       contentType: 'ticket',
     });
@@ -113,12 +110,11 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_DELETE,
-      assignedUsers: ticket.assignedUserIds || [],
       content: `'${getUserDetail(user)}' deleted ticket: '${ticket.name}'`,
       contentType: 'ticket',
     });
 
-    return Tickets.removeTicket(_id);
+    return ticket.remove();
   },
 };
 
