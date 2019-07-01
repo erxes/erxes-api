@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { Stages } from '../../../db/models';
+import { BOARD_TYPES } from '../../../db/models/definitions/constants';
 import { getNextMonth, getToday } from '../../utils';
 
 const contains = (values: string[] = [], empty = false) => {
@@ -10,7 +11,7 @@ const contains = (values: string[] = [], empty = false) => {
   return { $in: values };
 };
 
-export const generateCommonFilters = async (args: any) => {
+export const generateCommonFilters = async (args: any, type: string) => {
   const {
     date,
     pipelineId,
@@ -24,14 +25,13 @@ export const generateCommonFilters = async (args: any) => {
     assignedUserIds,
     customerIds,
     companyIds,
-    productIds,
   } = args;
-
-  const filter: any = {};
 
   const assignedToNoOne = value => {
     return value.length === 1 && value[0].length === 0;
   };
+
+  const filter: any = {};
 
   if (assignedUserIds) {
     // Filter by assigned to no one
@@ -46,10 +46,6 @@ export const generateCommonFilters = async (args: any) => {
 
   if (companyIds) {
     filter.companyIds = contains(companyIds);
-  }
-
-  if (productIds) {
-    filter['productsData.productId'] = contains(productIds);
   }
 
   if (nextDay) {
@@ -113,6 +109,31 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.closeDate = dateSelector(date);
     filter.stageId = { $in: stageIds };
+  }
+
+  if (Object.keys(args.extraParams).length > 0) {
+    const params = args.extraParams;
+
+    switch (type) {
+      case BOARD_TYPES.DEAL: {
+        const productIds = params.productIds;
+
+        filter['productsData.productId'] = contains(productIds);
+
+        break;
+      }
+      case BOARD_TYPES.TICKET: {
+        filter.priority = params.priority;
+        filter.source = params.source;
+
+        break;
+      }
+      case BOARD_TYPES.TASK: {
+        filter.priority = params.priority;
+
+        break;
+      }
+    }
   }
 
   return filter;

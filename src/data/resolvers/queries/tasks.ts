@@ -8,7 +8,7 @@ const taskQueries = {
    * Tasks list
    */
   async tasks(_root, args: IListParams) {
-    const filter = await generateCommonFilters(args);
+    const filter = await generateCommonFilters(args, 'task');
     const sort = { order: 1, createdAt: -1 };
 
     return Tasks.find(filter)

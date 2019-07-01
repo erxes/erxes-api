@@ -7,7 +7,7 @@ export default {
   async amount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const amountsMap = {};
 
-    const filter = await generateCommonFilters({ ...args, stageId: stage._id });
+    const filter = await generateCommonFilters({ ...args, stageId: stage._id }, stage.type);
 
     if (stage.type === BOARD_TYPES.DEAL) {
       const amountList = await Deals.aggregate([
@@ -42,7 +42,7 @@ export default {
   },
 
   async itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
-    const filter = await generateCommonFilters({ ...args, stageId: stage._id });
+    const filter = await generateCommonFilters({ ...args, stageId: stage._id }, stage.type);
 
     switch (stage.type) {
       case BOARD_TYPES.DEAL: {

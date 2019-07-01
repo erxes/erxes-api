@@ -12,7 +12,7 @@ const dealQueries = {
    * Deals list
    */
   async deals(_root, args: IDealListParams) {
-    const filter = await generateCommonFilters(args);
+    const filter = await generateCommonFilters(args, 'deal');
     const sort = { order: 1, createdAt: -1 };
 
     return Deals.find(filter)
@@ -25,7 +25,7 @@ const dealQueries = {
    *  Deal total amounts
    */
   async dealsTotalAmounts(_root, args: IDealListParams) {
-    const filter = await generateCommonFilters(args);
+    const filter = await generateCommonFilters(args, 'deal');
 
     const dealCount = await Deals.find(filter).countDocuments();
     const amountList = await Deals.aggregate([

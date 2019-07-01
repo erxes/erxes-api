@@ -8,7 +8,7 @@ const ticketQueries = {
    * Tickets list
    */
   async tickets(_root, args: IListParams) {
-    const filter = await generateCommonFilters(args);
+    const filter = await generateCommonFilters(args, 'ticket');
     const sort = { order: 1, createdAt: -1 };
 
     return Tickets.find(filter)
