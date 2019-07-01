@@ -286,6 +286,7 @@ export const BOARD_TYPES = {
 export const NOTIFICATION_TYPES = {
   CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
   CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
+  CONVERSATION_ASSIGNEE_REMOVE: 'conversationAssigneeRemove',
   CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
   CONVERSATION_STATE_CHANGE: 'conversationStateChange',
   DEAL_ADD: 'dealAdd',
