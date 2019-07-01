@@ -9,7 +9,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import utils, { fetchIntegrationApi } from '../../utils';
+import utils, { fetchIntegrationApi, getEnv } from '../../utils';
 
 interface IConversationMessageAdd {
   conversationId: string;
@@ -104,9 +104,11 @@ const sendNotifications = async ({
   mobile?: boolean;
 }) => {
   for (const conversation of conversations) {
+    const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
     const doc = {
       createdUser: user._id,
-      link: `/inbox?_id=${conversation._id}`,
+      link: `${MAIN_APP_DOMAIN}/inbox/index?_id=${conversation._id}`,
       title: 'Conversation updated',
       content: '',
       notifType: type,
@@ -120,10 +122,10 @@ const sendNotifications = async ({
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
-        doc.content = 'Assigned user has changed.';
+        doc.content += `Assigned user has changed. </br> ${conversation.content}`;
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.content = 'Conversation status has changed.';
+        doc.content += `Conversation status has changed. </br> ${conversation.content}`;
         break;
     }
 
