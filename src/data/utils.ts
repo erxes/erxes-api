@@ -217,14 +217,26 @@ export const readFileRequest = async (key: string): Promise<any> => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFile = async (file): Promise<string> => {
+export const uploadFile = async (file, fromEditor = false): Promise<any> => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
-  if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    return uploadFileAWS(file);
+  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+
+  if (fromEditor) {
+    if (IS_PUBLIC === 'true') {
+      return {
+        fileName: file.name,
+        uploaded: 1,
+        url: nameOrLink,
+      };
+    }
+
+    return `${DOMAIN}/read-file?key=${nameOrLink}`;
   }
 
-  return uploadFileGCS(file);
+  return nameOrLink;
 };
 
 /**
