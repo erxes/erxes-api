@@ -177,14 +177,6 @@ const conversationMutations = {
     if (doc.internal) {
       const messageObj = await ConversationMessages.addMessage(doc, user._id);
 
-      await sendNotifications({
-        user,
-        conversations: [conversation],
-        type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-        mobile: true,
-        messageContent: messageObj.content || '',
-      });
-
       // publish new message to conversation detail
       publishMessage(messageObj);
 
@@ -233,6 +225,18 @@ const conversationMutations = {
 
     const dbMessage = await ConversationMessages.findOne({
       _id: message._id,
+    });
+
+    if (!dbMessage) {
+      return;
+    }
+
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: dbMessage.content || '',
     });
 
     // Publishing both admin & client
