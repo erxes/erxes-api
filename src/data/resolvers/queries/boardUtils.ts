@@ -1,6 +1,5 @@
 import * as moment from 'moment';
 import { Stages } from '../../../db/models';
-import { BOARD_TYPES } from '../../../db/models/definitions/constants';
 import { getNextMonth, getToday } from '../../utils';
 
 const contains = (values: string[] = [], empty = false) => {
@@ -11,7 +10,7 @@ const contains = (values: string[] = [], empty = false) => {
   return { $in: values };
 };
 
-export const generateCommonFilters = async (args: any, type: string) => {
+const generateCommonFilters = async (args: any) => {
   const {
     date,
     pipelineId,
@@ -111,29 +110,45 @@ export const generateCommonFilters = async (args: any, type: string) => {
     filter.stageId = { $in: stageIds };
   }
 
-  if (Object.keys(args.extraParams).length > 0) {
-    const params = args.extraParams;
+  return filter;
+};
 
-    switch (type) {
-      case BOARD_TYPES.DEAL: {
-        const productIds = params.productIds;
+export const generateDealCommonFilters = async (args: any) => {
+  const filter = await generateCommonFilters(args);
 
-        filter['productsData.productId'] = contains(productIds);
+  const productIds = args.extraParams.productIds;
 
-        break;
-      }
-      case BOARD_TYPES.TICKET: {
-        filter.priority = params.priority;
-        filter.source = params.source;
+  if (productIds) {
+    filter['productsData.productId'] = contains(productIds);
+  }
 
-        break;
-      }
-      case BOARD_TYPES.TASK: {
-        filter.priority = params.priority;
+  return filter;
+};
 
-        break;
-      }
-    }
+export const generateTicketCommonFilters = async (args: any) => {
+  const filter = await generateCommonFilters(args);
+
+  const extraParams = args.extraParams;
+  const { priority, source } = extraParams;
+
+  if (priority) {
+    filter.priority = priority;
+  }
+  if (source) {
+    filter.source = source;
+  }
+
+  return filter;
+};
+
+export const generateTaskCommonFilters = async (args: any) => {
+  const filter = await generateCommonFilters(args);
+
+  const extraParams = args.extraParams;
+  const { priority } = extraParams;
+
+  if (priority) {
+    filter.priority = priority;
   }
 
   return filter;
