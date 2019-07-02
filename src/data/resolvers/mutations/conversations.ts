@@ -10,7 +10,6 @@ import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import utils, { fetchIntegrationApi, getEnv } from '../../utils';
-import { getUserDetail } from '../boardUtils';
 
 interface IConversationMessageAdd {
   conversationId: string;
@@ -110,7 +109,7 @@ const sendNotifications = async ({
     const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
     const doc = {
-      createdUser: user._id,
+      createdUser: user,
       link: `${MAIN_APP_DOMAIN}/inbox/index?_id=${conversation._id}`,
       title: 'Conversation updated',
       content: '',
@@ -120,21 +119,20 @@ const sendNotifications = async ({
 
     switch (type) {
       case NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE:
-        doc.title = `You have a new message from ${getUserDetail(user)}`;
         doc.content = messageContent || '';
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
-        doc.content = `${getUserDetail(user)} has assigned you to conversation </br> ${conversation.content}`;
+        doc.content = `has assigned you to conversation </br> ${conversation.content}`;
         break;
       case 'unassign':
         doc.notifType = NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE;
-        doc.content = `${getUserDetail(user)} has removed you from conversation </br> ${conversation.content}`;
+        doc.content = `has removed you from conversation </br> ${conversation.content}`;
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.content = `${getUserDetail(user)} changed conversation status to ${(
-          conversation.status || ''
-        ).toUpperCase()} </br> ${conversation.content}`;
+        doc.content = `changed conversation status to ${(conversation.status || '').toUpperCase()} </br> ${
+          conversation.content
+        }`;
         break;
     }
 

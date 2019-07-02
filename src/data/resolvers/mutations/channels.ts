@@ -16,16 +16,17 @@ interface IChannelsEdit extends IChannel {
 export const sendChannelNotifications = async (
   channel: IChannelDocument,
   type: 'invited' | 'removed',
+  user: IUserDocument,
   receivers?: string[],
 ) => {
-  let content = `You have invited to '${channel.name}' channel.`;
+  let content = `invited you  ${channel.name} channel`;
 
   if (type === 'removed') {
-    content = `You have been removed from '${channel.name}' channel.`;
+    content = `removed you from ${channel.name} channel`;
   }
 
   return utils.sendNotification({
-    createdUser: channel.userId || '',
+    createdUser: user,
     notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
     title: content,
     content,
@@ -43,7 +44,7 @@ const channelMutations = {
   async channelsAdd(_root, doc: IChannel, { user }: { user: IUserDocument }) {
     const channel = await Channels.createChannel(doc, user._id);
 
-    await sendChannelNotifications(channel, 'invited');
+    await sendChannelNotifications(channel, 'invited', user);
 
     return channel;
   },
@@ -51,7 +52,7 @@ const channelMutations = {
   /**
    * Update channel data
    */
-  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit) {
+  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: { user: IUserDocument }) {
     const channel = await Channels.findOne({ _id });
 
     if (!channel) {
@@ -62,8 +63,8 @@ const channelMutations = {
 
     const { addedUserIds, removedUserIds } = checkUserIds(memberIds || [], channel.memberIds || []);
 
-    await sendChannelNotifications(channel, 'invited', addedUserIds);
-    await sendChannelNotifications(channel, 'removed', removedUserIds);
+    await sendChannelNotifications(channel, 'invited', user, addedUserIds);
+    await sendChannelNotifications(channel, 'removed', user, removedUserIds);
 
     return Channels.updateChannel(_id, doc);
   },
@@ -71,7 +72,7 @@ const channelMutations = {
   /**
    * Remove a channel
    */
-  async channelsRemove(_root, { _id }: { _id: string }) {
+  async channelsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
     const channel = await Channels.findOne({ _id });
 
     if (!channel) {
@@ -80,7 +81,7 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
-    await sendChannelNotifications(channel, 'removed');
+    await sendChannelNotifications(channel, 'removed', user);
 
     return true;
   },

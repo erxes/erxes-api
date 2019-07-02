@@ -4,7 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface IDealsEdit extends IDeal {
@@ -25,7 +25,7 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_ADD,
-      content: `'${getUserDetail(user)}' invited you to the '${deal.name}'.`,
+      content: `invited you to the '${deal.name}'.`,
       contentType: 'deal',
     });
 
@@ -82,7 +82,7 @@ const dealMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Deals, deal, 'deal', destinationStageId, user);
+    const content = await itemsChange(Deals, deal, 'deal', destinationStageId);
 
     await sendNotifications({
       item: deal,
@@ -116,7 +116,7 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_DELETE,
-      content: `'${getUserDetail(user)}' deleted deal: '${deal.name}'`,
+      content: `deleted deal: '${deal.name}'`,
       contentType: 'deal',
     });
 

@@ -4,7 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface ITicketsEdit extends ITicket {
@@ -25,7 +25,7 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_ADD,
-      content: `'${getUserDetail(user)}' invited you to the '${ticket.name}'.`,
+      content: `invited you to the '${ticket.name}'.`,
       contentType: 'ticket',
     });
 
@@ -76,7 +76,7 @@ const ticketMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId, user);
+    const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId);
 
     await sendNotifications({
       item: ticket,
@@ -110,7 +110,7 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_DELETE,
-      content: `'${getUserDetail(user)}' deleted ticket: '${ticket.name}'`,
+      content: `deleted ticket: '${ticket.name}'`,
       contentType: 'ticket',
     });
 

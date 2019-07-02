@@ -7,10 +7,6 @@ import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils, { getEnv } from '../utils';
 
-export const getUserDetail = user => {
-  return (user.details && user.details.fullName) || user.email;
-};
-
 /**
  * Send notification to all members of this content except the sender
  */
@@ -44,7 +40,7 @@ export const sendNotifications = async ({
   }
 
   if (!content) {
-    content = `'${getUserDetail(user)}' has updated your ${contentType} '${item.name}'`;
+    content = `has updated your ${contentType} '${item.name}'`;
   }
 
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
@@ -56,10 +52,10 @@ export const sendNotifications = async ({
   }
 
   if (removedUsers && removedUsers.length > 0) {
-    content = `'${getUserDetail(user)}' removed you from ${contentType}: '${item.name}'.`;
+    content = `removed you from ${contentType}: '${item.name}'.`;
 
     await utils.sendNotification({
-      createdUser: user._id,
+      createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       title: content,
       content,
@@ -69,10 +65,10 @@ export const sendNotifications = async ({
   }
 
   if (invitedUsers && invitedUsers.length > 0) {
-    content = `'${getUserDetail(user)}' invited you to the ${contentType}: '${item.name}'.`;
+    content = `invited you to the ${contentType}: '${item.name}'.`;
 
     await utils.sendNotification({
-      createdUser: user._id,
+      createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       title: content,
       content,
@@ -84,7 +80,7 @@ export const sendNotifications = async ({
   const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
 
   await utils.sendNotification({
-    createdUser: user._id,
+    createdUser: user,
     notifType: type,
     title: content,
     content,
@@ -102,12 +98,11 @@ export const itemsChange = async (
   item: IDealDocument | ITicketDocument,
   type: string,
   destinationStageId: string,
-  user: IUserDocument,
 ) => {
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
-  let content = `'${getUserDetail(user)}' changed order your ${type}:'${item.name}'`;
+  let content = `changed order your ${type}:'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
@@ -116,7 +111,7 @@ export const itemsChange = async (
       throw new Error('Stage not found');
     }
 
-    content = `'${getUserDetail(user)}' moved your ${type} '${item.name}' to the '${stage.name}'.`;
+    content = `moved your ${type} '${item.name}' to the '${stage.name}'.`;
   }
 
   return content;

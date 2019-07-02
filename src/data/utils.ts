@@ -8,6 +8,8 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
+import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
+import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
@@ -341,6 +343,13 @@ export const sendEmail = async ({
 };
 
 /**
+ * Returns user's name or email
+ */
+export const getUserDetail = (user: IUser) => {
+  return (user.details && user.details.fullName) || user.email;
+};
+
+/**
  * Send a notification
  */
 export const sendNotification = async ({
@@ -348,7 +357,7 @@ export const sendNotification = async ({
   receivers,
   ...doc
 }: {
-  createdUser?: string;
+  createdUser: IUserDocument;
   receivers: string[];
   title: string;
   content: string;
@@ -371,7 +380,7 @@ export const sendNotification = async ({
   for (const receiverId of receivers) {
     try {
       // send web and mobile notification
-      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
+      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser._id);
 
       await sendEmail({
         toEmails,
@@ -380,6 +389,8 @@ export const sendNotification = async ({
           name: 'notification',
           data: {
             notification: doc,
+            action: NOTIFICATION_TYPES[doc.notifType],
+            userName: getUserDetail(createdUser),
           },
         },
       });

@@ -4,7 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
-import { getUserDetail, itemsChange, sendNotifications } from '../boardUtils';
+import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface ITasksEdit extends ITask {
@@ -25,7 +25,7 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_ADD,
-      content: `'${getUserDetail(user)}' invited you to the '${task.name}'.`,
+      content: `invited you to the '${task.name}'.`,
       contentType: 'task',
     });
 
@@ -76,7 +76,7 @@ const taskMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Tasks, task, 'task', destinationStageId, user);
+    const content = await itemsChange(Tasks, task, 'task', destinationStageId);
 
     await sendNotifications({
       item: task,
@@ -110,7 +110,7 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_DELETE,
-      content: `'${getUserDetail(user)}' deleted task: '${task.name}'`,
+      content: `deleted task: '${task.name}'`,
       contentType: 'task',
     });
 
