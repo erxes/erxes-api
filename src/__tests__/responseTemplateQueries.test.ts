@@ -17,8 +17,8 @@ describe('responseTemplateQueries', () => {
     await responseTemplateFactory();
 
     const qry = `
-      query responseTemplates($page: Int $perPage: Int) {
-        responseTemplates(page: $page perPage: $perPage) {
+      query responseTemplates($page: Int, $perPage: Int, $name: String, $brandId: String) {
+        responseTemplates(page: $page, perPage: $perPage, name: $name, brandId: $brandId) {
           _id
           name
           brandId
