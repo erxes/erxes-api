@@ -104,6 +104,22 @@ const integrationMutations = {
   async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
     return fetchIntegrationApi({ path: '/accounts/remove', method: 'post', body: { _id } });
   },
+
+  /**
+   * Send gmail
+   */
+  async integrationSendMail(_root, args: any) {
+    const { erxesApiId, ...mailParams } = args;
+
+    return fetchIntegrationApi({
+      path: '/gmail/send',
+      method: 'POST',
+      body: {
+        erxesApiId,
+        data: JSON.stringify(mailParams),
+      },
+    });
+  },
 };
 
 checkPermission(
