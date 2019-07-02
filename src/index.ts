@@ -136,7 +136,7 @@ app.post('/upload-file', async (req, res) => {
 
     if (status === 'ok') {
       try {
-        const result = await uploadFile(file, response.upload !== null);
+        const result = await uploadFile(file, response.upload ? true : false);
 
         return res.send(result);
       } catch (e) {

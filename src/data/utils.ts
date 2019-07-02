@@ -225,15 +225,13 @@ export const uploadFile = async (file, fromEditor = false): Promise<any> => {
   const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
 
   if (fromEditor) {
-    if (IS_PUBLIC === 'true') {
-      return {
-        fileName: file.name,
-        uploaded: 1,
-        url: nameOrLink,
-      };
+    const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
+
+    if (IS_PUBLIC !== 'true') {
+      editorResult.url = `${DOMAIN}/read-file?key=${nameOrLink}`;
     }
 
-    return `${DOMAIN}/read-file?key=${nameOrLink}`;
+    return editorResult;
   }
 
   return nameOrLink;
