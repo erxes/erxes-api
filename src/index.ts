@@ -126,15 +126,35 @@ app.get('/read-file', async (req: any, res) => {
 
 // file upload
 app.post('/upload-file', async (req, res) => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
   const form = new formidable.IncomingForm();
 
   form.parse(req, async (_error, _fields, response) => {
-    const status = await checkFile(response.file);
-
+    let type = 'default';
+    let file = response.file;
+    if (!file) {
+      type = 'editor';
+      file = response.upload;
+    }
+    const status = await checkFile(file);
     if (status === 'ok') {
       try {
-        const url = await uploadFile(response.file);
-        return res.end(url);
+        let url = await uploadFile(file);
+        if (type === 'default') {
+          return res.end(url);
+        } else {
+          if (IS_PUBLIC !== 'true') {
+            url = `${DOMAIN}/read-file?key=${url}`;
+          }
+          const result = {
+            fileName: file.name,
+            uploaded: 1,
+            url,
+          };
+          return res.send(result);
+        }
       } catch (e) {
         return res.status(500).send(e.message);
       }
