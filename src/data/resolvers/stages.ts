@@ -12,7 +12,7 @@ export default {
     const amountsMap = {};
 
     if (stage.type === BOARD_TYPES.DEAL) {
-      const filter = await generateDealCommonFilters({ ...args, stageId: stage._id });
+      const filter = await generateDealCommonFilters({ ...args, stageId: stage._id }, args.extraParams);
 
       const amountList = await Deals.aggregate([
         {
@@ -48,17 +48,17 @@ export default {
   async itemsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     switch (stage.type) {
       case BOARD_TYPES.DEAL: {
-        const filter = await generateDealCommonFilters({ ...args, stageId: stage._id });
+        const filter = await generateDealCommonFilters({ ...args, stageId: stage._id }, args.extraParams);
 
         return Deals.find(filter).countDocuments();
       }
       case BOARD_TYPES.TICKET: {
-        const filter = await generateTicketCommonFilters({ ...args, stageId: stage._id });
+        const filter = await generateTicketCommonFilters({ ...args, stageId: stage._id }, args.extraParams);
 
         return Tickets.find(filter).countDocuments();
       }
       case BOARD_TYPES.TASK: {
-        const filter = await generateTaskCommonFilters({ ...args, stageId: stage._id });
+        const filter = await generateTaskCommonFilters({ ...args, stageId: stage._id }, args.extraParams);
 
         return Tasks.find(filter).countDocuments();
       }

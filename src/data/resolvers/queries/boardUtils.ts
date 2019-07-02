@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { Stages } from '../../../db/models';
 import { getNextMonth, getToday } from '../../utils';
 
-const contains = (values: string[] = [], empty = false) => {
+export const contains = (values: string[] = [], empty = false) => {
   if (empty) {
     return [];
   }
@@ -10,7 +10,7 @@ const contains = (values: string[] = [], empty = false) => {
   return { $in: values };
 };
 
-const generateCommonFilters = async (args: any) => {
+export const generateCommonFilters = async (args: any) => {
   const {
     date,
     pipelineId,
@@ -113,52 +113,38 @@ const generateCommonFilters = async (args: any) => {
   return filter;
 };
 
-export const generateDealCommonFilters = async (args: any) => {
+export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
   const filter = await generateCommonFilters(args);
-  const extraParams = args.extraParams;
+  const { productIds } = extraParams || args;
 
-  if (extraParams) {
-    const productIds = extraParams.productIds;
-
-    if (productIds) {
-      filter['productsData.productId'] = contains(productIds);
-    }
+  if (productIds) {
+    filter['productsData.productId'] = contains(productIds);
   }
 
   return filter;
 };
 
-export const generateTicketCommonFilters = async (args: any) => {
+export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
   const filter = await generateCommonFilters(args);
+  const { priority, source } = extraParams || args;
 
-  const extraParams = args.extraParams;
+  if (priority) {
+    filter.priority = priority;
+  }
 
-  if (extraParams) {
-    const { priority, source } = extraParams;
-
-    if (priority) {
-      filter.priority = priority;
-    }
-
-    if (source) {
-      filter.source = source;
-    }
+  if (source) {
+    filter.source = source;
   }
 
   return filter;
 };
 
-export const generateTaskCommonFilters = async (args: any) => {
+export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
   const filter = await generateCommonFilters(args);
+  const { priority } = extraParams || args;
 
-  const extraParams = args.extraParams;
-
-  if (extraParams) {
-    const { priority } = extraParams;
-
-    if (priority) {
-      filter.priority = priority;
-    }
+  if (priority) {
+    filter.priority = priority;
   }
 
   return filter;

@@ -42,7 +42,7 @@ describe('dealQueries', () => {
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
-      $extraParams: JSON
+      $productIds: [String]
       $nextDay: String
       $nextWeek: String
       $nextMonth: String
@@ -54,7 +54,7 @@ describe('dealQueries', () => {
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        extraParams: $extraParams
+        productIds: $productIds
         nextDay: $nextDay
         nextWeek: $nextWeek
         nextMonth: $nextMonth
@@ -134,7 +134,7 @@ describe('dealQueries', () => {
 
     await dealFactory({ productsData: { productId } });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { extraParams: { productIds: [productId] } });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { productIds: [productId] });
 
     expect(response.length).toBe(1);
   });

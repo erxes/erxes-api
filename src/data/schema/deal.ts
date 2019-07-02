@@ -51,7 +51,7 @@ export const queries = `
     skip: Int
     search: String
     assignedUserIds: [String]
-    extraParams: JSON
+    productIds: [String]
     nextDay: String
     nextWeek: String
     nextMonth: String
@@ -64,7 +64,7 @@ export const queries = `
     customerIds: [String]
     companyIds: [String]
     assignedUserIds: [String]
-    extraParams: JSON
+    productIds: [String]
     nextDay: String
     nextWeek: String
     nextMonth: String
