@@ -115,11 +115,14 @@ const generateCommonFilters = async (args: any) => {
 
 export const generateDealCommonFilters = async (args: any) => {
   const filter = await generateCommonFilters(args);
+  const extraParams = args.extraParams;
 
-  const productIds = args.extraParams.productIds;
+  if (extraParams) {
+    const productIds = extraParams.productIds;
 
-  if (productIds) {
-    filter['productsData.productId'] = contains(productIds);
+    if (productIds) {
+      filter['productsData.productId'] = contains(productIds);
+    }
   }
 
   return filter;
@@ -129,13 +132,17 @@ export const generateTicketCommonFilters = async (args: any) => {
   const filter = await generateCommonFilters(args);
 
   const extraParams = args.extraParams;
-  const { priority, source } = extraParams;
 
-  if (priority) {
-    filter.priority = priority;
-  }
-  if (source) {
-    filter.source = source;
+  if (extraParams) {
+    const { priority, source } = extraParams;
+
+    if (priority) {
+      filter.priority = priority;
+    }
+
+    if (source) {
+      filter.source = source;
+    }
   }
 
   return filter;
@@ -145,10 +152,13 @@ export const generateTaskCommonFilters = async (args: any) => {
   const filter = await generateCommonFilters(args);
 
   const extraParams = args.extraParams;
-  const { priority } = extraParams;
 
-  if (priority) {
-    filter.priority = priority;
+  if (extraParams) {
+    const { priority } = extraParams;
+
+    if (priority) {
+      filter.priority = priority;
+    }
   }
 
   return filter;
