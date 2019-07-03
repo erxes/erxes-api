@@ -1,5 +1,5 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.13.1
+version: v1.13.5
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   'npm:chownr:20180731':
@@ -12,4 +12,28 @@ ignore:
     - bcrypt > node-pre-gyp > tar > chownr:
         reason: Development only
         expires: '2018-12-13T02:45:09.866Z'
-patch: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-450202:
+    - '@google-cloud/pubsub > google-auto-auth > async > lodash':
+        patched: '2019-07-03T21:26:08.699Z'
+    - xlsx-populate > lodash:
+        patched: '2019-07-03T21:26:08.699Z'
+    - apollo-server-express > apollo-server-core > lodash:
+        patched: '2019-07-03T21:26:08.699Z'
+    - '@google-cloud/storage > async > lodash':
+        patched: '2019-07-03T21:26:08.699Z'
+    - mongoose > async > lodash:
+        patched: '2019-07-03T21:26:08.699Z'
+    - '@google-cloud/pubsub > google-gax > lodash':
+        patched: '2019-07-03T21:26:08.699Z'
+    - firebase-admin > @google-cloud/storage > async > lodash:
+        patched: '2019-07-03T21:26:08.699Z'
+    - apollo-server-express > apollo-server-core > apollo-engine-reporting > lodash:
+        patched: '2019-07-03T21:26:08.699Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > async > lodash':
+        patched: '2019-07-03T21:26:08.699Z'
+    - '@google-cloud/pubsub > @google-cloud/common > split-array-stream > async > lodash':
+        patched: '2019-07-03T21:26:08.699Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > async > lodash':
+        patched: '2019-07-03T21:26:08.699Z'

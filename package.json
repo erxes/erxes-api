@@ -32,7 +32,9 @@
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
-    "release": "release-it"
+    "release": "release-it",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "lint-staged": {
     "*.ts": [
@@ -92,7 +94,8 @@
     "twit": "^2.2.9",
     "underscore": "^1.8.3",
     "validator": "^9.0.0",
-    "xlsx-populate": "^1.14.0"
+    "xlsx-populate": "^1.14.0",
+    "snyk": "^1.189.0"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"
@@ -131,5 +134,6 @@
     "tslint-config-prettier": "^1.1.0",
     "tslint-config-standard": "^7.0.0",
     "typescript": "^2.9.2"
-  }
+  },
+  "snyk": true
 }
