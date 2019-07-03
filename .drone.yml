@@ -21,14 +21,13 @@ pipeline:
       # - mkdir src/private/xlsTemplateOutputs
       # - yarn test
       - ls -a
-      - echo $DRONE_COMMIT_BRANCH
+      - apt-get update && apt-get install -y git
+      - git checkout $DRONE_COMMIT_BRANCH
+      - git branch
 
   build:
     image: erxes/runner:latest
     commands:
-      - apt-get update && apt-get install -y git
-      - git checkout $DRONE_COMMIT_BRANCH
-      - git branch
       - yarn build
       - cat dist/private/version.json
       - ls -a dist/migrations
