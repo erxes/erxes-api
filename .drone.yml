@@ -31,6 +31,7 @@ pipeline:
       - git branch
       - yarn build
       - cat dist/private/version.json
+      - ls -a dist/migrations
     when:
       branch:
         - drone-test
