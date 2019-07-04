@@ -1,7 +1,9 @@
 import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
+import { putLog } from '../../utils';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;
@@ -14,14 +16,44 @@ const companyMutations = {
   async companiesAdd(_root, doc: ICompany, { user }: { user: IUserDocument }) {
     const company = await Companies.createCompany(doc, user);
 
+    await putLog({
+      body: {
+        createdBy: user._id,
+        type: 'company',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: company._id,
+        unicode: user.username || user.email || user._id,
+        description: `${company.primaryName} has been created`,
+      },
+    });
+
     return company;
   },
 
   /**
-   * Update company
+   * Updates a company
    */
-  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit) {
-    return Companies.updateCompany(_id, doc);
+  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user }: { user: IUserDocument }) {
+    const found = await Companies.findOne({ _id });
+    const updated = await Companies.updateCompany(_id, doc);
+
+    if (found && updated) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'company',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          unicode: user.username || user.email || user._id,
+          description: `${found.primaryName} has been updated`,
+        },
+      });
+    }
+
+    return updated;
   },
 
   /**
@@ -34,10 +66,25 @@ const companyMutations = {
   /**
    * Remove companies
    */
-  async companiesRemove(_root, { companyIds }: { companyIds: string[] }) {
+  async companiesRemove(_root, { companyIds }: { companyIds: string[] }, { user }: { user: IUserDocument }) {
     for (const companyId of companyIds) {
+      const company = await Companies.findOne({ _id: companyId });
       // Removing every company and modules associated with
-      await Companies.removeCompany(companyId);
+      const removed = await Companies.removeCompany(companyId);
+
+      if (company && removed) {
+        await putLog({
+          body: {
+            createdBy: user._id,
+            type: 'company',
+            action: LOG_ACTIONS.DELETE,
+            oldData: JSON.stringify(company),
+            objectId: companyId,
+            unicode: user.username || user.email || user._id,
+            description: `${company.primaryName} has been removed`,
+          },
+        });
+      }
     }
 
     return companyIds;
