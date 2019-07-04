@@ -254,3 +254,9 @@ export const NOTIFICATION_MODULES = [
     ],
   },
 ];
+
+export const LOG_ACTIONS = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+};

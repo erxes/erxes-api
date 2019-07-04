@@ -422,7 +422,7 @@ export const generateXlsx = async (workbook: any): Promise<string> => {
 interface IRequestParams {
   url?: string;
   path?: string;
-  method: string;
+  method?: string;
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
@@ -512,6 +512,32 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
   return sendRequest(
     { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
     'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const putLog = ({ body, params }: IRequestParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body, params },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogs = ({ body, params }: IRequestParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body, params },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };
 

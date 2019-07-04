@@ -1,6 +1,8 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
+import { putLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
@@ -21,8 +23,21 @@ const boardMutations = {
    */
   async boardsAdd(_root, doc: IBoard, { user }: { user: IUserDocument }) {
     await checkPermission(doc.type, user, 'boardsAdd');
+    const board = await Boards.createBoard({ userId: user._id, ...doc });
 
-    return Boards.createBoard({ userId: user._id, ...doc });
+    await putLog({
+      body: {
+        createdBy: user._id,
+        type: 'board',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: board._id,
+        unicode: user.username || user.email || user._id,
+        description: `${doc.name} has been created`,
+      },
+    });
+
+    return board;
   },
 
   /**
@@ -30,8 +45,23 @@ const boardMutations = {
    */
   async boardsEdit(_root, { _id, ...doc }: IBoardsEdit, { user }: { user: IUserDocument }) {
     await checkPermission(doc.type, user, 'boardsEdit');
+    const updated = await Boards.updateBoard(_id, doc);
 
-    return Boards.updateBoard(_id, doc);
+    if (updated && updated._id) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'board',
+          action: LOG_ACTIONS.UPDATE,
+          newData: JSON.stringify(doc),
+          objectId: updated._id,
+          unicode: user.username || user.email || user._id,
+          description: `${doc.name} has been edited`,
+        },
+      });
+    }
+
+    return updated;
   },
 
   /**
@@ -44,7 +74,20 @@ const boardMutations = {
       await checkPermission(board.type, user, 'boardsRemove');
     }
 
-    return Boards.removeBoard(_id);
+    const removed = await Boards.removeBoard(_id);
+
+    if (board && removed) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'board',
+          action: LOG_ACTIONS.DELETE,
+          objectId: _id,
+          unicode: user.username || user.email || user._id,
+          description: `${board.name} has been removed`,
+        },
+      });
+    }
   },
 
   /**
