@@ -3,7 +3,9 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
+import { putLog } from '../../utils';
 import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
@@ -29,22 +31,50 @@ const dealMutations = {
       'deal',
     );
 
+    await putLog({
+      body: {
+        createdBy: user._id,
+        type: 'deal',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: deal._id,
+        unicode: user.username || user.email || user._id,
+        description: `${deal.name} has been created`,
+      },
+    });
+
     return deal;
   },
 
   /**
    * Edit deal
    */
-  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
-    const deal = await Deals.updateDeal(_id, {
+  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: { user: IUserDocument }) {
+    const found = await Deals.findOne({ _id });
+    const updated = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await manageNotifications(Deals, deal, user, 'deal');
+    await manageNotifications(Deals, updated, user, 'deal');
 
-    return deal;
+    if (found && updated) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'deal',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          unicode: user.username || user.email || user._id,
+          description: `${found.name} has been edited`,
+        },
+      });
+    }
+
+    return updated;
   },
 
   /**
@@ -101,7 +131,21 @@ const dealMutations = {
       'deal',
     );
 
-    return Deals.removeDeal(_id);
+    const removed = await Deals.removeDeal(_id);
+
+    await putLog({
+      body: {
+        createdBy: user._id,
+        type: 'deal',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(deal),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${deal.name} has been removed`,
+      },
+    });
+
+    return removed;
   },
 };
 
