@@ -2,8 +2,9 @@ import { Channels } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import utils from '../../utils';
+import utils, { putLog } from '../../utils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -36,21 +37,64 @@ const channelMutations = {
 
     await sendChannelNotifications(channel);
 
+    await putLog({
+      body: {
+        createdBy: user._id,
+        type: 'channel',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: channel._id,
+        unicode: user.username || user.email || user._id,
+        description: `${doc.name} has been created`,
+      },
+    });
+
     return channel;
   },
 
   /**
    * Update channel data
    */
-  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit) {
-    return Channels.updateChannel(_id, doc);
+  async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: { user: IUserDocument }) {
+    const found = await Channels.findOne({ _id });
+    const updated = await Channels.updateChannel(_id, doc);
+
+    if (found && updated) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'channel',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          unicode: user.username || user.email || user._id,
+          description: `${found.name} has been updated`,
+        },
+      });
+    }
+
+    return updated;
   },
 
   /**
    * Remove a channel
    */
-  channelsRemove(_root, { _id }: { _id: string }) {
-    return Channels.removeChannel(_id);
+  async channelsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const channel = await Channels.findOne({ _id });
+    const removed = await Channels.removeChannel(_id);
+
+    if (channel && removed) {
+      await putLog({
+        body: {
+          createdBy: user._id,
+          type: 'channel',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(channel),
+          unicode: user.username || user.email || user._id,
+          description: `${channel.name} has been removed`,
+        },
+      });
+    }
   },
 };
 
