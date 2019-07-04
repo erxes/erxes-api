@@ -1,20 +1,13 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import {
-  ConversationMessages,
-  Conversations,
-  Deals,
-  Integrations,
-  Pipelines,
-  Stages,
-  Users,
-} from '../../../../db/models';
-import { IStageDocument } from '../../../../db/models/definitions/boards';
-import { IMessageDocument } from '../../../../db/models/definitions/conversationMessages';
-import { IUser } from '../../../../db/models/definitions/users';
-import { CONVERSATION_STATUSES, INSIGHT_TYPES } from '../../../constants';
-import { getDateFieldAsStr } from '../aggregationUtils';
-import { fixDate } from '../utils';
+import { ConversationMessages, Conversations, Deals, Integrations, Pipelines, Stages, Users } from '../../../db/models';
+import { IStageDocument } from '../../../db/models/definitions/boards';
+import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
+import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
+import { IUser } from '../../../db/models/definitions/users';
+import { INSIGHT_TYPES } from '../../constants';
+import { fixDate } from '../../utils';
+import { getDateFieldAsStr } from './aggregationUtils';
 import {
   IDealListArgs,
   IDealSelector,
@@ -557,7 +550,6 @@ export const getConversationSelectorToMsg = async (
     const integrationIdsList = await Integrations.find(filterSelector.integration).select('_id');
     conversationSelector.integrationId = { $in: integrationIdsList.map(row => row._id) };
   }
-
   return { ...conversationSelector };
 };
 
@@ -597,6 +589,7 @@ export const getConversationReportLookup = async (): Promise<any> => {
               internal: 1,
               userId: 1,
               customerId: 1,
+              sizeMentionedIds: { $size: '$mentionedUserIds' },
             },
           },
         ],

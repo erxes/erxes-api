@@ -154,6 +154,8 @@ describe('mutations', () => {
       isOnline: false,
       availabilityMethod: 'auto',
       requireAuth: false,
+      showChat: false,
+      forceLogoutWhenResolve: false,
       onlineHours: [
         {
           day: faker.random.word(),

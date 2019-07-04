@@ -1,9 +1,9 @@
-import { ConversationMessages, Conversations, Integrations, Tags } from '../../../../db/models';
-import { IUserDocument } from '../../../../db/models/definitions/users';
-import { INTEGRATION_KIND_CHOICES, TAG_TYPES } from '../../../constants';
-import { moduleCheckPermission, moduleRequireLogin } from '../../../permissions';
-import { getDateFieldAsStr, getDurationField } from '../aggregationUtils';
-import { IListArgs, IPieChartData } from './types';
+import { ConversationMessages, Conversations, Integrations, Tags } from '../../../db/models';
+import { TAG_TYPES } from '../../../db/models/definitions/constants';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { INTEGRATION_KIND_CHOICES } from '../../constants';
+import { getDateFieldAsStr, getDurationField } from '../../modules/insights/aggregationUtils';
+import { IListArgs, IPieChartData } from '../../modules/insights/types';
 import {
   fixChartData,
   fixDates,
@@ -21,7 +21,8 @@ import {
   getSummaryDates,
   getTimezone,
   noConversationSelector,
-} from './utils';
+} from '../../modules/insights/utils';
+import { moduleCheckPermission, moduleRequireLogin } from '../../permissions/wrappers';
 
 const insightQueries = {
   /**

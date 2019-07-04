@@ -8,12 +8,16 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
-import { debugBase, debugEmail, debugIntegrationsApi } from '../debuggers';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
  * Check that given file is not harmful
  */
 export const checkFile = async file => {
+  if (!file) {
+    throw new Error('Invalid file');
+  }
+
   const { size } = file;
 
   // 20mb
@@ -213,14 +217,24 @@ export const readFileRequest = async (key: string): Promise<any> => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFile = async (file): Promise<string> => {
+export const uploadFile = async (file, fromEditor = false): Promise<any> => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
-  if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    return uploadFileAWS(file);
+  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+
+  if (fromEditor) {
+    const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
+
+    if (IS_PUBLIC !== 'true') {
+      editorResult.url = `${DOMAIN}/read-file?key=${nameOrLink}`;
+    }
+
+    return editorResult;
   }
 
-  return uploadFileGCS(file);
+  return nameOrLink;
 };
 
 /**
@@ -401,63 +415,65 @@ export const createXlsFile = async () => {
 /**
  * Generates downloadable xls file on the url
  */
-export const generateXlsx = async (workbook: any, name: string): Promise<string> => {
-  // Url to download xls file
-  const url = `xlsTemplateOutputs/${name}.xlsx`;
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  // Saving xls workbook to the directory
-  await workbook.toFileAsync(`${__dirname}/../private/${url}`);
-
-  return `${DOMAIN}/static/${url}`;
+export const generateXlsx = async (workbook: any): Promise<string> => {
+  return workbook.outputAsync();
 };
 
 interface IRequestParams {
   url?: string;
   path?: string;
   method: string;
+  headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
+  form?: { [key: string]: string };
 }
 
 /**
  * Sends post request to specific url
  */
-export const sendRequest = async ({ url, method, body, params }: IRequestParams) => {
+export const sendRequest = async (
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage?: string,
+) => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
 
-  debugIntegrationsApi(`
-    Sending request to integrations api with
+  if (NODE_ENV === 'test') {
+    return;
+  }
+
+  debugExternalApi(`
+    Sending request to
     url: ${url}
     method: ${method}
+    body: ${JSON.stringify(body)}
     params: ${JSON.stringify(params)}
   `);
 
   try {
     const response = await requestify.request(url, {
       method,
-      headers: { 'Content-Type': 'application/json', origin: DOMAIN },
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN, ...(headers || {}) },
+      form,
       body,
       params,
     });
 
     const responseBody = response.getBody();
 
-    debugIntegrationsApi(`
-      Success from integrations api: ${url}
+    debugExternalApi(`
+      Success from : ${url}
       responseBody: ${JSON.stringify(responseBody)}
     `);
 
     return responseBody;
   } catch (e) {
     if (e.code === 'ECONNREFUSED') {
-      const message =
-        'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
-
-      debugIntegrationsApi(message);
-      throw new Error(message);
+      debugExternalApi(errorMessage);
+      throw new Error(errorMessage);
     } else {
-      debugIntegrationsApi(`Error occurred in integrations api: ${e.body}`);
+      debugExternalApi(`Error occurred : ${e.body}`);
       throw new Error(e.body);
     }
   }
@@ -469,7 +485,34 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
 export const fetchIntegrationApi = ({ path, method, body, params }: IRequestParams) => {
   const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
 
-  return sendRequest({ url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params });
+  return sendRequest(
+    { url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running',
+  );
+};
+
+/**
+ * Send request to crons api
+ */
+export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
+  const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+  );
+};
+
+/**
+ * Send request to workers api
+ */
+export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
 };
 
 /**
@@ -477,6 +520,12 @@ export const fetchIntegrationApi = ({ path, method, body, params }: IRequestPara
  * @param email as String
  */
 export const validateEmail = async email => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+
+  if (NODE_ENV === 'test') {
+    return true;
+  }
+
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
 
@@ -563,6 +612,52 @@ export const sendMobileNotification = async ({
       await transporter.send({ token, notification: { title, body } });
     }
   }
+};
+
+export const paginate = (collection, params: { page?: number; perPage?: number }) => {
+  const { page = 0, perPage = 0 } = params || {};
+
+  const _page = Number(page || '1');
+  const _limit = Number(perPage || '20');
+
+  return collection.limit(_limit).skip((_page - 1) * _limit);
+};
+
+/*
+ * Converts given value to date or if value in valid date
+ * then returns default value
+ */
+export const fixDate = (value, defaultValue = new Date()): Date => {
+  const date = new Date(value);
+
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+
+  return defaultValue;
+};
+
+export const getDate = (date: Date, day: number): Date => {
+  const currentDate = new Date();
+
+  date.setDate(currentDate.getDate() + day + 1);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+};
+
+export const getToday = (date: Date): Date => {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+};
+
+export const getNextMonth = (date: Date): { start: number; end: number } => {
+  const today = getToday(date);
+
+  const month = (new Date().getMonth() + 1) % 12;
+  const start = today.setMonth(month, 1);
+  const end = today.setMonth(month + 1, 0);
+
+  return { start, end };
 };
 
 export default {

@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
 import * as path from 'path';
-import { ActivityLogs } from './db/models';
-import { redisOptions } from './redisClient';
+import { ActivityLogs, Conversations } from './db/models';
+import { get, redisOptions, set } from './redisClient';
 
 // load environment variables
 dotenv.config();
@@ -31,7 +31,7 @@ interface IGoogleOptions {
   };
 }
 
-const { PUBSUB_TYPE, NODE_ENV }: { PUBSUB_TYPE?: string; NODE_ENV?: string } = process.env;
+const { PUBSUB_TYPE, NODE_ENV, PROCESS_NAME } = process.env;
 
 // Google pubsub message handler
 const commonMessageHandler = payload => {
@@ -59,7 +59,7 @@ const configGooglePubsub = (): IGoogleOptions => {
 const createPubsubInstance = (): IPubSub => {
   let pubsub;
 
-  if (NODE_ENV === 'test' || NODE_ENV === 'command') {
+  if (NODE_ENV === 'test' || NODE_ENV === 'command' || PROCESS_NAME === 'crons') {
     pubsub = {
       asyncIterator: () => null,
       publish: () => null,
@@ -101,12 +101,44 @@ const createPubsubInstance = (): IPubSub => {
   return pubsub;
 };
 
-const publishMessage = ({ action, data }: IPubsubMessage) => {
+const publishMessage = async ({ action, data }: IPubsubMessage) => {
   if (NODE_ENV === 'test') {
     return;
   }
 
   if (action === 'callPublish') {
+    if (data.trigger === 'conversationMessageInserted') {
+      const { customerId, conversationId } = data.payload;
+      const conversation = await Conversations.findOne({ _id: conversationId }, { integrationId: 1 });
+      const customerLastStatus = await get(`customer_last_status_${customerId}`);
+
+      // if customer's last status is left then mark as joined when customer ask
+      if (conversation && customerLastStatus === 'left') {
+        set(`customer_last_status_${customerId}`, 'joined');
+
+        // customer has joined + time
+        const conversationMessages = await Conversations.changeCustomerStatus(
+          'joined',
+          customerId,
+          conversation.integrationId,
+        );
+
+        for (const message of conversationMessages) {
+          graphqlPubsub.publish('conversationMessageInserted', {
+            conversationMessageInserted: message,
+          });
+        }
+
+        // notify as connected
+        graphqlPubsub.publish('customerConnectionChanged', {
+          customerConnectionChanged: {
+            _id: customerId,
+            status: 'connected',
+          },
+        });
+      }
+    }
+
     graphqlPubsub.publish(data.trigger, { [data.trigger]: data.payload });
   }
 

@@ -1,15 +1,7 @@
 import { dateType } from 'aws-sdk/clients/sts'; // tslint:disable-line
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
-import {
-  ACTIVITY_ACTIONS,
-  ACTIVITY_CONTENT_TYPES,
-  ACTIVITY_PERFORMER_TYPES,
-  ACTIVITY_TYPES,
-  FIELDS_GROUPS_CONTENT_TYPES,
-  NOTIFICATION_TYPES,
-  PRODUCT_TYPES,
-} from '../data/constants';
+import { FIELDS_GROUPS_CONTENT_TYPES } from '../data/constants';
 import { IActionPerformer, IActivity, IContentType } from '../db/models/definitions/activityLogs';
 import {
   ActivityLogs,
@@ -48,7 +40,16 @@ import {
   Users,
   UsersGroups,
 } from './models';
-import { BOARD_TYPES, STATUSES } from './models/definitions/constants';
+import {
+  ACTIVITY_ACTIONS,
+  ACTIVITY_CONTENT_TYPES,
+  ACTIVITY_PERFORMER_TYPES,
+  ACTIVITY_TYPES,
+  BOARD_TYPES,
+  NOTIFICATION_TYPES,
+  PRODUCT_TYPES,
+  STATUSES,
+} from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
@@ -342,13 +343,13 @@ interface ICustomerFactoryInput {
   messengerData?: any;
   customFieldsData?: any;
   companyIds?: string[];
-  tagIds?: string[] | string;
+  tagIds?: string[];
   ownerId?: string;
   hasValidEmail?: boolean;
 }
 
-export const customerFactory = (params: ICustomerFactoryInput = {}) => {
-  const customer = new Customers({
+export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
+  const doc = {
     integrationId: params.integrationId,
     firstName: params.firstName || faker.random.word(),
     lastName: params.lastName || faker.random.word(),
@@ -362,10 +363,16 @@ export const customerFactory = (params: ICustomerFactoryInput = {}) => {
     messengerData: params.messengerData || {},
     customFieldsData: params.customFieldsData || {},
     companyIds: params.companyIds || [faker.random.number(), faker.random.number()],
-    tagIds: params.tagIds || [faker.random.number(), faker.random.number()],
+    tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
-    hasValidEmail: params.hasValidEmail || null,
-  });
+    hasValidEmail: params.hasValidEmail || false,
+  };
+
+  if (useModelMethod) {
+    return Customers.createCustomer(doc);
+  }
+
+  const customer = new Customers(doc);
 
   return customer.save();
 };
@@ -673,6 +680,7 @@ export const boardFactory = (params: IBoardFactoryInput = {}) => {
 interface IPipelineFactoryInput {
   boardId?: string;
   type?: string;
+  bgColor?: string;
 }
 
 export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
@@ -681,6 +689,7 @@ export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
     boardId: params.boardId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
     visibility: 'public',
+    bgColor: params.bgColor || 'fff',
   });
 
   return pipeline.save();

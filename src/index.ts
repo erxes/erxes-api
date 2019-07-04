@@ -1,4 +1,3 @@
-import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
@@ -8,24 +7,22 @@ import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
-import resolvers from './data/resolvers';
+import * as request from 'request';
+import apolloServer from './apolloClient';
+import { companiesExport, customersExport } from './data/modules/coc/exporter';
+import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import typeDefs from './data/schema';
 import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
-import { Conversations, Customers } from './db/models';
-import { debugInit } from './debuggers';
+import { debugExternalApi, debugInit } from './debuggers';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
-import { graphqlPubsub } from './pubsub';
 import { initRedis } from './redisClient';
 import { init } from './startup';
-import { importXlsFile } from './workers/bulkInsert';
 
 // load environment variables
 dotenv.config();
 
-const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
@@ -71,134 +68,41 @@ app.use(cors(corsOptions));
 
 app.use(userMiddleware);
 
-let playground: PlaygroundConfig = false;
-
-if (NODE_ENV !== 'production') {
-  playground = {
-    settings: {
-      'general.betaUpdates': false,
-      'editor.theme': 'dark',
-      'editor.reuseHeaders': true,
-      'tracing.hideTracingResponse': true,
-      'editor.fontSize': 14,
-      'editor.fontFamily': `'Source Code Pro', 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace`,
-      'request.credentials': 'include',
-    },
-  };
-}
-
-const clients: string[] = [];
-const connectedClients: string[] = [];
-
-const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers,
-  playground,
-  context: ({ req, res }) => {
-    return {
-      user: req && req.user,
-      res,
-    };
-  },
-  subscriptions: {
-    keepAlive: 10000,
-    path: '/subscriptions',
-
-    onConnect(_connectionParams, webSocket) {
-      webSocket.on('message', async message => {
-        const parsedMessage = JSON.parse(message).id || {};
-
-        if (parsedMessage.type === 'messengerConnected') {
-          const messengerData = parsedMessage.value;
-          const integrationId = messengerData.integrationId;
-          webSocket.messengerData = parsedMessage.value;
-
-          const customerId = webSocket.messengerData.customerId;
-
-          if (!connectedClients.includes(customerId)) {
-            connectedClients.push(customerId);
-          }
-
-          // Waited for 5 seconds to reconnect in disconnect hook and disconnect hook
-          // removed this customer from connected clients list. So it means this customer
-          // is back online
-          if (!clients.includes(customerId)) {
-            clients.push(customerId);
-
-            // mark as online
-            await Customers.markCustomerAsActive(customerId);
-
-            // customer has joined + time
-            const conversationMessages = await Conversations.changeCustomerStatus('joined', customerId, integrationId);
-
-            for (const _message of conversationMessages) {
-              graphqlPubsub.publish('conversationMessageInserted', {
-                conversationMessageInserted: _message,
-              });
-            }
-
-            // notify as connected
-            graphqlPubsub.publish('customerConnectionChanged', {
-              customerConnectionChanged: {
-                _id: customerId,
-                status: 'connected',
-              },
-            });
-          }
-        }
-      });
-    },
-
-    async onDisconnect(webSocket) {
-      const messengerData = webSocket.messengerData;
-
-      if (messengerData) {
-        const customerId = messengerData.customerId;
-        const integrationId = messengerData.integrationId;
-
-        // Temporarily marking as disconnected
-        // If client refreshes his browser, It will trigger disconnect, connect hooks.
-        // So to determine this issue. We are marking as disconnected here and waiting
-        // for 5 seconds to reconnect.
-        connectedClients.splice(connectedClients.indexOf(customerId), 1);
-
-        setTimeout(async () => {
-          if (connectedClients.includes(customerId)) {
-            return;
-          }
-
-          clients.splice(clients.indexOf(customerId), 1);
-
-          // mark as offline
-          await Customers.markCustomerAsNotActive(customerId);
-
-          // customer has left + time
-          const conversationMessages = await Conversations.changeCustomerStatus('left', customerId, integrationId);
-
-          for (const message of conversationMessages) {
-            graphqlPubsub.publish('conversationMessageInserted', {
-              conversationMessageInserted: message,
-            });
-          }
-
-          // notify as disconnected
-          graphqlPubsub.publish('customerConnectionChanged', {
-            customerConnectionChanged: {
-              _id: customerId,
-              status: 'disconnected',
-            },
-          });
-        }, 10000);
-      }
-    },
-  },
-});
-
 app.use('/static', express.static(path.join(__dirname, 'private')));
 
 // for health check
 app.get('/status', async (_req, res) => {
   res.end('ok');
+});
+
+// export coc
+app.get('/coc-export', async (req: any, res) => {
+  const { query, user } = req;
+  const { type } = query;
+
+  try {
+    const { name, response } =
+      type === 'customers' ? await customersExport(query, user) : await companiesExport(query, user);
+
+    res.attachment(`${name}.xlsx`);
+
+    return res.send(response);
+  } catch (e) {
+    return res.end(e.message);
+  }
+});
+
+// export insights
+app.get('/insights-export', async (req: any, res) => {
+  try {
+    const { name, response } = await insightExports(req.query, req.user);
+
+    res.attachment(`${name}.xlsx`);
+
+    return res.send(response);
+  } catch (e) {
+    return res.end(e.message);
+  }
 });
 
 // read file
@@ -225,12 +129,16 @@ app.post('/upload-file', async (req, res) => {
   const form = new formidable.IncomingForm();
 
   form.parse(req, async (_error, _fields, response) => {
-    const status = await checkFile(response.file);
+    const file = response.file || response.upload;
+
+    // check file ====
+    const status = await checkFile(file);
 
     if (status === 'ok') {
       try {
-        const url = await uploadFile(response.file);
-        return res.end(url);
+        const result = await uploadFile(file, response.upload ? true : false);
+
+        return res.send(result);
       } catch (e) {
         return res.status(500).send(e.message);
       }
@@ -241,30 +149,31 @@ app.post('/upload-file', async (req, res) => {
 });
 
 // file import
-app.post('/import-file', (req: any, res) => {
-  const form = new formidable.IncomingForm();
-
+app.post('/import-file', async (req: any, res, next) => {
   // require login
   if (!req.user) {
     return res.end('foribidden');
   }
 
-  form.parse(req, async (_err, fields: any, response) => {
-    const status = await checkFile(response.file);
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
 
-    // if file is not ok then send error
-    if (status !== 'ok') {
-      return res.json(status);
-    }
+  debugExternalApi(`Pipeing request to ${WORKERS_API_DOMAIN}`);
 
-    importXlsFile(response.file, fields.type, { user: req.user })
-      .then(result => {
-        return res.json(result);
+  return req.pipe(
+    request
+      .post(`${WORKERS_API_DOMAIN}/import-file`)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
       })
-      .catch(e => {
-        return res.json({ status: 'error', message: e.message });
-      });
-  });
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
 });
 
 // engage unsubscribe
@@ -284,6 +193,12 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
+
+// Error handling middleware
+app.use((error, _req, res, _next) => {
+  console.error(error.stack);
+  res.status(500).send(error.message);
+});
 
 // Wrap the Express server
 const httpServer = createServer(app);

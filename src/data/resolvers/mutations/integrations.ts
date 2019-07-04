@@ -1,7 +1,7 @@
 import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IExternalIntegrationParams, IMessengerIntegration } from '../../../db/models/Integrations';
-import { checkPermission } from '../../permissions';
+import { checkPermission } from '../../permissions/wrappers';
 import { fetchIntegrationApi } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
@@ -83,13 +83,17 @@ const integrationMutations = {
    * Delete an integration
    */
   async integrationsRemove(_root, { _id }: { _id: string }) {
-    await fetchIntegrationApi({
-      path: '/integrations/remove',
-      method: 'POST',
-      body: {
-        integrationId: _id,
-      },
-    });
+    const integration = await Integrations.findOne({ _id });
+
+    if (integration && integration.kind === 'facebook') {
+      await fetchIntegrationApi({
+        path: '/integrations/remove',
+        method: 'POST',
+        body: {
+          integrationId: _id,
+        },
+      });
+    }
 
     return Integrations.removeIntegration(_id);
   },

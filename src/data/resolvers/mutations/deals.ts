@@ -1,9 +1,9 @@
 import { Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
+import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { NOTIFICATION_TYPES } from '../../constants';
-import { checkPermission } from '../../permissions';
+import { checkPermission } from '../../permissions/wrappers';
 import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
@@ -52,12 +52,13 @@ const dealMutations = {
    */
   async dealsChange(
     _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId?: string },
+    { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: { user: IUserDocument },
   ) {
     const deal = await Deals.updateDeal(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
+      stageId: destinationStageId,
     });
 
     const content = await itemsChange(Deals, deal, 'deal', destinationStageId);
