@@ -1,6 +1,9 @@
 import { Segments } from '../../../db/models';
 import { ISegment } from '../../../db/models/definitions/segments';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
+import { putLog } from '../../utils';
 
 interface ISegmentsEdit extends ISegment {
   _id: string;
@@ -10,22 +13,68 @@ const segmentMutations = {
   /**
    * Create new segment
    */
-  segmentsAdd(_root, doc: ISegment) {
-    return Segments.createSegment(doc);
+  async segmentsAdd(_root, doc: ISegment, { user }: { user: IUserDocument }) {
+    const segment = await Segments.createSegment(doc);
+
+    if (segment) {
+      await putLog({
+        createdBy: user._id,
+        type: 'segment',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: segment._id,
+        unicode: user.username || user.email || user._id,
+        description: `${segment.name} has been created`,
+      });
+    }
+
+    return segment;
   },
 
   /**
    * Update segment
    */
-  async segmentsEdit(_root, { _id, ...doc }: ISegmentsEdit) {
-    return Segments.updateSegment(_id, doc);
+  async segmentsEdit(_root, { _id, ...doc }: ISegmentsEdit, { user }: { user: IUserDocument }) {
+    const segment = await Segments.findOne({ _id });
+    const updated = await Segments.updateSegment(_id, doc);
+
+    if (segment && updated) {
+      await putLog({
+        createdBy: user._id,
+        type: 'segment',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(segment),
+        newData: JSON.stringify(doc),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${segment.name} has been edited`,
+      });
+    }
+
+    return updated;
   },
 
   /**
    * Delete segment
    */
-  async segmentsRemove(_root, { _id }: { _id: string }) {
-    return Segments.removeSegment(_id);
+  async segmentsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const segment = await Segments.findOne({ _id });
+    const removed = await Segments.removeSegment(_id);
+
+    if (segment) {
+      await putLog({
+        createdBy: user._id,
+        type: 'segment',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(segment),
+        newData: '',
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${segment.name} has been removed`,
+      });
+    }
+
+    return removed;
   },
 };
 
