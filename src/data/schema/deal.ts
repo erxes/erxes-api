@@ -30,6 +30,7 @@ export const types = `
   type DealTotalAmount {
     _id: String
     currency: String
+    type: String
     amount: Float
   }
 
@@ -59,8 +60,8 @@ export const queries = `
     overdue: String
   ): [Deal]
   dealsTotalAmounts(
-    date: ItemDate 
-    pipelineId: String 
+    date: ItemDate
+    pipelineId: String
     customerIds: [String]
     companyIds: [String]
     assignedUserIds: [String]

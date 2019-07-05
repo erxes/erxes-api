@@ -33,25 +33,69 @@ const dealQueries = {
         $match: filter,
       },
       {
+        $lookup: {
+          from: 'stages',
+          let: { letStageId: '$stageId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$letStageId'],
+                },
+              },
+            },
+            {
+              $project: {
+                probability: {
+                  $cond: {
+                    if: {
+                      $or: [{ $eq: ['$probability', 'Won'] }, { $eq: ['$probability', 'Lost'] }],
+                    },
+                    then: '$probability',
+                    else: 'In progress',
+                  },
+                },
+              },
+            },
+          ],
+          as: 'stage_probability',
+        },
+      },
+      {
         $unwind: '$productsData',
+      },
+      {
+        $unwind: '$stage_probability',
       },
       {
         $project: {
           amount: '$productsData.amount',
           currency: '$productsData.currency',
+          type: '$stage_probability.probability',
         },
       },
       {
         $group: {
-          _id: '$currency',
+          _id: { currency: '$currency', type: '$type' },
+
           amount: { $sum: '$amount' },
         },
+      },
+      {
+        $sort: { '_id.type': -1, '_id.currency': 1 },
       },
     ]);
 
     const dealAmounts = amountList.map(deal => {
-      return { _id: Math.random(), currency: deal._id, amount: deal.amount };
+      return {
+        _id: Math.random(),
+        type: deal._id.type,
+        currency: deal._id.currency,
+        amount: deal.amount,
+      };
     });
+
+    console.log(dealAmounts);
 
     return { _id: Math.random(), dealCount, dealAmounts };
   },
