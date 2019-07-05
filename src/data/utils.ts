@@ -429,6 +429,10 @@ interface IRequestParams {
   form?: { [key: string]: string };
 }
 
+interface ILogParams {
+  [key: string]: string;
+}
+
 /**
  * Sends post request to specific url
  */
@@ -519,11 +523,11 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
  * Sends a request to logs api
  * @param {Object} param0 Request
  */
-export const putLog = ({ body, params }: IRequestParams) => {
+export const putLog = (body: ILogParams) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
 
   return sendRequest(
-    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body, params },
+    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body },
     'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };
@@ -532,11 +536,11 @@ export const putLog = ({ body, params }: IRequestParams) => {
  * Sends a request to logs api
  * @param {Object} param0 Request
  */
-export const fetchLogs = ({ body, params }: IRequestParams) => {
+export const fetchLogs = ({ body }: IRequestParams) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
 
   return sendRequest(
-    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body, params },
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body },
     'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };

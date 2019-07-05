@@ -18,15 +18,13 @@ const emailTemplateMutations = {
 
     if (template) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'emailTemplate',
-          action: LOG_ACTIONS.CREATE,
-          newData: JSON.stringify(doc),
-          objectId: template._id,
-          unicode: user.username || user.email || user._id,
-          description: `${template.name} has been created`,
-        },
+        createdBy: user._id,
+        type: 'emailTemplate',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: template._id,
+        unicode: user.username || user.email || user._id,
+        description: `${template.name} has been created`,
       });
     }
 
@@ -42,16 +40,14 @@ const emailTemplateMutations = {
 
     if (found && updated) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'emailTemplate',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(found),
-          newData: JSON.stringify(fields),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} has been edited`,
-        },
+        createdBy: user._id,
+        type: 'emailTemplate',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(found),
+        newData: JSON.stringify(fields),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} has been edited`,
       });
     }
 
@@ -67,15 +63,13 @@ const emailTemplateMutations = {
 
     if (template) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'emailTemplate',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(template),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${template.name} has been removed`,
-        },
+        createdBy: user._id,
+        type: 'emailTemplate',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(template),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${template.name} has been removed`,
       });
     }
 

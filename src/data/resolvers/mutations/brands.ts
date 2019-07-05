@@ -17,15 +17,13 @@ const brandMutations = {
     const brand = await Brands.createBrand({ userId: user._id, ...doc });
 
     await putLog({
-      body: {
-        createdBy: user._id,
-        type: 'brand',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: brand._id,
-        unicode: user.username || user.email || user._id,
-        description: `${doc.name} has been created`,
-      },
+      createdBy: user._id,
+      type: 'brand',
+      action: LOG_ACTIONS.CREATE,
+      newData: JSON.stringify(doc),
+      objectId: brand._id,
+      unicode: user.username || user.email || user._id,
+      description: `${doc.name} has been created`,
     });
 
     return brand;
@@ -40,16 +38,14 @@ const brandMutations = {
 
     if (updated && updated._id) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'brand',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(brand),
-          newData: JSON.stringify(fields),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${fields.name} has been edited`,
-        },
+        createdBy: user._id,
+        type: 'brand',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(brand),
+        newData: JSON.stringify(fields),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${fields.name} has been edited`,
       });
     }
 
@@ -65,15 +61,13 @@ const brandMutations = {
 
     if (found && removed) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'brand',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} has been removed`,
-        },
+        createdBy: user._id,
+        type: 'brand',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(found),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} has been removed`,
       });
     }
 
@@ -93,15 +87,13 @@ const brandMutations = {
 
     if (updated && found) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'brand',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} email config has been changed`,
-        },
+        createdBy: user._id,
+        type: 'brand',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(found),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} email config has been changed`,
       });
     }
 

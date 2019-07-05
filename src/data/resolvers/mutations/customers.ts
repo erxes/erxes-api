@@ -18,15 +18,13 @@ const customerMutations = {
     const customer = await Customers.createCustomer(doc, user);
 
     await putLog({
-      body: {
-        createdBy: user._id,
-        type: 'customer',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: customer._id,
-        unicode: user.username || user.email || user._id,
-        description: `${customer.firstName} has been created`,
-      },
+      createdBy: user._id,
+      type: 'customer',
+      action: LOG_ACTIONS.CREATE,
+      newData: JSON.stringify(doc),
+      objectId: customer._id,
+      unicode: user.username || user.email || user._id,
+      description: `${customer.firstName} has been created`,
     });
 
     return customer;
@@ -41,16 +39,14 @@ const customerMutations = {
 
     if (updated && updated._id) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'customer',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(customer),
-          newData: JSON.stringify(doc),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${updated.firstName} has been updated`,
-        },
+        createdBy: user._id,
+        type: 'customer',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(customer),
+        newData: JSON.stringify(doc),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${updated.firstName} has been updated`,
       });
     }
 
@@ -82,15 +78,13 @@ const customerMutations = {
 
       if (found && removed) {
         await putLog({
-          body: {
-            createdBy: user._id,
-            type: 'customer',
-            action: LOG_ACTIONS.DELETE,
-            oldData: JSON.stringify(found),
-            objectId: customerId,
-            unicode: user.username || user.email || user._id,
-            description: `${found.firstName} has been deleted`,
-          },
+          createdBy: user._id,
+          type: 'customer',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(found),
+          objectId: customerId,
+          unicode: user.username || user.email || user._id,
+          description: `${found.firstName} has been deleted`,
         });
       }
     }

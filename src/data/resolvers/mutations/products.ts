@@ -19,15 +19,13 @@ const productMutations = {
 
     if (product) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'product',
-          action: LOG_ACTIONS.CREATE,
-          newData: JSON.stringify(doc),
-          objectId: product._id,
-          unicode: user.username || user.email || user._id,
-          description: `${product.name} has been created`,
-        },
+        createdBy: user._id,
+        type: 'product',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: product._id,
+        unicode: user.username || user.email || user._id,
+        description: `${product.name} has been created`,
       });
     }
 
@@ -45,16 +43,14 @@ const productMutations = {
 
     if (found && updated) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'product',
-          action: LOG_ACTIONS.UPDATE,
-          objectId: _id,
-          oldData: JSON.stringify(found),
-          newData: JSON.stringify(doc),
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} has been edited`,
-        },
+        createdBy: user._id,
+        type: 'product',
+        action: LOG_ACTIONS.UPDATE,
+        objectId: _id,
+        oldData: JSON.stringify(found),
+        newData: JSON.stringify(doc),
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} has been edited`,
       });
     }
 
@@ -71,15 +67,13 @@ const productMutations = {
 
     if (found) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'product',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} has been removed`,
-        },
+        createdBy: user._id,
+        type: 'product',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(found),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} has been removed`,
       });
     }
 

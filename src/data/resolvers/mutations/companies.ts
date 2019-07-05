@@ -17,15 +17,13 @@ const companyMutations = {
     const company = await Companies.createCompany(doc, user);
 
     await putLog({
-      body: {
-        createdBy: user._id,
-        type: 'company',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: company._id,
-        unicode: user.username || user.email || user._id,
-        description: `${company.primaryName} has been created`,
-      },
+      createdBy: user._id,
+      type: 'company',
+      action: LOG_ACTIONS.CREATE,
+      newData: JSON.stringify(doc),
+      objectId: company._id,
+      unicode: user.username || user.email || user._id,
+      description: `${company.primaryName} has been created`,
     });
 
     return company;
@@ -40,16 +38,14 @@ const companyMutations = {
 
     if (found && updated) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'company',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(found),
-          newData: JSON.stringify(doc),
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${found.primaryName} has been updated`,
-        },
+        createdBy: user._id,
+        type: 'company',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(found),
+        newData: JSON.stringify(doc),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${found.primaryName} has been updated`,
       });
     }
 
@@ -74,15 +70,13 @@ const companyMutations = {
 
       if (company && removed) {
         await putLog({
-          body: {
-            createdBy: user._id,
-            type: 'company',
-            action: LOG_ACTIONS.DELETE,
-            oldData: JSON.stringify(company),
-            objectId: companyId,
-            unicode: user.username || user.email || user._id,
-            description: `${company.primaryName} has been removed`,
-          },
+          createdBy: user._id,
+          type: 'company',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(company),
+          objectId: companyId,
+          unicode: user.username || user.email || user._id,
+          description: `${company.primaryName} has been removed`,
         });
       }
     }

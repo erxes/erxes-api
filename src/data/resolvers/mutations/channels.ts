@@ -38,15 +38,13 @@ const channelMutations = {
     await sendChannelNotifications(channel);
 
     await putLog({
-      body: {
-        createdBy: user._id,
-        type: 'channel',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: channel._id,
-        unicode: user.username || user.email || user._id,
-        description: `${doc.name} has been created`,
-      },
+      createdBy: user._id,
+      type: 'channel',
+      action: LOG_ACTIONS.CREATE,
+      newData: JSON.stringify(doc),
+      objectId: channel._id,
+      unicode: user.username || user.email || user._id,
+      description: `${doc.name} has been created`,
     });
 
     return channel;
@@ -61,15 +59,13 @@ const channelMutations = {
 
     if (found && updated) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'channel',
-          action: LOG_ACTIONS.UPDATE,
-          oldData: JSON.stringify(found),
-          newData: JSON.stringify(doc),
-          unicode: user.username || user.email || user._id,
-          description: `${found.name} has been updated`,
-        },
+        createdBy: user._id,
+        type: 'channel',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(found),
+        newData: JSON.stringify(doc),
+        unicode: user.username || user.email || user._id,
+        description: `${found.name} has been updated`,
       });
     }
 
@@ -85,14 +81,12 @@ const channelMutations = {
 
     if (channel && removed) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'channel',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(channel),
-          unicode: user.username || user.email || user._id,
-          description: `${channel.name} has been removed`,
-        },
+        createdBy: user._id,
+        type: 'channel',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(channel),
+        unicode: user.username || user.email || user._id,
+        description: `${channel.name} has been removed`,
       });
     }
   },

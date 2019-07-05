@@ -26,15 +26,13 @@ const boardMutations = {
     const board = await Boards.createBoard({ userId: user._id, ...doc });
 
     await putLog({
-      body: {
-        createdBy: user._id,
-        type: 'board',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: board._id,
-        unicode: user.username || user.email || user._id,
-        description: `${doc.name} has been created`,
-      },
+      createdBy: user._id,
+      type: 'board',
+      action: LOG_ACTIONS.CREATE,
+      newData: JSON.stringify(doc),
+      objectId: board._id,
+      unicode: user.username || user.email || user._id,
+      description: `${doc.name} has been created`,
     });
 
     return board;
@@ -49,15 +47,13 @@ const boardMutations = {
 
     if (updated && updated._id) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'board',
-          action: LOG_ACTIONS.UPDATE,
-          newData: JSON.stringify(doc),
-          objectId: updated._id,
-          unicode: user.username || user.email || user._id,
-          description: `${doc.name} has been edited`,
-        },
+        createdBy: user._id,
+        type: 'board',
+        action: LOG_ACTIONS.UPDATE,
+        newData: JSON.stringify(doc),
+        objectId: updated._id,
+        unicode: user.username || user.email || user._id,
+        description: `${doc.name} has been edited`,
       });
     }
 
@@ -78,14 +74,12 @@ const boardMutations = {
 
     if (board && removed) {
       await putLog({
-        body: {
-          createdBy: user._id,
-          type: 'board',
-          action: LOG_ACTIONS.DELETE,
-          objectId: _id,
-          unicode: user.username || user.email || user._id,
-          description: `${board.name} has been removed`,
-        },
+        createdBy: user._id,
+        type: 'board',
+        action: LOG_ACTIONS.DELETE,
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${board.name} has been removed`,
       });
     }
   },
