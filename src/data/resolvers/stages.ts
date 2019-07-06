@@ -75,7 +75,6 @@ export default {
     const filter = await generateDealCommonFilters(
       {
         ...args,
-        stageId: stage._id,
         $and: [{ pipelineId: stage.pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stage._id } }],
       },
       args.extraParams,

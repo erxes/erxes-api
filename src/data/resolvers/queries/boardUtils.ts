@@ -12,6 +12,7 @@ export const contains = (values: string[] = [], empty = false) => {
 
 export const generateCommonFilters = async (args: any) => {
   const {
+    $and,
     date,
     pipelineId,
     stageId,
@@ -41,7 +42,9 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
   }
-
+  if ($and) {
+    filter.$and = $and;
+  }
   if (customerIds) {
     filter.customerIds = contains(customerIds);
   }
