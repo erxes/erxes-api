@@ -1,8 +1,10 @@
 import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
+import { IUserDocument } from '../../../db/models/definitions/users';
 import { IExternalIntegrationParams, IMessengerIntegration } from '../../../db/models/Integrations';
+import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchIntegrationApi } from '../../utils';
+import { fetchIntegrationApi, putLog } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
   _id: string;
@@ -16,15 +18,49 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration) {
-    return Integrations.createMessengerIntegration(doc);
+  async integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration, { user }: { user: IUserDocument }) {
+    const integration = await Integrations.createMessengerIntegration(doc);
+
+    if (integration) {
+      await putLog({
+        createdBy: user._id,
+        type: 'integration',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: integration._id,
+        unicode: user.username || user.email || user._id,
+        description: `${integration.name} has been created`,
+      });
+    }
+
+    return integration;
   },
 
   /**
    * Update messenger integration
    */
-  integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditMessengerIntegration) {
-    return Integrations.updateMessengerIntegration(_id, fields);
+  async integrationsEditMessengerIntegration(
+    _root,
+    { _id, ...fields }: IEditMessengerIntegration,
+    { user }: { user: IUserDocument },
+  ) {
+    const integration = await Integrations.findOne({ _id });
+    const updated = await Integrations.updateMessengerIntegration(_id, fields);
+
+    if (integration && updated) {
+      await putLog({
+        createdBy: user._id,
+        type: 'integration',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(integration),
+        newData: JSON.stringify(fields),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${integration.name} has been edited`,
+      });
+    }
+
+    return updated;
   },
 
   /**
@@ -82,16 +118,28 @@ const integrationMutations = {
   /**
    * Delete an integration
    */
-  async integrationsRemove(_root, { _id }: { _id: string }) {
+  async integrationsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
     const integration = await Integrations.findOne({ _id });
 
-    if (integration && integration.kind === 'facebook') {
-      await fetchIntegrationApi({
-        path: '/integrations/remove',
-        method: 'POST',
-        body: {
-          integrationId: _id,
-        },
+    if (integration) {
+      if (integration.kind === 'facebook') {
+        await fetchIntegrationApi({
+          path: '/integrations/remove',
+          method: 'POST',
+          body: {
+            integrationId: _id,
+          },
+        });
+      }
+
+      await putLog({
+        createdBy: user._id,
+        type: 'integration',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(integration),
+        objectId: integration._id,
+        unicode: user.username || user.email || user._id,
+        description: `${integration.name} has been removed`,
       });
     }
 
