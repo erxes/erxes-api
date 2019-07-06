@@ -1,4 +1,4 @@
-import { Deals, Tasks, Tickets } from '../../db/models';
+import { Deals, Stages, Tasks, Tickets } from '../../db/models';
 import { IStageDocument } from '../../db/models/definitions/boards';
 import { BOARD_TYPES } from '../../db/models/definitions/constants';
 import {
@@ -63,5 +63,111 @@ export default {
         return Tasks.find(filter).countDocuments();
       }
     }
+  },
+
+  async primaryDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
+    const filter = await generateDealCommonFilters({ ...args, primaryStageId: stage._id }, args.extraParams);
+
+    return Deals.find(filter).countDocuments();
+  },
+
+  async inProcessDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
+    const filter = await generateDealCommonFilters(
+      {
+        ...args,
+        stageId: stage._id,
+        $and: [{ pipelineId: stage.pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stage._id } }],
+      },
+      args.extraParams,
+    );
+
+    const deals = await Stages.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $lookup: {
+          from: 'deals',
+          localField: '_id',
+          foreignField: 'stageId',
+          as: 'deals',
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          deals: 1,
+        },
+      },
+      {
+        $unwind: '$deals',
+      },
+      {
+        $match: {
+          'deals.primaryStageId': stage._id,
+        },
+      },
+    ]);
+
+    return deals.length;
+  },
+
+  async stayedDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
+    const filter = await generateDealCommonFilters(
+      { ...args, primaryStageId: stage._id, stageId: stage._id },
+      args.extraParams,
+    );
+
+    return Deals.find(filter).countDocuments();
+  },
+
+  async stageInfo(stage: IStageDocument, _args, _context, { variableValues: args }) {
+    const result: { count?: number; percent?: number } = {};
+    const filter = await generateDealCommonFilters(
+      {
+        ...args,
+        order: { $in: [stage.order, stage.order ? stage.order + 1 : 1] },
+        pipelineId: stage.pipelineId,
+        probability: { $ne: 'Lost' },
+      },
+      args.extraParams,
+    );
+
+    const stages = await Stages.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $lookup: {
+          from: 'deals',
+          localField: '_id',
+          foreignField: 'stageId',
+          as: 'currentDeals',
+        },
+      },
+      {
+        $lookup: {
+          from: 'deals',
+          localField: '_id',
+          foreignField: 'primaryStageId',
+          as: 'primaryDeals',
+        },
+      },
+      {
+        $project: {
+          order: 1,
+          currentDealCount: { $size: '$currentDeals' },
+          primaryDealCount: { $size: '$primaryDeals' },
+        },
+      },
+      { $sort: { order: 1 } },
+    ]);
+
+    if (stages.length === 2) {
+      result.count = stages[0].currentDealCount - stages[1].currentDealCount;
+      result.percent = (stages[1].primaryDealCount * 100) / stages[0].primaryDealCount;
+    }
+
+    return result;
   },
 };

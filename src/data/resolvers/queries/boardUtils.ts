@@ -24,6 +24,9 @@ export const generateCommonFilters = async (args: any) => {
     assignedUserIds,
     customerIds,
     companyIds,
+    order,
+    probability,
+    primaryStageId,
   } = args;
 
   const assignedToNoOne = value => {
@@ -45,6 +48,18 @@ export const generateCommonFilters = async (args: any) => {
 
   if (companyIds) {
     filter.companyIds = contains(companyIds);
+  }
+
+  if (order) {
+    filter.order = order;
+  }
+
+  if (probability) {
+    filter.probability = probability;
+  }
+
+  if (primaryStageId) {
+    filter.primaryStageId = primaryStageId;
   }
 
   if (nextDay) {
