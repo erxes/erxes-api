@@ -33,7 +33,7 @@ const internalNoteMutations = {
           throw new Error('Pipeline not found');
         }
 
-        const title = `${user.details ? user.details.fullName : 'Someone'} mentioned you in deal note`;
+        const title = `${user.details ? user.details.fullName : 'Someone'} mentioned you in "${deal.name}" deal`;
 
         utils.sendNotification({
           createdUser: user._id,
