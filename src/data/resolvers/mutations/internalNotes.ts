@@ -1,6 +1,8 @@
 import { Deals, InternalNotes, Pipelines, Stages } from '../../../db/models';
+import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { IUserDocument } from '../../../db/models/definitions/users';
+
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import utils from '../../utils';
 
@@ -37,7 +39,7 @@ const internalNoteMutations = {
 
         utils.sendNotification({
           createdUser: user._id,
-          notifType: 'channelMembersChange',
+          notifType: NOTIFICATION_TYPES.DEAL_EDIT,
           title,
           content: title,
           link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
