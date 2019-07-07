@@ -219,14 +219,24 @@ export const readFileRequest = async (key: string): Promise<any> => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFile = async (file): Promise<string> => {
+export const uploadFile = async (file, fromEditor = false): Promise<any> => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
-  if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    return uploadFileAWS(file);
+  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+
+  if (fromEditor) {
+    const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
+
+    if (IS_PUBLIC !== 'true') {
+      editorResult.url = `${DOMAIN}/read-file?key=${nameOrLink}`;
+    }
+
+    return editorResult;
   }
 
-  return uploadFileGCS(file);
+  return nameOrLink;
 };
 
 /**
@@ -437,7 +447,7 @@ interface IRequestParams {
  */
 export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
-  errorMessage: string,
+  errorMessage?: string,
 ) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
