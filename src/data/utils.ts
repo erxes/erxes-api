@@ -362,18 +362,17 @@ export const getUserDetail = (user: IUser) => {
 /**
  * Send a notification
  */
-export const sendNotification = async ({
-  createdUser,
-  receivers,
-  ...doc
-}: {
+export const sendNotification = async (doc: {
   createdUser: IUserDocument;
   receivers: string[];
   title: string;
   content: string;
   notifType: string;
   link: string;
+  action?: string;
 }) => {
+  const { createdUser, receivers, title, content, notifType, link, action } = doc;
+
   // collecting emails
   const recipients = await Users.find({ _id: { $in: receivers } });
 
@@ -390,7 +389,10 @@ export const sendNotification = async ({
   for (const receiverId of receivers) {
     try {
       // send web and mobile notification
-      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser._id);
+      await Notifications.createNotification(
+        { link, title, content, notifType, receiver: receiverId },
+        createdUser._id,
+      );
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
@@ -406,7 +408,7 @@ export const sendNotification = async ({
       name: 'notification',
       data: {
         notification: doc,
-        action: NOTIFICATION_TYPES[doc.notifType],
+        action: action ? action : NOTIFICATION_TYPES[notifType],
         userName: getUserDetail(createdUser),
       },
     },

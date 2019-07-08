@@ -115,6 +115,7 @@ const sendNotifications = async ({
       content: '',
       notifType: type,
       receivers: conversationNotifReceivers(conversation, user._id),
+      action: NOTIFICATION_TYPES[type] || '',
     };
 
     switch (type) {
@@ -123,11 +124,13 @@ const sendNotifications = async ({
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
-        doc.content = `has assigned you to conversation </br> ${conversation.content}`;
+        doc.action = 'has assigned you to conversation ';
+        doc.content = conversation.content || '';
         break;
       case 'unassign':
         doc.notifType = NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE;
-        doc.content = `has removed you from conversation </br> ${conversation.content}`;
+        doc.action = 'has removed you from conversation';
+        doc.content = conversation.content || '';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
         doc.content = `changed conversation status to ${(conversation.status || '').toUpperCase()} </br> ${
