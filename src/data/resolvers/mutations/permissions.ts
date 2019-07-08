@@ -109,10 +109,27 @@ const usersGroupMutations = {
    * @param {String} doc.description
    * @return {Promise} newly created group object
    */
-  async usersGroupsAdd(_root, { memberIds, ...doc }: IUserGroup & { memberIds?: string[] }) {
+  async usersGroupsAdd(
+    _root,
+    { memberIds, ...doc }: IUserGroup & { memberIds?: string[] },
+    { user }: { user: IUserDocument },
+  ) {
     const result = await UsersGroups.createGroup(doc, memberIds);
 
+    if (result) {
+      await putLog({
+        createdBy: user._id,
+        type: 'userGroup',
+        action: LOG_ACTIONS.CREATE,
+        objectId: result._id,
+        newData: JSON.stringify(doc),
+        unicode: user.username || user.email || user._id,
+        description: `${result.name} has been created`,
+      });
+    }
+
     resetPermissionsCache();
+
     return result;
   },
 
@@ -122,10 +139,29 @@ const usersGroupMutations = {
    * @param {String} doc.description
    * @return {Promise} updated group object
    */
-  async usersGroupsEdit(_root, { _id, memberIds, ...doc }: { _id: string; memberIds?: string[] } & IUserGroup) {
+  async usersGroupsEdit(
+    _root,
+    { _id, memberIds, ...doc }: { _id: string; memberIds?: string[] } & IUserGroup,
+    { user }: { user: IUserDocument },
+  ) {
+    const group = await UsersGroups.findOne({ _id });
     const result = await UsersGroups.updateGroup(_id, doc, memberIds);
 
+    if (group && result) {
+      await putLog({
+        createdBy: user._id,
+        type: 'userGroup',
+        action: LOG_ACTIONS.UPDATE,
+        oldData: JSON.stringify(group),
+        newData: JSON.stringify(doc),
+        objectId: _id,
+        unicode: user.username || user.email || user._id,
+        description: `${group.name} has been edited`,
+      });
+    }
+
     resetPermissionsCache();
+
     return result;
   },
 
@@ -134,10 +170,23 @@ const usersGroupMutations = {
    * @param {String} _id
    * @return {Promise}
    */
-  async usersGroupsRemove(_root, { _id }: { _id: string }) {
+  async usersGroupsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const group = await UsersGroups.findOne({ _id });
     const result = await UsersGroups.removeGroup(_id);
 
+    if (group && result) {
+      await putLog({
+        createdBy: user._id,
+        type: 'userGroup',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(group),
+        unicode: user.username || user.email || user._id,
+        description: `${group.name} has been removed`,
+      });
+    }
+
     resetPermissionsCache();
+
     return result;
   },
 };
