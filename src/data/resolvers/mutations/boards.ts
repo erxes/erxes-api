@@ -1,8 +1,7 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
@@ -25,10 +24,9 @@ const boardMutations = {
     await checkPermission(doc.type, user, 'boardsAdd');
     const board = await Boards.createBoard({ userId: user._id, ...doc });
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'board',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: board._id,
         description: `${doc.name} has been created`,
@@ -49,10 +47,9 @@ const boardMutations = {
     const updated = await Boards.updateBoard(_id, doc);
 
     if (board) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'board',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(board),
           newData: JSON.stringify(doc),
           objectId: updated._id,
@@ -78,10 +75,9 @@ const boardMutations = {
     const removed = await Boards.removeBoard(_id);
 
     if (board && removed) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'board',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(board),
           objectId: _id,
           description: `${board.name} has been removed`,

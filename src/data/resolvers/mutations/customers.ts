@@ -2,9 +2,8 @@ import { Customers } from '../../../db/models';
 
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -17,10 +16,9 @@ const customerMutations = {
   async customersAdd(_root, doc: ICustomer, { user }: { user: IUserDocument }) {
     const customer = await Customers.createCustomer(doc, user);
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'customer',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: customer._id,
         description: `${customer.firstName} has been created`,
@@ -39,10 +37,9 @@ const customerMutations = {
     const updated = await Customers.updateCustomer(_id, doc);
 
     if (customer) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'customer',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(customer),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -79,10 +76,9 @@ const customerMutations = {
       const removed = await Customers.removeCustomer(customerId);
 
       if (found && removed) {
-        await putLog(
+        await putDeleteLog(
           {
             type: 'customer',
-            action: LOG_ACTIONS.DELETE,
             oldData: JSON.stringify(found),
             objectId: customerId,
             description: `${found.firstName} has been deleted`,

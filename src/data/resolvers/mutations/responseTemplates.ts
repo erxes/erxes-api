@@ -1,9 +1,8 @@
 import { ResponseTemplates } from '../../../db/models';
 import { IResponseTemplate } from '../../../db/models/definitions/responseTemplates';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IResponseTemplatesEdit extends IResponseTemplate {
   _id: string;
@@ -17,10 +16,9 @@ const responseTemplateMutations = {
     const template = await ResponseTemplates.create(doc);
 
     if (template) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'responseTemplate',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: template._id,
           description: `${template.name} has been created`,
@@ -40,10 +38,9 @@ const responseTemplateMutations = {
     const updated = await ResponseTemplates.updateResponseTemplate(_id, fields);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'responseTemplate',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(fields),
           objectId: _id,
@@ -64,10 +61,9 @@ const responseTemplateMutations = {
     const removed = await ResponseTemplates.removeResponseTemplate(_id);
 
     if (template) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'responseTemplate',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(template),
           objectId: _id,
           description: `${template.name} has been removed`,

@@ -3,9 +3,8 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
@@ -32,10 +31,9 @@ const dealMutations = {
       'deal',
     );
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'deal',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: deal._id,
         description: `${deal.name} has been created`,
@@ -60,10 +58,9 @@ const dealMutations = {
     await manageNotifications(Deals, updated, user, 'deal');
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'deal',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -132,10 +129,9 @@ const dealMutations = {
 
     const removed = await Deals.removeDeal(_id);
 
-    await putLog(
+    await putDeleteLog(
       {
         type: 'deal',
-        action: LOG_ACTIONS.DELETE,
         oldData: JSON.stringify(deal),
         objectId: _id,
         description: `${deal.name} has been removed`,

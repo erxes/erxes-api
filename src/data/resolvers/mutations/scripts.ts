@@ -1,9 +1,8 @@
 import { Scripts } from '../../../db/models';
 import { IScript } from '../../../db/models/definitions/scripts';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IScriptsEdit extends IScript {
   _id: string;
@@ -17,10 +16,9 @@ const scriptMutations = {
     const script = await Scripts.createScript(doc);
 
     if (script) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'script',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: script._id,
           description: `${script.name} has been created`,
@@ -40,10 +38,9 @@ const scriptMutations = {
     const updated = await Scripts.updateScript(_id, fields);
 
     if (script) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'script',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(script),
           newData: JSON.stringify(fields),
           objectId: _id,
@@ -64,10 +61,9 @@ const scriptMutations = {
     const removed = await Scripts.removeScript(_id);
 
     if (script) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'script',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(script),
           objectId: _id,
           description: `${script.name} has been removed`,

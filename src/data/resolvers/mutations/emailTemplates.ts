@@ -1,9 +1,8 @@
 import { EmailTemplates } from '../../../db/models';
 import { IEmailTemplate } from '../../../db/models/definitions/emailTemplates';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IEmailTemplatesEdit extends IEmailTemplate {
   _id: string;
@@ -17,10 +16,9 @@ const emailTemplateMutations = {
     const template = await EmailTemplates.create(doc);
 
     if (template) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'emailTemplate',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: template._id,
           description: `${template.name} has been created`,
@@ -40,10 +38,9 @@ const emailTemplateMutations = {
     const updated = await EmailTemplates.updateEmailTemplate(_id, fields);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'emailTemplate',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(fields),
           objectId: _id,
@@ -64,10 +61,9 @@ const emailTemplateMutations = {
     const removed = await EmailTemplates.removeEmailTemplate(_id);
 
     if (template) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'emailTemplate',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(template),
           objectId: _id,
           description: `${template.name} has been removed`,

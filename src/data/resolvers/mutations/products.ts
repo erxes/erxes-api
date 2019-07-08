@@ -1,9 +1,8 @@
 import { Products } from '../../../db/models';
 import { IProduct } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IProductsEdit extends IProduct {
   _id: string;
@@ -18,10 +17,9 @@ const productMutations = {
     const product = await Products.createProduct(doc);
 
     if (product) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'product',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: product._id,
           description: `${product.name} has been created`,
@@ -43,10 +41,9 @@ const productMutations = {
     const updated = await Products.updateProduct(_id, doc);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'product',
-          action: LOG_ACTIONS.UPDATE,
           objectId: _id,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(doc),
@@ -68,10 +65,9 @@ const productMutations = {
     const removed = await Products.removeProduct(_id);
 
     if (found) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'product',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(found),
           objectId: _id,
           description: `${found.name} has been removed`,

@@ -1,8 +1,7 @@
 import { Forms, MessengerApps } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { requireLogin } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog } from '../../utils';
 
 const messengerAppMutations = {
   /**
@@ -24,10 +23,9 @@ const messengerAppMutations = {
     });
 
     if (kb) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'messengerAppKb',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(params),
           objectId: kb._id,
           description: `${name} has been created`,
@@ -64,10 +62,9 @@ const messengerAppMutations = {
     });
 
     if (lead) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'messengerAppLead',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(params),
           objectId: lead._id,
           description: `${name} has been created`,
@@ -87,10 +84,9 @@ const messengerAppMutations = {
     const removed = await MessengerApps.deleteOne({ _id });
 
     if (messengerApp) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'messengerApp',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(messengerApp),
           objectId: _id,
           description: `${messengerApp.name} has been removed`,

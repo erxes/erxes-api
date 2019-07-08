@@ -2,9 +2,8 @@ import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { IExternalIntegrationParams, IMessengerIntegration } from '../../../db/models/Integrations';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchIntegrationApi, putLog } from '../../utils';
+import { fetchIntegrationApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IEditMessengerIntegration extends IMessengerIntegration {
   _id: string;
@@ -22,10 +21,9 @@ const integrationMutations = {
     const integration = await Integrations.createMessengerIntegration(doc);
 
     if (integration) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'integration',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: integration._id,
           description: `${integration.name} has been created`,
@@ -48,11 +46,10 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
-    if (integration && updated) {
-      await putLog(
+    if (integration) {
+      await putUpdateLog(
         {
           type: 'integration',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(integration),
           newData: JSON.stringify(fields),
           objectId: _id,
@@ -134,10 +131,9 @@ const integrationMutations = {
         });
       }
 
-      await putLog(
+      await putDeleteLog(
         {
           type: 'integration',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(integration),
           objectId: integration._id,
           description: `${integration.name} has been removed`,

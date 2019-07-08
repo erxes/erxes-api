@@ -442,7 +442,6 @@ export interface ILogQueryParams {
 
 interface ILogParams {
   type: string;
-  action: string;
   oldData?: string;
   newData?: string;
   description?: string;
@@ -536,11 +535,44 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
 };
 
 /**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'create' };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'update' };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'delete' };
+
+  return putLog(doc, user);
+};
+
+/**
  * Sends a request to logs api
  * @param {Object} body Request
  * @param {Object} user User information from mutation context
  */
-export const putLog = (body: ILogParams, user: IUserDocument) => {
+const putLog = (body: ILogParams, user: IUserDocument) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
   const doc = {
     ...body,

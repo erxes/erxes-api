@@ -2,9 +2,8 @@ import { Channels } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import utils, { putLog } from '../../utils';
+import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -37,10 +36,9 @@ const channelMutations = {
 
     await sendChannelNotifications(channel);
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'channel',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: channel._id,
         description: `${doc.name} has been created`,
@@ -59,13 +57,13 @@ const channelMutations = {
     const updated = await Channels.updateChannel(_id, doc);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'channel',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(doc),
           description: `${found.name} has been updated`,
+          objectId: _id,
         },
         user,
       );
@@ -82,12 +80,12 @@ const channelMutations = {
     const removed = await Channels.removeChannel(_id);
 
     if (channel && removed) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'channel',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(channel),
           description: `${channel.name} has been removed`,
+          objectId: _id,
         },
         user,
       );

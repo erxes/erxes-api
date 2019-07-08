@@ -3,9 +3,8 @@ import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } f
 import { ITopic } from '../../../db/models/definitions/knowledgebase';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { IArticleCreate, ICategoryCreate } from '../../../db/models/KnowledgeBase';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 const knowledgeBaseMutations = {
   /**
@@ -15,10 +14,9 @@ const knowledgeBaseMutations = {
     const topic = await KnowledgeBaseTopics.createDoc(doc, user._id);
 
     if (topic) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'knowledgeBaseTopic',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: topic._id,
           description: `${topic.title} has been created`,
@@ -38,10 +36,9 @@ const knowledgeBaseMutations = {
     const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
 
     if (topic) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'knowledgeBaseTopic',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(topic),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -62,10 +59,9 @@ const knowledgeBaseMutations = {
     const removed = await KnowledgeBaseTopics.removeDoc(_id);
 
     if (topic) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'knowledgeBaseTopic',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(topic),
           objectId: _id,
           description: `${topic.title} has been removed`,
@@ -83,10 +79,9 @@ const knowledgeBaseMutations = {
   async knowledgeBaseCategoriesAdd(_root, { doc }: { doc: ICategoryCreate }, { user }: { user: IUserDocument }) {
     const kbCategory = await KnowledgeBaseCategories.createDoc(doc, user._id);
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'knowledgeBaseCategory',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: kbCategory._id,
         description: `${kbCategory.title} has been created`,
@@ -109,10 +104,9 @@ const knowledgeBaseMutations = {
     const updated = await KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
 
     if (kbCategory) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'knowledgeBaseCategory',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(kbCategory),
           newData: JSON.stringify(doc),
           description: `${kbCategory.title} has been edited`,
@@ -133,10 +127,9 @@ const knowledgeBaseMutations = {
     const removed = await KnowledgeBaseCategories.removeDoc(_id);
 
     if (kbCategory) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'knowledgeBaseCategory',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(kbCategory),
           objectId: kbCategory._id,
           description: `${kbCategory.title} has been removed`,
@@ -154,10 +147,9 @@ const knowledgeBaseMutations = {
   async knowledgeBaseArticlesAdd(_root, { doc }: { doc: IArticleCreate }, { user }: { user: IUserDocument }) {
     const kbArticle = await KnowledgeBaseArticles.createDoc(doc, user._id);
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'knowledgeBaseArticle',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         description: `${kbArticle.title} has been created`,
         objectId: kbArticle._id,
@@ -180,10 +172,9 @@ const knowledgeBaseMutations = {
     const updated = await KnowledgeBaseArticles.updateDoc(_id, doc, user._id);
 
     if (kbArticle) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'knowledgeBaseArticle',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(kbArticle),
           newData: JSON.stringify(doc),
           description: `${kbArticle.title} has been edited`,
@@ -204,10 +195,9 @@ const knowledgeBaseMutations = {
     const removed = await KnowledgeBaseArticles.removeDoc(_id);
 
     if (kbArticle) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'knowledgeBaseArticle',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(kbArticle),
           objectId: _id,
           description: `${kbArticle.title} has been removed`,

@@ -3,9 +3,9 @@ import { METHODS } from '../../../db/models/definitions/constants';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { awsRequests } from '../../../trackers/engageTracker';
-import { LOG_ACTIONS, MESSAGE_KINDS } from '../../constants';
+import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchCronsApi, getEnv, putLog } from '../../utils';
+import { fetchCronsApi, getEnv, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -42,10 +42,9 @@ const engageMutations = {
     }
 
     if (engageMessage) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'engage',
-          action: LOG_ACTIONS.DELETE,
           newData: JSON.stringify(doc),
           objectId: engageMessage._id,
           description: `${engageMessage.title} has been created`,
@@ -67,14 +66,13 @@ const engageMutations = {
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
 
     if (engageMessage) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'engage',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(engageMessage),
           newData: JSON.stringify(updated),
           objectId: _id,
-          descripton: `${engageMessage.title} has been edited`,
+          description: `${engageMessage.title} has been edited`,
         },
         user,
       );
@@ -94,12 +92,10 @@ const engageMutations = {
     const removed = await EngageMessages.removeEngageMessage(_id);
 
     if (engageMessage) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'engage',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(engageMessage),
-          newData: '',
           objectId: _id,
           description: `${engageMessage.title} has been removed`,
         },

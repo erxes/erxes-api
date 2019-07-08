@@ -1,8 +1,7 @@
 import { ImportHistory } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchWorkersApi, putLog } from '../../utils';
+import { fetchWorkersApi, putDeleteLog } from '../../utils';
 
 const importHistoryMutations = {
   /**
@@ -28,10 +27,9 @@ const importHistoryMutations = {
       },
     });
 
-    await putLog(
+    await putDeleteLog(
       {
         type: 'importHistory',
-        action: LOG_ACTIONS.DELETE,
         oldData: JSON.stringify(importHistory),
         objectId: _id,
         description: `${importHistory._id}-${importHistory.date} has been removed`,

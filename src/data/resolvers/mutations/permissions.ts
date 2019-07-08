@@ -1,10 +1,9 @@
 import { Permissions, Users, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 const permissionMutations = {
   /**
@@ -38,10 +37,9 @@ const permissionMutations = {
           }
         }
 
-        await putLog(
+        await putCreateLog(
           {
             type: 'permission',
-            action: LOG_ACTIONS.CREATE,
             objectId: perm._id,
             newData: JSON.stringify(perm),
             description,
@@ -86,10 +84,9 @@ const permissionMutations = {
         }
       }
 
-      await putLog(
+      await putDeleteLog(
         {
           type: 'permission',
-          action: LOG_ACTIONS.DELETE,
           objectId: perm._id,
           oldData: JSON.stringify(perm),
           description,
@@ -119,10 +116,9 @@ const usersGroupMutations = {
     const result = await UsersGroups.createGroup(doc, memberIds);
 
     if (result) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'userGroup',
-          action: LOG_ACTIONS.CREATE,
           objectId: result._id,
           newData: JSON.stringify(doc),
           description: `${result.name} has been created`,
@@ -151,10 +147,9 @@ const usersGroupMutations = {
     const result = await UsersGroups.updateGroup(_id, doc, memberIds);
 
     if (group) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'userGroup',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(group),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -179,12 +174,12 @@ const usersGroupMutations = {
     const result = await UsersGroups.removeGroup(_id);
 
     if (group && result) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'userGroup',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(group),
           description: `${group.name} has been removed`,
+          objectId: _id,
         },
         user,
       );

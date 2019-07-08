@@ -1,9 +1,8 @@
 import { Brands } from '../../../db/models';
 import { IBrand, IBrandEmailConfig } from '../../../db/models/definitions/brands';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IBrandsEdit extends IBrand {
   _id: string;
@@ -16,10 +15,9 @@ const brandMutations = {
   async brandsAdd(_root, doc: IBrand, { user }: { user: IUserDocument }) {
     const brand = await Brands.createBrand({ userId: user._id, ...doc });
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'brand',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: brand._id,
         description: `${doc.name} has been created`,
@@ -38,10 +36,9 @@ const brandMutations = {
     const updated = await Brands.updateBrand(_id, fields);
 
     if (brand) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'brand',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(brand),
           newData: JSON.stringify(fields),
           objectId: _id,
@@ -62,10 +59,9 @@ const brandMutations = {
     const removed = await Brands.removeBrand(_id);
 
     if (found && removed) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'brand',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(found),
           objectId: _id,
           description: `${found.name} has been removed`,
@@ -89,10 +85,9 @@ const brandMutations = {
     const updated = await Brands.updateEmailConfig(_id, emailConfig);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'brand',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           objectId: _id,
           description: `${found.name} email config has been changed`,

@@ -2,9 +2,8 @@ import { Deals, InternalNotes, Pipelines, Stages } from '../../../db/models';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
-import utils, { putLog } from '../../utils';
+import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;
@@ -40,10 +39,9 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.createInternalNote(args, user);
 
     if (internalNote) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'internalNote',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(args),
           objectId: internalNote._id,
           description: `${internalNote.contentType} has been created`,
@@ -63,10 +61,9 @@ const internalNoteMutations = {
     const updated = await InternalNotes.updateInternalNote(_id, doc);
 
     if (internalNote) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'internalNote',
-          action: LOG_ACTIONS.UPDATE,
           objectId: _id,
           oldData: JSON.stringify(internalNote),
           newData: JSON.stringify(doc),
@@ -87,10 +84,9 @@ const internalNoteMutations = {
     const removed = await InternalNotes.removeInternalNote(_id);
 
     if (internalNote) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'internalNote',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(internalNote),
           objectId: _id,
           description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,

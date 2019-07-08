@@ -1,9 +1,8 @@
 import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;
@@ -16,10 +15,9 @@ const companyMutations = {
   async companiesAdd(_root, doc: ICompany, { user }: { user: IUserDocument }) {
     const company = await Companies.createCompany(doc, user);
 
-    await putLog(
+    await putCreateLog(
       {
         type: 'company',
-        action: LOG_ACTIONS.CREATE,
         newData: JSON.stringify(doc),
         objectId: company._id,
         description: `${company.primaryName} has been created`,
@@ -38,10 +36,9 @@ const companyMutations = {
     const updated = await Companies.updateCompany(_id, doc);
 
     if (found) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'company',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(found),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -71,10 +68,9 @@ const companyMutations = {
       const removed = await Companies.removeCompany(companyId);
 
       if (company && removed) {
-        await putLog(
+        await putDeleteLog(
           {
             type: 'company',
-            action: LOG_ACTIONS.DELETE,
             oldData: JSON.stringify(company),
             objectId: companyId,
             description: `${company.primaryName} has been removed`,

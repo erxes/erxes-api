@@ -1,9 +1,8 @@
 import { Segments } from '../../../db/models';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ISegmentsEdit extends ISegment {
   _id: string;
@@ -17,10 +16,9 @@ const segmentMutations = {
     const segment = await Segments.createSegment(doc);
 
     if (segment) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'segment',
-          action: LOG_ACTIONS.CREATE,
           newData: JSON.stringify(doc),
           objectId: segment._id,
           description: `${segment.name} has been created`,
@@ -40,10 +38,9 @@ const segmentMutations = {
     const updated = await Segments.updateSegment(_id, doc);
 
     if (segment) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'segment',
-          action: LOG_ACTIONS.UPDATE,
           oldData: JSON.stringify(segment),
           newData: JSON.stringify(doc),
           objectId: _id,
@@ -64,10 +61,9 @@ const segmentMutations = {
     const removed = await Segments.removeSegment(_id);
 
     if (segment) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'segment',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(segment),
           objectId: _id,
           description: `${segment.name} has been removed`,

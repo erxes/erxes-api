@@ -1,9 +1,8 @@
 import { Tags } from '../../../db/models';
 import { ITag } from '../../../db/models/definitions/tags';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_ACTIONS } from '../../constants';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import { putLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { publishConversationsChanged } from './conversations';
 
 interface ITagsEdit extends ITag {
@@ -18,10 +17,9 @@ const tagMutations = {
     const tag = await Tags.createTag(doc);
 
     if (tag) {
-      await putLog(
+      await putCreateLog(
         {
           type: 'tag',
-          action: LOG_ACTIONS.CREATE,
           objectId: tag._id,
           newData: JSON.stringify(tag),
           description: `${tag.name} has been created`,
@@ -41,10 +39,9 @@ const tagMutations = {
     const updated = await Tags.updateTag(_id, doc);
 
     if (tag) {
-      await putLog(
+      await putUpdateLog(
         {
           type: 'tag',
-          action: LOG_ACTIONS.UPDATE,
           objectId: tag._id,
           oldData: JSON.stringify(tag),
           newData: JSON.stringify(doc),
@@ -65,10 +62,9 @@ const tagMutations = {
     const removed = await Tags.removeTag(ids);
 
     for (const tag of tags) {
-      await putLog(
+      await putDeleteLog(
         {
           type: 'tag',
-          action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(tag),
           objectId: tag._id,
           description: `${tag.name} has been removed`,
