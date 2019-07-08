@@ -1,7 +1,10 @@
-import { Permissions, UsersGroups } from '../../../db/models';
+import { Permissions, Users, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_ACTIONS } from '../../constants';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
+import { putLog } from '../../utils';
 
 const permissionMutations = {
   /**
@@ -12,10 +15,43 @@ const permissionMutations = {
    * @param {Boolean} doc.allowed
    * @return {Promise} newly created permission object
    */
-  async permissionsAdd(_root, doc: IPermissionParams) {
+  async permissionsAdd(_root, doc: IPermissionParams, { user }: { user: IUserDocument }) {
     const result = await Permissions.createPermission(doc);
 
+    if (result && result.length > 0) {
+      result.forEach(async perm => {
+        let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
+
+        if (perm.groupId) {
+          const group = await UsersGroups.findOne({ _id: perm.groupId });
+
+          if (group && group.name) {
+            description = `${description} user group "${group.name}" `;
+          }
+        }
+
+        if (perm.userId) {
+          const permUser = await Users.findOne({ _id: perm.userId });
+
+          if (permUser) {
+            description = `${description} user "${permUser.email}" has been created`;
+          }
+        }
+
+        await putLog({
+          createdBy: user._id,
+          type: 'permission',
+          action: LOG_ACTIONS.CREATE,
+          objectId: perm._id,
+          newData: JSON.stringify(perm),
+          unicode: user.username || user.email || user._id,
+          description,
+        });
+      });
+    } // end result checking
+
     resetPermissionsCache();
+
     return result;
   },
 
@@ -24,10 +60,44 @@ const permissionMutations = {
    * @param {[String]} ids
    * @return {Promise}
    */
-  async permissionsRemove(_root, { ids }: { ids: string[] }) {
+  async permissionsRemove(_root, { ids }: { ids: string[] }, { user }: { user: IUserDocument }) {
+    const permissions = await Permissions.find({ _id: { $in: ids } });
     const result = await Permissions.removePermission(ids);
 
+    for (const perm of permissions) {
+      let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
+
+      // prepare user group related description
+      if (perm.groupId) {
+        const group = await UsersGroups.findOne({ _id: perm.groupId });
+
+        if (group && group.name) {
+          description = `${description} user group "${group.name}" has been removed`;
+        }
+      }
+
+      // prepare user related description
+      if (perm.userId) {
+        const permUser = await Users.findOne({ _id: perm.userId });
+
+        if (permUser && permUser.email) {
+          description = `${description} user "${permUser.email}" has been removed`;
+        }
+      }
+
+      await putLog({
+        createdBy: user._id,
+        type: 'permission',
+        action: LOG_ACTIONS.DELETE,
+        objectId: perm._id,
+        oldData: JSON.stringify(perm),
+        unicode: user.username || user.email || user._id,
+        description,
+      });
+    } // end for loop
+
     resetPermissionsCache();
+
     return result;
   },
 };
