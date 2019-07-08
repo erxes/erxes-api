@@ -43,7 +43,7 @@ export const types = `
 export const queries = `
   dealDetail(_id: String!): Deal
   deals(
-    primaryStageId: String
+    initialStageId: String
     pipelineId: String
     stageId: String
     customerIds: [String]

@@ -27,7 +27,7 @@ export const generateCommonFilters = async (args: any) => {
     companyIds,
     order,
     probability,
-    primaryStageId,
+    initialStageId,
   } = args;
 
   const assignedToNoOne = value => {
@@ -42,9 +42,11 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
   }
+
   if ($and) {
     filter.$and = $and;
   }
+
   if (customerIds) {
     filter.customerIds = contains(customerIds);
   }
@@ -61,8 +63,8 @@ export const generateCommonFilters = async (args: any) => {
     filter.probability = probability;
   }
 
-  if (primaryStageId) {
-    filter.primaryStageId = primaryStageId;
+  if (initialStageId) {
+    filter.initialStageId = initialStageId;
   }
 
   if (nextDay) {

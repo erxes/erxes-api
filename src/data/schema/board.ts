@@ -32,7 +32,7 @@ export const types = `
     itemsTotalCount: Int
     stageInfo: JSON
     stayedDealsTotalCount: Int
-    primaryDealsTotalCount: Int
+    initialDealsTotalCount: Int
     inProcessDealsTotalCount: Int
     ${commonTypes}
   }
@@ -50,7 +50,7 @@ export const queries = `
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
   stages(
-    isLost: Boolean,
+    isNotLost: Boolean,
     pipelineId: String!,
     search: String,
     companyIds: [String],

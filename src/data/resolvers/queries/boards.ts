@@ -56,12 +56,12 @@ const boardQueries = {
   /**
    *  Stages list
    */
-  stages(_root, { pipelineId, isLost }: { pipelineId: string; isLost: string }) {
+  stages(_root, { pipelineId, isNotLost }: { pipelineId: string; isNotLost: boolean }) {
     const filter: any = {};
 
     filter.pipelineId = pipelineId;
 
-    if (isLost) {
+    if (isNotLost) {
       filter.probability = { $ne: 'Lost' };
     }
 

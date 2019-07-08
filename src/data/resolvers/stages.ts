@@ -65,8 +65,8 @@ export default {
     }
   },
 
-  async primaryDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
-    const filter = await generateDealCommonFilters({ ...args, primaryStageId: stage._id }, args.extraParams);
+  async initialDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
+    const filter = await generateDealCommonFilters({ ...args, initialStageId: stage._id }, args.extraParams);
 
     return Deals.find(filter).countDocuments();
   },
@@ -103,7 +103,7 @@ export default {
       },
       {
         $match: {
-          'deals.primaryStageId': stage._id,
+          'deals.initialStageId': stage._id,
         },
       },
     ]);
@@ -113,7 +113,7 @@ export default {
 
   async stayedDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const filter = await generateDealCommonFilters(
-      { ...args, primaryStageId: stage._id, stageId: stage._id },
+      { ...args, initialStageId: stage._id, stageId: stage._id },
       args.extraParams,
     );
 
@@ -148,7 +148,7 @@ export default {
         $lookup: {
           from: 'deals',
           localField: '_id',
-          foreignField: 'primaryStageId',
+          foreignField: 'initialStageId',
           as: 'primaryDeals',
         },
       },
