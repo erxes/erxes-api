@@ -37,7 +37,7 @@ const knowledgeBaseMutations = {
     const topic = await KnowledgeBaseTopics.findOne({ _id });
     const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
 
-    if (topic && updated) {
+    if (topic) {
       await putLog(
         {
           type: 'knowledgeBaseTopic',
@@ -80,51 +80,143 @@ const knowledgeBaseMutations = {
   /**
    * Create category document
    */
-  knowledgeBaseCategoriesAdd(_root, { doc }: { doc: ICategoryCreate }, { user }: { user: IUserDocument }) {
-    return KnowledgeBaseCategories.createDoc(doc, user._id);
+  async knowledgeBaseCategoriesAdd(_root, { doc }: { doc: ICategoryCreate }, { user }: { user: IUserDocument }) {
+    const kbCategory = await KnowledgeBaseCategories.createDoc(doc, user._id);
+
+    await putLog(
+      {
+        type: 'knowledgeBaseCategory',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: kbCategory._id,
+        description: `${kbCategory.title} has been created`,
+      },
+      user,
+    );
+
+    return kbCategory;
   },
 
   /**
    * Update category document
    */
-  knowledgeBaseCategoriesEdit(
+  async knowledgeBaseCategoriesEdit(
     _root,
     { _id, doc }: { _id: string; doc: ICategoryCreate },
     { user }: { user: IUserDocument },
   ) {
-    return KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
+    const kbCategory = await KnowledgeBaseCategories.findOne({ _id });
+    const updated = await KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
+
+    if (kbCategory) {
+      await putLog(
+        {
+          type: 'knowledgeBaseCategory',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(kbCategory),
+          newData: JSON.stringify(doc),
+          description: `${kbCategory.title} has been edited`,
+          objectId: kbCategory._id,
+        },
+        user,
+      );
+    }
+
+    return updated;
   },
 
   /**
    * Remove category document
    */
-  knowledgeBaseCategoriesRemove(_root, { _id }: { _id: string }) {
-    return KnowledgeBaseCategories.removeDoc(_id);
+  async knowledgeBaseCategoriesRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const kbCategory = await KnowledgeBaseCategories.findOne({ _id });
+    const removed = await KnowledgeBaseCategories.removeDoc(_id);
+
+    if (kbCategory) {
+      await putLog(
+        {
+          type: 'knowledgeBaseCategory',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(kbCategory),
+          objectId: kbCategory._id,
+          description: `${kbCategory.title} has been removed`,
+        },
+        user,
+      );
+    }
+
+    return removed;
   },
 
   /**
    * Create article document
    */
-  knowledgeBaseArticlesAdd(_root, { doc }: { doc: IArticleCreate }, { user }: { user: IUserDocument }) {
-    return KnowledgeBaseArticles.createDoc(doc, user._id);
+  async knowledgeBaseArticlesAdd(_root, { doc }: { doc: IArticleCreate }, { user }: { user: IUserDocument }) {
+    const kbArticle = await KnowledgeBaseArticles.createDoc(doc, user._id);
+
+    await putLog(
+      {
+        type: 'knowledgeBaseArticle',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        description: `${kbArticle.title} has been created`,
+        objectId: kbArticle._id,
+      },
+      user,
+    );
+
+    return kbArticle;
   },
 
   /**
    * Update article document
    */
-  knowledgeBaseArticlesEdit(
+  async knowledgeBaseArticlesEdit(
     _root,
     { _id, doc }: { _id: string; doc: IArticleCreate },
     { user }: { user: IUserDocument },
   ) {
-    return KnowledgeBaseArticles.updateDoc(_id, doc, user._id);
+    const kbArticle = await KnowledgeBaseArticles.findOne({ _id });
+    const updated = await KnowledgeBaseArticles.updateDoc(_id, doc, user._id);
+
+    if (kbArticle) {
+      await putLog(
+        {
+          type: 'knowledgeBaseArticle',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(kbArticle),
+          newData: JSON.stringify(doc),
+          description: `${kbArticle.title} has been edited`,
+          objectId: _id,
+        },
+        user,
+      );
+    }
+
+    return updated;
   },
 
   /**
    * Remove article document
    */
-  knowledgeBaseArticlesRemove(_root, { _id }: { _id: string }) {
-    return KnowledgeBaseArticles.removeDoc(_id);
+  async knowledgeBaseArticlesRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+    const kbArticle = await KnowledgeBaseArticles.findOne({ _id });
+    const removed = await KnowledgeBaseArticles.removeDoc(_id);
+
+    if (kbArticle) {
+      await putLog(
+        {
+          type: 'knowledgeBaseArticle',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(kbArticle),
+          objectId: _id,
+          description: `${kbArticle.title} has been removed`,
+        },
+        user,
+      );
+    }
+
+    return removed;
   },
 };
 

@@ -66,7 +66,7 @@ const engageMutations = {
 
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
 
-    if (engageMessage && updated) {
+    if (engageMessage) {
       await putLog(
         {
           type: 'engage',

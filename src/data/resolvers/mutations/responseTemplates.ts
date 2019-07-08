@@ -39,7 +39,7 @@ const responseTemplateMutations = {
     const found = await ResponseTemplates.findOne({ _id });
     const updated = await ResponseTemplates.updateResponseTemplate(_id, fields);
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'responseTemplate',
@@ -69,7 +69,6 @@ const responseTemplateMutations = {
           type: 'responseTemplate',
           action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(template),
-          newData: '',
           objectId: _id,
           description: `${template.name} has been removed`,
         },

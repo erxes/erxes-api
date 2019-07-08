@@ -38,7 +38,7 @@ const customerMutations = {
     const customer = await Customers.findOne({ _id });
     const updated = await Customers.updateCustomer(_id, doc);
 
-    if (updated && updated._id) {
+    if (customer) {
       await putLog(
         {
           type: 'customer',
@@ -46,7 +46,7 @@ const customerMutations = {
           oldData: JSON.stringify(customer),
           newData: JSON.stringify(doc),
           objectId: _id,
-          description: `${updated.firstName} has been updated`,
+          description: `${customer.firstName} has been updated`,
         },
         user,
       );

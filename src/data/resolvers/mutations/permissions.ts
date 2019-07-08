@@ -150,7 +150,7 @@ const usersGroupMutations = {
     const group = await UsersGroups.findOne({ _id });
     const result = await UsersGroups.updateGroup(_id, doc, memberIds);
 
-    if (group && result) {
+    if (group) {
       await putLog(
         {
           type: 'userGroup',

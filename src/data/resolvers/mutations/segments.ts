@@ -39,7 +39,7 @@ const segmentMutations = {
     const segment = await Segments.findOne({ _id });
     const updated = await Segments.updateSegment(_id, doc);
 
-    if (segment && updated) {
+    if (segment) {
       await putLog(
         {
           type: 'segment',
@@ -69,7 +69,6 @@ const segmentMutations = {
           type: 'segment',
           action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(segment),
-          newData: '',
           objectId: _id,
           description: `${segment.name} has been removed`,
         },

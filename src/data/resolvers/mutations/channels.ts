@@ -58,7 +58,7 @@ const channelMutations = {
     const found = await Channels.findOne({ _id });
     const updated = await Channels.updateChannel(_id, doc);
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'channel',

@@ -39,7 +39,7 @@ const emailTemplateMutations = {
     const found = await EmailTemplates.findOne({ _id });
     const updated = await EmailTemplates.updateEmailTemplate(_id, fields);
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'emailTemplate',

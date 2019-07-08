@@ -40,7 +40,7 @@ const tagMutations = {
     const tag = await Tags.findOne({ _id });
     const updated = await Tags.updateTag(_id, doc);
 
-    if (tag && updated) {
+    if (tag) {
       await putLog(
         {
           type: 'tag',
@@ -70,7 +70,6 @@ const tagMutations = {
           type: 'tag',
           action: LOG_ACTIONS.DELETE,
           oldData: JSON.stringify(tag),
-          newData: '',
           objectId: tag._id,
           description: `${tag.name} has been removed`,
         },

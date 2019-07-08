@@ -37,7 +37,7 @@ const companyMutations = {
     const found = await Companies.findOne({ _id });
     const updated = await Companies.updateCompany(_id, doc);
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'company',

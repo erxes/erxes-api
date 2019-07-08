@@ -37,7 +37,7 @@ const brandMutations = {
     const brand = await Brands.findOne({ _id });
     const updated = await Brands.updateBrand(_id, fields);
 
-    if (updated && updated._id) {
+    if (brand) {
       await putLog(
         {
           type: 'brand',
@@ -88,7 +88,7 @@ const brandMutations = {
     const found = await Brands.findOne({ _id });
     const updated = await Brands.updateEmailConfig(_id, emailConfig);
 
-    if (updated && found) {
+    if (found) {
       await putLog(
         {
           type: 'brand',

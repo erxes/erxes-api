@@ -39,7 +39,7 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.findOne({ _id });
     const updated = await InternalNotes.updateInternalNote(_id, doc);
 
-    if (internalNote && updated) {
+    if (internalNote) {
       await putLog(
         {
           type: 'internalNote',

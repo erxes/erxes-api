@@ -33,7 +33,6 @@ const importHistoryMutations = {
         type: 'importHistory',
         action: LOG_ACTIONS.DELETE,
         oldData: JSON.stringify(importHistory),
-        newData: '',
         objectId: _id,
         description: `${importHistory._id}-${importHistory.date} has been removed`,
       },

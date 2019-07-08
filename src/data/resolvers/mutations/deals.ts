@@ -58,7 +58,7 @@ const dealMutations = {
 
     await manageNotifications(Deals, updated, user, 'deal');
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'deal',
@@ -125,7 +125,7 @@ const dealMutations = {
       user,
       NOTIFICATION_TYPES.DEAL_DELETE,
       deal.assignedUserIds || [],
-      `'{userName}' deleted deal: '${deal.name}'`,
+      `'${user.username}' deleted deal: '${deal.name}'`,
       'deal',
     );
 

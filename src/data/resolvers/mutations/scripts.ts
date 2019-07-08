@@ -39,7 +39,7 @@ const scriptMutations = {
     const script = await Scripts.findOne({ _id });
     const updated = await Scripts.updateScript(_id, fields);
 
-    if (script && updated) {
+    if (script) {
       await putLog(
         {
           type: 'script',

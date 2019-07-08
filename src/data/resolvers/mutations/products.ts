@@ -42,7 +42,7 @@ const productMutations = {
     const found = await Products.findOne({ _id });
     const updated = await Products.updateProduct(_id, doc);
 
-    if (found && updated) {
+    if (found) {
       await putLog(
         {
           type: 'product',

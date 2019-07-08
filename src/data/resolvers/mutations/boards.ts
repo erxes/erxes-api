@@ -44,13 +44,16 @@ const boardMutations = {
    */
   async boardsEdit(_root, { _id, ...doc }: IBoardsEdit, { user }: { user: IUserDocument }) {
     await checkPermission(doc.type, user, 'boardsEdit');
+
+    const board = await Boards.findOne({ _id });
     const updated = await Boards.updateBoard(_id, doc);
 
-    if (updated && updated._id) {
+    if (board) {
       await putLog(
         {
           type: 'board',
           action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(board),
           newData: JSON.stringify(doc),
           objectId: updated._id,
           description: `${doc.name} has been edited`,
@@ -79,6 +82,7 @@ const boardMutations = {
         {
           type: 'board',
           action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(board),
           objectId: _id,
           description: `${board.name} has been removed`,
         },
