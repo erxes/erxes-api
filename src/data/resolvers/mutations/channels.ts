@@ -40,7 +40,7 @@ const channelMutations = {
       {
         type: 'channel',
         newData: JSON.stringify(doc),
-        objectId: channel._id,
+        object: JSON.stringify(channel),
         description: `${doc.name} has been created`,
       },
       user,
@@ -53,17 +53,16 @@ const channelMutations = {
    * Update channel data
    */
   async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: { user: IUserDocument }) {
-    const found = await Channels.findOne({ _id });
+    const channel = await Channels.findOne({ _id });
     const updated = await Channels.updateChannel(_id, doc);
 
-    if (found) {
+    if (channel) {
       await putUpdateLog(
         {
           type: 'channel',
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(channel),
           newData: JSON.stringify(doc),
-          description: `${found.name} has been updated`,
-          objectId: _id,
+          description: `${channel.name} has been updated`,
         },
         user,
       );
@@ -83,9 +82,8 @@ const channelMutations = {
       await putDeleteLog(
         {
           type: 'channel',
-          oldData: JSON.stringify(channel),
+          object: JSON.stringify(channel),
           description: `${channel.name} has been removed`,
-          objectId: _id,
         },
         user,
       );

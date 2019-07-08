@@ -27,7 +27,7 @@ const messengerAppMutations = {
         {
           type: 'messengerAppKb',
           newData: JSON.stringify(params),
-          objectId: kb._id,
+          object: JSON.stringify(kb),
           description: `${name} has been created`,
         },
         user,
@@ -66,7 +66,7 @@ const messengerAppMutations = {
         {
           type: 'messengerAppLead',
           newData: JSON.stringify(params),
-          objectId: lead._id,
+          object: JSON.stringify(lead),
           description: `${name} has been created`,
         },
         user,
@@ -87,8 +87,7 @@ const messengerAppMutations = {
       await putDeleteLog(
         {
           type: 'messengerApp',
-          oldData: JSON.stringify(messengerApp),
-          objectId: _id,
+          object: JSON.stringify(messengerApp),
           description: `${messengerApp.name} has been removed`,
         },
         user,

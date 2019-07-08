@@ -442,10 +442,9 @@ export interface ILogQueryParams {
 
 interface ILogParams {
   type: string;
-  oldData?: string;
   newData?: string;
   description?: string;
-  objectId: string;
+  object: string;
 }
 
 /**

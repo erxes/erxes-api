@@ -43,7 +43,7 @@ const internalNoteMutations = {
         {
           type: 'internalNote',
           newData: JSON.stringify(args),
-          objectId: internalNote._id,
+          object: JSON.stringify(internalNote),
           description: `${internalNote.contentType} has been created`,
         },
         user,
@@ -64,8 +64,7 @@ const internalNoteMutations = {
       await putUpdateLog(
         {
           type: 'internalNote',
-          objectId: _id,
-          oldData: JSON.stringify(internalNote),
+          object: JSON.stringify(internalNote),
           newData: JSON.stringify(doc),
           description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
         },
@@ -87,8 +86,7 @@ const internalNoteMutations = {
       await putDeleteLog(
         {
           type: 'internalNote',
-          oldData: JSON.stringify(internalNote),
-          objectId: _id,
+          object: JSON.stringify(internalNote),
           description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,
         },
         user,

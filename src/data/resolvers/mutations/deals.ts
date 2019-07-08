@@ -35,7 +35,7 @@ const dealMutations = {
       {
         type: 'deal',
         newData: JSON.stringify(doc),
-        objectId: deal._id,
+        object: JSON.stringify(deal),
         description: `${deal.name} has been created`,
       },
       user,
@@ -48,7 +48,7 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: { user: IUserDocument }) {
-    const found = await Deals.findOne({ _id });
+    const deal = await Deals.findOne({ _id });
     const updated = await Deals.updateDeal(_id, {
       ...doc,
       modifiedAt: new Date(),
@@ -57,14 +57,13 @@ const dealMutations = {
 
     await manageNotifications(Deals, updated, user, 'deal');
 
-    if (found) {
+    if (deal) {
       await putUpdateLog(
         {
           type: 'deal',
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(deal),
           newData: JSON.stringify(doc),
-          objectId: _id,
-          description: `${found.name} has been edited`,
+          description: `${deal.name} has been edited`,
         },
         user,
       );
@@ -132,8 +131,7 @@ const dealMutations = {
     await putDeleteLog(
       {
         type: 'deal',
-        oldData: JSON.stringify(deal),
-        objectId: _id,
+        object: JSON.stringify(deal),
         description: `${deal.name} has been removed`,
       },
       user,

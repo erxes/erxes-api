@@ -20,7 +20,7 @@ const emailTemplateMutations = {
         {
           type: 'emailTemplate',
           newData: JSON.stringify(doc),
-          objectId: template._id,
+          object: JSON.stringify(template),
           description: `${template.name} has been created`,
         },
         user,
@@ -34,17 +34,16 @@ const emailTemplateMutations = {
    * Update email template
    */
   async emailTemplatesEdit(_root, { _id, ...fields }: IEmailTemplatesEdit, { user }: { user: IUserDocument }) {
-    const found = await EmailTemplates.findOne({ _id });
+    const template = await EmailTemplates.findOne({ _id });
     const updated = await EmailTemplates.updateEmailTemplate(_id, fields);
 
-    if (found) {
+    if (template) {
       await putUpdateLog(
         {
           type: 'emailTemplate',
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(template),
           newData: JSON.stringify(fields),
-          objectId: _id,
-          description: `${found.name} has been edited`,
+          description: `${template.name} has been edited`,
         },
         user,
       );
@@ -64,8 +63,7 @@ const emailTemplateMutations = {
       await putDeleteLog(
         {
           type: 'emailTemplate',
-          oldData: JSON.stringify(template),
-          objectId: _id,
+          object: JSON.stringify(template),
           description: `${template.name} has been removed`,
         },
         user,

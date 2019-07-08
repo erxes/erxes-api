@@ -20,7 +20,7 @@ const responseTemplateMutations = {
         {
           type: 'responseTemplate',
           newData: JSON.stringify(doc),
-          objectId: template._id,
+          object: JSON.stringify(template),
           description: `${template.name} has been created`,
         },
         user,
@@ -34,17 +34,16 @@ const responseTemplateMutations = {
    * Update response template
    */
   async responseTemplatesEdit(_root, { _id, ...fields }: IResponseTemplatesEdit, { user }: { user: IUserDocument }) {
-    const found = await ResponseTemplates.findOne({ _id });
+    const template = await ResponseTemplates.findOne({ _id });
     const updated = await ResponseTemplates.updateResponseTemplate(_id, fields);
 
-    if (found) {
+    if (template) {
       await putUpdateLog(
         {
           type: 'responseTemplate',
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(template),
           newData: JSON.stringify(fields),
-          objectId: _id,
-          description: `${found.name} has been edited`,
+          description: `${template.name} has been edited`,
         },
         user,
       );
@@ -64,8 +63,7 @@ const responseTemplateMutations = {
       await putDeleteLog(
         {
           type: 'responseTemplate',
-          oldData: JSON.stringify(template),
-          objectId: _id,
+          object: JSON.stringify(template),
           description: `${template.name} has been removed`,
         },
         user,

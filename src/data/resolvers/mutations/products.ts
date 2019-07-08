@@ -21,7 +21,7 @@ const productMutations = {
         {
           type: 'product',
           newData: JSON.stringify(doc),
-          objectId: product._id,
+          object: JSON.stringify(product),
           description: `${product.name} has been created`,
         },
         user,
@@ -37,17 +37,16 @@ const productMutations = {
    * @param {Object} param2.doc Product info
    */
   async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user }: { user: IUserDocument }) {
-    const found = await Products.findOne({ _id });
+    const product = await Products.findOne({ _id });
     const updated = await Products.updateProduct(_id, doc);
 
-    if (found) {
+    if (product) {
       await putUpdateLog(
         {
           type: 'product',
-          objectId: _id,
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(product),
           newData: JSON.stringify(doc),
-          description: `${found.name} has been edited`,
+          description: `${product.name} has been edited`,
         },
         user,
       );
@@ -61,16 +60,15 @@ const productMutations = {
    * @param {string} param1._id Product id
    */
   async productsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const found = await Products.findOne({ _id });
+    const product = await Products.findOne({ _id });
     const removed = await Products.removeProduct(_id);
 
-    if (found) {
+    if (product) {
       await putDeleteLog(
         {
           type: 'product',
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          description: `${found.name} has been removed`,
+          object: JSON.stringify(product),
+          description: `${product.name} has been removed`,
         },
         user,
       );

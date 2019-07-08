@@ -20,7 +20,7 @@ const scriptMutations = {
         {
           type: 'script',
           newData: JSON.stringify(doc),
-          objectId: script._id,
+          object: JSON.stringify(script),
           description: `${script.name} has been created`,
         },
         user,
@@ -41,9 +41,8 @@ const scriptMutations = {
       await putUpdateLog(
         {
           type: 'script',
-          oldData: JSON.stringify(script),
+          object: JSON.stringify(script),
           newData: JSON.stringify(fields),
-          objectId: _id,
           description: `${script.name} has been edited`,
         },
         user,
@@ -64,8 +63,7 @@ const scriptMutations = {
       await putDeleteLog(
         {
           type: 'script',
-          oldData: JSON.stringify(script),
-          objectId: _id,
+          object: JSON.stringify(script),
           description: `${script.name} has been removed`,
         },
         user,

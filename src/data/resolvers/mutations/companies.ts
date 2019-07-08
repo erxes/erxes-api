@@ -19,7 +19,7 @@ const companyMutations = {
       {
         type: 'company',
         newData: JSON.stringify(doc),
-        objectId: company._id,
+        object: JSON.stringify(company),
         description: `${company.primaryName} has been created`,
       },
       user,
@@ -32,17 +32,16 @@ const companyMutations = {
    * Updates a company
    */
   async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user }: { user: IUserDocument }) {
-    const found = await Companies.findOne({ _id });
+    const company = await Companies.findOne({ _id });
     const updated = await Companies.updateCompany(_id, doc);
 
-    if (found) {
+    if (company) {
       await putUpdateLog(
         {
           type: 'company',
-          oldData: JSON.stringify(found),
+          object: JSON.stringify(company),
           newData: JSON.stringify(doc),
-          objectId: _id,
-          description: `${found.primaryName} has been updated`,
+          description: `${company.primaryName} has been updated`,
         },
         user,
       );
@@ -71,8 +70,7 @@ const companyMutations = {
         await putDeleteLog(
           {
             type: 'company',
-            oldData: JSON.stringify(company),
-            objectId: companyId,
+            object: JSON.stringify(company),
             description: `${company.primaryName} has been removed`,
           },
           user,

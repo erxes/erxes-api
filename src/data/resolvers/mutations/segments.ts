@@ -20,7 +20,7 @@ const segmentMutations = {
         {
           type: 'segment',
           newData: JSON.stringify(doc),
-          objectId: segment._id,
+          object: JSON.stringify(segment),
           description: `${segment.name} has been created`,
         },
         user,
@@ -41,9 +41,8 @@ const segmentMutations = {
       await putUpdateLog(
         {
           type: 'segment',
-          oldData: JSON.stringify(segment),
+          object: JSON.stringify(segment),
           newData: JSON.stringify(doc),
-          objectId: _id,
           description: `${segment.name} has been edited`,
         },
         user,
@@ -64,8 +63,7 @@ const segmentMutations = {
       await putDeleteLog(
         {
           type: 'segment',
-          oldData: JSON.stringify(segment),
-          objectId: _id,
+          object: JSON.stringify(segment),
           description: `${segment.name} has been removed`,
         },
         user,

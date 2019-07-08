@@ -46,7 +46,7 @@ const engageMutations = {
         {
           type: 'engage',
           newData: JSON.stringify(doc),
-          objectId: engageMessage._id,
+          object: JSON.stringify(engageMessage),
           description: `${engageMessage.title} has been created`,
         },
         user,
@@ -69,9 +69,8 @@ const engageMutations = {
       await putUpdateLog(
         {
           type: 'engage',
-          oldData: JSON.stringify(engageMessage),
+          object: JSON.stringify(engageMessage),
           newData: JSON.stringify(updated),
-          objectId: _id,
           description: `${engageMessage.title} has been edited`,
         },
         user,
@@ -95,8 +94,7 @@ const engageMutations = {
       await putDeleteLog(
         {
           type: 'engage',
-          oldData: JSON.stringify(engageMessage),
-          objectId: _id,
+          object: JSON.stringify(engageMessage),
           description: `${engageMessage.title} has been removed`,
         },
         user,

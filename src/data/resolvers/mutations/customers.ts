@@ -20,7 +20,7 @@ const customerMutations = {
       {
         type: 'customer',
         newData: JSON.stringify(doc),
-        objectId: customer._id,
+        object: JSON.stringify(customer),
         description: `${customer.firstName} has been created`,
       },
       user,
@@ -40,9 +40,8 @@ const customerMutations = {
       await putUpdateLog(
         {
           type: 'customer',
-          oldData: JSON.stringify(customer),
+          object: JSON.stringify(customer),
           newData: JSON.stringify(doc),
-          objectId: _id,
           description: `${customer.firstName} has been updated`,
         },
         user,
@@ -72,16 +71,15 @@ const customerMutations = {
   async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: { user: IUserDocument }) {
     for (const customerId of customerIds) {
       // Removing every customer and modules associated with
-      const found = await Customers.findOne({ _id: customerId });
+      const customer = await Customers.findOne({ _id: customerId });
       const removed = await Customers.removeCustomer(customerId);
 
-      if (found && removed) {
+      if (customer && removed) {
         await putDeleteLog(
           {
             type: 'customer',
-            oldData: JSON.stringify(found),
-            objectId: customerId,
-            description: `${found.firstName} has been deleted`,
+            object: JSON.stringify(customer),
+            description: `${customer.firstName} has been deleted`,
           },
           user,
         );

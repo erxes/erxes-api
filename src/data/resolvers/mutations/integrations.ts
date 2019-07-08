@@ -25,7 +25,7 @@ const integrationMutations = {
         {
           type: 'integration',
           newData: JSON.stringify(doc),
-          objectId: integration._id,
+          object: JSON.stringify(integration),
           description: `${integration.name} has been created`,
         },
         user,
@@ -50,9 +50,8 @@ const integrationMutations = {
       await putUpdateLog(
         {
           type: 'integration',
-          oldData: JSON.stringify(integration),
+          object: JSON.stringify(integration),
           newData: JSON.stringify(fields),
-          objectId: _id,
           description: `${integration.name} has been edited`,
         },
         user,
@@ -134,8 +133,7 @@ const integrationMutations = {
       await putDeleteLog(
         {
           type: 'integration',
-          oldData: JSON.stringify(integration),
-          objectId: integration._id,
+          object: JSON.stringify(integration),
           description: `${integration.name} has been removed`,
         },
         user,

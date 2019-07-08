@@ -28,8 +28,8 @@ const boardMutations = {
       {
         type: 'board',
         newData: JSON.stringify(doc),
-        objectId: board._id,
         description: `${doc.name} has been created`,
+        object: JSON.stringify(board),
       },
       user,
     );
@@ -50,10 +50,9 @@ const boardMutations = {
       await putUpdateLog(
         {
           type: 'board',
-          oldData: JSON.stringify(board),
           newData: JSON.stringify(doc),
-          objectId: updated._id,
           description: `${doc.name} has been edited`,
+          object: JSON.stringify(board),
         },
         user,
       );
@@ -78,8 +77,7 @@ const boardMutations = {
       await putDeleteLog(
         {
           type: 'board',
-          oldData: JSON.stringify(board),
-          objectId: _id,
+          object: JSON.stringify(board),
           description: `${board.name} has been removed`,
         },
         user,

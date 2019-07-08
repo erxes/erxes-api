@@ -20,8 +20,8 @@ const tagMutations = {
       await putCreateLog(
         {
           type: 'tag',
-          objectId: tag._id,
           newData: JSON.stringify(tag),
+          object: JSON.stringify(tag),
           description: `${tag.name} has been created`,
         },
         user,
@@ -42,8 +42,7 @@ const tagMutations = {
       await putUpdateLog(
         {
           type: 'tag',
-          objectId: tag._id,
-          oldData: JSON.stringify(tag),
+          object: JSON.stringify(tag),
           newData: JSON.stringify(doc),
           description: `${tag.name} has been edited`,
         },
@@ -65,8 +64,7 @@ const tagMutations = {
       await putDeleteLog(
         {
           type: 'tag',
-          oldData: JSON.stringify(tag),
-          objectId: tag._id,
+          object: JSON.stringify(tag),
           description: `${tag.name} has been removed`,
         },
         user,

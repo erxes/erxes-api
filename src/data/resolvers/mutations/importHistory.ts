@@ -30,8 +30,7 @@ const importHistoryMutations = {
     await putDeleteLog(
       {
         type: 'importHistory',
-        oldData: JSON.stringify(importHistory),
-        objectId: _id,
+        object: JSON.stringify(importHistory),
         description: `${importHistory._id}-${importHistory.date} has been removed`,
       },
       user,

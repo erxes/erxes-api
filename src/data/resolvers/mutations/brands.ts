@@ -19,7 +19,7 @@ const brandMutations = {
       {
         type: 'brand',
         newData: JSON.stringify(doc),
-        objectId: brand._id,
+        object: JSON.stringify(brand),
         description: `${doc.name} has been created`,
       },
       user,
@@ -39,9 +39,8 @@ const brandMutations = {
       await putUpdateLog(
         {
           type: 'brand',
-          oldData: JSON.stringify(brand),
+          object: JSON.stringify(brand),
           newData: JSON.stringify(fields),
-          objectId: _id,
           description: `${fields.name} has been edited`,
         },
         user,
@@ -55,16 +54,15 @@ const brandMutations = {
    * Delete brand
    */
   async brandsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const found = await Brands.findOne({ _id });
+    const brand = await Brands.findOne({ _id });
     const removed = await Brands.removeBrand(_id);
 
-    if (found && removed) {
+    if (brand && removed) {
       await putDeleteLog(
         {
           type: 'brand',
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          description: `${found.name} has been removed`,
+          object: JSON.stringify(brand),
+          description: `${brand.name} has been removed`,
         },
         user,
       );
@@ -81,16 +79,15 @@ const brandMutations = {
     { _id, emailConfig }: { _id: string; emailConfig: IBrandEmailConfig },
     { user }: { user: IUserDocument },
   ) {
-    const found = await Brands.findOne({ _id });
+    const brand = await Brands.findOne({ _id });
     const updated = await Brands.updateEmailConfig(_id, emailConfig);
 
-    if (found) {
+    if (brand) {
       await putUpdateLog(
         {
           type: 'brand',
-          oldData: JSON.stringify(found),
-          objectId: _id,
-          description: `${found.name} email config has been changed`,
+          object: JSON.stringify(brand),
+          description: `${brand.name} email config has been changed`,
         },
         user,
       );
