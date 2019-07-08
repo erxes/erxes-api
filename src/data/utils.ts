@@ -573,6 +573,11 @@ export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
  */
 const putLog = (body: ILogParams, user: IUserDocument) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return;
+  }
+
   const doc = {
     ...body,
     createdBy: user._id,
