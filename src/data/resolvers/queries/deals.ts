@@ -58,20 +58,20 @@ const dealQueries = {
               },
             },
           ],
-          as: 'stage_probability',
+          as: 'stageProbability',
         },
       },
       {
         $unwind: '$productsData',
       },
       {
-        $unwind: '$stage_probability',
+        $unwind: '$stageProbability',
       },
       {
         $project: {
           amount: '$productsData.amount',
           currency: '$productsData.currency',
-          type: '$stage_probability.probability',
+          type: '$stageProbability.probability',
         },
       },
       {
@@ -85,7 +85,7 @@ const dealQueries = {
         $group: {
           _id: '$_id.type',
           currencies: {
-            $push: { amount: '$amount', currency: '$_id.currency' },
+            $push: { amount: '$amount', name: '$_id.currency' },
           },
         },
       },
@@ -94,11 +94,11 @@ const dealQueries = {
       },
     ]);
 
-    const dealAmounts = amountList.map(deal => {
-      return { _id: Math.random(), type: deal._id, currencies: deal.currencies };
+    const totalForType = amountList.map(type => {
+      return { _id: Math.random(), name: type._id, currencies: type.currencies };
     });
 
-    return { _id: Math.random(), dealCount, dealAmounts };
+    return { _id: Math.random(), dealCount, totalForType };
   },
 
   /**

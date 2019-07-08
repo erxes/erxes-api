@@ -29,19 +29,19 @@ export const types = `
 
   type DealTotalCurrency {
     amount: Float
-    currency: String
+    name: String
   }
 
-  type DealTotalAmount {
+  type TotalForAmount {
     _id: String
-    type: String
+    name: String
     currencies: [DealTotalCurrency]
   }
 
   type DealTotalAmounts {
     _id: String
     dealCount: Int
-    dealAmounts: [DealTotalAmount]
+    totalForType: [TotalForAmount]
   }
 `;
 
