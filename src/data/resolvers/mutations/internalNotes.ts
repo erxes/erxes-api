@@ -17,23 +17,9 @@ const internalNoteMutations = {
   async internalNotesAdd(_root, args: IInternalNote, { user }: { user: IUserDocument }) {
     switch (args.contentType) {
       case 'deal': {
-        const deal = await Deals.findOne({ _id: args.contentTypeId });
-
-        if (!deal) {
-          throw new Error('Deal not found');
-        }
-
-        const stage = await Stages.findOne({ _id: deal.stageId });
-
-        if (!stage) {
-          throw new Error('Stage not found');
-        }
-
-        const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-
-        if (!pipeline) {
-          throw new Error('Pipeline not found');
-        }
+        const deal = await Deals.getDeal(args.contentTypeId);
+        const stage = await Stages.getStage(deal.stageId || '');
+        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
         const title = `${user.details ? user.details.fullName : 'Someone'} mentioned you in "${deal.name}" deal`;
 
