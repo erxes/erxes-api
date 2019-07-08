@@ -43,7 +43,7 @@ export interface IDeal extends ICommonFields {
   description?: string;
   assignedUserIds?: string[];
   stageId?: string;
-  primaryStageId?: string;
+  initialStageId?: string;
   modifiedAt?: Date;
   modifiedBy?: string;
 }
@@ -105,7 +105,7 @@ export const dealSchema = new Schema({
   description: field({ type: String, optional: true }),
   assignedUserIds: field({ type: [String] }),
   stageId: field({ type: String, optional: true }),
-  primaryStageId: field({ type: String, optional: true }),
+  initialStageId: field({ type: String, optional: true }),
   modifiedAt: field({
     type: Date,
     default: new Date(),
