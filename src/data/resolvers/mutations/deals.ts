@@ -5,7 +5,7 @@ import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
+import { itemsChange, manageNotifications, notifiedUserIds, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -93,7 +93,7 @@ const dealMutations = {
       deal.stageId || '',
       user,
       NOTIFICATION_TYPES.DEAL_CHANGE,
-      deal.assignedUserIds || [],
+      await notifiedUserIds(deal),
       content,
       'deal',
     );
@@ -122,8 +122,8 @@ const dealMutations = {
       deal.stageId || '',
       user,
       NOTIFICATION_TYPES.DEAL_DELETE,
-      deal.assignedUserIds || [],
-      `'${user.username}' deleted deal: '${deal.name}'`,
+      await notifiedUserIds(deal),
+      `'{userName}' deleted deal: '${deal.name}'`,
       'deal',
     );
 
@@ -141,11 +141,25 @@ const dealMutations = {
 
     return removed;
   },
+
+  /**
+   * Watch deal
+   */
+  async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+    const deal = await Deals.findOne({ _id });
+
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    return Deals.watchDeal(_id, isAdd, user._id);
+  },
 };
 
 checkPermission(dealMutations, 'dealsAdd', 'dealsAdd');
 checkPermission(dealMutations, 'dealsEdit', 'dealsEdit');
 checkPermission(dealMutations, 'dealsUpdateOrder', 'dealsUpdateOrder');
 checkPermission(dealMutations, 'dealsRemove', 'dealsRemove');
+checkPermission(dealMutations, 'dealsWatch', 'dealsWatch');
 
 export default dealMutations;
