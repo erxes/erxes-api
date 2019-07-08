@@ -24,6 +24,7 @@ export const types = `
     modifiedAt: Date
     modifiedBy: String
     stage: Stage
+    isWatched: Boolean
     ${commonTypes}
   }
 
@@ -48,6 +49,7 @@ export const types = `
 export const queries = `
   dealDetail(_id: String!): Deal
   deals(
+    initialStageId: String
     pipelineId: String
     stageId: String
     customerIds: [String]
@@ -96,4 +98,5 @@ export const mutations = `
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
+  dealsWatch(_id: String, isAdd: Boolean): Deal
 `;
