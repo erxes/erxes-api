@@ -19,17 +19,18 @@ export const sendChannelNotifications = async (
   user: IUserDocument,
   receivers?: string[],
 ) => {
-  let content = `invited you  ${channel.name} channel`;
+  let action = `invited you to the`;
 
   if (type === 'removed') {
-    content = `removed you from ${channel.name} channel`;
+    action = `removed you from`;
   }
 
   return utils.sendNotification({
     createdUser: user,
     notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
-    title: content,
-    content,
+    title: `Channel updated`,
+    action,
+    content: `${channel.name} channel`,
     link: `/inbox?channelId=${channel._id}`,
 
     // exclude current user
