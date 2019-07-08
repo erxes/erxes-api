@@ -1,7 +1,12 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import {
+  CONVERSATION_STATUSES,
+  KIND_CHOICES,
+  NOTIFICATION_TYPE_ACTIONS,
+  NOTIFICATION_TYPES,
+} from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
@@ -115,7 +120,7 @@ const sendNotifications = async ({
       content: messageContent ? messageContent : conversation.content || '',
       notifType: type,
       receivers: conversationNotifReceivers(conversation, user._id),
-      action: NOTIFICATION_TYPES[type] || '',
+      action: NOTIFICATION_TYPE_ACTIONS[type] || '',
     };
 
     switch (type) {

@@ -8,7 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
-import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
+import { NOTIFICATION_TYPE_ACTIONS } from '../db/models/definitions/constants';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
@@ -408,7 +408,7 @@ export const sendNotification = async (doc: {
       name: 'notification',
       data: {
         notification: doc,
-        action: action ? action : NOTIFICATION_TYPES[notifType],
+        action: action ? action : NOTIFICATION_TYPE_ACTIONS[notifType],
         userName: getUserDetail(createdUser),
       },
     },
