@@ -1,4 +1,4 @@
-import { fetchLogs } from '../../utils';
+import { fetchLogs, ILogQueryParams } from '../../utils';
 
 const logQueries = {
   /**
@@ -10,16 +10,16 @@ const logQueries = {
    * @param {string} params.page
    * @param {string} params.perPage
    */
-  logs(_root, { start, end, userId, action, page, perPage }) {
+  logs(_root, params: ILogQueryParams) {
+    const { start, end, userId, action, page, perPage } = params;
+
     return fetchLogs({
-      body: {
-        start,
-        end,
-        userId,
-        action,
-        page,
-        perPage,
-      },
+      start,
+      end,
+      userId,
+      action,
+      page,
+      perPage,
     });
   },
 };
