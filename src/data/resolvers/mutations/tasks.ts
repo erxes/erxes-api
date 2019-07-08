@@ -25,7 +25,8 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_ADD,
-      content: `invited you to the '${task.name}'.`,
+      action: `invited you to the`,
+      content: `'${task.name}'.`,
       contentType: 'task',
     });
 
@@ -110,7 +111,8 @@ const taskMutations = {
       item: task,
       user,
       type: NOTIFICATION_TYPES.TASK_DELETE,
-      content: `deleted task: '${task.name}'`,
+      action: `deleted task:`,
+      content: `'${task.name}'`,
       contentType: 'task',
     });
 

@@ -14,6 +14,7 @@ export const sendNotifications = async ({
   item,
   user,
   type,
+  action,
   content,
   contentType,
   invitedUsers,
@@ -22,6 +23,7 @@ export const sendNotifications = async ({
   item: IDealDocument;
   user: IUserDocument;
   type: string;
+  action?: string;
   content?: string;
   contentType: string;
   invitedUsers?: string[];
@@ -58,8 +60,8 @@ export const sendNotifications = async ({
       createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       title,
-      action: 'removed you from',
-      content: `${contentType}: '${item.name}'`,
+      action: `removed you from ${contentType}`,
+      content: `'${item.name}'`,
       link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: removedUsers,
     });
@@ -70,8 +72,8 @@ export const sendNotifications = async ({
       createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       title,
-      action: `invited you to the`,
-      content: `${contentType}: '${item.name}'.`,
+      action: `invited you to the ${contentType}: `,
+      content: `'${item.name}'`,
       link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: invitedUsers,
     });
@@ -83,7 +85,7 @@ export const sendNotifications = async ({
     createdUser: user,
     notifType: type,
     title,
-    action: 'has updated',
+    action: action ? action : `has updated ${contentType}`,
     content,
     link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 

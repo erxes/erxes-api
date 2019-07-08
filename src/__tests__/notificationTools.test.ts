@@ -50,6 +50,7 @@ describe('testings helper methods', () => {
       title: 'new Notification title',
       content: 'new Notification content',
       link: 'new Notification link',
+      action: 'action',
       receivers: [_user._id, _user2._id, _user3._id],
     };
 
@@ -90,7 +91,7 @@ describe('testings helper methods', () => {
 
     const spySendNotification = jest.spyOn(utils, 'sendNotification').mockImplementation(() => ({}));
 
-    await sendChannelNotifications(channel, 'invited');
+    await sendChannelNotifications(channel, 'invited', _user);
 
     expect(utils.sendNotification).toBeCalledWith({
       createdUser: channel.userId,

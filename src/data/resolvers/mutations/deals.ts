@@ -25,7 +25,8 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_ADD,
-      content: `invited you to the '${deal.name}'.`,
+      action: 'invited you to the deal',
+      content: `'${deal.name}'.`,
       contentType: 'deal',
     });
 
@@ -56,6 +57,8 @@ const dealMutations = {
       type: NOTIFICATION_TYPES.DEAL_EDIT,
       invitedUsers: addedUserIds,
       removedUsers: removedUserIds,
+      action: `has updated deal`,
+      content: `${updatedDeal.name}`,
       contentType: 'deal',
     });
 
@@ -116,7 +119,8 @@ const dealMutations = {
       item: deal,
       user,
       type: NOTIFICATION_TYPES.DEAL_DELETE,
-      content: `deleted deal: '${deal.name}'`,
+      action: `deleted deal:`,
+      content: `'${deal.name}'`,
       contentType: 'deal',
     });
 

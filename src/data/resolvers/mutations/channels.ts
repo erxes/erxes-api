@@ -62,7 +62,7 @@ const channelMutations = {
 
     const { memberIds } = doc;
 
-    const { addedUserIds, removedUserIds } = checkUserIds(memberIds || [], channel.memberIds || []);
+    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
 
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);

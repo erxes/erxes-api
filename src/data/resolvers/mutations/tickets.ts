@@ -25,7 +25,8 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_ADD,
-      content: `invited you to the '${ticket.name}'.`,
+      action: `invited you to the`,
+      content: `'${ticket.name}'.`,
       contentType: 'ticket',
     });
 
@@ -110,7 +111,8 @@ const ticketMutations = {
       item: ticket,
       user,
       type: NOTIFICATION_TYPES.TICKET_DELETE,
-      content: `deleted ticket: '${ticket.name}'`,
+      action: `deleted ticket:`,
+      content: `'${ticket.name}'`,
       contentType: 'ticket',
     });
 
