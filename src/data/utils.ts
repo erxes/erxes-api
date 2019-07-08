@@ -8,6 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
+import { IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
@@ -521,13 +522,19 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
 
 /**
  * Sends a request to logs api
- * @param {Object} param0 Request
+ * @param {Object} body Request
+ * @param {Object} user User information from mutation context
  */
-export const putLog = (body: ILogParams) => {
+export const putLog = (body: ILogParams, user: IUserDocument) => {
   const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+  const doc = {
+    ...body,
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+  };
 
   return sendRequest(
-    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body },
+    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body: doc },
     'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };

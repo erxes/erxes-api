@@ -17,15 +17,16 @@ const scriptMutations = {
     const script = await Scripts.createScript(doc);
 
     if (script) {
-      await putLog({
-        createdBy: user._id,
-        type: 'script',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: script._id,
-        unicode: user.username || user.email || user._id,
-        description: `${script.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'script',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: script._id,
+          description: `${script.name} has been created`,
+        },
+        user,
+      );
     }
 
     return script;
@@ -39,16 +40,17 @@ const scriptMutations = {
     const updated = await Scripts.updateScript(_id, fields);
 
     if (script && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'script',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(script),
-        newData: JSON.stringify(fields),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${script.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'script',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(script),
+          newData: JSON.stringify(fields),
+          objectId: _id,
+          description: `${script.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -62,15 +64,16 @@ const scriptMutations = {
     const removed = await Scripts.removeScript(_id);
 
     if (script) {
-      await putLog({
-        createdBy: user._id,
-        type: 'script',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(script),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${script.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'script',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(script),
+          objectId: _id,
+          description: `${script.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

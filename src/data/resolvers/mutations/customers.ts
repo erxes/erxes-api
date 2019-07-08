@@ -17,15 +17,16 @@ const customerMutations = {
   async customersAdd(_root, doc: ICustomer, { user }: { user: IUserDocument }) {
     const customer = await Customers.createCustomer(doc, user);
 
-    await putLog({
-      createdBy: user._id,
-      type: 'customer',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: customer._id,
-      unicode: user.username || user.email || user._id,
-      description: `${customer.firstName} has been created`,
-    });
+    await putLog(
+      {
+        type: 'customer',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: customer._id,
+        description: `${customer.firstName} has been created`,
+      },
+      user,
+    );
 
     return customer;
   },
@@ -38,16 +39,17 @@ const customerMutations = {
     const updated = await Customers.updateCustomer(_id, doc);
 
     if (updated && updated._id) {
-      await putLog({
-        createdBy: user._id,
-        type: 'customer',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(customer),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${updated.firstName} has been updated`,
-      });
+      await putLog(
+        {
+          type: 'customer',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(customer),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${updated.firstName} has been updated`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -77,15 +79,16 @@ const customerMutations = {
       const removed = await Customers.removeCustomer(customerId);
 
       if (found && removed) {
-        await putLog({
-          createdBy: user._id,
-          type: 'customer',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(found),
-          objectId: customerId,
-          unicode: user.username || user.email || user._id,
-          description: `${found.firstName} has been deleted`,
-        });
+        await putLog(
+          {
+            type: 'customer',
+            action: LOG_ACTIONS.DELETE,
+            oldData: JSON.stringify(found),
+            objectId: customerId,
+            description: `${found.firstName} has been deleted`,
+          },
+          user,
+        );
       }
     }
 

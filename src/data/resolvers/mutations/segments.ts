@@ -17,15 +17,16 @@ const segmentMutations = {
     const segment = await Segments.createSegment(doc);
 
     if (segment) {
-      await putLog({
-        createdBy: user._id,
-        type: 'segment',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: segment._id,
-        unicode: user.username || user.email || user._id,
-        description: `${segment.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'segment',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: segment._id,
+          description: `${segment.name} has been created`,
+        },
+        user,
+      );
     }
 
     return segment;
@@ -39,16 +40,17 @@ const segmentMutations = {
     const updated = await Segments.updateSegment(_id, doc);
 
     if (segment && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'segment',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(segment),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${segment.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'segment',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(segment),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${segment.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -62,16 +64,17 @@ const segmentMutations = {
     const removed = await Segments.removeSegment(_id);
 
     if (segment) {
-      await putLog({
-        createdBy: user._id,
-        type: 'segment',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(segment),
-        newData: '',
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${segment.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'segment',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(segment),
+          newData: '',
+          objectId: _id,
+          description: `${segment.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

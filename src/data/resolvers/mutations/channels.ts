@@ -37,15 +37,16 @@ const channelMutations = {
 
     await sendChannelNotifications(channel);
 
-    await putLog({
-      createdBy: user._id,
-      type: 'channel',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: channel._id,
-      unicode: user.username || user.email || user._id,
-      description: `${doc.name} has been created`,
-    });
+    await putLog(
+      {
+        type: 'channel',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: channel._id,
+        description: `${doc.name} has been created`,
+      },
+      user,
+    );
 
     return channel;
   },
@@ -58,15 +59,16 @@ const channelMutations = {
     const updated = await Channels.updateChannel(_id, doc);
 
     if (found && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'channel',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(found),
-        newData: JSON.stringify(doc),
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been updated`,
-      });
+      await putLog(
+        {
+          type: 'channel',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          description: `${found.name} has been updated`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -80,14 +82,15 @@ const channelMutations = {
     const removed = await Channels.removeChannel(_id);
 
     if (channel && removed) {
-      await putLog({
-        createdBy: user._id,
-        type: 'channel',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(channel),
-        unicode: user.username || user.email || user._id,
-        description: `${channel.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'channel',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(channel),
+          description: `${channel.name} has been removed`,
+        },
+        user,
+      );
     }
   },
 };

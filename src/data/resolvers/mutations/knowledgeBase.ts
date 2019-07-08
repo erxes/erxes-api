@@ -15,15 +15,16 @@ const knowledgeBaseMutations = {
     const topic = await KnowledgeBaseTopics.createDoc(doc, user._id);
 
     if (topic) {
-      await putLog({
-        createdBy: user._id,
-        type: 'knowledgeBaseTopic',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: topic._id,
-        unicode: user.username || user.email || user._id,
-        description: `${topic.title} has been created`,
-      });
+      await putLog(
+        {
+          type: 'knowledgeBaseTopic',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: topic._id,
+          description: `${topic.title} has been created`,
+        },
+        user,
+      );
     }
 
     return topic;
@@ -37,16 +38,17 @@ const knowledgeBaseMutations = {
     const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
 
     if (topic && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'knowledgeBaseTopic',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(topic),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${topic.title} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'knowledgeBaseTopic',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(topic),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${topic.title} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -60,15 +62,16 @@ const knowledgeBaseMutations = {
     const removed = await KnowledgeBaseTopics.removeDoc(_id);
 
     if (topic) {
-      await putLog({
-        createdBy: user._id,
-        type: 'knowledgeBaseTopic',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(topic),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${topic.title} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'knowledgeBaseTopic',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(topic),
+          objectId: _id,
+          description: `${topic.title} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

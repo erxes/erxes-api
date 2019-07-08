@@ -31,15 +31,16 @@ const dealMutations = {
       'deal',
     );
 
-    await putLog({
-      createdBy: user._id,
-      type: 'deal',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: deal._id,
-      unicode: user.username || user.email || user._id,
-      description: `${deal.name} has been created`,
-    });
+    await putLog(
+      {
+        type: 'deal',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: deal._id,
+        description: `${deal.name} has been created`,
+      },
+      user,
+    );
 
     return deal;
   },
@@ -58,16 +59,17 @@ const dealMutations = {
     await manageNotifications(Deals, updated, user, 'deal');
 
     if (found && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'deal',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(found),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'deal',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${found.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -129,15 +131,16 @@ const dealMutations = {
 
     const removed = await Deals.removeDeal(_id);
 
-    await putLog({
-      createdBy: user._id,
-      type: 'deal',
-      action: LOG_ACTIONS.DELETE,
-      oldData: JSON.stringify(deal),
-      objectId: _id,
-      unicode: user.username || user.email || user._id,
-      description: `${deal.name} has been removed`,
-    });
+    await putLog(
+      {
+        type: 'deal',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(deal),
+        objectId: _id,
+        description: `${deal.name} has been removed`,
+      },
+      user,
+    );
 
     return removed;
   },

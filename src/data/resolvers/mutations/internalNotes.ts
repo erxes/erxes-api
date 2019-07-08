@@ -17,15 +17,16 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.createInternalNote(args, user);
 
     if (internalNote) {
-      await putLog({
-        createdBy: user._id,
-        type: 'internalNote',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(args),
-        objectId: internalNote._id,
-        unicode: user.username || user.email || user._id,
-        description: `${internalNote.contentType} has been created`,
-      });
+      await putLog(
+        {
+          type: 'internalNote',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(args),
+          objectId: internalNote._id,
+          description: `${internalNote.contentType} has been created`,
+        },
+        user,
+      );
     }
 
     return internalNote;
@@ -39,16 +40,17 @@ const internalNoteMutations = {
     const updated = await InternalNotes.updateInternalNote(_id, doc);
 
     if (internalNote && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'internalNote',
-        action: LOG_ACTIONS.UPDATE,
-        objectId: _id,
-        oldData: JSON.stringify(internalNote),
-        newData: JSON.stringify(doc),
-        unicode: user.username || user.email || user._id,
-        description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'internalNote',
+          action: LOG_ACTIONS.UPDATE,
+          objectId: _id,
+          oldData: JSON.stringify(internalNote),
+          newData: JSON.stringify(doc),
+          description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -62,15 +64,16 @@ const internalNoteMutations = {
     const removed = await InternalNotes.removeInternalNote(_id);
 
     if (internalNote) {
-      await putLog({
-        createdBy: user._id,
-        type: 'internalNote',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(internalNote),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'internalNote',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(internalNote),
+          objectId: _id,
+          description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

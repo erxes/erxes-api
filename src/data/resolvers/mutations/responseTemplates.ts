@@ -17,15 +17,16 @@ const responseTemplateMutations = {
     const template = await ResponseTemplates.create(doc);
 
     if (template) {
-      await putLog({
-        createdBy: user._id,
-        type: 'responseTemplate',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: template._id,
-        unicode: user.username || user.email || user._id,
-        description: `${template.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'responseTemplate',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: template._id,
+          description: `${template.name} has been created`,
+        },
+        user,
+      );
     }
 
     return template;
@@ -39,16 +40,17 @@ const responseTemplateMutations = {
     const updated = await ResponseTemplates.updateResponseTemplate(_id, fields);
 
     if (found && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'responseTemplate',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(found),
-        newData: JSON.stringify(fields),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'responseTemplate',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(fields),
+          objectId: _id,
+          description: `${found.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -62,16 +64,17 @@ const responseTemplateMutations = {
     const removed = await ResponseTemplates.removeResponseTemplate(_id);
 
     if (template) {
-      await putLog({
-        createdBy: user._id,
-        type: 'responseTemplate',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(template),
-        newData: '',
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${template.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'responseTemplate',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(template),
+          newData: '',
+          objectId: _id,
+          description: `${template.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

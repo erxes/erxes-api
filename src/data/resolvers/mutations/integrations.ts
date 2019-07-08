@@ -22,15 +22,16 @@ const integrationMutations = {
     const integration = await Integrations.createMessengerIntegration(doc);
 
     if (integration) {
-      await putLog({
-        createdBy: user._id,
-        type: 'integration',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: integration._id,
-        unicode: user.username || user.email || user._id,
-        description: `${integration.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'integration',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: integration._id,
+          description: `${integration.name} has been created`,
+        },
+        user,
+      );
     }
 
     return integration;
@@ -48,16 +49,17 @@ const integrationMutations = {
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
     if (integration && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'integration',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(integration),
-        newData: JSON.stringify(fields),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${integration.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'integration',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(integration),
+          newData: JSON.stringify(fields),
+          objectId: _id,
+          description: `${integration.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -132,15 +134,16 @@ const integrationMutations = {
         });
       }
 
-      await putLog({
-        createdBy: user._id,
-        type: 'integration',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(integration),
-        objectId: integration._id,
-        unicode: user.username || user.email || user._id,
-        description: `${integration.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'integration',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(integration),
+          objectId: integration._id,
+          description: `${integration.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return Integrations.removeIntegration(_id);

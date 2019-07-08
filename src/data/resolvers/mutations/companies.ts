@@ -16,15 +16,16 @@ const companyMutations = {
   async companiesAdd(_root, doc: ICompany, { user }: { user: IUserDocument }) {
     const company = await Companies.createCompany(doc, user);
 
-    await putLog({
-      createdBy: user._id,
-      type: 'company',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: company._id,
-      unicode: user.username || user.email || user._id,
-      description: `${company.primaryName} has been created`,
-    });
+    await putLog(
+      {
+        type: 'company',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: company._id,
+        description: `${company.primaryName} has been created`,
+      },
+      user,
+    );
 
     return company;
   },
@@ -37,16 +38,17 @@ const companyMutations = {
     const updated = await Companies.updateCompany(_id, doc);
 
     if (found && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'company',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(found),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.primaryName} has been updated`,
-      });
+      await putLog(
+        {
+          type: 'company',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${found.primaryName} has been updated`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -69,15 +71,16 @@ const companyMutations = {
       const removed = await Companies.removeCompany(companyId);
 
       if (company && removed) {
-        await putLog({
-          createdBy: user._id,
-          type: 'company',
-          action: LOG_ACTIONS.DELETE,
-          oldData: JSON.stringify(company),
-          objectId: companyId,
-          unicode: user.username || user.email || user._id,
-          description: `${company.primaryName} has been removed`,
-        });
+        await putLog(
+          {
+            type: 'company',
+            action: LOG_ACTIONS.DELETE,
+            oldData: JSON.stringify(company),
+            objectId: companyId,
+            description: `${company.primaryName} has been removed`,
+          },
+          user,
+        );
       }
     }
 

@@ -38,15 +38,16 @@ const permissionMutations = {
           }
         }
 
-        await putLog({
-          createdBy: user._id,
-          type: 'permission',
-          action: LOG_ACTIONS.CREATE,
-          objectId: perm._id,
-          newData: JSON.stringify(perm),
-          unicode: user.username || user.email || user._id,
-          description,
-        });
+        await putLog(
+          {
+            type: 'permission',
+            action: LOG_ACTIONS.CREATE,
+            objectId: perm._id,
+            newData: JSON.stringify(perm),
+            description,
+          },
+          user,
+        );
       });
     } // end result checking
 
@@ -85,15 +86,16 @@ const permissionMutations = {
         }
       }
 
-      await putLog({
-        createdBy: user._id,
-        type: 'permission',
-        action: LOG_ACTIONS.DELETE,
-        objectId: perm._id,
-        oldData: JSON.stringify(perm),
-        unicode: user.username || user.email || user._id,
-        description,
-      });
+      await putLog(
+        {
+          type: 'permission',
+          action: LOG_ACTIONS.DELETE,
+          objectId: perm._id,
+          oldData: JSON.stringify(perm),
+          description,
+        },
+        user,
+      );
     } // end for loop
 
     resetPermissionsCache();
@@ -117,15 +119,16 @@ const usersGroupMutations = {
     const result = await UsersGroups.createGroup(doc, memberIds);
 
     if (result) {
-      await putLog({
-        createdBy: user._id,
-        type: 'userGroup',
-        action: LOG_ACTIONS.CREATE,
-        objectId: result._id,
-        newData: JSON.stringify(doc),
-        unicode: user.username || user.email || user._id,
-        description: `${result.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'userGroup',
+          action: LOG_ACTIONS.CREATE,
+          objectId: result._id,
+          newData: JSON.stringify(doc),
+          description: `${result.name} has been created`,
+        },
+        user,
+      );
     }
 
     resetPermissionsCache();
@@ -148,16 +151,17 @@ const usersGroupMutations = {
     const result = await UsersGroups.updateGroup(_id, doc, memberIds);
 
     if (group && result) {
-      await putLog({
-        createdBy: user._id,
-        type: 'userGroup',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(group),
-        newData: JSON.stringify(doc),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${group.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'userGroup',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(group),
+          newData: JSON.stringify(doc),
+          objectId: _id,
+          description: `${group.name} has been edited`,
+        },
+        user,
+      );
     }
 
     resetPermissionsCache();
@@ -175,14 +179,15 @@ const usersGroupMutations = {
     const result = await UsersGroups.removeGroup(_id);
 
     if (group && result) {
-      await putLog({
-        createdBy: user._id,
-        type: 'userGroup',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(group),
-        unicode: user.username || user.email || user._id,
-        description: `${group.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'userGroup',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(group),
+          description: `${group.name} has been removed`,
+        },
+        user,
+      );
     }
 
     resetPermissionsCache();

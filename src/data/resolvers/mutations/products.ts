@@ -18,15 +18,16 @@ const productMutations = {
     const product = await Products.createProduct(doc);
 
     if (product) {
-      await putLog({
-        createdBy: user._id,
-        type: 'product',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(doc),
-        objectId: product._id,
-        unicode: user.username || user.email || user._id,
-        description: `${product.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'product',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(doc),
+          objectId: product._id,
+          description: `${product.name} has been created`,
+        },
+        user,
+      );
     }
 
     return product;
@@ -42,16 +43,17 @@ const productMutations = {
     const updated = await Products.updateProduct(_id, doc);
 
     if (found && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'product',
-        action: LOG_ACTIONS.UPDATE,
-        objectId: _id,
-        oldData: JSON.stringify(found),
-        newData: JSON.stringify(doc),
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'product',
+          action: LOG_ACTIONS.UPDATE,
+          objectId: _id,
+          oldData: JSON.stringify(found),
+          newData: JSON.stringify(doc),
+          description: `${found.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -66,15 +68,16 @@ const productMutations = {
     const removed = await Products.removeProduct(_id);
 
     if (found) {
-      await putLog({
-        createdBy: user._id,
-        type: 'product',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(found),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'product',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(found),
+          objectId: _id,
+          description: `${found.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

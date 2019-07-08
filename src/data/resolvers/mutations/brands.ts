@@ -16,15 +16,16 @@ const brandMutations = {
   async brandsAdd(_root, doc: IBrand, { user }: { user: IUserDocument }) {
     const brand = await Brands.createBrand({ userId: user._id, ...doc });
 
-    await putLog({
-      createdBy: user._id,
-      type: 'brand',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: brand._id,
-      unicode: user.username || user.email || user._id,
-      description: `${doc.name} has been created`,
-    });
+    await putLog(
+      {
+        type: 'brand',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: brand._id,
+        description: `${doc.name} has been created`,
+      },
+      user,
+    );
 
     return brand;
   },
@@ -37,16 +38,17 @@ const brandMutations = {
     const updated = await Brands.updateBrand(_id, fields);
 
     if (updated && updated._id) {
-      await putLog({
-        createdBy: user._id,
-        type: 'brand',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(brand),
-        newData: JSON.stringify(fields),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${fields.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'brand',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(brand),
+          newData: JSON.stringify(fields),
+          objectId: _id,
+          description: `${fields.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -60,15 +62,16 @@ const brandMutations = {
     const removed = await Brands.removeBrand(_id);
 
     if (found && removed) {
-      await putLog({
-        createdBy: user._id,
-        type: 'brand',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(found),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'brand',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(found),
+          objectId: _id,
+          description: `${found.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;
@@ -86,15 +89,16 @@ const brandMutations = {
     const updated = await Brands.updateEmailConfig(_id, emailConfig);
 
     if (updated && found) {
-      await putLog({
-        createdBy: user._id,
-        type: 'brand',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(found),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${found.name} email config has been changed`,
-      });
+      await putLog(
+        {
+          type: 'brand',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(found),
+          objectId: _id,
+          description: `${found.name} email config has been changed`,
+        },
+        user,
+      );
     }
 
     return updated;

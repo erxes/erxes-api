@@ -24,15 +24,16 @@ const messengerAppMutations = {
     });
 
     if (kb) {
-      await putLog({
-        createdBy: user._id,
-        type: 'messengerAppKb',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(params),
-        objectId: kb._id,
-        unicode: user.username || user.email || user._id,
-        description: `${name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'messengerAppKb',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(params),
+          objectId: kb._id,
+          description: `${name} has been created`,
+        },
+        user,
+      );
     }
 
     return kb;
@@ -63,15 +64,16 @@ const messengerAppMutations = {
     });
 
     if (lead) {
-      await putLog({
-        createdBy: user._id,
-        type: 'messengerAppLead',
-        action: LOG_ACTIONS.CREATE,
-        newData: JSON.stringify(params),
-        objectId: lead._id,
-        unicode: user.username || user.email || user._id,
-        description: `${name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'messengerAppLead',
+          action: LOG_ACTIONS.CREATE,
+          newData: JSON.stringify(params),
+          objectId: lead._id,
+          description: `${name} has been created`,
+        },
+        user,
+      );
     }
 
     return lead;
@@ -85,15 +87,16 @@ const messengerAppMutations = {
     const removed = await MessengerApps.deleteOne({ _id });
 
     if (messengerApp) {
-      await putLog({
-        createdBy: user._id,
-        type: 'messengerApp',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(messengerApp),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${messengerApp.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'messengerApp',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(messengerApp),
+          objectId: _id,
+          description: `${messengerApp.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

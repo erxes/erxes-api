@@ -25,15 +25,16 @@ const boardMutations = {
     await checkPermission(doc.type, user, 'boardsAdd');
     const board = await Boards.createBoard({ userId: user._id, ...doc });
 
-    await putLog({
-      createdBy: user._id,
-      type: 'board',
-      action: LOG_ACTIONS.CREATE,
-      newData: JSON.stringify(doc),
-      objectId: board._id,
-      unicode: user.username || user.email || user._id,
-      description: `${doc.name} has been created`,
-    });
+    await putLog(
+      {
+        type: 'board',
+        action: LOG_ACTIONS.CREATE,
+        newData: JSON.stringify(doc),
+        objectId: board._id,
+        description: `${doc.name} has been created`,
+      },
+      user,
+    );
 
     return board;
   },
@@ -46,15 +47,16 @@ const boardMutations = {
     const updated = await Boards.updateBoard(_id, doc);
 
     if (updated && updated._id) {
-      await putLog({
-        createdBy: user._id,
-        type: 'board',
-        action: LOG_ACTIONS.UPDATE,
-        newData: JSON.stringify(doc),
-        objectId: updated._id,
-        unicode: user.username || user.email || user._id,
-        description: `${doc.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'board',
+          action: LOG_ACTIONS.UPDATE,
+          newData: JSON.stringify(doc),
+          objectId: updated._id,
+          description: `${doc.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -73,14 +75,15 @@ const boardMutations = {
     const removed = await Boards.removeBoard(_id);
 
     if (board && removed) {
-      await putLog({
-        createdBy: user._id,
-        type: 'board',
-        action: LOG_ACTIONS.DELETE,
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${board.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'board',
+          action: LOG_ACTIONS.DELETE,
+          objectId: _id,
+          description: `${board.name} has been removed`,
+        },
+        user,
+      );
     }
   },
 

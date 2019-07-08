@@ -28,16 +28,17 @@ const importHistoryMutations = {
       },
     });
 
-    await putLog({
-      createdBy: user._id,
-      type: 'importHistory',
-      action: LOG_ACTIONS.DELETE,
-      oldData: JSON.stringify(importHistory),
-      newData: '',
-      objectId: _id,
-      unicode: user.username || user.email || user._id,
-      description: `${importHistory._id}-${importHistory.date} has been removed`,
-    });
+    await putLog(
+      {
+        type: 'importHistory',
+        action: LOG_ACTIONS.DELETE,
+        oldData: JSON.stringify(importHistory),
+        newData: '',
+        objectId: _id,
+        description: `${importHistory._id}-${importHistory.date} has been removed`,
+      },
+      user,
+    );
 
     return ImportHistory.findOne({ _id: importHistory._id });
   },

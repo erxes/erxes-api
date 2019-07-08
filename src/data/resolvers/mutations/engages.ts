@@ -42,15 +42,16 @@ const engageMutations = {
     }
 
     if (engageMessage) {
-      await putLog({
-        createdBy: user._id,
-        type: 'engage',
-        action: LOG_ACTIONS.DELETE,
-        newData: JSON.stringify(doc),
-        objectId: engageMessage._id,
-        unicode: user.username || user.email || user._id,
-        description: `${engageMessage.title} has been created`,
-      });
+      await putLog(
+        {
+          type: 'engage',
+          action: LOG_ACTIONS.DELETE,
+          newData: JSON.stringify(doc),
+          objectId: engageMessage._id,
+          description: `${engageMessage.title} has been created`,
+        },
+        user,
+      );
     }
 
     return engageMessage;
@@ -66,16 +67,17 @@ const engageMutations = {
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
 
     if (engageMessage && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'engage',
-        action: LOG_ACTIONS.UPDATE,
-        oldData: JSON.stringify(engageMessage),
-        newData: JSON.stringify(updated),
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        descripton: `${engageMessage.title} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'engage',
+          action: LOG_ACTIONS.UPDATE,
+          oldData: JSON.stringify(engageMessage),
+          newData: JSON.stringify(updated),
+          objectId: _id,
+          descripton: `${engageMessage.title} has been edited`,
+        },
+        user,
+      );
     }
 
     return EngageMessages.findOne({ _id });
@@ -92,16 +94,17 @@ const engageMutations = {
     const removed = await EngageMessages.removeEngageMessage(_id);
 
     if (engageMessage) {
-      await putLog({
-        createdBy: user._id,
-        type: 'engage',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(engageMessage),
-        newData: '',
-        objectId: _id,
-        unicode: user.username || user.email || user._id,
-        description: `${engageMessage.title} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'engage',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(engageMessage),
+          newData: '',
+          objectId: _id,
+          description: `${engageMessage.title} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;

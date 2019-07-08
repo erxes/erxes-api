@@ -18,15 +18,16 @@ const tagMutations = {
     const tag = await Tags.createTag(doc);
 
     if (tag) {
-      await putLog({
-        createdBy: user._id,
-        type: 'tag',
-        action: LOG_ACTIONS.CREATE,
-        objectId: tag._id,
-        newData: JSON.stringify(tag),
-        unicode: user.username || user.email || user._id,
-        description: `${tag.name} has been created`,
-      });
+      await putLog(
+        {
+          type: 'tag',
+          action: LOG_ACTIONS.CREATE,
+          objectId: tag._id,
+          newData: JSON.stringify(tag),
+          description: `${tag.name} has been created`,
+        },
+        user,
+      );
     }
 
     return tag;
@@ -40,16 +41,17 @@ const tagMutations = {
     const updated = await Tags.updateTag(_id, doc);
 
     if (tag && updated) {
-      await putLog({
-        createdBy: user._id,
-        type: 'tag',
-        action: LOG_ACTIONS.UPDATE,
-        objectId: tag._id,
-        oldData: JSON.stringify(tag),
-        newData: JSON.stringify(doc),
-        unicode: user.username || user.email || user._id,
-        description: `${tag.name} has been edited`,
-      });
+      await putLog(
+        {
+          type: 'tag',
+          action: LOG_ACTIONS.UPDATE,
+          objectId: tag._id,
+          oldData: JSON.stringify(tag),
+          newData: JSON.stringify(doc),
+          description: `${tag.name} has been edited`,
+        },
+        user,
+      );
     }
 
     return updated;
@@ -63,16 +65,17 @@ const tagMutations = {
     const removed = await Tags.removeTag(ids);
 
     for (const tag of tags) {
-      await putLog({
-        createdBy: user._id,
-        type: 'tag',
-        action: LOG_ACTIONS.DELETE,
-        oldData: JSON.stringify(tag),
-        newData: '',
-        objectId: tag._id,
-        unicode: user.username || user.email || user._id,
-        description: `${tag.name} has been removed`,
-      });
+      await putLog(
+        {
+          type: 'tag',
+          action: LOG_ACTIONS.DELETE,
+          oldData: JSON.stringify(tag),
+          newData: '',
+          objectId: tag._id,
+          description: `${tag.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return removed;
