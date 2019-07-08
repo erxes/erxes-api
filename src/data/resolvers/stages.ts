@@ -65,12 +65,20 @@ export default {
     }
   },
 
+  /*
+   * Total count of deals that are created on this stage initially
+   */
   async initialDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const filter = await generateDealCommonFilters({ ...args, initialStageId: stage._id }, args.extraParams);
 
     return Deals.find(filter).countDocuments();
   },
 
+  /*
+   * Total count of deals that are
+   * 1. created on this stage initially
+   * 2. moved to other stage which has probability other than Lost
+   */
   async inProcessDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const filter = await generateDealCommonFilters(
       {
@@ -122,6 +130,7 @@ export default {
 
   async stageInfo(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const result: { count?: number; percent?: number } = {};
+
     const filter = await generateDealCommonFilters(
       {
         ...args,
