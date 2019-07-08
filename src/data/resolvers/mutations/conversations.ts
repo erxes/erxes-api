@@ -112,7 +112,7 @@ const sendNotifications = async ({
       createdUser: user,
       link: `${MAIN_APP_DOMAIN}/inbox/index?_id=${conversation._id}`,
       title: 'Conversation updated',
-      content: '',
+      content: messageContent ? messageContent : conversation.content || '',
       notifType: type,
       receivers: conversationNotifReceivers(conversation, user._id),
       action: NOTIFICATION_TYPES[type] || '',
@@ -120,22 +120,17 @@ const sendNotifications = async ({
 
     switch (type) {
       case NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE:
-        doc.content = messageContent || '';
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
         doc.action = 'has assigned you to conversation ';
-        doc.content = conversation.content || '';
         break;
       case 'unassign':
         doc.notifType = NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE;
         doc.action = 'has removed you from conversation';
-        doc.content = conversation.content || '';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.content = `changed conversation status to ${(conversation.status || '').toUpperCase()} </br> ${
-          conversation.content
-        }`;
+        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
         break;
     }
 
