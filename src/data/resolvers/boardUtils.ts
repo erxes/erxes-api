@@ -105,7 +105,8 @@ export const itemsChange = async (
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
-  let content = `changed order your ${type}:'${item.name}'`;
+  let action = `changed order of your `;
+  let content = `${type}:'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
@@ -114,10 +115,12 @@ export const itemsChange = async (
       throw new Error('Stage not found');
     }
 
-    content = `moved your ${type} '${item.name}' to the '${stage.name}'.`;
+    action = `moved your`;
+
+    content = `${type} '${item.name}' to the '${stage.name}'.`;
   }
 
-  return content;
+  return { content, action };
 };
 
 export const boardId = async (item: IDealDocument | ITicketDocument) => {
