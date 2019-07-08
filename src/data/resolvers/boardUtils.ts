@@ -1,11 +1,31 @@
 import { Boards, Pipelines, Stages } from '../../db/models';
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
-import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils, { getEnv } from '../utils';
+
+export const notifiedUserIds = async (item: any) => {
+  const userIds: string[] = [];
+
+  if (item.assignedUserIds) {
+    userIds.concat(item.assignedUserIds);
+  }
+
+  if (item.watchedUserIds) {
+    userIds.concat(item.watchedUserIds);
+  }
+
+  const stage = await Stages.getStage(item.stageId || '');
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+  if (pipeline.watchedUserIds) {
+    userIds.concat(pipeline.watchedUserIds);
+  }
+
+  return userIds;
+};
 
 /**
  * Send notification to all members of this content except the sender
@@ -90,18 +110,13 @@ export const sendNotifications = async ({
     link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user, invited user and removed users
-    receivers: (item.assignedUserIds || []).filter(id => {
+    receivers: (await notifiedUserIds(item)).filter(id => {
       return usersToExclude.indexOf(id) < 0;
     }),
   });
 };
 
-export const itemsChange = async (
-  collection: any,
-  item: IDealDocument | ITicketDocument,
-  type: string,
-  destinationStageId: string,
-) => {
+export const itemsChange = async (collection: any, item: any, type: string, destinationStageId: string) => {
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
@@ -123,7 +138,7 @@ export const itemsChange = async (
   return { content, action };
 };
 
-export const boardId = async (item: IDealDocument | ITicketDocument) => {
+export const boardId = async (item: any) => {
   const stage = await Stages.findOne({ _id: item.stageId });
 
   if (!stage) {

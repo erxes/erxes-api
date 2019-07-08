@@ -119,11 +119,25 @@ const ticketMutations = {
 
     return ticket.remove();
   },
+
+  /**
+   * Watch ticket
+   */
+  async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+    const ticket = await Tickets.findOne({ _id });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    return Tickets.watchTicket(_id, isAdd, user._id);
+  },
 };
 
 checkPermission(ticketMutations, 'ticketsAdd', 'ticketsAdd');
 checkPermission(ticketMutations, 'ticketsEdit', 'ticketsEdit');
 checkPermission(ticketMutations, 'ticketsUpdateOrder', 'ticketsUpdateOrder');
 checkPermission(ticketMutations, 'ticketsRemove', 'ticketsRemove');
+checkPermission(ticketMutations, 'ticketsWatch', 'ticketsWatch');
 
 export default ticketMutations;

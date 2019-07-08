@@ -20,6 +20,7 @@ export const types = `
     memberIds: [String]
     members: [User]
     bgColor: String
+    isWatched: Boolean
     ${commonTypes}
   }
 
@@ -30,6 +31,10 @@ export const types = `
     pipelineId: String!
     amount: JSON
     itemsTotalCount: Int
+    compareNextStage: JSON
+    stayedDealsTotalCount: Int
+    initialDealsTotalCount: Int
+    inProcessDealsTotalCount: Int
     ${commonTypes}
   }
 
@@ -46,6 +51,7 @@ export const queries = `
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
   stages(
+    isNotLost: Boolean,
     pipelineId: String!,
     search: String,
     companyIds: [String],
@@ -84,6 +90,7 @@ export const mutations = `
   pipelinesAdd(${commonParams}, ${pipelineParams}): Pipeline
   pipelinesEdit(_id: String!, ${commonParams}, ${pipelineParams}): Pipeline
   pipelinesUpdateOrder(orders: [OrderItem]): [Pipeline]
+  pipelinesWatch(_id: String!, isAdd: Boolean, type: String!): Pipeline
   pipelinesRemove(_id: String!): JSON
 
   stagesUpdateOrder(orders: [OrderItem]): [Stage]

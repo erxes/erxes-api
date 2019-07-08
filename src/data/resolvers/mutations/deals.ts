@@ -16,6 +16,7 @@ const dealMutations = {
    * Create new deal
    */
   async dealsAdd(_root, doc: IDeal, { user }: { user: IUserDocument }) {
+    doc.initialStageId = doc.stageId;
     const deal = await Deals.createDeal({
       ...doc,
       modifiedBy: user._id,
@@ -127,11 +128,25 @@ const dealMutations = {
 
     return deal.remove();
   },
+
+  /**
+   * Watch deal
+   */
+  async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+    const deal = await Deals.findOne({ _id });
+
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    return Deals.watchDeal(_id, isAdd, user._id);
+  },
 };
 
 checkPermission(dealMutations, 'dealsAdd', 'dealsAdd');
 checkPermission(dealMutations, 'dealsEdit', 'dealsEdit');
 checkPermission(dealMutations, 'dealsUpdateOrder', 'dealsUpdateOrder');
 checkPermission(dealMutations, 'dealsRemove', 'dealsRemove');
+checkPermission(dealMutations, 'dealsWatch', 'dealsWatch');
 
 export default dealMutations;

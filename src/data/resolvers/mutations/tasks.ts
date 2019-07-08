@@ -119,11 +119,25 @@ const taskMutations = {
 
     return task.remove();
   },
+
+  /**
+   * Watch task
+   */
+  async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+    const task = await Tasks.findOne({ _id });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    return Tasks.watchTask(_id, isAdd, user._id);
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
 checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
 checkPermission(taskMutations, 'tasksUpdateOrder', 'tasksUpdateOrder');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
+checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
 
 export default taskMutations;

@@ -1,13 +1,14 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { changeCompany, changeCustomer, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
-import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface ITicketModel extends Model<ITicketDocument> {
   createTicket(doc: ITicket): Promise<ITicketDocument>;
   updateTicket(_id: string, doc: ITicket): Promise<ITicketDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITicketDocument[]>;
+  watchTicket(_id: string, isAdd: boolean, userId: string): void;
   changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<ITicketDocument>;
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<ITicketDocument>;
 }
@@ -48,6 +49,13 @@ export const loadTicketClass = () => {
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
       return updateOrder(Tickets, orders, stageId);
+    }
+
+    /**
+     * Watch ticket
+     */
+    public static async watchTicket(_id: string, isAdd: boolean, userId: string) {
+      return watchItem(Tickets, _id, isAdd, userId);
     }
 
     /**
