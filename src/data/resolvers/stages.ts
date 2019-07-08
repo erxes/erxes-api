@@ -141,11 +141,12 @@ export default {
       {
         ...args,
         order: { $in: [order, order + 1] },
-        pipelineId: stage.pipelineId,
         probability: { $ne: 'Lost' },
       },
       args.extraParams,
     );
+
+    filter.pipelineId = stage.pipelineId;
 
     const stages = await Stages.aggregate([
       {
