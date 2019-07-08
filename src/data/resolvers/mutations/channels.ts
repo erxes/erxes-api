@@ -40,7 +40,7 @@ const channelMutations = {
       {
         type: 'channel',
         newData: JSON.stringify(doc),
-        object: JSON.stringify(channel),
+        object: channel,
         description: `${doc.name} has been created`,
       },
       user,
@@ -60,7 +60,7 @@ const channelMutations = {
       await putUpdateLog(
         {
           type: 'channel',
-          object: JSON.stringify(channel),
+          object: channel,
           newData: JSON.stringify(doc),
           description: `${channel.name} has been updated`,
         },
@@ -82,7 +82,7 @@ const channelMutations = {
       await putDeleteLog(
         {
           type: 'channel',
-          object: JSON.stringify(channel),
+          object: channel,
           description: `${channel.name} has been removed`,
         },
         user,

@@ -18,7 +18,7 @@ const knowledgeBaseMutations = {
         {
           type: 'knowledgeBaseTopic',
           newData: JSON.stringify(doc),
-          object: JSON.stringify(topic),
+          object: topic,
           description: `${topic.title} has been created`,
         },
         user,
@@ -39,7 +39,7 @@ const knowledgeBaseMutations = {
       await putUpdateLog(
         {
           type: 'knowledgeBaseTopic',
-          object: JSON.stringify(topic),
+          object: topic,
           newData: JSON.stringify(doc),
           description: `${topic.title} has been edited`,
         },
@@ -61,7 +61,7 @@ const knowledgeBaseMutations = {
       await putDeleteLog(
         {
           type: 'knowledgeBaseTopic',
-          object: JSON.stringify(topic),
+          object: topic,
           description: `${topic.title} has been removed`,
         },
         user,
@@ -82,7 +82,7 @@ const knowledgeBaseMutations = {
         type: 'knowledgeBaseCategory',
         newData: JSON.stringify(doc),
         description: `${kbCategory.title} has been created`,
-        object: JSON.stringify(kbCategory),
+        object: kbCategory,
       },
       user,
     );
@@ -105,7 +105,7 @@ const knowledgeBaseMutations = {
       await putUpdateLog(
         {
           type: 'knowledgeBaseCategory',
-          object: JSON.stringify(kbCategory),
+          object: kbCategory,
           newData: JSON.stringify(doc),
           description: `${kbCategory.title} has been edited`,
         },
@@ -127,7 +127,7 @@ const knowledgeBaseMutations = {
       await putDeleteLog(
         {
           type: 'knowledgeBaseCategory',
-          object: JSON.stringify(kbCategory),
+          object: kbCategory,
           description: `${kbCategory.title} has been removed`,
         },
         user,
@@ -148,7 +148,7 @@ const knowledgeBaseMutations = {
         type: 'knowledgeBaseArticle',
         newData: JSON.stringify(doc),
         description: `${kbArticle.title} has been created`,
-        object: JSON.stringify(kbArticle),
+        object: kbArticle,
       },
       user,
     );
@@ -171,7 +171,7 @@ const knowledgeBaseMutations = {
       await putUpdateLog(
         {
           type: 'knowledgeBaseArticle',
-          object: JSON.stringify(kbArticle),
+          object: kbArticle,
           newData: JSON.stringify(doc),
           description: `${kbArticle.title} has been edited`,
         },
@@ -193,7 +193,7 @@ const knowledgeBaseMutations = {
       await putDeleteLog(
         {
           type: 'knowledgeBaseArticle',
-          object: JSON.stringify(kbArticle),
+          object: kbArticle,
           description: `${kbArticle.title} has been removed`,
         },
         user,

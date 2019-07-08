@@ -19,7 +19,7 @@ const brandMutations = {
       {
         type: 'brand',
         newData: JSON.stringify(doc),
-        object: JSON.stringify(brand),
+        object: brand,
         description: `${doc.name} has been created`,
       },
       user,
@@ -39,7 +39,7 @@ const brandMutations = {
       await putUpdateLog(
         {
           type: 'brand',
-          object: JSON.stringify(brand),
+          object: brand,
           newData: JSON.stringify(fields),
           description: `${fields.name} has been edited`,
         },
@@ -61,7 +61,7 @@ const brandMutations = {
       await putDeleteLog(
         {
           type: 'brand',
-          object: JSON.stringify(brand),
+          object: brand,
           description: `${brand.name} has been removed`,
         },
         user,
@@ -86,7 +86,7 @@ const brandMutations = {
       await putUpdateLog(
         {
           type: 'brand',
-          object: JSON.stringify(brand),
+          object: brand,
           description: `${brand.name} email config has been changed`,
         },
         user,

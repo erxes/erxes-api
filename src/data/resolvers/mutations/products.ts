@@ -21,7 +21,7 @@ const productMutations = {
         {
           type: 'product',
           newData: JSON.stringify(doc),
-          object: JSON.stringify(product),
+          object: product,
           description: `${product.name} has been created`,
         },
         user,
@@ -44,7 +44,7 @@ const productMutations = {
       await putUpdateLog(
         {
           type: 'product',
-          object: JSON.stringify(product),
+          object: product,
           newData: JSON.stringify(doc),
           description: `${product.name} has been edited`,
         },
@@ -67,7 +67,7 @@ const productMutations = {
       await putDeleteLog(
         {
           type: 'product',
-          object: JSON.stringify(product),
+          object: product,
           description: `${product.name} has been removed`,
         },
         user,

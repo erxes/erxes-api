@@ -40,7 +40,7 @@ const permissionMutations = {
         await putCreateLog(
           {
             type: 'permission',
-            object: JSON.stringify(perm),
+            object: perm,
             newData: JSON.stringify(perm),
             description,
           },
@@ -87,7 +87,7 @@ const permissionMutations = {
       await putDeleteLog(
         {
           type: 'permission',
-          object: JSON.stringify(perm),
+          object: perm,
           description,
         },
         user,
@@ -118,7 +118,7 @@ const usersGroupMutations = {
       await putCreateLog(
         {
           type: 'userGroup',
-          object: JSON.stringify(result),
+          object: result,
           newData: JSON.stringify(doc),
           description: `${result.name} has been created`,
         },
@@ -149,7 +149,7 @@ const usersGroupMutations = {
       await putUpdateLog(
         {
           type: 'userGroup',
-          object: JSON.stringify(group),
+          object: group,
           newData: JSON.stringify(doc),
           description: `${group.name} has been edited`,
         },
@@ -175,7 +175,7 @@ const usersGroupMutations = {
       await putDeleteLog(
         {
           type: 'userGroup',
-          object: JSON.stringify(group),
+          object: group,
           description: `${group.name} has been removed`,
         },
         user,

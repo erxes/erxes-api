@@ -20,7 +20,7 @@ const customerMutations = {
       {
         type: 'customer',
         newData: JSON.stringify(doc),
-        object: JSON.stringify(customer),
+        object: customer,
         description: `${customer.firstName} has been created`,
       },
       user,
@@ -40,7 +40,7 @@ const customerMutations = {
       await putUpdateLog(
         {
           type: 'customer',
-          object: JSON.stringify(customer),
+          object: customer,
           newData: JSON.stringify(doc),
           description: `${customer.firstName} has been updated`,
         },
@@ -78,7 +78,7 @@ const customerMutations = {
         await putDeleteLog(
           {
             type: 'customer',
-            object: JSON.stringify(customer),
+            object: customer,
             description: `${customer.firstName} has been deleted`,
           },
           user,

@@ -20,7 +20,7 @@ const responseTemplateMutations = {
         {
           type: 'responseTemplate',
           newData: JSON.stringify(doc),
-          object: JSON.stringify(template),
+          object: template,
           description: `${template.name} has been created`,
         },
         user,
@@ -41,7 +41,7 @@ const responseTemplateMutations = {
       await putUpdateLog(
         {
           type: 'responseTemplate',
-          object: JSON.stringify(template),
+          object: template,
           newData: JSON.stringify(fields),
           description: `${template.name} has been edited`,
         },
@@ -63,7 +63,7 @@ const responseTemplateMutations = {
       await putDeleteLog(
         {
           type: 'responseTemplate',
-          object: JSON.stringify(template),
+          object: template,
           description: `${template.name} has been removed`,
         },
         user,

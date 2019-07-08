@@ -444,7 +444,7 @@ interface ILogParams {
   type: string;
   newData?: string;
   description?: string;
-  object: string;
+  object: any;
 }
 
 /**
@@ -539,7 +539,7 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
  * @param user User information from mutation context
  */
 export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'create' };
+  const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
 
   return putLog(doc, user);
 };
@@ -550,7 +550,7 @@ export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
  * @param user User information from mutation context
  */
 export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'update' };
+  const doc = { ...params, action: 'update', object: JSON.stringify(params.object) };
 
   return putLog(doc, user);
 };
@@ -561,7 +561,7 @@ export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
  * @param user User information from mutation context
  */
 export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'delete' };
+  const doc = { ...params, action: 'delete', object: JSON.stringify(params.object) };
 
   return putLog(doc, user);
 };

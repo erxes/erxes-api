@@ -21,7 +21,7 @@ const tagMutations = {
         {
           type: 'tag',
           newData: JSON.stringify(tag),
-          object: JSON.stringify(tag),
+          object: tag,
           description: `${tag.name} has been created`,
         },
         user,
@@ -42,7 +42,7 @@ const tagMutations = {
       await putUpdateLog(
         {
           type: 'tag',
-          object: JSON.stringify(tag),
+          object: tag,
           newData: JSON.stringify(doc),
           description: `${tag.name} has been edited`,
         },
@@ -64,7 +64,7 @@ const tagMutations = {
       await putDeleteLog(
         {
           type: 'tag',
-          object: JSON.stringify(tag),
+          object: tag,
           description: `${tag.name} has been removed`,
         },
         user,

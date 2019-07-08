@@ -19,7 +19,7 @@ const companyMutations = {
       {
         type: 'company',
         newData: JSON.stringify(doc),
-        object: JSON.stringify(company),
+        object: company,
         description: `${company.primaryName} has been created`,
       },
       user,
@@ -39,7 +39,7 @@ const companyMutations = {
       await putUpdateLog(
         {
           type: 'company',
-          object: JSON.stringify(company),
+          object: company,
           newData: JSON.stringify(doc),
           description: `${company.primaryName} has been updated`,
         },
@@ -70,7 +70,7 @@ const companyMutations = {
         await putDeleteLog(
           {
             type: 'company',
-            object: JSON.stringify(company),
+            object: company,
             description: `${company.primaryName} has been removed`,
           },
           user,

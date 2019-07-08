@@ -35,7 +35,7 @@ const dealMutations = {
       {
         type: 'deal',
         newData: JSON.stringify(doc),
-        object: JSON.stringify(deal),
+        object: deal,
         description: `${deal.name} has been created`,
       },
       user,
@@ -61,7 +61,7 @@ const dealMutations = {
       await putUpdateLog(
         {
           type: 'deal',
-          object: JSON.stringify(deal),
+          object: deal,
           newData: JSON.stringify(doc),
           description: `${deal.name} has been edited`,
         },
@@ -131,7 +131,7 @@ const dealMutations = {
     await putDeleteLog(
       {
         type: 'deal',
-        object: JSON.stringify(deal),
+        object: deal,
         description: `${deal.name} has been removed`,
       },
       user,
