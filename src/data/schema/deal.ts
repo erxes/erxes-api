@@ -33,7 +33,7 @@ export const types = `
     name: String
   }
 
-  type TotalForAmount {
+  type TotalForType {
     _id: String
     name: String
     currencies: [DealTotalCurrency]
@@ -42,7 +42,7 @@ export const types = `
   type DealTotalAmounts {
     _id: String
     dealCount: Int
-    totalForType: [TotalForAmount]
+    totalForType: [TotalForType]
   }
 `;
 
