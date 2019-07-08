@@ -1,12 +1,7 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
-import {
-  CONVERSATION_STATUSES,
-  KIND_CHOICES,
-  NOTIFICATION_TYPE_ACTIONS,
-  NOTIFICATION_TYPES,
-} from '../../../db/models/definitions/constants';
+import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
@@ -120,11 +115,12 @@ const sendNotifications = async ({
       content: messageContent ? messageContent : conversation.content || '',
       notifType: type,
       receivers: conversationNotifReceivers(conversation, user._id),
-      action: NOTIFICATION_TYPE_ACTIONS[type] || '',
+      action: 'updated conversation',
     };
 
     switch (type) {
       case NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE:
+        doc.action = `sent you a message`;
         doc.receivers = conversationNotifReceivers(conversation, user._id, false);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
@@ -135,7 +131,8 @@ const sendNotifications = async ({
         doc.action = 'has removed you from conversation';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
+        doc.action = `changed conversation status to`;
+        doc.content = `${(conversation.status || '').toUpperCase()}`;
         break;
     }
 

@@ -39,10 +39,10 @@ export const sendNotifications = async ({
     throw new Error('Pipeline not found');
   }
 
-  const title = `has updated your ${contentType} '${item.name}'`;
+  const title = `${contentType} updated`;
 
   if (!content) {
-    content = title;
+    content = `${contentType} '${item.name}'`;
   }
 
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
@@ -54,26 +54,24 @@ export const sendNotifications = async ({
   }
 
   if (removedUsers && removedUsers.length > 0) {
-    content = `removed you from ${contentType}: '${item.name}'.`;
-
     await utils.sendNotification({
       createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       title,
-      content,
+      action: 'removed you from',
+      content: `${contentType}: '${item.name}'`,
       link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: removedUsers,
     });
   }
 
   if (invitedUsers && invitedUsers.length > 0) {
-    content = `invited you to the ${contentType}: '${item.name}'.`;
-
     await utils.sendNotification({
       createdUser: user,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       title,
-      content,
+      action: `invited you to the`,
+      content: `${contentType}: '${item.name}'.`,
       link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: invitedUsers,
     });
@@ -85,6 +83,7 @@ export const sendNotifications = async ({
     createdUser: user,
     notifType: type,
     title,
+    action: 'has updated',
     content,
     link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 

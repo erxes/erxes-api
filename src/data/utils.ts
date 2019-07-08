@@ -8,7 +8,6 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
-import { NOTIFICATION_TYPE_ACTIONS } from '../db/models/definitions/constants';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
@@ -369,7 +368,7 @@ export const sendNotification = async (doc: {
   content: string;
   notifType: string;
   link: string;
-  action?: string;
+  action: string;
 }) => {
   const { createdUser, receivers, title, content, notifType, link, action } = doc;
 
@@ -390,7 +389,7 @@ export const sendNotification = async (doc: {
     try {
       // send web and mobile notification
       await Notifications.createNotification(
-        { link, title, content, notifType, receiver: receiverId },
+        { link, title, content, notifType, receiver: receiverId, action },
         createdUser._id,
       );
     } catch (e) {
@@ -408,7 +407,7 @@ export const sendNotification = async (doc: {
       name: 'notification',
       data: {
         notification: doc,
-        action: action ? action : NOTIFICATION_TYPE_ACTIONS[notifType],
+        action,
         userName: getUserDetail(createdUser),
       },
     },
