@@ -21,9 +21,6 @@ export interface IPermissionParams {
 
 export interface IPermissionDocument extends IPermission, Document {
   _id: string;
-  length: number;
-  find(arg0: (p: any) => boolean): any;
-  forEach(arg0: (p: any) => any): any;
 }
 
 export const permissionSchema = new Schema({

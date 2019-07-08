@@ -18,7 +18,7 @@ const permissionMutations = {
     const result = await Permissions.createPermission(doc);
 
     if (result && result.length > 0) {
-      result.forEach(async perm => {
+      for (const perm of result) {
         let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
 
         if (perm.groupId) {
@@ -46,7 +46,7 @@ const permissionMutations = {
           },
           user,
         );
-      });
+      } // end for loop
     } // end result checking
 
     resetPermissionsCache();
