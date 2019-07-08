@@ -82,20 +82,21 @@ const dealQueries = {
         },
       },
       {
-        $sort: { '_id.type': -1, '_id.currency': 1 },
+        $group: {
+          _id: '$_id.type',
+          currencies: {
+            $push: { amount: '$amount', currency: '$_id.currency' },
+          },
+        },
+      },
+      {
+        $sort: { _id: -1 },
       },
     ]);
 
     const dealAmounts = amountList.map(deal => {
-      return {
-        _id: Math.random(),
-        type: deal._id.type,
-        currency: deal._id.currency,
-        amount: deal.amount,
-      };
+      return { _id: Math.random(), type: deal._id, currencies: deal.currencies };
     });
-
-    console.log(dealAmounts);
 
     return { _id: Math.random(), dealCount, dealAmounts };
   },

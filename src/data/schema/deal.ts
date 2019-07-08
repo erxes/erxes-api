@@ -27,11 +27,15 @@ export const types = `
     ${commonTypes}
   }
 
+  type DealTotalCurrency {
+    amount: Float
+    currency: String
+  }
+
   type DealTotalAmount {
     _id: String
-    currency: String
     type: String
-    amount: Float
+    currencies: [DealTotalCurrency]
   }
 
   type DealTotalAmounts {
