@@ -33,7 +33,7 @@ export const loadNotificationClass = () => {
     /**
      * Create a notification
      */
-    public static async createNotification(doc: INotification, createdUser?: IUserDocument | string) {
+    public static async createNotification(doc: INotification, createdUserId: string) {
       // if receiver is configured to get this notification
       const config = await NotificationConfigurations.findOne({
         user: doc.receiver,
@@ -45,7 +45,7 @@ export const loadNotificationClass = () => {
         throw new Error('Configuration does not exist');
       }
 
-      return Notifications.create({ ...doc, createdUser });
+      return Notifications.create({ ...doc, createdUser: createdUserId });
     }
 
     /**

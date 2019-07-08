@@ -175,14 +175,6 @@ const conversationMutations = {
     if (doc.internal) {
       const messageObj = await ConversationMessages.addMessage(doc, user._id);
 
-      await sendNotifications({
-        user,
-        conversations: [conversation],
-        type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-        mobile: true,
-        messageContent: messageObj.content || '',
-      });
-
       // publish new message to conversation detail
       publishMessage(messageObj);
 
@@ -208,6 +200,14 @@ const conversationMutations = {
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
+
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: message.content || '',
+    });
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK) {
