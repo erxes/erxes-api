@@ -128,13 +128,19 @@ export default {
     return Deals.find(filter).countDocuments();
   },
 
-  async stageInfo(stage: IStageDocument, _args, _context, { variableValues: args }) {
+  /*
+   * Compare current stage with next stage
+   * by initial and current deals count
+   */
+  async compareNextStage(stage: IStageDocument, _args, _context, { variableValues: args }) {
     const result: { count?: number; percent?: number } = {};
+
+    const { order = 1 } = stage;
 
     const filter = await generateDealCommonFilters(
       {
         ...args,
-        order: { $in: [stage.order, stage.order ? stage.order + 1 : 1] },
+        order: { $in: [order, order + 1] },
         pipelineId: stage.pipelineId,
         probability: { $ne: 'Lost' },
       },
@@ -158,22 +164,23 @@ export default {
           from: 'deals',
           localField: '_id',
           foreignField: 'initialStageId',
-          as: 'primaryDeals',
+          as: 'initialDeals',
         },
       },
       {
         $project: {
           order: 1,
           currentDealCount: { $size: '$currentDeals' },
-          primaryDealCount: { $size: '$primaryDeals' },
+          initialDealCount: { $size: '$initialDeals' },
         },
       },
       { $sort: { order: 1 } },
     ]);
 
     if (stages.length === 2) {
-      result.count = stages[0].currentDealCount - stages[1].currentDealCount;
-      result.percent = (stages[1].primaryDealCount * 100) / stages[0].primaryDealCount;
+      const [first, second] = stages;
+      result.count = first.currentDealCount - second.currentDealCount;
+      result.percent = (second.initialDealCount * 100) / first.initialDealCount;
     }
 
     return result;

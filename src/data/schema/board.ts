@@ -30,7 +30,7 @@ export const types = `
     pipelineId: String!
     amount: JSON
     itemsTotalCount: Int
-    stageInfo: JSON
+    compareNextStage: JSON
     stayedDealsTotalCount: Int
     initialDealsTotalCount: Int
     inProcessDealsTotalCount: Int
