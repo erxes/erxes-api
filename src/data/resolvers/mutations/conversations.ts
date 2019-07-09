@@ -9,7 +9,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import utils, { fetchIntegrationApi, getEnv } from '../../utils';
+import utils, { fetchIntegrationApi } from '../../utils';
 
 interface IConversationMessageAdd {
   conversationId: string;
@@ -106,11 +106,9 @@ const sendNotifications = async ({
   messageContent?: string;
 }) => {
   for (const conversation of conversations) {
-    const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
-
     const doc = {
       createdUser: user,
-      link: `${MAIN_APP_DOMAIN}/inbox/index?_id=${conversation._id}`,
+      link: `/inbox/index?_id=${conversation._id}`,
       title: 'Conversation updated',
       content: messageContent ? messageContent : conversation.content || '',
       notifType: type,

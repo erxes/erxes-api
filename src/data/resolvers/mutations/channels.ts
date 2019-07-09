@@ -31,7 +31,7 @@ export const sendChannelNotifications = async (
     title: `Channel updated`,
     action,
     content: `${channel.name} channel`,
-    link: `/inbox?channelId=${channel._id}`,
+    link: `/inbox/index?channelId=${channel._id}`,
 
     // exclude current user
     receivers: receivers ? receivers : (channel.memberIds || []).filter(id => id !== channel.userId),

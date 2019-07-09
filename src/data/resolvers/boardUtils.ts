@@ -4,7 +4,7 @@ import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
-import utils, { getEnv } from '../utils';
+import utils from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
   let userIds: string[] = [];
@@ -67,8 +67,6 @@ export const sendNotifications = async ({
     content = `${contentType} '${item.name}'`;
   }
 
-  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
-
   let route = '';
 
   if (contentType === 'ticket') {
@@ -82,7 +80,7 @@ export const sendNotifications = async ({
       title,
       action: `removed you from ${contentType}`,
       content: `'${item.name}'`,
-      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: removedUsers,
     });
   }
@@ -94,7 +92,7 @@ export const sendNotifications = async ({
       title,
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
-      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: invitedUsers,
     });
   }
@@ -107,7 +105,7 @@ export const sendNotifications = async ({
     title,
     action: action ? action : `has updated ${contentType}`,
     content,
-    link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+    link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user, invited user and removed users
     receivers: (await notifiedUserIds(item)).filter(id => {

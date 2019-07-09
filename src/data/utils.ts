@@ -370,7 +370,8 @@ export const sendNotification = async (doc: {
   link: string;
   action: string;
 }) => {
-  const { createdUser, receivers, title, content, notifType, link, action } = doc;
+  const { createdUser, receivers, title, content, notifType, action } = doc;
+  let link = doc.link;
 
   // collecting emails
   const recipients = await Users.find({ _id: { $in: receivers } });
@@ -399,6 +400,10 @@ export const sendNotification = async (doc: {
       }
     }
   }
+
+  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
+  link = `${MAIN_APP_DOMAIN}/${link}`;
 
   await sendEmail({
     toEmails,
