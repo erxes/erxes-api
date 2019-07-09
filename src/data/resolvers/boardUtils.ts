@@ -7,21 +7,21 @@ import { checkLogin } from '../permissions/wrappers';
 import utils, { getEnv } from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
-  const userIds: string[] = [];
+  let userIds: string[] = [];
 
-  if (item.assignedUserIds) {
-    userIds.concat(item.assignedUserIds);
+  if (item.assignedUserIds && item.assignedUserIds.length > 0) {
+    userIds = userIds.concat(item.assignedUserIds);
   }
 
-  if (item.watchedUserIds) {
-    userIds.concat(item.watchedUserIds);
+  if (item.watchedUserIds && item.watchedUserIds.length > 0) {
+    userIds = userIds.concat(item.watchedUserIds);
   }
 
   const stage = await Stages.getStage(item.stageId || '');
   const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
-  if (pipeline.watchedUserIds) {
-    userIds.concat(pipeline.watchedUserIds);
+  if (pipeline.watchedUserIds && pipeline.watchedUserIds.length > 0) {
+    userIds = userIds.concat(pipeline.watchedUserIds);
   }
 
   return userIds;
