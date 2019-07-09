@@ -403,7 +403,7 @@ export const sendNotification = async (doc: {
 
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
-  link = `${MAIN_APP_DOMAIN}/${link}`;
+  link = `${MAIN_APP_DOMAIN}${link}`;
 
   await sendEmail({
     toEmails,
@@ -411,7 +411,7 @@ export const sendNotification = async (doc: {
     template: {
       name: 'notification',
       data: {
-        notification: doc,
+        notification: { ...doc, link },
         action,
         userName: getUserDetail(createdUser),
       },
