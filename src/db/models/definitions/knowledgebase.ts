@@ -15,6 +15,7 @@ export interface IArticle {
   content?: string;
   status?: string;
   reactionChoices: string[];
+  reactionCounts: { [key: string]: number };
 }
 
 export interface IArticleDocument extends ICommonFields, IArticle, Document {
@@ -71,6 +72,7 @@ export const articleSchema = new Schema({
     default: PUBLISH_STATUSES.DRAFT,
   }),
   reactionChoices: field({ type: [String], default: [] }),
+  reactionCounts: field({ type: Object }),
   ...commonFields,
 });
 
