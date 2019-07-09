@@ -129,8 +129,7 @@ const sendNotifications = async ({
         doc.action = 'has removed you from conversation';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.action = `changed conversation status to`;
-        doc.content = `${(conversation.status || '').toUpperCase()}`;
+        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
         break;
     }
 
