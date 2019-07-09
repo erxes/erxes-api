@@ -118,8 +118,8 @@ export const itemsChange = async (collection: any, item: any, type: string, dest
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
-  let action = `changed order of your `;
-  let content = `${type}:'${item.name}'`;
+  let action = `changed order of your ${type}:`;
+  let content = `'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
