@@ -99,7 +99,7 @@ describe('testings helper methods', () => {
       notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
       title: `Channel updated`,
       content,
-      link: `/inbox?channelId=${channel._id}`,
+      link: `/inbox/index?channelId=${channel._id}`,
       receivers: channel && channel.memberIds ? channel.memberIds.filter(id => id !== channel.userId) : null,
     });
 

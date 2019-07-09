@@ -9,7 +9,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import utils, { fetchIntegrationApi, getEnv } from '../../utils';
+import utils, { fetchIntegrationApi } from '../../utils';
 
 interface IConversationMessageAdd {
   conversationId: string;
@@ -106,11 +106,9 @@ const sendNotifications = async ({
   messageContent?: string;
 }) => {
   for (const conversation of conversations) {
-    const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
-
     const doc = {
       createdUser: user,
-      link: `${MAIN_APP_DOMAIN}/inbox/index?_id=${conversation._id}`,
+      link: `/inbox/index?_id=${conversation._id}`,
       title: 'Conversation updated',
       content: messageContent ? messageContent : conversation.content || '',
       notifType: type,
@@ -131,8 +129,7 @@ const sendNotifications = async ({
         doc.action = 'has removed you from conversation';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.action = `changed conversation status to`;
-        doc.content = `${(conversation.status || '').toUpperCase()}`;
+        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
         break;
     }
 
@@ -171,6 +168,14 @@ const conversationMutations = {
       throw new Error('Integration not found');
     }
 
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: doc.content || '',
+    });
+
     // do not send internal message to third service integrations
     if (doc.internal) {
       const messageObj = await ConversationMessages.addMessage(doc, user._id);
@@ -200,14 +205,6 @@ const conversationMutations = {
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
-
-    await sendNotifications({
-      user,
-      conversations: [conversation],
-      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-      mobile: true,
-      messageContent: message.content || '',
-    });
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK) {

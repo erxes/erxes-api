@@ -4,24 +4,24 @@ import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
-import utils, { getEnv } from '../utils';
+import utils from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
-  const userIds: string[] = [];
+  let userIds: string[] = [];
 
-  if (item.assignedUserIds) {
-    userIds.concat(item.assignedUserIds);
+  if (item.assignedUserIds && item.assignedUserIds.length > 0) {
+    userIds = userIds.concat(item.assignedUserIds);
   }
 
-  if (item.watchedUserIds) {
-    userIds.concat(item.watchedUserIds);
+  if (item.watchedUserIds && item.watchedUserIds.length > 0) {
+    userIds = userIds.concat(item.watchedUserIds);
   }
 
   const stage = await Stages.getStage(item.stageId || '');
   const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
-  if (pipeline.watchedUserIds) {
-    userIds.concat(pipeline.watchedUserIds);
+  if (pipeline.watchedUserIds && pipeline.watchedUserIds.length > 0) {
+    userIds = userIds.concat(pipeline.watchedUserIds);
   }
 
   return userIds;
@@ -67,8 +67,6 @@ export const sendNotifications = async ({
     content = `${contentType} '${item.name}'`;
   }
 
-  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
-
   let route = '';
 
   if (contentType === 'ticket') {
@@ -82,7 +80,7 @@ export const sendNotifications = async ({
       title,
       action: `removed you from ${contentType}`,
       content: `'${item.name}'`,
-      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: removedUsers,
     });
   }
@@ -94,7 +92,7 @@ export const sendNotifications = async ({
       title,
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
-      link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
       receivers: invitedUsers,
     });
   }
@@ -107,7 +105,7 @@ export const sendNotifications = async ({
     title,
     action: action ? action : `has updated ${contentType}`,
     content,
-    link: `${MAIN_APP_DOMAIN}${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+    link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
 
     // exclude current user, invited user and removed users
     receivers: (await notifiedUserIds(item)).filter(id => {
@@ -120,8 +118,8 @@ export const itemsChange = async (collection: any, item: any, type: string, dest
   const oldItem = await collection.findOne({ _id: item._id });
   const oldStageId = oldItem ? oldItem.stageId || '' : '';
 
-  let action = `changed order of your `;
-  let content = `${type}:'${item.name}'`;
+  let action = `changed order of your ${type}:`;
+  let content = `'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
