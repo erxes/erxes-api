@@ -3,7 +3,7 @@ import { IChannel, IChannelDocument } from '../../../db/models/definitions/chann
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleCheckPermission } from '../../permissions/wrappers';
-import utils from '../../utils';
+import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkUserIds } from './notifications';
 
 interface IChannelsEdit extends IChannel {
@@ -47,6 +47,16 @@ const channelMutations = {
 
     await sendChannelNotifications(channel, 'invited', user);
 
+    await putCreateLog(
+      {
+        type: 'channel',
+        newData: JSON.stringify(doc),
+        object: channel,
+        description: `${doc.name} has been created`,
+      },
+      user,
+    );
+
     return channel;
   },
 
@@ -67,7 +77,21 @@ const channelMutations = {
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);
 
-    return Channels.updateChannel(_id, doc);
+    const updated = await Channels.updateChannel(_id, doc);
+
+    if (channel) {
+      await putUpdateLog(
+        {
+          type: 'channel',
+          object: channel,
+          newData: JSON.stringify(doc),
+          description: `${channel.name} has been updated`,
+        },
+        user,
+      );
+    }
+
+    return updated;
   },
 
   /**
@@ -80,9 +104,18 @@ const channelMutations = {
       throw new Error('Channel not found');
     }
 
+    await sendChannelNotifications(channel, 'removed', user);
+
     await Channels.removeChannel(_id);
 
-    await sendChannelNotifications(channel, 'removed', user);
+    await putDeleteLog(
+      {
+        type: 'channel',
+        object: channel,
+        description: `${channel.name} has been removed`,
+      },
+      user,
+    );
 
     return true;
   },

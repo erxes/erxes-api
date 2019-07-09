@@ -4,6 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -30,6 +31,16 @@ const dealMutations = {
       content: `'${deal.name}'.`,
       contentType: 'deal',
     });
+
+    await putCreateLog(
+      {
+        type: 'deal',
+        newData: JSON.stringify(doc),
+        object: deal,
+        description: `${deal.name} has been created`,
+      },
+      user,
+    );
 
     return deal;
   },
@@ -63,6 +74,17 @@ const dealMutations = {
       contentType: 'deal',
     });
 
+    if (updatedDeal) {
+      await putUpdateLog(
+        {
+          type: 'deal',
+          object: updatedDeal,
+          newData: JSON.stringify(doc),
+          description: `${updatedDeal.name} has been edited`,
+        },
+        user,
+      );
+    }
     return updatedDeal;
   },
 
@@ -126,7 +148,18 @@ const dealMutations = {
       contentType: 'deal',
     });
 
-    return deal.remove();
+    const removed = deal.remove();
+
+    await putDeleteLog(
+      {
+        type: 'deal',
+        object: deal,
+        description: `${deal.name} has been removed`,
+      },
+      user,
+    );
+
+    return removed;
   },
 
   /**
