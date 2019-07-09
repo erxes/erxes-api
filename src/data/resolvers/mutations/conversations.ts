@@ -171,6 +171,14 @@ const conversationMutations = {
       throw new Error('Integration not found');
     }
 
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: doc.content || '',
+    });
+
     // do not send internal message to third service integrations
     if (doc.internal) {
       const messageObj = await ConversationMessages.addMessage(doc, user._id);
@@ -200,14 +208,6 @@ const conversationMutations = {
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
-
-    await sendNotifications({
-      user,
-      conversations: [conversation],
-      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-      mobile: true,
-      messageContent: message.content || '',
-    });
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK) {
