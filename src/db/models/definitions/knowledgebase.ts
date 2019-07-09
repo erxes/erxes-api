@@ -14,6 +14,7 @@ export interface IArticle {
   summary?: string;
   content?: string;
   status?: string;
+  reactionChoices: string[];
 }
 
 export interface IArticleDocument extends ICommonFields, IArticle, Document {
@@ -69,6 +70,7 @@ export const articleSchema = new Schema({
     enum: PUBLISH_STATUSES.ALL,
     default: PUBLISH_STATUSES.DRAFT,
   }),
+  reactionChoices: field({ type: [String], default: [] }),
   ...commonFields,
 });
 
