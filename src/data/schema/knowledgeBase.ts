@@ -6,6 +6,7 @@ export const types = `
     content: String
     status: String
     reactionChoices: [String]
+    reactionCounts: JSON
     createdBy: String
     createdUser: User
     createdDate: Date
