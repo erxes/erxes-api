@@ -8,6 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
+import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
@@ -351,20 +352,27 @@ export const sendEmail = async ({
 };
 
 /**
+ * Returns user's name or email
+ */
+export const getUserDetail = (user: IUser) => {
+  return (user.details && user.details.fullName) || user.email;
+};
+
+/**
  * Send a notification
  */
-export const sendNotification = async ({
-  createdUser,
-  receivers,
-  ...doc
-}: {
-  createdUser?: string;
+export const sendNotification = async (doc: {
+  createdUser: IUserDocument;
   receivers: string[];
   title: string;
   content: string;
   notifType: string;
   link: string;
+  action: string;
 }) => {
+  const { createdUser, receivers, title, content, notifType, action } = doc;
+  let link = doc.link;
+
   // collecting emails
   const recipients = await Users.find({ _id: { $in: receivers } });
 
@@ -381,8 +389,10 @@ export const sendNotification = async ({
   for (const receiverId of receivers) {
     try {
       // send web and mobile notification
-
-      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
+      await Notifications.createNotification(
+        { link, title, content, notifType, receiver: receiverId, action },
+        createdUser._id,
+      );
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
@@ -391,16 +401,24 @@ export const sendNotification = async ({
     }
   }
 
-  return sendEmail({
+  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
+  link = `${MAIN_APP_DOMAIN}${link}`;
+
+  await sendEmail({
     toEmails,
     title: 'Notification',
     template: {
       name: 'notification',
       data: {
-        notification: doc,
+        notification: { ...doc, link },
+        action,
+        userName: getUserDetail(createdUser),
       },
     },
   });
+
+  return true;
 };
 
 /**
@@ -423,11 +441,27 @@ export const generateXlsx = async (workbook: any): Promise<string> => {
 interface IRequestParams {
   url?: string;
   path?: string;
-  method: string;
+  method?: string;
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
   form?: { [key: string]: string };
+}
+
+export interface ILogQueryParams {
+  start?: string;
+  end?: string;
+  userId?: string;
+  action?: string;
+  page?: number;
+  perPage?: number;
+}
+
+interface ILogParams {
+  type: string;
+  newData?: string;
+  description?: string;
+  object: any;
 }
 
 /**
@@ -513,6 +547,83 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
   return sendRequest(
     { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
     'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'update', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'delete', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} body Request
+ * @param {Object} user User information from mutation context
+ */
+const putLog = (body: ILogParams, user: IUserDocument) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return;
+  }
+
+  const doc = {
+    ...body,
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+  };
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body: { params: JSON.stringify(doc) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogs = (params: ILogQueryParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return {
+      logs: [],
+      totalCount: 0,
+    };
+  }
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body: { params: JSON.stringify(params) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
   );
 };
 
