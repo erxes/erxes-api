@@ -19,13 +19,9 @@ export interface IConversationModel extends Model<IConversationDocument> {
 
   assignUserConversation(conversationIds: string[], assignedUserId?: string): Promise<IConversationDocument[]>;
 
-  unassignUserConversation(conversationIds: string[]): Promise<IConversationDocument>;
+  unassignUserConversation(conversationIds: string[]): Promise<IConversationDocument[]>;
 
-  changeCustomerStatus(
-    status: string,
-    customerId: string,
-    integrationId: string,
-  ): Array<Promise<IConversationDocument>>;
+  changeCustomerStatus(status: string, customerId: string, integrationId: string): Promise<IMessageDocument[]>;
 
   changeStatusConversation(conversationIds: string[], status: string, userId?: string): Promise<IConversationDocument>;
 

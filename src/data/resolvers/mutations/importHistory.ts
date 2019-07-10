@@ -1,13 +1,14 @@
-import * as path from 'path';
 import { ImportHistory } from '../../../db/models';
-import { clearIntervals, createWorkers, removeWorkers, splitToCore } from '../../../workers/utils';
+import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
+import { fetchWorkersApi, putDeleteLog } from '../../utils';
 
 const importHistoryMutations = {
   /**
-   * Remove a history
+   * Removes a history
+   * @param {string} param1._id ImportHistory id
    */
-  async importHistoriesRemove(_root, { _id }: { _id: string }) {
+  async importHistoriesRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
     const importHistory = await ImportHistory.findOne({ _id });
 
     if (!importHistory) {
@@ -16,23 +17,24 @@ const importHistoryMutations = {
 
     await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
-    const ids: any = importHistory.ids || [];
+    await fetchWorkersApi({
+      path: '/import-remove',
+      method: 'POST',
+      body: {
+        targetIds: JSON.stringify(importHistory.ids || []),
+        contentType: importHistory.contentType,
+        importHistoryId: importHistory._id,
+      },
+    });
 
-    const results = splitToCore(ids);
-
-    const workerFile =
-      process.env.NODE_ENV === 'production'
-        ? `./dist/workers/importHistoryRemove.worker.js`
-        : './src/workers/importHistoryRemove.worker.import.js';
-
-    const workerPath = path.resolve(workerFile);
-
-    const workerData = {
-      contentType: importHistory.contentType,
-      importHistoryId: importHistory._id,
-    };
-
-    await createWorkers(workerPath, workerData, results);
+    await putDeleteLog(
+      {
+        type: 'importHistory',
+        object: importHistory,
+        description: `${importHistory._id}-${importHistory.date} has been removed`,
+      },
+      user,
+    );
 
     return ImportHistory.findOne({ _id: importHistory._id });
   },
@@ -47,9 +49,7 @@ const importHistoryMutations = {
       throw new Error('History not found');
     }
 
-    clearIntervals();
-
-    removeWorkers();
+    await fetchWorkersApi({ path: '/import-cancel', method: 'POST' });
 
     return true;
   },

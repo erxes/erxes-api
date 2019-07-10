@@ -1,10 +1,11 @@
 import { Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
+import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { itemsChange, manageNotifications, sendNotifications } from '../boardUtils';
+import { itemsChange, sendNotifications } from '../boardUtils';
+import { checkUserIds } from './notifications';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
@@ -20,14 +21,14 @@ const ticketMutations = {
       modifiedBy: user._id,
     });
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      item: ticket,
       user,
-      NOTIFICATION_TYPES.TICKET_ADD,
-      ticket.assignedUserIds || [],
-      `'{userName}' invited you to the '${ticket.name}'.`,
-      'ticket',
-    );
+      type: NOTIFICATION_TYPES.TICKET_ADD,
+      action: `invited you to the`,
+      content: `'${ticket.name}'.`,
+      contentType: 'ticket',
+    });
 
     return ticket;
   },
@@ -36,15 +37,30 @@ const ticketMutations = {
    * Edit ticket
    */
   async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }) {
-    const ticket = await Tickets.updateTicket(_id, {
+    const oldTicket = await Tickets.findOne({ _id });
+
+    if (!oldTicket) {
+      throw new Error('Ticket not found');
+    }
+
+    const updatedTicket = await Tickets.updateTicket(_id, {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
     });
 
-    await manageNotifications(Tickets, ticket, user, 'ticket');
+    const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds || [], doc.assignedUserIds || []);
 
-    return ticket;
+    await sendNotifications({
+      item: updatedTicket,
+      user,
+      type: NOTIFICATION_TYPES.TICKET_EDIT,
+      invitedUsers: addedUserIds,
+      removedUsers: removedUserIds,
+      contentType: 'ticket',
+    });
+
+    return updatedTicket;
   },
 
   /**
@@ -61,16 +77,16 @@ const ticketMutations = {
       stageId: destinationStageId,
     });
 
-    const content = await itemsChange(Tickets, ticket, 'ticket', destinationStageId);
+    const { content, action } = await itemsChange(Tickets, ticket, 'ticket', destinationStageId);
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      item: ticket,
       user,
-      NOTIFICATION_TYPES.TICKET_CHANGE,
-      ticket.assignedUserIds || [],
+      type: NOTIFICATION_TYPES.TICKET_CHANGE,
+      action,
       content,
-      'ticket',
-    );
+      contentType: 'ticket',
+    });
 
     return ticket;
   },
@@ -92,16 +108,29 @@ const ticketMutations = {
       throw new Error('ticket not found');
     }
 
-    await sendNotifications(
-      ticket.stageId || '',
+    await sendNotifications({
+      item: ticket,
       user,
-      NOTIFICATION_TYPES.TICKET_DELETE,
-      ticket.assignedUserIds || [],
-      `'{userName}' deleted ticket: '${ticket.name}'`,
-      'ticket',
-    );
+      type: NOTIFICATION_TYPES.TICKET_DELETE,
+      action: `deleted ticket:`,
+      content: `'${ticket.name}'`,
+      contentType: 'ticket',
+    });
 
-    return Tickets.removeTicket(_id);
+    return ticket.remove();
+  },
+
+  /**
+   * Watch ticket
+   */
+  async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+    const ticket = await Tickets.findOne({ _id });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    return Tickets.watchTicket(_id, isAdd, user._id);
   },
 };
 
@@ -109,5 +138,6 @@ checkPermission(ticketMutations, 'ticketsAdd', 'ticketsAdd');
 checkPermission(ticketMutations, 'ticketsEdit', 'ticketsEdit');
 checkPermission(ticketMutations, 'ticketsUpdateOrder', 'ticketsUpdateOrder');
 checkPermission(ticketMutations, 'ticketsRemove', 'ticketsRemove');
+checkPermission(ticketMutations, 'ticketsWatch', 'ticketsWatch');
 
 export default ticketMutations;

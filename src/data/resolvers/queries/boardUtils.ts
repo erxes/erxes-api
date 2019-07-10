@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { Stages } from '../../../db/models';
 import { getNextMonth, getToday } from '../../utils';
 
-const contains = (values: string[] = [], empty = false) => {
+export const contains = (values: string[] = [], empty = false) => {
   if (empty) {
     return [];
   }
@@ -12,6 +12,7 @@ const contains = (values: string[] = [], empty = false) => {
 
 export const generateCommonFilters = async (args: any) => {
   const {
+    $and,
     date,
     pipelineId,
     stageId,
@@ -24,20 +25,26 @@ export const generateCommonFilters = async (args: any) => {
     assignedUserIds,
     customerIds,
     companyIds,
-    productIds,
+    order,
+    probability,
+    initialStageId,
   } = args;
-
-  const filter: any = {};
 
   const assignedToNoOne = value => {
     return value.length === 1 && value[0].length === 0;
   };
+
+  const filter: any = {};
 
   if (assignedUserIds) {
     // Filter by assigned to no one
     const notAssigned = assignedToNoOne(assignedUserIds);
 
     filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
+  }
+
+  if ($and) {
+    filter.$and = $and;
   }
 
   if (customerIds) {
@@ -48,8 +55,16 @@ export const generateCommonFilters = async (args: any) => {
     filter.companyIds = contains(companyIds);
   }
 
-  if (productIds) {
-    filter['productsData.productId'] = contains(productIds);
+  if (order) {
+    filter.order = order;
+  }
+
+  if (probability) {
+    filter.probability = probability;
+  }
+
+  if (initialStageId) {
+    filter.initialStageId = initialStageId;
   }
 
   if (nextDay) {
@@ -113,6 +128,43 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.closeDate = dateSelector(date);
     filter.stageId = { $in: stageIds };
+  }
+
+  return filter;
+};
+
+export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
+  const filter = await generateCommonFilters(args);
+  const { productIds } = extraParams || args;
+
+  if (productIds) {
+    filter['productsData.productId'] = contains(productIds);
+  }
+
+  return filter;
+};
+
+export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
+  const filter = await generateCommonFilters(args);
+  const { priority, source } = extraParams || args;
+
+  if (priority) {
+    filter.priority = contains(priority);
+  }
+
+  if (source) {
+    filter.source = contains(source);
+  }
+
+  return filter;
+};
+
+export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
+  const filter = await generateCommonFilters(args);
+  const { priority } = extraParams || args;
+
+  if (priority) {
+    filter.priority = contains(priority);
   }
 
   return filter;

@@ -1,14 +1,13 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES } from '../../../db/models/definitions/constants';
+import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { debugIntegrationsApi } from '../../../debuggers';
+import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
-import { NOTIFICATION_TYPES } from '../../constants';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import utils, { fetchIntegrationApi } from '../../utils';
 
@@ -93,6 +92,61 @@ export const publishClientMessage = (message: IMessageDocument) => {
   });
 };
 
+const sendNotifications = async ({
+  user,
+  conversations,
+  type,
+  mobile,
+  messageContent,
+}: {
+  user: IUserDocument;
+  conversations: IConversationDocument[];
+  type: string;
+  mobile?: boolean;
+  messageContent?: string;
+}) => {
+  for (const conversation of conversations) {
+    const doc = {
+      createdUser: user,
+      link: `/inbox/index?_id=${conversation._id}`,
+      title: 'Conversation updated',
+      content: messageContent ? messageContent : conversation.content || '',
+      notifType: type,
+      receivers: conversationNotifReceivers(conversation, user._id),
+      action: 'updated conversation',
+    };
+
+    switch (type) {
+      case NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE:
+        doc.action = `sent you a message`;
+        doc.receivers = conversationNotifReceivers(conversation, user._id, false);
+        break;
+      case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
+        doc.action = 'has assigned you to conversation ';
+        break;
+      case 'unassign':
+        doc.notifType = NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE;
+        doc.action = 'has removed you from conversation';
+        break;
+      case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
+        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
+        break;
+    }
+
+    await utils.sendNotification(doc);
+
+    if (mobile) {
+      // send mobile notification ======
+      await utils.sendMobileNotification({
+        title: doc.title,
+        body: strip(doc.content),
+        receivers: conversationNotifReceivers(conversation, user._id, false),
+        customerId: conversation.customerId,
+      });
+    }
+  }
+};
+
 const conversationMutations = {
   /**
    * Create new message in conversation
@@ -114,24 +168,12 @@ const conversationMutations = {
       throw new Error('Integration not found');
     }
 
-    // send notification =======
-    const title = 'You have a new message.';
-
-    utils.sendNotification({
-      createdUser: user._id,
-      notifType: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-      title,
-      content: doc.content,
-      link: `/inbox?_id=${conversation._id}`,
-      receivers: conversationNotifReceivers(conversation, user._id),
-    });
-
-    // send mobile notification ======
-    utils.sendMobileNotification({
-      title,
-      body: strip(doc.content),
-      receivers: conversationNotifReceivers(conversation, user._id, false),
-      customerId: conversation.customerId,
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: doc.content || '',
     });
 
     // do not send internal message to third service integrations
@@ -177,10 +219,10 @@ const conversationMutations = {
         },
       })
         .then(response => {
-          debugIntegrationsApi(response);
+          debugExternalApi(response);
         })
         .catch(e => {
-          debugIntegrationsApi(e.message);
+          debugExternalApi(e.message);
         });
     }
 
@@ -202,7 +244,7 @@ const conversationMutations = {
     { conversationIds, assignedUserId }: { conversationIds: string[]; assignedUserId: string },
     { user }: { user: IUserDocument },
   ) {
-    const updatedConversations: IConversationDocument[] = await Conversations.assignUserConversation(
+    const conversations: IConversationDocument[] = await Conversations.assignUserConversation(
       conversationIds,
       assignedUserId,
     );
@@ -210,33 +252,28 @@ const conversationMutations = {
     // notify graphl subscription
     publishConversationsChanged(conversationIds, 'assigneeChanged');
 
-    for (const conversation of updatedConversations) {
-      const content = 'Assigned user has changed';
+    await sendNotifications({ user, conversations, type: NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE });
 
-      // send notification
-      utils.sendNotification({
-        createdUser: user._id,
-        notifType: NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE,
-        title: content,
-        content,
-        link: `/inbox?_id=${conversation._id}`,
-        receivers: conversationNotifReceivers(conversation, user._id),
-      });
-    }
-
-    return updatedConversations;
+    return conversations;
   },
 
   /**
    * Unassign employee from conversation
    */
-  async conversationsUnassign(_root, { _ids }: { _ids: string[] }) {
-    const conversations = await Conversations.unassignUserConversation(_ids);
+  async conversationsUnassign(_root, { _ids }: { _ids: string[] }, { user }: { user: IUserDocument }) {
+    const oldConversations = await Conversations.find({ _id: { $in: _ids } });
+    const updatedConversations = await Conversations.unassignUserConversation(_ids);
+
+    await sendNotifications({
+      user,
+      conversations: oldConversations,
+      type: 'unassign',
+    });
 
     // notify graphl subscription
     publishConversationsChanged(_ids, 'assigneeChanged');
 
-    return conversations;
+    return updatedConversations;
   },
 
   /**
@@ -295,20 +332,17 @@ const conversationMutations = {
           });
         }
       }
-
-      const content = 'Conversation status has changed.';
-
-      utils.sendNotification({
-        createdUser: user._id,
-        notifType: NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE,
-        title: content,
-        content,
-        link: `/inbox?_id=${conversation._id}`,
-        receivers: conversationNotifReceivers(conversation, user._id),
-      });
     }
 
-    return Conversations.find({ _id: { $in: _ids } });
+    const updatedConversations = await Conversations.find({ _id: { $in: _ids } });
+
+    await sendNotifications({
+      user,
+      conversations: updatedConversations,
+      type: NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE,
+    });
+
+    return updatedConversations;
   },
 
   /**

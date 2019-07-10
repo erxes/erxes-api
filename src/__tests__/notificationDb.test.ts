@@ -1,7 +1,7 @@
-import { NOTIFICATION_TYPES } from '../data/constants';
 import { notificationConfigurationFactory, userFactory } from '../db/factories';
 import { NotificationConfigurations, Notifications, Users } from '../db/models';
 
+import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('Notification model tests', () => {
@@ -46,6 +46,12 @@ describe('Notification model tests', () => {
 
   test('model create, update, remove', async () => {
     // Create notification ================
+
+    await notificationConfigurationFactory({
+      isAllowed: true,
+      notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
+      user: _user2._id,
+    });
 
     let doc = {
       notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,

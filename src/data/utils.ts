@@ -8,12 +8,17 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
-import { debugBase, debugEmail, debugIntegrationsApi } from '../debuggers';
+import { IUser, IUserDocument } from '../db/models/definitions/users';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 
 /*
  * Check that given file is not harmful
  */
 export const checkFile = async file => {
+  if (!file) {
+    throw new Error('Invalid file');
+  }
+
   const { size } = file;
 
   // 20mb
@@ -213,14 +218,24 @@ export const readFileRequest = async (key: string): Promise<any> => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFile = async (file): Promise<string> => {
+export const uploadFile = async (file, fromEditor = false): Promise<any> => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
-  if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    return uploadFileAWS(file);
+  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+
+  if (fromEditor) {
+    const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
+
+    if (IS_PUBLIC !== 'true') {
+      editorResult.url = `${DOMAIN}/read-file?key=${nameOrLink}`;
+    }
+
+    return editorResult;
   }
 
-  return uploadFileGCS(file);
+  return nameOrLink;
 };
 
 /**
@@ -337,20 +352,27 @@ export const sendEmail = async ({
 };
 
 /**
+ * Returns user's name or email
+ */
+export const getUserDetail = (user: IUser) => {
+  return (user.details && user.details.fullName) || user.email;
+};
+
+/**
  * Send a notification
  */
-export const sendNotification = async ({
-  createdUser,
-  receivers,
-  ...doc
-}: {
-  createdUser?: string;
+export const sendNotification = async (doc: {
+  createdUser: IUserDocument;
   receivers: string[];
   title: string;
   content: string;
   notifType: string;
   link: string;
+  action: string;
 }) => {
+  const { createdUser, receivers, title, content, notifType, action } = doc;
+  let link = doc.link;
+
   // collecting emails
   const recipients = await Users.find({ _id: { $in: receivers } });
 
@@ -367,7 +389,10 @@ export const sendNotification = async ({
   for (const receiverId of receivers) {
     try {
       // send web and mobile notification
-      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
+      await Notifications.createNotification(
+        { link, title, content, notifType, receiver: receiverId, action },
+        createdUser._id,
+      );
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
@@ -376,16 +401,24 @@ export const sendNotification = async ({
     }
   }
 
-  return sendEmail({
+  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
+  link = `${MAIN_APP_DOMAIN}${link}`;
+
+  await sendEmail({
     toEmails,
     title: 'Notification',
     template: {
       name: 'notification',
       data: {
-        notification: doc,
+        notification: { ...doc, link },
+        action,
+        userName: getUserDetail(createdUser),
       },
     },
   });
+
+  return true;
 };
 
 /**
@@ -401,66 +434,81 @@ export const createXlsFile = async () => {
 /**
  * Generates downloadable xls file on the url
  */
-export const generateXlsx = async (workbook: any, name: string, output = 'file'): Promise<string> => {
-  // Url to download xls file
-  const url = `xlsTemplateOutputs/${name}.xlsx`;
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  if (output === 'file') {
-    // Saving xls workbook to the directory
-    await workbook.toFileAsync(`${__dirname}/../private/${url}`);
-    return `${DOMAIN}/static/${url}`;
-  }
-
+export const generateXlsx = async (workbook: any): Promise<string> => {
   return workbook.outputAsync();
 };
 
 interface IRequestParams {
   url?: string;
   path?: string;
-  method: string;
+  method?: string;
+  headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: string };
+  form?: { [key: string]: string };
+}
+
+export interface ILogQueryParams {
+  start?: string;
+  end?: string;
+  userId?: string;
+  action?: string;
+  page?: number;
+  perPage?: number;
+}
+
+interface ILogParams {
+  type: string;
+  newData?: string;
+  description?: string;
+  object: any;
 }
 
 /**
  * Sends post request to specific url
  */
-export const sendRequest = async ({ url, method, body, params }: IRequestParams) => {
+export const sendRequest = async (
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage?: string,
+) => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
 
-  debugIntegrationsApi(`
-    Sending request to integrations api with
+  if (NODE_ENV === 'test') {
+    return;
+  }
+
+  debugExternalApi(`
+    Sending request to
     url: ${url}
     method: ${method}
+    body: ${JSON.stringify(body)}
     params: ${JSON.stringify(params)}
   `);
 
   try {
     const response = await requestify.request(url, {
       method,
-      headers: { 'Content-Type': 'application/json', origin: DOMAIN },
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN, ...(headers || {}) },
+      form,
       body,
       params,
     });
 
     const responseBody = response.getBody();
 
-    debugIntegrationsApi(`
-      Success from integrations api: ${url}
+    debugExternalApi(`
+      Success from : ${url}
       responseBody: ${JSON.stringify(responseBody)}
     `);
 
     return responseBody;
   } catch (e) {
     if (e.code === 'ECONNREFUSED') {
-      const message =
-        'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running';
-
-      debugIntegrationsApi(message);
-      throw new Error(message);
+      debugExternalApi(errorMessage);
+      throw new Error(errorMessage);
     } else {
-      debugIntegrationsApi(`Error occurred in integrations api: ${e.body}`);
+      debugExternalApi(`Error occurred : ${e.body}`);
       throw new Error(e.body);
     }
   }
@@ -472,7 +520,111 @@ export const sendRequest = async ({ url, method, body, params }: IRequestParams)
 export const fetchIntegrationApi = ({ path, method, body, params }: IRequestParams) => {
   const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
 
-  return sendRequest({ url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params });
+  return sendRequest(
+    { url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running',
+  );
+};
+
+/**
+ * Send request to crons api
+ */
+export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
+  const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+  );
+};
+
+/**
+ * Send request to workers api
+ */
+export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'update', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'delete', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} body Request
+ * @param {Object} user User information from mutation context
+ */
+const putLog = (body: ILogParams, user: IUserDocument) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return;
+  }
+
+  const doc = {
+    ...body,
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+  };
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body: { params: JSON.stringify(doc) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogs = (params: ILogQueryParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return {
+      logs: [],
+      totalCount: 0,
+    };
+  }
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body: { params: JSON.stringify(params) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
 };
 
 /**
@@ -480,6 +632,12 @@ export const fetchIntegrationApi = ({ path, method, body, params }: IRequestPara
  * @param email as String
  */
 export const validateEmail = async email => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+
+  if (NODE_ENV === 'test') {
+    return true;
+  }
+
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
 

@@ -1,8 +1,8 @@
 import * as moment from 'moment';
 import * as schedule from 'node-schedule';
-import { NOTIFICATION_TYPES } from '../data/constants';
 import utils from '../data/utils';
-import { Deals, Pipelines, Stages } from '../db/models';
+import { Deals, Pipelines, Stages, Users } from '../db/models';
+import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
 
 /**
  * Send notification Deals dueDate
@@ -20,25 +20,24 @@ export const sendNotifications = async () => {
   });
 
   for (const deal of deals) {
-    const stage = await Stages.findOne({ _id: deal.stageId });
+    const stage = await Stages.getStage(deal.stageId || '');
+    const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
-    if (!stage) {
-      throw new Error('Stage not found');
+    const user = await Users.findOne({ _id: deal.modifiedBy });
+
+    if (!user) {
+      return;
     }
 
-    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-
-    if (!pipeline) {
-      throw new Error('Pipeline not found');
-    }
-
-    const content = `Reminder: '${deal.name}' deal is due in upcoming`;
+    const content = `'${deal.name}' deal is due in upcoming`;
 
     utils.sendNotification({
       notifType: NOTIFICATION_TYPES.DEAL_DUE_DATE,
       title: content,
       content,
+      action: `Reminder:`,
       link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+      createdUser: user,
       // exclude current user
       receivers: deal.assignedUserIds || [],
     });

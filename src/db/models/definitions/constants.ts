@@ -1,5 +1,3 @@
-export const LANGUAGE_CHOICES = ['', 'mn', 'en'];
-
 export const CONVERSATION_STATUSES = {
   NEW: 'new',
   OPEN: 'open',
@@ -94,8 +92,9 @@ export const ACTIVITY_TYPES = {
   EMAIL: 'email',
   TICKET: 'ticket',
   TASK: 'task',
+  BRAND: 'brand',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task'],
+  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task', 'brand'],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -280,4 +279,54 @@ export const BOARD_TYPES = {
   TICKET: 'ticket',
   TASK: 'task',
   ALL: ['deal', 'ticket', 'task'],
+};
+
+// module constants
+export const NOTIFICATION_TYPES = {
+  CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
+  CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
+  CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
+  CONVERSATION_STATE_CHANGE: 'conversationStateChange',
+  DEAL_ADD: 'dealAdd',
+  DEAL_REMOVE_ASSIGN: 'dealRemoveAssign',
+  DEAL_EDIT: 'dealEdit',
+  DEAL_CHANGE: 'dealChange',
+  DEAL_DUE_DATE: 'dealDueDate',
+  DEAL_DELETE: 'dealDelete',
+  TICKET_ADD: 'ticketAdd',
+  TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
+  TICKET_EDIT: 'ticketEdit',
+  TICKET_CHANGE: 'ticketChange',
+  TICKET_DUE_DATE: 'ticketDueDate',
+  TICKET_DELETE: 'ticketDelete',
+  TASK_ADD: 'taskAdd',
+  TASK_REMOVE_ASSIGN: 'taskRemoveAssign',
+  TASK_EDIT: 'taskEdit',
+  TASK_CHANGE: 'taskChange',
+  TASK_DUE_DATE: 'taskDueDate',
+  TASK_DELETE: 'taskDelete',
+  ALL: [
+    'channelMembersChange',
+    'conversationAddMessage',
+    'conversationAssigneeChange',
+    'conversationStateChange',
+    'dealAdd',
+    'dealRemoveAssign',
+    'dealEdit',
+    'dealChange',
+    'dealDueDate',
+    'dealDelete',
+    'ticketAdd',
+    'ticketRemoveAssign',
+    'ticketEdit',
+    'ticketChange',
+    'ticketDueDate',
+    'ticketDelete',
+    'taskAdd',
+    'taskRemoveAssign',
+    'taskEdit',
+    'taskChange',
+    'taskDueDate',
+    'taskDelete',
+  ],
 };
