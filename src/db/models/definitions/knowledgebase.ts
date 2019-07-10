@@ -14,8 +14,8 @@ export interface IArticle {
   summary?: string;
   content?: string;
   status?: string;
-  reactionChoices: string[];
-  reactionCounts: { [key: string]: number };
+  reactionChoices?: string[];
+  reactionCounts?: { [key: string]: number };
 }
 
 export interface IArticleDocument extends ICommonFields, IArticle, Document {
