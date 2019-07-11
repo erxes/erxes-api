@@ -67,11 +67,7 @@ const countByField = async (
 ): Promise<ICountBy> => {
   const counts: ICountBy = {};
   values.map(row => (counts[row] = 0));
-  /*
-      {
-        $unwind: `$${field}`,
-      },
-      */
+
   const matchObj: any = {};
   matchObj[field] = { $in: values };
   let pipelines: any = [
@@ -124,7 +120,6 @@ const countByTag = async (mainQuery: any): Promise<ICountBy> => {
   tags.forEach(element => {
     tagRawIds.push(element._id);
   });
-
   return countByField(mainQuery, 'tagIds', tagRawIds, true);
 };
 
