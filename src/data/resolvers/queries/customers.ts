@@ -59,81 +59,89 @@ const countByBrand = async (qb: any, mainQuery: any): Promise<ICountBy> => {
   return counts;
 };
 
+const countByField = async (
+  mainQuery: any,
+  field: string,
+  values: [string],
+  multi: boolean = false,
+): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+  values.map(row => (counts[row] = 0));
+  /*
+      {
+        $unwind: `$${field}`,
+      },
+      */
+  const matchObj: any = {};
+  matchObj[field] = { $in: values };
+  let pipelines: any = [
+    { $match: mainQuery },
+    { $match: matchObj },
+    { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+  ];
+  if (multi) {
+    pipelines = [pipelines[0], { $unwind: `$${field}` }, pipelines[1], pipelines[2]];
+  }
+  const countData = await Customers.aggregate(pipelines);
+
+  await countData.forEach(element => {
+    counts[element._id] += element.count;
+  });
+
+  return counts;
+};
+
 const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
   const counts: ICountBy = {};
-  const integrationIds = await Integrations.find({ kind: { $in: INTEGRATION_KIND_CHOICES.ALL } }).select({
+  const integrations = await Integrations.find({ kind: { $in: INTEGRATION_KIND_CHOICES.ALL } }).select({
     _id: 1,
     name: 1,
     kind: 1,
   });
-  const integrationMap = {};
   const rawIntegrationIds: any = [];
-  integrationIds.forEach(element => {
+  const integrationMap = {};
+  integrations.forEach(element => {
     rawIntegrationIds.push(element._id);
     integrationMap[element._id] = element.kind;
-    if (element.kind) {
-      counts[element.kind] = 0;
-    }
+    counts[element.kind || ''] = 0;
   });
 
   const query = { integrationId: { $in: rawIntegrationIds } };
   const findQuery = { $and: [mainQuery, query] };
-  const countData = await Customers.aggregate([
-    {
-      $match: findQuery,
-    },
-    {
-      $group: {
-        _id: '$integrationId',
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  countData.forEach(element => {
-    const kind = integrationMap[element._id];
-    counts[kind] += element.count;
+  const countData = await countByField(findQuery, 'integrationId', rawIntegrationIds);
+  await Object.keys(countData).forEach(key => {
+    const integrationName = integrationMap[key];
+    counts[integrationName] += countData[key];
   });
 
   return counts;
 };
 
 const countByTag = async (mainQuery: any): Promise<ICountBy> => {
-  const counts: ICountBy = {};
-
   // Count customers by tag
   const tags = await Tags.find({ type: TAG_TYPES.CUSTOMER }).select('_id');
-  const tagRawIds = tags.map(row => row._id);
-
-  const tagCountData = await Customers.aggregate([
-    {
-      $match: mainQuery,
-    },
-    {
-      $project: {
-        tagIds: 1,
-        _id: 0,
-      },
-    },
-    {
-      $unwind: '$tagIds',
-    },
-    {
-      $match: { tagIds: { $in: tagRawIds } },
-    },
-    {
-      $group: {
-        _id: '$tagIds',
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  tagCountData.forEach(row => {
-    counts[row._id] = row.count;
+  const tagRawIds: any = [];
+  tags.forEach(element => {
+    tagRawIds.push(element._id);
   });
 
-  return counts;
+  return countByField(mainQuery, 'tagIds', tagRawIds, true);
+};
+
+const countByLeadStatus = async (mainQuery: any): Promise<ICountBy> => {
+  const statuses: any = [];
+  COC_LEAD_STATUS_TYPES.forEach(row => {
+    statuses.push(row);
+  });
+  return countByField(mainQuery, 'leadStatus', statuses);
+};
+
+const countByLifecycleStatus = async (mainQuery: any): Promise<ICountBy> => {
+  const stateTypes: any = [];
+  COC_LIFECYCLE_STATE_TYPES.forEach(row => {
+    stateTypes.push(row);
+  });
+  return countByField(mainQuery, 'lifecycleState', stateTypes);
 };
 
 const countByForm = async (qb: any, mainQuery: any, params: any): Promise<ICountBy> => {
@@ -228,19 +236,11 @@ const customerQueries = {
         counts.byForm = await countByForm(qb, mainQuery, params);
         break;
       case 'byLeadStatus':
-        {
-          for (const status of COC_LEAD_STATUS_TYPES) {
-            counts.byLeadStatus[status] = await count(qb.leadStatusFilter(status), mainQuery);
-          }
-        }
+        counts.byLeadStatus = await countByLeadStatus(mainQuery);
         break;
 
       case 'byLifecycleState':
-        {
-          for (const state of COC_LIFECYCLE_STATE_TYPES) {
-            counts.byLifecycleState[state] = await count(qb.lifecycleStateFilter(state), mainQuery);
-          }
-        }
+        counts.byLifecycleState = await countByLifecycleStatus(mainQuery);
         break;
 
       case 'byIntegrationType':
