@@ -1,5 +1,4 @@
 import { EngageMessages } from '../../../db/models';
-import { METHODS } from '../../../db/models/definitions/constants';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MESSAGE_KINDS } from '../../constants';
@@ -20,13 +19,9 @@ const engageMutations = {
     doc: IEngageMessage,
     { user, dataSources: { EngagesAPI } }: { user: IUserDocument; dataSources: { EngagesAPI: any } },
   ) {
-    const { method } = doc;
-
-    if (method === METHODS.EMAIL) {
-      return EngagesAPI.create(doc);
-    }
-
     const engageMessage = await EngageMessages.createEngageMessage(doc);
+
+    await send(engageMessage, EngagesAPI);
 
     if (engageMessage) {
       await putCreateLog(
@@ -122,8 +117,6 @@ const engageMutations = {
    */
   async engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
     const engageMessage = await EngageMessages.engageMessageSetLive(_id);
-
-    await send(engageMessage);
 
     return engageMessage;
   },

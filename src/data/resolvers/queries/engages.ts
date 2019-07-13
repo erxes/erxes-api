@@ -1,6 +1,7 @@
 import { EngageMessages, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { paginate } from '../../utils';
 
 interface IListArgs {
   kind?: string;
@@ -181,8 +182,8 @@ const engageQueries = {
   /**
    * Engage messages list
    */
-  engageMessages(_root, _args: IListArgs, { dataSources: { EngagesAPI } }: { dataSources: { EngagesAPI: any } }) {
-    return EngagesAPI.list();
+  engageMessages(_root, args: IListArgs, { user }: { user: IUserDocument }) {
+    return paginate(EngageMessages.find(listQuery(args, user)), args);
   },
 
   /**
