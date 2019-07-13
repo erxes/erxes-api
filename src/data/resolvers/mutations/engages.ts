@@ -1,11 +1,10 @@
-import { EngageMessages, Users } from '../../../db/models';
+import { EngageMessages } from '../../../db/models';
 import { METHODS } from '../../../db/models/definitions/constants';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { awsRequests } from '../../../trackers/engageTracker';
 import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchCronsApi, getEnv, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { fetchCronsApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -16,30 +15,18 @@ const engageMutations = {
   /**
    * Create new message
    */
-  async engageMessageAdd(_root, doc: IEngageMessage, { user }: { user: IUserDocument }) {
-    const { method, fromUserId } = doc;
+  async engageMessageAdd(
+    _root,
+    doc: IEngageMessage,
+    { user, dataSources: { EngagesAPI } }: { user: IUserDocument; dataSources: { EngagesAPI: any } },
+  ) {
+    const { method } = doc;
 
     if (method === METHODS.EMAIL) {
-      // Checking if configs exist
-      getEnv({ name: 'AWS_SES_CONFIG_SET' });
-      getEnv({ name: 'AWS_ENDPOINT' });
-
-      const fromUser = await Users.findOne({ _id: fromUserId });
-
-      const { VerifiedEmailAddresses = [] } = await awsRequests.getVerifiedEmails();
-
-      // If verified creates engagemessage
-      if (fromUser && !VerifiedEmailAddresses.includes(fromUser.email)) {
-        throw new Error('Email not verified');
-      }
+      return EngagesAPI.create(doc);
     }
 
     const engageMessage = await EngageMessages.createEngageMessage(doc);
-
-    // if manual and live then send immediately
-    if (doc.kind === MESSAGE_KINDS.MANUAL && doc.isLive) {
-      await send(engageMessage);
-    }
 
     if (engageMessage) {
       await putCreateLog(
