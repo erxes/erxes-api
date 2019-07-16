@@ -1,4 +1,4 @@
-import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages } from '../../../db/models';
+import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { IUserDocument } from '../../../db/models/definitions/users';
@@ -14,10 +14,10 @@ const internalNoteMutations = {
    * Adds internalNote object and also adds an activity log
    */
   async internalNotesAdd(_root, args: IInternalNote, { user }: { user: IUserDocument }) {
-    let notifDoc: ISendNotification = {
+    const notifDoc: ISendNotification = {
       title: `${args.contentType.toUpperCase()} updated`,
       createdUser: user,
-      action: `mentioned you in`,
+      action: `mentioned you in ${args.contentType}`,
       receivers: args.mentionedUserIds || [],
       content: ``,
       link: ``,
@@ -30,34 +30,53 @@ const internalNoteMutations = {
         const stage = await Stages.getStage(deal.stageId || '');
         const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
-        notifDoc = {
-          ...notifDoc,
-          notifType: NOTIFICATION_TYPES.DEAL_EDIT,
-          content: ` "${deal.name}" deal`,
-          link: `/${args.contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
-        };
+        notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
+        notifDoc.content = `"${deal.name}"`;
+        notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        break;
       }
 
       case 'customer': {
         const customer = await Customers.getCustomer(args.contentTypeId);
 
-        notifDoc = {
-          ...notifDoc,
-          notifType: NOTIFICATION_TYPES.CUSTOMER_MENTION,
-          content: `${customer.primaryEmail || customer.firstName || customer.lastName || customer.primaryPhone}`,
-          link: `/contacts/customers/details/${customer._id}`,
-        };
+        notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
+        notifDoc.content = `"${customer.primaryEmail ||
+          customer.firstName ||
+          customer.lastName ||
+          customer.primaryPhone}"`;
+        notifDoc.link = `/contacts/customers/details/${customer._id}`;
+        break;
       }
 
       case 'company': {
         const company = await Companies.getCompany(args.contentTypeId);
 
-        notifDoc = {
-          ...notifDoc,
-          notifType: NOTIFICATION_TYPES.CUSTOMER_MENTION,
-          content: `${company.primaryName || company.primaryEmail || company.primaryPhone}`,
-          link: `/contacts/companies/details/${company._id}`,
-        };
+        notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
+        notifDoc.content = `"${company.primaryName || company.primaryEmail || company.primaryPhone}"`;
+        notifDoc.link = `/contacts/companies/details/${company._id}`;
+        break;
+      }
+
+      case 'ticket': {
+        const ticket = await Tickets.getTicket(args.contentTypeId);
+        const stage = await Stages.getStage(ticket.stageId || '');
+        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+        notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
+        notifDoc.content = `"${ticket.name}"`;
+        notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        break;
+      }
+
+      case 'task': {
+        const task = await Tasks.getTask(args.contentTypeId);
+        const stage = await Stages.getStage(task.stageId || '');
+        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+        notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
+        notifDoc.content = `"${task.name}"`;
+        notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        break;
       }
 
       default:
