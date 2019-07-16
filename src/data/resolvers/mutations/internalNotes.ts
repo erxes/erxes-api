@@ -1,9 +1,9 @@
-import { Deals, InternalNotes, Pipelines, Stages } from '../../../db/models';
+import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages } from '../../../db/models';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleRequireLogin } from '../../permissions/wrappers';
-import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;
@@ -14,26 +14,57 @@ const internalNoteMutations = {
    * Adds internalNote object and also adds an activity log
    */
   async internalNotesAdd(_root, args: IInternalNote, { user }: { user: IUserDocument }) {
+    let notifDoc: ISendNotification = {
+      title: `${args.contentType.toUpperCase()} updated`,
+      createdUser: user,
+      action: `mentioned you in`,
+      receivers: args.mentionedUserIds || [],
+      content: ``,
+      link: ``,
+      notifType: ``,
+    };
+
     switch (args.contentType) {
       case 'deal': {
         const deal = await Deals.getDeal(args.contentTypeId);
         const stage = await Stages.getStage(deal.stageId || '');
         const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
-        utils.sendNotification({
-          createdUser: user,
+        notifDoc = {
+          ...notifDoc,
           notifType: NOTIFICATION_TYPES.DEAL_EDIT,
-          title: `Deal Updated`,
           content: ` "${deal.name}" deal`,
-          action: `mentioned you in`,
-          link: `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
-          receivers: args.mentionedUserIds || [],
-        });
+          link: `/${args.contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+        };
+      }
+
+      case 'customer': {
+        const customer = await Customers.getCustomer(args.contentTypeId);
+
+        notifDoc = {
+          ...notifDoc,
+          notifType: NOTIFICATION_TYPES.CUSTOMER_MENTION,
+          content: `${customer.primaryEmail || customer.firstName || customer.lastName || customer.primaryPhone}`,
+          link: `/contacts/customers/details/${customer._id}`,
+        };
+      }
+
+      case 'company': {
+        const company = await Companies.getCompany(args.contentTypeId);
+
+        notifDoc = {
+          ...notifDoc,
+          notifType: NOTIFICATION_TYPES.CUSTOMER_MENTION,
+          content: `${company.primaryName || company.primaryEmail || company.primaryPhone}`,
+          link: `/contacts/companies/details/${company._id}`,
+        };
       }
 
       default:
         break;
     }
+
+    await utils.sendNotification(notifDoc);
 
     const internalNote = await InternalNotes.createInternalNote(args, user);
 
