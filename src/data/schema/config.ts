@@ -23,8 +23,10 @@ export const types = `
 export const queries = `
   configsDetail(code: String!): Config
   configsVersions: ProjectInfos
+  engagesConfigDetail: JSON
 `;
 
 export const mutations = `
   configsInsert(code: String!, value: [String]!): Config
+  engagesConfigSave(accessKeyId: String, secretAccessKey: String, ): JSON
 `;

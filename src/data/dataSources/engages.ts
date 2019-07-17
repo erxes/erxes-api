@@ -18,7 +18,15 @@ export default class EngagesAPI extends RESTDataSource {
   public async send(params) {
     return this.post(
       `/engages/send`, // path
-      { ...params }, // request body
+      params, // request body
     );
+  }
+
+  public async engagesConfigDetail() {
+    return this.get(`/configs/detail`);
+  }
+
+  public async engagesConfigSave(params) {
+    return this.post(`configs/save`, params);
   }
 }
