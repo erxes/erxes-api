@@ -26,6 +26,7 @@ import Scripts from './Scripts';
 import Segments from './Segments';
 import Tags from './Tags';
 import Tasks from './Tasks';
+import TaskTypes from './TaskTypes';
 import Tickets from './Tickets';
 import Users from './Users';
 
@@ -67,4 +68,5 @@ export {
   UsersGroups,
   Tickets,
   Tasks,
+  TaskTypes,
 };

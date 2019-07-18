@@ -23,6 +23,7 @@ import scripts from './scripts';
 import segments from './segments';
 import tags from './tags';
 import tasks from './tasks';
+import taskTypes from './taskTypes';
 import tickets from './tickets';
 import users from './users';
 
@@ -56,4 +57,5 @@ export default {
   ...usersGroups,
   ...tickets,
   ...tasks,
+  ...taskTypes,
 };

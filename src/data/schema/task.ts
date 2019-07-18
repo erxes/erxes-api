@@ -9,6 +9,8 @@ export const types = `
     name: String!
     stageId: String
     boardId: String
+    dealId: String,
+    typeId: String,
     companyIds: [String]
     customerIds: [String]
     assignedUserIds: [String]
@@ -33,6 +35,7 @@ export const queries = `
   tasks(
     pipelineId: String
     stageId: String
+    dealId: String
     customerIds: [String]
     companyIds: [String]
     date: ItemDate
