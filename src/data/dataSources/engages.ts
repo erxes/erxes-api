@@ -11,10 +11,6 @@ export default class EngagesAPI extends RESTDataSource {
     this.httpCache = new HTTPCache();
   }
 
-  public async list() {
-    return this.get(`/engages/list`);
-  }
-
   public async send(params) {
     return this.post(
       `/engages/send`, // path
