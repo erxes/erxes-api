@@ -15,6 +15,7 @@ import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils'
 import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
+import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
@@ -193,6 +194,9 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
+
+// handle engages api requests
+app.post('/engages-api', engagesApiMiddleware);
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
