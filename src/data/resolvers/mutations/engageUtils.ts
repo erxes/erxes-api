@@ -131,6 +131,7 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
       customers: customerInfos,
       email: engageMessage.email,
       fromEmail: user._id,
+      engageMessageId: engageMessage._id,
     });
   }
 
