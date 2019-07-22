@@ -120,6 +120,7 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
       if (customer.firstName && customer.lastName) {
         customerName = `${customer.firstName} ${customer.lastName}`;
       }
+
       return {
         _id: customer._id,
         name: customerName,
@@ -130,7 +131,11 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
     await engagesApi.send({
       customers: customerInfos,
       email: engageMessage.email,
-      fromEmail: user._id,
+      user: {
+        email: user.email,
+        name: user.details && user.details.fullName,
+        position: user.details && user.details.position,
+      },
       engageMessageId: engageMessage._id,
     });
   }
