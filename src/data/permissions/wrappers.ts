@@ -14,6 +14,9 @@ export const checkLogin = (user: IUserDocument) => {
  * Wraps object property (function) with permission checkers
  */
 export const permissionWrapper = (cls: any, methodName: string, checkers: any) => {
+  if (methodName === 'tasks') {
+    console.log(cls);
+  }
   const oldMethod = cls[methodName];
 
   cls[methodName] = (root, args, { user }) => {

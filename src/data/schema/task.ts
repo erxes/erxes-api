@@ -10,6 +10,7 @@ export const types = `
     stageId: String
     boardId: String
     dealId: String,
+    tickedId: String,
     typeId: String,
     companyIds: [String]
     customerIds: [String]
@@ -17,6 +18,9 @@ export const types = `
     closeDate: Date
     description: String
     priority: String
+    deal: Deal
+    ticket: Ticket
+    type: TaskType
     companies: [Company]
     customers: [Customer]
     assignedUsers: [User]
@@ -36,6 +40,7 @@ export const queries = `
     pipelineId: String
     stageId: String
     dealId: String
+    tickedId: String,
     customerIds: [String]
     companyIds: [String]
     date: ItemDate
@@ -54,6 +59,9 @@ export const queries = `
 const commonParams = `
   name: String!,
   stageId: String,
+  dealId: String,
+  tickedId: String,
+  typeId: String,
   assignedUserIds: [String],
   companyIds: [String],
   attachments: [AttachmentInput],

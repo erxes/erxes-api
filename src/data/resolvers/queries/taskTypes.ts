@@ -1,5 +1,5 @@
 import { TaskTypes } from '../../../db/models';
-import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { moduleRequireLogin } from '../../permissions/wrappers';
 
 const taskTypeQueries = {
   /**
@@ -19,7 +19,5 @@ const taskTypeQueries = {
 };
 
 moduleRequireLogin(taskTypeQueries);
-
-checkPermission(taskTypeQueries, 'tasks', 'showTaskTypes', []);
 
 export default taskTypeQueries;

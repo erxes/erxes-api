@@ -1,9 +1,21 @@
-import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Customers, Deals, Pipelines, Stages, TaskTypes, Tickets, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
 
 export default {
+  deal(task: ITaskDocument) {
+    return Deals.findOne({ _id: task.dealId });
+  },
+
+  ticket(task: ITaskDocument) {
+    return Tickets.findOne({ _id: task.tickedId });
+  },
+
+  type(task: ITaskDocument) {
+    return TaskTypes.findOne({ _id: task.typeId });
+  },
+
   companies(task: ITaskDocument) {
     return Companies.find({ _id: { $in: task.companyIds || [] } });
   },

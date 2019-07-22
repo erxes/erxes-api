@@ -358,10 +358,6 @@ export const moduleObjects = {
           'tasksRemove',
           'tasksUpdateOrder',
           'tasksWatch',
-          'showTaskTypes',
-          'taskTypeAdd',
-          'taskTypeEdit',
-          'taskTypeRemove',
         ],
       },
       {
@@ -431,22 +427,6 @@ export const moduleObjects = {
       {
         name: 'tasksWatch',
         description: 'Watch task',
-      },
-      {
-        name: 'showTaskTypes',
-        description: 'Show task types',
-      },
-      {
-        name: 'taskTypeAdd',
-        description: 'Add task type',
-      },
-      {
-        name: 'taskTypeEdit',
-        description: 'Edit task type',
-      },
-      {
-        name: 'taskTypeRemove',
-        description: 'Remove task type',
       },
     ],
   },

@@ -16,6 +16,8 @@ export const generateCommonFilters = async (args: any) => {
     date,
     pipelineId,
     stageId,
+    dealId,
+    tickedId,
     search,
     overdue,
     nextMonth,
@@ -45,6 +47,14 @@ export const generateCommonFilters = async (args: any) => {
 
   if ($and) {
     filter.$and = $and;
+  }
+
+  if (dealId) {
+    filter.dealId = dealId;
+  }
+
+  if (tickedId) {
+    filter.tickedId = tickedId;
   }
 
   if (customerIds) {
