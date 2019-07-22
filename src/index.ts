@@ -19,7 +19,6 @@ import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
-import { init } from './startup';
 
 // load environment variables
 dotenv.config();
@@ -214,7 +213,4 @@ apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
   debugInit(`GraphQL Server is now running on ${PORT}`);
-
-  // execute startup actions
-  init(app);
 });
