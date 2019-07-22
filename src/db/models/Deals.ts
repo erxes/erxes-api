@@ -1,20 +1,31 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { changeCompany, changeCustomer, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
-import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface IDealModel extends Model<IDealDocument> {
+  getDeal(_id: string): Promise<IDealDocument>;
   createDeal(doc: IDeal): Promise<IDealDocument>;
   updateDeal(_id: string, doc: IDeal): Promise<IDealDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<IDealDocument[]>;
-  removeDeal(_id: string): void;
+  watchDeal(_id: string, isAdd: boolean, userId: string): void;
   changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<IDealDocument>;
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<IDealDocument>;
 }
 
 export const loadDealClass = () => {
   class Deal {
+    public static async getDeal(_id: string) {
+      const deal = await Deals.findOne({ _id });
+
+      if (!deal) {
+        throw new Error('Deal not found');
+      }
+
+      return deal;
+    }
+
     /**
      * Create a deal
      */
@@ -52,16 +63,10 @@ export const loadDealClass = () => {
     }
 
     /**
-     * Remove Deal
+     * Watch deal
      */
-    public static async removeDeal(_id: string) {
-      const deal = await Deals.findOne({ _id });
-
-      if (!deal) {
-        throw new Error('Deal not found');
-      }
-
-      return deal.remove();
+    public static async watchDeal(_id: string, isAdd: boolean, userId: string) {
+      return watchItem(Deals, _id, isAdd, userId);
     }
 
     /**

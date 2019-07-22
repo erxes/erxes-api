@@ -1,5 +1,3 @@
-export const LANGUAGE_CHOICES = ['', 'mn', 'en', 'fr', 'de', 'kr', 'es', 'ptBr', 'jp', 'ru', 'zh'];
-
 export const CONVERSATION_STATUSES = {
   NEW: 'new',
   OPEN: 'open',
@@ -95,8 +93,9 @@ export const ACTIVITY_TYPES = {
   EMAIL: 'email',
   TICKET: 'ticket',
   TASK: 'task',
+  BRAND: 'brand',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task'],
+  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task', 'brand'],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -307,6 +306,8 @@ export const NOTIFICATION_TYPES = {
   TASK_CHANGE: 'taskChange',
   TASK_DUE_DATE: 'taskDueDate',
   TASK_DELETE: 'taskDelete',
+  CUSTOMER_MENTION: 'customerMention',
+  COMPANY_MENTION: 'companyMention',
   ALL: [
     'channelMembersChange',
     'conversationAddMessage',
@@ -330,5 +331,7 @@ export const NOTIFICATION_TYPES = {
     'taskChange',
     'taskDueDate',
     'taskDelete',
+    'customerMention',
+    'companyMention',
   ],
 };

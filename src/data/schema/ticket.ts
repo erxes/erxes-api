@@ -19,6 +19,8 @@ export const types = `
     companies: [Company]
     customers: [Customer]
     assignedUsers: [User]
+    isWatched: Boolean
+    attachments: [Attachment]
     stage: Stage
     pipeline: Pipeline
     modifiedAt: Date
@@ -43,8 +45,8 @@ export const queries = `
     nextMonth: String
     noCloseDate: String
     overdue: String
-    priority: String
-    source: String
+    priority: [String]
+    source: [String]
   ): [Ticket]
 `;
 
@@ -53,6 +55,7 @@ const commonParams = `
   stageId: String,
   assignedUserIds: [String],
   companyIds: [String],
+  attachments: [AttachmentInput],
   customerIds: [String],
   closeDate: Date,
   description: String,
@@ -67,4 +70,5 @@ export const mutations = `
   ticketsChange( _id: String!, destinationStageId: String): Ticket
   ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]
   ticketsRemove(_id: String!): Ticket
+  ticketsWatch(_id: String, isAdd: Boolean): Ticket
 `;

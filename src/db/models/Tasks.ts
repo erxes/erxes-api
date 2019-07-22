@@ -1,20 +1,34 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { changeCompany, changeCustomer, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITask, ITaskDocument, taskSchema } from './definitions/tasks';
-import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface ITaskModel extends Model<ITaskDocument> {
   createTask(doc: ITask): Promise<ITaskDocument>;
+  getTask(_id: string): Promise<ITaskDocument>;
   updateTask(_id: string, doc: ITask): Promise<ITaskDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITaskDocument[]>;
-  removeTask(_id: string): void;
+  watchTask(_id: string, isAdd: boolean, userId: string): void;
   changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<ITaskDocument>;
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<ITaskDocument>;
 }
 
 export const loadTaskClass = () => {
   class Task {
+    /**
+     * Retreives Task
+     */
+    public static async getTask(_id: string) {
+      const task = await Tasks.findOne({ _id });
+
+      if (!task) {
+        throw new Error('Task not found');
+      }
+
+      return task;
+    }
+
     /**
      * Create a Task
      */
@@ -52,16 +66,10 @@ export const loadTaskClass = () => {
     }
 
     /**
-     * Remove Task
+     * Watch task
      */
-    public static async removeTask(_id: string) {
-      const task = await Tasks.findOne({ _id });
-
-      if (!task) {
-        throw new Error('Task not found');
-      }
-
-      return task.remove();
+    public static async watchTask(_id: string, isAdd: boolean, userId: string) {
+      return watchItem(Tasks, _id, isAdd, userId);
     }
 
     /**

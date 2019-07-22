@@ -1,20 +1,34 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import { changeCompany, changeCustomer, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
-import { changeCompany, changeCustomer, updateOrder } from './utils';
 
 export interface ITicketModel extends Model<ITicketDocument> {
   createTicket(doc: ITicket): Promise<ITicketDocument>;
+  getTicket(_id: string): Promise<ITicketDocument>;
   updateTicket(_id: string, doc: ITicket): Promise<ITicketDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITicketDocument[]>;
-  removeTicket(_id: string): void;
+  watchTicket(_id: string, isAdd: boolean, userId: string): void;
   changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<ITicketDocument>;
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<ITicketDocument>;
 }
 
 export const loadTicketClass = () => {
   class Ticket {
+    /**
+     * Retreives Ticket
+     */
+    public static async getTicket(_id: string) {
+      const ticket = await Tickets.findOne({ _id });
+
+      if (!ticket) {
+        throw new Error('Ticket not found');
+      }
+
+      return ticket;
+    }
+
     /**
      * Create a Ticket
      */
@@ -52,16 +66,10 @@ export const loadTicketClass = () => {
     }
 
     /**
-     * Remove Ticket
+     * Watch ticket
      */
-    public static async removeTicket(_id: string) {
-      const ticket = await Tickets.findOne({ _id });
-
-      if (!ticket) {
-        throw new Error('Ticket not found');
-      }
-
-      return ticket.remove();
+    public static async watchTicket(_id: string, isAdd: boolean, userId: string) {
+      return watchItem(Tickets, _id, isAdd, userId);
     }
 
     /**
