@@ -154,6 +154,8 @@ export const mutations = `
     cc: String
     bcc: String
     from: String!
+    headerId: String
+    threadId: String
     attachments: [gmailAttachmentData]
   ): JSON
 `;

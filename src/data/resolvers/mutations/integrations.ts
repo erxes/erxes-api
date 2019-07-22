@@ -120,15 +120,13 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (integration.kind === 'facebook') {
-        await fetchIntegrationApi({
-          path: '/integrations/remove',
-          method: 'POST',
-          body: {
-            integrationId: _id,
-          },
-        });
-      }
+      await fetchIntegrationApi({
+        path: '/integrations/remove',
+        method: 'POST',
+        body: {
+          integrationId: _id,
+        },
+      });
 
       await putDeleteLog(
         {
