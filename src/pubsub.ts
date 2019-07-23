@@ -1,3 +1,4 @@
+import * as cote from 'cote';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
@@ -75,10 +76,6 @@ const createPubsubInstance = (): IPubSub => {
 
     const googlePubsub = new GooglePubSub(googleOptions, undefined, commonMessageHandler);
 
-    googlePubsub.subscribe('widgetNotification', message => {
-      publishMessage(message);
-    });
-
     pubsub = googlePubsub;
   } else {
     const redisPubSub = new RedisPubSub({
@@ -89,10 +86,6 @@ const createPubsubInstance = (): IPubSub => {
       },
       publisher: new Redis(redisOptions),
       subscriber: new Redis(redisOptions),
-    });
-
-    redisPubSub.subscribe('widgetNotification', message => {
-      return publishMessage(message);
     });
 
     pubsub = redisPubSub;
@@ -150,5 +143,11 @@ const publishMessage = async ({ action, data }: IPubsubMessage) => {
 const convertPubSubBuffer = (data: Buffer) => {
   return JSON.parse(data.toString());
 };
+
+const subscriber = new cote.Subscriber({ name: 'erxes-api' });
+
+subscriber.on('widgetNotification', data => {
+  publishMessage(JSON.parse(data));
+});
 
 export const graphqlPubsub = createPubsubInstance();

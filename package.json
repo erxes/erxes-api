@@ -62,6 +62,7 @@
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
+    "cote": "^0.20.0",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
     "email-deep-validator": "^3.1.0",
