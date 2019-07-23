@@ -1,4 +1,3 @@
-import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MESSAGE_KINDS } from '../../constants';
@@ -19,9 +18,7 @@ const engageMutations = {
     doc: IEngageMessage,
     { user, dataSources: { EngagesAPI } }: { user: IUserDocument; dataSources: { EngagesAPI: any } },
   ) {
-    const engageMessage = await EngageMessages.createEngageMessage(doc);
-
-    await send(engageMessage, EngagesAPI);
+    const engageMessage = await send(doc, EngagesAPI);
 
     if (engageMessage) {
       await putCreateLog(
@@ -41,9 +38,12 @@ const engageMutations = {
   /**
    * Edit message
    */
-  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: { user: IUserDocument }) {
-    const engageMessage = await EngageMessages.findOne({ _id });
-    const updated = await EngageMessages.updateEngageMessage(_id, doc);
+  async engageMessageEdit(
+    _root,
+    { _id, ...doc }: IEngageMessageEdit,
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
+  ) {
+    const engageMessage = await dataSources.EngagesAPI.updateEngage(_id, doc);
 
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
 
@@ -52,25 +52,27 @@ const engageMutations = {
         {
           type: 'engage',
           object: engageMessage,
-          newData: JSON.stringify(updated),
+          newData: JSON.stringify(engageMessage),
           description: `${engageMessage.title} has been edited`,
         },
         user,
       );
     }
 
-    return EngageMessages.findOne({ _id });
+    return engageMessage;
   },
 
   /**
    * Remove message
    */
-  async engageMessageRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const engageMessage = await EngageMessages.findOne({ _id });
+  async engageMessageRemove(
+    _root,
+    { _id }: { _id: string },
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
+  ) {
+    const engageMessage = await dataSources.EngagesAPI.removeEngageMessage(_id);
 
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
-
-    const removed = await EngageMessages.removeEngageMessage(_id);
 
     if (engageMessage) {
       await putDeleteLog(
@@ -83,14 +85,14 @@ const engageMutations = {
       );
     }
 
-    return removed;
+    return engageMessage;
   },
 
   /**
    * Engage message set live
    */
-  async engageMessageSetLive(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
+  async engageMessageSetLive(_root, { _id }: { _id: string }, { dataSources }) {
+    const engageMessage = await dataSources.EngageAPI.engageMessageSetLive(_id);
 
     const { kind } = engageMessage;
 
@@ -108,15 +110,15 @@ const engageMutations = {
   /**
    * Engage message set pause
    */
-  engageMessageSetPause(_root, { _id }: { _id: string }) {
-    return EngageMessages.engageMessageSetPause(_id);
+  engageMessageSetPause(_root, { _id }: { _id: string }, { dataSources }) {
+    return dataSources.EngageAPI.EngageAPIes.engageMessageSetPause(_id);
   },
 
   /**
    * Engage message set live manual
    */
-  async engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
+  async engageMessageSetLiveManual(_root, { _id }: { _id: string }, { dataSources }) {
+    const engageMessage = await dataSources.EngageAPI.engageMessageSetLive(_id);
 
     return engageMessage;
   },

@@ -1,15 +1,7 @@
-import {
-  ConversationMessages,
-  Conversations,
-  Customers,
-  EngageMessages,
-  Integrations,
-  Segments,
-  Users,
-} from '../../../db/models';
+import { ConversationMessages, Conversations, Customers, Integrations, Segments, Users } from '../../../db/models';
 import { METHODS } from '../../../db/models/definitions/constants';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
-import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
+import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, MESSAGE_KINDS } from '../../constants';
 import QueryBuilder from '../../modules/segments/queryBuilder';
@@ -95,7 +87,7 @@ export const findCustomers = async ({
   return Customers.find(customerQuery);
 };
 
-export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: any) => {
+export const send = async (engageMessage: IEngageMessage, engagesApi?: any) => {
   const { customerIds, segmentIds, tagIds, brandIds, fromUserId } = engageMessage;
 
   const user = await Users.findOne({ _id: fromUserId });
@@ -111,7 +103,7 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
   const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
 
   // save matched customer ids
-  EngageMessages.setCustomerIds(engageMessage._id, customers);
+  // EngageMessages.setCustomerIds(engageMessage._id, customers);
 
   if (engageMessage.method === METHODS.EMAIL) {
     const customerInfos = customers.map(customer => {
@@ -128,20 +120,19 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
       };
     });
 
-    await engagesApi.send({
+    return engagesApi.send({
       customers: customerInfos,
-      email: engageMessage.email,
+      engageMessage,
       user: {
         email: user.email,
         name: user.details && user.details.fullName,
         position: user.details && user.details.position,
       },
-      engageMessageId: engageMessage._id,
     });
   }
 
   if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
-    await sendViaMessenger(engageMessage, customers, user);
+    return sendViaMessenger(engageMessage, customers, user, engagesApi);
   }
 };
 
@@ -149,9 +140,10 @@ export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: a
  * Send via messenger
  */
 export const sendViaMessenger = async (
-  message: IEngageMessageDocument,
+  message: IEngageMessage,
   customers: ICustomerDocument[],
   user: IUserDocument,
+  engagesApi,
 ) => {
   const { fromUserId } = message;
 
@@ -171,6 +163,10 @@ export const sendViaMessenger = async (
     throw new Error('Integration not found');
   }
 
+  const engageMessage = await engagesApi.send({
+    engageMessage: message,
+  });
+
   for (const customer of customers) {
     // replace keys in content
     const replacedContent = replaceKeys({ content, customer, user });
@@ -185,9 +181,9 @@ export const sendViaMessenger = async (
     // create message
     await ConversationMessages.createMessage({
       engageData: {
-        messageId: message._id,
+        messageId: engageMessage._id,
         fromUserId,
-        ...message.messenger.toJSON(),
+        ...engageMessage.messenger.toJSON(),
       },
       conversationId: conversation._id,
       userId: fromUserId,
@@ -195,6 +191,8 @@ export const sendViaMessenger = async (
       content: replacedContent,
     });
   }
+
+  return engageMessage;
 };
 
 /*

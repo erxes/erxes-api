@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import * as _ from 'underscore';
-import { Companies, Conversations, Customers, EngageMessages, Integrations } from '.';
+import { Companies, Conversations, Customers, Integrations } from '.';
 import { ITag, ITagDocument, tagSchema } from './definitions/tags';
 
 interface ITagObjectParams {
@@ -129,7 +129,7 @@ export const loadClass = () => {
 
       count += await Customers.find({ tagIds: { $in: ids } }).countDocuments();
       count += await Conversations.find({ tagIds: { $in: ids } }).countDocuments();
-      count += await EngageMessages.find({ tagIds: { $in: ids } }).countDocuments();
+      // count += await EngageMessages.find({ tagIds: { $in: ids } }).countDocuments();
       count += await Companies.find({ tagIds: { $in: ids } }).countDocuments();
       count += await Integrations.find({ tagIds: { $in: ids } }).countDocuments();
 
@@ -150,8 +150,8 @@ export const loadClass = () => {
         case 'customer':
           collection = Customers;
           break;
-        case 'engageMessage':
-          collection = EngageMessages;
+          // case 'engageMessage':
+          //   collection = EngageMessages;
           break;
         case 'company':
           collection = Companies;

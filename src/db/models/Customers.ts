@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail } from '../../data/utils';
-import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes, Tickets } from './';
+import { ActivityLogs, Conversations, Deals, Fields, InternalNotes, Tickets } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -242,7 +242,6 @@ export const loadClass = () => {
     public static async removeCustomer(customerId: string) {
       // Removing every modules that associated with customer
       await Conversations.removeCustomerConversations(customerId);
-      await EngageMessages.removeCustomerEngages(customerId);
       await InternalNotes.removeCustomerInternalNotes(customerId);
 
       return Customers.deleteOne({ _id: customerId });
@@ -316,7 +315,6 @@ export const loadClass = () => {
 
       // Updating every modules associated with customers
       await Conversations.changeCustomer(customer._id, customerIds);
-      await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);
       await Deals.changeCustomer(customer._id, customerIds);
       await Tickets.changeCustomer(customer._id, customerIds);

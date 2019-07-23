@@ -15,7 +15,6 @@ import {
   Customers,
   Deals,
   EmailTemplates,
-  EngageMessages,
   Fields,
   FieldsGroups,
   Forms,
@@ -50,7 +49,6 @@ import {
   PRODUCT_TYPES,
   STATUSES,
 } from './models/definitions/constants';
-import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
 
@@ -144,39 +142,6 @@ export const tagsFactory = (params: ITagFactoryInput = {}) => {
   });
 
   return tag.save();
-};
-
-interface IEngageMessageFactoryInput {
-  kind?: string;
-  userId?: string;
-  segmentIds?: string[];
-  brandIds?: string[];
-  tagIds?: string[] | string;
-  isLive?: boolean;
-  isDraft?: boolean;
-  customerIds?: string[];
-  method?: string;
-  messenger?: IMessenger;
-  title?: string;
-  email?: IEmail;
-}
-
-export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) => {
-  const engageMessage = new EngageMessages({
-    kind: params.kind || 'manual',
-    method: params.method || 'messenger',
-    title: params.title || faker.random.word(),
-    fromUserId: params.userId || faker.random.uuid(),
-    segmentIds: params.segmentIds || [],
-    brandIds: params.brandIds || [],
-    tagIds: params.tagIds || [],
-    isLive: params.isLive || false,
-    isDraft: params.isDraft || false,
-    messenger: params.messenger,
-    email: params.email,
-  });
-
-  return engageMessage.save();
 };
 
 interface IBrandFactoryInput {
