@@ -144,7 +144,13 @@ const convertPubSubBuffer = (data: Buffer) => {
   return JSON.parse(data.toString());
 };
 
-const subscriber = new cote.Subscriber({ name: 'erxes-api' });
+const subscriber = new cote.Subscriber(
+  { name: 'erxes-api' },
+  {
+    log: false,
+    statusLogsEnabled: false,
+  },
+);
 
 subscriber.on('widgetNotification', data => {
   publishMessage(JSON.parse(data));
