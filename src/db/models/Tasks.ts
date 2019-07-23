@@ -39,6 +39,7 @@ export const loadTaskClass = () => {
 
       const task = await Tasks.create({
         ...doc,
+        isDone: false,
         order: tasksCount,
         modifiedAt: new Date(),
       });

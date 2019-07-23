@@ -25,6 +25,7 @@ export const types = `
     customers: [Customer]
     assignedUsers: [User]
     isWatched: Boolean
+    isDone: Boolean
     attachments: [Attachment]
     stage: Stage
     pipeline: Pipeline
@@ -79,4 +80,5 @@ export const mutations = `
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task
+  tasksChangeStatus(_id: String!): Task
 `;

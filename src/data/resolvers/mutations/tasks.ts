@@ -132,6 +132,22 @@ const taskMutations = {
 
     return Tasks.watchTask(_id, isAdd, user._id);
   },
+
+  /**
+   * Change status task
+   */
+
+  async tasksChangeStatus(_root, { _id }: { _id: string }) {
+    const task = await Tasks.findOne({ _id });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    const isDone = task.isDone ? false : true;
+
+    return Tasks.updateTask(_id, { isDone });
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
