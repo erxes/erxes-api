@@ -25,6 +25,7 @@ dotenv.config();
 
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
+const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN', defaultValue: '' });
 
 // firebase app initialization
 fs.exists(path.join(__dirname, '..', '/google_cred.json'), exists => {
@@ -146,6 +147,17 @@ app.post('/upload-file', async (req, res) => {
 
     return res.status(500).send(status);
   });
+});
+
+// redirect to integration
+app.get('/connect-integration', async (req: any, res, _next) => {
+  if (!req.user) {
+    return res.end('forbidden');
+  }
+
+  const link = req.query.link;
+
+  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}`);
 });
 
 // file import

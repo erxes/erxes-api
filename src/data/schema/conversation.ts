@@ -69,6 +69,30 @@ export const types = `
     messengerAppData: JSON
     user: User
     customer: Customer
+    gmailData: Gmail
+  }
+
+  type Gmail {
+    messageId: String,
+    headerId: String,
+    from: String,
+    to: String,
+    cc: String,
+    bcc: String,
+    reply: [String],
+    references: String,
+    threadId: String,
+    subject: String,
+    textPlain: String,
+    textHtml: String,
+    attachments: [GmailAttachment],
+  }
+
+  type GmailAttachment {
+    filename: String,
+    mimeType: String,
+    size: Int,
+    attachmentId: String,
   }
 
   type ConversationChangedResponse {
