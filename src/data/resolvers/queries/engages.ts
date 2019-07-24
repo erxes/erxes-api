@@ -195,7 +195,7 @@ const engageQueries = {
    * Get one message
    */
   engageMessageDetail(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngagesAPI.engageDetail({ _id });
+    return dataSources.EngagesAPI.engageDetail(_id);
   },
 
   /**
