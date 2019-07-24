@@ -56,9 +56,14 @@ const tagMutations = {
   /**
    * Remove tag
    */
-  async tagsRemove(_root, { ids }: { ids: string[] }, { user }: { user: IUserDocument }) {
+  async tagsRemove(
+    _root,
+    { ids }: { ids: string[] },
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
+  ) {
     const tags = await Tags.find({ _id: { $in: ids } });
-    const removed = await Tags.removeTag(ids);
+    const engageCounts = await dataSources.EngagesAPI.count({ tagIds: { $in: ids } });
+    const removed = await Tags.removeTag(ids, engageCounts);
 
     for (const tag of tags) {
       await putDeleteLog(
@@ -77,12 +82,22 @@ const tagMutations = {
   /**
    * Attach a tag
    */
-  tagsTag(_root, { type, targetIds, tagIds }: { type: string; targetIds: string[]; tagIds: string[] }) {
+  async tagsTag(
+    _root,
+    { type, targetIds, tagIds }: { type: string; targetIds: string[]; tagIds: string[] },
+    { dataSources },
+  ) {
     if (type === 'conversation') {
       publishConversationsChanged(targetIds, 'tag');
     }
 
-    return Tags.tagsTag(type, targetIds, tagIds);
+    const result = await Tags.tagsTag(type, targetIds, tagIds);
+
+    if (result === 'updateEngage') {
+      dataSources.EngagesAPI.tag(targetIds, tagIds);
+    }
+
+    return true;
   },
 };
 

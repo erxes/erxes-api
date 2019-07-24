@@ -97,7 +97,7 @@ describe('Test tags model', () => {
   });
 
   test('Remove tag', async () => {
-    const isDeleted = await Tags.removeTag([_tag.id]);
+    const isDeleted = await Tags.removeTag([_tag.id], 0);
     expect(isDeleted).toBeTruthy();
   });
 
@@ -130,7 +130,7 @@ describe('Test tags model', () => {
   test('Remove tag not found', async () => {
     expect.assertions(1);
     try {
-      await Tags.removeTag([_customer._id]);
+      await Tags.removeTag([_customer._id], 0);
     } catch (e) {
       expect(e.message).toEqual('Tag not found');
     }
@@ -140,7 +140,7 @@ describe('Test tags model', () => {
     expect.assertions(1);
     try {
       await Customers.updateMany({ _id: _customer._id }, { $set: { tagIds: [_tag._id] } });
-      await Tags.removeTag([_tag._id]);
+      await Tags.removeTag([_tag._id], 0);
     } catch (e) {
       expect(e.message).toEqual("Can't remove a tag with tagged object(s)");
     }

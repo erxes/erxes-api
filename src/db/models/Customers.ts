@@ -19,7 +19,10 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
   updateCompanies(_id: string, companyIds: string[]): Promise<ICustomerDocument>;
   removeCustomer(customerId: string): void;
-  mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
+  mergeCustomers(
+    customerIds: string[],
+    customerFields: ICustomer,
+  ): Promise<{ customer: ICustomerDocument; updateEngage: boolean }>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
 }
@@ -322,7 +325,7 @@ export const loadClass = () => {
       // create log
       await ActivityLogs.createCustomerLog(customer);
 
-      return customer;
+      return { customer, updateEngage: true };
     }
   }
 
