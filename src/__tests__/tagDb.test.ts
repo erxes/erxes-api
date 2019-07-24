@@ -1,24 +1,24 @@
-import { engageMessageFactory, tagsFactory } from '../db/factories';
-import { EngageMessages, Tags } from '../db/models';
+import { customerFactory, tagsFactory } from '../db/factories';
+import { Customers, Tags } from '../db/models';
 
 import './setup.ts';
 
 describe('Test tags model', () => {
   let _tag;
   let _tag2;
-  let _message;
+  let _customer;
 
   beforeEach(async () => {
     // Creating test data
     _tag = await tagsFactory({});
     _tag2 = await tagsFactory({});
-    _message = await engageMessageFactory({});
+    _customer = await customerFactory({});
   });
 
   afterEach(async () => {
     // Clearing test data
     await Tags.deleteMany({});
-    await EngageMessages.deleteMany({});
+    await Customers.deleteMany({});
   });
 
   test('Validate unique tag', async () => {
@@ -39,7 +39,7 @@ describe('Test tags model', () => {
       await Tags.tagObject({
         tagIds: [_tag._id],
         objectIds: [],
-        collection: EngageMessages,
+        collection: Customers,
         tagType: 'customer',
       });
     } catch (e) {
@@ -102,12 +102,12 @@ describe('Test tags model', () => {
 
   test('Tags tag', async () => {
     const type = 'engageMessage';
-    const targetIds = [_message._id];
+    const targetIds = [_customer._id];
     const tagIds = [_tag._id];
 
     await Tags.tagsTag(type, targetIds, tagIds);
 
-    const messageObj = await EngageMessages.findOne({ _id: _message._id });
+    const messageObj = await Customers.findOne({ _id: _customer._id });
     const tagObj = await Tags.findOne({ _id: _tag._id });
 
     if (!messageObj || !messageObj.tagIds) {
@@ -129,7 +129,7 @@ describe('Test tags model', () => {
   test('Remove tag not found', async () => {
     expect.assertions(1);
     try {
-      await Tags.removeTag([_message._id]);
+      await Tags.removeTag([_customer._id]);
     } catch (e) {
       expect(e.message).toEqual('Tag not found');
     }
@@ -138,7 +138,7 @@ describe('Test tags model', () => {
   test("Can't remove a tag", async () => {
     expect.assertions(1);
     try {
-      await EngageMessages.updateMany({ _id: _message._id }, { $set: { tagIds: [_tag._id] } });
+      await Customers.updateMany({ _id: _customer._id }, { $set: { tagIds: [_tag._id] } });
       await Tags.removeTag([_tag._id]);
     } catch (e) {
       expect(e.message).toEqual("Can't remove a tag with tagged object(s)");

@@ -165,6 +165,7 @@ export const sendViaMessenger = async (
 
   const engageMessage = await engagesApi.send({
     engageMessage: message,
+    customerIds: customers.map(customer => customer._id),
   });
 
   for (const customer of customers) {
