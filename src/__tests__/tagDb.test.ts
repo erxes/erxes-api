@@ -35,12 +35,13 @@ describe('Test tags model', () => {
 
   test('Tag not found', async () => {
     expect.assertions(1);
+
     try {
       await Tags.tagObject({
         tagIds: [_tag._id],
         objectIds: [],
         collection: Customers,
-        tagType: 'customer',
+        tagType: 'integration',
       });
     } catch (e) {
       expect(e.message).toEqual('Tag not found.');
@@ -101,16 +102,16 @@ describe('Test tags model', () => {
   });
 
   test('Tags tag', async () => {
-    const type = 'engageMessage';
+    const type = 'customer';
     const targetIds = [_customer._id];
     const tagIds = [_tag._id];
 
     await Tags.tagsTag(type, targetIds, tagIds);
 
-    const messageObj = await Customers.findOne({ _id: _customer._id });
+    const customerObj = await Customers.findOne({ _id: _customer._id });
     const tagObj = await Tags.findOne({ _id: _tag._id });
 
-    if (!messageObj || !messageObj.tagIds) {
+    if (!customerObj || !customerObj.tagIds) {
       throw new Error('Engage message not found');
     }
 
@@ -119,7 +120,7 @@ describe('Test tags model', () => {
     }
 
     expect(tagObj.objectCount).toBe(1);
-    expect(messageObj.tagIds[0]).toEqual(_tag.id);
+    expect(customerObj.tagIds[0]).toEqual(_tag.id);
   });
 
   test('Attach company tag', async () => {

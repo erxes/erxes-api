@@ -97,7 +97,7 @@ describe('Test tags mutations', () => {
 
   test('Tag tags', async () => {
     const args = {
-      type: 'engageMessage',
+      type: 'customer',
       targetIds: [_customer._id],
       tagIds: [_tag._id],
     };

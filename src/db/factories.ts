@@ -136,7 +136,7 @@ interface ITagFactoryInput {
 export const tagsFactory = (params: ITagFactoryInput = {}) => {
   const tag = new Tags({
     name: faker.random.word(),
-    type: params.type || 'engageMessage',
+    type: params.type || 'customer',
     colorCode: params.colorCode || Random.id(),
     userId: Random.id(),
   });

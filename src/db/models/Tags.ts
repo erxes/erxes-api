@@ -150,8 +150,6 @@ export const loadClass = () => {
         case 'customer':
           collection = Customers;
           break;
-          // case 'engageMessage':
-          //   collection = EngageMessages;
           break;
         case 'company':
           collection = Companies;
