@@ -1,4 +1,4 @@
-import { Companies, Customers, Deals, Tags, Users } from '../../db/models';
+import { Companies, Customers, Deals, Tags, Tasks, Users } from '../../db/models';
 import { ICompanyDocument } from '../../db/models/definitions/companies';
 
 export default {
@@ -20,5 +20,13 @@ export default {
 
   deals(company: ICompanyDocument) {
     return Deals.find({ companyIds: { $in: [company._id] || [] } });
+  },
+
+  inProgressTasks(company: ICompanyDocument) {
+    return Tasks.find({ $and: [{ companyIds: company._id, isDone: false }] });
+  },
+
+  doneTasks(company: ICompanyDocument) {
+    return Tasks.find({ $and: [{ companyIds: company._id, isDone: true }] });
   },
 };

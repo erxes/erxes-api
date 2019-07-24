@@ -1,4 +1,4 @@
-import { Companies, Conversations, Deals, Integrations, Tags, Users } from '../../db/models';
+import { Companies, Conversations, Deals, Integrations, Tags, Tasks, Users } from '../../db/models';
 import { ICustomerDocument } from '../../db/models/definitions/customers';
 
 interface IMessengerCustomData {
@@ -51,5 +51,13 @@ export default {
 
   deals(customer: ICustomerDocument) {
     return Deals.find({ customerIds: { $in: [customer._id] } });
+  },
+
+  inProgressTasks(customer: ICustomerDocument) {
+    return Tasks.find({ $and: [{ customerIds: customer._id, isDone: false }] });
+  },
+
+  doneTasks(customer: ICustomerDocument) {
+    return Tasks.find({ $and: [{ customerIds: customer._id, isDone: true }] });
   },
 };

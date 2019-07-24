@@ -1,4 +1,4 @@
-import { Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
+import { Companies, Customers, Pipelines, Products, Stages, Tasks, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
@@ -10,6 +10,14 @@ export default {
 
   customers(deal: IDealDocument) {
     return Customers.find({ _id: { $in: deal.customerIds || [] } });
+  },
+
+  inProgressTasks(deal: IDealDocument) {
+    return Tasks.find({ $and: [{ dealId: deal._id, isDone: false }] });
+  },
+
+  doneTasks(deal: IDealDocument) {
+    return Tasks.find({ $and: [{ dealId: deal._id, isDone: true }] });
   },
 
   async products(deal: IDealDocument) {

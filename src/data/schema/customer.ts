@@ -57,6 +57,8 @@ export const types = `
     getMessengerCustomData: JSON
     getTags: [Tag]
     owner: User
+    inProgressTasks: [Task]
+    doneTasks: [Task]
   }
 
   type CustomersListResponse {

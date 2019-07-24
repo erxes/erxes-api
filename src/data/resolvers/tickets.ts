@@ -1,9 +1,17 @@
-import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Customers, Pipelines, Stages, Tasks, Users } from '../../db/models';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
 
 export default {
+  inProgressTasks(ticket: ITicketDocument) {
+    return Tasks.find({ $and: [{ ticketId: ticket._id, isDone: false }] });
+  },
+
+  doneTasks(ticket: ITicketDocument) {
+    return Tasks.find({ $and: [{ ticketId: ticket._id, isDone: true }] });
+  },
+
   companies(ticket: ITicketDocument) {
     return Companies.find({ _id: { $in: ticket.companyIds || [] } });
   },

@@ -26,6 +26,9 @@ export const types = `
     stage: Stage
     attachments: [Attachment]
     isWatched: Boolean
+    
+    inProgressTasks: [Task]
+    doneTasks: [Task]
     ${commonTypes}
   }
 

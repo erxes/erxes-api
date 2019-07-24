@@ -40,6 +40,8 @@ export const types = `
     customers: [Customer]
     deals: [Deal]
     getTags: [Tag]
+    inProgressTasks: [Task]
+    doneTasks: [Task]
   }
 
   type CompaniesListResponse {

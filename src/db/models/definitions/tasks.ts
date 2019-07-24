@@ -7,6 +7,7 @@ export interface ITask extends IItemCommonFields {
   tickedId?: string;
   typeId?: string;
   isDone?: boolean;
+  previousStageId?: string;
   priority?: string;
 }
 
@@ -22,5 +23,6 @@ export const taskSchema = new Schema({
   tickedId: field({ type: String, optional: true }),
   typeId: field({ type: String, optional: true }),
   isDone: field({ type: Boolean }),
+  previousStageId: field({ type: String }),
   priority: field({ type: String, optional: true }),
 });

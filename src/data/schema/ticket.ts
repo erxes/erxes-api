@@ -25,6 +25,9 @@ export const types = `
     pipeline: Pipeline
     modifiedAt: Date
     modifiedBy: String
+
+    inProgressTasks: [Task]
+    doneTasks: [Task]
     ${commonTypes}
   }
 `;

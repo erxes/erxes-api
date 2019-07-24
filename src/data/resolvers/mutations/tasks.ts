@@ -1,4 +1,4 @@
-import { Tasks } from '../../../db/models';
+import { Pipelines, Stages, Tasks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
@@ -37,11 +37,7 @@ const taskMutations = {
    * Edit task
    */
   async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }) {
-    const oldTask = await Tasks.findOne({ _id });
-
-    if (!oldTask) {
-      throw new Error('Task not found');
-    }
+    const oldTask = await Tasks.getTask(_id);
 
     const updatedTask = await Tasks.updateTask(_id, {
       ...doc,
@@ -71,10 +67,18 @@ const taskMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: { user: IUserDocument },
   ) {
+    const oldTask = await Tasks.getTask(_id);
+
+    const destinationStage = await Stages.getStage(destinationStageId || '');
+    const isDone = destinationStage.probability === 'Done' ? true : false;
+    const previousStageId = isDone ? oldTask.stageId : destinationStageId;
+
     const task = await Tasks.updateTask(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
+      previousStageId,
+      isDone,
     });
 
     const { content, action } = await itemsChange(Tasks, task, 'task', destinationStageId);
@@ -139,14 +143,26 @@ const taskMutations = {
 
   async tasksChangeStatus(_root, { _id }: { _id: string }) {
     const task = await Tasks.findOne({ _id });
+    const doc: any = {};
 
     if (!task) {
       throw new Error('Task not found');
     }
 
-    const isDone = task.isDone ? false : true;
+    doc.isDone = task.isDone ? false : true;
+    doc.stageId = task.isDone ? task.previousStageId : task.stageId;
 
-    return Tasks.updateTask(_id, { isDone });
+    if (doc.isDone) {
+      const currentStage = await Stages.getStage(task.stageId || '');
+      const pipeline = await Pipelines.getPipeline(currentStage.pipelineId || '');
+      const doneStage = await Stages.findOne({ $and: [{ pipelineId: pipeline.id }, { probability: 'Done' }] });
+
+      if (doneStage) {
+        doc.stageId = doneStage._id;
+      }
+    }
+
+    return Tasks.updateTask(_id, { ...doc });
   },
 };
 
