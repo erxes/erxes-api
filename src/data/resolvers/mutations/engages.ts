@@ -70,7 +70,7 @@ const engageMutations = {
     { _id }: { _id: string },
     { user, dataSources }: { user: IUserDocument; dataSources: any },
   ) {
-    const engageMessage = await dataSources.EngagesAPI.removeEngageMessage(_id);
+    const engageMessage = await dataSources.EngagesAPI.removeEngage(_id);
 
     await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
 
@@ -111,7 +111,7 @@ const engageMutations = {
    * Engage message set pause
    */
   engageMessageSetPause(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngageAPI.EngageAPIes.engageMessageSetPause(_id);
+    return dataSources.EngageAPI.engageMessageSetPause(_id);
   },
 
   /**

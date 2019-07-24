@@ -29,4 +29,28 @@ export default class EngagesAPI extends RESTDataSource {
   public async engagesStats(engageMessageId) {
     return this.get(`/deliveryReports/statsList/${engageMessageId}`);
   }
+
+  public async engagesList() {
+    return this.get(`/engages/list`);
+  }
+
+  public async engageDetail(engageMessageId) {
+    return this.get(`/engages/detail/${engageMessageId}`);
+  }
+
+  public async updateEngage(engageMessageId, doc) {
+    return this.post(`/engages/update/${engageMessageId}`, doc);
+  }
+
+  public async removeEngage(engageMessageId) {
+    return this.delete(`/engages/remove${engageMessageId}`);
+  }
+
+  public async engageMessageSetLive(engageMessageId) {
+    return this.post(`engages/setLive/${engageMessageId}`);
+  }
+
+  public async engageMessageSetPause(engageMessageId) {
+    return this.post(`engages/setPause/${engageMessageId}`);
+  }
 }

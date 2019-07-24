@@ -188,14 +188,14 @@ const engageQueries = {
    * Engage messages list
    */
   engageMessages(_root, args: IListArgs, { user, dataSources }: { user: IUserDocument; dataSources: any }) {
-    return dataSources.EngagesAPI.list(listQuery(args, user), args);
+    return dataSources.EngagesAPI.engagesList(listQuery(args, user), args);
   },
 
   /**
    * Get one message
    */
   engageMessageDetail(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngagesAPI.detail({ _id });
+    return dataSources.EngagesAPI.engageDetail({ _id });
   },
 
   /**
