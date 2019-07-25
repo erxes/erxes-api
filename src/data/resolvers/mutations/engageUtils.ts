@@ -96,14 +96,7 @@ export const send = async (engageMessage: IEngageMessage, engagesApi?: any) => {
     throw new Error('User not found');
   }
 
-  if (!engageMessage.isLive) {
-    return;
-  }
-
   const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
-
-  // save matched customer ids
-  // EngageMessages.setCustomerIds(engageMessage._id, customers);
 
   if (engageMessage.method === METHODS.EMAIL) {
     const customerInfos = customers.map(customer => {

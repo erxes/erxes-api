@@ -1,8 +1,7 @@
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchCronsApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -45,7 +44,7 @@ const engageMutations = {
   ) {
     const engageMessage = await dataSources.EngagesAPI.updateEngage(_id, doc);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
+    console.log('ENGAGE MESSAGE', engageMessage);
 
     if (engageMessage) {
       await putUpdateLog(
@@ -72,8 +71,6 @@ const engageMutations = {
   ) {
     const engageMessage = await dataSources.EngagesAPI.removeEngage(_id);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
-
     if (engageMessage) {
       await putDeleteLog(
         {
@@ -92,35 +89,21 @@ const engageMutations = {
    * Engage message set live
    */
   async engageMessageSetLive(_root, { _id }: { _id: string }, { dataSources }) {
-    const engageMessage = await dataSources.EngageAPI.engageMessageSetLive(_id);
-
-    const { kind } = engageMessage;
-
-    if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
-      await fetchCronsApi({
-        path: '/create-schedule',
-        method: 'POST',
-        body: { message: JSON.stringify(engageMessage) },
-      });
-    }
-
-    return engageMessage;
+    return dataSources.EngagesAPI.engageMessageSetLive(_id);
   },
 
   /**
    * Engage message set pause
    */
   engageMessageSetPause(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngageAPI.engageMessageSetPause(_id);
+    return dataSources.EngagesAPI.engageMessageSetPause(_id);
   },
 
   /**
    * Engage message set live manual
    */
   async engageMessageSetLiveManual(_root, { _id }: { _id: string }, { dataSources }) {
-    const engageMessage = await dataSources.EngageAPI.engageMessageSetLive(_id);
-
-    return engageMessage;
+    return dataSources.EngageAPI.engageMessageSetLive(_id);
   },
 };
 

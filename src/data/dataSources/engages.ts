@@ -43,14 +43,14 @@ export default class EngagesAPI extends RESTDataSource {
   }
 
   public async removeEngage(engageMessageId) {
-    return this.delete(`/engages/remove${engageMessageId}`);
+    return this.delete(`/engages/remove/${engageMessageId}`);
   }
 
   public async engageMessageSetLive(engageMessageId) {
-    return this.post(`engages/setLive/${engageMessageId}`);
+    return this.post(`/engages/setLive/${engageMessageId}`);
   }
 
   public async engageMessageSetPause(engageMessageId) {
-    return this.post(`engages/setPause/${engageMessageId}`);
+    return this.post(`/engages/setPause/${engageMessageId}`);
   }
 }
