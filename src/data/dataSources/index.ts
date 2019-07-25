@@ -1,3 +1,4 @@
+import CronsAPI from './crons';
 import EngagesAPI from './engages';
 
-export { EngagesAPI };
+export { EngagesAPI, CronsAPI };

@@ -30,8 +30,8 @@ export default class EngagesAPI extends RESTDataSource {
     return this.get(`/deliveryReports/statsList/${engageMessageId}`);
   }
 
-  public async engagesList() {
-    return this.get(`/engages/list`);
+  public async engagesList(params) {
+    return this.post(`/engages/list`, params);
   }
 
   public async engageDetail(engageMessageId) {

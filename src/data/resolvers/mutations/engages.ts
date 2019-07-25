@@ -1,5 +1,6 @@
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
@@ -44,7 +45,7 @@ const engageMutations = {
   ) {
     const engageMessage = await dataSources.EngagesAPI.updateEngage(_id, doc);
 
-    console.log('ENGAGE MESSAGE', engageMessage);
+    await dataSources.CronsAPI.updateOrRemoveSchedule(_id, true);
 
     if (engageMessage) {
       await putUpdateLog(
@@ -71,6 +72,8 @@ const engageMutations = {
   ) {
     const engageMessage = await dataSources.EngagesAPI.removeEngage(_id);
 
+    await dataSources.CronsAPI.updateOrRemoveSchedule(_id);
+
     if (engageMessage) {
       await putDeleteLog(
         {
@@ -89,7 +92,15 @@ const engageMutations = {
    * Engage message set live
    */
   async engageMessageSetLive(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngagesAPI.engageMessageSetLive(_id);
+    const engageMessage = dataSources.EngagesAPI.engageMessageSetLive(_id);
+
+    const { kind } = engageMessage;
+
+    if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
+      dataSources.CronsAPI.createSchedule(JSON.stringify(engageMessage));
+    }
+
+    return engageMessage;
   },
 
   /**
