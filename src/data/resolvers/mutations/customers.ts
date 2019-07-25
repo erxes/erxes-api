@@ -61,8 +61,18 @@ const customerMutations = {
   /**
    * Merge customers
    */
-  async customersMerge(_root, { customerIds, customerFields }: { customerIds: string[]; customerFields: ICustomer }) {
-    return Customers.mergeCustomers(customerIds, customerFields);
+  async customersMerge(
+    _root,
+    { customerIds, customerFields }: { customerIds: string[]; customerFields: ICustomer },
+    { dataSources },
+  ) {
+    const { customer, updateEngage } = await Customers.mergeCustomers(customerIds, customerFields);
+
+    if (updateEngage) {
+      dataSources.EngagesAPI.changeCustomer();
+    }
+
+    return customer;
   },
 
   /**

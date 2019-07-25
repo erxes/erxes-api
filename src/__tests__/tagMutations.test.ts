@@ -1,13 +1,13 @@
 import { graphqlRequest } from '../db/connection';
-import { engageMessageFactory, tagsFactory, userFactory } from '../db/factories';
-import { EngageMessages, Tags, Users } from '../db/models';
+import { customerFactory, tagsFactory, userFactory } from '../db/factories';
+import { Customers, Tags, Users } from '../db/models';
 
 import './setup.ts';
 
 describe('Test tags mutations', () => {
   let _tag;
   let _user;
-  let _message;
+  let _customer;
   let doc;
   let context;
 
@@ -27,7 +27,7 @@ describe('Test tags mutations', () => {
     // Creating test data
     _tag = await tagsFactory({});
     _user = await userFactory({});
-    _message = await engageMessageFactory({});
+    _customer = await customerFactory({});
 
     context = { user: _user };
 
@@ -42,7 +42,7 @@ describe('Test tags mutations', () => {
     // Clearing test data
     await Tags.deleteMany({});
     await Users.deleteMany({});
-    await EngageMessages.deleteMany({});
+    await Customers.deleteMany({});
   });
 
   test('Add tag', async () => {
@@ -97,8 +97,8 @@ describe('Test tags mutations', () => {
 
   test('Tag tags', async () => {
     const args = {
-      type: 'engageMessage',
-      targetIds: [_message._id],
+      type: 'customer',
+      targetIds: [_customer._id],
       tagIds: [_tag._id],
     };
 
@@ -118,7 +118,7 @@ describe('Test tags mutations', () => {
 
     await graphqlRequest(mutation, 'tagsTag', args, context);
 
-    const engageMessage = await EngageMessages.findOne({ _id: _message._id });
+    const engageMessage = await Customers.findOne({ _id: _customer._id });
 
     if (!engageMessage) {
       throw new Error('Engage message not found');

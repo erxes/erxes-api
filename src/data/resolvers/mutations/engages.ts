@@ -1,9 +1,8 @@
-import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchCronsApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -19,9 +18,7 @@ const engageMutations = {
     doc: IEngageMessage,
     { user, dataSources: { EngagesAPI } }: { user: IUserDocument; dataSources: { EngagesAPI: any } },
   ) {
-    const engageMessage = await EngageMessages.createEngageMessage(doc);
-
-    await send(engageMessage, EngagesAPI);
+    const engageMessage = await send(doc, EngagesAPI);
 
     if (engageMessage) {
       await putCreateLog(
@@ -41,36 +38,41 @@ const engageMutations = {
   /**
    * Edit message
    */
-  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: { user: IUserDocument }) {
-    const engageMessage = await EngageMessages.findOne({ _id });
-    const updated = await EngageMessages.updateEngageMessage(_id, doc);
+  async engageMessageEdit(
+    _root,
+    { _id, ...doc }: IEngageMessageEdit,
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
+  ) {
+    const engageMessage = await dataSources.EngagesAPI.updateEngage(_id, doc);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
+    await dataSources.CronsAPI.updateOrRemoveSchedule(_id, true);
 
     if (engageMessage) {
       await putUpdateLog(
         {
           type: 'engage',
           object: engageMessage,
-          newData: JSON.stringify(updated),
+          newData: JSON.stringify(engageMessage),
           description: `${engageMessage.title} has been edited`,
         },
         user,
       );
     }
 
-    return EngageMessages.findOne({ _id });
+    return engageMessage;
   },
 
   /**
    * Remove message
    */
-  async engageMessageRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const engageMessage = await EngageMessages.findOne({ _id });
+  async engageMessageRemove(
+    _root,
+    { _id }: { _id: string },
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
+  ) {
+    const engageMessage = await dataSources.EngagesAPI.removeEngage(_id);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
-
-    const removed = await EngageMessages.removeEngageMessage(_id);
+    await dataSources.CronsAPI.updateOrRemoveSchedule(_id);
 
     if (engageMessage) {
       await putDeleteLog(
@@ -83,23 +85,19 @@ const engageMutations = {
       );
     }
 
-    return removed;
+    return engageMessage;
   },
 
   /**
    * Engage message set live
    */
-  async engageMessageSetLive(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
+  async engageMessageSetLive(_root, { _id }: { _id: string }, { dataSources }) {
+    const engageMessage = dataSources.EngagesAPI.engageMessageSetLive(_id);
 
     const { kind } = engageMessage;
 
     if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
-      await fetchCronsApi({
-        path: '/create-schedule',
-        method: 'POST',
-        body: { message: JSON.stringify(engageMessage) },
-      });
+      dataSources.CronsAPI.createSchedule(JSON.stringify(engageMessage));
     }
 
     return engageMessage;
@@ -108,17 +106,15 @@ const engageMutations = {
   /**
    * Engage message set pause
    */
-  engageMessageSetPause(_root, { _id }: { _id: string }) {
-    return EngageMessages.engageMessageSetPause(_id);
+  engageMessageSetPause(_root, { _id }: { _id: string }, { dataSources }) {
+    return dataSources.EngagesAPI.engageMessageSetPause(_id);
   },
 
   /**
    * Engage message set live manual
    */
-  async engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
-
-    return engageMessage;
+  async engageMessageSetLiveManual(_root, { _id }: { _id: string }, { dataSources }) {
+    return dataSources.EngageAPI.engageMessageSetLive(_id);
   },
 };
 

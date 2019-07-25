@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import * as schedule from 'node-schedule';
+import { EngagesAPI } from '../data/dataSources';
 import { send } from '../data/resolvers/mutations/engageUtils';
-import { EngageMessages } from '../db/models';
 import { IEngageMessageDocument, IScheduleDate } from '../db/models/definitions/engages';
 
 interface IEngageSchedules {
@@ -24,6 +24,14 @@ export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: 
     return;
   }
 
+  const api = new EngagesAPI();
+
+  const engageMessage = await api.engageDetail(_id);
+
+  if (!engageMessage) {
+    return;
+  }
+
   // Remove selected job instance and update tracker
   ENGAGE_SCHEDULES[selectedIndex].job.cancel();
   ENGAGE_SCHEDULES.splice(selectedIndex, 1);
@@ -32,13 +40,7 @@ export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: 
     return;
   }
 
-  const message = await EngageMessages.findOne({ _id });
-
-  if (!message) {
-    return;
-  }
-
-  return createSchedule(message);
+  return createSchedule(engageMessage);
 };
 
 /**
@@ -105,7 +107,9 @@ export const createScheduleRule = (scheduleDate: IScheduleDate) => {
 };
 
 const initCronJob = async () => {
-  const messages = await EngageMessages.find({
+  const api = new EngagesAPI();
+
+  const messages = await api.engagesList({
     kind: { $in: ['auto', 'visitorAuto'] },
     isLive: true,
   });

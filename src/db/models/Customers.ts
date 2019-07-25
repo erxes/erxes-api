@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail } from '../../data/utils';
-import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes, Tickets } from './';
+import { ActivityLogs, Conversations, Deals, Fields, InternalNotes, Tickets } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -19,7 +19,10 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
   updateCompanies(_id: string, companyIds: string[]): Promise<ICustomerDocument>;
   removeCustomer(customerId: string): void;
-  mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
+  mergeCustomers(
+    customerIds: string[],
+    customerFields: ICustomer,
+  ): Promise<{ customer: ICustomerDocument; updateEngage: boolean }>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
 }
@@ -242,7 +245,6 @@ export const loadClass = () => {
     public static async removeCustomer(customerId: string) {
       // Removing every modules that associated with customer
       await Conversations.removeCustomerConversations(customerId);
-      await EngageMessages.removeCustomerEngages(customerId);
       await InternalNotes.removeCustomerInternalNotes(customerId);
 
       return Customers.deleteOne({ _id: customerId });
@@ -316,7 +318,6 @@ export const loadClass = () => {
 
       // Updating every modules associated with customers
       await Conversations.changeCustomer(customer._id, customerIds);
-      await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);
       await Deals.changeCustomer(customer._id, customerIds);
       await Tickets.changeCustomer(customer._id, customerIds);
@@ -324,7 +325,7 @@ export const loadClass = () => {
       // create log
       await ActivityLogs.createCustomerLog(customer);
 
-      return customer;
+      return { customer, updateEngage: true };
     }
   }
 

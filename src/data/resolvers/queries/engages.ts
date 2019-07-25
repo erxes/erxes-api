@@ -1,7 +1,6 @@
-import { EngageMessages, Tags } from '../../../db/models';
+import { Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import { paginate } from '../../utils';
 
 interface IListArgs {
   kind?: string;
@@ -32,8 +31,8 @@ interface ICountsByTag {
 }
 
 // basic count helper
-const count = async (selector: {}): Promise<number> => {
-  const res = await EngageMessages.find(selector).countDocuments();
+const count = async (selector: {}, engagesApi): Promise<number> => {
+  const res = await engagesApi.list(selector).countDocuments();
   return Number(res);
 };
 
@@ -62,15 +61,18 @@ const statusQueryBuilder = (status: string, user?: IUserDocument): IStatusQueryB
 };
 
 // count for each kind
-const countsByKind = async () => ({
-  all: await count({}),
-  auto: await count({ kind: 'auto' }),
-  visitorAuto: await count({ kind: 'visitorAuto' }),
-  manual: await count({ kind: 'manual' }),
+const countsByKind = async engagesApi => ({
+  all: await count({}, engagesApi),
+  auto: await count({ kind: 'auto' }, engagesApi),
+  visitorAuto: await count({ kind: 'visitorAuto' }, engagesApi),
+  manual: await count({ kind: 'manual' }, engagesApi),
 });
 
 // count for each status type
-const countsByStatus = async ({ kind, user }: { kind: string; user: IUserDocument }): Promise<ICountsByStatus> => {
+const countsByStatus = async (
+  { kind, user }: { kind: string; user: IUserDocument },
+  engagesApi,
+): Promise<ICountsByStatus> => {
   const query: IQuery = {};
 
   if (kind) {
@@ -78,23 +80,26 @@ const countsByStatus = async ({ kind, user }: { kind: string; user: IUserDocumen
   }
 
   return {
-    live: await count({ ...query, ...statusQueryBuilder('live') }),
-    draft: await count({ ...query, ...statusQueryBuilder('draft') }),
-    paused: await count({ ...query, ...statusQueryBuilder('paused') }),
-    yours: await count({ ...query, ...statusQueryBuilder('yours', user) }),
+    live: await count({ ...query, ...statusQueryBuilder('live') }, engagesApi),
+    draft: await count({ ...query, ...statusQueryBuilder('draft') }, engagesApi),
+    paused: await count({ ...query, ...statusQueryBuilder('paused') }, engagesApi),
+    yours: await count({ ...query, ...statusQueryBuilder('yours', user) }, engagesApi),
   };
 };
 
 // cout for each tag
-const countsByTag = async ({
-  kind,
-  status,
-  user,
-}: {
-  kind: string;
-  status: string;
-  user: IUserDocument;
-}): Promise<ICountsByTag[]> => {
+const countsByTag = async (
+  {
+    kind,
+    status,
+    user,
+  }: {
+    kind: string;
+    status: string;
+    user: IUserDocument;
+  },
+  engagesApi,
+): Promise<ICountsByTag[]> => {
   let query: any = {};
 
   if (kind) {
@@ -111,7 +116,7 @@ const countsByTag = async ({
   const response: ICountsByTag[] = [];
 
   for (const tag of tags) {
-    response[tag._id] = await count({ ...query, ...tagQueryBuilder(tag._id) });
+    response[tag._id] = await count({ ...query, ...tagQueryBuilder(tag._id) }, engagesApi);
   }
 
   return response;
@@ -122,19 +127,19 @@ const countsByTag = async ({
  */
 const listQuery = ({ segmentIds, brandIds, tagIds, kind, status, tag, ids }: IListArgs, user: IUserDocument): any => {
   if (ids) {
-    return EngageMessages.find({ _id: { $in: ids } });
+    return { _id: { $in: ids } };
   }
 
   if (segmentIds) {
-    return EngageMessages.find({ segmentIds: { $in: segmentIds } });
+    return { segmentIds: { $in: segmentIds } };
   }
 
   if (brandIds) {
-    return EngageMessages.find({ brandIds: { $in: brandIds } });
+    return { brandIds: { $in: brandIds } };
   }
 
   if (tagIds) {
-    return EngageMessages.find({ tagIds: { $in: tagIds } });
+    return { tagIds: { $in: tagIds } };
   }
 
   let query: any = {};
@@ -164,40 +169,40 @@ const engageQueries = {
   engageMessageCounts(
     _root,
     { name, kind, status }: { name: string; kind: string; status: string },
-    { user }: { user: IUserDocument },
+    { user, dataSources }: { user: IUserDocument; dataSources: any },
   ) {
     if (name === 'kind') {
-      return countsByKind();
+      return countsByKind(dataSources.EngagesAPI);
     }
 
     if (name === 'status') {
-      return countsByStatus({ kind, user });
+      return countsByStatus({ kind, user }, dataSources.EngagesAPI);
     }
 
     if (name === 'tag') {
-      return countsByTag({ kind, status, user });
+      return countsByTag({ kind, status, user }, dataSources.EngagesAPI);
     }
   },
 
   /**
    * Engage messages list
    */
-  engageMessages(_root, args: IListArgs, { user }: { user: IUserDocument }) {
-    return paginate(EngageMessages.find(listQuery(args, user)), args);
+  engageMessages(_root, args: IListArgs, { user, dataSources }: { user: IUserDocument; dataSources: any }) {
+    return dataSources.EngagesAPI.engagesList(listQuery(args, user), args);
   },
 
   /**
    * Get one message
    */
-  engageMessageDetail(_root, { _id }: { _id: string }) {
-    return EngageMessages.findOne({ _id });
+  engageMessageDetail(_root, { _id }: { _id: string }, { dataSources }) {
+    return dataSources.EngagesAPI.engageDetail(_id);
   },
 
   /**
    * Get all messages count. We will use it in pager
    */
-  engageMessagesTotalCount(_root, args: IListArgs, { user }: { user: IUserDocument }) {
-    return EngageMessages.find(listQuery(args, user)).countDocuments();
+  engageMessagesTotalCount(_root, args: IListArgs, { user, dataSources }: { user: IUserDocument; dataSources }) {
+    return dataSources.EngagesAPI.count(listQuery(args, user), args);
   },
 };
 

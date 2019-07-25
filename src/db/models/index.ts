@@ -10,7 +10,6 @@ import Customers from './Customers';
 import Deals from './Deals';
 import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
-import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
 import Forms from './Forms';
 import ImportHistory from './ImportHistory';
@@ -38,7 +37,6 @@ export {
   Brands,
   Integrations,
   Forms,
-  EngageMessages,
   Tags,
   Fields,
   Segments,
