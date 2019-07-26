@@ -213,13 +213,13 @@ describe('Customers model tests', () => {
 
     const customerIds = [visitor1._id, visitor2._id];
 
-    const merged = await Customers.mergeCustomers(customerIds, {
+    const { customer } = await Customers.mergeCustomers(customerIds, {
       primaryEmail: 'merged@gmail.com',
       primaryPhone: '2555225',
     });
 
-    expect(merged.emails).toContain('merged@gmail.com');
-    expect(merged.phones).toContain('2555225');
+    expect(customer.emails).toContain('merged@gmail.com');
+    expect(customer.phones).toContain('2555225');
   });
 
   test('Merge customers', async () => {
@@ -295,22 +295,22 @@ describe('Customers model tests', () => {
       ownerId: '456',
     };
 
-    const mergedCustomer = await Customers.mergeCustomers(customerIds, doc);
+    const { customer } = await Customers.mergeCustomers(customerIds, doc);
 
-    if (!mergedCustomer || !mergedCustomer.messengerData || !mergedCustomer.visitorContactInfo) {
+    if (!customer || !customer.messengerData || !customer.visitorContactInfo) {
       throw new Error('Merged customer not found');
     }
 
-    expect(mergedCustomer.integrationId).toBeDefined();
-    expect(mergedCustomer.firstName).toBe(doc.firstName);
-    expect(mergedCustomer.lastName).toBe(doc.lastName);
-    expect(mergedCustomer.primaryEmail).toBe(doc.primaryEmail);
-    expect(mergedCustomer.primaryPhone).toBe(doc.primaryPhone);
-    expect(mergedCustomer.messengerData.toJSON()).toEqual(doc.messengerData);
-    expect(mergedCustomer.companyIds).toEqual(expect.arrayContaining(mergedCompanyIds));
-    expect(mergedCustomer.tagIds).toEqual(expect.arrayContaining(mergedTagIds));
-    expect(mergedCustomer.visitorContactInfo.toJSON()).toEqual(doc.visitorContactInfo);
-    expect(mergedCustomer.ownerId).toBe('456');
+    expect(customer.integrationId).toBeDefined();
+    expect(customer.firstName).toBe(doc.firstName);
+    expect(customer.lastName).toBe(doc.lastName);
+    expect(customer.primaryEmail).toBe(doc.primaryEmail);
+    expect(customer.primaryPhone).toBe(doc.primaryPhone);
+    expect(customer.messengerData.toJSON()).toEqual(doc.messengerData);
+    expect(customer.companyIds).toEqual(expect.arrayContaining(mergedCompanyIds));
+    expect(customer.tagIds).toEqual(expect.arrayContaining(mergedTagIds));
+    expect(customer.visitorContactInfo.toJSON()).toEqual(doc.visitorContactInfo);
+    expect(customer.ownerId).toBe('456');
 
     // Checking old customers datas to be deleted
     const oldCustomer = (await Customers.findOne({ _id: customerIds[0] })) || { status: '' };
@@ -327,12 +327,12 @@ describe('Customers model tests', () => {
     expect(internalNote).toHaveLength(0);
 
     // Checking merged customer datas
-    expect(await Conversations.find({ customerId: mergedCustomer._id })).not.toHaveLength(0);
-    expect(await ConversationMessages.find({ customerId: mergedCustomer._id })).not.toHaveLength(0);
+    expect(await Conversations.find({ customerId: customer._id })).not.toHaveLength(0);
+    expect(await ConversationMessages.find({ customerId: customer._id })).not.toHaveLength(0);
 
     internalNote = await InternalNotes.find({
       contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-      contentTypeId: mergedCustomer._id,
+      contentTypeId: customer._id,
     });
 
     expect(internalNote).not.toHaveLength(0);
@@ -344,11 +344,11 @@ describe('Customers model tests', () => {
     expect(deals.length).toBe(0);
 
     const deal = await Deals.findOne({
-      customerIds: { $in: [mergedCustomer._id] },
+      customerIds: { $in: [customer._id] },
     });
     if (!deal) {
       throw new Error('Deal not found');
     }
-    expect(deal.customerIds).toContain(mergedCustomer._id);
+    expect(deal.customerIds).toContain(customer._id);
   });
 });
