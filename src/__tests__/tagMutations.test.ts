@@ -1,3 +1,5 @@
+import * as sinon from 'sinon';
+import EngagesAPI from '../data/dataSources/engages';
 import { graphqlRequest } from '../db/connection';
 import { customerFactory, tagsFactory, userFactory } from '../db/factories';
 import { Customers, Tags, Users } from '../db/models';
@@ -90,7 +92,14 @@ describe('Test tags mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'tagsRemove', { ids: [_tag._id] }, context);
+    sinon.stub(EngagesAPI.prototype, 'count').callsFake(() => [{}]);
+
+    await graphqlRequest(
+      mutation,
+      'tagsRemove',
+      { ids: [_tag._id] },
+      { ...context, dataSources: { EngagesAPI: new EngagesAPI() } },
+    );
 
     expect(await Tags.find({ _id: { $in: [_tag._id] } })).toEqual([]);
   });

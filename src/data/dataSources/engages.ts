@@ -53,4 +53,12 @@ export default class EngagesAPI extends RESTDataSource {
   public async engageMessageSetPause(engageMessageId) {
     return this.post(`/engages/setPause/${engageMessageId}`);
   }
+
+  public async changeCustomer() {
+    return this.post(`/engages/changeCustomer`);
+  }
+
+  public async count() {
+    return this.post(`/engages/count`);
+  }
 }

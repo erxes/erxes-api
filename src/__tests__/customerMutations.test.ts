@@ -1,4 +1,6 @@
 import * as faker from 'faker';
+import * as sinon from 'sinon';
+import EngagesAPI from '../data/dataSources/engages';
 import { graphqlRequest } from '../db/connection';
 import { customerFactory, userFactory } from '../db/factories';
 import { Customers, Users } from '../db/models';
@@ -248,7 +250,12 @@ describe('Customers mutations', () => {
       }
     `;
 
-    const customer = await graphqlRequest(mutation, 'customersMerge', params, context);
+    sinon.stub(EngagesAPI.prototype, 'changeCustomer').callsFake(() => [{}]);
+
+    const customer = await graphqlRequest(mutation, 'customersMerge', params, {
+      user: _user,
+      dataSources: { EngagesAPI: new EngagesAPI() },
+    });
 
     expect(customer.firstName).toBe(params.customerFields.firstName);
   });
