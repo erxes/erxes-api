@@ -92,7 +92,7 @@ describe('Test tags mutations', () => {
       }
     `;
 
-    sinon.stub(EngagesAPI.prototype, 'count').callsFake(() => [{}]);
+    sinon.stub(EngagesAPI.prototype, 'engagesTotalCount').callsFake(() => [{}]);
 
     await graphqlRequest(
       mutation,

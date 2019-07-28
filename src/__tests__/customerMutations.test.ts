@@ -250,7 +250,7 @@ describe('Customers mutations', () => {
       }
     `;
 
-    sinon.stub(EngagesAPI.prototype, 'changeCustomer').callsFake(() => [{}]);
+    sinon.stub(EngagesAPI.prototype, 'engagesChangeCustomer').callsFake(() => [{}]);
 
     const customer = await graphqlRequest(mutation, 'customersMerge', params, {
       user: _user,
