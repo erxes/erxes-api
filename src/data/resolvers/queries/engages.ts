@@ -32,7 +32,12 @@ interface ICountsByTag {
 
 // basic count helper
 const count = async (selector: {}, engagesApi): Promise<number> => {
-  const res = await engagesApi.list(selector).countDocuments();
+  const res = await engagesApi.count(selector);
+
+  if (!res) {
+    return 0;
+  }
+
   return Number(res);
 };
 
@@ -188,7 +193,7 @@ const engageQueries = {
    * Engage messages list
    */
   engageMessages(_root, args: IListArgs, { user, dataSources }: { user: IUserDocument; dataSources: any }) {
-    return dataSources.EngagesAPI.engagesList(listQuery(args, user), args);
+    return dataSources.EngagesAPI.engagesList(listQuery(args, user));
   },
 
   /**
@@ -202,7 +207,7 @@ const engageQueries = {
    * Get all messages count. We will use it in pager
    */
   engageMessagesTotalCount(_root, args: IListArgs, { user, dataSources }: { user: IUserDocument; dataSources }) {
-    return dataSources.EngagesAPI.count(listQuery(args, user), args);
+    return dataSources.EngagesAPI.count(listQuery(args, user));
   },
 };
 
