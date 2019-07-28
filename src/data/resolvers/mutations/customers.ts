@@ -69,7 +69,10 @@ const customerMutations = {
     const { customer, updateEngage } = await Customers.mergeCustomers(customerIds, customerFields);
 
     if (updateEngage) {
-      dataSources.EngagesAPI.changeCustomer();
+      await dataSources.EngagesAPI.changeCustomer({
+        newCustomerId: updateEngage.newCustomerId,
+        customerIds: updateEngage.customerIds,
+      });
     }
 
     return customer;

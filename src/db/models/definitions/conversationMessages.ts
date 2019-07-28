@@ -11,12 +11,12 @@ interface IEngageDataRules {
 interface IEngageDataRulesDocument extends IEngageDataRules, Document {}
 
 export interface IEngageData {
-  messageId: string;
-  brandId: string;
-  content: string;
-  fromUserId: string;
-  kind: string;
-  sentAs: string;
+  messageId?: string;
+  brandId?: string;
+  content?: string;
+  fromUserId?: string;
+  kind?: string;
+  sentAs?: string;
   rules?: IEngageDataRules[];
 }
 

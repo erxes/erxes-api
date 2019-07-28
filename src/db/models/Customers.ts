@@ -22,7 +22,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   mergeCustomers(
     customerIds: string[],
     customerFields: ICustomer,
-  ): Promise<{ customer: ICustomerDocument; updateEngage: boolean }>;
+  ): Promise<{ customer: ICustomerDocument; updateEngage: { newCustomerId: string; customerIds: string[] } }>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
 }
@@ -325,7 +325,7 @@ export const loadClass = () => {
       // create log
       await ActivityLogs.createCustomerLog(customer);
 
-      return { customer, updateEngage: true };
+      return { customer, updateEngage: { newCustomerId: customer._id, customerIds } };
     }
   }
 

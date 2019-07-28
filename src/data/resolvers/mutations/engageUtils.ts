@@ -1,7 +1,7 @@
 import { ConversationMessages, Conversations, Customers, Integrations, Segments, Users } from '../../../db/models';
 import { METHODS } from '../../../db/models/definitions/constants';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
-import { IEngageMessage } from '../../../db/models/definitions/engages';
+import { IEngageMessage, IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, MESSAGE_KINDS } from '../../constants';
 import QueryBuilder from '../../modules/segments/queryBuilder';
@@ -124,8 +124,17 @@ export const send = async (engageMessage: IEngageMessage, engagesApi?: any) => {
     });
   }
 
-  if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
-    return sendViaMessenger(engageMessage, customers, user, engagesApi);
+  if (engageMessage.method === METHODS.MESSENGER) {
+    const engageMessageDb = await engagesApi.send({
+      engageMessage,
+      customerIds: customers.map(customer => customer._id),
+    });
+
+    if (engageMessageDb.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
+      return sendViaMessenger(engageMessageDb, customers, user);
+    }
+
+    return engageMessageDb;
   }
 };
 
@@ -133,10 +142,9 @@ export const send = async (engageMessage: IEngageMessage, engagesApi?: any) => {
  * Send via messenger
  */
 export const sendViaMessenger = async (
-  message: IEngageMessage,
+  message: IEngageMessageDocument,
   customers: ICustomerDocument[],
   user: IUserDocument,
-  engagesApi,
 ) => {
   const { fromUserId } = message;
 
@@ -156,11 +164,6 @@ export const sendViaMessenger = async (
     throw new Error('Integration not found');
   }
 
-  const engageMessage = await engagesApi.send({
-    engageMessage: message,
-    customerIds: customers.map(customer => customer._id),
-  });
-
   for (const customer of customers) {
     // replace keys in content
     const replacedContent = replaceKeys({ content, customer, user });
@@ -172,12 +175,18 @@ export const sendViaMessenger = async (
       content: replacedContent,
     });
 
+    const { messenger } = message;
+
     // create message
     await ConversationMessages.createMessage({
       engageData: {
-        messageId: engageMessage._id,
+        messageId: message._id,
         fromUserId,
-        ...engageMessage.messenger.toJSON(),
+        brandId: messenger.brandId,
+        content: messenger.content,
+        kind: messenger.kind,
+        sentAs: messenger.sentAs,
+        rules: messenger.rules,
       },
       conversationId: conversation._id,
       userId: fromUserId,
@@ -186,7 +195,7 @@ export const sendViaMessenger = async (
     });
   }
 
-  return engageMessage;
+  return message;
 };
 
 /*
