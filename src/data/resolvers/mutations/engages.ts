@@ -97,7 +97,7 @@ const engageMutations = {
     const { kind } = engageMessage;
 
     if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
-      dataSources.CronsAPI.createSchedule(JSON.stringify(engageMessage));
+      await dataSources.CronsAPI.createSchedule(JSON.stringify(engageMessage));
     }
 
     return engageMessage;
