@@ -30,31 +30,31 @@ export default class EngagesAPI extends RESTDataSource {
     return this.get(`/deliveryReports/statsList/${engageMessageId}`);
   }
 
-  public async engagesList(params) {
-    return this.post(`/engages/list`, params);
+  public async engagesList(params, user) {
+    return this.post(`/engages/list`, { ...params, user });
   }
 
-  public async engageDetail(engageMessageId) {
+  public async engagesDetail(engageMessageId) {
     return this.get(`/engages/detail/${engageMessageId}`);
   }
 
-  public async updateEngage(engageMessageId, doc) {
+  public async engagesUpdate(engageMessageId, doc) {
     return this.post(`/engages/update/${engageMessageId}`, doc);
   }
 
-  public async removeEngage(engageMessageId) {
+  public async engagesRemove(engageMessageId) {
     return this.delete(`/engages/remove/${engageMessageId}`);
   }
 
-  public async engageMessageSetLive(engageMessageId) {
+  public async engagesSetLive(engageMessageId) {
     return this.post(`/engages/setLive/${engageMessageId}`);
   }
 
-  public async engageMessageSetPause(engageMessageId) {
+  public async engagesSetPause(engageMessageId) {
     return this.post(`/engages/setPause/${engageMessageId}`);
   }
 
-  public async changeCustomer({
+  public async engagesChangeCustomer({
     engageMessageId,
     newCustomerId,
     customerIds,
@@ -66,7 +66,15 @@ export default class EngagesAPI extends RESTDataSource {
     return this.post(`/engages/changeCustomer/${engageMessageId}`, { newCustomerId, customerIds });
   }
 
-  public async count() {
-    return this.post(`/engages/count`);
+  public async engagesCount(params) {
+    return this.post(`/engages/count`, params);
+  }
+
+  public async engagesTotalCount(params, user) {
+    return this.post(`/engages/totalCount`, { ...params, user });
+  }
+
+  public async engagesTag(targetIds, tagIds) {
+    return this.post(`/engages/tag`, { targetIds, tagIds });
   }
 }

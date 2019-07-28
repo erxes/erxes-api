@@ -62,7 +62,7 @@ const tagMutations = {
     { user, dataSources }: { user: IUserDocument; dataSources: any },
   ) {
     const tags = await Tags.find({ _id: { $in: ids } });
-    const engageCounts = await dataSources.EngagesAPI.count({ tagIds: { $in: ids } });
+    const engageCounts = await dataSources.EngagesAPI.engagesTotalCount({ tagIds: { $in: ids } });
     const removed = await Tags.removeTag(ids, engageCounts);
 
     for (const tag of tags) {
@@ -94,7 +94,7 @@ const tagMutations = {
     const result = await Tags.tagsTag(type, targetIds, tagIds);
 
     if (result === 'updateEngage') {
-      dataSources.EngagesAPI.tag(targetIds, tagIds);
+      dataSources.EngagesAPI.engagesTag(targetIds, tagIds);
     }
 
     return true;

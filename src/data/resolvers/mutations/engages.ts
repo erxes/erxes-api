@@ -43,7 +43,7 @@ const engageMutations = {
     { _id, ...doc }: IEngageMessageEdit,
     { user, dataSources }: { user: IUserDocument; dataSources: any },
   ) {
-    const engageMessage = await dataSources.EngagesAPI.updateEngage(_id, doc);
+    const engageMessage = await dataSources.EngagesAPI.engagesUpdate(_id, doc);
 
     await dataSources.CronsAPI.updateOrRemoveSchedule(_id, true);
 
@@ -70,7 +70,7 @@ const engageMutations = {
     { _id }: { _id: string },
     { user, dataSources }: { user: IUserDocument; dataSources: any },
   ) {
-    const engageMessage = await dataSources.EngagesAPI.removeEngage(_id);
+    const engageMessage = await dataSources.EngagesAPI.engagesRemove(_id);
 
     await dataSources.CronsAPI.updateOrRemoveSchedule(_id);
 
@@ -92,7 +92,7 @@ const engageMutations = {
    * Engage message set live
    */
   async engageMessageSetLive(_root, { _id }: { _id: string }, { dataSources }) {
-    const engageMessage = dataSources.EngagesAPI.engageMessageSetLive(_id);
+    const engageMessage = dataSources.EngagesAPI.engagesSetLive(_id);
 
     const { kind } = engageMessage;
 
@@ -107,14 +107,14 @@ const engageMutations = {
    * Engage message set pause
    */
   engageMessageSetPause(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngagesAPI.engageMessageSetPause(_id);
+    return dataSources.EngagesAPI.engagesSetPause(_id);
   },
 
   /**
    * Engage message set live manual
    */
   async engageMessageSetLiveManual(_root, { _id }: { _id: string }, { dataSources }) {
-    return dataSources.EngageAPI.engageMessageSetLive(_id);
+    return dataSources.EngageAPI.engagesSetLive(_id);
   },
 };
 
