@@ -79,7 +79,7 @@ export const types = `
     filename: String
     size: Int
     mimeType: String
-    url: String
+    data: String
   }
 `;
 

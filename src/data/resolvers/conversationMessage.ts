@@ -12,9 +12,7 @@ export default {
   },
 
   async gmailData(message: IMessageDocument) {
-    const { conversationId } = message;
-
-    const conversation = await Conversations.findOne({ _id: conversationId }).lean();
+    const conversation = await Conversations.findOne({ _id: message.conversationId }).lean();
 
     if (!conversation) {
       return null;
@@ -28,8 +26,8 @@ export default {
 
     return fetchIntegrationApi({
       path: '/gmail/get-message',
-      method: 'get',
-      params: { conversationId: message.conversationId },
+      method: 'GET',
+      params: { erxesApiMessageId: message._id },
     });
   },
 };

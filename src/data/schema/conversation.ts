@@ -69,7 +69,7 @@ export const types = `
     messengerAppData: JSON
     user: User
     customer: Customer
-    gmailData: [Gmail]
+    gmailData: Gmail
   }
 
   type Gmail {
@@ -93,6 +93,7 @@ export const types = `
     mimeType: String,
     size: Int,
     attachmentId: String,
+    data: String,
   }
 
   type ConversationChangedResponse {
