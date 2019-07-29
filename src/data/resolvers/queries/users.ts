@@ -49,9 +49,8 @@ const userQueries = {
    */
   async users(_root, args: IListArgs) {
     const selector = await queryBuilder(args);
-    const sort = { username: 1 };
 
-    return paginate(Users.find(selector).sort(sort), args);
+    return paginate(Users.find(selector), args);
   },
 
   /**
