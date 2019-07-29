@@ -1,6 +1,5 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
-import * as sinon from 'sinon';
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
@@ -27,8 +26,6 @@ import {
   Tags,
   Users,
 } from '../db/models';
-
-import { awsRequests } from '../trackers/engageTracker';
 
 import './setup.ts';
 
@@ -263,8 +260,6 @@ describe('engage message mutation tests', () => {
     process.env.MAIL_PORT = '123';
     process.env.AWS_REGION = 'us-west-2';
 
-    sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
-
     const emessage = await engageMessageFactory({
       method: 'email',
       title: 'Send via email',
@@ -283,8 +278,6 @@ describe('engage message mutation tests', () => {
       expect(e.message).toBe('User not found');
     }
 
-    const executeSendViaEmail = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
-
     const emessageWithUser = await engageMessageFactory({
       method: 'email',
       title: 'Send via email',
@@ -298,8 +291,6 @@ describe('engage message mutation tests', () => {
     });
 
     await engageUtils.send(emessageWithUser);
-
-    expect(executeSendViaEmail.mock.calls.length).toBe(1);
   });
 
   const engageMessageAddMutation = `
@@ -320,7 +311,6 @@ describe('engage message mutation tests', () => {
         messengerReceivedCustomerIds
         email
         messenger
-        deliveryReports
         scheduleDate {
           type
           day
@@ -352,15 +342,6 @@ describe('engage message mutation tests', () => {
       throw new Error('User not found');
     }
 
-    const sandbox = sinon.createSandbox();
-
-    sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve({ VerifiedEmailAddresses: [user.email] });
-      });
-    });
-
-    const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
     const sendSpy = jest.spyOn(engageUtils, 'send');
 
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
@@ -385,12 +366,10 @@ describe('engage message mutation tests', () => {
     expect(tags).toEqual(_doc.tagIds);
     expect(engageMessage.email.toJSON()).toEqual(_doc.email);
     expect(engageMessage.messenger.toJSON()).toMatchObject(_doc.messenger);
-    expect(engageMessage.deliveryReports).toEqual({});
     expect(engageMessage.scheduleDate.type).toEqual('year');
     expect(engageMessage.scheduleDate.month).toEqual('2');
     expect(engageMessage.scheduleDate.day).toEqual('14');
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
-    awsSpy.mockRestore();
     sendSpy.mockRestore();
   });
 
@@ -400,24 +379,11 @@ describe('engage message mutation tests', () => {
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
     process.env.AWS_ENDPOINT = '123';
 
-    const sandbox = sinon.createSandbox();
-    const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
-    const mock = sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
-
-    sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve({ VerifiedEmailAddresses: [] });
-      });
-    });
-
     try {
       await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
     } catch (e) {
       expect(e.toString()).toContain('Email not verified');
     }
-
-    awsSpy.mockRestore();
-    mock.mockRestore();
   });
 
   test('Edit engage message', async () => {
