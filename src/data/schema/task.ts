@@ -59,6 +59,7 @@ export const queries = `
 
 const commonParams = `
   name: String!,
+  isDone: Boolean,
   stageId: String,
   dealId: String,
   tickedId: String,
