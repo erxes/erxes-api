@@ -79,7 +79,7 @@ export const types = `
     filename: String
     size: Int
     mimeType: String
-    data: String
+    url: String
   }
 `;
 
@@ -156,6 +156,7 @@ export const mutations = `
     from: String!
     headerId: String
     threadId: String
+    references: String
     attachments: [gmailAttachmentData]
   ): JSON
 `;

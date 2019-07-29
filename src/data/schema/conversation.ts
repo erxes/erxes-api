@@ -69,7 +69,7 @@ export const types = `
     messengerAppData: JSON
     user: User
     customer: Customer
-    gmailData: Gmail
+    gmailData: [Gmail]
   }
 
   type Gmail {
