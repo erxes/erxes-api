@@ -16,6 +16,14 @@ const taskMutations = {
    * Create new task
    */
   async tasksAdd(_root, doc: ITask, { user }: { user: IUserDocument }) {
+    const currentStage = await Stages.getStage(doc.stageId || '');
+    if (currentStage.probability !== 'Done') {
+      const pipeline = await Pipelines.getPipeline(currentStage.pipelineId || '');
+      const doneStage = await Stages.findOne({ pipelineId: pipeline._id, probability: 'Done' });
+
+      doc.stageId = doneStage ? doneStage._id : currentStage._id;
+    }
+
     const task = await Tasks.createTask({
       ...doc,
       modifiedBy: user._id,
