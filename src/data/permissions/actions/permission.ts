@@ -707,22 +707,22 @@ export const moduleObjects = {
       },
     ],
   },
-  forms: {
-    name: 'forms',
-    description: 'Form',
+  lead: {
+    name: 'lead',
+    description: 'Lead',
     actions: [
       {
-        name: 'formsAll',
+        name: 'leadAll',
         description: 'All',
-        use: ['showForms', 'manageForms'],
+        use: ['showLeads', 'manageLeads'],
       },
       {
-        name: 'manageForms',
-        description: 'Manage forms',
+        name: 'manageLeads',
+        description: 'Manage leads',
       },
       {
-        name: 'showForms',
-        description: 'Show forms',
+        name: 'showLeads',
+        description: 'Show leads',
       },
     ],
   },
