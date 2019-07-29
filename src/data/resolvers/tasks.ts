@@ -9,7 +9,7 @@ export default {
   },
 
   ticket(task: ITaskDocument) {
-    return Tickets.findOne({ _id: task.tickedId });
+    return Tickets.findOne({ _id: task.ticketId });
   },
 
   type(task: ITaskDocument) {

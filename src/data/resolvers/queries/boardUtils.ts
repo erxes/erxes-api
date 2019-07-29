@@ -17,7 +17,7 @@ export const generateCommonFilters = async (args: any) => {
     pipelineId,
     stageId,
     dealId,
-    tickedId,
+    ticketId,
     search,
     overdue,
     nextMonth,
@@ -53,8 +53,8 @@ export const generateCommonFilters = async (args: any) => {
     filter.dealId = dealId;
   }
 
-  if (tickedId) {
-    filter.tickedId = tickedId;
+  if (ticketId) {
+    filter.ticketId = ticketId;
   }
 
   if (customerIds) {

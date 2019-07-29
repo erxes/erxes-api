@@ -4,7 +4,7 @@ import { commonItemFieldsSchema, IItemCommonFields } from './boards';
 
 export interface ITask extends IItemCommonFields {
   dealId?: string;
-  tickedId?: string;
+  ticketId?: string;
   typeId?: string;
   isDone?: boolean;
   previousStageId?: string;
@@ -20,7 +20,7 @@ export const taskSchema = new Schema({
   ...commonItemFieldsSchema,
 
   dealId: field({ type: String, optional: true }),
-  tickedId: field({ type: String, optional: true }),
+  ticketId: field({ type: String, optional: true }),
   typeId: field({ type: String, optional: true }),
   isDone: field({ type: Boolean }),
   previousStageId: field({ type: String }),
