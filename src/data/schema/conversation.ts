@@ -86,6 +86,7 @@ export const types = `
     textPlain: String,
     textHtml: String,
     attachments: [GmailAttachment],
+    integrationEmail: String,
   }
 
   type GmailAttachment {

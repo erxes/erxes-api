@@ -27,7 +27,10 @@ export default {
     return fetchIntegrationApi({
       path: '/gmail/get-message',
       method: 'GET',
-      params: { erxesApiMessageId: message._id },
+      params: {
+        erxesApiMessageId: message._id,
+        integrationId: integration._id,
+      },
     });
   },
 };
