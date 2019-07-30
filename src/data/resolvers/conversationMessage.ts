@@ -14,7 +14,7 @@ export default {
   async gmailData(message: IMessageDocument) {
     const conversation = await Conversations.findOne({ _id: message.conversationId }).lean();
 
-    if (!conversation) {
+    if (!conversation || message.internal) {
       return null;
     }
 
