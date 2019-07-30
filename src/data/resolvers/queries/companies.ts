@@ -1,4 +1,4 @@
-import { Brands, Companies, Segments, Tags } from '../../../db/models';
+import { Brands, Companies, Customers, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
 import { brandFilter, filter, IListArgs, sortBuilder } from '../../modules/coc/companies';
@@ -137,6 +137,31 @@ const companyQueries = {
     }
 
     return counts;
+  },
+
+  async relatedCompanies(customerIds?: string[], companyIds?: string[]) {
+    const relatedCompanyIds = await Customers.aggregate([
+      { $match: { _id: { $in: customerIds || [] } } },
+      { $unwind: '$companyIds' },
+      { $group: { _id: null, letCompanyIds: { $push: '$companyIds' } } },
+      { $project: { _id: 0, letCompanyIds: 1 } },
+    ]);
+
+    let allCompanyIds = (await relatedCompanyIds[0].letCompanyIds) || [];
+    allCompanyIds = await allCompanyIds.concat(companyIds || []);
+
+    return Companies.find({ _id: { $in: allCompanyIds || [] } });
+  },
+
+  async relatedCustomers(customerIds?: string[], companyIds?: string[]) {
+    const allCustomerIds = await Customers.aggregate([
+      { $unwind: '$companyIds' },
+      { $match: { $or: [{ _id: { $in: customerIds || [] } }, { companyIds: { $in: companyIds || [] } }] } },
+      { $group: { _id: null, letCustomerIds: { $push: '$_id' } } },
+      { $project: { _id: 0, letCustomerIds: 1 } },
+    ]);
+
+    return Customers.find({ _id: { $in: allCustomerIds[0].letCustomerIds || [] } });
   },
 
   /**
