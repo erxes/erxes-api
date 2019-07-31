@@ -176,12 +176,13 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
   if (priority) {
     filter.priority = contains(priority);
   }
+
   if (contentType) {
-    filter.contentType = contains(contentType);
+    filter.contentType = contentType;
   }
 
   if (contentId) {
-    filter.contentId = contains(contentId);
+    filter.contentId = contentId;
   }
 
   return filter;
