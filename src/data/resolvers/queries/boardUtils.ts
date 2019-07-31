@@ -171,10 +171,17 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
 
 export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
   const filter = await generateCommonFilters(args);
-  const { priority } = extraParams || args;
+  const { priority, contentType, contentId } = extraParams || args;
 
   if (priority) {
     filter.priority = contains(priority);
+  }
+  if (contentType) {
+    filter.contentType = contains(contentType);
+  }
+
+  if (contentId) {
+    filter.contentId = contains(contentId);
   }
 
   return filter;

@@ -23,10 +23,10 @@ export default {
   },
 
   inProgressTasks(company: ICompanyDocument) {
-    return Tasks.find({ $and: [{ companyIds: company._id, isDone: false }] });
+    return Tasks.find({ $and: [{ contentId: company._id, isDone: false }] });
   },
 
   doneTasks(company: ICompanyDocument) {
-    return Tasks.find({ $and: [{ companyIds: company._id, isDone: true }] });
+    return Tasks.find({ $and: [{ contentId: company._id, isDone: true }] });
   },
 };

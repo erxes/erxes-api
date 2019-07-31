@@ -1,7 +1,9 @@
 import { Model, model } from 'mongoose';
 import { ITaskType, ITaskTypeDocument, taskTypeSchema } from './definitions/taskTypes';
+import Tasks from './Tasks';
 
 export interface ITaskTypeModel extends Model<ITaskTypeDocument> {
+  getTaskType(_id: string): Promise<ITaskTypeDocument>;
   createTaskType(doc: ITaskType): ITaskTypeDocument;
   updateTaskType(_id: string, fields: ITaskType): ITaskTypeDocument;
   removeTaskType(_id: string): void;
@@ -9,6 +11,19 @@ export interface ITaskTypeModel extends Model<ITaskTypeDocument> {
 
 export const loadTaskClass = () => {
   class TaskType {
+    /**
+     * Get Task type
+     */
+
+    public static async getTaskType(_id: string) {
+      const task = await TaskTypes.findOne({ _id });
+
+      if (!task) {
+        throw new Error('Task type not found');
+      }
+
+      return task;
+    }
     /**
      * Create Task type
      */
@@ -36,6 +51,12 @@ export const loadTaskClass = () => {
 
       if (!taskTypeObj) {
         throw new Error(`Task type not found with id ${_id}`);
+      }
+
+      const count = await Tasks.find({ typeId: _id }).countDocuments();
+
+      if (count > 0) {
+        throw new Error("Can't remove this task type");
       }
 
       return taskTypeObj.remove();

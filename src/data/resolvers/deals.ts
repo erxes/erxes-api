@@ -13,11 +13,11 @@ export default {
   },
 
   inProgressTasks(deal: IDealDocument) {
-    return Tasks.find({ $and: [{ dealId: deal._id, isDone: false }] });
+    return Tasks.find({ $and: [{ contentId: deal._id, isDone: false }] });
   },
 
   doneTasks(deal: IDealDocument) {
-    return Tasks.find({ $and: [{ dealId: deal._id, isDone: true }] });
+    return Tasks.find({ $and: [{ contentId: deal._id, isDone: true }] });
   },
 
   async products(deal: IDealDocument) {

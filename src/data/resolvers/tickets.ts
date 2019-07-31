@@ -5,11 +5,11 @@ import { boardId } from './boardUtils';
 
 export default {
   inProgressTasks(ticket: ITicketDocument) {
-    return Tasks.find({ $and: [{ ticketId: ticket._id, isDone: false }] });
+    return Tasks.find({ $and: [{ contentId: ticket._id, isDone: false }] });
   },
 
   doneTasks(ticket: ITicketDocument) {
-    return Tasks.find({ $and: [{ ticketId: ticket._id, isDone: true }] });
+    return Tasks.find({ $and: [{ contentId: ticket._id, isDone: true }] });
   },
 
   companies(ticket: ITicketDocument) {

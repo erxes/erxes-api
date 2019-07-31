@@ -54,10 +54,10 @@ export default {
   },
 
   inProgressTasks(customer: ICustomerDocument) {
-    return Tasks.find({ $and: [{ customerIds: customer._id, isDone: false }] });
+    return Tasks.find({ $and: [{ contentId: customer._id, isDone: false }] });
   },
 
   doneTasks(customer: ICustomerDocument) {
-    return Tasks.find({ $and: [{ customerIds: customer._id, isDone: true }] });
+    return Tasks.find({ $and: [{ contentId: customer._id, isDone: true }] });
   },
 };
