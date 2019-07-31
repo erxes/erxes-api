@@ -3,8 +3,8 @@ import { field } from '../utils';
 import { commonItemFieldsSchema, IItemCommonFields } from './boards';
 
 export interface ITask extends IItemCommonFields {
-  dealId?: string;
-  ticketId?: string;
+  contentType?: string;
+  contentId?: string;
   typeId?: string;
   isDone?: boolean;
   previousStageId?: string;
@@ -19,8 +19,8 @@ export interface ITaskDocument extends ITask, Document {
 export const taskSchema = new Schema({
   ...commonItemFieldsSchema,
 
-  dealId: field({ type: String, optional: true }),
-  ticketId: field({ type: String, optional: true }),
+  contentType: field({ type: String, optional: true }),
+  contentId: field({ type: String, optional: true }),
   typeId: field({ type: String, optional: true }),
   isDone: field({ type: Boolean }),
   previousStageId: field({ type: String }),

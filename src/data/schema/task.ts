@@ -9,20 +9,14 @@ export const types = `
     name: String!
     stageId: String
     boardId: String
-    dealId: String,
-    ticketId: String,
     typeId: String,
-    companyIds: [String]
-    customerIds: [String]
+    contentType: String,
+    contentId: String,
     assignedUserIds: [String]
     closeDate: Date
     description: String
     priority: String
-    deal: Deal
-    ticket: Ticket
     type: TaskType
-    companies: [Company]
-    customers: [Customer]
     assignedUsers: [User]
     isWatched: Boolean
     isDone: Boolean
@@ -31,6 +25,7 @@ export const types = `
     pipeline: Pipeline
     modifiedAt: Date
     modifiedBy: String
+    content: [JSON]
     ${commonTypes}
   }
 `;
@@ -40,10 +35,8 @@ export const queries = `
   tasks(
     pipelineId: String
     stageId: String
-    dealId: String
-    ticketId: String,
-    customerIds: [String]
-    companyIds: [String]
+    contentType: String,
+    contentId: String,
     date: ItemDate
     skip: Int
     search: String
@@ -60,14 +53,12 @@ export const queries = `
 const commonParams = `
   name: String!,
   isDone: Boolean,
-  stageId: String,
-  dealId: String,
-  ticketId: String,
+  stageId: String
+  contentType: String,
+  contentId: String,
   typeId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,

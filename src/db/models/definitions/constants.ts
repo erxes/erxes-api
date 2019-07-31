@@ -281,6 +281,14 @@ export const BOARD_TYPES = {
   ALL: ['deal', 'ticket', 'task'],
 };
 
+export const TASK_TYPES = {
+  DEAL: 'deal',
+  TICKET: 'ticket',
+  COMPANY: 'company',
+  CUSTOMER: 'customer',
+  ALL: ['deal', 'ticket', 'customer', 'company'],
+};
+
 // module constants
 export const NOTIFICATION_TYPES = {
   CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',

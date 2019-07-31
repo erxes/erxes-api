@@ -1,27 +1,29 @@
-import { Companies, Customers, Deals, Pipelines, Stages, TaskTypes, Tickets, Users } from '../../db/models';
+import { Companies, Deals, Pipelines, Stages, TaskTypes, Tickets, Users } from '../../db/models';
+import { TASK_TYPES } from '../../db/models/definitions/constants';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
 
 export default {
-  deal(task: ITaskDocument) {
-    return Deals.findOne({ _id: task.dealId });
-  },
-
-  ticket(task: ITaskDocument) {
-    return Tickets.findOne({ _id: task.ticketId });
+  content(task: ITaskDocument) {
+    switch (task.contentType) {
+      case TASK_TYPES.DEAL: {
+        return Deals.findOne({ _id: task.contentId });
+      }
+      case TASK_TYPES.TICKET: {
+        return Tickets.findOne({ _id: task.contentId });
+      }
+      case TASK_TYPES.COMPANY: {
+        return Companies.find({ _id: task.contentId });
+      }
+      case TASK_TYPES.CUSTOMER: {
+        return Companies.find({ _id: task.contentId });
+      }
+    }
   },
 
   type(task: ITaskDocument) {
     return TaskTypes.findOne({ _id: task.typeId });
-  },
-
-  companies(task: ITaskDocument) {
-    return Companies.find({ _id: { $in: task.companyIds || [] } });
-  },
-
-  customers(task: ITaskDocument) {
-    return Customers.find({ _id: { $in: task.customerIds || [] } });
   },
 
   assignedUsers(task: ITaskDocument) {
