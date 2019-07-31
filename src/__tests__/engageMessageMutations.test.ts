@@ -1,6 +1,8 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
+import * as sinon from 'sinon';
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
+import EngagesAPI from '../data/dataSources/engages';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -136,7 +138,7 @@ describe('engage message mutation tests', () => {
       },
     };
 
-    context = { user: _user };
+    context = { user: _user, dataSources: { EngagesAPI: new EngagesAPI() } };
 
     spy = jest.spyOn(engageUtils, 'send');
   });
@@ -342,14 +344,12 @@ describe('engage message mutation tests', () => {
       throw new Error('User not found');
     }
 
-    const sendSpy = jest.spyOn(engageUtils, 'send');
+    sinon.stub(EngagesAPI.prototype, 'send').callsFake(() => ({}));
 
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
-    expect(spy.mock.calls.length).toBe(1);
-    expect(sendSpy.mock.calls.length).toBe(1);
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
     expect(engageMessage.segmentIds).toEqual(_doc.segmentIds);
@@ -370,20 +370,6 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.scheduleDate.month).toEqual('2');
     expect(engageMessage.scheduleDate.day).toEqual('14');
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
-    sendSpy.mockRestore();
-  });
-
-  test('Engage add with unverified email', async () => {
-    expect.assertions(1);
-
-    process.env.AWS_SES_CONFIG_SET = 'aws-ses';
-    process.env.AWS_ENDPOINT = '123';
-
-    try {
-      await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
-    } catch (e) {
-      expect(e.toString()).toContain('Email not verified');
-    }
   });
 
   test('Edit engage message', async () => {
@@ -526,15 +512,12 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const sendSpy = jest.spyOn(engageUtils, 'send');
-
     const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLiveManual', { _id: _message._id }, context);
 
     if (!conversationMessage.engageData) {
       throw new Error('Conversation engageData not found');
     }
 
-    expect(engageUtils.send).toHaveBeenCalled();
     expect(engageMessage.isLive).toBe(true);
     expect(conversation.userId).toBe(conversationObj.userId);
     expect(conversation.customerId).toBe(conversationObj.customerId);
@@ -545,6 +528,5 @@ describe('engage message mutation tests', () => {
     expect(conversationMessage.userId).toBe(conversationMessageObj.userId);
     expect(conversationMessage.customerId).toBe(conversationMessageObj.customerId);
     expect(conversationMessage.content).toBe(conversationMessageObj.content);
-    sendSpy.mockRestore();
   });
 });
