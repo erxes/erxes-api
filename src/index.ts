@@ -16,11 +16,11 @@ import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils'
 import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
+import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initSubscribe, unsubscribe } from './pubsub';
 import { initRedis } from './redisClient';
-import { init } from './startup';
 
 // load environment variables
 dotenv.config();
@@ -223,6 +223,9 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
 
+// handle engages api requests
+app.post('/engages-api', engagesApiMiddleware);
+
 // Error handling middleware
 app.use((error, _req, res, _next) => {
   console.error(error.stack);
@@ -239,9 +242,6 @@ apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
   debugInit(`GraphQL Server is now running on ${PORT}`);
-
-  // execute startup actions
-  init(app);
 });
 
 // GRACEFULL SHUTDOWN
