@@ -150,6 +150,7 @@ export const mutations = `
     erxesApiId: String!
     subject: String!
     textHtml: String!
+    textPlain: String!
     to: String!
     cc: String
     bcc: String
