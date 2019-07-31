@@ -1,5 +1,5 @@
 import * as schedule from 'node-schedule';
-import { getEnv, sendRequest } from '../data/utils';
+import { notifyRunCron } from '../messageQueue';
 
 /**
  * *    *    *    *    *    *
@@ -13,10 +13,5 @@ import { getEnv, sendRequest } from '../data/utils';
  * └───────────────────────── second (0 - 59, OPTIONAL)
  */
 schedule.scheduleJob('0 0 * * *', () => {
-  const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
-
-  sendRequest(
-    { url: `${INTEGRATIONS_API_DOMAIN}/gmail/cronjob`, method: 'get' },
-    'Failed to request cronjob to integrations',
-  );
+  return notifyRunCron();
 });

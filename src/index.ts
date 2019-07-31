@@ -10,6 +10,7 @@ import * as mongoose from 'mongoose';
 import * as path from 'path';
 import * as request from 'request';
 import apolloServer from './apolloClient';
+import './cronJobs';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
@@ -17,6 +18,7 @@ import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
+
 import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
