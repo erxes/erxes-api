@@ -99,8 +99,6 @@ export const findCustomers = async ({
 export const send = async (engageMessage: IEngageMessageDocument) => {
   const { customerIds, segmentIds, tagIds, brandIds, fromUserId } = engageMessage;
 
-  const engagesApi = new EngagesAPI();
-
   const user = await Users.findOne({ _id: fromUserId });
 
   if (!user) {
@@ -117,6 +115,8 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
   EngageMessages.setCustomerIds(engageMessage._id, customers);
 
   if (engageMessage.method === METHODS.EMAIL) {
+    const engagesApi = new EngagesAPI();
+
     const customerInfos = customers.map(customer => {
       let customerName = customer.firstName || customer.lastName || 'Customer';
 
