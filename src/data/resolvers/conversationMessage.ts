@@ -1,6 +1,6 @@
 import { Conversations, Customers, Integrations, Users } from '../../db/models';
 import { IMessageDocument } from '../../db/models/definitions/conversationMessages';
-import { fetchIntegrationApi } from '../utils';
+import { IntegrationsAPI } from '../dataSources';
 
 export default {
   user(message: IMessageDocument) {
@@ -24,13 +24,11 @@ export default {
       return null;
     }
 
-    return fetchIntegrationApi({
-      path: '/gmail/get-message',
-      method: 'GET',
-      params: {
-        erxesApiMessageId: message._id,
-        integrationId: integration._id,
-      },
+    const integrationsApi = new IntegrationsAPI();
+
+    return integrationsApi.fetchApi('/gmail/get-message', {
+      erxesApiMessageId: message._id,
+      integrationId: integration._id,
     });
   },
 };
