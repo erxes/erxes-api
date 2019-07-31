@@ -16,20 +16,18 @@ import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils'
 import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
+import './messageQueue';
 import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
-import { initSubscribe, unsubscribe } from './pubsub';
 import { initRedis } from './redisClient';
+
+initRedis();
 
 // load environment variables
 dotenv.config();
 
-// connect to redis server
-initRedis(() => {
-  initSubscribe();
-});
-
+const { NODE_ENV } = process.env;
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN', defaultValue: '' });
@@ -248,11 +246,9 @@ httpServer.listen(PORT, () => {
 process.stdin.resume(); // so the program will not close instantly
 
 // If the Node process ends, close the Mongoose connection
-(['SIGINT', 'SIGKILL', 'SIGTERM', 'SIGQUIT'] as NodeJS.Signals[]).forEach(sig => {
-  try {
+if (NODE_ENV === 'production') {
+  (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach(sig => {
     process.on(sig, () => {
-      unsubscribe();
-
       // Stops the server from accepting new connections and finishes existing connections.
       httpServer.close((error: Error) => {
         if (error) {
@@ -266,7 +262,5 @@ process.stdin.resume(); // so the program will not close instantly
         });
       });
     });
-  } catch (e) {
-    console.log(e.message);
-  }
-});
+  });
+}
