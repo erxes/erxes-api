@@ -25,7 +25,7 @@ export const types = `
     pipeline: Pipeline
     modifiedAt: Date
     modifiedBy: String
-    content: [JSON]
+    content: JSON
     ${commonTypes}
   }
 `;
