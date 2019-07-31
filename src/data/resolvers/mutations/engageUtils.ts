@@ -12,6 +12,7 @@ import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { INTEGRATION_KIND_CHOICES, MESSAGE_KINDS } from '../../constants';
+import EngagesAPI from '../../dataSources/engages';
 import QueryBuilder from '../../modules/segments/queryBuilder';
 
 /**
@@ -95,8 +96,10 @@ export const findCustomers = async ({
   return Customers.find(customerQuery);
 };
 
-export const send = async (engageMessage: IEngageMessageDocument, engagesApi?: any) => {
+export const send = async (engageMessage: IEngageMessageDocument) => {
   const { customerIds, segmentIds, tagIds, brandIds, fromUserId } = engageMessage;
+
+  const engagesApi = new EngagesAPI();
 
   const user = await Users.findOne({ _id: fromUserId });
 

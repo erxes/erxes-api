@@ -23,7 +23,6 @@ export const loadClass = () => {
     public static createEngageMessage(doc: IEngageMessage) {
       return EngageMessages.create({
         ...doc,
-        deliveryReports: {},
         createdDate: new Date(),
       });
     }

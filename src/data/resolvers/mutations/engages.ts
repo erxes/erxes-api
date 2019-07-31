@@ -14,14 +14,10 @@ const engageMutations = {
   /**
    * Create new message
    */
-  async engageMessageAdd(
-    _root,
-    doc: IEngageMessage,
-    { user, dataSources: { EngagesAPI } }: { user: IUserDocument; dataSources: { EngagesAPI: any } },
-  ) {
+  async engageMessageAdd(_root, doc: IEngageMessage, { user }: { user: IUserDocument }) {
     const engageMessage = await EngageMessages.createEngageMessage(doc);
 
-    await send(engageMessage, EngagesAPI);
+    await send(engageMessage);
 
     if (engageMessage) {
       await putCreateLog(
