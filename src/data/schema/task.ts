@@ -30,6 +30,8 @@ export const types = `
 
 export const queries = `
   taskDetail(_id: String!): Task
+  taskRelatedCustomers(_id: String!): [Customer]
+  taskRelatedCompanies(_id: String!): [Company]
   tasks(
     pipelineId: String
     stageId: String

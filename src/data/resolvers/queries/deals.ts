@@ -109,7 +109,7 @@ const dealQueries = {
     return Deals.findOne({ _id });
   },
 
-  async relatedCompanies(_root, { _id }: { _id: string }) {
+  async dealRelatedCompanies(_root, { _id }: { _id: string }) {
     const deal = await Deals.findOne({ _id });
 
     if (!deal) {
@@ -119,7 +119,7 @@ const dealQueries = {
     return companyQueries.relatedCompanies(deal.customerIds || [], deal.companyIds || []);
   },
 
-  async relatedCustomers(_root, { _id }: { _id: string }) {
+  async dealRelatedCustomers(_root, { _id }: { _id: string }) {
     const deal = await Deals.findOne({ _id });
 
     if (!deal) {
