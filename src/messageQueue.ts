@@ -83,8 +83,10 @@ const initConsumer = async () => {
 
     channel.consume('engagesApi', async msg => {
       if (msg !== null) {
-        const { customerId } = msg.content;
-        await Customers.updateOne({ _id: customerId }, { $set: { doNotDisturb: true } });
+        const { data } = JSON.parse(msg.content.toString());
+
+        await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+
         channel.ack(msg);
       }
     });
