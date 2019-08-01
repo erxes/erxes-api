@@ -73,7 +73,7 @@ const buildMessage = (action: string, data?: IMessage) => {
 
 export const notifyRunCron = async () => {
   if (channel) {
-    await channel.sendToQueue('erxes-api', buildMessage('cronjob'));
+    await channel.sendToQueue('erxes-api-queue', buildMessage('cronjob'));
   }
 };
 
