@@ -197,7 +197,6 @@ app.post('/integrations-api', integrationsApiMiddleware);
 
 // handle engage trackers
 app.post(`/service/engage/tracker`, async (req, res) => {
-  console.log('receiving something from engage tracker');
   try {
     const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
 
