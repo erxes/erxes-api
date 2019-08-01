@@ -1,4 +1,4 @@
-import { Companies, Deals, Pipelines, Stages, TaskTypes, Tickets, Users } from '../../db/models';
+import { Companies, Customers, Deals, Pipelines, Stages, TaskTypes, Tickets, Users } from '../../db/models';
 import { TASK_TYPES } from '../../db/models/definitions/constants';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { IUserDocument } from '../../db/models/definitions/users';
@@ -14,10 +14,10 @@ export default {
         return Tickets.findOne({ _id: task.contentId });
       }
       case TASK_TYPES.COMPANY: {
-        return Companies.find({ _id: task.contentId });
+        return Companies.findOne({ _id: task.contentId });
       }
       case TASK_TYPES.CUSTOMER: {
-        return Companies.find({ _id: task.contentId });
+        return Customers.findOne({ _id: task.contentId });
       }
     }
   },
