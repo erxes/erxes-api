@@ -10,6 +10,7 @@ import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { graphqlPubsub } from '../pubsub';
 
 /*
  * Check that given file is not harmful
@@ -61,16 +62,28 @@ const createAWS = () => {
   const AWS_ACCESS_KEY_ID = getEnv({ name: 'AWS_ACCESS_KEY_ID' });
   const AWS_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SECRET_ACCESS_KEY' });
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
+  const AWS_COMPATIBLE_SERVICE_ENDPOINT = getEnv({ name: 'AWS_COMPATIBLE_SERVICE_ENDPOINT' });
+  const AWS_FORCE_PATH_STYLE = getEnv({ name: 'AWS_FORCE_PATH_STYLE' });
 
   if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_BUCKET) {
     throw new Error('AWS credentials are not configured');
   }
 
-  // initialize s3
-  return new AWS.S3({
+  const options: { accessKeyId: string; secretAccessKey: string; endpoint?: string; s3ForcePathStyle?: boolean } = {
     accessKeyId: AWS_ACCESS_KEY_ID,
     secretAccessKey: AWS_SECRET_ACCESS_KEY,
-  });
+  };
+
+  if (AWS_FORCE_PATH_STYLE === 'true') {
+    options.s3ForcePathStyle = true;
+  }
+
+  if (AWS_COMPATIBLE_SERVICE_ENDPOINT) {
+    options.endpoint = AWS_COMPATIBLE_SERVICE_ENDPOINT;
+  }
+
+  // initialize s3
+  return new AWS.S3(options);
 };
 
 /**
@@ -395,6 +408,8 @@ export const sendNotification = async (doc: ISendNotification) => {
         { link, title, content, notifType, receiver: receiverId, action },
         createdUser._id,
       );
+
+      graphqlPubsub.publish('notificationInserted');
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {

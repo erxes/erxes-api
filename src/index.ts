@@ -6,23 +6,27 @@ import * as express from 'express';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
+import * as mongoose from 'mongoose';
 import * as path from 'path';
 import * as request from 'request';
 import apolloServer from './apolloClient';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
+import { checkFile, getEnv, readFileRequest, sendRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
-import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
+import './messageQueue';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
 
+initRedis();
+
 // load environment variables
 dotenv.config();
 
+const { NODE_ENV } = process.env;
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
 
@@ -45,9 +49,6 @@ fs.exists(path.join(__dirname, '..', '/google_cred.json'), exists => {
 
 // connect to mongo database
 connect();
-
-// connect to redis server
-initRedis();
 
 const app = express();
 
@@ -194,8 +195,45 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
 
-// handle engages api requests
-app.post('/engages-api', engagesApiMiddleware);
+// handle engage trackers
+app.post(`/service/engage/tracker`, async (req, res) => {
+  console.log('receiving something from engage tracker');
+  try {
+    const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+
+    const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+
+    const chunks: any = [];
+
+    req.setEncoding('utf8');
+
+    req.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    req.on('end', async () => {
+      const message = JSON.parse(chunks.join(''));
+
+      const { Type = '', Message = {}, Token = '', TopicArn = '' } = message;
+
+      await sendRequest({
+        url,
+        method: 'post',
+        body: {
+          Type,
+          Message,
+          Token,
+          TopicArn,
+        },
+      });
+    });
+
+    return res.end('success');
+  } catch (e) {
+    res.end(e.message);
+    debugExternalApi(`Error from engages api ${e.message}`);
+  }
+});
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
@@ -214,3 +252,26 @@ apolloServer.installSubscriptionHandlers(httpServer);
 httpServer.listen(PORT, () => {
   debugInit(`GraphQL Server is now running on ${PORT}`);
 });
+
+// GRACEFULL SHUTDOWN
+process.stdin.resume(); // so the program will not close instantly
+
+// If the Node process ends, close the Mongoose connection
+if (NODE_ENV === 'production') {
+  (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach(sig => {
+    process.on(sig, () => {
+      // Stops the server from accepting new connections and finishes existing connections.
+      httpServer.close((error: Error) => {
+        if (error) {
+          console.error(error.message);
+          process.exit(1);
+        }
+
+        mongoose.connection.close(() => {
+          console.log('Mongoose connection disconnected');
+          process.exit(0);
+        });
+      });
+    });
+  });
+}
