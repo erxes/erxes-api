@@ -13,7 +13,7 @@ import apolloServer from './apolloClient';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { checkFile, getEnv, readFileRequest, sendRequest, uploadFile } from './data/utils';
+import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
@@ -198,42 +198,26 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 app.post('/integrations-api', integrationsApiMiddleware);
 
 // handle engage trackers
-app.post(`/service/engage/tracker`, async (req, res) => {
-  try {
-    const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+app.post(`/service/engage/tracker`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
 
-    const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+  const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
 
-    const chunks: any = [];
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
 
-    req.setEncoding('utf8');
-
-    req.on('data', chunk => {
-      chunks.push(chunk);
-    });
-
-    req.on('end', async () => {
-      const message = JSON.parse(chunks.join(''));
-
-      const { Type = '', Message = {}, Token = '', TopicArn = '' } = message;
-
-      await sendRequest({
-        url,
-        method: 'post',
-        body: {
-          Type,
-          Message,
-          Token,
-          TopicArn,
-        },
-      });
-    });
-
-    return res.end('success');
-  } catch (e) {
-    res.end(e.message);
-    debugExternalApi(`Error from engages api ${e.message}`);
-  }
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
 });
 
 // Error handling middleware
