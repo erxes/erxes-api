@@ -1,5 +1,6 @@
 import { Brands, Segments, Tags, Users } from '../../db/models';
 import { IEngageMessageDocument } from '../../db/models/definitions/engages';
+import { debugBase } from '../../debuggers';
 
 export default {
   segments(engageMessage: IEngageMessageDocument) {
@@ -29,7 +30,15 @@ export default {
       return Brands.findOne({ _id: messenger.brandId });
     }
   },
-  stats(engageMessage: IEngageMessageDocument, _args, { dataSources }) {
-    return dataSources.EngagesAPI.engagesStats(engageMessage._id);
+  async stats(engageMessage: IEngageMessageDocument, _args, { dataSources }) {
+    let stats = {};
+
+    try {
+      stats = await dataSources.EngagesAPI.engagesStats(engageMessage._id);
+    } catch (e) {
+      debugBase(e.message);
+    }
+
+    return stats;
   },
 };
