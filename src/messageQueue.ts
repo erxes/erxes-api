@@ -1,6 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import { ActivityLogs, Conversations } from './db/models';
+import { ActivityLogs, Conversations, Customers } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 import { get, set } from './redisClient';
@@ -88,6 +88,18 @@ const initConsumer = async () => {
     channel.consume('widgetNotification', async msg => {
       if (msg !== null) {
         await receiveMessage(JSON.parse(msg.content.toString()));
+        channel.ack(msg);
+      }
+    });
+
+    await channel.assertQueue('engagesApi');
+
+    channel.consume('engagesApi', async msg => {
+      if (msg !== null) {
+        const { data } = JSON.parse(msg.content.toString());
+
+        await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+
         channel.ack(msg);
       }
     });

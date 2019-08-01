@@ -19,10 +19,11 @@ import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
 
-import engagesApiMiddleware from './middlewares/engagesApiMiddleware';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
+
+initRedis();
 
 initRedis();
 
@@ -223,8 +224,28 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
 
-// handle engages api requests
-app.post('/engages-api', engagesApiMiddleware);
+// handle engage trackers
+app.post(`/service/engage/tracker`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+
+  const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+});
 
 // Error handling middleware
 app.use((error, _req, res, _next) => {
