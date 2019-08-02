@@ -1,7 +1,7 @@
 import { Brands, Companies, Customers, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
-import { brandFilter, filter, IListArgs, sortBuilder } from '../../modules/coc/companies';
+import { brandFilter, filter, filterKind, IListArgs, sortBuilder } from '../../modules/coc/companies';
 import QueryBuilder from '../../modules/segments/queryBuilder';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { paginate } from '../../utils';
@@ -139,7 +139,9 @@ const companyQueries = {
     return counts;
   },
 
-  async relatedCompanies(customerIds?: string[], companyIds?: string[]) {
+  async relatedCompanies(_root, params: IListArgs) {
+    const { companyIds, customerIds } = await filterKind(params.itemKind || '', params.itemId || '');
+
     const relatedCompanyIds = await Customers.aggregate([
       { $match: { _id: { $in: customerIds || [] } } },
       { $unwind: '$companyIds' },
@@ -151,17 +153,6 @@ const companyQueries = {
     allCompanyIds = await allCompanyIds.concat(companyIds || []);
 
     return Companies.find({ _id: { $in: allCompanyIds || [] } });
-  },
-
-  async relatedCustomers(customerIds?: string[], companyIds?: string[]) {
-    const allCustomerIds = await Customers.aggregate([
-      { $unwind: '$companyIds' },
-      { $match: { $or: [{ _id: { $in: customerIds || [] } }, { companyIds: { $in: companyIds || [] } }] } },
-      { $group: { _id: null, letCustomerIds: { $push: '$_id' } } },
-      { $project: { _id: 0, letCustomerIds: 1 } },
-    ]);
-
-    return Customers.find({ _id: { $in: allCustomerIds[0].letCustomerIds || [] } });
   },
 
   /**

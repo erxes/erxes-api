@@ -69,6 +69,8 @@ const queryParams = `
   sortField: String
   sortDirection: Int
   brand: String
+  itemId: String
+  itemKind: String
 `;
 
 export const queries = `
@@ -76,8 +78,7 @@ export const queries = `
   companies(${queryParams}): [Company]
   companyCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
   companyDetail(_id: String!): Company
-  relatedCompanies: [Company]
-  relatedCustomers: [Customer]
+  relatedCompanies(${queryParams}): [Company]
 `;
 
 const commonFields = `

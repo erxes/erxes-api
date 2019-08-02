@@ -1,4 +1,4 @@
-import { Customers, Integrations, Segments } from '../../../db/models';
+import { Customers, Deals, Integrations, Segments, Tickets } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
 
@@ -14,6 +14,8 @@ export interface IListArgs {
   sortField?: string;
   sortDirection?: number;
   brand?: string;
+  itemId?: string;
+  itemKind?: string;
 }
 
 interface IIn {
@@ -111,4 +113,36 @@ export const filter = async (params: IListArgs) => {
   }
 
   return selector;
+};
+
+export const filterKind = async (itemKind: string, itemId: string) => {
+  let companyIds = [''];
+  let customerIds = [''];
+
+  switch (itemKind) {
+    case 'deal':
+      const deal = await Deals.findOne({ _id: itemId });
+
+      if (!deal) {
+        throw new Error('Deal not found');
+      }
+      companyIds = deal.companyIds || [''];
+      customerIds = deal.customerIds || [''];
+      break;
+
+    case 'ticket':
+      const ticket = await Tickets.findOne({ _id: itemId });
+
+      if (!ticket) {
+        throw new Error('Ticket not found');
+      }
+      companyIds = ticket.companyIds || [''];
+      customerIds = ticket.customerIds || [''];
+      break;
+
+    default:
+      break;
+  }
+
+  return { companyIds: companyIds, customerIds: customerIds };
 };

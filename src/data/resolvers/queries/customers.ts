@@ -2,6 +2,7 @@ import { Brands, Customers, Forms, Integrations, Segments, Tags } from '../../..
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, INTEGRATION_KIND_CHOICES } from '../../constants';
+import { filterKind } from '../../modules/coc/companies';
 import { Builder as BuildQuery, IListArgs, sortBuilder } from '../../modules/coc/customers';
 import QueryBuilder from '../../modules/segments/queryBuilder';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
@@ -249,6 +250,19 @@ const customerQueries = {
     }
 
     return counts;
+  },
+
+  async relatedCustomers(_root, params: IListArgs) {
+    const { companyIds, customerIds } = await filterKind(params.itemKind || '', params.itemId || '');
+
+    const allCustomerIds = await Customers.aggregate([
+      { $unwind: '$companyIds' },
+      { $match: { $or: [{ _id: { $in: customerIds || [] } }, { companyIds: { $in: companyIds || [] } }] } },
+      { $group: { _id: null, letCustomerIds: { $push: '$_id' } } },
+      { $project: { _id: 0, letCustomerIds: 1 } },
+    ]);
+
+    return Customers.find({ _id: { $in: allCustomerIds[0].letCustomerIds || [] } });
   },
 
   /**

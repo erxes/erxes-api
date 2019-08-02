@@ -2,7 +2,6 @@ import { Deals } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IListParams } from './boards';
 import { generateDealCommonFilters } from './boardUtils';
-import companyQueries from './companies';
 
 interface IDealListParams extends IListParams {
   productIds?: [string];
@@ -107,26 +106,6 @@ const dealQueries = {
    */
   dealDetail(_root, { _id }: { _id: string }) {
     return Deals.findOne({ _id });
-  },
-
-  async dealRelatedCompanies(_root, { _id }: { _id: string }) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
-    return companyQueries.relatedCompanies(deal.customerIds || [], deal.companyIds || []);
-  },
-
-  async dealRelatedCustomers(_root, { _id }: { _id: string }) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
-    return companyQueries.relatedCustomers(deal.customerIds || [], deal.companyIds || []);
   },
 };
 

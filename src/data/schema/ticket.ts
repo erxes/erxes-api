@@ -31,8 +31,6 @@ export const types = `
 
 export const queries = `
   ticketDetail(_id: String!): Ticket
-  ticketRelatedCustomers(_id: String!): [Customer]
-  ticketRelatedCompanies(_id: String!): [Company]
   tickets(
     pipelineId: String
     stageId: String

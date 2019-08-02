@@ -82,6 +82,8 @@ const queryParams = `
   leadStatus: String
   sortField: String
   sortDirection: Int
+  itemId: String
+  itemKind: String
 `;
 
 export const queries = `
@@ -90,6 +92,7 @@ export const queries = `
   customerCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
   customerDetail(_id: String!): Customer
   customerListForSegmentPreview(segment: JSON, limit: Int): [Customer]
+  relatedCustomers(${queryParams}): [Customer]
 `;
 
 const fields = `
