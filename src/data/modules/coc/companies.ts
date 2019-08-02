@@ -144,5 +144,5 @@ export const filterKind = async (itemKind: string, itemId: string) => {
       break;
   }
 
-  return { companyIds: companyIds, customerIds: customerIds };
+  return { companyIds, customerIds };
 };
