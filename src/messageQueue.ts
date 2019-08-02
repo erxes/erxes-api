@@ -1,6 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
-import { ActivityLogs, Conversations } from './db/models';
+import { ActivityLogs, Conversations, Customers } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 import { get, set } from './redisClient';
@@ -9,7 +9,7 @@ dotenv.config();
 
 const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 
-interface IMessage {
+interface IWidgetMessage {
   action: string;
   data: {
     trigger: string;
@@ -18,7 +18,10 @@ interface IMessage {
   };
 }
 
-const reciveMessage = async ({ action, data }: IMessage) => {
+let connection;
+let channel;
+
+const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
   if (NODE_ENV === 'test') {
     return;
   }
@@ -64,17 +67,38 @@ const reciveMessage = async ({ action, data }: IMessage) => {
   }
 };
 
+export const sendMessage = async (queueName: string, data?: any) => {
+  if (channel) {
+    await channel.assertQueue(queueName);
+    await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data || {})));
+  }
+};
+
 const initConsumer = async () => {
   // Consumer
   try {
-    const conn = await amqplib.connect(RABBITMQ_HOST);
-    const channel = await conn.createChannel();
+    connection = await amqplib.connect(RABBITMQ_HOST);
+    channel = await connection.createChannel();
 
+    // listen for widgets api =========
     await channel.assertQueue('widgetNotification');
 
     channel.consume('widgetNotification', async msg => {
       if (msg !== null) {
-        await reciveMessage(JSON.parse(msg.content.toString()));
+        await receiveWidgetNotification(JSON.parse(msg.content.toString()));
+        channel.ack(msg);
+      }
+    });
+
+    // listen for engage api ===========
+    await channel.assertQueue('engages-api:set-donot-disturb');
+
+    channel.consume('engages-api:set-donot-disturb', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+
         channel.ack(msg);
       }
     });

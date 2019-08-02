@@ -10,6 +10,7 @@ import * as mongoose from 'mongoose';
 import * as path from 'path';
 import * as request from 'request';
 import apolloServer from './apolloClient';
+import './cronJobs';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
@@ -17,10 +18,12 @@ import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
+
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
-import { init } from './startup';
+
+initRedis();
 
 initRedis();
 
@@ -30,6 +33,7 @@ dotenv.config();
 const { NODE_ENV } = process.env;
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
+const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN', defaultValue: '' });
 
 // firebase app initialization
 fs.exists(path.join(__dirname, '..', '/google_cred.json'), exists => {
@@ -56,7 +60,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   bodyParser.json({
-    limit: '10mb',
+    limit: '15mb',
   }),
 );
 app.use(cookieParser());
@@ -126,6 +130,19 @@ app.get('/read-file', async (req: any, res) => {
   }
 });
 
+// get gmail attachment file
+app.get('/read-gmail-attachment', async (req: any, res) => {
+  const { messageId, attachmentId, integrationId, filename } = req.query;
+
+  if (!messageId || !attachmentId || !integrationId) {
+    return res.status(404).send('Attachment not found');
+  }
+
+  res.redirect(
+    `${INTEGRATIONS_API_DOMAIN}/gmail/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
+  );
+});
+
 // file upload
 app.post('/upload-file', async (req, res) => {
   const form = new formidable.IncomingForm();
@@ -148,6 +165,17 @@ app.post('/upload-file', async (req, res) => {
 
     return res.status(500).send(status);
   });
+});
+
+// redirect to integration
+app.get('/connect-integration', async (req: any, res, _next) => {
+  if (!req.user) {
+    return res.end('forbidden');
+  }
+
+  const link = req.query.link;
+
+  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}`);
 });
 
 // file import
@@ -196,6 +224,29 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 // handle integrations api requests
 app.post('/integrations-api', integrationsApiMiddleware);
 
+// handle engage trackers
+app.post(`/service/engage/tracker`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+
+  const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+});
+
 // Error handling middleware
 app.use((error, _req, res, _next) => {
   console.error(error.stack);
@@ -212,9 +263,6 @@ apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
   debugInit(`GraphQL Server is now running on ${PORT}`);
-
-  // execute startup actions
-  init(app);
 });
 
 // GRACEFULL SHUTDOWN

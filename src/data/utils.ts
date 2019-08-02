@@ -9,7 +9,7 @@ import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
-import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -409,7 +409,9 @@ export const sendNotification = async (doc: ISendNotification) => {
         createdUser._id,
       );
 
-      graphqlPubsub.publish('notificationInserted');
+      graphqlPubsub.publish('notificationInserted', {
+        userId: receiverId,
+      });
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
@@ -529,18 +531,6 @@ export const sendRequest = async (
       throw new Error(e.body);
     }
   }
-};
-
-/**
- * Send request to integrations api
- */
-export const fetchIntegrationApi = ({ path, method, body, params }: IRequestParams) => {
-  const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
-
-  return sendRequest(
-    { url: `${INTEGRATIONS_API_DOMAIN}${path}`, method, body, params },
-    'Failed to connect integration api. Check INTEGRATIONS_API_DOMAIN env or integration api is not running',
-  );
 };
 
 /**
@@ -693,10 +683,6 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
 
   if (!value && typeof defaultValue !== 'undefined') {
     return defaultValue;
-  }
-
-  if (!value) {
-    debugBase(`Missing environment variable configuration for ${name}`);
   }
 
   return value || '';
