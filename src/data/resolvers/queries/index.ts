@@ -12,6 +12,7 @@ import emailTemplates from './emailTemplates';
 import engages from './engages';
 import { fieldQueries as fields, fieldsGroupQueries as fieldsgroups } from './fields';
 import forms from './forms';
+import growthHack from './growthHacks';
 import importHistory from './importHistory';
 import insights from './insights';
 import integrations from './integrations';
@@ -64,4 +65,5 @@ export default {
   ...tickets,
   ...tasks,
   ...logs,
+  ...growthHack,
 };

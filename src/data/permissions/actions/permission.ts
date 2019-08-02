@@ -332,6 +332,104 @@ export const moduleObjects = {
       },
     ],
   },
+  growthHacks: {
+    name: 'growthHacks',
+    description: 'GrowthHacks',
+    actions: [
+      {
+        name: 'growthHacksAll',
+        description: 'All',
+        use: [
+          'showGrowthHacks',
+          'growthHackBoardsAdd',
+          'growthHackBoardsEdit',
+          'growthHackBoardsRemove',
+          'growthHackPipelinesAdd',
+          'growthHackPipelinesEdit',
+          'growthHackPipelinesUpdateOrder',
+          'growthHackPipelinesWatch',
+          'growthHackPipelinesRemove',
+          'growthHackStagesAdd',
+          'growthHackStagesEdit',
+          'growthHackStagesUpdateOrder',
+          'growthHackStagesRemove',
+          'growthHacksAdd',
+          'growthHacksEdit',
+          'growthHacksRemove',
+          'growthHacksUpdateOrder',
+          'growthHacksWatch',
+        ],
+      },
+      {
+        name: 'showGrowthHacks',
+        description: 'Show growthHacks',
+      },
+      {
+        name: 'growthHackBoardsAdd',
+        description: 'Add growthHack board',
+      },
+      {
+        name: 'growthHackBoardsRemove',
+        description: 'Remove growthHack board',
+      },
+      {
+        name: 'growthHackPipelinesAdd',
+        description: 'Add growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesEdit',
+        description: 'Edit growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesRemove',
+        description: 'Remove growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesWatch',
+        description: 'Growth hack pipeline watch',
+      },
+      {
+        name: 'growthHackPipelinesUpdateOrder',
+        description: 'Update pipeline order',
+      },
+      {
+        name: 'growthHackStagesAdd',
+        description: 'Add growthHack stage',
+      },
+      {
+        name: 'growthHackStagesEdit',
+        description: 'Edit growthHack stage',
+      },
+      {
+        name: 'growthHackStagesUpdateOrder',
+        description: 'Update stage order',
+      },
+      {
+        name: 'growthHackStagesRemove',
+        description: 'Remove growthHack stage',
+      },
+      {
+        name: 'growthHacksAdd',
+        description: 'Add growthHack',
+      },
+      {
+        name: 'growthHacksEdit',
+        description: 'Edit growthHack',
+      },
+      {
+        name: 'growthHacksUpdateOrder',
+        description: 'Update growthHack order',
+      },
+      {
+        name: 'growthHacksRemove',
+        description: 'Remove growthHack',
+      },
+      {
+        name: 'growthHacksWatch',
+        description: 'Watch growthHack',
+      },
+    ],
+  },
   tasks: {
     name: 'tasks',
     description: 'Tasks',

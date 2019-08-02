@@ -73,8 +73,9 @@ export const ACTIVITY_CONTENT_TYPES = {
   DEAL: 'deal',
   TICKET: 'ticket',
   TASK: 'task',
+  GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task'],
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'growthHack'],
 };
 
 export const PUBLISH_STATUSES = {
@@ -94,8 +95,21 @@ export const ACTIVITY_TYPES = {
   TICKET: 'ticket',
   TASK: 'task',
   BRAND: 'brand',
+  GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email', 'ticket', 'task', 'brand'],
+  ALL: [
+    'customer',
+    'company',
+    'internal_note',
+    'conversation',
+    'segment',
+    'deal',
+    'email',
+    'ticket',
+    'task',
+    'brand',
+    'growthHack',
+  ],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -279,7 +293,8 @@ export const BOARD_TYPES = {
   DEAL: 'deal',
   TICKET: 'ticket',
   TASK: 'task',
-  ALL: ['deal', 'ticket', 'task'],
+  GROWTH_HACK: 'growthHack',
+  ALL: ['deal', 'ticket', 'task', 'growthHack'],
 };
 
 // module constants
@@ -294,6 +309,12 @@ export const NOTIFICATION_TYPES = {
   DEAL_CHANGE: 'dealChange',
   DEAL_DUE_DATE: 'dealDueDate',
   DEAL_DELETE: 'dealDelete',
+  GROWTH_HACK_ADD: 'growthHackAdd',
+  GROWTH_HACK_REMOVE_ASSIGN: 'growthHackRemoveAssign',
+  GROWTH_HACK_EDIT: 'growthHackEdit',
+  GROWTH_HACK_CHANGE: 'growthHackChange',
+  GROWTH_HACK_DUE_DATE: 'growthHackDueDate',
+  GROWTH_HACK_DELETE: 'growthHackDelete',
   TICKET_ADD: 'ticketAdd',
   TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
   TICKET_EDIT: 'ticketEdit',

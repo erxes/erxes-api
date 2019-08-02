@@ -10,6 +10,7 @@ import emailTemplates from './emailTemplates';
 import engages from './engages';
 import { fieldMutations as fields, fieldsGroupsMutations as fieldsgroups } from './fields';
 import forms from './forms';
+import growthHacks from './growthHacks';
 import importHistory from './importHistory';
 import integrations from './integrations';
 import internalNotes from './internalNotes';
@@ -56,4 +57,5 @@ export default {
   ...usersGroups,
   ...tickets,
   ...tasks,
+  ...growthHacks,
 };

@@ -19,6 +19,7 @@ import {
   Fields,
   FieldsGroups,
   Forms,
+  GrowthHacks,
   ImportHistory,
   Integrations,
   InternalNotes,
@@ -711,7 +712,7 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
   return stage.save();
 };
 
-interface ITicketFactoryInput {
+interface IDealFactoryInput {
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -721,7 +722,7 @@ interface ITicketFactoryInput {
   assignedUserIds?: string[];
 }
 
-export const dealFactory = (params: ITicketFactoryInput = {}) => {
+export const dealFactory = (params: IDealFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     name: faker.random.word(),
@@ -783,6 +784,30 @@ export const ticketFactory = (params: ITicketFactoryInput = {}) => {
   });
 
   return ticket.save();
+};
+
+interface IGrowthHackFactoryInput {
+  stageId?: string;
+  closeDate?: Date;
+  customerIds?: string[];
+  companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
+}
+
+export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
+  const growthHack = new GrowthHacks({
+    ...params,
+    name: faker.random.word(),
+    stageId: params.stageId || faker.random.word(),
+    companyIds: params.companyIds || [faker.random.word()],
+    customerIds: params.customerIds || [faker.random.word()],
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
+    description: faker.random.word(),
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+  });
+
+  return growthHack.save();
 };
 
 interface IProductFactoryInput {

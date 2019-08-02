@@ -13,6 +13,7 @@ import EmailTemplates from './EmailTemplates';
 import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
 import Forms from './Forms';
+import GrowthHacks from './GrowthHacks';
 import ImportHistory from './ImportHistory';
 import Integrations from './Integrations';
 import InternalNotes from './InternalNotes';
@@ -67,4 +68,5 @@ export {
   UsersGroups,
   Tickets,
   Tasks,
+  GrowthHacks,
 };
