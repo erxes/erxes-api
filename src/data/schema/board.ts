@@ -35,6 +35,7 @@ export const types = `
     stayedDealsTotalCount: Int
     initialDealsTotalCount: Int
     inProcessDealsTotalCount: Int
+    formId: String
     ${commonTypes}
   }
 

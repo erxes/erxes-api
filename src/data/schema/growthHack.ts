@@ -4,6 +4,11 @@ const commonTypes = `
 `;
 
 export const types = `
+  type IFormField {
+    _id: String
+    value: String
+  }
+  
   type GrowthHack {
     _id: String!
     name: String!
@@ -18,6 +23,7 @@ export const types = `
     companies: [Company]
     customers: [Customer]
     hackDescription: String
+    formFields: [IFormField]
     goal: String
     assignedUsers: [User]
     modifiedAt: Date
@@ -25,6 +31,7 @@ export const types = `
     stage: Stage
     attachments: [Attachment]
     isWatched: Boolean
+    formId: String
     ${commonTypes}
   }
 `;

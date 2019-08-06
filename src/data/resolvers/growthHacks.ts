@@ -30,6 +30,16 @@ export default {
     return boardId(growthHack);
   },
 
+  async formId(growthHack: IGrowthHackDocument) {
+    const stage = await Stages.findOne({ _id: growthHack.stageId });
+
+    if (!stage) {
+      return null;
+    }
+
+    return stage.formId;
+  },
+
   stage(growthHack: IGrowthHackDocument) {
     return Stages.findOne({ _id: growthHack.stageId });
   },

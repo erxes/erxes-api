@@ -54,6 +54,7 @@ export interface IStage extends ICommonFields {
   name?: string;
   probability?: string;
   pipelineId?: string;
+  formId?: string;
 }
 
 export interface IStageDocument extends IStage, Document {
@@ -148,5 +149,6 @@ export const stageSchema = new Schema({
     enum: PROBABILITY.ALL,
   }), // Win probability
   pipelineId: field({ type: String }),
+  formId: field({ type: String }),
   ...commonFieldsSchema,
 });
