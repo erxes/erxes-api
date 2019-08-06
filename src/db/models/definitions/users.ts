@@ -46,6 +46,7 @@ export interface IUser {
   details?: IDetail;
   links?: ILink;
   isActive?: boolean;
+  brandIds?: string[];
   groupIds?: string[];
   deviceTokens?: string[];
 }
@@ -113,6 +114,7 @@ export const userSchema = new Schema({
   details: field({ type: detailSchema, default: {} }),
   links: field({ type: linkSchema, default: {} }),
   isActive: field({ type: Boolean, default: true }),
+  brandIds: field({ type: [String] }),
   groupIds: field({ type: [String] }),
   deviceTokens: field({ type: [String], default: [] }),
 });

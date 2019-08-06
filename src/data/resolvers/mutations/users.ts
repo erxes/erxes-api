@@ -6,7 +6,6 @@ import utils, { authCookieOptions, getEnv } from '../../utils';
 
 interface IUsersEdit extends IUser {
   channelIds?: string[];
-  groupIds?: string[];
   _id: string;
 }
 
@@ -94,7 +93,7 @@ const userMutations = {
    * Update user
    */
   async usersEdit(_root, args: IUsersEdit) {
-    const { _id, username, email, channelIds = [], groupIds = [], details, links } = args;
+    const { _id, username, email, channelIds = [], groupIds = [], brandIds = [], details, links } = args;
 
     const updatedUser = await Users.updateUser(_id, {
       username,
@@ -102,6 +101,7 @@ const userMutations = {
       details,
       links,
       groupIds,
+      brandIds,
     });
 
     // add new user to channels

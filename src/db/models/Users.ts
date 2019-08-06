@@ -18,6 +18,7 @@ interface IEditProfile {
 interface IUpdateUser extends IEditProfile {
   password?: string;
   groupIds?: string[];
+  brandIds?: string[];
 }
 
 export interface IUserModel extends Model<IUserDocument> {
@@ -152,8 +153,11 @@ export const loadClass = () => {
     /**
      * Update user information
      */
-    public static async updateUser(_id: string, { username, email, password, details, links, groupIds }: IUpdateUser) {
-      const doc = { username, email, password, details, links, groupIds };
+    public static async updateUser(
+      _id: string,
+      { username, email, password, details, links, groupIds, brandIds }: IUpdateUser,
+    ) {
+      const doc = { username, email, password, details, links, groupIds, brandIds };
 
       // Checking duplicated email
       await this.checkDuplication({ email, idsToExclude: _id });
