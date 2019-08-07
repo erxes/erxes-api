@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { field } from '../utils';
+import { field, schemaWrapper } from '../utils';
 import { PUBLISH_STATUSES } from './constants';
 
 interface ICommonFields {
@@ -85,24 +85,26 @@ export const categorySchema = new Schema({
   ...commonFields,
 });
 
-export const topicSchema = new Schema({
-  _id: field({ pkey: true }),
-  title: field({ type: String }),
-  description: field({ type: String, optional: true }),
-  brandId: field({ type: String, optional: true }),
+export const topicSchema = schemaWrapper(
+  new Schema({
+    _id: field({ pkey: true }),
+    title: field({ type: String }),
+    description: field({ type: String, optional: true }),
+    brandId: field({ type: String, optional: true }),
 
-  categoryIds: field({
-    type: [String],
-    required: false,
+    categoryIds: field({
+      type: [String],
+      required: false,
+    }),
+
+    color: field({ type: String, optional: true }),
+    backgroundImage: field({ type: String, optional: true }),
+
+    languageCode: field({
+      type: String,
+      optional: true,
+    }),
+
+    ...commonFields,
   }),
-
-  color: field({ type: String, optional: true }),
-  backgroundImage: field({ type: String, optional: true }),
-
-  languageCode: field({
-    type: String,
-    optional: true,
-  }),
-
-  ...commonFields,
-});
+);
