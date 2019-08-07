@@ -1,9 +1,9 @@
 import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { fetchCronsApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
@@ -15,7 +15,7 @@ const engageMutations = {
   /**
    * Create new message
    */
-  async engageMessageAdd(_root, doc: IEngageMessage, { user }: { user: IUserDocument }) {
+  async engageMessageAdd(_root, doc: IEngageMessage, { user }: IContext) {
     const engageMessage = await EngageMessages.createEngageMessage(doc);
 
     await send(engageMessage);
@@ -38,7 +38,7 @@ const engageMutations = {
   /**
    * Edit message
    */
-  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: { user: IUserDocument }) {
+  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: IContext) {
     const engageMessage = await EngageMessages.findOne({ _id });
     const updated = await EngageMessages.updateEngageMessage(_id, doc);
 
@@ -66,7 +66,7 @@ const engageMutations = {
   /**
    * Remove message
    */
-  async engageMessageRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async engageMessageRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const engageMessage = await EngageMessages.findOne({ _id });
 
     try {

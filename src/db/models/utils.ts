@@ -21,6 +21,12 @@ export const field = options => {
   return options;
 };
 
+export const schemaWrapper = schema => {
+  schema.add({ brandIds: [String] });
+
+  return schema;
+};
+
 // Checking field names, All field names must be configured correctly
 export const checkFieldNames = async (type: string, fields: string[]) => {
   let basicInfos = CUSTOMER_BASIC_INFOS;

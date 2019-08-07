@@ -41,8 +41,16 @@ const apolloServer = new ApolloServer({
   playground,
   uploads: false,
   context: ({ req, res }) => {
+    if (!req) {
+      return {};
+    }
+
+    const brandIds = JSON.parse(req.cookies.brandIds || '[]');
+
     return {
-      user: req && req.user,
+      docModifier: doc => ({ ...doc, brandIds }),
+      commonQuerySelector: { brandIds: { $in: brandIds } },
+      user: req.user,
       res,
     };
   },

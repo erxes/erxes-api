@@ -1,8 +1,7 @@
 import { Customers } from '../../../db/models';
-
 import { ICustomer } from '../../../db/models/definitions/customers';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ICustomersEdit extends ICustomer {
@@ -13,7 +12,7 @@ const customerMutations = {
   /**
    * Create new customer also adds Customer registration log
    */
-  async customersAdd(_root, doc: ICustomer, { user }: { user: IUserDocument }) {
+  async customersAdd(_root, doc: ICustomer, { user }: IContext) {
     const customer = await Customers.createCustomer(doc, user);
 
     await putCreateLog(
@@ -32,7 +31,7 @@ const customerMutations = {
   /**
    * Update customer
    */
-  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: { user: IUserDocument }) {
+  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: IContext) {
     const customer = await Customers.findOne({ _id });
     const updated = await Customers.updateCustomer(_id, doc);
 
@@ -68,7 +67,7 @@ const customerMutations = {
   /**
    * Remove customers
    */
-  async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: { user: IUserDocument }) {
+  async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: IContext) {
     for (const customerId of customerIds) {
       // Removing every customer and modules associated with
       const customer = await Customers.findOne({ _id: customerId });

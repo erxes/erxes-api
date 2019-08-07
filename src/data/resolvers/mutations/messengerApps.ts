@@ -1,6 +1,6 @@
 import { Forms, MessengerApps } from '../../../db/models';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog } from '../../utils';
 
 const messengerAppMutations = {
@@ -10,7 +10,7 @@ const messengerAppMutations = {
    * @param {string} params.integrationId Integration
    * @param {string} params.topicId Topic
    */
-  async messengerAppsAddKnowledgebase(_root, params, { user }: { user: IUserDocument }) {
+  async messengerAppsAddKnowledgebase(_root, params, { user }: IContext) {
     const { name, integrationId, topicId } = params;
     const kb = await MessengerApps.createApp({
       name,
@@ -43,7 +43,7 @@ const messengerAppMutations = {
    * @param {string} params.integrationId Integration
    * @param {string} params.formId Form
    */
-  async messengerAppsAddLead(_root, params, { user }: { user: IUserDocument }) {
+  async messengerAppsAddLead(_root, params, { user }: IContext) {
     const { name, integrationId, formId } = params;
     const form = await Forms.findOne({ _id: formId });
 
@@ -79,7 +79,7 @@ const messengerAppMutations = {
   /*
    * Remove app
    */
-  async messengerAppsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async messengerAppsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const messengerApp = await MessengerApps.findOne({ _id });
     const removed = await MessengerApps.deleteOne({ _id });
 

@@ -1,7 +1,7 @@
 import { Products } from '../../../db/models';
 import { IProduct } from '../../../db/models/definitions/deals';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleCheckPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IProductsEdit extends IProduct {
@@ -13,7 +13,7 @@ const productMutations = {
    * Creates a new product
    * @param {Object} doc Product document
    */
-  async productsAdd(_root, doc: IProduct, { user }: { user: IUserDocument }) {
+  async productsAdd(_root, doc: IProduct, { user }: IContext) {
     const product = await Products.createProduct(doc);
 
     if (product) {
@@ -36,7 +36,7 @@ const productMutations = {
    * @param {string} param2._id Product id
    * @param {Object} param2.doc Product info
    */
-  async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user }: { user: IUserDocument }) {
+  async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user }: IContext) {
     const product = await Products.findOne({ _id });
     const updated = await Products.updateProduct(_id, doc);
 
@@ -59,7 +59,7 @@ const productMutations = {
    * Removes a product
    * @param {string} param1._id Product id
    */
-  async productsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async productsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const product = await Products.findOne({ _id });
     const removed = await Products.removeProduct(_id);
 

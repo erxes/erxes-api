@@ -1,6 +1,5 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
-import * as sinon from 'sinon';
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
 import EngagesAPI from '../data/dataSources/engages';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';

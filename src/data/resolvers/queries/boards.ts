@@ -1,5 +1,6 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 
 export interface IDate {
   month: number;
@@ -21,8 +22,8 @@ const boardQueries = {
   /**
    *  Boards list
    */
-  boards(_root, { type }: { type: string }) {
-    return Boards.find({ type }).sort({ order: 1, createdAt: -1 });
+  boards(_root, { type }: { type: string }, { commonQuerySelector }: IContext) {
+    return Boards.find({ ...commonQuerySelector, type }).sort({ order: 1, createdAt: -1 });
   },
 
   /**

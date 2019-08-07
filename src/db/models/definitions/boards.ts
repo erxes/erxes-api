@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { field } from '../utils';
+import { field, schemaWrapper } from '../utils';
 import { BOARD_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 
 interface ICommonFields {
@@ -115,15 +115,17 @@ export const commonItemFieldsSchema = {
   modifiedBy: field({ type: String }),
 };
 
-export const boardSchema = new Schema({
-  _id: field({ pkey: true }),
-  name: field({ type: String }),
-  isDefault: field({
-    type: Boolean,
-    default: false,
+export const boardSchema = schemaWrapper(
+  new Schema({
+    _id: field({ pkey: true }),
+    name: field({ type: String }),
+    isDefault: field({
+      type: Boolean,
+      default: false,
+    }),
+    ...commonFieldsSchema,
   }),
-  ...commonFieldsSchema,
-});
+);
 
 export const pipelineSchema = new Schema({
   _id: field({ pkey: true }),
