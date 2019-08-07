@@ -1,6 +1,7 @@
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from '../../../db/models';
 
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
 /* Articles list & total count helper */
@@ -125,8 +126,8 @@ const knowledgeBaseQueries = {
   /**
    * Topic list
    */
-  knowledgeBaseTopics(_root, args: { page: number; perPage: number }) {
-    const topics = paginate(KnowledgeBaseTopics.find({}), args);
+  knowledgeBaseTopics(_root, args: { page: number; perPage: number }, { commonQuerySelector }: IContext) {
+    const topics = paginate(KnowledgeBaseTopics.find(commonQuerySelector), args);
     return topics.sort({ modifiedDate: -1 });
   },
 
@@ -140,8 +141,8 @@ const knowledgeBaseQueries = {
   /**
    * Total topic count
    */
-  knowledgeBaseTopicsTotalCount() {
-    return KnowledgeBaseTopics.find({}).countDocuments();
+  knowledgeBaseTopicsTotalCount(_root, _args, { commonQuerySelector }: IContext) {
+    return KnowledgeBaseTopics.find(commonQuerySelector).countDocuments();
   },
 };
 

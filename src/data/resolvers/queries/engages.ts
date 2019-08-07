@@ -121,24 +121,28 @@ const countsByTag = async ({
 /*
  * List filter
  */
-const listQuery = ({ segmentIds, brandIds, tagIds, kind, status, tag, ids }: IListArgs, user: IUserDocument): any => {
+const listQuery = (
+  commonSelector,
+  { segmentIds, brandIds, tagIds, kind, status, tag, ids }: IListArgs,
+  user: IUserDocument,
+): any => {
   if (ids) {
-    return EngageMessages.find({ _id: { $in: ids } });
+    return EngageMessages.find({ ...commonSelector, _id: { $in: ids } });
   }
 
   if (segmentIds) {
-    return EngageMessages.find({ segmentIds: { $in: segmentIds } });
+    return EngageMessages.find({ ...commonSelector, segmentIds: { $in: segmentIds } });
   }
 
   if (brandIds) {
-    return EngageMessages.find({ brandIds: { $in: brandIds } });
+    return EngageMessages.find({ ...commonSelector, brandIds: { $in: brandIds } });
   }
 
   if (tagIds) {
-    return EngageMessages.find({ tagIds: { $in: tagIds } });
+    return EngageMessages.find({ ...commonSelector, tagIds: { $in: tagIds } });
   }
 
-  let query: any = {};
+  let query = commonSelector;
 
   // filter by kind
   if (kind) {
@@ -183,8 +187,8 @@ const engageQueries = {
   /**
    * Engage messages list
    */
-  engageMessages(_root, args: IListArgs, { user }: IContext) {
-    return paginate(EngageMessages.find(listQuery(args, user)), args);
+  engageMessages(_root, args: IListArgs, { user, commonQuerySelector }: IContext) {
+    return paginate(EngageMessages.find(listQuery(commonQuerySelector, args, user)), args);
   },
 
   /**
@@ -197,8 +201,8 @@ const engageQueries = {
   /**
    * Get all messages count. We will use it in pager
    */
-  engageMessagesTotalCount(_root, args: IListArgs, { user }: IContext) {
-    return EngageMessages.find(listQuery(args, user)).countDocuments();
+  engageMessagesTotalCount(_root, args: IListArgs, { user, commonQuerySelector }: IContext) {
+    return EngageMessages.find(listQuery(commonQuerySelector, args, user)).countDocuments();
   },
 };
 

@@ -63,6 +63,8 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
     return doc;
   };
 
+  finalContext.commonQuerySelector = {};
+
   const response: any = await graphql(schema, source, rootValue, finalContext, args);
 
   if (response.errors || !response.data) {
