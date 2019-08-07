@@ -119,8 +119,8 @@ const knowledgeBaseQueries = {
   /**
    * Get last category
    */
-  knowledgeBaseCategoriesGetLast() {
-    return KnowledgeBaseCategories.findOne({}).sort({ createdDate: -1 });
+  knowledgeBaseCategoriesGetLast(_root, _args, { commonQuerySelector }: IContext) {
+    return KnowledgeBaseCategories.findOne(commonQuerySelector).sort({ createdDate: -1 });
   },
 
   /**
