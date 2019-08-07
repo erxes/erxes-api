@@ -10,18 +10,20 @@ const messengerAppMutations = {
    * @param {string} params.integrationId Integration
    * @param {string} params.topicId Topic
    */
-  async messengerAppsAddKnowledgebase(_root, params, { user }: IContext) {
+  async messengerAppsAddKnowledgebase(_root, params, { user, docModifier }: IContext) {
     const { name, integrationId, topicId } = params;
 
-    const kb = await MessengerApps.createApp({
-      name,
-      kind: 'knowledgebase',
-      showInInbox: false,
-      credentials: {
-        integrationId,
-        topicId,
-      },
-    });
+    const kb = await MessengerApps.createApp(
+      docModifier({
+        name,
+        kind: 'knowledgebase',
+        showInInbox: false,
+        credentials: {
+          integrationId,
+          topicId,
+        },
+      }),
+    );
 
     if (kb) {
       await putCreateLog(
@@ -44,7 +46,7 @@ const messengerAppMutations = {
    * @param {string} params.integrationId Integration
    * @param {string} params.formId Form
    */
-  async messengerAppsAddLead(_root, params, { user }: IContext) {
+  async messengerAppsAddLead(_root, params, { user, docModifier }: IContext) {
     const { name, integrationId, formId } = params;
     const form = await Forms.findOne({ _id: formId });
 
@@ -52,15 +54,17 @@ const messengerAppMutations = {
       throw new Error('Form not found');
     }
 
-    const lead = await MessengerApps.createApp({
-      name,
-      kind: 'lead',
-      showInInbox: false,
-      credentials: {
-        integrationId,
-        formCode: form.code || '',
-      },
-    });
+    const lead = await MessengerApps.createApp(
+      docModifier({
+        name,
+        kind: 'lead',
+        showInInbox: false,
+        credentials: {
+          integrationId,
+          formCode: form.code || '',
+        },
+      }),
+    );
 
     if (lead) {
       await putCreateLog(
