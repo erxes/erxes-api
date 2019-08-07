@@ -28,6 +28,7 @@ import {
   Users,
 } from '../db/models';
 
+import { STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('engage message mutation tests', () => {
@@ -95,6 +96,8 @@ describe('engage message mutation tests', () => {
     });
     _customer = await customerFactory({
       hasValidEmail: true,
+      status: STATUSES.ACTIVE,
+      profileScore: 1,
     });
     _integration = await integrationFactory({ brandId: 'brandId' });
 
