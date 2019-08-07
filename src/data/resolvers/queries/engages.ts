@@ -1,6 +1,7 @@
 import { EngageMessages, Tags } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
 interface IListArgs {
@@ -164,7 +165,7 @@ const engageQueries = {
   engageMessageCounts(
     _root,
     { name, kind, status }: { name: string; kind: string; status: string },
-    { user }: { user: IUserDocument },
+    { user }: IContext,
   ) {
     if (name === 'kind') {
       return countsByKind();
@@ -182,7 +183,7 @@ const engageQueries = {
   /**
    * Engage messages list
    */
-  engageMessages(_root, args: IListArgs, { user }: { user: IUserDocument }) {
+  engageMessages(_root, args: IListArgs, { user }: IContext) {
     return paginate(EngageMessages.find(listQuery(args, user)), args);
   },
 
@@ -196,7 +197,7 @@ const engageQueries = {
   /**
    * Get all messages count. We will use it in pager
    */
-  engageMessagesTotalCount(_root, args: IListArgs, { user }: { user: IUserDocument }) {
+  engageMessagesTotalCount(_root, args: IListArgs, { user }: IContext) {
     return EngageMessages.find(listQuery(args, user)).countDocuments();
   },
 };
