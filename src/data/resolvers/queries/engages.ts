@@ -63,16 +63,19 @@ const statusQueryBuilder = (status: string, user?: IUserDocument): IStatusQueryB
 };
 
 // count for each kind
-const countsByKind = async () => ({
-  all: await count({}),
-  auto: await count({ kind: 'auto' }),
-  visitorAuto: await count({ kind: 'visitorAuto' }),
-  manual: await count({ kind: 'manual' }),
+const countsByKind = async commonSelector => ({
+  all: await count(commonSelector),
+  auto: await count({ ...commonSelector, kind: 'auto' }),
+  visitorAuto: await count({ ...commonSelector, kind: 'visitorAuto' }),
+  manual: await count({ ...commonSelector, kind: 'manual' }),
 });
 
 // count for each status type
-const countsByStatus = async ({ kind, user }: { kind: string; user: IUserDocument }): Promise<ICountsByStatus> => {
-  const query: IQuery = {};
+const countsByStatus = async (
+  commonSelector,
+  { kind, user }: { kind: string; user: IUserDocument },
+): Promise<ICountsByStatus> => {
+  const query: IQuery = commonSelector;
 
   if (kind) {
     query.kind = kind;
@@ -87,16 +90,19 @@ const countsByStatus = async ({ kind, user }: { kind: string; user: IUserDocumen
 };
 
 // cout for each tag
-const countsByTag = async ({
-  kind,
-  status,
-  user,
-}: {
-  kind: string;
-  status: string;
-  user: IUserDocument;
-}): Promise<ICountsByTag[]> => {
-  let query: any = {};
+const countsByTag = async (
+  commonSelector,
+  {
+    kind,
+    status,
+    user,
+  }: {
+    kind: string;
+    status: string;
+    user: IUserDocument;
+  },
+): Promise<ICountsByTag[]> => {
+  let query: any = commonSelector;
 
   if (kind) {
     query.kind = kind;
@@ -169,18 +175,18 @@ const engageQueries = {
   engageMessageCounts(
     _root,
     { name, kind, status }: { name: string; kind: string; status: string },
-    { user }: IContext,
+    { user, commonQuerySelector }: IContext,
   ) {
     if (name === 'kind') {
-      return countsByKind();
+      return countsByKind(commonQuerySelector);
     }
 
     if (name === 'status') {
-      return countsByStatus({ kind, user });
+      return countsByStatus(commonQuerySelector, { kind, user });
     }
 
     if (name === 'tag') {
-      return countsByTag({ kind, status, user });
+      return countsByTag(commonQuerySelector, { kind, status, user });
     }
   },
 

@@ -29,15 +29,15 @@ const boardQueries = {
   /**
    *  Board detail
    */
-  boardDetail(_root, { _id }: { _id: string }) {
-    return Boards.findOne({ _id });
+  boardDetail(_root, { _id }: { _id: string }, { commonQuerySelector }: IContext) {
+    return Boards.findOne({ ...commonQuerySelector, _id });
   },
 
   /**
    * Get last board
    */
-  boardGetLast(_root, { type }: { type: string }) {
-    return Boards.findOne({ type }).sort({ createdAt: -1 });
+  boardGetLast(_root, { type }: { type: string }, { commonQuerySelector }: IContext) {
+    return Boards.findOne({ ...commonQuerySelector, type }).sort({ createdAt: -1 });
   },
 
   /**
