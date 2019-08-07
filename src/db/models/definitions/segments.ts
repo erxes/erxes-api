@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field, schemaWrapper } from '../utils';
 import { ACTIVITY_CONTENT_TYPES } from './constants';
+import { field, schemaWrapper } from './utils';
 
 export interface ICondition {
   field: string;

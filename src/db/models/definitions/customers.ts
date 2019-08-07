@@ -2,7 +2,7 @@ import { Document, Schema } from 'mongoose';
 
 import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
 
-import { field, schemaWrapper } from '../utils';
+import { field, schemaWrapper } from './utils';
 
 export interface ILocation {
   remoteAddress: string;

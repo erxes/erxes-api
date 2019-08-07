@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field, schemaWrapper } from '../utils';
 import { IRule, ruleSchema } from './common';
+import { field, schemaWrapper } from './utils';
 
 export interface ICallout extends Document {
   title?: string;

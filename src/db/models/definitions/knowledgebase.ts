@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field, schemaWrapper } from '../utils';
 import { PUBLISH_STATUSES } from './constants';
+import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
   createdBy: string;

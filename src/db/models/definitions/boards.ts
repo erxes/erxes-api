@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field, schemaWrapper } from '../utils';
 import { BOARD_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
+import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
   userId?: string;

@@ -8,7 +8,7 @@ import {
   STATUSES,
 } from './constants';
 
-import { field, schemaWrapper } from '../utils';
+import { field, schemaWrapper } from './utils';
 
 export interface ILink {
   linkedIn?: string;

@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xlsxPopulate from 'xlsx-populate';
+import { checkFieldNames } from '../data/modules/coc/utils';
 import { can } from '../data/permissions/utils';
 import { ImportHistory } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
-import { checkFieldNames } from '../db/models/utils';
 import { createWorkers, splitToCore } from './utils';
 
 export const intervals: any[] = [];

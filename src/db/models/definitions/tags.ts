@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field, schemaWrapper } from '../utils';
 import { TAG_TYPES } from './constants';
+import { field, schemaWrapper } from './utils';
 
 export interface ITag {
   name: string;
