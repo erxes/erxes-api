@@ -22,7 +22,7 @@ export const field = options => {
 };
 
 export const schemaWrapper = schema => {
-  schema.add({ brandIds: [String] });
+  schema.add({ scopeBrandIds: [String] });
 
   return schema;
 };

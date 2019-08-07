@@ -41,15 +41,16 @@ const apolloServer = new ApolloServer({
   playground,
   uploads: false,
   context: ({ req, res }) => {
-    if (!req) {
+    if (!req || process.env.NODE_ENV === 'test') {
       return {};
     }
 
     const brandIds = JSON.parse(req.cookies.brandIds || '[]');
 
     return {
-      docModifier: doc => ({ ...doc, brandIds }),
-      commonQuerySelector: { brandIds: { $in: brandIds } },
+      brandIdSelector: { _id: { $in: brandIds } },
+      docModifier: doc => ({ ...doc, scopeBrandIds: brandIds }),
+      commonQuerySelector: { scopeBrandIds: { $in: brandIds } },
       user: req.user,
       res,
     };

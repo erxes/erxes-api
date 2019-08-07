@@ -5,5 +5,6 @@ export interface IContext {
   res: express.Response;
   user: IUserDocument;
   docModifier: <T>(doc: T) => T & { brandIds: string[] };
+  brandIdSelector: {};
   commonQuerySelector: {};
 }
