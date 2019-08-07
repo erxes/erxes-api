@@ -9,8 +9,8 @@ const knowledgeBaseMutations = {
   /**
    * Create topic document
    */
-  async knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user }: IContext) {
-    const topic = await KnowledgeBaseTopics.createDoc(doc, user._id);
+  async knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user, docModifier }: IContext) {
+    const topic = await KnowledgeBaseTopics.createDoc(docModifier(doc), user._id);
 
     if (topic) {
       await putCreateLog(
@@ -30,9 +30,9 @@ const knowledgeBaseMutations = {
   /**
    * Update topic document
    */
-  async knowledgeBaseTopicsEdit(_root, { _id, doc }: { _id: string; doc: ITopic }, { user }: IContext) {
+  async knowledgeBaseTopicsEdit(_root, { _id, doc }: { _id: string; doc: ITopic }, { user, docModifier }: IContext) {
     const topic = await KnowledgeBaseTopics.findOne({ _id });
-    const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
+    const updated = await KnowledgeBaseTopics.updateDoc(_id, docModifier(doc), user._id);
 
     if (topic) {
       await putUpdateLog(

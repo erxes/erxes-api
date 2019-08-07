@@ -12,8 +12,8 @@ const companyMutations = {
   /**
    * Create new company also adds Company registration log
    */
-  async companiesAdd(_root, doc: ICompany, { user }: IContext) {
-    const company = await Companies.createCompany(doc, user);
+  async companiesAdd(_root, doc: ICompany, { user, docModifier }: IContext) {
+    const company = await Companies.createCompany(docModifier(doc), user);
 
     await putCreateLog(
       {
@@ -31,9 +31,9 @@ const companyMutations = {
   /**
    * Updates a company
    */
-  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user }: IContext) {
+  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user, docModifier }: IContext) {
     const company = await Companies.findOne({ _id });
-    const updated = await Companies.updateCompany(_id, doc);
+    const updated = await Companies.updateCompany(_id, docModifier(doc));
 
     if (company) {
       await putUpdateLog(

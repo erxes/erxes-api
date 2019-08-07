@@ -12,6 +12,7 @@ const messengerAppMutations = {
    */
   async messengerAppsAddKnowledgebase(_root, params, { user }: IContext) {
     const { name, integrationId, topicId } = params;
+
     const kb = await MessengerApps.createApp({
       name,
       kind: 'knowledgebase',

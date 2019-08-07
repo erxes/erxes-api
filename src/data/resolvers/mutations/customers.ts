@@ -12,8 +12,8 @@ const customerMutations = {
   /**
    * Create new customer also adds Customer registration log
    */
-  async customersAdd(_root, doc: ICustomer, { user }: IContext) {
-    const customer = await Customers.createCustomer(doc, user);
+  async customersAdd(_root, doc: ICustomer, { user, docModifier }: IContext) {
+    const customer = await Customers.createCustomer(docModifier(doc), user);
 
     await putCreateLog(
       {
@@ -31,9 +31,9 @@ const customerMutations = {
   /**
    * Update customer
    */
-  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: IContext) {
+  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user, docModifier }: IContext) {
     const customer = await Customers.findOne({ _id });
-    const updated = await Customers.updateCustomer(_id, doc);
+    const updated = await Customers.updateCustomer(_id, docModifier(doc));
 
     if (customer) {
       await putUpdateLog(

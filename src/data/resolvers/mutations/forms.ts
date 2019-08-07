@@ -11,15 +11,15 @@ const formMutations = {
   /**
    * Create a new form
    */
-  formsAdd(_root, doc: IForm, { user }: IContext) {
-    return Forms.createForm(doc, user._id);
+  formsAdd(_root, doc: IForm, { user, docModifier }: IContext) {
+    return Forms.createForm(docModifier(doc), user._id);
   },
 
   /**
    * Update form data
    */
-  formsEdit(_root, { _id, ...doc }: IFormsEdit) {
-    return Forms.updateForm(_id, doc);
+  formsEdit(_root, { _id, ...doc }: IFormsEdit, { docModifier }: IContext) {
+    return Forms.updateForm(_id, docModifier(doc));
   },
 };
 

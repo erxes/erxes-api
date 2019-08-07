@@ -12,8 +12,8 @@ const emailTemplateMutations = {
   /**
    * Create new email template
    */
-  async emailTemplatesAdd(_root, doc: IEmailTemplate, { user }: IContext) {
-    const template = await EmailTemplates.create(doc);
+  async emailTemplatesAdd(_root, doc: IEmailTemplate, { user, docModifier }: IContext) {
+    const template = await EmailTemplates.create(docModifier(doc));
 
     if (template) {
       await putCreateLog(
@@ -33,9 +33,9 @@ const emailTemplateMutations = {
   /**
    * Update email template
    */
-  async emailTemplatesEdit(_root, { _id, ...fields }: IEmailTemplatesEdit, { user }: IContext) {
+  async emailTemplatesEdit(_root, { _id, ...fields }: IEmailTemplatesEdit, { user, docModifier }: IContext) {
     const template = await EmailTemplates.findOne({ _id });
-    const updated = await EmailTemplates.updateEmailTemplate(_id, fields);
+    const updated = await EmailTemplates.updateEmailTemplate(_id, docModifier(fields));
 
     if (template) {
       await putUpdateLog(

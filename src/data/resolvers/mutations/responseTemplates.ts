@@ -12,8 +12,8 @@ const responseTemplateMutations = {
   /**
    * Create new response template
    */
-  async responseTemplatesAdd(_root, doc: IResponseTemplate, { user }: IContext) {
-    const template = await ResponseTemplates.create(doc);
+  async responseTemplatesAdd(_root, doc: IResponseTemplate, { user, docModifier }: IContext) {
+    const template = await ResponseTemplates.create(docModifier(doc));
 
     if (template) {
       await putCreateLog(
@@ -33,9 +33,9 @@ const responseTemplateMutations = {
   /**
    * Update response template
    */
-  async responseTemplatesEdit(_root, { _id, ...fields }: IResponseTemplatesEdit, { user }: IContext) {
+  async responseTemplatesEdit(_root, { _id, ...fields }: IResponseTemplatesEdit, { user, docModifier }: IContext) {
     const template = await ResponseTemplates.findOne({ _id });
-    const updated = await ResponseTemplates.updateResponseTemplate(_id, fields);
+    const updated = await ResponseTemplates.updateResponseTemplate(_id, docModifier(fields));
 
     if (template) {
       await putUpdateLog(

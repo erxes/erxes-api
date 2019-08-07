@@ -12,8 +12,8 @@ const scriptMutations = {
   /**
    * Create new script
    */
-  async scriptsAdd(_root, doc: IScript, { user }: IContext) {
-    const script = await Scripts.createScript(doc);
+  async scriptsAdd(_root, doc: IScript, { user, docModifier }: IContext) {
+    const script = await Scripts.createScript(docModifier(doc));
 
     if (script) {
       await putCreateLog(
@@ -33,9 +33,9 @@ const scriptMutations = {
   /**
    * Update script
    */
-  async scriptsEdit(_root, { _id, ...fields }: IScriptsEdit, { user }: IContext) {
+  async scriptsEdit(_root, { _id, ...fields }: IScriptsEdit, { user, docModifier }: IContext) {
     const script = await Scripts.findOne({ _id });
-    const updated = await Scripts.updateScript(_id, fields);
+    const updated = await Scripts.updateScript(_id, docModifier(fields));
 
     if (script) {
       await putUpdateLog(
