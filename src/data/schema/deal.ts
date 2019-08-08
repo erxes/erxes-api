@@ -10,8 +10,6 @@ export const types = `
     stageId: String
     pipeline: Pipeline
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
     assignedUserIds: [String]
     amount: JSON
     closeDate: Date
@@ -53,8 +51,6 @@ export const queries = `
     initialStageId: String
     pipelineId: String
     stageId: String
-    customerIds: [String]
-    companyIds: [String]
     date: ItemDate
     skip: Int
     search: String
@@ -69,8 +65,6 @@ export const queries = `
   dealsTotalAmounts(
     date: ItemDate
     pipelineId: String
-    customerIds: [String]
-    companyIds: [String]
     assignedUserIds: [String]
     productIds: [String]
     nextDay: String
@@ -85,9 +79,7 @@ const commonParams = `
   name: String!,
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,
@@ -98,6 +90,8 @@ export const mutations = `
   dealsAdd(${commonParams}): Deal
   dealsEdit(_id: String!, ${commonParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
+  dealsEditCompanies(_id: String!, companyIds: [String]!): Deal
+  dealsEditCustomers(_id: String!, customerIds: [String]!): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal

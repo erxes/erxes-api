@@ -1,15 +1,28 @@
 import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { IUserDocument } from '../../db/models/definitions/users';
+import { getSavedConformity } from '../modules/conformity/conformityUtils';
 import { boardId } from './boardUtils';
 
 export default {
-  companies(task: ITaskDocument) {
-    return Companies.find({ _id: { $in: task.companyIds || [] } });
+  async companies(task: ITaskDocument) {
+    const companyIds = await getSavedConformity({
+      mainType: 'task',
+      mainTypeId: task._id,
+      relType: 'company',
+    });
+
+    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
-  customers(task: ITaskDocument) {
-    return Customers.find({ _id: { $in: task.customerIds || [] } });
+  async customers(task: ITaskDocument) {
+    const customerIds = await getSavedConformity({
+      mainType: 'task',
+      mainTypeId: task._id,
+      relType: 'customer',
+    });
+
+    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   assignedUsers(task: ITaskDocument) {

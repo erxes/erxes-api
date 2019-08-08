@@ -3,6 +3,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { itemsChange, sendNotifications } from '../boardUtils';
@@ -173,6 +174,30 @@ const dealMutations = {
     }
 
     return Deals.watchDeal(_id, isAdd, user._id);
+  },
+
+  async dealsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
+    const deal = await Deals.findOne({ _id });
+
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    saveConformity({ mainType: 'deal', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
+
+    return deal;
+  },
+
+  async dealsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
+    const deal = await Deals.findOne({ _id });
+
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    saveConformity({ mainType: 'deal', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
+
+    return deal;
   },
 };
 

@@ -1,5 +1,6 @@
 import { Companies, Conversations, Deals, Integrations, Tags, Users } from '../../db/models';
 import { ICustomerDocument } from '../../db/models/definitions/customers';
+import { getSavedConformity } from '../modules/conformity/conformityUtils';
 
 interface IMessengerCustomData {
   name: string;
@@ -41,8 +42,13 @@ export default {
     return Conversations.find({ customerId: customer._id });
   },
 
-  companies(customer: ICustomerDocument) {
-    return Companies.find({ _id: { $in: customer.companyIds || [] } });
+  async companies(customer: ICustomerDocument) {
+    const companyIds = await getSavedConformity({
+      mainType: 'customer',
+      mainTypeId: customer._id,
+      relType: 'company',
+    });
+    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
   owner(customer: ICustomerDocument) {

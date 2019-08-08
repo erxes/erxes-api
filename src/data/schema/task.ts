@@ -9,8 +9,6 @@ export const types = `
     name: String!
     stageId: String
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
     assignedUserIds: [String]
     closeDate: Date
     description: String
@@ -33,8 +31,6 @@ export const queries = `
   tasks(
     pipelineId: String
     stageId: String
-    customerIds: [String]
-    companyIds: [String]
     date: ItemDate
     skip: Int
     search: String
@@ -52,9 +48,7 @@ const commonParams = `
   name: String!,
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,
@@ -65,6 +59,8 @@ export const mutations = `
   tasksAdd(${commonParams}): Task
   tasksEdit(_id: String!, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
+  tasksEditCompanies(_id: String!, companyIds: [String]!): Task
+  tasksEditCustomers(_id: String!, customerIds: [String]!): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task

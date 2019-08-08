@@ -3,6 +3,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
@@ -131,6 +132,30 @@ const taskMutations = {
     }
 
     return Tasks.watchTask(_id, isAdd, user._id);
+  },
+
+  async tasksEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
+    const task = await Tasks.findOne({ _id });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    saveConformity({ mainType: 'task', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
+
+    return task;
+  },
+
+  async tasksEditCustomers(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
+    const task = await Tasks.findOne({ _id });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    saveConformity({ mainType: 'task', mainTypeId: _id, relType: 'customer', relTypeIds: companyIds });
+
+    return task;
   },
 };
 

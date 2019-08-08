@@ -65,7 +65,6 @@ export interface ICustomer {
   isUser?: boolean;
   integrationId?: string;
   tagIds?: string[];
-  companyIds?: string[];
   mergedIds?: string[];
   status?: string;
   customFieldsData?: any;
@@ -206,7 +205,6 @@ export const customerSchema = new Schema({
 
   integrationId: field({ type: String, optional: true }),
   tagIds: field({ type: [String], optional: true, index: true }),
-  companyIds: field({ type: [String], optional: true }),
 
   // Merged customer ids
   mergedIds: field({ type: [String], optional: true }),

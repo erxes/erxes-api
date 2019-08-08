@@ -3,6 +3,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
@@ -131,6 +132,30 @@ const ticketMutations = {
     }
 
     return Tickets.watchTicket(_id, isAdd, user._id);
+  },
+
+  async ticketsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
+    const ticket = await Tickets.findOne({ _id });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    saveConformity({ mainType: 'ticket', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
+
+    return ticket;
+  },
+
+  async ticketsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
+    const ticket = await Tickets.findOne({ _id });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    saveConformity({ mainType: 'ticket', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
+
+    return ticket;
   },
 };
 

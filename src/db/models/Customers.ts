@@ -1,6 +1,7 @@
 import { Model, model } from 'mongoose';
+import { changeConformity, removeConformity, saveConformity } from '../../data/modules/conformity/conformityUtils';
 import { validateEmail } from '../../data/utils';
-import { ActivityLogs, Conversations, Deals, EngageMessages, Fields, InternalNotes, Tickets } from './';
+import { ActivityLogs, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -186,9 +187,12 @@ export const loadClass = () => {
      * Update customer companies
      */
     public static async updateCompanies(_id: string, companyIds: string[]) {
-      // updating companyIds field
-      await Customers.findByIdAndUpdate(_id, { $set: { companyIds } });
-
+      saveConformity({
+        mainType: 'customer',
+        mainTypeId: _id,
+        relType: 'company',
+        relTypeIds: companyIds,
+      });
       return Customers.findOne({ _id });
     }
 
@@ -245,6 +249,8 @@ export const loadClass = () => {
       await EngageMessages.removeCustomerEngages(customerId);
       await InternalNotes.removeCustomerInternalNotes(customerId);
 
+      await removeConformity({ mainType: 'customer', mainTypeId: customerId });
+
       return Customers.deleteOne({ _id: customerId });
     }
 
@@ -256,7 +262,6 @@ export const loadClass = () => {
       await Customers.checkDuplication(customerFields, customerIds);
 
       let tagIds: string[] = [];
-      let companyIds: string[] = [];
 
       let emails: string[] = [];
       let phones: string[] = [];
@@ -278,11 +283,9 @@ export const loadClass = () => {
           customerFields.integrationId = customerObj.integrationId;
 
           const customerTags: string[] = customerObj.tagIds || [];
-          const customerCompanies: string[] = customerObj.companyIds || [];
 
           // Merging customer's tag and companies into 1 array
           tagIds = tagIds.concat(customerTags);
-          companyIds = companyIds.concat(customerCompanies);
 
           // Merging emails, phones
           emails = [...emails, ...(customerObj.emails || [])];
@@ -295,9 +298,6 @@ export const loadClass = () => {
       // Removing Duplicated Tags from customer
       tagIds = Array.from(new Set(tagIds));
 
-      // Removing Duplicated Companies from customer
-      companyIds = Array.from(new Set(companyIds));
-
       // Removing Duplicated Emails from customer
       emails = Array.from(new Set(emails));
 
@@ -308,18 +308,16 @@ export const loadClass = () => {
       const customer = await this.createCustomer({
         ...customerFields,
         tagIds,
-        companyIds,
         mergedIds: customerIds,
         emails,
         phones,
       });
 
       // Updating every modules associated with customers
+      await changeConformity({ type: 'customer', newTypeId: customer._id, oldTypeIds: customerIds });
       await Conversations.changeCustomer(customer._id, customerIds);
       await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);
-      await Deals.changeCustomer(customer._id, customerIds);
-      await Tickets.changeCustomer(customer._id, customerIds);
 
       // create log
       await ActivityLogs.createCustomerLog(customer);

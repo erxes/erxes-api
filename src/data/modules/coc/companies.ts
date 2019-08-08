@@ -1,5 +1,6 @@
-import { Customers, Deals, Integrations, Segments, Tickets } from '../../../db/models';
+import { Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import { getSavedConformity } from '../conformity/conformityUtils';
 import QueryBuilder from '../segments/queryBuilder';
 
 export interface IListArgs {
@@ -53,7 +54,12 @@ export const brandFilter = async (brandId: string): Promise<IBrandFilter> => {
   let companyIds: any = [];
 
   for (const customer of customers) {
-    companyIds = [...companyIds, ...(customer.companyIds || [])];
+    const customerCompanyIds = await getSavedConformity({
+      mainType: 'customer',
+      mainTypeId: customer._id,
+      relType: 'company',
+    });
+    companyIds = [...companyIds, ...(customerCompanyIds || [])];
   }
 
   return { _id: { $in: companyIds } };
@@ -113,36 +119,4 @@ export const filter = async (params: IListArgs) => {
   }
 
   return selector;
-};
-
-export const filterKind = async (itemKind: string, itemId: string) => {
-  let companyIds = [''];
-  let customerIds = [''];
-
-  switch (itemKind) {
-    case 'deal':
-      const deal = await Deals.findOne({ _id: itemId });
-
-      if (!deal) {
-        throw new Error('Deal not found');
-      }
-      companyIds = deal.companyIds || [''];
-      customerIds = deal.customerIds || [''];
-      break;
-
-    case 'ticket':
-      const ticket = await Tickets.findOne({ _id: itemId });
-
-      if (!ticket) {
-        throw new Error('Ticket not found');
-      }
-      companyIds = ticket.companyIds || [''];
-      customerIds = ticket.customerIds || [''];
-      break;
-
-    default:
-      break;
-  }
-
-  return { companyIds, customerIds };
 };

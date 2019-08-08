@@ -9,8 +9,6 @@ export const types = `
     name: String!
     stageId: String
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
     assignedUserIds: [String]
     closeDate: Date
     description: String
@@ -34,8 +32,6 @@ export const queries = `
   tickets(
     pipelineId: String
     stageId: String
-    customerIds: [String]
-    companyIds: [String]
     date: ItemDate
     skip: Int
     search: String
@@ -54,9 +50,7 @@ const commonParams = `
   name: String!,
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,
@@ -68,6 +62,8 @@ export const mutations = `
   ticketsAdd(${commonParams}): Ticket
   ticketsEdit(_id: String!, ${commonParams}): Ticket
   ticketsChange( _id: String!, destinationStageId: String): Ticket
+  ticketsEditCompanies(_id: String!, companyIds: [String]!): Ticket
+  ticketsEditCustomers(_id: String!, customerIds: [String]!): Ticket
   ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]
   ticketsRemove(_id: String!): Ticket
   ticketsWatch(_id: String, isAdd: Boolean): Ticket

@@ -1,5 +1,5 @@
 import ActivityLogs from './ActivityLogs';
-import { Boards, Pipelines, Stages } from './Boards';
+import { Boards, Conformities, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
 import Channels from './Channels';
 import Companies from './Companies';
@@ -46,6 +46,7 @@ export {
   Customers,
   Companies,
   EmailDeliveries,
+  Conformities,
   Conversations,
   ConversationMessages,
   KnowledgeBaseArticles,
