@@ -44,6 +44,7 @@ export interface ILink {
 interface ILinkDocument extends ILink, Document {}
 
 export interface ICustomer {
+  scopeBrandIds?: string[];
   firstName?: string;
   lastName?: string;
   primaryEmail?: string;

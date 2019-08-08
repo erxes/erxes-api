@@ -22,6 +22,7 @@ export interface ILink {
 interface ILinkDocument extends ILink, Document {}
 
 export interface ICompany {
+  scopeBrandIds?: string[];
   primaryName?: string;
   avatar?: string;
   names?: string[];
