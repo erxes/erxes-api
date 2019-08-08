@@ -20,7 +20,7 @@ connect().then(async () => {
     return;
   }
 
-  const { user, brandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
+  const { user, scopeBrandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
 
   let percentage = '0';
   let create: any = Customers.createCustomer;
@@ -47,7 +47,7 @@ connect().then(async () => {
 
     // Customer or company object to import
     const coc: any = {
-      scopeBrandIds: brandIds,
+      scopeBrandIds,
       customFieldsData: {},
     };
 

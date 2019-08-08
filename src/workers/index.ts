@@ -75,7 +75,7 @@ app.post('/import-file', async (req: any, res) => {
 
   debugRequest(debugWorkers, req);
 
-  const brandIds = JSON.parse(req.cookies.brandIds || '[]');
+  const scopeBrandIds = JSON.parse(req.cookies.scopeBrandIds || '[]');
 
   form.parse(req, async (_err, fields: any, response) => {
     let status = '';
@@ -91,7 +91,7 @@ app.post('/import-file', async (req: any, res) => {
       return res.json(status);
     }
 
-    importXlsFile(response.file, fields.type, { brandIds, user: req.user })
+    importXlsFile(response.file, fields.type, { scopeBrandIds, user: req.user })
       .then(result => {
         debugResponse(debugWorkers, req);
         return res.json(result);

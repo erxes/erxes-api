@@ -488,6 +488,7 @@ export const loadClass = () => {
         details: _user.details,
         isOwner: _user.isOwner,
         groupIds: _user.groupIds,
+        brandIds: _user.brandIds,
         username: _user.username,
       };
 

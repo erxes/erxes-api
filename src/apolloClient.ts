@@ -45,13 +45,27 @@ const apolloServer = new ApolloServer({
       return {};
     }
 
-    const brandIds = JSON.parse(req.cookies.brandIds || '[]');
+    const user = req.user;
+
+    let brandIds = [];
+    let brandIdSelector = {};
+
+    if (user && !user.isOwner) {
+      brandIds = user.brandIds || [];
+      brandIdSelector = { _id: { $in: brandIds } };
+    }
+
+    let scopeBrandIds = JSON.parse(req.cookies.scopeBrandIds || '[]');
+
+    if (scopeBrandIds.length === 0) {
+      scopeBrandIds = brandIds;
+    }
 
     return {
-      brandIdSelector: { _id: { $in: brandIds } },
-      docModifier: doc => ({ ...doc, scopeBrandIds: brandIds }),
-      commonQuerySelector: { scopeBrandIds: { $in: brandIds } },
-      user: req.user,
+      brandIdSelector,
+      docModifier: doc => ({ ...doc, scopeBrandIds }),
+      commonQuerySelector: { scopeBrandIds: { $in: scopeBrandIds } },
+      user,
       res,
     };
   },

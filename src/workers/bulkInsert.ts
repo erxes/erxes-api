@@ -16,7 +16,7 @@ export const intervals: any[] = [];
 export const importXlsFile = async (
   file: any,
   type: string,
-  { user, brandIds }: { brandIds: string[]; user: IUserDocument },
+  { user, scopeBrandIds }: { scopeBrandIds: string[]; user: IUserDocument },
 ) => {
   return new Promise(async (resolve, reject) => {
     if (!(await can('importXlsFile', user))) {
@@ -97,7 +97,7 @@ export const importXlsFile = async (
         const percentagePerData = Number(((1 / usedSheets.length) * 100).toFixed(3));
 
         const workerData = {
-          brandIds,
+          scopeBrandIds,
           user,
           contentType: type,
           properties,
