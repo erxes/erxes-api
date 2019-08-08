@@ -3,7 +3,6 @@ import * as dotenv from 'dotenv';
 import { EngagesAPI, IntegrationsAPI } from './data/dataSources';
 import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
-import { getEnv } from './data/utils';
 import { Conversations, Customers } from './db/models';
 import { graphqlPubsub } from './pubsub';
 import { get, getArray, set, setArray } from './redisClient';
@@ -11,7 +10,7 @@ import { get, getArray, set, setArray } from './redisClient';
 // load environment variables
 dotenv.config();
 
-const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+const { NODE_ENV, USE_BRAND_RESTRICTIONS } = process.env;
 
 let playground: PlaygroundConfig = false;
 
@@ -41,11 +40,21 @@ const apolloServer = new ApolloServer({
   playground,
   uploads: false,
   context: ({ req, res }) => {
-    if (!req || process.env.NODE_ENV === 'test') {
+    if (!req || NODE_ENV === 'test') {
       return {};
     }
 
     const user = req.user;
+
+    if (USE_BRAND_RESTRICTIONS !== 'true') {
+      return {
+        brandIdSelector: {},
+        docModifier: doc => doc,
+        commonQuerySelector: {},
+        user,
+        res,
+      };
+    }
 
     let brandIds = [];
     let brandIdSelector = {};
