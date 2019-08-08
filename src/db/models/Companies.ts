@@ -219,9 +219,6 @@ export const loadClass = () => {
       // Removing modules associated with current companies
       await InternalNotes.changeCompany(company._id, companyIds);
 
-      // create log
-      await ActivityLogs.createCompanyLog(company);
-
       return company;
     }
   }

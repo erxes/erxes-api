@@ -319,9 +319,6 @@ export const loadClass = () => {
       await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);
 
-      // create log
-      await ActivityLogs.createCustomerLog(customer);
-
       return customer;
     }
   }
