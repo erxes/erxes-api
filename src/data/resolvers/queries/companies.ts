@@ -33,7 +33,16 @@ const countBySegment = async (commonSelector, args: ICountArgs): Promise<ICountB
   });
 
   for (const s of segments) {
-    counts[s._id] = await count({ ...commonSelector, ...(await QueryBuilder.segments(s)) }, args);
+    try {
+      counts[s._id] = await count({ ...commonSelector, ...(await QueryBuilder.segments(s)) }, args);
+    } catch (e) {
+      // catch mongo error
+      if (e.name === 'CastError') {
+        counts[s._id] = 0;
+      } else {
+        throw new Error(e);
+      }
+    }
   }
 
   return counts;
