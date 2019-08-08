@@ -106,6 +106,6 @@ const userQueries = {
 requireLogin(userQueries, 'usersTotalCount');
 requireLogin(userQueries, 'userDetail');
 
-checkPermission(userQueries, 'users', 'showUsers', []);
+checkPermission(userQueries, 'users', 'showTeamMembers', []);
 
 export default userQueries;

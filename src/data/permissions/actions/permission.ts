@@ -600,29 +600,29 @@ export const moduleObjects = {
       },
     ],
   },
-  users: {
-    name: 'users',
-    description: 'Users',
+  teamMembers: {
+    name: 'teamMembers',
+    description: 'Team members',
     actions: [
       {
-        name: 'usersAll',
+        name: 'teamMembersAll',
         description: 'All',
-        use: ['showUsers', 'usersEdit', 'usersInvite', 'usersSetActiveStatus'],
+        use: ['showTeamMembers', 'teamMembersEdit', 'teamMembersInvite', 'teamMembersSetActiveStatus'],
       },
       {
-        name: 'showUsers',
-        description: 'Show users',
+        name: 'showTeamMembers',
+        description: 'Show team members',
       },
       {
-        name: 'usersSetActiveStatus',
-        description: 'Set active/deactive user',
+        name: 'teamMembersSetActiveStatus',
+        description: 'Set active/deactive team member',
       },
       {
-        name: 'usersEdit',
-        description: 'Update user',
+        name: 'teamMembersEdit',
+        description: 'Update team member',
       },
       {
-        name: 'usersInvite',
+        name: 'teamMembersInvite',
         description: 'Invite user',
       },
     ],

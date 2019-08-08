@@ -227,9 +227,9 @@ requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
 
-checkPermission(userMutations, 'usersEdit', 'usersEdit');
-checkPermission(userMutations, 'usersInvite', 'usersInvite');
-checkPermission(userMutations, 'usersResendInvitation', 'usersInvite');
-checkPermission(userMutations, 'usersSetActiveStatus', 'usersSetActiveStatus');
+checkPermission(userMutations, 'usersEdit', 'teamMembersEdit');
+checkPermission(userMutations, 'usersInvite', 'teamMembersInvite');
+checkPermission(userMutations, 'usersResendInvitation', 'teamMembersInvite');
+checkPermission(userMutations, 'usersSetActiveStatus', 'teamMembersSetActiveStatus');
 
 export default userMutations;
