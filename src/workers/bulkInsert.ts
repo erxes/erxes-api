@@ -13,7 +13,11 @@ export const intervals: any[] = [];
  * Receives and saves xls file in private/xlsImports folder
  * and imports customers to the database
  */
-export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
+export const importXlsFile = async (
+  file: any,
+  type: string,
+  { user, brandIds }: { brandIds: string[]; user: IUserDocument },
+) => {
   return new Promise(async (resolve, reject) => {
     if (!(await can('importXlsFile', user))) {
       return reject(new Error('Permission denied!'));
@@ -93,8 +97,9 @@ export const importXlsFile = async (file: any, type: string, { user }: { user: I
         const percentagePerData = Number(((1 / usedSheets.length) * 100).toFixed(3));
 
         const workerData = {
-          contentType: type,
+          brandIds,
           user,
+          contentType: type,
           properties,
           importHistoryId: importHistory._id,
           percentagePerData,
