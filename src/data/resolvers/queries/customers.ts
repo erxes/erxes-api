@@ -6,6 +6,7 @@ import { Builder as BuildQuery, IListArgs, sortBuilder } from '../../modules/coc
 import { getRelatedConformity } from '../../modules/conformity/conformityUtils';
 import QueryBuilder from '../../modules/segments/queryBuilder';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
 interface ICountBy {
@@ -90,13 +91,16 @@ const countByField = async (
 
 const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
   const counts: ICountBy = {};
+
   const integrations = await Integrations.find({ kind: { $in: INTEGRATION_KIND_CHOICES.ALL } }).select({
     _id: 1,
     name: 1,
     kind: 1,
   });
+
   const rawIntegrationIds: any = [];
   const integrationMap = {};
+
   integrations.forEach(element => {
     rawIntegrationIds.push(element._id);
     integrationMap[element._id] = element.kind;
@@ -106,6 +110,7 @@ const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
   const query = { integrationId: { $in: rawIntegrationIds } };
   const findQuery = { $and: [mainQuery, query] };
   const countData = await countByField(findQuery, 'integrationId', rawIntegrationIds);
+
   await Object.keys(countData).forEach(key => {
     const integrationName = integrationMap[key];
     counts[integrationName] += countData[key];
@@ -157,28 +162,30 @@ const customerQueries = {
   /**
    * Customers list
    */
-  async customers(_root, params: IListArgs) {
+  async customers(_root, params: IListArgs, { commonQuerySelector }: IContext) {
     const qb = new BuildQuery(params);
 
     await qb.buildAllQueries();
 
     const sort = sortBuilder(params);
 
-    return paginate(Customers.find(qb.mainQuery()).sort(sort), params);
+    return paginate(Customers.find({ ...commonQuerySelector, ...qb.mainQuery() }).sort(sort), params);
   },
 
   /**
    * Customers for only main list
    */
-  async customersMain(_root, params: IListArgs) {
+  async customersMain(_root, params: IListArgs, { commonQuerySelector }: IContext) {
     const qb = new BuildQuery(params);
 
     await qb.buildAllQueries();
 
     const sort = sortBuilder(params);
 
-    const list = await paginate(Customers.find(qb.mainQuery()).sort(sort), params);
-    const totalCount = await Customers.find(qb.mainQuery()).countDocuments();
+    const selector = { ...commonQuerySelector, ...qb.mainQuery() };
+
+    const list = await paginate(Customers.find(selector).sort(sort), params);
+    const totalCount = await Customers.find(selector).countDocuments();
 
     return { list, totalCount };
   },
@@ -186,7 +193,7 @@ const customerQueries = {
   /**
    * Group customer counts by brands, segments, integrations, tags
    */
-  async customerCounts(_root, params: ICountParams) {
+  async customerCounts(_root, params: ICountParams, { commonQuerySelector }: IContext) {
     const { only } = params;
 
     const counts = {
@@ -204,12 +211,12 @@ const customerQueries = {
 
     await qb.buildAllQueries();
 
-    let mainQuery = qb.mainQuery();
+    let mainQuery = { ...commonQuerySelector, ...qb.mainQuery() };
 
     // if passed at least one filter other than perPage
     // then find all filtered customers then add subsequent filter to it
     if (Object.keys(params).length > 1) {
-      const customers = await Customers.find(qb.mainQuery(), { _id: 1 });
+      const customers = await Customers.find(mainQuery, { _id: 1 });
       const customerIds = customers.map(customer => customer._id);
 
       mainQuery = { _id: { $in: customerIds } };

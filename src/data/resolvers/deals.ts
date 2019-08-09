@@ -1,7 +1,7 @@
 import { Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
-import { IUserDocument } from '../../db/models/definitions/users';
 import { getSavedConformity } from '../modules/conformity/conformityUtils';
+import { IContext } from '../types';
 import { boardId } from './boardUtils';
 
 export default {
@@ -84,7 +84,7 @@ export default {
     return Stages.findOne({ _id: deal.stageId });
   },
 
-  isWatched(deal: IDealDocument, _args, { user }: { user: IUserDocument }) {
+  isWatched(deal: IDealDocument, _args, { user }: IContext) {
     const watchedUserIds = deal.watchedUserIds || [];
 
     if (watchedUserIds.includes(user._id)) {

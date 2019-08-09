@@ -261,6 +261,7 @@ export const loadClass = () => {
       // Checking duplicated fields of customer
       await Customers.checkDuplication(customerFields, customerIds);
 
+      let scopeBrandIds: string[] = [];
       let tagIds: string[] = [];
 
       let emails: string[] = [];
@@ -282,6 +283,9 @@ export const loadClass = () => {
           // get last customer's integrationId
           customerFields.integrationId = customerObj.integrationId;
 
+          // Merging scopeBrandIds
+          scopeBrandIds = [...scopeBrandIds, ...(customerObj.scopeBrandIds || [])];
+
           const customerTags: string[] = customerObj.tagIds || [];
 
           // Merging customer's tag and companies into 1 array
@@ -295,18 +299,18 @@ export const loadClass = () => {
         }
       }
 
-      // Removing Duplicated Tags from customer
+      // Removing Duplicates
+      scopeBrandIds = Array.from(new Set(scopeBrandIds));
       tagIds = Array.from(new Set(tagIds));
 
       // Removing Duplicated Emails from customer
       emails = Array.from(new Set(emails));
-
-      // Removing Duplicated Phones from customer
       phones = Array.from(new Set(phones));
 
       // Creating customer with properties
       const customer = await this.createCustomer({
         ...customerFields,
+        scopeBrandIds,
         tagIds,
         mergedIds: customerIds,
         emails,

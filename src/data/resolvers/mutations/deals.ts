@@ -2,9 +2,9 @@ import { Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
@@ -17,8 +17,9 @@ const dealMutations = {
   /**
    * Create new deal
    */
-  async dealsAdd(_root, doc: IDeal, { user }: { user: IUserDocument }) {
+  async dealsAdd(_root, doc: IDeal, { user }: IContext) {
     doc.initialStageId = doc.stageId;
+
     const deal = await Deals.createDeal({
       ...doc,
       modifiedBy: user._id,
@@ -49,7 +50,7 @@ const dealMutations = {
   /**
    * Edit deal
    */
-  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }) {
+  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
     const oldDeal = await Deals.findOne({ _id });
 
     if (!oldDeal) {
@@ -95,7 +96,7 @@ const dealMutations = {
   async dealsChange(
     _root,
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
-    { user }: { user: IUserDocument },
+    { user }: IContext,
   ) {
     const deal = await Deals.findOne({ _id });
 
@@ -133,7 +134,7 @@ const dealMutations = {
   /**
    * Remove deal
    */
-  async dealsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const deal = await Deals.findOne({ _id });
 
     if (!deal) {
@@ -166,7 +167,7 @@ const dealMutations = {
   /**
    * Watch deal
    */
-  async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+  async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     const deal = await Deals.findOne({ _id });
 
     if (!deal) {

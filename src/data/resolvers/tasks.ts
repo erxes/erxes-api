@@ -1,7 +1,7 @@
 import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
-import { IUserDocument } from '../../db/models/definitions/users';
 import { getSavedConformity } from '../modules/conformity/conformityUtils';
+import { IContext } from '../types';
 import { boardId } from './boardUtils';
 
 export default {
@@ -47,7 +47,7 @@ export default {
     return Stages.findOne({ _id: task.stageId });
   },
 
-  isWatched(task: ITaskDocument, _args, { user }: { user: IUserDocument }) {
+  isWatched(task: ITaskDocument, _args, { user }: IContext) {
     const watchedUserIds = task.watchedUserIds || [];
 
     if (watchedUserIds.includes(user._id)) {

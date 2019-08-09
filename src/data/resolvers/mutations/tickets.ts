@@ -2,9 +2,9 @@ import { Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -16,7 +16,7 @@ const ticketMutations = {
   /**
    * Create new ticket
    */
-  async ticketsAdd(_root, doc: ITicket, { user }: { user: IUserDocument }) {
+  async ticketsAdd(_root, doc: ITicket, { user }: IContext) {
     const ticket = await Tickets.createTicket({
       ...doc,
       modifiedBy: user._id,
@@ -37,7 +37,7 @@ const ticketMutations = {
   /**
    * Edit ticket
    */
-  async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }) {
+  async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }: IContext) {
     const oldTicket = await Tickets.findOne({ _id });
 
     if (!oldTicket) {
@@ -70,7 +70,7 @@ const ticketMutations = {
   async ticketsChange(
     _root,
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
-    { user }: { user: IUserDocument },
+    { user }: IContext,
   ) {
     const ticket = await Tickets.updateTicket(_id, {
       modifiedAt: new Date(),
@@ -102,7 +102,7 @@ const ticketMutations = {
   /**
    * Remove ticket
    */
-  async ticketsRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async ticketsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const ticket = await Tickets.findOne({ _id });
 
     if (!ticket) {
@@ -124,7 +124,7 @@ const ticketMutations = {
   /**
    * Watch ticket
    */
-  async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+  async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     const ticket = await Tickets.findOne({ _id });
 
     if (!ticket) {

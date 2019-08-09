@@ -2,9 +2,9 @@ import { Tasks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -16,7 +16,7 @@ const taskMutations = {
   /**
    * Create new task
    */
-  async tasksAdd(_root, doc: ITask, { user }: { user: IUserDocument }) {
+  async tasksAdd(_root, doc: ITask, { user }: IContext) {
     const task = await Tasks.createTask({
       ...doc,
       modifiedBy: user._id,
@@ -37,7 +37,7 @@ const taskMutations = {
   /**
    * Edit task
    */
-  async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }) {
+  async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
     const oldTask = await Tasks.findOne({ _id });
 
     if (!oldTask) {
@@ -70,7 +70,7 @@ const taskMutations = {
   async tasksChange(
     _root,
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
-    { user }: { user: IUserDocument },
+    { user }: IContext,
   ) {
     const task = await Tasks.updateTask(_id, {
       modifiedAt: new Date(),
@@ -102,7 +102,7 @@ const taskMutations = {
   /**
    * Remove task
    */
-  async tasksRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async tasksRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const task = await Tasks.findOne({ _id });
 
     if (!task) {
@@ -124,7 +124,7 @@ const taskMutations = {
   /**
    * Watch task
    */
-  async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
+  async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     const task = await Tasks.findOne({ _id });
 
     if (!task) {
