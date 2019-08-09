@@ -294,7 +294,8 @@ export const BOARD_TYPES = {
   TICKET: 'ticket',
   TASK: 'task',
   GROWTH_HACK: 'growthHack',
-  ALL: ['deal', 'ticket', 'task', 'growthHack'],
+  GROWTH_HACK_TEMPLATE: 'growthHackTemplate',
+  ALL: ['deal', 'ticket', 'task', 'growthHack', 'growthHackTemplate'],
 };
 
 // module constants

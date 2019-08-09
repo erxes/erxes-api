@@ -195,6 +195,15 @@ const PERMISSION_MAP = {
     pipelinesRemove: 'growthHackPipelinesRemove',
     pipelinesWatch: 'growthHackPipelinesWatch',
   },
+  growthHackTemplate: {
+    boardsAdd: 'growthHackTemplateBoardsAdd',
+    boardsEdit: 'growthHackTemplateBoardsEdit',
+    boardsRemove: 'growthHackTemplateBoardsRemove',
+    pipelinesAdd: 'growthHackTemplatePipelinesAdd',
+    pipelinesEdit: 'growthHackTemplatePipelinesEdit',
+    pipelinesRemove: 'growthHackTemplatePipelinesRemove',
+    pipelinesWatch: 'growthHackTemplatePipelinesWatch',
+  },
 };
 
 export const checkPermission = async (type: string, user: IUserDocument, mutationName: string) => {

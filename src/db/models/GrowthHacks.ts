@@ -27,7 +27,7 @@ export const loadGrowthHackClass = () => {
     }
 
     /**
-     * Create a growthHack
+     * Create a growth hack
      */
     public static async createGrowthHack(doc: IGrowthHack) {
       const growthHacksCount = await GrowthHacks.find({
@@ -47,7 +47,7 @@ export const loadGrowthHackClass = () => {
     }
 
     /**
-     * Update GrowthHack
+     * Update growth hack
      */
     public static async updateGrowthHack(_id: string, doc: IGrowthHack) {
       await GrowthHacks.updateOne({ _id }, { $set: doc });
@@ -56,14 +56,14 @@ export const loadGrowthHackClass = () => {
     }
 
     /*
-     * Update given growthHacks orders
+     * Update given growth hack orders
      */
     public static async updateOrder(stageId: string, orders: IOrderInput[]) {
       return updateOrder(GrowthHacks, orders, stageId);
     }
 
     /**
-     * Watch growthHack
+     * Watch growth hack
      */
     public static async watchGrowthHack(_id: string, isAdd: boolean, userId: string) {
       return watchItem(GrowthHacks, _id, isAdd, userId);
@@ -92,6 +92,6 @@ export const loadGrowthHackClass = () => {
 loadGrowthHackClass();
 
 // tslint:disable-next-line
-const GrowthHacks = model<IGrowthHackDocument, IGrowthHackModel>('growthHacks', growthHackSchema);
+const GrowthHacks = model<IGrowthHackDocument, IGrowthHackModel>('growth_hacks', growthHackSchema);
 
 export default GrowthHacks;
