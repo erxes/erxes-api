@@ -1,5 +1,6 @@
 import { Conformities } from '../../../db/models';
 
+// return relTypeIds = string[]
 export const getSavedConformity = async ({
   mainType,
   mainTypeId,
@@ -207,4 +208,41 @@ export const changeConformity = async ({
     { $match: { $and: [{ relType: type }, { relTypeId: { $in: oldTypeIds } }] } },
     { relTypeId: newTypeId },
   );
+};
+
+export const getFilterConformity = async ({
+  mainType,
+  mainTypeIds,
+  relType,
+}: {
+  mainType: string;
+  mainTypeIds: string[];
+  relType: string;
+}) => {
+  const relTypeIds = await Conformities.aggregate([
+    {
+      $match: {
+        $or: [
+          {
+            $and: [{ mainType }, { mainTypeId: { $in: mainTypeIds } }, { relType }],
+          },
+          {
+            $and: [{ mainType: relType }, { relType: mainType }, { relTypeId: { $in: mainTypeIds } }],
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        relTypeId: {
+          $cond: {
+            if: { $eq: ['$mainType', mainType] },
+            then: '$relTypeId',
+            else: '$mainTypeId',
+          },
+        },
+      },
+    },
+  ]);
+  return relTypeIds.map(item => String(item.relTypeId));
 };

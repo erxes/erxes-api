@@ -1,4 +1,4 @@
-import { Companies, Conversations, Deals, Integrations, Tags, Users } from '../../db/models';
+import { Companies, Conversations, Integrations, Tags, Users } from '../../db/models';
 import { ICustomerDocument } from '../../db/models/definitions/customers';
 import { getSavedConformity } from '../modules/conformity/conformityUtils';
 
@@ -53,9 +53,5 @@ export default {
 
   owner(customer: ICustomerDocument) {
     return Users.findOne({ _id: customer.ownerId });
-  },
-
-  deals(customer: ICustomerDocument) {
-    return Deals.find({ customerIds: { $in: [customer._id] } });
   },
 };

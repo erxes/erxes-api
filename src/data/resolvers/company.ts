@@ -1,4 +1,4 @@
-import { Companies, Customers, Deals, Tags, Users } from '../../db/models';
+import { Companies, Customers, Tags, Users } from '../../db/models';
 import { ICompanyDocument } from '../../db/models/definitions/companies';
 import { getSavedConformity } from '../modules/conformity/conformityUtils';
 
@@ -22,9 +22,5 @@ export default {
 
   parentCompany(company: ICompanyDocument) {
     return Companies.findOne({ _id: company.parentCompanyId });
-  },
-
-  deals(company: ICompanyDocument) {
-    return Deals.find({ companyIds: { $in: [company._id] || [] } });
   },
 };

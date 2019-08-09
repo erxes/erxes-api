@@ -38,7 +38,6 @@ export const types = `
     customFieldsData: JSON
 
     customers: [Customer]
-    deals: [Deal]
     getTags: [Tag]
   }
 

@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { Stages } from '../../../db/models';
+import { getFilterConformity } from '../../modules/conformity/conformityUtils';
 import { getNextMonth, getToday } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -28,6 +29,7 @@ export const generateCommonFilters = async (args: any) => {
     order,
     probability,
     initialStageId,
+    type,
   } = args;
 
   const assignedToNoOne = value => {
@@ -47,12 +49,22 @@ export const generateCommonFilters = async (args: any) => {
     filter.$and = $and;
   }
 
-  if (customerIds) {
-    filter.customerIds = contains(customerIds);
+  if (customerIds && type) {
+    const relIds = await getFilterConformity({
+      mainType: 'customer',
+      mainTypeIds: customerIds,
+      relType: type,
+    });
+    filter._id = contains(relIds);
   }
 
-  if (companyIds) {
-    filter.companyIds = contains(companyIds);
+  if (companyIds && type) {
+    const relIds = await getFilterConformity({
+      mainType: 'company',
+      mainTypeIds: companyIds,
+      relType: type,
+    });
+    filter._id = contains(relIds);
   }
 
   if (order) {
@@ -134,6 +146,7 @@ export const generateCommonFilters = async (args: any) => {
 };
 
 export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
+  args.type = 'deal';
   const filter = await generateCommonFilters(args);
   const { productIds } = extraParams || args;
 
@@ -145,6 +158,7 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
 };
 
 export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
+  args.type = 'ticket';
   const filter = await generateCommonFilters(args);
   const { priority, source } = extraParams || args;
 
@@ -160,6 +174,7 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
 };
 
 export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
+  args.type = 'task';
   const filter = await generateCommonFilters(args);
   const { priority } = extraParams || args;
 
