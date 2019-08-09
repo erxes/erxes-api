@@ -66,6 +66,8 @@ export interface ICustomer {
   isUser?: boolean;
   integrationId?: string;
   tagIds?: string[];
+  // TODO migrate after remove 1row
+  companyIds?: string[];
   mergedIds?: string[];
   status?: string;
   customFieldsData?: any;
