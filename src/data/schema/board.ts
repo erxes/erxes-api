@@ -50,6 +50,7 @@ export const queries = `
   boardGetLast(type: String!): Board
   boardDetail(_id: String!): Board
   pipelines(boardId: String!): [Pipeline]
+  growthHackTemplates: [Pipeline]
   pipelineDetail(_id: String!): Pipeline
   stages(
     isNotLost: Boolean,

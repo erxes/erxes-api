@@ -64,6 +64,13 @@ const commonParams = `
   goal: String,
   hackDescription: String,
   formFields: JSON,
+
+  hackStage: String,
+  priority: String,
+  reach: Int,
+  impact: Int,
+  confidence: Int,
+  ease: Int,
 `;
 
 export const mutations = `
