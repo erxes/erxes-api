@@ -42,32 +42,32 @@ const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
       const customerLastStatus = await get(`customer_last_status_${customerId}`);
 
       // if customer's last status is left then mark as joined when customer ask
-      if (conversation && customerLastStatus === 'left') {
-        set(`customer_last_status_${customerId}`, 'joined');
+      if (conversation) {
+        if (customerLastStatus === 'left') {
+          set(`customer_last_status_${customerId}`, 'joined');
 
-        // customer has joined + time
-        const conversationMessages = await Conversations.changeCustomerStatus(
-          'joined',
-          customerId,
-          conversation.integrationId,
-        );
+          // customer has joined + time
+          const conversationMessages = await Conversations.changeCustomerStatus(
+            'joined',
+            customerId,
+            conversation.integrationId,
+          );
 
-        for (const message of conversationMessages) {
-          graphqlPubsub.publish('conversationMessageInserted', {
-            conversationMessageInserted: message,
+          for (const message of conversationMessages) {
+            graphqlPubsub.publish('conversationMessageInserted', {
+              conversationMessageInserted: message,
+            });
+          }
+
+          // notify as connected
+          graphqlPubsub.publish('customerConnectionChanged', {
+            customerConnectionChanged: {
+              _id: customerId,
+              status: 'connected',
+            },
           });
         }
 
-        // notify as connected
-        graphqlPubsub.publish('customerConnectionChanged', {
-          customerConnectionChanged: {
-            _id: customerId,
-            status: 'connected',
-          },
-        });
-      }
-
-      if (conversation) {
         sendMobileNotification({
           title: 'You have a new message',
           body: content,
