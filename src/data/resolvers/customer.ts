@@ -1,6 +1,5 @@
-import { Companies, Conversations, Integrations, Tags, Users } from '../../db/models';
+import { Companies, Conformities, Conversations, Integrations, Tags, Users } from '../../db/models';
 import { ICustomerDocument } from '../../db/models/definitions/customers';
-import { getSavedConformity } from '../modules/conformity/conformityUtils';
 
 interface IMessengerCustomData {
   name: string;
@@ -43,11 +42,12 @@ export default {
   },
 
   async companies(customer: ICustomerDocument) {
-    const companyIds = await getSavedConformity({
+    const companyIds = await Conformities.savedConformity({
       mainType: 'customer',
       mainTypeId: customer._id,
       relType: 'company',
     });
+
     return Companies.find({ _id: { $in: companyIds || [] } });
   },
 

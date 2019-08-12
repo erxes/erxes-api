@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
-import { changeConformity, removeConformity, saveConformity } from '../../data/modules/conformity/conformityUtils';
 import { validateEmail } from '../../data/utils';
-import { ActivityLogs, Conversations, EngageMessages, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -187,12 +186,13 @@ export const loadClass = () => {
      * Update customer companies
      */
     public static async updateCompanies(_id: string, companyIds: string[]) {
-      saveConformity({
+      Conformities.createConformity({
         mainType: 'customer',
         mainTypeId: _id,
         relType: 'company',
         relTypeIds: companyIds,
       });
+
       return Customers.findOne({ _id });
     }
 
@@ -249,7 +249,7 @@ export const loadClass = () => {
       await EngageMessages.removeCustomerEngages(customerId);
       await InternalNotes.removeCustomerInternalNotes(customerId);
 
-      await removeConformity({ mainType: 'customer', mainTypeId: customerId });
+      await Conformities.removeConformity({ mainType: 'customer', mainTypeId: customerId });
 
       return Customers.deleteOne({ _id: customerId });
     }
@@ -318,7 +318,7 @@ export const loadClass = () => {
       });
 
       // Updating every modules associated with customers
-      await changeConformity({ type: 'customer', newTypeId: customer._id, oldTypeIds: customerIds });
+      await Conformities.changeConformity({ type: 'customer', newTypeId: customer._id, oldTypeIds: customerIds });
       await Conversations.changeCustomer(customer._id, customerIds);
       await EngageMessages.changeCustomer(customer._id, customerIds);
       await InternalNotes.changeCustomer(customer._id, customerIds);

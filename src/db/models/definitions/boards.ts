@@ -66,17 +66,6 @@ export interface IOrderInput {
   order: number;
 }
 
-export interface IConformity {
-  mainType: string;
-  mainTypeId: string;
-  relType: string;
-  relTypeId: string;
-}
-
-export interface IConformityDocument extends IConformity, Document {
-  _id: string;
-}
-
 const attachmentSchema = new Schema(
   {
     name: field({ type: String }),
@@ -161,12 +150,4 @@ export const stageSchema = new Schema({
   }), // Win probability
   pipelineId: field({ type: String }),
   ...commonFieldsSchema,
-});
-
-export const conformitySchema = new Schema({
-  _id: field({ pkey: true }),
-  mainType: field({ type: String }),
-  mainTypeId: field({ type: String }),
-  relType: field({ type: String }),
-  relTypeId: field({ type: String }),
 });

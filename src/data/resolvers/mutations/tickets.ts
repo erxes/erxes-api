@@ -1,8 +1,7 @@
-import { Tickets } from '../../../db/models';
+import { Conformities, Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
-import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { itemsChange, sendNotifications } from '../boardUtils';
@@ -38,11 +37,7 @@ const ticketMutations = {
    * Edit ticket
    */
   async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }: IContext) {
-    const oldTicket = await Tickets.findOne({ _id });
-
-    if (!oldTicket) {
-      throw new Error('Ticket not found');
-    }
+    const oldTicket = await Tickets.getTicket(_id);
 
     const updatedTicket = await Tickets.updateTicket(_id, {
       ...doc,
@@ -103,11 +98,7 @@ const ticketMutations = {
    * Remove ticket
    */
   async ticketsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const ticket = await Tickets.findOne({ _id });
-
-    if (!ticket) {
-      throw new Error('ticket not found');
-    }
+    const ticket = await Tickets.getTicket(_id);
 
     await sendNotifications({
       item: ticket,
@@ -125,35 +116,31 @@ const ticketMutations = {
    * Watch ticket
    */
   async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
-    const ticket = await Tickets.findOne({ _id });
-
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
     return Tickets.watchTicket(_id, isAdd, user._id);
   },
 
   async ticketsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const ticket = await Tickets.findOne({ _id });
+    const ticket = await Tickets.getTicket(_id);
 
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
-    saveConformity({ mainType: 'ticket', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
+    Conformities.createConformity({
+      mainType: 'ticket',
+      mainTypeId: _id,
+      relType: 'company',
+      relTypeIds: companyIds,
+    });
 
     return ticket;
   },
 
   async ticketsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
-    const ticket = await Tickets.findOne({ _id });
+    const ticket = await Tickets.getTicket(_id);
 
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
-    saveConformity({ mainType: 'ticket', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
+    Conformities.createConformity({
+      mainType: 'ticket',
+      mainTypeId: _id,
+      relType: 'customer',
+      relTypeIds: customerIds,
+    });
 
     return ticket;
   },

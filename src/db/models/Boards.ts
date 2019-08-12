@@ -3,11 +3,8 @@ import { Deals, Tasks, Tickets } from './';
 import { updateOrder, watchItem } from './boardUtils';
 import {
   boardSchema,
-  conformitySchema,
   IBoard,
   IBoardDocument,
-  IConformity,
-  IConformityDocument,
   IPipeline,
   IPipelineDocument,
   IStage,
@@ -329,89 +326,9 @@ export const loadStageClass = () => {
   return stageSchema;
 };
 
-export interface IConformityModel extends Model<IConformityDocument> {
-  filterConformity(doc: IConformity): Promise<IConformityDocument>;
-  createConformity(doc: IConformity): Promise<IConformityDocument>;
-  removeConformity(doc: IConformity): Promise<IConformityDocument>;
-}
-
-export const loadConformityClass = () => {
-  class Conformity {
-    /*
-     * Get a stage
-     */
-    public static async filterConformity(doc: IConformity) {
-      return Conformities.find({
-        $or: [
-          {
-            $and: [
-              { mainType: doc.mainType },
-              { mainTypeId: doc.mainTypeId },
-              { relType: doc.relType },
-              { relTypeId: doc.relTypeId },
-            ],
-          },
-          {
-            $and: [
-              { mainType: doc.relType },
-              { mainTypeId: doc.relTypeId },
-              { relType: doc.mainType },
-              { relTypeId: doc.mainTypeId },
-            ],
-          },
-        ],
-      });
-    }
-
-    /**
-     * Create a stage
-     */
-    public static createConformity(doc: IConformity) {
-      return Conformities.create(doc);
-    }
-
-    /**
-     * Remove Stage
-     */
-    public static async removeConformity(doc: IConformity) {
-      const selector = {
-        $or: [
-          {
-            $and: [
-              { mainType: doc.mainType },
-              { mainTypeId: doc.mainTypeId },
-              { relType: doc.relType },
-              { relTypeId: doc.relTypeId },
-            ],
-          },
-          {
-            $and: [
-              { mainType: doc.relType },
-              { mainTypeId: doc.relTypeId },
-              { relType: doc.mainType },
-              { relTypeId: doc.mainTypeId },
-            ],
-          },
-        ],
-      };
-      const confirmity = await Conformities.findOne(selector);
-
-      if (!confirmity) {
-        throw new Error('Confirmity not found');
-      }
-
-      return Conformities.deleteOne(selector);
-    }
-  }
-
-  conformitySchema.loadClass(Conformity);
-  return conformitySchema;
-};
-
 loadBoardClass();
 loadPipelineClass();
 loadStageClass();
-loadConformityClass();
 
 // tslint:disable-next-line
 const Boards = model<IBoardDocument, IBoardModel>('boards', boardSchema);
@@ -422,7 +339,4 @@ const Pipelines = model<IPipelineDocument, IPipelineModel>('pipelines', pipeline
 // tslint:disable-next-line
 const Stages = model<IStageDocument, IStageModel>('stages', stageSchema);
 
-// tslint:disable-next-line
-const Conformities = model<IConformityDocument, IConformityModel>('conformity', conformitySchema);
-
-export { Boards, Conformities, Pipelines, Stages };
+export { Boards, Pipelines, Stages };

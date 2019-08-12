@@ -1,6 +1,5 @@
-import { Customers, Integrations, Segments } from '../../../db/models';
+import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
-import { getSavedConformity } from '../conformity/conformityUtils';
 import QueryBuilder from '../segments/queryBuilder';
 
 export interface IListArgs {
@@ -49,20 +48,16 @@ export const brandFilter = async (brandId: string): Promise<IBrandFilter> => {
   const integrations = await Integrations.find({ brandId }, { _id: 1 });
   const integrationIds = integrations.map(i => i._id);
 
-  const customers = await Customers.find({ integrationId: { $in: integrationIds } }, { companyIds: 1 });
+  const customers = await Customers.find({ integrationId: { $in: integrationIds } });
 
-  let companyIds: any = [];
+  const customerIds = await customers.map(customer => customer._id);
+  const companyIds = await Conformities.filterConformity({
+    mainType: 'customer',
+    mainTypeIds: customerIds,
+    relType: 'company',
+  });
 
-  for (const customer of customers) {
-    const customerCompanyIds = await getSavedConformity({
-      mainType: 'customer',
-      mainTypeId: customer._id,
-      relType: 'company',
-    });
-    companyIds = [...companyIds, ...(customerCompanyIds || [])];
-  }
-
-  return { _id: { $in: companyIds } };
+  return { _id: { $in: companyIds || [] } };
 };
 
 export const filter = async (params: IListArgs) => {

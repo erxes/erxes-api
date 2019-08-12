@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
-import { changeConformity, removeConformity, saveConformity } from '../../data/modules/conformity/conformityUtils';
-import { ActivityLogs, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
@@ -129,7 +128,7 @@ export const loadClass = () => {
      * Update company customers
      */
     public static async updateCustomers(_id: string, customerIds: string[]) {
-      saveConformity({
+      Conformities.createConformity({
         mainType: 'company',
         mainTypeId: _id,
         relType: 'customer',
@@ -146,7 +145,7 @@ export const loadClass = () => {
       // Removing modules associated with company
       await InternalNotes.removeCompanyInternalNotes(companyId);
 
-      await removeConformity({ mainType: 'company', mainTypeId: companyId });
+      await Conformities.removeConformity({ mainType: 'company', mainTypeId: companyId });
 
       return Companies.deleteOne({ _id: companyId });
     }
@@ -213,7 +212,7 @@ export const loadClass = () => {
       });
 
       // Updating customer companies, deals, tasks, tickets
-      await changeConformity({ type: 'company', newTypeId: company._id, oldTypeIds: companyIds });
+      await Conformities.changeConformity({ type: 'company', newTypeId: company._id, oldTypeIds: companyIds });
 
       // Removing modules associated with current companies
       await InternalNotes.changeCompany(company._id, companyIds);

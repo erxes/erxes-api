@@ -1,9 +1,10 @@
 import ActivityLogs from './ActivityLogs';
-import { Boards, Conformities, Pipelines, Stages } from './Boards';
+import { Boards, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
 import Channels from './Channels';
 import Companies from './Companies';
 import Configs from './Configs';
+import Conformities from './Conformity';
 import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
 import Customers from './Customers';

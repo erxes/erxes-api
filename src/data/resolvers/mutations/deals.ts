@@ -1,8 +1,7 @@
-import { Deals } from '../../../db/models';
+import { Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
-import { saveConformity } from '../../modules/conformity/conformityUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -51,11 +50,7 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
-    const oldDeal = await Deals.findOne({ _id });
-
-    if (!oldDeal) {
-      throw new Error('Deal not found');
-    }
+    const oldDeal = await Deals.getDeal(_id);
 
     const updatedDeal = await Deals.updateDeal(_id, {
       ...doc,
@@ -98,11 +93,7 @@ const dealMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
+    const deal = await Deals.getDeal(_id);
 
     await Deals.updateDeal(_id, {
       modifiedAt: new Date(),
@@ -135,11 +126,7 @@ const dealMutations = {
    * Remove deal
    */
   async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
+    const deal = await Deals.getDeal(_id);
 
     await sendNotifications({
       item: deal,
@@ -168,35 +155,21 @@ const dealMutations = {
    * Watch deal
    */
   async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
     return Deals.watchDeal(_id, isAdd, user._id);
   },
 
   async dealsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const deal = await Deals.findOne({ _id });
+    const deal = await Deals.getDeal(_id);
 
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
-    saveConformity({ mainType: 'deal', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
+    Conformities.createConformity({ mainType: 'deal', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
 
     return deal;
   },
 
   async dealsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
-    const deal = await Deals.findOne({ _id });
+    const deal = await Deals.getDeal(_id);
 
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
-    saveConformity({ mainType: 'deal', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
+    Conformities.createConformity({ mainType: 'deal', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
 
     return deal;
   },

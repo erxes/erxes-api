@@ -1,6 +1,5 @@
 import * as moment from 'moment';
-import { Stages } from '../../../db/models';
-import { getFilterConformity } from '../../modules/conformity/conformityUtils';
+import { Conformities, Stages } from '../../../db/models';
 import { getNextMonth, getToday } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -50,16 +49,16 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (customerIds && type) {
-    const relIds = await getFilterConformity({
+    const relIds = await Conformities.filterConformity({
       mainType: 'customer',
       mainTypeIds: customerIds,
       relType: type,
     });
-    filter._id = contains(relIds);
+    filter._id = contains(relIds || []);
   }
 
   if (companyIds && type) {
-    const relIds = await getFilterConformity({
+    const relIds = await Conformities.filterConformity({
       mainType: 'company',
       mainTypeIds: companyIds,
       relType: type,

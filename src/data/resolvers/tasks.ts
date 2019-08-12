@@ -1,12 +1,11 @@
-import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Conformities, Customers, Pipelines, Stages, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
-import { getSavedConformity } from '../modules/conformity/conformityUtils';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
 
 export default {
   async companies(task: ITaskDocument) {
-    const companyIds = await getSavedConformity({
+    const companyIds = await Conformities.savedConformity({
       mainType: 'task',
       mainTypeId: task._id,
       relType: 'company',
@@ -16,7 +15,7 @@ export default {
   },
 
   async customers(task: ITaskDocument) {
-    const customerIds = await getSavedConformity({
+    const customerIds = await Conformities.savedConformity({
       mainType: 'task',
       mainTypeId: task._id,
       relType: 'customer',

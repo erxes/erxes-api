@@ -1,14 +1,14 @@
-import { Companies, Customers, Tags, Users } from '../../db/models';
+import { Companies, Conformities, Customers, Tags, Users } from '../../db/models';
 import { ICompanyDocument } from '../../db/models/definitions/companies';
-import { getSavedConformity } from '../modules/conformity/conformityUtils';
 
 export default {
   async customers(company: ICompanyDocument) {
-    const customerIds = await getSavedConformity({
+    const customerIds = await Conformities.savedConformity({
       mainType: 'company',
       mainTypeId: company._id,
       relType: 'customer',
     });
+
     return Customers.find({ _id: { $in: customerIds || [] } });
   },
 

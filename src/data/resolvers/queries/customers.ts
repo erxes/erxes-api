@@ -1,9 +1,8 @@
-import { Brands, Customers, Forms, Integrations, Segments, Tags } from '../../../db/models';
+import { Brands, Conformities, Customers, Forms, Integrations, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, INTEGRATION_KIND_CHOICES } from '../../constants';
 import { Builder as BuildQuery, IListArgs, sortBuilder } from '../../modules/coc/customers';
-import { getRelatedConformity } from '../../modules/conformity/conformityUtils';
 import QueryBuilder from '../../modules/segments/queryBuilder';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -260,12 +259,12 @@ const customerQueries = {
   },
 
   async relatedCustomers(_root, params: IListArgs) {
-    const customerIds = await getRelatedConformity({
+    const customerIds = await Conformities.relatedConformity({
       mainType: params.itemKind || '',
       mainTypeId: params.itemId || '',
       relType: 'customer',
     });
-    return Customers.find({ _id: { $in: customerIds } });
+    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   /**
