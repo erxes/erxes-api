@@ -1,5 +1,7 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
+import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
+import { sendMobileNotification } from './data/utils';
 import { ActivityLogs, Conversations, Customers } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
@@ -28,8 +30,15 @@ const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
 
   if (action === 'callPublish') {
     if (data.trigger === 'conversationMessageInserted') {
-      const { customerId, conversationId } = data.payload;
-      const conversation = await Conversations.findOne({ _id: conversationId }, { integrationId: 1 });
+      const { customerId, conversationId, content } = data.payload;
+      const conversation = await Conversations.findOne(
+        { _id: conversationId },
+        {
+          integrationId: 1,
+          participatedUserIds: 1,
+          assignedUserId: 1,
+        },
+      );
       const customerLastStatus = await get(`customer_last_status_${customerId}`);
 
       // if customer's last status is left then mark as joined when customer ask
@@ -55,6 +64,16 @@ const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
             _id: customerId,
             status: 'connected',
           },
+        });
+      }
+
+      if (conversation) {
+        sendMobileNotification({
+          title: 'You have a new message',
+          body: content,
+          customerId,
+          conversationId,
+          receivers: conversationNotifReceivers(conversation, customerId),
         });
       }
     }
