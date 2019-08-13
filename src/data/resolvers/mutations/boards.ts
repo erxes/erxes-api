@@ -140,6 +140,33 @@ const boardMutations = {
   },
 
   /**
+   * Copy pipeline
+   */
+  // async pipelinesCopy(_root, { _id }: { _id: string }) {
+  // const pipeline = await Pipelines.findOne({ _id });
+
+  // if (pipeline) {
+  //   const stages = await Stages.find({ pipelineId: pipeline._id });
+
+  //   const copiedPipeline = { ...pipeline };
+
+  //   const copiedStages = [];
+
+  //   stages.forEach(stage => {
+  //     const copy = { ...stage };
+
+  //     if (copy) {
+  //       copiedStages.push(copy);
+  //     }
+  //   });
+
+  //   return Pipelines.createPipeline(copiedPipeline, copiedStages);
+  // }
+
+  //   return null;
+  // },
+
+  /**
    * Update stage orders
    */
   stagesUpdateOrder(_root, { orders }: { orders: IOrderInput[] }) {

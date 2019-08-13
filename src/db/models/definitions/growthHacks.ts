@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
-import { field } from '../utils';
 import { commonItemFieldsSchema, IItemCommonFields } from './boards';
+import { field } from './utils';
 
 export interface IGrowthHack extends IItemCommonFields {
   hackDescription?: string;
@@ -18,4 +18,10 @@ export const growthHackSchema = new Schema({
   hackDescription: field({ type: String }),
   goal: field({ type: String }),
   formFields: field({ type: Object }),
+  hackStage: field({ type: String }),
+  priority: field({ type: String }),
+  reach: field({ type: Number }),
+  impact: field({ type: Number }),
+  confidence: field({ type: Number }),
+  ease: field({ type: Number }),
 });
