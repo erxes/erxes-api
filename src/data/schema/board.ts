@@ -27,8 +27,8 @@ export const types = `
   type Stage {
     _id: String!
     name: String!
-    probability: String
     pipelineId: String!
+    probability: String
     amount: JSON
     itemsTotalCount: Int
     compareNextStage: JSON
@@ -94,6 +94,7 @@ export const mutations = `
   pipelinesUpdateOrder(orders: [OrderItem]): [Pipeline]
   pipelinesWatch(_id: String!, isAdd: Boolean, type: String!): Pipeline
   pipelinesRemove(_id: String!): JSON
+  pipelinesCopy(_id: String!, boardId: String, type: String): Pipeline
 
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON

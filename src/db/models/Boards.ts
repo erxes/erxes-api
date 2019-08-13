@@ -7,6 +7,7 @@ import {
   IBoardDocument,
   IPipeline,
   IPipelineDocument,
+  IPipelineStage,
   IStage,
   IStageDocument,
   pipelineSchema,
@@ -18,9 +19,6 @@ export interface IOrderInput {
   _id: string;
   order: number;
 }
-
-// Not mongoose document, just stage shaped plain object
-type IPipelineStage = IStage & { _id: string };
 
 const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId: string) => {
   let order = 0;

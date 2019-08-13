@@ -1,5 +1,5 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
-import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
+import { IBoard, IOrderInput, IPipeline, IPipelineStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
@@ -142,29 +142,39 @@ const boardMutations = {
   /**
    * Copy pipeline
    */
-  // async pipelinesCopy(_root, { _id }: { _id: string }) {
-  // const pipeline = await Pipelines.findOne({ _id });
+  async pipelinesCopy(_root, { _id, boardId, type }: { _id: string; boardId: string; type: string }) {
+    const pipeline = await Pipelines.findOne({ _id });
 
-  // if (pipeline) {
-  //   const stages = await Stages.find({ pipelineId: pipeline._id });
+    if (pipeline) {
+      const stages = await Stages.find({ pipelineId: pipeline._id });
 
-  //   const copiedPipeline = { ...pipeline };
+      const copiedPipeline = {
+        name: `Copy of ${pipeline.name}`,
+        boardId,
+        type,
+        visibility: pipeline.visibility,
+        memberIds: pipeline.memberIds,
+        bgColor: pipeline.bgColor,
+      };
 
-  //   const copiedStages = [];
+      const copiedStages: IPipelineStage[] = [];
 
-  //   stages.forEach(stage => {
-  //     const copy = { ...stage };
+      stages.forEach(stage => {
+        const copied = {
+          name: stage.name,
+          formId: stage.formId,
+          type,
+          _id: Math.random().toString(),
+        };
 
-  //     if (copy) {
-  //       copiedStages.push(copy);
-  //     }
-  //   });
+        copiedStages.push(copied);
+      });
 
-  //   return Pipelines.createPipeline(copiedPipeline, copiedStages);
-  // }
+      return Pipelines.createPipeline(copiedPipeline, copiedStages);
+    }
 
-  //   return null;
-  // },
+    return null;
+  },
 
   /**
    * Update stage orders

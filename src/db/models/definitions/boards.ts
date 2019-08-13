@@ -61,6 +61,9 @@ export interface IStageDocument extends IStage, Document {
   _id: string;
 }
 
+// Not mongoose document, just stage shaped plain object
+export type IPipelineStage = IStage & { _id: string };
+
 export interface IOrderInput {
   _id: string;
   order: number;
