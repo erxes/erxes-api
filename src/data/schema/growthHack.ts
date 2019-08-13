@@ -20,6 +20,12 @@ export const types = `
     hackDescription: String
     formFields: JSON
     goal: String
+    hackStage: String
+    priority: String
+    reach: Int
+    impact: Int
+    confidence: Int
+    ease: Int
     assignedUsers: [User]
     modifiedAt: Date
     modifiedBy: String
@@ -64,6 +70,12 @@ const commonParams = `
   goal: String,
   hackDescription: String,
   formFields: JSON,
+  hackStage: String,
+  priority: String,
+  reach: Int,
+  impact: Int,
+  confidence: Int,
+  ease: Int,
 
   hackStage: String,
   priority: String,
