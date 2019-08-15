@@ -163,6 +163,7 @@ const boardMutations = {
         const copied = {
           name: stage.name,
           formId: stage.formId,
+          pipelineId: stage.pipelineId,
           type,
           _id: Math.random().toString(),
         };

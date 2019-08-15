@@ -1,4 +1,4 @@
-import { GrowthHacks } from '../../../db/models';
+import { GrowthHacks, Stages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -49,11 +49,7 @@ const growthHackMutations = {
    * Edit growthHack
    */
   async growthHacksEdit(_root, { _id, ...doc }: IGrowthHacksEdit, { user }) {
-    const oldGrowthHack = await GrowthHacks.findOne({ _id });
-
-    if (!oldGrowthHack) {
-      throw new Error('Growth hack not found');
-    }
+    const oldGrowthHack = await GrowthHacks.getGrowthHack(_id);
 
     const updatedGrowthHack = await GrowthHacks.updateGrowthHack(_id, {
       ...doc,
@@ -96,7 +92,7 @@ const growthHackMutations = {
    */
   async growthHacksChange(
     _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId: string },
+    { _id, destinationStageId, formFields }: { _id: string; destinationStageId: string; formFields: JSON },
     { user }: { user: IUserDocument },
   ) {
     const growthHack = await GrowthHacks.findOne({ _id });
@@ -109,6 +105,7 @@ const growthHackMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
+      formFields,
     });
 
     const { content, action } = await itemsChange(GrowthHacks, growthHack, 'growthHack', destinationStageId);
@@ -123,6 +120,25 @@ const growthHackMutations = {
     });
 
     return growthHack;
+  },
+
+  /**
+   * Save growth hack form field
+   */
+  async growthHacksSaveFormFields(
+    _root,
+    { _id, stageId, formFields }: { _id: string; stageId: string; formFields: JSON },
+    { user }: { user: IUserDocument },
+  ) {
+    await GrowthHacks.updateGrowthHack(_id, {
+      modifiedAt: new Date(),
+      modifiedBy: user._id,
+      formFields,
+    });
+
+    const stage = await Stages.getStage(stageId);
+
+    return stage.formId;
   },
 
   /**
