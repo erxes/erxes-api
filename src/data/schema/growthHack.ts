@@ -33,6 +33,7 @@ export const types = `
     attachments: [Attachment]
     isWatched: Boolean
     formId: String
+    scoringType: String
     ${commonTypes}
   }
 `;

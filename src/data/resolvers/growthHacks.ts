@@ -17,11 +17,7 @@ export default {
   },
 
   async pipeline(growthHack: IGrowthHackDocument) {
-    const stage = await Stages.findOne({ _id: growthHack.stageId });
-
-    if (!stage) {
-      return null;
-    }
+    const stage = await Stages.getStage(growthHack.stageId);
 
     return Pipelines.findOne({ _id: stage.pipelineId });
   },
@@ -31,13 +27,16 @@ export default {
   },
 
   async formId(growthHack: IGrowthHackDocument) {
-    const stage = await Stages.findOne({ _id: growthHack.stageId });
-
-    if (!stage) {
-      return null;
-    }
+    const stage = await Stages.getStage(growthHack.stageId);
 
     return stage.formId;
+  },
+
+  async scoringType(growthHack: IGrowthHackDocument) {
+    const stage = await Stages.getStage(growthHack.stageId);
+    const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+
+    return pipeline.hackScoringType;
   },
 
   stage(growthHack: IGrowthHackDocument) {

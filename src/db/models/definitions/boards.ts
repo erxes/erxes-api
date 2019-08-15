@@ -19,7 +19,7 @@ export interface IItemCommonFields {
   watchedUserIds?: string[];
   notifiedUserIds?: string[];
   attachments?: any[];
-  stageId?: string;
+  stageId: string;
   initialStageId?: string;
   modifiedAt?: Date;
   modifiedBy?: string;
@@ -53,7 +53,7 @@ export interface IPipelineDocument extends IPipeline, Document {
 export interface IStage extends ICommonFields {
   name?: string;
   probability?: string;
-  pipelineId?: string;
+  pipelineId: string;
   formId?: string;
 }
 
@@ -110,7 +110,7 @@ export const commonItemFieldsSchema = {
   assignedUserIds: field({ type: [String] }),
   watchedUserIds: field({ type: [String] }),
   attachments: field({ type: [attachmentSchema] }),
-  stageId: field({ type: String, optional: true }),
+  stageId: field({ type: String }),
   initialStageId: field({ type: String, optional: true }),
   modifiedAt: field({
     type: Date,
