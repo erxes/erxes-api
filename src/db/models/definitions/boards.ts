@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { BOARD_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
+import { BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
@@ -30,7 +30,6 @@ export interface IItemCommonFields {
 
 export interface IBoard extends ICommonFields {
   name?: string;
-  isDefault?: boolean;
 }
 
 export interface IBoardDocument extends IBoard, Document {
@@ -44,6 +43,7 @@ export interface IPipeline extends ICommonFields {
   memberIds?: string[];
   bgColor?: string;
   watchedUserIds?: string[];
+  hackScoringType?: string;
 }
 
 export interface IPipelineDocument extends IPipeline, Document {
@@ -123,10 +123,6 @@ export const boardSchema = schemaWrapper(
   new Schema({
     _id: field({ pkey: true }),
     name: field({ type: String }),
-    isDefault: field({
-      type: Boolean,
-      default: false,
-    }),
     ...commonFieldsSchema,
   }),
 );
@@ -143,6 +139,10 @@ export const pipelineSchema = new Schema({
   watchedUserIds: field({ type: [String] }),
   memberIds: field({ type: [String] }),
   bgColor: field({ type: String }),
+  hackScoringType: field({
+    type: String,
+    enum: HACK_SCORING_TYPES.ALL,
+  }),
   ...commonFieldsSchema,
 });
 

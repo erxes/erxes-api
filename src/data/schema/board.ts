@@ -21,6 +21,7 @@ export const types = `
     members: [User]
     bgColor: String
     isWatched: Boolean
+    hackScoringType: String
     ${commonTypes}
   }
 
@@ -81,7 +82,8 @@ const pipelineParams = `
   stages: JSON,
   visibility: String!,
   memberIds: [String],
-  bgColor: String
+  bgColor: String,
+  hackScoringType: String
 `;
 
 export const mutations = `
