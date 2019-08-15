@@ -294,7 +294,6 @@ export const loadClass = () => {
             isActive: true,
             registrationToken: undefined,
             username,
-            getNotificationByEmail: true,
             details: {
               fullName,
             },
