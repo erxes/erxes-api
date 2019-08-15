@@ -143,6 +143,12 @@ export const PIPELINE_VISIBLITIES = {
   ALL: ['public', 'private'],
 };
 
+export const HACK_SCORING_TYPES = {
+  RICE: 'rice',
+  ICE: 'ice',
+  ALL: ['rice', 'ice'],
+};
+
 export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
