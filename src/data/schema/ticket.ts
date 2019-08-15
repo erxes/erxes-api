@@ -64,8 +64,6 @@ export const mutations = `
   ticketsAdd(${commonParams}): Ticket
   ticketsEdit(_id: String!, ${commonParams}): Ticket
   ticketsChange( _id: String!, destinationStageId: String): Ticket
-  ticketsEditCompanies(_id: String!, companyIds: [String]!): Ticket
-  ticketsEditCustomers(_id: String!, customerIds: [String]!): Ticket
   ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]
   ticketsRemove(_id: String!): Ticket
   ticketsWatch(_id: String, isAdd: Boolean): Ticket

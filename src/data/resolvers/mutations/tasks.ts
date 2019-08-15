@@ -1,4 +1,4 @@
-import { Conformities, Tasks } from '../../../db/models';
+import { Tasks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
@@ -117,32 +117,6 @@ const taskMutations = {
    */
   async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Tasks.watchTask(_id, isAdd, user._id);
-  },
-
-  async tasksEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const task = await Tasks.getTask(_id);
-
-    Conformities.createConformity({
-      mainType: 'task',
-      mainTypeId: _id,
-      relType: 'company',
-      relTypeIds: companyIds,
-    });
-
-    return task;
-  },
-
-  async tasksEditCustomers(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const task = await Tasks.getTask(_id);
-
-    Conformities.createConformity({
-      mainType: 'task',
-      mainTypeId: _id,
-      relType: 'customer',
-      relTypeIds: companyIds,
-    });
-
-    return task;
   },
 };
 

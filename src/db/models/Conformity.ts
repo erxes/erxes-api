@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { Deals, Tasks, Tickets } from './';
 import {
   conformitySchema,
   IConformity,
@@ -25,8 +26,20 @@ const getSavedAnyConformityMatch = ({ mainType, mainTypeId }: { mainType: string
   };
 };
 
+const getMainItem = (mainType: string, mainTypeId: string) => {
+  switch (mainType) {
+    case 'deal':
+      return Deals.getDeal(mainTypeId);
+    case 'task':
+      return Tasks.getTask(mainTypeId);
+    case 'ticket':
+      return Tickets.getTicket(mainTypeId);
+  }
+};
+
 export interface IConformityModel extends Model<IConformityDocument> {
-  createConformity(doc: IConformityCreate): void;
+  addConformity(doc: IConformity): Promise<IConformityDocument>;
+  createConformity(doc: IConformityCreate): Promise<any>;
   savedConformity(doc: IConformitySaved): Promise<string[]>;
   changeConformity(doc: IConformityChange): void;
   filterConformity(doc: IConformityFilter): Promise<string[]>;
@@ -39,6 +52,10 @@ export const loadConformityClass = () => {
     /**
      * Create a conformity
      */
+    public static async addConformity(doc: IConformity) {
+      return Conformities.create(doc);
+    }
+
     public static async createConformity(doc: IConformityCreate) {
       const newRelTypeIds = doc.relTypeIds || [];
       const oldRelTypeIds = await Conformity.savedConformity({
@@ -80,6 +97,7 @@ export const loadConformityClass = () => {
           },
         ],
       });
+      return getMainItem(doc.mainType, doc.mainTypeId);
     }
 
     public static async savedConformity(doc: IConformitySaved) {

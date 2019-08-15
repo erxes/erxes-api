@@ -1,4 +1,4 @@
-import { Conformities, Deals } from '../../../db/models';
+import { Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
@@ -156,22 +156,6 @@ const dealMutations = {
    */
   async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Deals.watchDeal(_id, isAdd, user._id);
-  },
-
-  async dealsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const deal = await Deals.getDeal(_id);
-
-    Conformities.createConformity({ mainType: 'deal', mainTypeId: _id, relType: 'company', relTypeIds: companyIds });
-
-    return deal;
-  },
-
-  async dealsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
-    const deal = await Deals.getDeal(_id);
-
-    Conformities.createConformity({ mainType: 'deal', mainTypeId: _id, relType: 'customer', relTypeIds: customerIds });
-
-    return deal;
   },
 };
 

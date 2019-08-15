@@ -1,4 +1,4 @@
-import { Conformities, Tickets } from '../../../db/models';
+import { Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
@@ -117,32 +117,6 @@ const ticketMutations = {
    */
   async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Tickets.watchTicket(_id, isAdd, user._id);
-  },
-
-  async ticketsEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    const ticket = await Tickets.getTicket(_id);
-
-    Conformities.createConformity({
-      mainType: 'ticket',
-      mainTypeId: _id,
-      relType: 'company',
-      relTypeIds: companyIds,
-    });
-
-    return ticket;
-  },
-
-  async ticketsEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
-    const ticket = await Tickets.getTicket(_id);
-
-    Conformities.createConformity({
-      mainType: 'ticket',
-      mainTypeId: _id,
-      relType: 'customer',
-      relTypeIds: customerIds,
-    });
-
-    return ticket;
   },
 };
 

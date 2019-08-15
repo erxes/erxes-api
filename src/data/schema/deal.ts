@@ -94,8 +94,6 @@ export const mutations = `
   dealsAdd(${commonParams}): Deal
   dealsEdit(_id: String!, ${commonParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
-  dealsEditCompanies(_id: String!, companyIds: [String]!): Deal
-  dealsEditCustomers(_id: String!, customerIds: [String]!): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal

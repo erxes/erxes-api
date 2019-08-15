@@ -61,8 +61,6 @@ export const mutations = `
   tasksAdd(${commonParams}): Task
   tasksEdit(_id: String!, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
-  tasksEditCompanies(_id: String!, companyIds: [String]!): Task
-  tasksEditCustomers(_id: String!, customerIds: [String]!): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task

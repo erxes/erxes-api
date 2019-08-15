@@ -5,7 +5,7 @@ export const types = `
     createdAt: Date
     modifiedAt: Date
     avatar: String
-    
+
     size: Int
     website: String
     industry: String
