@@ -3,7 +3,9 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { UsersGroups } from '.';
+import { NotificationConfigurations, UsersGroups } from '.';
+import { NOTIFICATION_TYPES } from './definitions/constants';
+import { IConfig } from './definitions/notifications';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -294,12 +296,15 @@ export const loadClass = () => {
             isActive: true,
             registrationToken: undefined,
             username,
+            getNotificationByEmail: true,
             details: {
               fullName,
             },
           },
         },
       );
+
+      await this.enableNotifications(user._id);
 
       return user;
     }
@@ -580,6 +585,19 @@ export const loadClass = () => {
         token,
         refreshToken,
       };
+    }
+
+    /**
+     * Enable notifications on user confirmation
+     */
+    public static async enableNotifications(user: string) {
+      const doc: IConfig[] = [];
+
+      for (const notifType of NOTIFICATION_TYPES.ALL) {
+        doc.push({ user, notifType, isAllowed: true });
+      }
+
+      return NotificationConfigurations.insertMany(doc);
     }
   }
 
