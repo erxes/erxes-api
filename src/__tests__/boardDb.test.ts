@@ -212,6 +212,7 @@ describe('Test board model', () => {
       name: stageName,
       userId: user._id,
       type: 'deal',
+      pipelineId: pipeline._id,
     });
 
     expect(updatedStage).toBeDefined();
