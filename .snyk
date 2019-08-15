@@ -175,4 +175,67 @@ ignore:
     - firebase-admin > @google-cloud/firestore > lodash.merge:
         reason: None given
         expires: '2019-08-08T03:54:50.957Z'
-patch: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-AXIOS-174505:
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > googleapis-common > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > google-auth-library > gcp-metadata > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > googleapis-common > google-auth-library > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > google-auth-library > gtoken > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > googleapis-common > google-auth-library > gtoken > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > googleapis-common > google-auth-library > gcp-metadata > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - googleapis > google-auth-library > axios:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > gtoken > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > google-auth-library > gcp-metadata > axios':
+        patched: '2019-08-15T21:26:07.249Z'
+  SNYK-JS-LODASH-450202:
+    - '@google-cloud/pubsub > google-auto-auth > async > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
+    - xlsx-populate > lodash:
+        patched: '2019-08-15T21:26:07.249Z'
+    - apollo-server-express > apollo-server-core > lodash:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/storage > async > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
+    - mongoose > async > lodash:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-gax > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
+    - firebase-admin > @google-cloud/storage > async > lodash:
+        patched: '2019-08-15T21:26:07.249Z'
+    - apollo-server-express > apollo-server-core > apollo-engine-reporting > lodash:
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > google-gax > google-auto-auth > async > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > split-array-stream > async > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
+    - '@google-cloud/pubsub > @google-cloud/common > google-auto-auth > async > lodash':
+        patched: '2019-08-15T21:26:07.249Z'
