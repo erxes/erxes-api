@@ -89,7 +89,8 @@ const commonParams = `
 export const mutations = `
   growthHacksAdd(${commonParams}): GrowthHack
   growthHacksEdit(_id: String!, ${commonParams}): GrowthHack
-  growthHacksChange( _id: String!, destinationStageId: String): GrowthHack
+  growthHacksChange( _id: String!, destinationStageId: String!): GrowthHack
+  growthHacksSaveFormFields( _id: String!, stageId: String!, formFields: JSON!): String
   growthHacksUpdateOrder(stageId: String!, orders: [OrderItem]): [GrowthHack]
   growthHacksRemove(_id: String!): GrowthHack
   growthHacksWatch(_id: String, isAdd: Boolean): GrowthHack
