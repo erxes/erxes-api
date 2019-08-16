@@ -38,6 +38,8 @@ export const queries = `
     date: ItemDate
     skip: Int
     search: String
+    companyIds: [String]
+    customerIds: [String]
     assignedUserIds: [String]
     nextDay: String
     nextWeek: String

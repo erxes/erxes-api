@@ -57,6 +57,8 @@ export const queries = `
     date: ItemDate
     skip: Int
     search: String
+    companyIds: [String]
+    customerIds: [String]
     assignedUserIds: [String]
     productIds: [String]
     nextDay: String
@@ -71,6 +73,8 @@ export const queries = `
     mainType: String
     mainTypeIds: [String]
     relType: String
+    companyIds: [String]
+    customerIds: [String]
     assignedUserIds: [String]
     productIds: [String]
     nextDay: String
