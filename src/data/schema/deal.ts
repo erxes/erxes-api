@@ -51,8 +51,9 @@ export const queries = `
     initialStageId: String
     pipelineId: String
     stageId: String
-    companyIds: [String]
-    customerIds: [String]
+    mainType: String
+    mainTypeIds: [String]
+    relType: String
     date: ItemDate
     skip: Int
     search: String
@@ -67,8 +68,9 @@ export const queries = `
   dealsTotalAmounts(
     date: ItemDate
     pipelineId: String
-    companyIds: [String]
-    customerIds: [String]
+    mainType: String
+    mainTypeIds: [String]
+    relType: String
     assignedUserIds: [String]
     productIds: [String]
     nextDay: String

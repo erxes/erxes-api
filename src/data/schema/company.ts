@@ -68,8 +68,8 @@ const queryParams = `
   sortField: String
   sortDirection: Int
   brand: String
-  itemId: String
-  itemKind: String
+  mainType: String
+  mainTypeId: String
 `;
 
 export const queries = `

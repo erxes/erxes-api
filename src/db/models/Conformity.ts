@@ -2,7 +2,7 @@ import { Model, model } from 'mongoose';
 import { Deals, Tasks, Tickets } from './';
 import {
   conformitySchema,
-  IConformity,
+  IConformityAdd,
   IConformityChange,
   IConformityCreate,
   IConformityDocument,
@@ -38,7 +38,7 @@ const getMainItem = (mainType: string, mainTypeId: string) => {
 };
 
 export interface IConformityModel extends Model<IConformityDocument> {
-  addConformity(doc: IConformity): Promise<IConformityDocument>;
+  addConformity(doc: IConformityAdd): Promise<IConformityDocument>;
   createConformity(doc: IConformityCreate): Promise<any>;
   savedConformity(doc: IConformitySaved): Promise<string[]>;
   changeConformity(doc: IConformityChange): void;
@@ -52,8 +52,15 @@ export const loadConformityClass = () => {
     /**
      * Create a conformity
      */
-    public static async addConformity(doc: IConformity) {
-      return Conformities.create(doc);
+    public static async addConformity(doc: IConformityAdd) {
+      return doc.mainTypeIds.map(mainTypeId => {
+        Conformities.create({
+          mainType: doc.mainType,
+          mainTypeId,
+          relType: doc.relType,
+          relTypeId: doc.relTypeId,
+        });
+      });
     }
 
     public static async createConformity(doc: IConformityCreate) {
@@ -252,7 +259,7 @@ export const loadConformityClass = () => {
     /**
      * Remove conformity
      */
-    public static async removeConformity(doc: IConformity) {
+    public static async removeConformity(doc: IConformityRemove) {
       const match = getSavedAnyConformityMatch({
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,

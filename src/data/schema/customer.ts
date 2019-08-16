@@ -81,8 +81,8 @@ const queryParams = `
   leadStatus: String
   sortField: String
   sortDirection: Int
-  itemId: String
-  itemKind: String
+  mainType: String
+  mainTypeId: String
 `;
 
 export const queries = `

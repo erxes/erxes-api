@@ -23,12 +23,12 @@ export const generateCommonFilters = async (args: any) => {
     nextWeek,
     noCloseDate,
     assignedUserIds,
-    customerIds,
-    companyIds,
+    mainType,
+    mainTypeIds,
+    relType,
     order,
     probability,
     initialStageId,
-    type,
   } = args;
 
   const assignedToNoOne = value => {
@@ -48,22 +48,13 @@ export const generateCommonFilters = async (args: any) => {
     filter.$and = $and;
   }
 
-  if (customerIds && type) {
+  if (mainType && mainTypeIds && relType) {
     const relIds = await Conformities.filterConformity({
-      mainType: 'customer',
-      mainTypeIds: customerIds,
-      relType: type,
+      mainType,
+      mainTypeIds,
+      relType,
     });
     filter._id = contains(relIds || []);
-  }
-
-  if (companyIds && type) {
-    const relIds = await Conformities.filterConformity({
-      mainType: 'company',
-      mainTypeIds: companyIds,
-      relType: type,
-    });
-    filter._id = contains(relIds);
   }
 
   if (order) {
@@ -145,7 +136,6 @@ export const generateCommonFilters = async (args: any) => {
 };
 
 export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'deal';
   const filter = await generateCommonFilters(args);
   const { productIds } = extraParams || args;
 
@@ -157,7 +147,6 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
 };
 
 export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'ticket';
   const filter = await generateCommonFilters(args);
   const { priority, source } = extraParams || args;
 
@@ -173,7 +162,6 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
 };
 
 export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'task';
   const filter = await generateCommonFilters(args);
   const { priority } = extraParams || args;
 

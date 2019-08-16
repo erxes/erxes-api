@@ -8,6 +8,13 @@ export interface IConformity {
   relTypeId: string;
 }
 
+export interface IConformityAdd {
+  mainType: string;
+  mainTypeIds: string[];
+  relType: string;
+  relTypeId: string;
+}
+
 export interface IConformityCreate {
   mainType: string;
   mainTypeId: string;

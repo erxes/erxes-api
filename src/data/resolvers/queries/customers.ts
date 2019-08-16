@@ -260,8 +260,8 @@ const customerQueries = {
 
   async relatedCustomers(_root, params: IListArgs) {
     const customerIds = await Conformities.relatedConformity({
-      mainType: params.itemKind || '',
-      mainTypeId: params.itemId || '',
+      mainType: params.mainType || '',
+      mainTypeId: params.mainTypeId || '',
       relType: 'customer',
     });
     return Customers.find({ _id: { $in: customerIds || [] } });

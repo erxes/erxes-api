@@ -31,8 +31,9 @@ export const queries = `
   tasks(
     pipelineId: String
     stageId: String
-    companyIds: [String]
-    customerIds: [String]
+    mainType: String
+    mainTypeIds: [String]
+    relType: String
     date: ItemDate
     skip: Int
     search: String

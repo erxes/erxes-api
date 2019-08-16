@@ -14,8 +14,8 @@ export interface IListArgs {
   sortField?: string;
   sortDirection?: number;
   brand?: string;
-  itemId?: string;
-  itemKind?: string;
+  mainType?: string;
+  mainTypeId?: string;
 }
 
 interface IIn {

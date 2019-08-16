@@ -14,7 +14,7 @@ export const types = `
 
 const commonParams = `
   mainType: String
-  mainTypeId: String
+  mainTypeIds: [String]
   relType: String
   relTypeId: String
 `;

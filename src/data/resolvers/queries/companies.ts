@@ -154,8 +154,8 @@ const companyQueries = {
 
   async relatedCompanies(_root, params: IListArgs) {
     const companyIds = await Conformities.relatedConformity({
-      mainType: params.itemKind || '',
-      mainTypeId: params.itemId || '',
+      mainType: params.mainType || '',
+      mainTypeId: params.mainTypeId || '',
       relType: 'company',
     });
     return Companies.find({ _id: { $in: companyIds || [] } });

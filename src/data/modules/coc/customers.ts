@@ -44,8 +44,8 @@ export interface IListArgs {
   byFakeSegment?: any;
   integrationType?: string;
   integration?: string;
-  itemId?: string;
-  itemKind?: string;
+  mainType?: string;
+  mainTypeId?: string;
 }
 
 interface IIntegrationIds {
