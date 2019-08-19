@@ -1,19 +1,27 @@
 import { PipelineTemplates } from '../../../db/models';
-import { IPipelineTemplate } from '../../../db/models/definitions/pipelineTemplates';
+import { IPipelineTemplate, IPipelineTemplateStage } from '../../../db/models/definitions/pipelineTemplates';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IPipelineTemplatesEdit extends IPipelineTemplate {
   _id: string;
+  stages: IPipelineTemplateStage[];
+}
+
+interface IPipelineTemplatesAdd extends IPipelineTemplate {
+  stages: IPipelineTemplateStage[];
 }
 
 const pipelineTemplateMutations = {
   /**
    * Create new pipeline template
    */
-  async pipelineTemplatesAdd(_root, doc: IPipelineTemplate, { user, docModifier }: IContext) {
-    const pipelineTemplate = await PipelineTemplates.createPipelineTemplate(docModifier({ userId: user._id, ...doc }));
+  async pipelineTemplatesAdd(_root, { stages, ...doc }: IPipelineTemplatesAdd, { user, docModifier }: IContext) {
+    const pipelineTemplate = await PipelineTemplates.createPipelineTemplate(
+      docModifier({ userId: user._id, ...doc }),
+      stages,
+    );
 
     await putCreateLog(
       {
@@ -31,9 +39,10 @@ const pipelineTemplateMutations = {
   /**
    * Edit pipeline template
    */
-  async pipelineTemplatesEdit(_root, { _id, ...doc }: IPipelineTemplatesEdit, { user, docModifier }: IContext) {
+  async pipelineTemplatesEdit(_root, { _id, stages, ...doc }: IPipelineTemplatesEdit, { user, docModifier }: IContext) {
     const pipelineTemplate = await PipelineTemplates.findOne({ _id });
-    const updated = await PipelineTemplates.updatePipelineTemplate(_id, docModifier(doc));
+
+    const updated = await PipelineTemplates.updatePipelineTemplate(_id, docModifier(doc), stages);
 
     if (pipelineTemplate) {
       await putUpdateLog(

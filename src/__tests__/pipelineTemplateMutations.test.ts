@@ -40,6 +40,7 @@ describe('PipelineTemplates mutations', () => {
     stages {
       name
       formId
+      order
     }
   `;
 
@@ -66,6 +67,7 @@ describe('PipelineTemplates mutations', () => {
 
     expect(created.name).toBe(args.name);
     expect(created.description).toBe(args.description);
+
     expect(created.stages[0].formId).toBe('formId1');
     expect(created.stages[1].formId).toBe('formId2');
     expect(created.stages[2].formId).toBe('formId3');

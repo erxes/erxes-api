@@ -1,9 +1,18 @@
 import { Model, model } from 'mongoose';
-import { IPipelineTemplate, IPipelineTemplateDocument, pipelineTemplateSchema } from './definitions/pipelineTemplates';
+import {
+  IPipelineTemplate,
+  IPipelineTemplateDocument,
+  IPipelineTemplateStage,
+  pipelineTemplateSchema,
+} from './definitions/pipelineTemplates';
 
 export interface IPipelineTemplateModel extends Model<IPipelineTemplateDocument> {
-  createPipelineTemplate(doc: IPipelineTemplate): Promise<IPipelineTemplateDocument>;
-  updatePipelineTemplate(_id: string, doc: IPipelineTemplate): Promise<IPipelineTemplateDocument>;
+  createPipelineTemplate(doc: IPipelineTemplate, stages: IPipelineTemplateStage[]): Promise<IPipelineTemplateDocument>;
+  updatePipelineTemplate(
+    _id: string,
+    doc: IPipelineTemplate,
+    stages: IPipelineTemplateStage[],
+  ): Promise<IPipelineTemplateDocument>;
   removePipelineTemplate(_id: string): void;
 }
 
@@ -12,15 +21,19 @@ export const loadPipelineTemplateClass = () => {
     /**
      * Create a pipeline template
      */
-    public static async createPipelineTemplate(doc: IPipelineTemplate) {
-      return PipelineTemplates.create(doc);
+    public static async createPipelineTemplate(doc: IPipelineTemplate, stages: IPipelineTemplateStage[]) {
+      const orderedStages = stages.map((stage, index) => ({ ...stage, index }));
+
+      return PipelineTemplates.create({ ...doc, stages: orderedStages });
     }
 
     /**
      * Update pipeline template
      */
-    public static async updatePipelineTemplate(_id: string, doc: IPipelineTemplate) {
-      await PipelineTemplates.updateOne({ _id }, { $set: doc });
+    public static async updatePipelineTemplate(_id: string, doc: IPipelineTemplate, stages: IPipelineTemplateStage[]) {
+      const orderedStages = stages.map((stage, index) => ({ ...stage, index }));
+
+      await PipelineTemplates.updateOne({ _id }, { $set: { ...doc, stages: orderedStages } });
 
       return PipelineTemplates.findOne({ _id });
     }

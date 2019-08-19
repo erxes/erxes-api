@@ -1,7 +1,7 @@
 import { Document, Schema } from 'mongoose';
 import { field } from './utils';
 
-interface IStage {
+export interface IPipelineTemplateStage {
   name: string;
   formId: string;
 }
@@ -9,7 +9,6 @@ interface IStage {
 export interface IPipelineTemplate {
   name: string;
   description?: string;
-  stages?: IStage[];
 }
 
 export interface IPipelineTemplateDocument extends IPipelineTemplate, Document {
@@ -19,7 +18,8 @@ export interface IPipelineTemplateDocument extends IPipelineTemplate, Document {
 const stageSchema = new Schema(
   {
     name: field({ type: String }),
-    formId: field({ type: String }),
+    formId: field({ type: String, optional: true }),
+    order: field({ type: Number }),
   },
   { _id: false },
 );

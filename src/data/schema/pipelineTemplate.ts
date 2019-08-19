@@ -2,6 +2,7 @@ export const types = `
   type PipelineTemplateStage {
     name: String!
     formId: String!
+    order: Int
   }
 
   input PipelineTemplateStageInput {
