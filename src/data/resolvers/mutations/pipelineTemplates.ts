@@ -9,15 +9,11 @@ interface IPipelineTemplatesEdit extends IPipelineTemplate {
   stages: IPipelineTemplateStage[];
 }
 
-interface IPipelineTemplatesAdd extends IPipelineTemplate {
-  stages: IPipelineTemplateStage[];
-}
-
 const pipelineTemplateMutations = {
   /**
    * Create new pipeline template
    */
-  async pipelineTemplatesAdd(_root, { stages, ...doc }: IPipelineTemplatesAdd, { user, docModifier }: IContext) {
+  async pipelineTemplatesAdd(_root, { stages, ...doc }: IPipelineTemplate, { user, docModifier }: IContext) {
     const pipelineTemplate = await PipelineTemplates.createPipelineTemplate(
       docModifier({ userId: user._id, ...doc }),
       stages,
@@ -57,6 +53,13 @@ const pipelineTemplateMutations = {
     }
 
     return updated;
+  },
+
+  /**
+   * Duplicate pipeline template
+   */
+  async pipelineTemplatesDuplicate(_root, { _id }: { _id: string }) {
+    return PipelineTemplates.duplicatePipelineTemplate(_id);
   },
 
   /**

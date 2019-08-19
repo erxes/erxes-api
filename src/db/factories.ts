@@ -206,6 +206,10 @@ export const pipelineTemplateFactory = () => {
   const pipelineTemplate = new PipelineTemplates({
     name: faker.random.word(),
     description: faker.random.word(),
+    stages: [
+      { name: faker.random.word(), formId: faker.random.word() },
+      { name: faker.random.word(), formId: faker.random.word() },
+    ],
   });
 
   return pipelineTemplate.save();

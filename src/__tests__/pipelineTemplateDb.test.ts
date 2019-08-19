@@ -1,17 +1,11 @@
 import { pipelineTemplateFactory } from '../db/factories';
 import { PipelineTemplates } from '../db/models';
-import { IPipelineTemplateDocument, IPipelineTemplateStage } from '../db/models/definitions/pipelineTemplates';
+import { IPipelineTemplateDocument } from '../db/models/definitions/pipelineTemplates';
 
 import './setup.ts';
 
 describe('Test pipeline template model', () => {
   let pipelineTemplate: IPipelineTemplateDocument;
-  const stages: IPipelineTemplateStage[] = [
-    { name: 'Stage 1', formId: 'formId1' },
-    { name: 'Stage 2', formId: 'formId2' },
-    { name: 'Stage 3', formId: 'formId3' },
-    { name: 'Stage 4', formId: 'formId4' },
-  ];
 
   beforeEach(async () => {
     // Creating test data
@@ -28,14 +22,15 @@ describe('Test pipeline template model', () => {
     const created = await PipelineTemplates.createPipelineTemplate(
       {
         name: pipelineTemplate.name,
-        description: pipelineTemplate.description,
+        description: pipelineTemplate.description || '',
       },
-      stages,
+      pipelineTemplate.stages,
     );
 
     expect(created).toBeDefined();
     expect(created.name).toEqual(pipelineTemplate.name);
     expect(created.description).toEqual(pipelineTemplate.description);
+    expect(created.stages.length).toEqual(pipelineTemplate.stages.length);
   });
 
   test('Update pipeline template', async () => {
@@ -48,12 +43,13 @@ describe('Test pipeline template model', () => {
         name,
         description,
       },
-      stages,
+      pipelineTemplate.stages,
     );
 
     expect(updated).toBeDefined();
     expect(updated.name).toEqual(name);
     expect(updated.description).toEqual(description);
+    expect(updated.stages.length).toEqual(pipelineTemplate.stages.length);
   });
 
   test('Remove pipeline template', async () => {

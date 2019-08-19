@@ -34,4 +34,5 @@ export const mutations = `
   pipelineTemplatesAdd(${commonParams}): PipelineTemplate
   pipelineTemplatesEdit(_id: String!, ${commonParams}): PipelineTemplate
   pipelineTemplatesRemove(_id: String!): JSON
+  pipelineTemplatesDuplicate(_id: String!): PipelineTemplate
 `;

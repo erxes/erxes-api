@@ -89,7 +89,7 @@ describe('PipelineTemplates mutations', () => {
     expect(edited._id).toBe(pipelineTemplate._id);
     expect(edited.name).toBe(args.name);
     expect(edited.description).toBe(args.description);
-    expect(edited.stages.length).toBe(4);
+    expect(edited.stages.length).toBe(args.stages.length);
   });
 
   test('Remove pipelineTemplate', async () => {
@@ -102,5 +102,27 @@ describe('PipelineTemplates mutations', () => {
     await graphqlRequest(mutation, 'pipelineTemplatesRemove', { _id: pipelineTemplate._id });
 
     expect(await PipelineTemplates.find({ _id: { $in: [pipelineTemplate._id] } })).toEqual([]);
+  });
+
+  test('Duplicate pipelineTemplate', async () => {
+    const mutation = `
+      mutation pipelineTemplatesDuplicate($_id: String!) {
+        pipelineTemplatesDuplicate(_id: $_id) {
+          _id
+          name
+          description
+          stages {
+            name
+            formId
+          }
+        }
+      }
+    `;
+
+    const duplicated = await graphqlRequest(mutation, 'pipelineTemplatesDuplicate', { _id: pipelineTemplate._id });
+
+    expect(duplicated.name).toBe(pipelineTemplate.name);
+    expect(duplicated.description).toBe(pipelineTemplate.description);
+    expect(duplicated.stages.length).toBe(pipelineTemplate.stages.length);
   });
 });

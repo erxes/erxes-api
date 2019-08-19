@@ -9,6 +9,7 @@ export interface IPipelineTemplateStage {
 export interface IPipelineTemplate {
   name: string;
   description?: string;
+  stages: IPipelineTemplateStage[];
 }
 
 export interface IPipelineTemplateDocument extends IPipelineTemplate, Document {
