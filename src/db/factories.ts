@@ -54,6 +54,7 @@ import {
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
+import PipelineTemplates from './models/PipelineTemplates';
 
 interface IActivityLogFactoryInput {
   performer?: IActionPerformer;
@@ -199,6 +200,15 @@ export const brandFactory = (params: IBrandFactoryInput = {}) => {
   });
 
   return brand.save();
+};
+
+export const pipelineTemplateFactory = () => {
+  const pipelineTemplate = new PipelineTemplates({
+    name: faker.random.word(),
+    description: faker.random.word(),
+  });
+
+  return pipelineTemplate.save();
 };
 
 interface IEmailTemplateFactoryInput {

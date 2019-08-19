@@ -18,6 +18,7 @@ import knowledgeBase from './knowledgeBase';
 import messengerApps from './messengerApps';
 import notifications from './notifications';
 import { permissionMutations as permissions, usersGroupMutations as usersGroups } from './permissions';
+import pipelineTemplates from './pipelineTemplates';
 import products from './products';
 import responseTemplates from './responseTemplates';
 import scripts from './scripts';
@@ -58,4 +59,5 @@ export default {
   ...tickets,
   ...tasks,
   ...growthHacks,
+  ...pipelineTemplates,
 };
