@@ -15,13 +15,13 @@ export interface IGrowthHackDocument extends IGrowthHack, Document {
 export const growthHackSchema = new Schema({
   ...commonItemFieldsSchema,
 
-  hackDescription: field({ type: String }),
-  goal: field({ type: String }),
-  formFields: field({ type: Object }),
-  hackStage: field({ type: String }),
-  priority: field({ type: String }),
-  reach: field({ type: Number }),
-  impact: field({ type: Number }),
-  confidence: field({ type: Number }),
-  ease: field({ type: Number }),
+  hackDescription: field({ type: String, optional: true }),
+  goal: field({ type: String, optional: true }),
+  formFields: field({ type: Object, optional: true }),
+  hackStage: field({ type: String, optional: true }),
+  priority: field({ type: String, optional: true }),
+  reach: field({ type: Number, optional: true }),
+  impact: field({ type: Number, optional: true }),
+  confidence: field({ type: Number, optional: true }),
+  ease: field({ type: Number, optional: true }),
 });
