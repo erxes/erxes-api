@@ -1,4 +1,4 @@
-import { Customers } from '../../../db/models';
+import { Conformities, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -82,6 +82,8 @@ const customerMutations = {
           },
           user,
         );
+
+        await Conformities.removeConformity({ mainType: 'customer', mainTypeId: customer._id });
       }
     }
 

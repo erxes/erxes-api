@@ -1,4 +1,4 @@
-import { Deals } from '../../../db/models';
+import { Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
@@ -147,6 +147,8 @@ const dealMutations = {
       },
       user,
     );
+
+    await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
 
     return removed;
   },

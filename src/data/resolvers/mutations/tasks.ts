@@ -1,4 +1,4 @@
-import { Tasks } from '../../../db/models';
+import { Conformities, Tasks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
@@ -108,6 +108,8 @@ const taskMutations = {
       content: `'${task.name}'`,
       contentType: 'task',
     });
+
+    await Conformities.removeConformity({ mainType: 'task', mainTypeId: task._id });
 
     return task.remove();
   },

@@ -1,4 +1,4 @@
-import { Tickets } from '../../../db/models';
+import { Conformities, Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
@@ -108,6 +108,8 @@ const ticketMutations = {
       content: `'${ticket.name}'`,
       contentType: 'ticket',
     });
+
+    await Conformities.removeConformity({ mainType: 'ticket', mainTypeId: ticket._id });
 
     return ticket.remove();
   },
