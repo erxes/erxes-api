@@ -2,6 +2,7 @@ import { graphqlRequest } from '../db/connection';
 import { pipelineTemplateFactory } from '../db/factories';
 import { PipelineTemplates } from '../db/models';
 
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('pipelineTemplateQueries', () => {
@@ -12,8 +13,7 @@ describe('pipelineTemplateQueries', () => {
 
   test('Pipeline templates', async () => {
     const args = {
-      page: 1,
-      perPage: 2,
+      type: BOARD_TYPES.GROWTH_HACK,
     };
 
     await pipelineTemplateFactory();
@@ -21,8 +21,8 @@ describe('pipelineTemplateQueries', () => {
     await pipelineTemplateFactory();
 
     const qry = `
-      query pipelineTemplates($page: Int $perPage: Int) {
-        pipelineTemplates(page: $page perPage: $perPage) {
+      query pipelineTemplates($type: String!) {
+        pipelineTemplates(type: $type) {
           _id
           name
           description

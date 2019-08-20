@@ -18,7 +18,7 @@ export const growthHackSchema = new Schema({
   hackDescription: field({ type: String, optional: true }),
   goal: field({ type: String, optional: true }),
   formFields: field({ type: Object, optional: true }),
-  hackStage: field({ type: String, optional: true }),
+  hackStages: field({ type: [String], optional: true }),
   priority: field({ type: String, optional: true }),
   reach: field({ type: Number, optional: true }),
   impact: field({ type: Number, optional: true }),

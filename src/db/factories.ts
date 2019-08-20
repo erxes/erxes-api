@@ -206,6 +206,7 @@ export const pipelineTemplateFactory = () => {
   const pipelineTemplate = new PipelineTemplates({
     name: faker.random.word(),
     description: faker.random.word(),
+    type: BOARD_TYPES.GROWTH_HACK,
     stages: [
       { name: faker.random.word(), formId: faker.random.word() },
       { name: faker.random.word(), formId: faker.random.word() },
@@ -809,6 +810,7 @@ interface IGrowthHackFactoryInput {
   companyIds?: string[];
   noCloseDate?: boolean;
   assignedUserIds?: string[];
+  hackStages?: string[];
 }
 
 export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
@@ -821,6 +823,7 @@ export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    hackStages: params.hackStages || [faker.random.word()],
   });
 
   return growthHack.save();
