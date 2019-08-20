@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Deals, Tasks, Tickets } from './';
+import { Deals, PipelineTemplates, Tasks, Tickets } from './';
 import { updateOrder, watchItem } from './boardUtils';
 import {
   boardSchema,
@@ -70,6 +70,21 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   }
 
   return Stages.deleteMany({ pipelineId, _id: { $nin: validStageIds } });
+};
+
+const fromTemplate = async (doc: IPipeline, pipelineId: string) => {
+  const { templateId, type } = doc;
+  const template = await PipelineTemplates.findOne({ _id: templateId });
+  const templateStages = template ? template.stages : [];
+
+  const stages: IPipelineStage[] = templateStages.map(stage => ({
+    _id: Math.random().toString(),
+    name: stage.name,
+    pipelineId,
+    type,
+  }));
+
+  await createOrUpdatePipelineStages(stages, pipelineId);
 };
 
 export interface IBoardModel extends Model<IBoardDocument> {
@@ -151,7 +166,9 @@ export const loadPipelineClass = () => {
     public static async createPipeline(doc: IPipeline, stages: IPipelineStage[]) {
       const pipeline = await Pipelines.create(doc);
 
-      if (stages) {
+      if (doc.templateId) {
+        await fromTemplate(doc, pipeline._id);
+      } else if (stages) {
         await createOrUpdatePipelineStages(stages, pipeline._id);
       }
 
@@ -162,7 +179,9 @@ export const loadPipelineClass = () => {
      * Update Pipeline
      */
     public static async updatePipeline(_id: string, doc: IPipeline, stages: IPipelineStage[]) {
-      if (stages) {
+      if (doc.templateId) {
+        await fromTemplate(doc, _id);
+      } else if (stages) {
         await createOrUpdatePipelineStages(stages, _id);
       }
 
