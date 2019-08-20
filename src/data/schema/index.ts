@@ -107,6 +107,12 @@ import { mutations as GrowthHackMutations, queries as GrowthHackQueries, types a
 
 import { queries as LogQueries, types as LogTypes } from './log';
 
+import {
+  mutations as PipelineTemplateMutations,
+  queries as PipelineTemplateQueries,
+  types as PipelineTemplateTypes,
+} from './pipelineTemplate';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -143,6 +149,7 @@ export const types = `
   ${TaskTypes}
   ${LogTypes}
   ${GrowthHackTypes}
+  ${PipelineTemplateTypes}
 `;
 
 export const queries = `
@@ -179,6 +186,7 @@ export const queries = `
     ${TaskQueries}
     ${LogQueries}
     ${GrowthHackQueries}
+    ${PipelineTemplateQueries}
   }
 `;
 
@@ -213,6 +221,7 @@ export const mutations = `
     ${TicketMutations}
     ${TaskMutations}
     ${GrowthHackMutations}
+    ${PipelineTemplateMutations}
   }
 `;
 

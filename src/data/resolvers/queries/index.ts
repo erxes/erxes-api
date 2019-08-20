@@ -22,6 +22,7 @@ import logs from './logs';
 import messengerApps from './messengerApps';
 import notifications from './notifications';
 import { permissionQueries as permissions, usersGroupQueries as usersGroups } from './permissions';
+import pipelineTemplates from './pipelineTemplates';
 import products from './products';
 import responseTemplates from './responseTemplates';
 import scripts from './scripts';
@@ -66,4 +67,5 @@ export default {
   ...tasks,
   ...logs,
   ...growthHack,
+  ...pipelineTemplates,
 };

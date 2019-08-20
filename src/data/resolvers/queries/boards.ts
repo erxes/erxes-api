@@ -52,7 +52,7 @@ const boardQueries = {
    *  Template list
    */
   growthHackTemplates() {
-    return Pipelines.find({ type: BOARD_TYPES.GROWTH_HACK_TEMPLATE }).sort({ order: 1, createdAt: -1 });
+    return Pipelines.find({ type: BOARD_TYPES.GROWTH_HACK }).sort({ order: 1, createdAt: -1 });
   },
 
   /**

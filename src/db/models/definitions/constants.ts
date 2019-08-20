@@ -300,8 +300,7 @@ export const BOARD_TYPES = {
   TICKET: 'ticket',
   TASK: 'task',
   GROWTH_HACK: 'growthHack',
-  GROWTH_HACK_TEMPLATE: 'growthHackTemplate',
-  ALL: ['deal', 'ticket', 'task', 'growthHack', 'growthHackTemplate'],
+  ALL: ['deal', 'ticket', 'task', 'growthHack'],
 };
 
 // module constants
