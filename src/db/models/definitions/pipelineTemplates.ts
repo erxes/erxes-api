@@ -9,6 +9,7 @@ export interface IPipelineTemplateStage {
 export interface IPipelineTemplate {
   name: string;
   description?: string;
+  type: string;
   stages: IPipelineTemplateStage[];
 }
 
@@ -29,6 +30,7 @@ export const pipelineTemplateSchema = new Schema({
   _id: field({ pkey: true }),
 
   name: field({ type: String }),
+  type: field({ type: String }),
   description: field({ type: String, optional: true }),
   stages: field({ type: [stageSchema], default: [] }),
 });

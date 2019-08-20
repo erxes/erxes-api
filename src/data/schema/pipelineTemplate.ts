@@ -14,6 +14,7 @@ export const types = `
     _id: String!
     name: String!
     description: String
+    type: String
     stages: [PipelineTemplateStage]
   }
 `;
@@ -21,11 +22,12 @@ export const types = `
 const commonParams = `
   name: String!
   description: String
+  type: String!
   stages: [PipelineTemplateStageInput]
 `;
 
 export const queries = `
-  pipelineTemplates(page: Int, perPage: Int): [PipelineTemplate]
+  pipelineTemplates(type: String!): [PipelineTemplate]
   pipelineTemplateDetail(_id: String!): PipelineTemplate
   pipelineTemplatesTotalCount: Int
 `;

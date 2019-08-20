@@ -3,6 +3,7 @@ import { graphqlRequest } from '../db/connection';
 import { pipelineTemplateFactory } from '../db/factories';
 import { PipelineTemplates } from '../db/models';
 
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 /*
@@ -11,6 +12,7 @@ import './setup.ts';
 const args = {
   name: faker.name.findName(),
   description: faker.random.word(),
+  type: BOARD_TYPES.GROWTH_HACK,
   stages: [
     { name: 'Stage 1', formId: 'formId1' },
     { name: 'Stage 2', formId: 'formId2' },
@@ -25,18 +27,21 @@ describe('PipelineTemplates mutations', () => {
   const commonParamDefs = `
     $name: String!
     $description: String
+    $type: String!
     $stages: [PipelineTemplateStageInput]
   `;
 
   const commonParams = `
     name: $name
     description: $description
+    type: $type
     stages: $stages
   `;
 
   const commonReturn = `
     name
     description
+    type
     stages {
       name
       formId
@@ -67,6 +72,7 @@ describe('PipelineTemplates mutations', () => {
 
     expect(created.name).toBe(args.name);
     expect(created.description).toBe(args.description);
+    expect(created.type).toBe(args.type);
 
     expect(created.stages[0].formId).toBe('formId1');
     expect(created.stages[1].formId).toBe('formId2');
@@ -88,6 +94,7 @@ describe('PipelineTemplates mutations', () => {
 
     expect(edited._id).toBe(pipelineTemplate._id);
     expect(edited.name).toBe(args.name);
+    expect(edited.type).toBe(args.type);
     expect(edited.description).toBe(args.description);
     expect(edited.stages.length).toBe(args.stages.length);
   });

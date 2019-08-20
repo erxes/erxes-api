@@ -1,13 +1,12 @@
 import { PipelineTemplates } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
-import { paginate } from '../../utils';
 
 const pipelineTemplateQueries = {
   /**
    *  Pipeline template list
    */
-  pipelineTemplates(_root, pagintationArgs: { page: number; perPage: number }) {
-    return paginate(PipelineTemplates.find(), pagintationArgs);
+  pipelineTemplates(_root, { type }: { type: string }) {
+    return PipelineTemplates.find({ type });
   },
 
   /**

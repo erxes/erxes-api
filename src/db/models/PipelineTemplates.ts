@@ -7,7 +7,8 @@ import {
 
 interface IDoc {
   name: string;
-  description: string;
+  description?: string;
+  type: string;
 }
 
 export interface IPipelineTemplateModel extends Model<IPipelineTemplateDocument> {
@@ -52,6 +53,7 @@ export const loadPipelineTemplateClass = () => {
       const duplicated: IDoc = {
         name: pipelineTemplate.name,
         description: pipelineTemplate.description || '',
+        type: pipelineTemplate.type,
       };
 
       return PipelineTemplates.createPipelineTemplate(duplicated, pipelineTemplate.stages);
