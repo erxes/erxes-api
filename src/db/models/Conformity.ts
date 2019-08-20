@@ -53,14 +53,7 @@ export const loadConformityClass = () => {
      * Create a conformity
      */
     public static async addConformity(doc: IConformityAdd) {
-      return doc.mainTypeIds.map(mainTypeId => {
-        Conformities.create({
-          mainType: doc.mainType,
-          mainTypeId,
-          relType: doc.relType,
-          relTypeId: doc.relTypeId,
-        });
-      });
+      return Conformities.create(doc);
     }
 
     public static async createConformity(doc: IConformityCreate) {

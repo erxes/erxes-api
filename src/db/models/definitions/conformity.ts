@@ -10,7 +10,7 @@ export interface IConformity {
 
 export interface IConformityAdd {
   mainType: string;
-  mainTypeIds: string[];
+  mainTypeId: string;
   relType: string;
   relTypeId: string;
 }

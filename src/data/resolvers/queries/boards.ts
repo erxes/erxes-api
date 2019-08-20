@@ -16,6 +16,10 @@ export interface IListParams {
   customerIds?: [string];
   companyIds?: [string];
   assignedUserIds?: [string];
+  mainType?: string;
+  mainTypeId?: string;
+  relType?: string;
+  isRelated?: boolean;
 }
 
 const boardQueries = {

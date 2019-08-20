@@ -26,8 +26,9 @@ export const generateCommonFilters = async (args: any) => {
     customerIds,
     assignedUserIds,
     mainType,
-    mainTypeIds,
+    mainTypeId,
     relType,
+    isRelated,
     order,
     probability,
     initialStageId,
@@ -51,10 +52,19 @@ export const generateCommonFilters = async (args: any) => {
     filter.$and = $and;
   }
 
-  if (mainType && mainTypeIds && relType) {
-    const relIds = await Conformities.filterConformity({
+  if (mainType && mainTypeId && relType) {
+    const relIds = await Conformities.savedConformity({
       mainType,
-      mainTypeIds,
+      mainTypeId,
+      relType,
+    });
+    filter._id = contains(relIds || []);
+  }
+
+  if (mainType && mainTypeId && relType && isRelated) {
+    const relIds = await Conformities.relatedConformity({
+      mainType,
+      mainTypeId,
       relType,
     });
     filter._id = contains(relIds || []);

@@ -32,8 +32,9 @@ export const queries = `
     pipelineId: String
     stageId: String
     mainType: String
-    mainTypeIds: [String]
+    mainTypeId: String
     relType: String
+    isRelated: Boolean
     date: ItemDate
     skip: Int
     search: String
