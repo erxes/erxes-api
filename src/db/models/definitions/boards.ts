@@ -44,6 +44,7 @@ export interface IPipeline extends ICommonFields {
   bgColor?: string;
   watchedUserIds?: string[];
   hackScoringType?: string;
+  templateId?: string;
 }
 
 export interface IPipelineDocument extends IPipeline, Document {
@@ -143,6 +144,7 @@ export const pipelineSchema = new Schema({
     type: String,
     enum: HACK_SCORING_TYPES.ALL,
   }),
+  templateId: field({ type: String }),
   ...commonFieldsSchema,
 });
 

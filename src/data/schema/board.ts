@@ -22,6 +22,7 @@ export const types = `
     bgColor: String
     isWatched: Boolean
     hackScoringType: String
+    templateId: String
     ${commonTypes}
   }
 
@@ -83,7 +84,8 @@ const pipelineParams = `
   visibility: String!,
   memberIds: [String],
   bgColor: String,
-  hackScoringType: String
+  hackScoringType: String,
+  templateId: String
 `;
 
 export const mutations = `
