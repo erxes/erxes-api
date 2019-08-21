@@ -25,6 +25,7 @@ import {
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
   KnowledgeBaseTopics,
+  Leads,
   MessengerApps,
   NotificationConfigurations,
   Notifications,
@@ -539,6 +540,13 @@ export const formFactory = async (params: IFormFactoryInput = {}) => {
     code: code || Random.id(),
     submissions: submissions || [],
     createdUserId: createdUserId || (await userFactory({})),
+  });
+};
+
+export const leadFactory = async ({ formId, createdUserId }: { formId: string; createdUserId: string }) => {
+  return Leads.create({
+    formId,
+    createdUserId,
   });
 };
 

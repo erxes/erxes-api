@@ -17,6 +17,7 @@ import insights from './insights';
 import integrations from './integrations';
 import internalNotes from './internalNotes';
 import knowledgeBase from './knowledgeBase';
+import leads from './leads';
 import logs from './logs';
 import messengerApps from './messengerApps';
 import notifications from './notifications';
@@ -64,4 +65,5 @@ export default {
   ...tickets,
   ...tasks,
   ...logs,
+  ...leads,
 };

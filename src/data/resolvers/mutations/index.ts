@@ -14,6 +14,7 @@ import importHistory from './importHistory';
 import integrations from './integrations';
 import internalNotes from './internalNotes';
 import knowledgeBase from './knowledgeBase';
+import leads from './leads';
 import messengerApps from './messengerApps';
 import notifications from './notifications';
 import { permissionMutations as permissions, usersGroupMutations as usersGroups } from './permissions';
@@ -56,4 +57,5 @@ export default {
   ...usersGroups,
   ...tickets,
   ...tasks,
+  ...leads,
 };

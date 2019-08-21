@@ -82,6 +82,7 @@ const integrationMutations = {
    * Edit a form integration
    */
   integrationsEditFormIntegration(_root, { _id, ...doc }: IEditFormIntegration) {
+    console.log('integrationsEditFormIntegration: ', doc);
     return Integrations.updateFormIntegration(_id, doc);
   },
 

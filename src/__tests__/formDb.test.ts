@@ -18,22 +18,6 @@ describe('form creation', () => {
     await Forms.deleteMany({});
   });
 
-  test(`testing if Error('createdUser must be supplied') is throwing as intended`, async () => {
-    expect.assertions(1);
-
-    try {
-      await Forms.createForm(
-        {
-          title: 'Test form',
-          description: 'Test form description',
-        },
-        undefined,
-      );
-    } catch (e) {
-      expect(e.message).toEqual('createdUser must be supplied');
-    }
-  });
-
   test('check if form creation method is working successfully', async () => {
     const form = await Forms.createForm(
       {

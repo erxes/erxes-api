@@ -103,6 +103,8 @@ import { mutations as TicketMutations, queries as TicketQueries, types as Ticket
 
 import { mutations as TaskMutations, queries as TaskQueries, types as TaskTypes } from './task';
 
+import { mutations as LeadMutations, queries as LeadQueries, types as LeadTypes } from './lead';
+
 import { queries as LogQueries, types as LogTypes } from './log';
 
 export const types = `
@@ -140,6 +142,7 @@ export const types = `
   ${TicketTypes}
   ${TaskTypes}
   ${LogTypes}
+  ${LeadTypes}
 `;
 
 export const queries = `
@@ -175,6 +178,7 @@ export const queries = `
     ${TicketQueries}
     ${TaskQueries}
     ${LogQueries}
+    ${LeadQueries}
   }
 `;
 
@@ -208,6 +212,7 @@ export const mutations = `
     ${PermissionMutations}
     ${TicketMutations}
     ${TaskMutations}
+    ${LeadMutations}
   }
 `;
 
