@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Deals, PipelineTemplates, Tasks, Tickets } from './';
+import { Deals, GrowthHacks, PipelineTemplates, Tasks, Tickets } from './';
 import { updateOrder, watchItem } from './boardUtils';
 import {
   boardSchema,
@@ -7,7 +7,6 @@ import {
   IBoardDocument,
   IPipeline,
   IPipelineDocument,
-  IPipelineStage,
   IStage,
   IStageDocument,
   pipelineSchema,
@@ -76,6 +75,7 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
     deal: Deals,
     ticket: Tickets,
     task: Tasks,
+    growthHack: GrowthHacks,
   };
 
   const remainedStages = await Stages.find({ pipelineId, _id: { $nin: prevItemIds } });
