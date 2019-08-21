@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
 import * as request from 'request';
+import * as xss from 'xss';
 import apolloServer from './apolloClient';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
@@ -51,6 +52,7 @@ initRedis();
 
 const app = express();
 
+app.disable('x-powered-by');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   bodyParser.json({
@@ -88,7 +90,7 @@ app.get('/coc-export', async (req: any, res) => {
 
     return res.send(response);
   } catch (e) {
-    return res.end(e.message);
+    return res.end(filterXSS(e.message));
   }
 });
 
@@ -101,7 +103,7 @@ app.get('/insights-export', async (req: any, res) => {
 
     return res.send(response);
   } catch (e) {
-    return res.end(e.message);
+    return res.end(filterXSS(e.message));
   }
 });
 
@@ -120,7 +122,7 @@ app.get('/read-file', async (req: any, res) => {
 
     return res.send(response);
   } catch (e) {
-    return res.end(e.message);
+    return res.end(filterXSS(e.message));
   }
 });
 
@@ -140,7 +142,7 @@ app.post('/upload-file', async (req, res) => {
 
         return res.send(result);
       } catch (e) {
-        return res.status(500).send(e.message);
+        return res.status(500).send(filterXSS(e.message));
       }
     }
 
@@ -181,7 +183,7 @@ app.get('/unsubscribe', async (req, res) => {
   const unsubscribed = await handleEngageUnSubscribe(req.query);
 
   if (unsubscribed) {
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     const template = fs.readFileSync(__dirname + '/private/emailTemplates/unsubscribe.html');
     res.send(template);
   }
