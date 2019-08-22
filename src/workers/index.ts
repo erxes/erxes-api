@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import * as formidable from 'formidable';
 import * as path from 'path';
-import * as xss from 'xss';
+import { filterXSS } from 'xss';
 import { checkFile } from '../data/utils';
 import { connect } from '../db/connection';
 import { debugRequest, debugResponse, debugWorkers } from '../debuggers';

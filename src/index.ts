@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import { createServer } from 'http';
 import * as path from 'path';
 import * as request from 'request';
-import * as xss from 'xss';
+import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
