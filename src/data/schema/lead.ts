@@ -12,6 +12,7 @@ export const types = `
     contactsGathered: Int
     tagIds: [String]
     getTags: [Tag]
+    form: Form
   }
 `;
 

@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
-import { Fields } from '.';
 import { ILead, ILeadDocument, leadSchema } from './definitions/leads';
+import Forms from './Forms';
 
 export interface ILeadModel extends Model<ILeadDocument> {
   generateCode(): string;
@@ -42,8 +42,13 @@ export const loadClass = () => {
      * Remove a lead
      */
     public static async removeLead(_id: string) {
-      // remove fields
-      await Fields.deleteMany({ contentType: 'lead', contentTypeId: _id });
+      const lead = await Leads.findOne({ _id });
+
+      if (!lead) {
+        throw new Error('Lead not found');
+      }
+
+      await Forms.removeForm(lead.formId);
 
       return Leads.deleteOne({ _id });
     }

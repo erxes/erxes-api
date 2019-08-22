@@ -6,15 +6,15 @@ export const types = `
     brandId: String!
     languageCode: String
     code: String
-    formId: String
+    leadId: String
     tagIds: [String]
     tags: [Tag]
-    formData: JSON
+    leadData: JSON
     messengerData: JSON
     uiOptions: JSON
 
     brand: Brand
-    form: Form
+    lead: Lead
     channels: [Channel]
   }
 
@@ -26,7 +26,7 @@ export const types = `
     byKind: JSON
   }
 
-  input IntegrationFormData {
+  input IntegrationLeadData {
     loadType: String
     successAction: String
     fromEmail: String,
@@ -121,20 +121,20 @@ export const mutations = `
     _id: String!,
     messengerData: IntegrationMessengerData): Integration
 
-  integrationsCreateFormIntegration(
+  integrationsCreateLeadIntegration(
     name: String!,
     brandId: String!,
     languageCode: String,
-    formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadId: String!,
+    leadData: IntegrationLeadData!): Integration
 
-  integrationsEditFormIntegration(
+  integrationsEditLeadIntegration(
     _id: String!
     name: String!,
     brandId: String!,
     languageCode: String,
-    formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadId: String!,
+    leadData: IntegrationLeadData!): Integration
 
   integrationsCreateExternalIntegration(
     kind: String!,

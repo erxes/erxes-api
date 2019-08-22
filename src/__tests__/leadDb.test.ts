@@ -1,10 +1,7 @@
-import * as toBeType from 'jest-tobetype';
 import { formFactory, leadFactory, userFactory } from '../db/factories';
 import { Leads, Users } from '../db/models';
 
 import './setup.ts';
-
-expect.extend(toBeType);
 
 describe('leadDb', () => {
   let _user;

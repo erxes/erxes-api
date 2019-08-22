@@ -78,6 +78,7 @@ export const loadClass = () => {
         {
           title: `${form.title} duplicated`,
           description: form.description,
+          type: form.type,
         },
         form.createdUserId,
       );
