@@ -18,8 +18,6 @@ export interface ICompanyModel extends Model<ICompanyDocument> {
 
   updateCompany(_id: string, doc: ICompany): Promise<ICompanyDocument>;
 
-  updateCustomers(_id: string, customerIds: string[]): Promise<ICompanyDocument>;
-
   removeCompany(_id: string): void;
 
   mergeCompanies(companyIds: string[], companyFields: ICompany): Promise<ICompanyDocument>;
@@ -120,20 +118,6 @@ export const loadClass = () => {
       }
 
       await Companies.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
-
-      return Companies.findOne({ _id });
-    }
-
-    /**
-     * Update company customers
-     */
-    public static async updateCustomers(_id: string, customerIds: string[]) {
-      Conformities.createConformity({
-        mainType: 'company',
-        mainTypeId: _id,
-        relType: 'customer',
-        relTypeIds: customerIds,
-      });
 
       return Companies.findOne({ _id });
     }

@@ -17,7 +17,6 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   updateCustomer(_id: string, doc: ICustomer): Promise<ICustomerDocument>;
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
-  updateCompanies(_id: string, companyIds: string[]): Promise<ICustomerDocument>;
   removeCustomer(customerId: string): void;
   mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
@@ -178,20 +177,6 @@ export const loadClass = () => {
         },
         { new: true },
       );
-
-      return Customers.findOne({ _id });
-    }
-
-    /**
-     * Update customer companies
-     */
-    public static async updateCompanies(_id: string, companyIds: string[]) {
-      Conformities.createConformity({
-        mainType: 'customer',
-        mainTypeId: _id,
-        relType: 'company',
-        relTypeIds: companyIds,
-      });
 
       return Customers.findOne({ _id });
     }
