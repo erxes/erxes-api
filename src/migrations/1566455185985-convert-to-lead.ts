@@ -39,9 +39,15 @@ module.exports.up = async () => {
 
     await Leads.create(doc);
 
+    const integration = await Integrations.findOne({ formId: form._id });
+
+    if (!integration) {
+      throw new Error('Integration not found');
+    }
+
     await Integrations.updateOne(
       { formId: form._id },
-      { $set: { kind: 'lead' }, $rename: { formId: 'leadId', formData: 'leadData' } },
+      { $set: { kind: 'lead', leadId: form._id, leadData: integration.formData } },
     );
   }
 
