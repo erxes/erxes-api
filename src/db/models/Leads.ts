@@ -12,7 +12,7 @@ export interface ILeadModel extends Model<ILeadDocument> {
   duplicate(_id: string): Promise<ILeadDocument>;
 }
 
-export const loadClass = () => {
+export const loadLeadClass = () => {
   class Lead {
     /**
      * Creates a lead document
@@ -75,7 +75,7 @@ export const loadClass = () => {
   return leadSchema;
 };
 
-loadClass();
+loadLeadClass();
 
 // tslint:disable-next-line
 const Leads = model<ILeadDocument, ILeadModel>('leads', leadSchema);
