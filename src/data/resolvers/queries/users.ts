@@ -6,6 +6,7 @@ import { paginate } from '../../utils';
 interface IListArgs {
   page?: number;
   perPage?: number;
+  noPaginate?: boolean;
   searchValue?: string;
   isActive?: boolean;
   ids?: string[];
@@ -33,7 +34,7 @@ const queryBuilder = async (params: IListArgs) => {
   }
 
   if (ids) {
-    selector._id = { $in: ids };
+    return { _id: { $in: ids } };
   }
 
   if (status) {
@@ -50,6 +51,10 @@ const userQueries = {
   async users(_root, args: IListArgs) {
     const selector = await queryBuilder(args);
     const sort = { username: 1 };
+
+    if (args.noPaginate) {
+      return Users.find(selector).sort(sort);
+    }
 
     return paginate(Users.find(selector).sort(sort), args);
   },

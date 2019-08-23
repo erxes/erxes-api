@@ -80,6 +80,7 @@ const commonParams = `
 `;
 
 const commonSelector = `
+  noPaginate: Boolean,
   searchValue: String,
   isActive: Boolean,
   ids: [String]
