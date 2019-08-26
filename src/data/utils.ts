@@ -5,6 +5,7 @@ import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as Path from 'path';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
@@ -28,7 +29,7 @@ export const checkFile = async file => {
   }
 
   // read file
-  const buffer = await fs.readFileSync(file.path);
+  const buffer = await fs.readFileSync(Path.basename(file.path));
 
   // determine file type using magic numbers
   const ft = fileType(buffer);
@@ -122,7 +123,7 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
   const fileName = `${AWS_PREFIX}${Math.random()}${file.name}`;
 
   // read file
-  const buffer = await fs.readFileSync(file.path);
+  const buffer = await fs.readFileSync(Path.basename(file.path));
 
   // upload to s3
   const response: any = await new Promise((resolve, reject) => {
@@ -404,13 +405,17 @@ export const sendNotification = async (doc: ISendNotification) => {
   for (const receiverId of receivers) {
     try {
       // send web and mobile notification
-      await Notifications.createNotification(
+      const notification = await Notifications.createNotification(
         { link, title, content, notifType, receiver: receiverId, action },
         createdUser._id,
       );
 
       graphqlPubsub.publish('notificationInserted', {
-        userId: receiverId,
+        notificationInserted: {
+          userId: receiverId,
+          title: notification.title,
+          content: notification.content,
+        },
       });
     } catch (e) {
       // Any other error is serious
@@ -730,11 +735,15 @@ export const sendMobileNotification = async ({
   }
 };
 
-export const paginate = (collection, params: { page?: number; perPage?: number }) => {
-  const { page = 0, perPage = 0 } = params || {};
+export const paginate = (collection, params: { ids?: string[]; page?: number; perPage?: number }) => {
+  const { page = 0, perPage = 0, ids } = params || { ids: null };
 
   const _page = Number(page || '1');
   const _limit = Number(perPage || '20');
+
+  if (ids) {
+    return collection;
+  }
 
   return collection.limit(_limit).skip((_page - 1) * _limit);
 };
