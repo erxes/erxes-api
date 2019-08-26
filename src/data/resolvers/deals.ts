@@ -1,4 +1,4 @@
-import { Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
+import { Companies, Customers, Notifications, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -79,5 +79,10 @@ export default {
     }
 
     return false;
+  },
+  async hasSeen(deal: IDealDocument, _args, { user }: IContext) {
+    const notification = await Notifications.findOne({ isRead: false, receiver: user._id, content: deal.name });
+
+    return notification ? false : true;
   },
 };
