@@ -735,13 +735,16 @@ export const sendMobileNotification = async ({
   }
 };
 
-export const paginate = (collection, params: { ids?: string[]; page?: number; perPage?: number }) => {
-  const { page = 0, perPage = 0, ids } = params || { ids: null };
+export const paginate = (
+  collection,
+  params: { ids?: string[]; page?: number; perPage?: number; searchValue?: string },
+) => {
+  const { page = 0, perPage = 0, ids, searchValue } = params || { ids: null, searchValue: '' };
 
   const _page = Number(page || '1');
   const _limit = Number(perPage || '20');
 
-  if (ids) {
+  if (ids || searchValue) {
     return collection;
   }
 
