@@ -51,7 +51,6 @@ export const queries = `
 `;
 
 const commonParams = `
-  name: String!,
   stageId: String,
   assignedUserIds: [String],
   attachments: [AttachmentInput],
@@ -62,8 +61,8 @@ const commonParams = `
 `;
 
 export const mutations = `
-  tasksAdd(${commonParams}): Task
-  tasksEdit(_id: String!, ${commonParams}): Task
+  tasksAdd(name: String!, ${commonParams}): Task
+  tasksEdit(_id: String!, name: String, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task
