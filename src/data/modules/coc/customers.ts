@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { Brands, Forms, Integrations, Segments } from '../../../db/models';
+import { Brands, Conformities, Forms, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
 
@@ -46,6 +46,7 @@ export interface IListArgs {
   integration?: string;
   mainType?: string;
   mainTypeId?: string;
+  isRelated?: boolean;
 }
 
 interface IIntegrationIds {
@@ -140,6 +141,16 @@ export class Builder {
     return { $or: fields };
   }
 
+  // filter by related Conformity
+  public async relatedFilter(mainType: string, mainTypeId: string): Promise<IIdsFilter> {
+    const customerIds = await Conformities.relatedConformity({
+      mainType,
+      mainTypeId,
+      relType: 'customer',
+    });
+    return { _id: { $in: customerIds || [] } };
+  }
+
   // filter by id
   public idsFilter(ids: string[]): IIdsFilter {
     return { _id: { $in: ids } };
@@ -193,6 +204,7 @@ export class Builder {
       integration: {},
       form: {},
       integrationType: {},
+      relatedConformity: {},
     };
 
     // filter by type
@@ -246,6 +258,10 @@ export class Builder {
       this.queries.searchValue = this.searchFilter(this.params.searchValue);
     }
 
+    if (this.params.mainType && this.params.mainTypeId && this.params.isRelated) {
+      this.queries.relatedConformity = await this.relatedFilter(this.params.mainType, this.params.mainTypeId);
+    }
+
     // filter by leadStatus
     if (this.params.leadStatus) {
       this.queries.leadStatus = this.leadStatusFilter(this.params.leadStatus);
@@ -272,6 +288,7 @@ export class Builder {
       ...this.queries.searchValue,
       ...this.queries.leadStatus,
       ...this.queries.lifecycleState,
+      ...this.queries.relatedConformity,
     };
   }
 }

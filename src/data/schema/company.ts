@@ -70,6 +70,7 @@ const queryParams = `
   brand: String
   mainType: String
   mainTypeId: String
+  isRelated: Boolean
 `;
 
 export const queries = `
@@ -77,7 +78,6 @@ export const queries = `
   companies(${queryParams}): [Company]
   companyCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
   companyDetail(_id: String!): Company
-  relatedCompanies(${queryParams}): [Company]
 `;
 
 const commonFields = `

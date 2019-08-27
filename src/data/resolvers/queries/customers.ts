@@ -1,4 +1,4 @@
-import { Brands, Conformities, Customers, Forms, Integrations, Segments, Tags } from '../../../db/models';
+import { Brands, Customers, Forms, Integrations, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES, INTEGRATION_KIND_CHOICES } from '../../constants';
@@ -256,15 +256,6 @@ const customerQueries = {
     }
 
     return counts;
-  },
-
-  async relatedCustomers(_root, params: IListArgs) {
-    const customerIds = await Conformities.relatedConformity({
-      mainType: params.mainType || '',
-      mainTypeId: params.mainTypeId || '',
-      relType: 'customer',
-    });
-    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   /**

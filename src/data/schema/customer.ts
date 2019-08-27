@@ -68,7 +68,7 @@ const queryParams = `
   page: Int
   perPage: Int
   segment: String
-  type: String 
+  type: String
   tag: String
   ids: [String]
   searchValue: String
@@ -83,6 +83,7 @@ const queryParams = `
   sortDirection: Int
   mainType: String
   mainTypeId: String
+  isRelated: Boolean
 `;
 
 export const queries = `
@@ -91,7 +92,6 @@ export const queries = `
   customerCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
   customerDetail(_id: String!): Customer
   customerListForSegmentPreview(segment: JSON, limit: Int): [Customer]
-  relatedCustomers(${queryParams}): [Customer]
 `;
 
 const fields = `

@@ -1,4 +1,4 @@
-import { Brands, Companies, Conformities, Segments, Tags } from '../../../db/models';
+import { Brands, Companies, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
 import { brandFilter, filter, IListArgs, sortBuilder } from '../../modules/coc/companies';
@@ -150,15 +150,6 @@ const companyQueries = {
     }
 
     return counts;
-  },
-
-  async relatedCompanies(_root, params: IListArgs) {
-    const companyIds = await Conformities.relatedConformity({
-      mainType: params.mainType || '',
-      mainTypeId: params.mainTypeId || '',
-      relType: 'company',
-    });
-    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
   /**

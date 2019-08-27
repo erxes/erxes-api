@@ -16,6 +16,7 @@ export interface IListArgs {
   brand?: string;
   mainType?: string;
   mainTypeId?: string;
+  isRelated?: boolean;
 }
 
 interface IIn {
@@ -86,6 +87,17 @@ export const filter = async (params: IListArgs) => {
     ];
 
     selector = { $or: fields };
+  }
+
+  // Filter by related Conformity
+  if (params.mainType && params.mainTypeId && params.isRelated) {
+    const companyIds = await Conformities.relatedConformity({
+      mainType: params.mainType || '',
+      mainTypeId: params.mainTypeId || '',
+      relType: 'company',
+    });
+
+    selector = { _id: { $in: companyIds || [] } };
   }
 
   // Filter by tag
