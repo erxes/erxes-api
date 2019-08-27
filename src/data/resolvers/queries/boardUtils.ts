@@ -22,9 +22,9 @@ export const generateCommonFilters = async (args: any) => {
     nextDay,
     nextWeek,
     noCloseDate,
-    companyIds,
-    customerIds,
     assignedUserIds,
+    customerIds,
+    companyIds,
     mainType,
     mainTypeId,
     relType,
@@ -52,24 +52,6 @@ export const generateCommonFilters = async (args: any) => {
     filter.$and = $and;
   }
 
-  if (mainType && mainTypeId && relType) {
-    const relIds = await Conformities.savedConformity({
-      mainType,
-      mainTypeId,
-      relType,
-    });
-    filter._id = contains(relIds || []);
-  }
-
-  if (mainType && mainTypeId && relType && isRelated) {
-    const relIds = await Conformities.relatedConformity({
-      mainType,
-      mainTypeId,
-      relType,
-    });
-    filter._id = contains(relIds || []);
-  }
-
   if (customerIds && type) {
     const relIds = await Conformities.filterConformity({
       mainType: 'customer',
@@ -86,6 +68,24 @@ export const generateCommonFilters = async (args: any) => {
       relType: type,
     });
     filter._id = contains(relIds);
+  }
+
+  if (mainType && mainTypeId && relType) {
+    const relIds = await Conformities.savedConformity({
+      mainType,
+      mainTypeId,
+      relType,
+    });
+    filter._id = contains(relIds || []);
+  }
+
+  if (mainType && mainTypeId && relType && isRelated) {
+    const relIds = await Conformities.relatedConformity({
+      mainType,
+      mainTypeId,
+      relType,
+    });
+    filter._id = contains(relIds || []);
   }
 
   if (order) {

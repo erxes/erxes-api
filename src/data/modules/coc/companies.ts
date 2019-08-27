@@ -49,7 +49,7 @@ export const brandFilter = async (brandId: string): Promise<IBrandFilter> => {
   const integrations = await Integrations.find({ brandId }, { _id: 1 });
   const integrationIds = integrations.map(i => i._id);
 
-  const customers = await Customers.find({ integrationId: { $in: integrationIds } });
+  const customers = await Customers.find({ integrationId: { $in: integrationIds } }, { companyIds: 1 });
 
   const customerIds = await customers.map(customer => customer._id);
   const companyIds = await Conformities.filterConformity({
