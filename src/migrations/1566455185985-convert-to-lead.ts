@@ -37,18 +37,16 @@ module.exports.up = async () => {
       submissions: form.submissions,
     };
 
-    await Leads.create(doc);
-
     const integration = await Integrations.findOne({ formId: form._id });
 
-    if (!integration) {
-      throw new Error('Integration not found');
-    }
+    if (integration) {
+      const lead = await Leads.create(doc);
 
-    await Integrations.updateOne(
-      { formId: form._id },
-      { $set: { kind: 'lead', leadId: form._id, leadData: integration.formData } },
-    );
+      await Integrations.updateOne(
+        { formId: form._id },
+        { $set: { kind: 'lead', leadId: lead._id, leadData: integration.formData } },
+      );
+    }
   }
 
   return Promise.resolve('ok');
