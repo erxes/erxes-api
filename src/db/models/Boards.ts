@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Deals, GrowthHacks, PipelineTemplates, Tasks, Tickets } from './';
+import { Deals, GrowthHacks, Tasks, Tickets } from './';
 import { updateOrder, watchItem } from './boardUtils';
 import {
   boardSchema,
@@ -20,6 +20,25 @@ export interface IOrderInput {
 
 // Not mongoose document, just stage shaped plain object
 type IPipelineStage = IStage & { _id: string };
+
+const hasItemCheck = async (type: string, pipelineId: string, prevItemIds: string[] = []) => {
+  const ITEMS = {
+    deal: Deals,
+    ticket: Tickets,
+    task: Tasks,
+    growthHack: GrowthHacks,
+  };
+
+  const stages = await Stages.find({ pipelineId, _id: { $nin: prevItemIds } });
+
+  for (const stage of stages) {
+    const itemCount = await ITEMS[type].find({ stageId: stage._id }).countDocuments();
+
+    if (itemCount > 0) {
+      throw new Error('There is a stage that has a item');
+    }
+  }
+};
 
 const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId: string, type: string) => {
   let order = 0;
@@ -71,39 +90,9 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
     await Stages.bulkWrite(bulkOpsPrevEntry);
   }
 
-  const ITEMS = {
-    deal: Deals,
-    ticket: Tickets,
-    task: Tasks,
-    growthHack: GrowthHacks,
-  };
-
-  const remainedStages = await Stages.find({ pipelineId, _id: { $nin: prevItemIds } });
-
-  for (const stage of remainedStages) {
-    const itemCount = await ITEMS[type].find({ stageId: stage._id }).countDocuments();
-
-    if (itemCount > 0) {
-      throw new Error('There is a stage that has a item');
-    }
-  }
+  await hasItemCheck(type, pipelineId, prevItemIds);
 
   return Stages.deleteMany({ pipelineId, _id: { $nin: validStageIds } });
-};
-
-const fromTemplate = async (doc: IPipeline, pipelineId: string) => {
-  const { templateId, type } = doc;
-  const template = await PipelineTemplates.findOne({ _id: templateId });
-  const templateStages = template ? template.stages : [];
-
-  const stages: IPipelineStage[] = templateStages.map(stage => ({
-    _id: Math.random().toString(),
-    name: stage.name,
-    pipelineId,
-    type,
-  }));
-
-  await createOrUpdatePipelineStages(stages, pipelineId, type);
 };
 
 export interface IBoardModel extends Model<IBoardDocument> {
@@ -140,10 +129,10 @@ export const loadBoardClass = () => {
         throw new Error('Board not found');
       }
 
-      const count = await Pipelines.find({ boardId: _id }).countDocuments();
+      const pipelines = await Pipelines.find({ boardId: _id });
 
-      if (count > 0) {
-        throw new Error("Can't remove a board");
+      for (const pipeline of pipelines) {
+        await hasItemCheck(pipeline.type, pipeline._id);
       }
 
       return Boards.deleteOne({ _id });
@@ -185,9 +174,7 @@ export const loadPipelineClass = () => {
     public static async createPipeline(doc: IPipeline, stages: IPipelineStage[]) {
       const pipeline = await Pipelines.create(doc);
 
-      if (doc.templateId) {
-        await fromTemplate(doc, pipeline._id);
-      } else if (stages) {
+      if (stages) {
         await createOrUpdatePipelineStages(stages, pipeline._id, pipeline.type);
       }
 
@@ -198,9 +185,7 @@ export const loadPipelineClass = () => {
      * Update Pipeline
      */
     public static async updatePipeline(_id: string, doc: IPipeline, stages: IPipelineStage[]) {
-      if (doc.templateId) {
-        await fromTemplate(doc, _id);
-      } else if (stages) {
+      if (stages) {
         await createOrUpdatePipelineStages(stages, _id, doc.type);
       }
 
@@ -226,11 +211,7 @@ export const loadPipelineClass = () => {
         throw new Error('Pipeline not found');
       }
 
-      const count = await Stages.find({ pipelineId: _id }).countDocuments();
-
-      if (count > 0) {
-        throw new Error("Can't remove a pipeline");
-      }
+      await hasItemCheck(pipeline.type, pipeline._id);
 
       return Pipelines.deleteOne({ _id });
     }
