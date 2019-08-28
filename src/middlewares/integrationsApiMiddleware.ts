@@ -18,13 +18,14 @@ const integrationsApiMiddleware = async (req, res) => {
 
   if (action === 'create-or-update-customer') {
     const integration = await Integrations.findOne({ _id: doc.integrationId });
-    const { primaryPhone } = doc;
-
-    let customer;
 
     if (!integration) {
       throw new Error(`Integration not found: ${doc.integrationId}`);
     }
+
+    const { primaryPhone } = doc;
+
+    let customer;
 
     if (primaryPhone) {
       customer = await Customers.findOne({ primaryPhone }).lean();
