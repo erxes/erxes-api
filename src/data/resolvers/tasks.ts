@@ -43,9 +43,8 @@ export default {
 
     return false;
   },
-  async hasSeen(deal: ITaskDocument, _args, { user }: IContext) {
-    const notification = await Notifications.findOne({ isRead: false, receiver: user._id, contentTypeId: deal._id });
 
-    return notification ? false : true;
+  hasSeen(deal: ITaskDocument, _args, { user }: IContext) {
+    return Notifications.checkIfRead(user._id, deal._id);
   },
 };
