@@ -20,6 +20,7 @@ export interface IListParams {
   mainTypeId?: string;
   relType?: string;
   isRelated?: boolean;
+  isSaved?: boolean;
 }
 
 const boardQueries = {

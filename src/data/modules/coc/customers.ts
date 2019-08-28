@@ -47,6 +47,7 @@ export interface IListArgs {
   mainType?: string;
   mainTypeId?: string;
   isRelated?: boolean;
+  isSaved?: boolean;
 }
 
 interface IIntegrationIds {
@@ -151,6 +152,15 @@ export class Builder {
     return { _id: { $in: customerIds || [] } };
   }
 
+  public async savedConformityFilter(mainType: string, mainTypeId: string): Promise<IIdsFilter> {
+    const customerIds = await Conformities.savedConformity({
+      mainType,
+      mainTypeId,
+      relType: 'customer',
+    });
+    return { _id: { $in: customerIds || [] } };
+  }
+
   // filter by id
   public idsFilter(ids: string[]): IIdsFilter {
     return { _id: { $in: ids } };
@@ -205,6 +215,7 @@ export class Builder {
       form: {},
       integrationType: {},
       relatedConformity: {},
+      savedConformity: {},
     };
 
     // filter by type
@@ -262,6 +273,10 @@ export class Builder {
       this.queries.relatedConformity = await this.relatedFilter(this.params.mainType, this.params.mainTypeId);
     }
 
+    if (this.params.mainType && this.params.mainTypeId && this.params.isSaved) {
+      this.queries.savedConformity = await this.savedConformityFilter(this.params.mainType, this.params.mainTypeId);
+    }
+
     // filter by leadStatus
     if (this.params.leadStatus) {
       this.queries.leadStatus = this.leadStatusFilter(this.params.leadStatus);
@@ -289,6 +304,7 @@ export class Builder {
       ...this.queries.leadStatus,
       ...this.queries.lifecycleState,
       ...this.queries.relatedConformity,
+      ...this.queries.savedConformity,
     };
   }
 }

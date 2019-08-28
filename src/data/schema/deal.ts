@@ -55,6 +55,7 @@ export const queries = `
     mainTypeId: String
     relType: String
     isRelated: Boolean
+    isSaved: Boolean
     date: ItemDate
     skip: Int
     search: String
@@ -75,6 +76,7 @@ export const queries = `
     mainTypeId: String
     relType: String
     isRelated: Boolean
+    isSaved: Boolean
     companyIds: [String]
     customerIds: [String]
     assignedUserIds: [String]

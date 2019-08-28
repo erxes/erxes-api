@@ -35,6 +35,7 @@ export const queries = `
     mainTypeId: String
     relType: String
     isRelated: Boolean
+    isSaved: Boolean
     date: ItemDate
     skip: Int
     search: String

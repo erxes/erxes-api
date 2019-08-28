@@ -17,6 +17,7 @@ export interface IListArgs {
   mainType?: string;
   mainTypeId?: string;
   isRelated?: boolean;
+  isSaved?: boolean;
 }
 
 interface IIn {
@@ -97,6 +98,15 @@ export const filter = async (params: IListArgs) => {
       relType: 'company',
     });
 
+    selector = { _id: { $in: companyIds || [] } };
+  }
+
+  if (params.mainType && params.mainTypeId && params.isSaved) {
+    const companyIds = await Conformities.savedConformity({
+      mainType: params.mainType || '',
+      mainTypeId: params.mainTypeId || '',
+      relType: 'company',
+    });
     selector = { _id: { $in: companyIds || [] } };
   }
 

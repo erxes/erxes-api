@@ -29,6 +29,7 @@ export const generateCommonFilters = async (args: any) => {
     mainTypeId,
     relType,
     isRelated,
+    isSaved,
     order,
     probability,
     initialStageId,
@@ -70,7 +71,7 @@ export const generateCommonFilters = async (args: any) => {
     filter._id = contains(relIds);
   }
 
-  if (mainType && mainTypeId && relType) {
+  if (mainType && mainTypeId && relType && isSaved) {
     const relIds = await Conformities.savedConformity({
       mainType,
       mainTypeId,

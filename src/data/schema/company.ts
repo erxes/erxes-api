@@ -71,6 +71,7 @@ const queryParams = `
   mainType: String
   mainTypeId: String
   isRelated: Boolean
+  isSaved: Boolean
 `;
 
 export const queries = `
