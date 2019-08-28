@@ -81,7 +81,7 @@ export default {
     return false;
   },
   async hasSeen(deal: IDealDocument, _args, { user }: IContext) {
-    const notification = await Notifications.findOne({ isRead: false, receiver: user._id, content: deal.name });
+    const notification = await Notifications.findOne({ isRead: false, receiver: user._id, contentTypeId: deal._id });
 
     return notification ? false : true;
   },

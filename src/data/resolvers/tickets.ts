@@ -1,4 +1,4 @@
-import { Companies, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Customers, Pipelines, Stages, Users, Notifications } from '../../db/models';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -42,5 +42,10 @@ export default {
     }
 
     return false;
+  },
+  async hasSeen(deal: ITicketDocument, _args, { user }: IContext) {
+    const notification = await Notifications.findOne({ isRead: false, receiver: user._id, contentTypeId: deal._id });
+
+    return notification ? false : true;
   },
 };
