@@ -73,11 +73,26 @@ export const sendNotifications = async ({
     route = '/inbox';
   }
 
+  const notificationDoc = {
+    createdUser: user,
+    title,
+    contentType,
+    contentTypeId: item._id,
+    notifType: type,
+    action: action ? action : `has updated ${contentType}`,
+    content,
+    link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
+
+    // exclude current user, invited user and removed users
+    receivers: (await notifiedUserIds(item)).filter(id => {
+      return usersToExclude.indexOf(id) < 0;
+    }),
+  };
+
   if (removedUsers && removedUsers.length > 0) {
     await utils.sendNotification({
-      createdUser: user,
+      ...notificationDoc,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
-      title,
       action: `removed you from ${contentType}`,
       content: `'${item.name}'`,
       link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
@@ -87,9 +102,8 @@ export const sendNotifications = async ({
 
   if (invitedUsers && invitedUsers.length > 0) {
     await utils.sendNotification({
-      createdUser: user,
+      ...notificationDoc,
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
-      title,
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
       link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
@@ -100,17 +114,7 @@ export const sendNotifications = async ({
   const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
 
   await utils.sendNotification({
-    createdUser: user,
-    notifType: type,
-    title,
-    action: action ? action : `has updated ${contentType}`,
-    content,
-    link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
-
-    // exclude current user, invited user and removed users
-    receivers: (await notifiedUserIds(item)).filter(id => {
-      return usersToExclude.indexOf(id) < 0;
-    }),
+    ...notificationDoc,
   });
 };
 
