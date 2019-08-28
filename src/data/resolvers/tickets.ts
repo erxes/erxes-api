@@ -1,4 +1,4 @@
-import { Companies, Customers, Pipelines, Stages, Users, Notifications } from '../../db/models';
+import { Companies, Customers, Notifications, Pipelines, Stages, Users } from '../../db/models';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
