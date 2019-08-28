@@ -44,7 +44,7 @@ export default {
     return false;
   },
 
-  hasSeen(deal: ITaskDocument, _args, { user }: IContext) {
+  hasNotified(deal: ITaskDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
   },
 };

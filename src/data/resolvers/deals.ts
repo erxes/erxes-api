@@ -81,7 +81,7 @@ export default {
     return false;
   },
 
-  hasSeen(deal: IDealDocument, _args, { user }: IContext) {
+  hasNotified(deal: IDealDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
   },
 };
