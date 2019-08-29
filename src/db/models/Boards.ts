@@ -12,6 +12,7 @@ import {
   pipelineSchema,
   stageSchema,
 } from './definitions/boards';
+import PipelineTemplates from './PipelineTemplates';
 
 export interface IOrderInput {
   _id: string;
@@ -20,6 +21,21 @@ export interface IOrderInput {
 
 // Not mongoose document, just stage shaped plain object
 type IPipelineStage = IStage & { _id: string };
+
+const getTemplateStages = async (templateId: string, pipelineId: string, type: string) => {
+  const template = await PipelineTemplates.findOne({ _id: templateId });
+
+  if (!template) {
+    throw new Error('Template not found');
+  }
+
+  return template.stages.map(stage => ({
+    _id: Math.random().toString(),
+    name: stage.name,
+    pipelineId,
+    type,
+  }));
+};
 
 const hasItemCheck = async (type: string, pipelineId: string, prevItemIds: string[] = []) => {
   const ITEMS = {
@@ -174,7 +190,11 @@ export const loadPipelineClass = () => {
     public static async createPipeline(doc: IPipeline, stages: IPipelineStage[]) {
       const pipeline = await Pipelines.create(doc);
 
-      if (stages) {
+      if (doc.templateId) {
+        const templateStages = await getTemplateStages(doc.templateId, pipeline._id, pipeline.type);
+
+        await createOrUpdatePipelineStages(templateStages, pipeline._id, pipeline.type);
+      } else if (stages) {
         await createOrUpdatePipelineStages(stages, pipeline._id, pipeline.type);
       }
 
@@ -182,10 +202,18 @@ export const loadPipelineClass = () => {
     }
 
     /**
-     * Update Pipeline
+     * Update a pipeline
      */
     public static async updatePipeline(_id: string, doc: IPipeline, stages: IPipelineStage[]) {
-      if (stages) {
+      if (doc.templateId) {
+        const pipeline = await Pipelines.getPipeline(_id);
+
+        if (doc.templateId !== pipeline.templateId) {
+          const templateStages = await getTemplateStages(doc.templateId, _id, doc.type);
+
+          await createOrUpdatePipelineStages(templateStages, _id, doc.type);
+        }
+      } else if (stages) {
         await createOrUpdatePipelineStages(stages, _id, doc.type);
       }
 
@@ -202,14 +230,10 @@ export const loadPipelineClass = () => {
     }
 
     /**
-     * Remove Pipeline
+     * Remove a pipeline
      */
     public static async removePipeline(_id: string) {
-      const pipeline = await Pipelines.findOne({ _id });
-
-      if (!pipeline) {
-        throw new Error('Pipeline not found');
-      }
+      const pipeline = await Pipelines.getPipeline(_id);
 
       await hasItemCheck(pipeline.type, pipeline._id);
 
