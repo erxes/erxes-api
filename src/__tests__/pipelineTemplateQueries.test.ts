@@ -32,7 +32,7 @@ describe('pipelineTemplateQueries', () => {
 
     const response = await graphqlRequest(qry, 'pipelineTemplates', args);
 
-    expect(response.length).toBe(2);
+    expect(response.length).toBe(3);
   });
 
   test('Pipeline template detail', async () => {
