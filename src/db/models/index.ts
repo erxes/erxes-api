@@ -18,6 +18,7 @@ import ImportHistory from './ImportHistory';
 import Integrations from './Integrations';
 import InternalNotes from './InternalNotes';
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from './KnowledgeBase';
+import Leads from './Leads';
 import MessengerApps from './MessengerApps';
 import { NotificationConfigurations, Notifications } from './Notifications';
 import { Permissions, UsersGroups } from './Permissions';
@@ -40,6 +41,7 @@ export {
   Brands,
   Integrations,
   Forms,
+  Leads,
   EngageMessages,
   Tags,
   Fields,

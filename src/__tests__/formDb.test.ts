@@ -2,6 +2,7 @@ import * as toBeType from 'jest-tobetype';
 import { customerFactory, fieldFactory, formFactory, userFactory } from '../db/factories';
 import { Customers, Fields, Forms, Users } from '../db/models';
 
+import { FORM_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 expect.extend(toBeType);
@@ -18,27 +19,12 @@ describe('form creation', () => {
     await Forms.deleteMany({});
   });
 
-  test(`testing if Error('createdUser must be supplied') is throwing as intended`, async () => {
-    expect.assertions(1);
-
-    try {
-      await Forms.createForm(
-        {
-          title: 'Test form',
-          description: 'Test form description',
-        },
-        undefined,
-      );
-    } catch (e) {
-      expect(e.message).toEqual('createdUser must be supplied');
-    }
-  });
-
   test('check if form creation method is working successfully', async () => {
     const form = await Forms.createForm(
       {
         title: 'Test form',
         description: 'Test form description',
+        type: FORM_TYPES.GROWTH_HACK,
       },
       _user._id,
     );
@@ -75,6 +61,7 @@ describe('form update', () => {
     const doc = {
       title: 'Test form 2',
       description: 'Test form description 2',
+      type: FORM_TYPES.GROWTH_HACK,
     };
 
     const formAfterUpdate = await Forms.updateForm(_form._id, doc);

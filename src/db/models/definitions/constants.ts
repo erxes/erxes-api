@@ -34,7 +34,7 @@ export const METHODS = {
   ALL: ['messenger', 'email'],
 };
 
-export const FORM_LOAD_TYPES = {
+export const LEAD_LOAD_TYPES = {
   SHOUTBOX: 'shoutbox',
   POPUP: 'popup',
   EMBEDDED: 'embedded',
@@ -44,7 +44,7 @@ export const FORM_LOAD_TYPES = {
   ALL: ['', 'shoutbox', 'popup', 'embedded', 'dropdown', 'slideInLeft', 'slideInRight'],
 };
 
-export const FORM_SUCCESS_ACTIONS = {
+export const LEAD_SUCCESS_ACTIONS = {
   EMAIL: 'email',
   REDIRECT: 'redirect',
   ONPAGE: 'onPage',
@@ -53,11 +53,11 @@ export const FORM_SUCCESS_ACTIONS = {
 
 export const KIND_CHOICES = {
   MESSENGER: 'messenger',
-  FORM: 'form',
+  LEAD: 'lead',
   FACEBOOK: 'facebook',
   GMAIL: 'gmail',
   CALLPRO: 'callpro',
-  ALL: ['messenger', 'form', 'facebook', 'gmail', 'callpro'],
+  ALL: ['messenger', 'lead', 'facebook', 'gmail', 'callpro'],
 };
 
 // messenger data availability constants
@@ -368,4 +368,10 @@ export const NOTIFICATION_TYPES = {
     'customerMention',
     'companyMention',
   ],
+};
+
+export const FORM_TYPES = {
+  LEAD: 'lead',
+  GROWTH_HACK: 'growthHack',
+  ALL: ['lead', 'growthHack'],
 };

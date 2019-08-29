@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { FORM_LOAD_TYPES, FORM_SUCCESS_ACTIONS, KIND_CHOICES, MESSENGER_DATA_AVAILABILITY } from './constants';
+import { KIND_CHOICES, LEAD_LOAD_TYPES, LEAD_SUCCESS_ACTIONS, MESSENGER_DATA_AVAILABILITY } from './constants';
 import { field } from './utils';
 
 export interface ILink {
@@ -44,7 +44,7 @@ export interface IMessengerData {
 
 export interface IMessengerDataDocument extends IMessengerData, Document {}
 
-export interface IFormData {
+export interface ILeadData {
   loadType?: string;
   successAction?: string;
   fromEmail?: string;
@@ -57,7 +57,7 @@ export interface IFormData {
   redirectUrl?: string;
 }
 
-export interface IFormDataDocument extends IFormData, Document {}
+export interface ILeadDataDocument extends ILeadData, Document {}
 
 export interface IUiOptions {
   color?: string;
@@ -74,15 +74,16 @@ export interface IIntegration {
   brandId?: string;
   languageCode?: string;
   tagIds?: string[];
-  formId?: string;
-  formData?: IFormData;
+  leadId?: string;
+  leadData?: ILeadData;
   messengerData?: IMessengerData;
   uiOptions?: IUiOptions;
 }
 
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
-  formData?: IFormDataDocument;
+  leadData?: ILeadDataDocument;
+  formData?: ILeadDataDocument;
   messengerData?: IMessengerDataDocument;
   uiOptions?: IUiOptionsDocument;
 }
@@ -128,16 +129,16 @@ const messengerDataSchema = new Schema(
   { _id: false },
 );
 
-// subdocument schema for FormData
-const formDataSchema = new Schema(
+// subdocument schema for LeadData
+const leadDataSchema = new Schema(
   {
     loadType: field({
       type: String,
-      enum: FORM_LOAD_TYPES.ALL,
+      enum: LEAD_LOAD_TYPES.ALL,
     }),
     successAction: field({
       type: String,
-      enum: FORM_SUCCESS_ACTIONS.ALL,
+      enum: LEAD_SUCCESS_ACTIONS.ALL,
       optional: true,
     }),
     fromEmail: field({
@@ -203,8 +204,8 @@ export const integrationSchema = new Schema({
     optional: true,
   }),
   tagIds: field({ type: [String], optional: true }),
-  formId: field({ type: String }),
-  formData: field({ type: formDataSchema }),
+  leadId: field({ type: String }),
+  leadData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),
 });

@@ -6,9 +6,9 @@ import { formSchema, IForm, IFormDocument } from './definitions/forms';
 
 export interface IFormModel extends Model<IFormDocument> {
   generateCode(): string;
-  createForm(doc: IForm, createdUserId?: string): Promise<IFormDocument>;
+  createForm(doc: IForm, createdUserId: string): Promise<IFormDocument>;
 
-  updateForm(_id, { title, description, buttonText, themeColor, callout, rules }: IForm): Promise<IFormDocument>;
+  updateForm(_id, { title, description, buttonText }: IForm): Promise<IFormDocument>;
 
   removeForm(_id: string): void;
   duplicate(_id: string): Promise<IFormDocument>;
@@ -34,11 +34,7 @@ export const loadClass = () => {
     /**
      * Creates a form document
      */
-    public static async createForm(doc: IForm, createdUserId?: string) {
-      if (!createdUserId) {
-        throw new Error('createdUser must be supplied');
-      }
-
+    public static async createForm(doc: IForm, createdUserId: string) {
       doc.code = await this.generateCode();
 
       return Forms.create({
@@ -51,12 +47,8 @@ export const loadClass = () => {
     /**
      * Updates a form document
      */
-    public static async updateForm(_id: string, { title, description, buttonText, themeColor, callout, rules }: IForm) {
-      await Forms.updateOne(
-        { _id },
-        { $set: { title, description, buttonText, themeColor, callout, rules } },
-        { runValidators: true },
-      );
+    public static async updateForm(_id: string, doc: IForm) {
+      await Forms.updateOne({ _id }, { $set: doc }, { runValidators: true });
 
       return Forms.findOne({ _id });
     }
@@ -86,6 +78,7 @@ export const loadClass = () => {
         {
           title: `${form.title} duplicated`,
           description: form.description,
+          type: form.type,
         },
         form.createdUserId,
       );
