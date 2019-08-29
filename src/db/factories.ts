@@ -26,6 +26,7 @@ import {
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
   KnowledgeBaseTopics,
+  Leads,
   MessengerApps,
   NotificationConfigurations,
   Notifications,
@@ -47,6 +48,7 @@ import {
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
   BOARD_TYPES,
+  FORM_TYPES,
   NOTIFICATION_TYPES,
   PRODUCT_TYPES,
   STATUSES,
@@ -512,8 +514,8 @@ interface IIntegrationFactoryInput {
   name?: string;
   kind?: string;
   brandId?: string;
-  formId?: string;
-  formData?: any | string;
+  leadId?: string;
+  leadData?: any | string;
   tagIds?: string[];
 }
 
@@ -524,37 +526,39 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     name: params.name || faker.random.word(),
     kind,
     brandId: params.brandId || Random.id(),
-    formId: params.formId || Random.id(),
+    leadId: params.leadId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
-    formData: params.formData === 'form' ? params.formData : kind === 'form' ? { thankContent: 'thankContent' } : null,
+    leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
   };
 
   return Integrations.create(doc);
 };
 
-interface IFormSubmission {
-  customerId: string;
-  submittedAt: Date;
-}
-
 interface IFormFactoryInput {
   title?: string;
   code?: string;
+  type?: string;
   description?: string;
   createdUserId?: string;
-  submissions?: IFormSubmission[];
 }
 
 export const formFactory = async (params: IFormFactoryInput = {}) => {
-  const { title, description, code, submissions, createdUserId } = params;
+  const { title, description, code, type, createdUserId } = params;
 
   return Forms.create({
     title: title || faker.random.word(),
     description: description || faker.random.word(),
     code: code || Random.id(),
-    submissions: submissions || [],
+    type: type || FORM_TYPES.GROWTH_HACK,
     createdUserId: createdUserId || (await userFactory({})),
+  });
+};
+
+export const leadFactory = async ({ formId, createdUserId }: { formId: string; createdUserId: string }) => {
+  return Leads.create({
+    formId,
+    createdUserId,
   });
 };
 
