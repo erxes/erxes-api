@@ -34,7 +34,7 @@ const internalNoteMutations = {
 
         notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
         notifDoc.content = `"${deal.name}"`;
-        notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
         notifDoc.contentTypeId = deal._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
         break;
@@ -72,7 +72,7 @@ const internalNoteMutations = {
 
         notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
         notifDoc.content = `"${ticket.name}"`;
-        notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
         notifDoc.contentTypeId = ticket._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
         break;
@@ -85,7 +85,7 @@ const internalNoteMutations = {
 
         notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
         notifDoc.content = `"${task.name}"`;
-        notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`;
+        notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
         notifDoc.contentTypeId = task._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
         break;
