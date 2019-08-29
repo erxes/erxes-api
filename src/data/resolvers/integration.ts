@@ -1,4 +1,4 @@
-import { Brands, Channels, Leads, Tags } from '../../db/models';
+import { Brands, Channels, Forms, Tags } from '../../db/models';
 import { IIntegrationDocument } from '../../db/models/definitions/integrations';
 
 export default {
@@ -6,8 +6,8 @@ export default {
     return Brands.findOne({ _id: integration.brandId });
   },
 
-  lead(integration: IIntegrationDocument) {
-    return Leads.findOne({ _id: integration.leadId });
+  form(integration: IIntegrationDocument) {
+    return Forms.findOne({ _id: integration.formId });
   },
 
   channels(integration: IIntegrationDocument) {

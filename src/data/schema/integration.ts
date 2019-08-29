@@ -6,7 +6,7 @@ export const types = `
     brandId: String!
     languageCode: String
     code: String
-    leadId: String
+    formId: String
     tagIds: [String]
     tags: [Tag]
     leadData: JSON
@@ -14,7 +14,7 @@ export const types = `
     uiOptions: JSON
 
     brand: Brand
-    lead: Lead
+    form: Form
     channels: [Channel]
   }
 
@@ -37,6 +37,9 @@ export const types = `
     adminEmailContent: String
     thankContent: String
     redirectUrl: String
+    themeColor: String
+    callout: JSON,
+    rules: [InputRule]
   }
 
   input MessengerOnlineHoursSchema {
@@ -125,7 +128,7 @@ export const mutations = `
     name: String!,
     brandId: String!,
     languageCode: String,
-    leadId: String!,
+    formId: String!,
     leadData: IntegrationLeadData!): Integration
 
   integrationsEditLeadIntegration(
@@ -133,7 +136,7 @@ export const mutations = `
     name: String!,
     brandId: String!,
     languageCode: String,
-    leadId: String!,
+    formId: String!,
     leadData: IntegrationLeadData!): Integration
 
   integrationsCreateExternalIntegration(

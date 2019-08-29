@@ -1,4 +1,5 @@
 import { Document, Schema } from 'mongoose';
+import { IRule, ruleSchema } from './common';
 import { KIND_CHOICES, LEAD_LOAD_TYPES, LEAD_SUCCESS_ACTIONS, MESSENGER_DATA_AVAILABILITY } from './constants';
 import { field } from './utils';
 
@@ -44,6 +45,14 @@ export interface IMessengerData {
 
 export interface IMessengerDataDocument extends IMessengerData, Document {}
 
+export interface ICallout extends Document {
+  title?: string;
+  body?: string;
+  buttonText?: string;
+  featuredImage?: string;
+  skip?: boolean;
+}
+
 export interface ILeadData {
   loadType?: string;
   successAction?: string;
@@ -55,9 +64,21 @@ export interface ILeadData {
   adminEmailContent?: string;
   thankContent?: string;
   redirectUrl?: string;
+  themeColor?: string;
+  callout?: ICallout;
+  rules?: IRule;
 }
 
-export interface ILeadDataDocument extends ILeadData, Document {}
+interface ISubmission extends Document {
+  customerId: string;
+  submittedAt: Date;
+}
+
+export interface ILeadDataDocument extends ILeadData, Document {
+  viewCount?: number;
+  contactsGathered?: number;
+  submissions?: ISubmission[];
+}
 
 export interface IUiOptions {
   color?: string;
@@ -74,7 +95,7 @@ export interface IIntegration {
   brandId?: string;
   languageCode?: string;
   tagIds?: string[];
-  leadId?: string;
+  formId?: string;
   leadData?: ILeadData;
   messengerData?: IMessengerData;
   uiOptions?: IUiOptions;
@@ -83,7 +104,6 @@ export interface IIntegration {
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
   leadData?: ILeadDataDocument;
-  formData?: ILeadDataDocument;
   messengerData?: IMessengerDataDocument;
   uiOptions?: IUiOptionsDocument;
 }
@@ -125,6 +145,27 @@ const messengerDataSchema = new Schema(
     showChat: field({ type: Boolean, default: true }),
     showLauncher: field({ type: Boolean, default: true }),
     forceLogoutWhenResolve: field({ type: Boolean, default: false }),
+  },
+  { _id: false },
+);
+
+// schema for lead's callout component
+const calloutSchema = new Schema(
+  {
+    title: field({ type: String, optional: true }),
+    body: field({ type: String, optional: true }),
+    buttonText: field({ type: String, optional: true }),
+    featuredImage: field({ type: String, optional: true }),
+    skip: field({ type: Boolean, optional: true }),
+  },
+  { _id: false },
+);
+
+// schema for lead submission details
+const submissionSchema = new Schema(
+  {
+    customerId: field({ type: String }),
+    submittedAt: field({ type: Date }),
   },
   { _id: false },
 );
@@ -173,6 +214,30 @@ const leadDataSchema = new Schema(
       type: String,
       optional: true,
     }),
+    themeColor: field({
+      type: String,
+      optional: true,
+    }),
+    callout: field({
+      type: calloutSchema,
+      optional: true,
+    }),
+    viewCount: field({
+      type: Number,
+      optional: true,
+    }),
+    contactsGathered: field({
+      type: Number,
+      optional: true,
+    }),
+    submissions: field({
+      type: [submissionSchema],
+      optional: true,
+    }),
+    rules: field({
+      type: [ruleSchema],
+      optional: true,
+    }),
   },
   { _id: false },
 );
@@ -204,7 +269,7 @@ export const integrationSchema = new Schema({
     optional: true,
   }),
   tagIds: field({ type: [String], optional: true }),
-  leadId: field({ type: String }),
+  formId: field({ type: String }),
   leadData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),

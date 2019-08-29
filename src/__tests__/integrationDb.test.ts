@@ -6,10 +6,9 @@ import {
   fieldFactory,
   formFactory,
   integrationFactory,
-  leadFactory,
   userFactory,
 } from '../db/factories';
-import { Brands, ConversationMessages, Forms, Integrations, Leads, Users } from '../db/models';
+import { Brands, ConversationMessages, Forms, Integrations, Users } from '../db/models';
 import { KIND_CHOICES, LEAD_LOAD_TYPES, MESSENGER_DATA_AVAILABILITY } from '../db/models/definitions/constants';
 
 import './setup.ts';
@@ -76,7 +75,6 @@ describe('messenger integration model edit method', () => {
 
 describe('lead integration create model test without leadData', () => {
   let _brand;
-  let _lead;
   let _user;
   let _form;
 
@@ -84,7 +82,6 @@ describe('lead integration create model test without leadData', () => {
     _brand = await brandFactory({});
     _user = await userFactory({});
     _form = await formFactory({});
-    _lead = await leadFactory({ createdUserId: _user._id, formId: _form._id });
   });
 
   afterEach(async () => {
@@ -92,7 +89,6 @@ describe('lead integration create model test without leadData', () => {
     await Integrations.deleteMany({});
     await Users.deleteMany({});
     await Forms.deleteMany({});
-    await Leads.deleteMany({});
   });
 
   test('check if create lead integration test wihtout leadData is throwing exception', async () => {
@@ -101,7 +97,7 @@ describe('lead integration create model test without leadData', () => {
     const mainDoc = {
       name: 'lead integration test',
       brandId: _brand._id,
-      leadId: _lead._id,
+      formId: _form._id,
     };
 
     try {
@@ -114,7 +110,6 @@ describe('lead integration create model test without leadData', () => {
 
 describe('create lead integration', () => {
   let _brand;
-  let _lead;
   let _user;
   let _form;
 
@@ -122,7 +117,6 @@ describe('create lead integration', () => {
     _brand = await brandFactory({});
     _form = await formFactory({});
     _user = await userFactory({});
-    _lead = await leadFactory({ createdUserId: _user._id, formId: _form._id });
   });
 
   afterEach(async () => {
@@ -130,14 +124,13 @@ describe('create lead integration', () => {
     await Integrations.deleteMany({});
     await Users.deleteMany({});
     await Forms.deleteMany({});
-    await Leads.deleteMany({});
   });
 
   test('test if create lead integration is working successfully', async () => {
     const mainDoc = {
       name: 'lead integration test',
       brandId: _brand._id,
-      leadId: _lead._id,
+      formId: _form._id,
     };
 
     const leadData = {
@@ -153,7 +146,7 @@ describe('create lead integration', () => {
       throw new Error('Integration not found');
     }
 
-    expect(integration.leadId).toEqual(_lead._id);
+    expect(integration.formId).toEqual(_form._id);
     expect(integration.name).toEqual(mainDoc.name);
     expect(integration.brandId).toEqual(_brand._id);
     expect(integration.leadData.loadType).toEqual(LEAD_LOAD_TYPES.EMBEDDED);
@@ -164,23 +157,18 @@ describe('create lead integration', () => {
 describe('edit lead integration', () => {
   let _brand;
   let _brand2;
-  let _lead;
-  let _lead2;
-  let _user;
   let _form;
   let _leadIntegration;
 
   beforeEach(async () => {
     _brand = await brandFactory({});
     _brand2 = await brandFactory({});
-    _user = await userFactory({});
     _form = await formFactory({});
-    _lead = await leadFactory({ createdUserId: _user._id, formId: _form._id });
-    _lead2 = await leadFactory({ createdUserId: _user._id, formId: _form._id });
+
     _leadIntegration = await integrationFactory({
       name: 'lead integration test',
       brandId: _brand._id,
-      leadId: _lead._id,
+      formId: _form._id,
       kind: KIND_CHOICES.LEAD,
       leadData: {
         loadType: LEAD_LOAD_TYPES.EMBEDDED,
@@ -193,14 +181,13 @@ describe('edit lead integration', () => {
     await Integrations.deleteMany({});
     await Users.deleteMany({});
     await Forms.deleteMany({});
-    await Leads.deleteMany({});
   });
 
   test('test if integration lead update method is running successfully', async () => {
     const mainDoc = {
       name: 'lead integration test 2',
       brandId: _brand2._id,
-      leadId: _lead2._id,
+      formId: _form._id,
     };
 
     const leadData = {
@@ -217,7 +204,7 @@ describe('edit lead integration', () => {
     }
 
     expect(integration.name).toEqual(mainDoc.name);
-    expect(integration.leadId).toEqual(_lead2._id);
+    expect(integration.formId).toEqual(_form._id);
     expect(integration.brandId).toEqual(_brand2._id);
     expect(integration.leadData.loadType).toEqual(LEAD_LOAD_TYPES.SHOUTBOX);
   });
@@ -225,24 +212,20 @@ describe('edit lead integration', () => {
 
 describe('remove integration model method test', () => {
   let _brand;
-  let _lead;
-  let _user;
   let _form;
   let _integration;
   let _conversation;
 
   beforeEach(async () => {
     _brand = await brandFactory({});
-    _user = await userFactory();
     _form = await formFactory();
 
-    _lead = await leadFactory({ formId: _form._id, createdUserId: _user._id });
-    await fieldFactory({ contentType: 'lead', contentTypeId: _lead._id });
+    await fieldFactory({ contentType: 'form', contentTypeId: _form._id });
 
     _integration = await integrationFactory({
       name: 'lead integration test',
       brandId: _brand._id,
-      leadId: _lead._id,
+      formId: _form._id,
       kind: 'lead',
     });
 
@@ -260,7 +243,6 @@ describe('remove integration model method test', () => {
     await Users.deleteMany({});
     await Forms.deleteMany({});
     await ConversationMessages.deleteMany({});
-    await Leads.deleteMany({});
   });
 
   test('test if remove lead integration model method is working successfully', async () => {
@@ -268,7 +250,6 @@ describe('remove integration model method test', () => {
 
     expect(await Integrations.find({}).countDocuments()).toEqual(0);
     expect(await ConversationMessages.find({}).countDocuments()).toBe(0);
-    expect(await Leads.find({}).countDocuments()).toBe(0);
     expect(await Forms.find({}).countDocuments()).toBe(0);
   });
 });

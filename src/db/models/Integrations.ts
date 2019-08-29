@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import 'mongoose-type-email';
-import { ConversationMessages, Conversations, Customers, Leads } from '.';
+import { ConversationMessages, Conversations, Customers, Forms } from '.';
 import { KIND_CHOICES } from './definitions/constants';
 import {
   IIntegration,
@@ -156,9 +156,9 @@ export const loadClass = () => {
         await Customers.removeCustomer(customerId);
       }
 
-      // Remove lead
-      if (integration.leadId) {
-        await Leads.removeLead(integration.leadId);
+      // Remove form
+      if (integration.formId) {
+        await Forms.removeForm(integration.formId);
       }
 
       return Integrations.deleteMany({ _id });

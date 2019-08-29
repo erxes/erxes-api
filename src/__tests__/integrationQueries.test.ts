@@ -32,13 +32,13 @@ describe('integrationQueries', () => {
         brandId
         languageCode
         code
-        leadId
+        formId
         leadData
         messengerData
         uiOptions
 
         brand { _id }
-        lead { _id }
+        form { _id }
         channels { _id }
       }
     }

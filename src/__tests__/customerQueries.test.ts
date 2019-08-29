@@ -1,15 +1,6 @@
 import * as faker from 'faker';
-import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
-import {
-  customerFactory,
-  formFactory,
-  integrationFactory,
-  leadFactory,
-  segmentFactory,
-  tagsFactory,
-  userFactory,
-} from '../db/factories';
+import { customerFactory, integrationFactory, segmentFactory, tagsFactory } from '../db/factories';
 import { Customers, Segments, Tags } from '../db/models';
 
 import './setup.ts';
