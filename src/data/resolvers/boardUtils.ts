@@ -27,6 +27,17 @@ export const notifiedUserIds = async (item: any) => {
   return userIds;
 };
 
+export interface IBoardNotificationParams {
+  item: IDealDocument;
+  user: IUserDocument;
+  type: string;
+  action?: string;
+  content?: string;
+  contentType: string;
+  invitedUsers?: string[];
+  removedUsers?: string[];
+}
+
 /**
  * Send notification to all members of this content except the sender
  */
@@ -39,16 +50,7 @@ export const sendNotifications = async ({
   contentType,
   invitedUsers,
   removedUsers,
-}: {
-  item: IDealDocument;
-  user: IUserDocument;
-  type: string;
-  action?: string;
-  content?: string;
-  contentType: string;
-  invitedUsers?: string[];
-  removedUsers?: string[];
-}) => {
+}: IBoardNotificationParams) => {
   const stage = await Stages.findOne({ _id: item.stageId });
 
   if (!stage) {
