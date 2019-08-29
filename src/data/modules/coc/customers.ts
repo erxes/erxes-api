@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { Brands, Integrations, Leads, Segments } from '../../../db/models';
+import { Brands, Forms, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
 
@@ -154,9 +154,9 @@ export class Builder {
   }
 
   // filter by lead
-  public async leadFilter(leadId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
-    const leadObj = await Leads.findOne({ _id: leadId });
-    const { submissions = [] } = leadObj || {};
+  public async leadFilter(formId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
+    const integration = await Integrations.findOne({ formId });
+    const submissions = integration && integration.leadData ? integration.leadData.submissions || [] : [];
     const ids: string[] = [];
 
     for (const submission of submissions) {

@@ -19,8 +19,6 @@ const formMutations = {
    * Update form data
    */
   formsEdit(_root, { _id, ...doc }: IFormsEdit, { docModifier }: IContext) {
-    console.log('formsEdit _id: ', _id);
-    console.log('formsEdit doc: ', doc);
     return Forms.updateForm(_id, docModifier(doc));
   },
 };

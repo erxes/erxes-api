@@ -204,25 +204,25 @@ describe('mutations', () => {
     const args = {
       name: _integration.name,
       brandId: _brand._id,
-      leadId: _integration.leadId,
+      formId: _integration.formId,
       ...commonLeadProperties,
     };
 
     const mutation = `
       mutation integrationsCreateLeadIntegration(
         ${commonParamDefs}
-        $leadId: String!
+        $formId: String!
         $leadData: IntegrationLeadData!
       ) {
         integrationsCreateLeadIntegration(
           ${commonParams}
-          leadId: $leadId
+          formId: $formId
           leadData: $leadData
         ) {
           name
           brandId
           languageCode
-          leadId
+          formId
           leadData
         }
       }
@@ -233,8 +233,7 @@ describe('mutations', () => {
     expect(leadIntegration.name).toBe(args.name);
     expect(leadIntegration.brandId).toBe(args.brandId);
     expect(leadIntegration.languageCode).toBe(args.languageCode);
-    expect(leadIntegration.leadId).toBe(args.leadId);
-    expect(leadIntegration.leadData.toJSON()).toEqual(args.leadData);
+    expect(leadIntegration.formId).toBe(args.formId);
   });
 
   test('Edit lead integration', async () => {
@@ -242,20 +241,20 @@ describe('mutations', () => {
       _id: _integration._id,
       name: _integration.name,
       brandId: _brand._id,
-      leadId: _integration.leadId,
+      formId: _integration.formId,
       ...commonLeadProperties,
     };
 
     const mutation = `
       mutation integrationsEditLeadIntegration(
         $_id: String!
-        $leadId: String!
+        $formId: String!
         $leadData: IntegrationLeadData!
         ${commonParamDefs}
       ) {
         integrationsEditLeadIntegration(
           _id: $_id
-          leadId: $leadId
+          formId: $formId
           leadData: $leadData
           ${commonParams}
         ) {
@@ -263,7 +262,7 @@ describe('mutations', () => {
           name
           brandId
           languageCode
-          leadId
+          formId
           leadData
         }
       }
@@ -275,7 +274,6 @@ describe('mutations', () => {
     expect(leadIntegration.name).toBe(args.name);
     expect(leadIntegration.brandId).toBe(args.brandId);
     expect(leadIntegration.languageCode).toBe(args.languageCode);
-    expect(leadIntegration.leadId).toBe(args.leadId);
-    expect(leadIntegration.leadData.toJSON()).toEqual(args.leadData);
+    expect(leadIntegration.formId).toBe(args.formId);
   });
 });

@@ -82,7 +82,6 @@ const integrationMutations = {
    * Edit a lead integration
    */
   integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditLeadIntegration) {
-    console.log('integrationsEditLeadIntegration: ', doc);
     return Integrations.updateLeadIntegration(_id, doc);
   },
 

@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Brands, Forms, Integrations, Leads } from '.';
+import { Brands, Forms, Integrations } from '.';
 import { IScript, IScriptDocument, scriptSchema } from './definitions/scripts';
 
 export interface IScriptModel extends Model<IScriptDocument> {
@@ -37,11 +37,10 @@ export const loadClass = () => {
         if (integrations) {
           for (const integration of integrations) {
             const brand = await Brands.findOne({ _id: integration.brandId });
-            const lead = await Leads.findOne({ _id: integration.leadId });
-            if (!lead) {
-              throw new Error('Deal not found');
+            const form = await Forms.findOne({ _id: integration.formId });
+            if (!form) {
+              throw new Error('Form not found');
             }
-            const form = await Forms.findOne({ _id: integration.leadId });
 
             if (brand && form) {
               maps.push({

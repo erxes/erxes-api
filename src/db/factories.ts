@@ -26,7 +26,6 @@ import {
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
   KnowledgeBaseTopics,
-  Leads,
   MessengerApps,
   NotificationConfigurations,
   Notifications,
@@ -514,7 +513,7 @@ interface IIntegrationFactoryInput {
   name?: string;
   kind?: string;
   brandId?: string;
-  leadId?: string;
+  formId?: string;
   leadData?: any | string;
   tagIds?: string[];
 }
@@ -526,7 +525,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     name: params.name || faker.random.word(),
     kind,
     brandId: params.brandId || Random.id(),
-    leadId: params.leadId || Random.id(),
+    formId: params.formId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
@@ -552,13 +551,6 @@ export const formFactory = async (params: IFormFactoryInput = {}) => {
     code: code || Random.id(),
     type: type || FORM_TYPES.GROWTH_HACK,
     createdUserId: createdUserId || (await userFactory({})),
-  });
-};
-
-export const leadFactory = async ({ formId, createdUserId }: { formId: string; createdUserId: string }) => {
-  return Leads.create({
-    formId,
-    createdUserId,
   });
 };
 
