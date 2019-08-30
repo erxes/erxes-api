@@ -76,7 +76,7 @@ const ticketMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const ticket = await Tickets.findOne({ _id });
+    const ticket = await Tickets.getTicket(_id);
 
     if (!ticket) {
       throw new Error('Ticket not found');
