@@ -3,7 +3,7 @@ import { connect } from '../db/connection';
 import { Forms, Integrations } from '../db/models';
 import { IRule } from '../db/models/definitions/common';
 import { IFormDocument } from '../db/models/definitions/forms';
-import { ICallout, IIntegrationDocument, ILeadDataDocument } from '../db/models/definitions/integrations';
+import { ICallout } from '../db/models/definitions/integrations';
 
 module.exports.up = async () => {
   await connect();
