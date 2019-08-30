@@ -136,10 +136,6 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
     const board = await Boards.getBoard(pipeline.boardId || '');
     const oldBoard = await Boards.getBoard(oldPipeline.boardId || '');
 
-    if (!board || !oldBoard) {
-      throw new Error('Board not found');
-    }
-
     action = `moved '${item.name}' from ${oldBoard.name}-${oldPipeline.name}-${oldStage.name} to `;
 
     content = `${board.name}-${pipeline.name}-${stage.name}`;
