@@ -78,10 +78,6 @@ const ticketMutations = {
   ) {
     const ticket = await Tickets.getTicket(_id);
 
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
     await Tickets.updateTicket(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
