@@ -76,7 +76,13 @@ const taskMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const task = await Tasks.updateTask(_id, {
+    const task = await Tasks.findOne({ _id });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    await Tasks.updateTask(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
