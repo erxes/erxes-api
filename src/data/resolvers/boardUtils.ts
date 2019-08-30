@@ -127,22 +127,14 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
   let content = `'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
-    const stage = await Stages.findOne({ _id: destinationStageId });
-    const oldStage = await Stages.findOne({ _id: oldStageId });
+    const stage = await Stages.getStage(destinationStageId);
+    const oldStage = await Stages.getStage(oldStageId);
 
-    if (!stage || !oldStage) {
-      throw new Error('Stage not found');
-    }
+    const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+    const oldPipeline = await Pipelines.getPipeline(oldStage.pipelineId || '');
 
-    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-    const oldPipeline = await Pipelines.findOne({ _id: oldStage.pipelineId });
-
-    if (!pipeline || !oldPipeline) {
-      throw new Error('Pipeline not found');
-    }
-
-    const board = await Boards.findOne({ _id: pipeline.boardId });
-    const oldBoard = await Boards.findOne({ _id: oldPipeline.boardId });
+    const board = await Boards.getBoard(pipeline.boardId || '');
+    const oldBoard = await Boards.getBoard(oldPipeline.boardId || '');
 
     if (!board || !oldBoard) {
       throw new Error('Board not found');
