@@ -72,7 +72,6 @@ export interface ILeadData {
   themeColor?: string;
   callout?: ICallout;
   rules?: IRule;
-  submissions?: ISubmission[];
 }
 
 export interface ILeadDataDocument extends ILeadData, Document {

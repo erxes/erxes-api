@@ -84,11 +84,11 @@ export const formSchema = schemaWrapper(
 export interface IFormSubmission {
   customerId: string;
   formId: string;
+  submittedAt?: Date;
 }
 
 export interface IFormSubmissionDocument extends IFormSubmission, Document {
   _id: string;
-  submittedAt: Date;
 }
 
 // schema for form submission document

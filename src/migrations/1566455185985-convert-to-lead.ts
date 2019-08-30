@@ -1,5 +1,5 @@
 import { connect } from '../db/connection';
-import { Forms, Integrations } from '../db/models';
+import { Forms, FormSubmissions, Integrations } from '../db/models';
 import { IFormDocument } from '../db/models/definitions/forms';
 
 module.exports.up = async () => {
@@ -27,8 +27,17 @@ module.exports.up = async () => {
         rules: form.rules,
         viewCount: form.viewCount,
         contactsGathered: form.contactsGathered,
-        submissions: form.submissions,
       };
+
+      const submissions = form.submissions || [];
+
+      for (const submission of submissions) {
+        await FormSubmissions.createFormSubmission({
+          formId: form._id,
+          customerId: submission.customerId,
+          submittedAt: submission.submittedAt,
+        });
+      }
 
       await Integrations.updateOne(
         { formId: form._id },
