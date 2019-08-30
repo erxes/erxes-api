@@ -375,3 +375,14 @@ export const FORM_TYPES = {
   GROWTH_HACK: 'growthHack',
   ALL: ['lead', 'growthHack'],
 };
+
+export const NOTIFICATION_CONTENT_TYPES = {
+  TASK: 'task',
+  DEAL: 'deal',
+  COMPANY: 'company',
+  CUSTOMER: 'customer',
+  TICKET: 'ticket',
+  CHANNEL: 'channel',
+  CONVERSATION: 'conversation',
+  ALL: ['task', 'deal', 'company', 'customer', 'ticket', 'channel', 'conversation'],
+};

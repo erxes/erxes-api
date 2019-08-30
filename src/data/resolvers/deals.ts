@@ -1,4 +1,4 @@
-import { Companies, Customers, Pipelines, Products, Stages, Users } from '../../db/models';
+import { Companies, Customers, Notifications, Pipelines, Products, Stages, Users } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -75,5 +75,9 @@ export default {
     }
 
     return false;
+  },
+
+  hasNotified(deal: IDealDocument, _args, { user }: IContext) {
+    return Notifications.checkIfRead(user._id, deal._id);
   },
 };
