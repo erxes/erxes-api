@@ -156,7 +156,12 @@ export class Builder {
   // filter by lead
   public async leadFilter(formId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
     const integration = await Integrations.findOne({ formId });
-    const submissions = integration && integration.leadData ? integration.leadData.submissions || [] : [];
+
+    if (!integration) {
+      throw new Error('Integration not found');
+    }
+
+    const submissions = integration.leadData ? integration.leadData.submissions || [] : [];
     const ids: string[] = [];
 
     for (const submission of submissions) {

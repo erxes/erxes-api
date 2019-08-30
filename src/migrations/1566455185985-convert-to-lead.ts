@@ -27,14 +27,21 @@ module.exports.up = async () => {
   for (const form of forms) {
     const integration = await Integrations.findOne({ formId: form._id });
 
-    if (integration) {
+    if (integration && integration.formData) {
       const leadData = {
-        ...integration.formData,
+        loadType: integration.formData.loadType,
+        successAction: integration.formData.successAction,
+        fromEmail: integration.formData.fromEmail,
+        userEmailTitle: integration.formData.userEmailTitle,
+        userEmailContent: integration.formData.userEmailContent,
+        adminEmails: integration.formData.adminEmails,
+        adminEmailTitle: integration.formData.adminEmailTitle,
+        adminEmailContent: integration.formData.adminEmailContent,
+        thankContent: integration.formData.thankContent,
+        redirectUrl: integration.formData.redirectUrl,
         themeColor: form.themeColor,
         callout: form.callout,
         rules: form.rules,
-        createdUserId: form.createdUserId,
-        createdDate: form.createdDate,
         viewCount: form.viewCount,
         contactsGathered: form.contactsGathered,
         submissions: form.submissions,

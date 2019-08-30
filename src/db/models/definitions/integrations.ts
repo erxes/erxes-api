@@ -3,6 +3,11 @@ import { IRule, ruleSchema } from './common';
 import { KIND_CHOICES, LEAD_LOAD_TYPES, LEAD_SUCCESS_ACTIONS, MESSENGER_DATA_AVAILABILITY } from './constants';
 import { field } from './utils';
 
+export interface ISubmission extends Document {
+  customerId: string;
+  submittedAt: Date;
+}
+
 export interface ILink {
   twitter?: string;
   facebook?: string;
@@ -67,17 +72,12 @@ export interface ILeadData {
   themeColor?: string;
   callout?: ICallout;
   rules?: IRule;
-}
-
-interface ISubmission extends Document {
-  customerId: string;
-  submittedAt: Date;
+  submissions?: ISubmission[];
 }
 
 export interface ILeadDataDocument extends ILeadData, Document {
   viewCount?: number;
   contactsGathered?: number;
-  submissions?: ISubmission[];
 }
 
 export interface IUiOptions {
@@ -103,8 +103,7 @@ export interface IIntegration {
 
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
-  leadData?: ILeadDataDocument;
-  formData?: ILeadDataDocument;
+  formData?: ILeadData;
   messengerData?: IMessengerDataDocument;
   uiOptions?: IUiOptionsDocument;
 }
@@ -151,7 +150,7 @@ const messengerDataSchema = new Schema(
 );
 
 // schema for lead's callout component
-const calloutSchema = new Schema(
+export const calloutSchema = new Schema(
   {
     title: field({ type: String, optional: true }),
     body: field({ type: String, optional: true }),
@@ -163,7 +162,7 @@ const calloutSchema = new Schema(
 );
 
 // schema for lead submission details
-const submissionSchema = new Schema(
+export const submissionSchema = new Schema(
   {
     customerId: field({ type: String }),
     submittedAt: field({ type: Date }),
@@ -272,6 +271,7 @@ export const integrationSchema = new Schema({
   tagIds: field({ type: [String], optional: true }),
   formId: field({ type: String }),
   leadData: field({ type: leadDataSchema }),
+  formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),
 });
