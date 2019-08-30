@@ -3,11 +3,11 @@ export const EMAIL_CONTENT_PLACEHOLDER = `<div class="${EMAIL_CONTENT_CLASS}"></
 
 export const INTEGRATION_KIND_CHOICES = {
   MESSENGER: 'messenger',
-  FORM: 'form',
+  LEAD: 'lead',
   FACEBOOK: 'facebook',
   GMAIL: 'gmail',
   CALLPRO: 'callpro',
-  ALL: ['messenger', 'form', 'facebook', 'gmail', 'callpro'],
+  ALL: ['messenger', 'lead', 'facebook', 'gmail', 'callpro'],
 };
 
 export const MESSAGE_KINDS = {
