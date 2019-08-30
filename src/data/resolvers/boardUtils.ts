@@ -120,23 +120,23 @@ export const sendNotifications = async ({
   });
 };
 
-export const itemsChange = async (collection: any, item: any, type: string, destinationStageId: string) => {
-  const oldItem = await collection.findOne({ _id: item._id });
-  const oldStageId = oldItem ? oldItem.stageId || '' : '';
+export const itemsChange = async (item: any, type: string, destinationStageId: string) => {
+  const oldStageId = item ? item.stageId || '' : '';
 
   let action = `changed order of your ${type}:`;
   let content = `'${item.name}'`;
 
   if (oldStageId !== destinationStageId) {
     const stage = await Stages.findOne({ _id: destinationStageId });
+    const oldStage = await Stages.findOne({ _id: oldStageId });
 
-    if (!stage) {
+    if (!stage || !oldStage) {
       throw new Error('Stage not found');
     }
 
-    action = `moved your`;
+    action = `moved '${item.name}' from '${oldStage.name}' to `;
 
-    content = `${type} '${item.name}' to the '${stage.name}'.`;
+    content = `${stage.name}`;
   }
 
   return { content, action };

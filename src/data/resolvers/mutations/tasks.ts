@@ -82,7 +82,7 @@ const taskMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(Tasks, task, 'task', destinationStageId);
+    const { content, action } = await itemsChange(task, 'task', destinationStageId);
 
     await sendNotifications({
       item: task,
