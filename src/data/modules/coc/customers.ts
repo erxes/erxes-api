@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { Brands, Integrations, Segments } from '../../../db/models';
+import { Brands, FormSubmissions, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
 
@@ -33,7 +33,7 @@ export interface IListArgs {
   ids?: string[];
   searchValue?: string;
   brand?: string;
-  lead?: string;
+  form?: string;
   startDate?: string;
   endDate?: string;
   lifecycleState?: string;
@@ -153,15 +153,9 @@ export class Builder {
     return { lifecycleState };
   }
 
-  // filter by lead
-  public async leadFilter(formId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
-    const integration = await Integrations.findOne({ formId });
-
-    if (!integration) {
-      throw new Error('Integration not found');
-    }
-
-    const submissions = integration.leadData ? integration.leadData.submissions || [] : [];
+  // filter by form
+  public async formFilter(formId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
+    const submissions = await FormSubmissions.find({ formId });
     const ids: string[] = [];
 
     for (const submission of submissions) {
@@ -194,7 +188,7 @@ export class Builder {
       searchValue: {},
       brand: {},
       integration: {},
-      lead: {},
+      form: {},
       integrationType: {},
     };
 
@@ -223,16 +217,16 @@ export class Builder {
       this.queries.integrationType = await this.integrationTypeFilter(this.params.integrationType);
     }
 
-    // filter by lead
-    if (this.params.lead) {
-      this.queries.lead = await this.leadFilter(this.params.lead);
+    // filter by form
+    if (this.params.form) {
+      this.queries.form = await this.formFilter(this.params.form);
 
       if (this.params.startDate && this.params.endDate) {
-        this.queries.lead = await this.leadFilter(this.params.lead, this.params.startDate, this.params.endDate);
+        this.queries.form = await this.formFilter(this.params.form, this.params.startDate, this.params.endDate);
       }
     }
 
-    /* If there are ids and lead params, returning ids filter only
+    /* If there are ids and form params, returning ids filter only
      * filter by ids
      */
     if (this.params.ids) {
@@ -269,7 +263,7 @@ export class Builder {
       ...this.queries.segment,
       ...this.queries.brand,
       ...this.queries.integrationType,
-      ...this.queries.lead,
+      ...this.queries.form,
       ...this.queries.ids,
       ...this.queries.integration,
       ...this.queries.searchValue,
