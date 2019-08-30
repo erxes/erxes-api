@@ -13,16 +13,14 @@ import {
 
 const getSavedAnyConformityMatch = ({ mainType, mainTypeId }: { mainType: string; mainTypeId: string }) => {
   return {
-    $match: {
-      $or: [
-        {
-          $and: [{ mainType }, { mainTypeId }],
-        },
-        {
-          $and: [{ relType: mainType }, { relTypeId: mainTypeId }],
-        },
-      ],
-    },
+    $or: [
+      {
+        $and: [{ mainType }, { mainTypeId }],
+      },
+      {
+        $and: [{ relType: mainType }, { relTypeId: mainTypeId }],
+      },
+    ],
   };
 };
 
@@ -130,14 +128,16 @@ export const loadConformityClass = () => {
     }
 
     public static async changeConformity(doc: IConformityChange) {
-      Conformities.updateMany(
-        { $match: { $and: [{ mainType: doc.type }, { mainTypeId: { $in: doc.oldTypeIds } }] } },
-        { mainTypeId: doc.newTypeId },
+      await Conformities.updateMany(
+        { $and: [{ mainType: doc.type }, { mainTypeId: { $in: doc.oldTypeIds } }] },
+        { $set: { mainTypeId: doc.newTypeId } },
+        { multi: true },
       );
 
-      Conformities.updateMany(
-        { $match: { $and: [{ relType: doc.type }, { relTypeId: { $in: doc.oldTypeIds } }] } },
-        { relTypeId: doc.newTypeId },
+      await Conformities.updateMany(
+        { $and: [{ relType: doc.type }, { relTypeId: { $in: doc.oldTypeIds } }] },
+        { $set: { relTypeId: doc.newTypeId } },
+        { multi: true },
       );
     }
 
@@ -181,7 +181,7 @@ export const loadConformityClass = () => {
       });
 
       const savedRelatedObjects = await Conformities.aggregate([
-        match,
+        { $match: match },
         {
           $project: {
             savedRelType: {
@@ -257,7 +257,7 @@ export const loadConformityClass = () => {
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,
       });
-      Conformities.deleteMany(match);
+      await Conformities.deleteMany(match);
     }
   }
 

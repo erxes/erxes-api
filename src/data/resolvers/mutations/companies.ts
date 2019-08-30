@@ -1,4 +1,4 @@
-import { Companies, Conformities } from '../../../db/models';
+import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -68,8 +68,6 @@ const companyMutations = {
           },
           user,
         );
-
-        await Conformities.removeConformity({ mainType: 'company', mainTypeId: company._id });
       }
     }
 

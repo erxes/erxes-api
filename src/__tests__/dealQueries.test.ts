@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
 import {
   companyFactory,
+  conformityFactory,
   customerFactory,
   dealFactory,
   productFactory,
@@ -17,8 +18,6 @@ describe('dealQueries', () => {
     _id
     name
     stageId
-    companyIds
-    customerIds
     assignedUserIds
     amount
     closeDate
@@ -38,7 +37,7 @@ describe('dealQueries', () => {
 
   const qryDealFilter = `
     query deals(
-      $stageId: String 
+      $stageId: String
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
@@ -50,7 +49,7 @@ describe('dealQueries', () => {
       $overdue: String
     ) {
       deals(
-        stageId: $stageId 
+        stageId: $stageId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
@@ -151,8 +150,14 @@ describe('dealQueries', () => {
 
   test('Deal filter by customers', async () => {
     const { _id } = await customerFactory();
+    const deal = await dealFactory({});
 
-    await dealFactory({ customerIds: [_id] });
+    await conformityFactory({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      relType: 'customer',
+      relTypeId: _id,
+    });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { customerIds: [_id] });
 
@@ -162,7 +167,14 @@ describe('dealQueries', () => {
   test('Deal filter by companies', async () => {
     const { _id } = await companyFactory();
 
-    await dealFactory({ companyIds: [_id] });
+    const deal = await dealFactory({});
+
+    await conformityFactory({
+      mainType: 'company',
+      mainTypeId: _id,
+      relType: 'deal',
+      relTypeId: deal._id,
+    });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [_id] });
 
