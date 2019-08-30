@@ -12,7 +12,6 @@ const formMutations = {
    * Create a new form
    */
   formsAdd(_root, doc: IForm, { user, docModifier }: IContext) {
-    console.log('formsAdd doc: ', doc);
     return Forms.createForm(docModifier(doc), user._id);
   },
 

@@ -21,11 +21,7 @@ export interface IFormModel extends Model<IFormDocument> {
   duplicate(_id: string): Promise<IFormDocument>;
 }
 
-export interface IFormSubmissionModel extends Model<IFormSubmissionDocument> {
-  createFormSubmission(doc: IFormSubmission): Promise<IFormSubmissionDocument>;
-}
-
-export const loadClass = () => {
+export const loadFormClass = () => {
   class Form {
     /**
      * Generates a random and unique 6 letter code
@@ -120,6 +116,10 @@ export const loadClass = () => {
   return formSchema;
 };
 
+export interface IFormSubmissionModel extends Model<IFormSubmissionDocument> {
+  createFormSubmission(doc: IFormSubmission): Promise<IFormSubmissionDocument>;
+}
+
 export const loadFormSubmissionClass = () => {
   class FormSubmission {
     /**
@@ -135,7 +135,7 @@ export const loadFormSubmissionClass = () => {
   return formSubmissionSchema;
 };
 
-loadClass();
+loadFormClass();
 loadFormSubmissionClass();
 
 // tslint:disable-next-line

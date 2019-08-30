@@ -19,7 +19,7 @@ export const types = `
     createdDate: Date
   }
 
-  type Form {
+  type FormSubmission {
     _id: String!
     customerId: String
     formId: String

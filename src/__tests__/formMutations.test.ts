@@ -81,34 +81,34 @@ describe('form and formField mutations', () => {
     expect(form.description).toBe(args.description);
   });
 
-  // test('Add form submission', async () => {
-  //   const submissionArgs = {
-  //     customerId: faker.random.word(),
-  //     formId: faker.random.word(),
-  //   };
+  test('Add form submission', async () => {
+    const submissionArgs = {
+      customerId: faker.random.word(),
+      formId: faker.random.word(),
+    };
 
-  //   const formSubmissionParamDefs = `
-  //     $customerId: String
-  //     $formId: String
-  //   `;
+    const formSubmissionParamDefs = `
+      $customerId: String
+      $formId: String
+    `;
 
-  //   const formSubmissionParams = `
-  //     customerId: $customerId
-  //     formId: $formId
-  //   `;
+    const formSubmissionParams = `
+      customerId: $customerId
+      formId: $formId
+    `;
 
-  //   const mutation = `
-  //     mutation formSubmissionsAdd(${formSubmissionParamDefs}) {
-  //       formSubmissionsAdd(${formSubmissionParams}) {
-  //         customerId
-  //         formId
-  //       }
-  //     }
-  //   `;
+    const mutation = `
+      mutation formSubmissionsAdd(${formSubmissionParamDefs}) {
+        formSubmissionsAdd(${formSubmissionParams}) {
+          customerId
+          formId
+        }
+      }
+    `;
 
-  //   const formSubmission = await graphqlRequest(mutation, 'formSubmissionsAdd', submissionArgs);
+    const formSubmission = await graphqlRequest(mutation, 'formSubmissionsAdd', submissionArgs);
 
-  //   expect(formSubmission.customerId).toBe(submissionArgs.customerId);
-  //   expect(formSubmission.formId).toBe(submissionArgs.formId);
-  // });
+    expect(formSubmission.customerId).toBe(submissionArgs.customerId);
+    expect(formSubmission.formId).toBe(submissionArgs.formId);
+  });
 });
