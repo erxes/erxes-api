@@ -134,9 +134,23 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
       throw new Error('Stage not found');
     }
 
-    action = `moved '${item.name}' from '${oldStage.name}' to `;
+    const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
+    const oldPipeline = await Pipelines.findOne({ _id: oldStage.pipelineId });
 
-    content = `${stage.name}`;
+    if (!pipeline || !oldPipeline) {
+      throw new Error('Pipeline not found');
+    }
+
+    const board = await Boards.findOne({ _id: pipeline.boardId });
+    const oldBoard = await Boards.findOne({ _id: oldPipeline.boardId });
+
+    if (!board || !oldBoard) {
+      throw new Error('Board not found');
+    }
+
+    action = `moved '${item.name}' from ${oldBoard.name}-${oldPipeline.name}-${oldStage.name} to `;
+
+    content = `${board.name}-${pipeline.name}-${stage.name}`;
   }
 
   return { content, action };
