@@ -59,7 +59,7 @@ export const queries = `
 `;
 
 const commonParams = `
-  name: String!,
+  name: String,
   stageId: String,
   assignedUserIds: [String],
   companyIds: [String],

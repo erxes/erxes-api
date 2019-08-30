@@ -104,6 +104,7 @@ export interface IIntegration {
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
   leadData?: ILeadDataDocument;
+  formData?: ILeadDataDocument;
   messengerData?: IMessengerDataDocument;
   uiOptions?: IUiOptionsDocument;
 }
