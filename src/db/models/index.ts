@@ -12,7 +12,7 @@ import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
 import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
-import Forms from './Forms';
+import { Forms, FormSubmissions } from './Forms';
 import GrowthHacks from './GrowthHacks';
 import ImportHistory from './ImportHistory';
 import Integrations from './Integrations';
@@ -40,6 +40,7 @@ export {
   Brands,
   Integrations,
   Forms,
+  FormSubmissions,
   EngageMessages,
   Tags,
   Fields,

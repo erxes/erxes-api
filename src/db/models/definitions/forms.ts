@@ -14,15 +14,20 @@ export interface IForm {
 
 export interface IFormDocument extends IForm, Document {
   _id: string;
-  viewCount?: number;
-  contactsGathered?: number;
-
-  submissions?: ISubmission[];
-  themeColor?: string;
-  callout?: ICallout;
-  rules?: IRule;
   createdUserId: string;
   createdDate: Date;
+  // TODO: remove
+  contactsGathered?: number;
+  // TODO: remove
+  viewCount?: number;
+  // TODO: remove
+  submissions?: ISubmission[];
+  // TODO: remove
+  themeColor?: string;
+  // TODO: remove
+  callout?: ICallout;
+  // TODO: remove
+  rules?: IRule;
 }
 
 // schema for form document
@@ -43,29 +48,55 @@ export const formSchema = schemaWrapper(
       default: Date.now,
     }),
 
+    // TODO: remove
     themeColor: field({
       type: String,
       optional: true,
     }),
+    // TODO: remove
     callout: field({
       type: calloutSchema,
       optional: true,
     }),
+    // TODO: remove
     viewCount: field({
       type: Number,
       optional: true,
     }),
+    // TODO: remove
     contactsGathered: field({
       type: Number,
       optional: true,
     }),
+    // TODO: remove
     submissions: field({
       type: [submissionSchema],
       optional: true,
     }),
+    // TODO: remove
     rules: field({
       type: [ruleSchema],
       optional: true,
     }),
+  }),
+);
+
+export interface IFormSubmission {
+  customerId: string;
+  formId: string;
+}
+
+export interface IFormSubmissionDocument extends IFormSubmission, Document {
+  _id: string;
+  submittedAt: Date;
+}
+
+// schema for form submission document
+export const formSubmissionSchema = schemaWrapper(
+  new Schema({
+    _id: field({ pkey: true }),
+    customerId: field({ type: String }),
+    submittedAt: field({ type: Date, default: Date.now }),
+    formId: field({ type: String }),
   }),
 );

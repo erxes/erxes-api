@@ -1,5 +1,5 @@
-import { Forms } from '../../../db/models';
-import { IForm } from '../../../db/models/definitions/forms';
+import { Forms, FormSubmissions } from '../../../db/models';
+import { IForm, IFormSubmission } from '../../../db/models/definitions/forms';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -12,6 +12,7 @@ const formMutations = {
    * Create a new form
    */
   formsAdd(_root, doc: IForm, { user, docModifier }: IContext) {
+    console.log('formsAdd doc: ', doc);
     return Forms.createForm(docModifier(doc), user._id);
   },
 
@@ -20,6 +21,13 @@ const formMutations = {
    */
   formsEdit(_root, { _id, ...doc }: IFormsEdit, { docModifier }: IContext) {
     return Forms.updateForm(_id, docModifier(doc));
+  },
+
+  /**
+   * Create a new form submission
+   */
+  formSubmissionsAdd(_root, doc: IFormSubmission, { docModifier }: IContext) {
+    return FormSubmissions.createFormSubmission(docModifier(doc));
   },
 };
 

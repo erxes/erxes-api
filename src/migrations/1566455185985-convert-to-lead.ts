@@ -1,28 +1,11 @@
-import { Document } from 'mongoose';
 import { connect } from '../db/connection';
 import { Forms, Integrations } from '../db/models';
-import { IRule } from '../db/models/definitions/common';
 import { IFormDocument } from '../db/models/definitions/forms';
-import { ICallout } from '../db/models/definitions/integrations';
 
 module.exports.up = async () => {
   await connect();
 
-  interface ISubmission extends Document {
-    customerId: string;
-    submittedAt: Date;
-  }
-
-  type IFormDocumentExtended = {
-    viewCount?: number;
-    contactsGathered?: number;
-    submissions?: ISubmission[];
-    themeColor?: string;
-    callout?: ICallout;
-    rules?: IRule;
-  } & IFormDocument;
-
-  const forms: IFormDocumentExtended[] = await Forms.find();
+  const forms: IFormDocument[] = await Forms.find();
 
   for (const form of forms) {
     const integration = await Integrations.findOne({ formId: form._id });
@@ -47,7 +30,27 @@ module.exports.up = async () => {
         submissions: form.submissions,
       };
 
-      await Integrations.updateOne({ formId: form._id }, { $set: { kind: 'lead', leadData } });
+      await Integrations.updateOne(
+        { formId: form._id },
+        {
+          $set: { kind: 'lead', leadData },
+          $unset: { formData: 1 },
+        },
+      );
+
+      await Forms.updateOne(
+        { _id: form._id },
+        {
+          $unset: {
+            themeColor: 1,
+            callout: 1,
+            rules: 1,
+            viewCount: 1,
+            contactsGathered: 1,
+            submissions: 1,
+          },
+        },
+      );
     }
   }
 

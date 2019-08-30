@@ -103,6 +103,7 @@ export interface IIntegration {
 
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
+  // TODO: remove
   formData?: ILeadData;
   messengerData?: IMessengerDataDocument;
   uiOptions?: IUiOptionsDocument;
@@ -271,6 +272,7 @@ export const integrationSchema = new Schema({
   tagIds: field({ type: [String], optional: true }),
   formId: field({ type: String }),
   leadData: field({ type: leadDataSchema }),
+  // TODO: remove
   formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),

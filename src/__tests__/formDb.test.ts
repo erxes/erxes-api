@@ -1,6 +1,6 @@
 import * as toBeType from 'jest-tobetype';
 import { customerFactory, fieldFactory, formFactory, userFactory } from '../db/factories';
-import { Customers, Fields, Forms, Users } from '../db/models';
+import { Customers, Fields, Forms, FormSubmissions, Users } from '../db/models';
 
 import { FORM_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
@@ -85,6 +85,7 @@ describe('form remove', async () => {
     await Forms.deleteMany({});
     await Fields.deleteMany({});
     await Customers.deleteMany({});
+    await FormSubmissions.deleteMany({});
   });
 
   test('check if form removal is working successfully', async () => {
@@ -147,5 +148,23 @@ describe('form duplication', () => {
 
     expect(fieldsCount).toEqual(6);
     expect(duplicatedFieldsCount).toEqual(3);
+  });
+
+  test('check if formSubmission creation method is working successfully', async () => {
+    const customer = await customerFactory({});
+
+    const formSubmission = await FormSubmissions.createFormSubmission({
+      customerId: customer._id,
+      formId: _form._id,
+    });
+
+    const formSubmissionObj = await FormSubmissions.findOne({ _id: formSubmission._id });
+
+    if (!formSubmissionObj) {
+      throw new Error('Form submission not found');
+    }
+
+    expect(formSubmissionObj.customerId).toBe(customer._id);
+    expect(formSubmissionObj.formId).toBe(_form._id);
   });
 });

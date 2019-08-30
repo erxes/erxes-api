@@ -2,7 +2,14 @@ import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
 import { FIELD_CONTENT_TYPES } from '../../data/constants';
 import { Fields } from './';
-import { formSchema, IForm, IFormDocument } from './definitions/forms';
+import {
+  formSchema,
+  formSubmissionSchema,
+  IForm,
+  IFormDocument,
+  IFormSubmission,
+  IFormSubmissionDocument,
+} from './definitions/forms';
 
 export interface IFormModel extends Model<IFormDocument> {
   generateCode(): string;
@@ -12,6 +19,10 @@ export interface IFormModel extends Model<IFormDocument> {
 
   removeForm(_id: string): void;
   duplicate(_id: string): Promise<IFormDocument>;
+}
+
+export interface IFormSubmissionModel extends Model<IFormSubmissionDocument> {
+  createFormSubmission(doc: IFormSubmission): Promise<IFormSubmissionDocument>;
 }
 
 export const loadClass = () => {
@@ -109,9 +120,28 @@ export const loadClass = () => {
   return formSchema;
 };
 
+export const loadFormSubmissionClass = () => {
+  class FormSubmission {
+    /**
+     * Creates a form document
+     */
+    public static async createFormSubmission(doc: IFormSubmission) {
+      return FormSubmissions.create(doc);
+    }
+  }
+
+  formSubmissionSchema.loadClass(FormSubmission);
+
+  return formSubmissionSchema;
+};
+
 loadClass();
+loadFormSubmissionClass();
 
 // tslint:disable-next-line
 const Forms = model<IFormDocument, IFormModel>('forms', formSchema);
 
-export default Forms;
+// tslint:disable-next-line
+const FormSubmissions = model<IFormSubmissionDocument, IFormSubmissionModel>('form_submissions', formSubmissionSchema);
+
+export { Forms, FormSubmissions };
