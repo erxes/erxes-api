@@ -19,6 +19,7 @@ import {
   Fields,
   FieldsGroups,
   Forms,
+  FormSubmissions,
   GrowthHacks,
   ImportHistory,
   Integrations,
@@ -551,6 +552,19 @@ export const formFactory = async (params: IFormFactoryInput = {}) => {
     code: code || Random.id(),
     type: type || FORM_TYPES.GROWTH_HACK,
     createdUserId: createdUserId || (await userFactory({})),
+  });
+};
+
+interface IFormSubmissionFactoryInput {
+  customerId?: string;
+  formId?: string;
+}
+
+export const formSubmissionFactory = async (params: IFormSubmissionFactoryInput = {}) => {
+  return FormSubmissions.create({
+    submittedAt: new Date(),
+    customerId: params.customerId || faker.random.word(),
+    formId: params.formId || faker.random.word(),
   });
 };
 

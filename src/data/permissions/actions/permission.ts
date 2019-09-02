@@ -136,6 +136,25 @@ export const moduleObjects = {
       },
     ],
   },
+  pipelineTemplates: {
+    name: 'pipelineTemplates',
+    description: 'Pipeline templates',
+    actions: [
+      {
+        name: 'pipelineTemplatesAll',
+        description: 'All',
+        use: ['showPipelineTemplates', 'managePipelineTemplates'],
+      },
+      {
+        name: 'showPipelineTemplates',
+        description: 'Show pipeline templates',
+      },
+      {
+        name: 'managePipelineTemplates',
+        description: 'Manage a pipeline template',
+      },
+    ],
+  },
   deals: {
     name: 'deals',
     description: 'Deals',

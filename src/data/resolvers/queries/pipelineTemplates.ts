@@ -1,5 +1,5 @@
 import { PipelineTemplates } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions/wrappers';
+import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 
 const pipelineTemplateQueries = {
   /**
@@ -25,5 +25,7 @@ const pipelineTemplateQueries = {
 };
 
 moduleRequireLogin(pipelineTemplateQueries);
+
+checkPermission(pipelineTemplateQueries, 'pipelineTemplates', 'showPipelineTemplates', []);
 
 export default pipelineTemplateQueries;
