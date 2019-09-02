@@ -71,6 +71,8 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   const prevEntries = await Stages.find({ _id: { $in: prevItemIds } });
   const prevEntriesIds = prevEntries.map(entry => entry._id);
 
+  await hasItemCheck(type, pipelineId, prevItemIds);
+
   for (const stage of stages) {
     order++;
 
@@ -105,8 +107,6 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   if (bulkOpsPrevEntry.length > 0) {
     await Stages.bulkWrite(bulkOpsPrevEntry);
   }
-
-  await hasItemCheck(type, pipelineId, prevItemIds);
 
   return Stages.deleteMany({ pipelineId, _id: { $nin: validStageIds } });
 };
