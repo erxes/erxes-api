@@ -108,7 +108,7 @@ const growthHackMutations = {
       formFields,
     });
 
-    const { content, action } = await itemsChange(GrowthHacks, growthHack, 'growthHack', destinationStageId);
+    const { content, action } = await itemsChange(growthHack, 'growthHack', destinationStageId);
 
     await sendNotifications({
       item: growthHack,
