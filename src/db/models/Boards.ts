@@ -112,6 +112,7 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
 };
 
 export interface IBoardModel extends Model<IBoardDocument> {
+  getBoard(_id: string): Promise<IBoardDocument>;
   createBoard(doc: IBoard): Promise<IBoardDocument>;
   updateBoard(_id: string, doc: IBoard): Promise<IBoardDocument>;
   removeBoard(_id: string): void;
@@ -119,6 +120,19 @@ export interface IBoardModel extends Model<IBoardDocument> {
 
 export const loadBoardClass = () => {
   class Board {
+    /*
+     * Get a Board
+     */
+    public static async getBoard(_id: string) {
+      const board = await Boards.findOne({ _id });
+
+      if (!board) {
+        throw new Error('Board not found');
+      }
+
+      return board;
+    }
+
     /**
      * Create a board
      */
