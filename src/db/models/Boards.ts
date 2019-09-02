@@ -34,6 +34,7 @@ const getTemplateStages = async (templateId: string, pipelineId: string, type: s
     name: stage.name,
     pipelineId,
     type,
+    formId: stage.formId,
   }));
 };
 
