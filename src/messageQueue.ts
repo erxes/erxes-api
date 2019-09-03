@@ -121,6 +121,28 @@ const initConsumer = async () => {
         channel.ack(msg);
       }
     });
+
+    // listen for spark notification  =========
+    await channel.assertQueue('sparkNotification');
+
+    channel.consume('sparkNotification', async msg => {
+      if (msg !== null) {
+        debugBase(`Received spark notification ${msg.content.toString()}`);
+
+        const data = JSON.parse(msg.content.toString());
+
+        if (data.action === 'mergeCustomers') {
+          const customerIds = data.customerIds;
+          const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } });
+
+          if (randomCustomer) {
+            Customers.mergeCustomers(customerIds, randomCustomer);
+          }
+        }
+
+        channel.ack(msg);
+      }
+    });
   } catch (e) {
     debugBase(e.message);
   }
