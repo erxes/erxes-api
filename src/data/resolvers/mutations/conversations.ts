@@ -229,9 +229,7 @@ const conversationMutations = {
         .catch(e => {
           debugExternalApi(e.message);
 
-          ConversationMessages.deleteOne({ _id: message._id });
-
-          return new Error('Facebook reply failed');
+          return ConversationMessages.deleteOne({ _id: message._id });
         });
     }
 
