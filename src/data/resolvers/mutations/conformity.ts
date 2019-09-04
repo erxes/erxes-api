@@ -1,5 +1,5 @@
 import { Conformities } from '../../../db/models';
-import { IConformityAdd, IConformityCreate } from '../../../db/models/definitions/conformity';
+import { IConformityAdd, IConformityEdit } from '../../../db/models/definitions/conformity';
 const conformityMutations = {
   /**
    * Create new deal
@@ -8,8 +8,8 @@ const conformityMutations = {
     return Conformities.addConformity({ ...doc });
   },
 
-  async conformityCreate(_root, doc: IConformityCreate) {
-    return Conformities.createConformity({ ...doc });
+  async conformityEdit(_root, doc: IConformityEdit) {
+    return Conformities.editConformity({ ...doc });
   },
 };
 

@@ -13,7 +13,7 @@ module.exports.up = async () => {
     const customerCompany = await Customers.find({ companyIds: { $exists: true } });
     customerCompany.map(customer =>
       (customer.companyIds || []).map(companyId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'customer',
           mainTypeId: customer._id,
           relType: 'company',
@@ -27,7 +27,7 @@ module.exports.up = async () => {
     const dealCustomer = await Deals.find({ customerIds: { $exists: true } });
     dealCustomer.map(deal =>
       (deal.customerIds || []).map(customerId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'deal',
           mainTypeId: deal._id,
           relType: 'customer',
@@ -41,7 +41,7 @@ module.exports.up = async () => {
     const dealCompany = await Deals.find({ companyIds: { $exists: true } });
     dealCompany.map(deal =>
       (deal.companyIds || []).map(companyId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'deal',
           mainTypeId: deal._id,
           relType: 'company',
@@ -55,7 +55,7 @@ module.exports.up = async () => {
     const ticketCustomer = await Tickets.find({ customerIds: { $exists: true } });
     ticketCustomer.map(ticket =>
       (ticket.customerIds || []).map(customerId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'ticket',
           mainTypeId: ticket._id,
           relType: 'customer',
@@ -69,7 +69,7 @@ module.exports.up = async () => {
     const ticketCompany = await Tickets.find({ companyIds: { $exists: true } });
     ticketCompany.map(ticket =>
       (ticket.companyIds || []).map(companyId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'ticket',
           mainTypeId: ticket._id,
           relType: 'company',
@@ -83,7 +83,7 @@ module.exports.up = async () => {
     const taskCustomer = await Tasks.find({ customerIds: { $exists: true } });
     taskCustomer.map(task =>
       (task.customerIds || []).map(customerId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'task',
           mainTypeId: task._id,
           relType: 'customer',
@@ -97,7 +97,7 @@ module.exports.up = async () => {
     const taskCompany = await Tasks.find({ companyIds: { $exists: true } });
     taskCompany.map(task =>
       (task.companyIds || []).map(companyId =>
-        Conformities.createConformity({
+        Conformities.addConformity({
           mainType: 'task',
           mainTypeId: task._id,
           relType: 'company',

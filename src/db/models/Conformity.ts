@@ -4,8 +4,8 @@ import {
   conformitySchema,
   IConformityAdd,
   IConformityChange,
-  IConformityCreate,
   IConformityDocument,
+  IConformityEdit,
   IConformityFilter,
   IConformityRemove,
   IConformitySaved,
@@ -37,7 +37,7 @@ const getMainItem = (mainType: string, mainTypeId: string) => {
 
 export interface IConformityModel extends Model<IConformityDocument> {
   addConformity(doc: IConformityAdd): Promise<IConformityDocument>;
-  createConformity(doc: IConformityCreate): Promise<any>;
+  editConformity(doc: IConformityEdit): Promise<any>;
   savedConformity(doc: IConformitySaved): Promise<string[]>;
   changeConformity(doc: IConformityChange): void;
   filterConformity(doc: IConformityFilter): Promise<string[]>;
@@ -54,7 +54,7 @@ export const loadConformityClass = () => {
       return Conformities.create(doc);
     }
 
-    public static async createConformity(doc: IConformityCreate) {
+    public static async editConformity(doc: IConformityEdit) {
       const newRelTypeIds = doc.relTypeIds || [];
       const oldRelTypeIds = await Conformity.savedConformity({
         mainType: doc.mainType,

@@ -15,7 +15,7 @@ export interface IConformityAdd {
   relTypeId: string;
 }
 
-export interface IConformityCreate {
+export interface IConformityEdit {
   mainType: string;
   mainTypeId: string;
   relType: string;

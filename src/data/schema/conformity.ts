@@ -28,5 +28,5 @@ const commonParamsCreate = `
 
 export const mutations = `
   conformityAdd(${commonParams}): Conformity
-  conformityCreate(${commonParamsCreate}): SuccessResult
+  conformityEdit(${commonParamsCreate}): SuccessResult
 `;
