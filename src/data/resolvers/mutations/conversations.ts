@@ -228,6 +228,7 @@ const conversationMutations = {
         })
         .catch(e => {
           debugExternalApi(e.message);
+          message.remove();
         });
     }
 
