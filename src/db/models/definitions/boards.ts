@@ -144,7 +144,7 @@ export const pipelineSchema = new Schema({
     type: String,
     enum: HACK_SCORING_TYPES.ALL,
   }),
-  templateId: field({ type: String }),
+  templateId: field({ type: String, optional: true }),
   ...commonFieldsSchema,
 });
 
