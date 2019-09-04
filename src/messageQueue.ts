@@ -2,7 +2,7 @@ import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
 import { sendMobileNotification } from './data/utils';
-import { ActivityLogs, Conversations, Customers } from './db/models';
+import { ActivityLogs, Companies, Conversations, Customers, RobotEntries } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 import { get, set } from './redisClient';
@@ -136,8 +136,14 @@ const initConsumer = async () => {
           const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } });
 
           if (randomCustomer) {
-            Customers.mergeCustomers(customerIds, randomCustomer);
+            await Customers.mergeCustomers(customerIds, randomCustomer);
+            await RobotEntries.create({ action: 'mergeCustomers', data: { customerIds } });
           }
+        }
+
+        if (data.action === 'fillCompanyInfo') {
+          await Companies.update({ _id: data._id }, { $set: data.modifier });
+          await RobotEntries.create({ action: 'fillCompanyInfo', data: { modifier: data.modifier } });
         }
 
         channel.ack(msg);
