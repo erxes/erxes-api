@@ -38,7 +38,7 @@ const getTemplateStages = async (templateId: string, pipelineId: string, type: s
   }));
 };
 
-const hasItemCheck = async (type: string, pipelineId: string, prevItemIds: string[] = []) => {
+const hasItem = async (type: string, pipelineId: string, prevItemIds: string[] = []) => {
   const ITEMS = {
     deal: Deals,
     ticket: Tickets,
@@ -72,7 +72,7 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   const prevEntries = await Stages.find({ _id: { $in: prevItemIds } });
   const prevEntriesIds = prevEntries.map(entry => entry._id);
 
-  await hasItemCheck(type, pipelineId, prevItemIds);
+  await hasItem(type, pipelineId, prevItemIds);
 
   for (const stage of stages) {
     order++;
@@ -163,7 +163,7 @@ export const loadBoardClass = () => {
       const pipelines = await Pipelines.find({ boardId: _id });
 
       for (const pipeline of pipelines) {
-        await hasItemCheck(pipeline.type, pipeline._id);
+        await hasItem(pipeline.type, pipeline._id);
       }
 
       return Boards.deleteOne({ _id });
@@ -250,7 +250,7 @@ export const loadPipelineClass = () => {
     public static async removePipeline(_id: string) {
       const pipeline = await Pipelines.getPipeline(_id);
 
-      await hasItemCheck(pipeline.type, pipeline._id);
+      await hasItem(pipeline.type, pipeline._id);
 
       return Pipelines.deleteOne({ _id });
     }
