@@ -22,6 +22,7 @@ import { NotificationConfigurations, Notifications } from './Notifications';
 import { Permissions, UsersGroups } from './Permissions';
 import Products from './Products';
 import ResponseTemplates from './ResponseTemplates';
+import RobotEntries from './RobotEntries';
 import Scripts from './Scripts';
 import Segments from './Segments';
 import Tags from './Tags';
@@ -67,4 +68,5 @@ export {
   UsersGroups,
   Tickets,
   Tasks,
+  RobotEntries,
 };
