@@ -59,6 +59,7 @@ export const generateCommonFilters = async (args: any) => {
       mainTypeIds: customerIds,
       relType: type,
     });
+
     filter._id = contains(relIds);
   }
 
@@ -68,25 +69,30 @@ export const generateCommonFilters = async (args: any) => {
       mainTypeIds: companyIds,
       relType: type,
     });
+
     filter._id = contains(relIds);
   }
 
-  if (mainType && mainTypeId && relType && isSaved) {
-    const relIds = await Conformities.savedConformity({
-      mainType,
-      mainTypeId,
-      relType,
-    });
-    filter._id = contains(relIds || []);
-  }
+  if (mainType && mainTypeId && relType) {
+    if (isSaved) {
+      const relIds = await Conformities.savedConformity({
+        mainType,
+        mainTypeId,
+        relType,
+      });
 
-  if (mainType && mainTypeId && relType && isRelated) {
-    const relIds = await Conformities.relatedConformity({
-      mainType,
-      mainTypeId,
-      relType,
-    });
-    filter._id = contains(relIds || []);
+      filter._id = contains(relIds || []);
+    }
+
+    if (isRelated) {
+      const relIds = await Conformities.relatedConformity({
+        mainType,
+        mainTypeId,
+        relType,
+      });
+
+      filter._id = contains(relIds || []);
+    }
   }
 
   if (order) {

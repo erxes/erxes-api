@@ -149,6 +149,7 @@ export class Builder {
       mainTypeId,
       relType: 'customer',
     });
+
     return { _id: { $in: customerIds || [] } };
   }
 
@@ -158,6 +159,7 @@ export class Builder {
       mainTypeId,
       relType: 'customer',
     });
+
     return { _id: { $in: customerIds || [] } };
   }
 
@@ -269,12 +271,14 @@ export class Builder {
       this.queries.searchValue = this.searchFilter(this.params.searchValue);
     }
 
-    if (this.params.mainType && this.params.mainTypeId && this.params.isRelated) {
-      this.queries.relatedConformity = await this.relatedFilter(this.params.mainType, this.params.mainTypeId);
-    }
+    if (this.params.mainType && this.params.mainTypeId) {
+      if (this.params.isRelated) {
+        this.queries.relatedConformity = await this.relatedFilter(this.params.mainType, this.params.mainTypeId);
+      }
 
-    if (this.params.mainType && this.params.mainTypeId && this.params.isSaved) {
-      this.queries.savedConformity = await this.savedConformityFilter(this.params.mainType, this.params.mainTypeId);
+      if (this.params.isSaved) {
+        this.queries.savedConformity = await this.savedConformityFilter(this.params.mainType, this.params.mainTypeId);
+      }
     }
 
     // filter by leadStatus

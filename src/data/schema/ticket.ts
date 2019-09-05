@@ -33,6 +33,8 @@ export const queries = `
   tickets(
     pipelineId: String
     stageId: String
+    customerIds: [String]
+    companyIds: [String]
     mainType: String
     mainTypeId: String
     relType: String
@@ -41,8 +43,6 @@ export const queries = `
     date: ItemDate
     skip: Int
     search: String
-    companyIds: [String]
-    customerIds: [String]
     assignedUserIds: [String]
     nextDay: String
     nextWeek: String

@@ -91,23 +91,26 @@ export const filter = async (params: IListArgs) => {
   }
 
   // Filter by related Conformity
-  if (params.mainType && params.mainTypeId && params.isRelated) {
-    const companyIds = await Conformities.relatedConformity({
-      mainType: params.mainType || '',
-      mainTypeId: params.mainTypeId || '',
-      relType: 'company',
-    });
+  if (params.mainType && params.mainTypeId) {
+    if (params.isRelated) {
+      const companyIds = await Conformities.relatedConformity({
+        mainType: params.mainType || '',
+        mainTypeId: params.mainTypeId || '',
+        relType: 'company',
+      });
 
-    selector = { _id: { $in: companyIds || [] } };
-  }
+      selector = { _id: { $in: companyIds || [] } };
+    }
 
-  if (params.mainType && params.mainTypeId && params.isSaved) {
-    const companyIds = await Conformities.savedConformity({
-      mainType: params.mainType || '',
-      mainTypeId: params.mainTypeId || '',
-      relType: 'company',
-    });
-    selector = { _id: { $in: companyIds || [] } };
+    if (params.isSaved) {
+      const companyIds = await Conformities.savedConformity({
+        mainType: params.mainType || '',
+        mainTypeId: params.mainTypeId || '',
+        relType: 'company',
+      });
+
+      selector = { _id: { $in: companyIds || [] } };
+    }
   }
 
   // Filter by tag

@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { Deals, Tasks, Tickets } from './';
 import {
   conformitySchema,
   IConformityAdd,
@@ -24,25 +23,24 @@ const getSavedAnyConformityMatch = ({ mainType, mainTypeId }: { mainType: string
   };
 };
 
-const getMainItem = (mainType: string, mainTypeId: string) => {
-  switch (mainType) {
-    case 'deal':
-      return Deals.getDeal(mainTypeId);
-    case 'task':
-      return Tasks.getTask(mainTypeId);
-    case 'ticket':
-      return Tickets.getTicket(mainTypeId);
-  }
+const getProjectConition = (mainType: string, isId: string) => {
+  return {
+    $cond: {
+      if: { $eq: ['$mainType', mainType] },
+      then: '$relType'.concat(isId),
+      else: '$mainType'.concat(isId),
+    },
+  };
 };
 
 export interface IConformityModel extends Model<IConformityDocument> {
   addConformity(doc: IConformityAdd): Promise<IConformityDocument>;
-  editConformity(doc: IConformityEdit): Promise<any>;
-  savedConformity(doc: IConformitySaved): Promise<string[]>;
+  editConformity(doc: IConformityEdit): void;
   changeConformity(doc: IConformityChange): void;
-  filterConformity(doc: IConformityFilter): Promise<string[]>;
-  relatedConformity(doc: IConformitySaved): Promise<string[]>;
   removeConformity(doc: IConformityRemove): void;
+  savedConformity(doc: IConformitySaved): Promise<string[]>;
+  relatedConformity(doc: IConformitySaved): Promise<string[]>;
+  filterConformity(doc: IConformityFilter): Promise<string[]>;
 }
 
 export const loadConformityClass = () => {
@@ -95,7 +93,8 @@ export const loadConformityClass = () => {
           },
         ],
       });
-      return getMainItem(doc.mainType, doc.mainTypeId);
+
+      return;
     }
 
     public static async savedConformity(doc: IConformitySaved) {
@@ -114,16 +113,11 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: {
-              $cond: {
-                if: { $eq: ['$mainType', doc.mainType] },
-                then: '$relTypeId',
-                else: '$mainTypeId',
-              },
-            },
+            relTypeId: getProjectConition(doc.mainType, 'Id'),
           },
         },
       ]);
+
       return relTypeIds.map(item => String(item.relTypeId));
     }
 
@@ -157,24 +151,15 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: {
-              $cond: {
-                if: { $eq: ['$mainType', doc.mainType] },
-                then: '$relTypeId',
-                else: '$mainTypeId',
-              },
-            },
+            relTypeId: getProjectConition(doc.mainType, 'Id'),
           },
         },
       ]);
+
       return relTypeIds.map(item => String(item.relTypeId));
     }
 
     public static async relatedConformity(doc: IConformitySaved) {
-      if (!(doc.mainType && doc.mainTypeId)) {
-        return [];
-      }
-
       const match = getSavedAnyConformityMatch({
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,
@@ -184,24 +169,8 @@ export const loadConformityClass = () => {
         { $match: match },
         {
           $project: {
-            savedRelType: {
-              $cond: {
-                if: {
-                  $eq: ['$mainType', doc.mainType],
-                },
-                then: '$relType',
-                else: '$mainType',
-              },
-            },
-            savedRelTypeId: {
-              $cond: {
-                if: {
-                  $eq: ['$mainType', doc.mainType],
-                },
-                then: '$relTypeId',
-                else: '$mainTypeId',
-              },
-            },
+            savedRelType: getProjectConition(doc.mainType, ''),
+            savedRelTypeId: getProjectConition(doc.mainType, 'Id'),
           },
         },
       ]);
@@ -233,20 +202,12 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: {
-              $cond: {
-                if: {
-                  $eq: ['$mainType', doc.relType],
-                },
-                then: '$mainTypeId',
-                else: '$relTypeId',
-              },
-            },
+            relTypeId: getProjectConition(doc.mainType, 'Id'),
           },
         },
       ]);
 
-      return relTypeIds.map(item => String(item.relTypeId));
+      return relTypeIds.map(item => item.relTypeId);
     }
 
     /**
@@ -257,6 +218,7 @@ export const loadConformityClass = () => {
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,
       });
+
       await Conformities.deleteMany(match);
     }
   }
