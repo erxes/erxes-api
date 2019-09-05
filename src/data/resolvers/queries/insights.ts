@@ -684,7 +684,7 @@ const insightQueries = {
 
     return [
       {
-        title: 'Average wait time between messages',
+        title: 'The average wait time between messages',
         count: insightAggregateAllAvg.length ? insightAggregateAllAvg[0].avgSecond : 0,
       },
       {
