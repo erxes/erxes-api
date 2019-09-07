@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { Conformities, Stages } from '../../../db/models';
+import { Stages } from '../../../db/models';
 import { getNextMonth, getToday } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -25,14 +25,9 @@ export const generateCommonFilters = async (args: any) => {
     assignedUserIds,
     customerIds,
     companyIds,
-    conformityMainType,
-    conformityMainTypeId,
-    conformityIsRelated,
-    conformityIsSaved,
     order,
     probability,
     initialStageId,
-    type,
   } = args;
 
   const assignedToNoOne = value => {
@@ -40,7 +35,6 @@ export const generateCommonFilters = async (args: any) => {
   };
 
   const filter: any = {};
-  let filterIds: string[] = [];
 
   if (assignedUserIds) {
     // Filter by assigned to no one
@@ -53,46 +47,12 @@ export const generateCommonFilters = async (args: any) => {
     filter.$and = $and;
   }
 
-  if (customerIds && type) {
-    const relIds = await Conformities.filterConformity({
-      mainType: 'customer',
-      mainTypeIds: customerIds,
-      relType: type,
-    });
-
-    filterIds = filterIds.concat(relIds);
+  if (customerIds) {
+    filter.customerIds = contains(customerIds);
   }
 
-  if (companyIds && type) {
-    const relIds = await Conformities.filterConformity({
-      mainType: 'company',
-      mainTypeIds: companyIds,
-      relType: type,
-    });
-
-    filterIds = filterIds.concat(relIds);
-  }
-
-  if (conformityMainType && conformityMainTypeId) {
-    if (conformityIsSaved) {
-      const relIds = await Conformities.savedConformity({
-        mainType: conformityMainType,
-        mainTypeId: conformityMainTypeId,
-        relType: type,
-      });
-
-      filterIds = filterIds.concat(relIds || []);
-    }
-
-    if (conformityIsRelated) {
-      const relIds = await Conformities.relatedConformity({
-        mainType: conformityMainType,
-        mainTypeId: conformityMainTypeId,
-        relType: type,
-      });
-
-      filterIds = filterIds.concat(relIds || []);
-    }
+  if (companyIds) {
+    filter.companyIds = contains(companyIds);
   }
 
   if (order) {
@@ -170,15 +130,10 @@ export const generateCommonFilters = async (args: any) => {
     filter.stageId = { $in: stageIds };
   }
 
-  if (filterIds.length) {
-    filter._id = contains(filterIds || []);
-  }
-
   return filter;
 };
 
 export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'deal';
   const filter = await generateCommonFilters(args);
   const { productIds } = extraParams || args;
 
@@ -190,7 +145,6 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
 };
 
 export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'ticket';
   const filter = await generateCommonFilters(args);
   const { priority, source } = extraParams || args;
 
@@ -206,7 +160,6 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
 };
 
 export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
-  args.type = 'task';
   const filter = await generateCommonFilters(args);
   const { priority } = extraParams || args;
 
