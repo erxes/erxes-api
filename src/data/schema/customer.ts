@@ -1,3 +1,5 @@
+import { conformityQueryFields } from './common';
+
 // TODO: remove customer's email and phone field after customCommand
 
 export const types = `
@@ -81,10 +83,7 @@ const queryParams = `
   leadStatus: String
   sortField: String
   sortDirection: Int
-  mainType: String
-  mainTypeId: String
-  isRelated: Boolean
-  isSaved: Boolean
+  ${conformityQueryFields}
 `;
 
 export const queries = `

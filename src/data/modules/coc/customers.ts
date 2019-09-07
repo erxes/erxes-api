@@ -1,8 +1,10 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { Brands, Conformities, Forms, Integrations, Segments } from '../../../db/models';
+import { IConformityQueryParams } from '../../../data/modules/conformities/types';
+import { Brands, Forms, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
+import { conformityFilterUtils } from './utils';
 
 interface ISortParams {
   [index: string]: number;
@@ -25,7 +27,7 @@ interface IIn {
   $in: string[];
 }
 
-export interface IListArgs {
+export interface IListArgs extends IConformityQueryParams {
   page?: number;
   perPage?: number;
   segment?: string;
@@ -44,10 +46,6 @@ export interface IListArgs {
   byFakeSegment?: any;
   integrationType?: string;
   integration?: string;
-  mainType?: string;
-  mainTypeId?: string;
-  isRelated?: boolean;
-  isSaved?: boolean;
 }
 
 interface IIntegrationIds {
@@ -142,27 +140,6 @@ export class Builder {
     return { $or: fields };
   }
 
-  // filter by related Conformity
-  public async relatedFilter(mainType: string, mainTypeId: string): Promise<IIdsFilter> {
-    const customerIds = await Conformities.relatedConformity({
-      mainType,
-      mainTypeId,
-      relType: 'customer',
-    });
-
-    return { _id: { $in: customerIds || [] } };
-  }
-
-  public async savedConformityFilter(mainType: string, mainTypeId: string): Promise<IIdsFilter> {
-    const customerIds = await Conformities.savedConformity({
-      mainType,
-      mainTypeId,
-      relType: 'customer',
-    });
-
-    return { _id: { $in: customerIds || [] } };
-  }
-
   // filter by id
   public idsFilter(ids: string[]): IIdsFilter {
     return { _id: { $in: ids } };
@@ -216,8 +193,7 @@ export class Builder {
       integration: {},
       form: {},
       integrationType: {},
-      relatedConformity: {},
-      savedConformity: {},
+      filterConformity: {},
     };
 
     // filter by type
@@ -271,15 +247,8 @@ export class Builder {
       this.queries.searchValue = this.searchFilter(this.params.searchValue);
     }
 
-    if (this.params.mainType && this.params.mainTypeId) {
-      if (this.params.isRelated) {
-        this.queries.relatedConformity = await this.relatedFilter(this.params.mainType, this.params.mainTypeId);
-      }
-
-      if (this.params.isSaved) {
-        this.queries.savedConformity = await this.savedConformityFilter(this.params.mainType, this.params.mainTypeId);
-      }
-    }
+    // Filter by related Conformity
+    this.queries.filterConformity = await conformityFilterUtils(this.queries.filterConformity, this.params, 'customer');
 
     // filter by leadStatus
     if (this.params.leadStatus) {
@@ -307,8 +276,7 @@ export class Builder {
       ...this.queries.searchValue,
       ...this.queries.leadStatus,
       ...this.queries.lifecycleState,
-      ...this.queries.relatedConformity,
-      ...this.queries.savedConformity,
+      ...this.queries.filterConformity,
     };
   }
 }

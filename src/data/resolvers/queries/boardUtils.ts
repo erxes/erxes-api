@@ -25,11 +25,10 @@ export const generateCommonFilters = async (args: any) => {
     assignedUserIds,
     customerIds,
     companyIds,
-    mainType,
-    mainTypeId,
-    relType,
-    isRelated,
-    isSaved,
+    conformityMainType,
+    conformityMainTypeId,
+    conformityIsRelated,
+    conformityIsSaved,
     order,
     probability,
     initialStageId,
@@ -41,6 +40,7 @@ export const generateCommonFilters = async (args: any) => {
   };
 
   const filter: any = {};
+  let filterIds: string[] = [];
 
   if (assignedUserIds) {
     // Filter by assigned to no one
@@ -60,7 +60,7 @@ export const generateCommonFilters = async (args: any) => {
       relType: type,
     });
 
-    filter._id = contains(relIds);
+    filterIds = filterIds.concat(relIds);
   }
 
   if (companyIds && type) {
@@ -70,28 +70,28 @@ export const generateCommonFilters = async (args: any) => {
       relType: type,
     });
 
-    filter._id = contains(relIds);
+    filterIds = filterIds.concat(relIds);
   }
 
-  if (mainType && mainTypeId && relType) {
-    if (isSaved) {
+  if (conformityMainType && conformityMainTypeId) {
+    if (conformityIsSaved) {
       const relIds = await Conformities.savedConformity({
-        mainType,
-        mainTypeId,
-        relType,
+        mainType: conformityMainType,
+        mainTypeId: conformityMainTypeId,
+        relType: type,
       });
 
-      filter._id = contains(relIds || []);
+      filterIds = filterIds.concat(relIds || []);
     }
 
-    if (isRelated) {
+    if (conformityIsRelated) {
       const relIds = await Conformities.relatedConformity({
-        mainType,
-        mainTypeId,
-        relType,
+        mainType: conformityMainType,
+        mainTypeId: conformityMainTypeId,
+        relType: type,
       });
 
-      filter._id = contains(relIds || []);
+      filterIds = filterIds.concat(relIds || []);
     }
   }
 
@@ -168,6 +168,10 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.closeDate = dateSelector(date);
     filter.stageId = { $in: stageIds };
+  }
+
+  if (filterIds) {
+    filter._id = contains(filterIds || []);
   }
 
   return filter;

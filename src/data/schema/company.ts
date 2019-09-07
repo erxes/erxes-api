@@ -1,3 +1,5 @@
+import { conformityQueryFields } from './common';
+
 export const types = `
   type Company {
     _id: String!
@@ -68,10 +70,7 @@ const queryParams = `
   sortField: String
   sortDirection: Int
   brand: String
-  mainType: String
-  mainTypeId: String
-  isRelated: Boolean
-  isSaved: Boolean
+  ${conformityQueryFields}
 `;
 
 export const queries = `

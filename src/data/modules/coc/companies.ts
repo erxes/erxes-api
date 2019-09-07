@@ -1,8 +1,10 @@
+import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
+import { conformityFilterUtils } from './utils';
 
-export interface IListArgs {
+export interface IListArgs extends IConformityQueryParams {
   page?: number;
   perPage?: number;
   segment?: string;
@@ -14,10 +16,6 @@ export interface IListArgs {
   sortField?: string;
   sortDirection?: number;
   brand?: string;
-  mainType?: string;
-  mainTypeId?: string;
-  isRelated?: boolean;
-  isSaved?: boolean;
 }
 
 interface IIn {
@@ -90,28 +88,8 @@ export const filter = async (params: IListArgs) => {
     selector = { $or: fields };
   }
 
-  // Filter by related Conformity
-  if (params.mainType && params.mainTypeId) {
-    if (params.isRelated) {
-      const companyIds = await Conformities.relatedConformity({
-        mainType: params.mainType || '',
-        mainTypeId: params.mainTypeId || '',
-        relType: 'company',
-      });
-
-      selector = { _id: { $in: companyIds || [] } };
-    }
-
-    if (params.isSaved) {
-      const companyIds = await Conformities.savedConformity({
-        mainType: params.mainType || '',
-        mainTypeId: params.mainTypeId || '',
-        relType: 'company',
-      });
-
-      selector = { _id: { $in: companyIds || [] } };
-    }
-  }
+  // Filter by related and saved Conformity
+  selector = await conformityFilterUtils(selector, params, 'company');
 
   // Filter by tag
   if (params.tag) {
