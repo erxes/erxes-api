@@ -170,7 +170,7 @@ export const generateCommonFilters = async (args: any) => {
     filter.stageId = { $in: stageIds };
   }
 
-  if (filterIds) {
+  if (filterIds.length) {
     filter._id = contains(filterIds || []);
   }
 

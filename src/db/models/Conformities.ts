@@ -125,13 +125,11 @@ export const loadConformityClass = () => {
       await Conformities.updateMany(
         { $and: [{ mainType: doc.type }, { mainTypeId: { $in: doc.oldTypeIds } }] },
         { $set: { mainTypeId: doc.newTypeId } },
-        { multi: true },
       );
 
       await Conformities.updateMany(
         { $and: [{ relType: doc.type }, { relTypeId: { $in: doc.oldTypeIds } }] },
         { $set: { relTypeId: doc.newTypeId } },
-        { multi: true },
       );
     }
 
