@@ -146,6 +146,23 @@ const initConsumer = async () => {
           await RobotEntries.create({ action: 'fillCompanyInfo', data: { modifier: data.modifier } });
         }
 
+        if (data.action === 'customerScoring') {
+          const modifier = data.scoreMap.map(entry => ({
+            updateOne: {
+              filter: {
+                _id: entry._id,
+              },
+              update: {
+                $set: { profileScore: entry.score },
+              },
+            },
+          }));
+
+          await Customers.bulkWrite(modifier);
+
+          await RobotEntries.create({ action: 'customerScoring', data: { scoreMap: data.scoreMap } });
+        }
+
         channel.ack(msg);
       }
     });
