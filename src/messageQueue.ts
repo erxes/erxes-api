@@ -163,6 +163,14 @@ const initConsumer = async () => {
           await RobotEntries.create({ action: 'customerScoring', data: { scoreMap: data.scoreMap } });
         }
 
+        if (data.action === 'channelsWithoutIntegration') {
+          await RobotEntries.create({ action: 'channelsWithoutIntegration', data: { channelIds: data.channelIds } });
+        }
+
+        if (data.action === 'brandsWithoutIntegration') {
+          await RobotEntries.create({ action: 'brandsWithoutIntegration', data: { brandIds: data.brandIds } });
+        }
+
         channel.ack(msg);
       }
     });
