@@ -47,23 +47,23 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
 export const conformityFilterUtils = async (baseQuery, params, relType) => {
   if (params.conformityMainType && params.conformityMainTypeId) {
     if (params.conformityIsRelated) {
-      const companyIds = await Conformities.relatedConformity({
+      const relTypeIds = await Conformities.relatedConformity({
         mainType: params.conformityMainType || '',
         mainTypeId: params.conformityMainTypeId || '',
         relType,
       });
 
-      baseQuery = { _id: { $in: companyIds || [] } };
+      baseQuery = { _id: { $in: relTypeIds || [] } };
     }
 
     if (params.conformityIsSaved) {
-      const companyIds = await Conformities.savedConformity({
+      const relTypeIds = await Conformities.savedConformity({
         mainType: params.conformityMainType || '',
         mainTypeId: params.conformityMainTypeId || '',
         relType,
       });
 
-      baseQuery = { _id: { $in: companyIds || [] } };
+      baseQuery = { _id: { $in: relTypeIds || [] } };
     }
   }
   return baseQuery;

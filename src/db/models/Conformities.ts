@@ -23,12 +23,12 @@ const getSavedAnyConformityMatch = ({ mainType, mainTypeId }: { mainType: string
   };
 };
 
-const getProjectConition = (mainType: string, isId: string) => {
+const getProjectCondition = (mainType: string, mainVar: string, relVar: string) => {
   return {
     $cond: {
       if: { $eq: ['$mainType', mainType] },
-      then: '$relType'.concat(isId),
-      else: '$mainType'.concat(isId),
+      then: '$'.concat(relVar),
+      else: '$'.concat(mainVar),
     },
   };
 };
@@ -113,7 +113,7 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: getProjectConition(doc.mainType, 'Id'),
+            relTypeId: getProjectCondition(doc.mainType, 'mainTypeId', 'relTypeId'),
           },
         },
       ]);
@@ -149,7 +149,7 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: getProjectConition(doc.mainType, 'Id'),
+            relTypeId: getProjectCondition(doc.mainType, 'mainTypeId', 'relTypeId'),
           },
         },
       ]);
@@ -167,8 +167,8 @@ export const loadConformityClass = () => {
         { $match: match },
         {
           $project: {
-            savedRelType: getProjectConition(doc.mainType, ''),
-            savedRelTypeId: getProjectConition(doc.mainType, 'Id'),
+            savedRelType: getProjectCondition(doc.mainType, 'mainType', 'relType'),
+            savedRelTypeId: getProjectCondition(doc.mainType, 'mainTypeId', 'relTypeId'),
           },
         },
       ]);
@@ -200,7 +200,7 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: getProjectConition(doc.mainType, 'Id'),
+            relTypeId: getProjectCondition(doc.relType, 'relTypeId', 'mainTypeId'),
           },
         },
       ]);
