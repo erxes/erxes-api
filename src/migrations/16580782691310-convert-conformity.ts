@@ -7,6 +7,7 @@ import { Conformities, Customers, Deals, Tasks, Tickets } from '../db/models';
  */
 module.exports.up = async () => {
   await connect;
+
   console.log('start migration on convert conformity');
   try {
     console.log('start migration on customerCompany conformity');

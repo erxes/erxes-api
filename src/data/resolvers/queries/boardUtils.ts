@@ -60,7 +60,7 @@ export const generateCommonFilters = async (args: any) => {
       relType: type,
     });
 
-    filterIds = filterIds.concat(relIds);
+    filterIds = relIds;
   }
 
   if (companyIds && type) {
@@ -70,7 +70,11 @@ export const generateCommonFilters = async (args: any) => {
       relType: type,
     });
 
-    filterIds = filterIds.concat(relIds);
+    filterIds = filterIds.length ? filterIds.filter(id => relIds.includes(id)) : relIds;
+  }
+
+  if (filterIds.length) {
+    filter._id = contains(filterIds || []);
   }
 
   if (conformityMainType && conformityMainTypeId) {
@@ -81,7 +85,7 @@ export const generateCommonFilters = async (args: any) => {
         relType: type,
       });
 
-      filterIds = filterIds.concat(relIds || []);
+      filter._id = contains(relIds || []);
     }
 
     if (conformityIsRelated) {
@@ -91,7 +95,7 @@ export const generateCommonFilters = async (args: any) => {
         relType: type,
       });
 
-      filterIds = filterIds.concat(relIds || []);
+      filter._id = contains(relIds || []);
     }
   }
 
@@ -168,10 +172,6 @@ export const generateCommonFilters = async (args: any) => {
 
     filter.closeDate = dateSelector(date);
     filter.stageId = { $in: stageIds };
-  }
-
-  if (filterIds.length) {
-    filter._id = contains(filterIds || []);
   }
 
   return filter;
