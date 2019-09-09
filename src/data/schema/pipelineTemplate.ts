@@ -1,7 +1,7 @@
 export const types = `
   type PipelineTemplateStage {
     name: String!
-    formId: String!
+    formId: String
     order: Int
   }
 
