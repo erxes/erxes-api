@@ -216,7 +216,7 @@ const conversationMutations = {
     const message = await ConversationMessages.addMessage(doc, user._id);
 
     // send reply to facebook
-    if (kind === KIND_CHOICES.FACEBOOK) {
+    if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
       dataSources.IntegrationsAPI.replyFacebookPost({
         conversationId: conversation._id,
         integrationId: integration._id,

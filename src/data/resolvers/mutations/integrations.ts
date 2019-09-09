@@ -96,8 +96,9 @@ const integrationMutations = {
     const integration = await Integrations.createExternalIntegration(doc);
 
     try {
-      await dataSources.IntegrationsAPI.createIntegration(doc.kind, {
+      await dataSources.IntegrationsAPI.createIntegration('facebook', {
         accountId: doc.accountId,
+        kind: doc.kind,
         integrationId: integration._id,
         data: data ? JSON.stringify(data) : '',
       });
@@ -116,7 +117,7 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (['facebook', 'gmail', 'callpro'].includes(integration.kind || '')) {
+      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro'].includes(integration.kind || '')) {
         await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
       }
 

@@ -47,7 +47,7 @@ export default {
   async post(conv: IConversationDocument, _args, { dataSources }: IContext) {
     const integration = await Integrations.findOne({ _id: conv.integrationId }).lean();
 
-    if (integration.kind !== 'facebook') {
+    if (integration.kind !== 'facebook-post') {
       return null;
     }
 
