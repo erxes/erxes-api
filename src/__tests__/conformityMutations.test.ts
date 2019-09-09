@@ -1,6 +1,6 @@
 import { graphqlRequest } from '../db/connection';
 import { companyFactory, conformityFactory, customerFactory, dealFactory } from '../db/factories';
-import { Conformities } from '../db/models';
+import { Companies, Conformities, Customers, Deals } from '../db/models';
 
 import './setup.ts';
 
@@ -50,7 +50,9 @@ test('Edit conformity mutations', async () => {
     mainTypeId: company._id,
     relType: 'customer',
   });
-  expect(relTypeIds.length).toEqual(2);
+
+  let savedCustomer = await Customers.find({ _id: { $in: relTypeIds } });
+  expect(savedCustomer.length).toEqual(2);
 
   args = {
     mainType: 'company',
@@ -65,7 +67,9 @@ test('Edit conformity mutations', async () => {
     mainTypeId: company._id,
     relType: 'customer',
   });
-  expect(relTypeIds.length).toEqual(3);
+
+  savedCustomer = await Customers.find({ _id: { $in: relTypeIds } });
+  expect(savedCustomer.length).toEqual(3);
 
   args = {
     mainType: 'customer',
@@ -80,14 +84,18 @@ test('Edit conformity mutations', async () => {
     mainTypeId: company._id,
     relType: 'customer',
   });
-  expect(relTypeIds.length).toEqual(3);
+
+  savedCustomer = await Customers.find({ _id: { $in: relTypeIds } });
+  expect(savedCustomer.length).toEqual(3);
 
   relTypeIds = await Conformities.savedConformity({
     mainType: 'company',
     mainTypeId: company1._id,
     relType: 'customer',
   });
-  expect(relTypeIds.length).toEqual(1);
+
+  savedCustomer = await Customers.find({ _id: { $in: relTypeIds } });
+  expect(savedCustomer.length).toEqual(1);
 
   args = {
     mainType: 'customer',
@@ -102,7 +110,9 @@ test('Edit conformity mutations', async () => {
     mainTypeId: customer2._id,
     relType: 'company',
   });
-  expect(relTypeIds.length).toEqual(0);
+
+  let relatedCompanies = await Companies.find({ _id: { $in: relTypeIds } });
+  expect(relatedCompanies.length).toEqual(0);
 
   const deal = await dealFactory({});
   args = {
@@ -118,14 +128,18 @@ test('Edit conformity mutations', async () => {
     mainTypeId: company._id,
     relType: 'deal',
   });
-  expect(relTypeIds.length).toEqual(1);
+
+  const relatedDeals = await Deals.find({ _id: { $in: relTypeIds } });
+  expect(relatedDeals.length).toEqual(1);
 
   relTypeIds = await Conformities.relatedConformity({
     mainType: 'deal',
     mainTypeId: deal._id,
     relType: 'company',
   });
-  expect(relTypeIds.length).toEqual(2);
+
+  relatedCompanies = await Companies.find({ _id: { $in: relTypeIds } });
+  expect(relatedCompanies.length).toEqual(2);
 });
 
 test('Add conformity mutations', async () => {
