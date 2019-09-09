@@ -42,7 +42,7 @@ export const loadFieldClass = () => {
 
       // Checking if the field is defined by the erxes
       if (fieldObj && fieldObj.isDefinedByErxes) {
-        throw new Error('Cant update this field');
+        throw new Error(`Can't update this field`);
       }
     }
 

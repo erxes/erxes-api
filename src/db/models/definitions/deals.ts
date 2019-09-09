@@ -9,6 +9,7 @@ export interface IProduct {
   description?: string;
   sku?: string;
   productId?: string;
+  customFieldsData?: any;
 }
 
 export interface IProductDocument extends IProduct, Document {
@@ -49,6 +50,7 @@ export const productSchema = new Schema({
   }),
   description: field({ type: String, optional: true }),
   sku: field({ type: String, optional: true }), // Stock Keeping Unit
+  customFieldsData: field({ type: Object, optional: true }),
   createdAt: field({
     type: Date,
     default: new Date(),

@@ -5,15 +5,17 @@ export const types = `
     type: String
     description: String
     sku: String
+    customFieldsData: JSON
     createdAt: Date
   }
 `;
 
 const params = `
-  name: String!,
+  name: String,
   type: String,
   description: String,
   sku: String,
+  customFieldsData: JSON
 `;
 
 export const queries = `
