@@ -7,7 +7,7 @@ export const types = `
 
   input PipelineTemplateStageInput {
     name: String!
-    formId: String!
+    formId: String
   }
   
   type PipelineTemplate {
