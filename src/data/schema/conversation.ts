@@ -26,6 +26,7 @@ export const types = `
     tagIds: [String]
 
     messages: [ConversationMessage]
+    post: FacebookPost
     tags: [Tag]
     customer: Customer
     integration: Integration
@@ -70,6 +71,31 @@ export const types = `
     user: User
     customer: Customer
     gmailData: Gmail
+  }
+
+  type FacebookPost {
+    postId: String
+    recipientId: String
+    senderId: String
+    content:String
+    erxesApiId: String
+    attachments: [String]
+    timestamp: Date
+    commentCount: Int
+  }
+
+  type FacebookComment {
+    commentId: String
+    postId: String
+    parentId: String
+    recipientId:String
+    senderId: String
+    attachments: [String]
+    content: String
+    erxesApiId: String
+    timestamp: Date
+    customer: Customer
+    commentCount: Int
   }
 
   type Gmail {
@@ -149,6 +175,12 @@ export const queries = `
     skip: Int
     limit: Int
   ): [ConversationMessage]
+
+  facebookComments(
+    postId: String!
+    skip: Int
+    limit: Int
+  ): [FacebookComment]
 
   conversationMessagesTotalCount(conversationId: String!): Int
   conversationCounts(${filterParams}, only: String): JSON

@@ -141,6 +141,12 @@ const conversationQueries = {
     return ConversationMessages.countDocuments({ conversationId });
   },
 
+  async facebookComments(_root, { postId, limit }: { postId: string; limit: number }, { dataSources }: IContext) {
+    return dataSources.IntegrationsAPI.fetchApi('/facebook/get-comments', {
+      postId,
+      limit: limit || 4,
+    });
+  },
   /**
    * Group conversation counts by brands, channels, integrations, status
    */
