@@ -47,6 +47,10 @@ describe('dealQueries', () => {
       $nextMonth: String
       $noCloseDate: String
       $overdue: String
+      $mainType: String
+      $mainTypeId: String
+      $isRelated: Boolean
+      $isSaved: Boolean
     ) {
       deals(
         stageId: $stageId
@@ -59,6 +63,10 @@ describe('dealQueries', () => {
         nextMonth: $nextMonth
         noCloseDate: $noCloseDate
         overdue: $overdue
+        conformityMainType: $mainType
+        conformityMainTypeId: $mainTypeId
+        conformityIsRelated: $isRelated
+        conformityIsSaved: $isSaved
       ) {
         ${commonDealTypes}
       }
@@ -219,5 +227,120 @@ describe('dealQueries', () => {
     const response = await graphqlRequest(qry, 'dealDetail', args);
 
     expect(response._id).toBe(deal._id);
+  });
+
+  test('Deal (=ticket, task) filter by conformity saved and related', async () => {
+    const { _id } = await companyFactory();
+
+    const deal = await dealFactory({});
+    await dealFactory({});
+    await customerFactory({});
+    await companyFactory({});
+
+    let response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'company',
+      mainTypeId: _id,
+      isSaved: true,
+    });
+
+    expect(response.length).toBe(0);
+
+    response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'company',
+      mainTypeId: _id,
+      isRelated: true,
+    });
+
+    expect(response.length).toBe(0);
+
+    await conformityFactory({
+      mainType: 'company',
+      mainTypeId: _id,
+      relType: 'deal',
+      relTypeId: deal._id,
+    });
+
+    const customer = await customerFactory({});
+    await conformityFactory({
+      mainType: 'company',
+      mainTypeId: _id,
+      relType: 'customer',
+      relTypeId: customer._id,
+    });
+
+    response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'company',
+      mainTypeId: _id,
+      isSaved: true,
+    });
+
+    expect(response.length).toBe(1);
+
+    response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'company',
+      mainTypeId: _id,
+      isRelated: true,
+    });
+
+    expect(response.length).toBe(0);
+
+    response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'customer',
+      mainTypeId: customer._id,
+      isSaved: true,
+    });
+
+    expect(response.length).toBe(0);
+
+    response = await graphqlRequest(qryDealFilter, 'deals', {
+      mainType: 'customer',
+      mainTypeId: customer._id,
+      isRelated: true,
+    });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Deal filter by customers and companies', async () => {
+    const customer = await customerFactory();
+    const company = await companyFactory();
+    const deal = await dealFactory({});
+    const deal1 = await dealFactory({});
+    const deal2 = await dealFactory({});
+
+    await conformityFactory({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      relType: 'customer',
+      relTypeId: customer._id,
+    });
+
+    await conformityFactory({
+      mainType: 'company',
+      mainTypeId: company._id,
+      relType: 'deal',
+      relTypeId: deal._id,
+    });
+
+    await conformityFactory({
+      mainType: 'deal',
+      mainTypeId: deal1._id,
+      relType: 'customer',
+      relTypeId: customer._id,
+    });
+
+    await conformityFactory({
+      mainType: 'company',
+      mainTypeId: company._id,
+      relType: 'deal',
+      relTypeId: deal2._id,
+    });
+
+    const response = await graphqlRequest(qryDealFilter, 'deals', {
+      customerIds: [customer._id],
+      companyIds: [company._id],
+    });
+
+    expect(response.length).toBe(1);
   });
 });

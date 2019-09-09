@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { companyFactory, conformityFactory, customerFactory, dealFactory } from '../db/factories';
+import { companyFactory, conformityFactory, customerFactory, dealFactory, taskFactory } from '../db/factories';
 import { Companies, Conformities, Customers, Deals } from '../db/models';
 
 import './setup.ts';
@@ -140,6 +140,23 @@ test('Edit conformity mutations', async () => {
 
   relatedCompanies = await Companies.find({ _id: { $in: relTypeIds } });
   expect(relatedCompanies.length).toEqual(2);
+
+  await taskFactory({});
+  await taskFactory({});
+
+  relTypeIds = await Conformities.relatedConformity({
+    mainType: 'company',
+    mainTypeId: company._id,
+    relType: 'task',
+  });
+  expect(relTypeIds.length).toEqual(0);
+
+  relTypeIds = await Conformities.savedConformity({
+    mainType: 'company',
+    mainTypeId: company._id,
+    relType: 'task',
+  });
+  expect(relTypeIds.length).toEqual(0);
 });
 
 test('Add conformity mutations', async () => {
