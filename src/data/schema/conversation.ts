@@ -178,6 +178,7 @@ export const queries = `
 
   facebookComments(
     postId: String!
+    commentId: String
     skip: Int
     limit: Int
   ): [FacebookComment]

@@ -141,9 +141,14 @@ const conversationQueries = {
     return ConversationMessages.countDocuments({ conversationId });
   },
 
-  async facebookComments(_root, { postId, limit }: { postId: string; limit: number }, { dataSources }: IContext) {
+  async facebookComments(
+    _root,
+    { postId, commentId, limit }: { commentId: string; postId: string; limit: number },
+    { dataSources }: IContext,
+  ) {
     return dataSources.IntegrationsAPI.fetchApi('/facebook/get-comments', {
       postId,
+      commentId,
       limit: limit || 4,
     });
   },

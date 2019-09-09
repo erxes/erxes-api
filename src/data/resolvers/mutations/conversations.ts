@@ -213,11 +213,26 @@ const conversationMutations = {
       });
     }
 
+    if (kind === KIND_CHOICES.FACEBOOK_POST) {
+      return dataSources.IntegrationsAPI.replyFacebookPost({
+        conversationId: conversation._id,
+        integrationId: integration._id,
+        content: strip(doc.content),
+        attachments: doc.attachments || [],
+      })
+        .then(response => {
+          debugExternalApi(response);
+        })
+        .catch(e => {
+          debugExternalApi(e.message);
+        });
+    }
+
     const message = await ConversationMessages.addMessage(doc, user._id);
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
-      dataSources.IntegrationsAPI.replyFacebookPost({
+      return dataSources.IntegrationsAPI.replyFacebook({
         conversationId: conversation._id,
         integrationId: integration._id,
         content: strip(doc.content),
