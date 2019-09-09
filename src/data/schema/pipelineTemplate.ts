@@ -15,6 +15,7 @@ export const types = `
     name: String!
     description: String
     type: String
+    isDefinedByErxes: Boolean
     stages: [PipelineTemplateStage]
   }
 `;

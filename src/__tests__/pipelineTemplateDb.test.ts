@@ -62,6 +62,16 @@ describe('Test pipeline template model', () => {
     expect(updated.stages.length).toEqual(pipelineTemplate.stages.length);
   });
 
+  test('Duplicate pipeline template', async () => {
+    const duplicated = await PipelineTemplates.duplicatePipelineTemplate(pipelineTemplate._id);
+
+    expect(duplicated).toBeDefined();
+    expect(duplicated.name).toEqual(pipelineTemplate.name);
+    expect(duplicated.description).toEqual(pipelineTemplate.description);
+    expect(duplicated.type).toEqual(pipelineTemplate.type);
+    expect(duplicated.stages.length).toEqual(pipelineTemplate.stages.length);
+  });
+
   test('Remove pipeline template', async () => {
     const isDeleted = await PipelineTemplates.removePipelineTemplate(pipelineTemplate._id);
 
