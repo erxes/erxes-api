@@ -8,7 +8,7 @@ import {
   IConformityFilter,
   IConformityRemove,
   IConformitySaved,
-} from './definitions/conformity';
+} from './definitions/conformities';
 
 const getSavedAnyConformityMatch = ({ mainType, mainTypeId }: { mainType: string; mainTypeId: string }) => {
   return {
