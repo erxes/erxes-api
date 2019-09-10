@@ -1,11 +1,13 @@
 export const types = `
   type PipelineTemplateStage {
+    _id: String!
     name: String!
     formId: String
     order: Int
   }
 
   input PipelineTemplateStageInput {
+    _id: String!
     name: String!
     formId: String
   }

@@ -30,7 +30,7 @@ const getTemplateStages = async (templateId: string, pipelineId: string, type: s
   }
 
   return template.stages.map(stage => ({
-    _id: Math.random().toString(),
+    _id: stage._id,
     name: stage.name,
     pipelineId,
     type,
