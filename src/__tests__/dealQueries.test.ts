@@ -167,9 +167,15 @@ describe('dealQueries', () => {
       relTypeId: _id,
     });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { customerIds: [_id] });
+    let response = await graphqlRequest(qryDealFilter, 'deals', { customerIds: [_id] });
 
     expect(response.length).toBe(1);
+
+    const customer1 = await customerFactory();
+
+    response = await graphqlRequest(qryDealFilter, 'deals', { customerIds: [customer1._id] });
+
+    expect(response.length).toBe(0);
   });
 
   test('Deal filter by companies', async () => {
@@ -184,9 +190,15 @@ describe('dealQueries', () => {
       relTypeId: deal._id,
     });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [_id] });
+    let response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [_id] });
 
     expect(response.length).toBe(1);
+
+    const company1 = await companyFactory();
+
+    response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [company1._id] });
+
+    expect(response.length).toBe(0);
   });
 
   test('Deals', async () => {

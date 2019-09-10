@@ -73,7 +73,7 @@ export const generateCommonFilters = async (args: any) => {
     filterIds = filterIds.length ? filterIds.filter(id => relIds.includes(id)) : relIds;
   }
 
-  if (filterIds.length) {
+  if (customerIds || companyIds) {
     filter._id = contains(filterIds || []);
   }
 
