@@ -18,13 +18,6 @@ export const types = `
     createdUser: User
     createdDate: Date
   }
-
-  type FormSubmission {
-    _id: String!
-    customerId: String
-    formId: String
-    submittedAt: Date
-  }
 `;
 
 const commonFields = `
@@ -34,11 +27,6 @@ const commonFields = `
   type: String!
 `;
 
-const formSubmissionFields = `
-  customerId: String,
-  formId: String,
-`;
-
 export const queries = `
   formDetail(_id: String!): Form
   forms: [Form]
@@ -46,6 +34,5 @@ export const queries = `
 
 export const mutations = `
   formsAdd(${commonFields}): Form
-  formSubmissionsAdd(${formSubmissionFields}): FormSubmission
   formsEdit(_id: String!, ${commonFields} ): Form
 `;
