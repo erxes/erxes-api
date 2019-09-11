@@ -25,6 +25,12 @@ interface IConversationMessageAdd {
   attachments?: any;
 }
 
+interface IReplyFacebookComment {
+  conversationId: string;
+  commentId: string;
+  content: string;
+}
+
 /**
  * conversation notrification receiver ids
  */
@@ -225,6 +231,7 @@ const conversationMutations = {
         })
         .catch(e => {
           debugExternalApi(e.message);
+          return e;
         });
     }
 
@@ -232,7 +239,7 @@ const conversationMutations = {
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
-      return dataSources.IntegrationsAPI.replyFacebook({
+      dataSources.IntegrationsAPI.replyFacebook({
         conversationId: conversation._id,
         integrationId: integration._id,
         content: strip(doc.content),
@@ -254,6 +261,45 @@ const conversationMutations = {
     publishMessage(dbMessage, conversation.customerId);
 
     return dbMessage;
+  },
+
+  async replyFacebookComment(_root, doc: IReplyFacebookComment, { user, dataSources }: IContext) {
+    const conversation = await Conversations.findOne({
+      _id: doc.conversationId,
+    });
+
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    const integration = await Integrations.findOne({
+      _id: conversation.integrationId,
+    });
+
+    if (!integration) {
+      throw new Error('Integration not found');
+    }
+
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: doc.content || '',
+    });
+
+    return dataSources.IntegrationsAPI.replyFacebookPost({
+      conversationId: doc.commentId,
+      integrationId: integration._id,
+      content: strip(doc.content),
+    })
+      .then(response => {
+        debugExternalApi(response);
+      })
+      .catch(e => {
+        debugExternalApi(e.message);
+        return e;
+      });
   },
 
   /**
