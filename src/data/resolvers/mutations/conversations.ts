@@ -250,6 +250,8 @@ const conversationMutations = {
         })
         .catch(e => {
           debugExternalApi(e.message);
+
+          return ConversationMessages.deleteOne({ _id: message._id });
         });
     }
 
