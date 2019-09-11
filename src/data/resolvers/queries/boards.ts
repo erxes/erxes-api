@@ -1,5 +1,6 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { BOARD_TYPES } from '../../../db/models/definitions/constants';
+import { IConformityQueryParams } from '../../modules/conformities/types';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -8,7 +9,7 @@ export interface IDate {
   year: number;
 }
 
-export interface IListParams {
+export interface IListParams extends IConformityQueryParams {
   pipelineId?: string;
   stageId: string;
   skip?: number;

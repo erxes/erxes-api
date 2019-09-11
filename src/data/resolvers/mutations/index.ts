@@ -3,6 +3,7 @@ import brands from './brands';
 import channels from './channels';
 import companies from './companies';
 import configs from './configs';
+import conformity from './conformities';
 import conversations from './conversations';
 import customers from './customers';
 import deals from './deals';
@@ -51,6 +52,7 @@ export default {
   ...boards,
   ...products,
   ...configs,
+  ...conformity,
   ...fieldsgroups,
   ...importHistory,
   ...messengerApps,

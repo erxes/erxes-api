@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { changeCompany, changeCustomer, updateOrder, watchItem } from './boardUtils';
+import { updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { growthHackSchema, IGrowthHack, IGrowthHackDocument } from './definitions/growthHacks';
 
@@ -20,7 +20,7 @@ export const loadGrowthHackClass = () => {
       const growthHack = await GrowthHacks.findOne({ _id });
 
       if (!growthHack) {
-        throw new Error('GrowthHack not found');
+        throw new Error('Growth hack not found');
       }
 
       return growthHack;
@@ -67,20 +67,6 @@ export const loadGrowthHackClass = () => {
      */
     public static async watchGrowthHack(_id: string, isAdd: boolean, userId: string) {
       return watchItem(GrowthHacks, _id, isAdd, userId);
-    }
-
-    /**
-     * Change customer
-     */
-    public static async changeCustomer(newCustomerId: string, oldCustomerIds: string[]) {
-      return changeCustomer(GrowthHacks, newCustomerId, oldCustomerIds);
-    }
-
-    /**
-     * Change company
-     */
-    public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
-      return changeCompany(GrowthHacks, newCompanyId, oldCompanyIds);
     }
   }
 

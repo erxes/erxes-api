@@ -113,6 +113,8 @@ import {
   types as PipelineTemplateTypes,
 } from './pipelineTemplate';
 
+import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -131,6 +133,7 @@ export const types = `
   ${TagTypes}
   ${FieldTypes}
   ${FormTypes}
+  ${ConformityTypes}
   ${CustomerTypes}
   ${SegmentTypes}
   ${ConversationTypes}
@@ -222,6 +225,7 @@ export const mutations = `
     ${TaskMutations}
     ${GrowthHackMutations}
     ${PipelineTemplateMutations}
+    ${ConformityMutations}
   }
 `;
 
