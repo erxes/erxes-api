@@ -75,48 +75,4 @@ describe('Test growthHacks model', () => {
     expect(updatedGrowthHack.order).toBe(3);
     expect(updatedGrowthHackToOrder.order).toBe(9);
   });
-
-  test('GrowthHack change customer', async () => {
-    const newCustomer = await customerFactory({});
-
-    const customer1 = await customerFactory({});
-    const customer2 = await customerFactory({});
-    const growthHackObj = await growthHackFactory({
-      customerIds: [customer2._id, customer1._id],
-    });
-
-    await GrowthHacks.changeCustomer(newCustomer._id, [customer2._id, customer1._id]);
-
-    const result = await GrowthHacks.findOne({ _id: growthHackObj._id });
-
-    if (!result) {
-      throw new Error('Growth hack not found');
-    }
-
-    expect(result.customerIds).toContain(newCustomer._id);
-    expect(result.customerIds).not.toContain(customer1._id);
-    expect(result.customerIds).not.toContain(customer2._id);
-  });
-
-  test('GrowthHack change company', async () => {
-    const newCompany = await companyFactory({});
-
-    const company1 = await companyFactory({});
-    const company2 = await companyFactory({});
-    const growthHackObj = await growthHackFactory({
-      companyIds: [company1._id, company2._id],
-    });
-
-    await GrowthHacks.changeCompany(newCompany._id, [company1._id, company2._id]);
-
-    const result = await GrowthHacks.findOne({ _id: growthHackObj._id });
-
-    if (!result) {
-      throw new Error('Growth hack not found');
-    }
-
-    expect(result.companyIds).toContain(newCompany._id);
-    expect(result.companyIds).not.toContain(company1._id);
-    expect(result.companyIds).not.toContain(company2._id);
-  });
 });

@@ -68,26 +68,6 @@ describe('growthHackQueries', () => {
     expect(response.length).toBe(1);
   });
 
-  test('GrowthHack filter by customers', async () => {
-    const { _id } = await customerFactory();
-
-    await growthHackFactory({ customerIds: [_id] });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { customerIds: [_id] });
-
-    expect(response.length).toBe(1);
-  });
-
-  test('GrowthHack filter by companies', async () => {
-    const { _id } = await companyFactory();
-
-    await growthHackFactory({ companyIds: [_id] });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { companyIds: [_id] });
-
-    expect(response.length).toBe(1);
-  });
-
   test('GrowthHacks', async () => {
     const stage = await stageFactory();
 

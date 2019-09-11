@@ -14,10 +14,10 @@ const args = {
   description: faker.random.word(),
   type: BOARD_TYPES.GROWTH_HACK,
   stages: [
-    { name: 'Stage 1', formId: 'formId1' },
-    { name: 'Stage 2', formId: 'formId2' },
-    { name: 'Stage 3', formId: 'formId3' },
-    { name: 'Stage 4', formId: 'formId4' },
+    { _id: Math.random().toString(), name: 'Stage 1', formId: 'formId1' },
+    { _id: Math.random().toString(), name: 'Stage 2', formId: 'formId2' },
+    { _id: Math.random().toString(), name: 'Stage 3', formId: 'formId3' },
+    { _id: Math.random().toString(), name: 'Stage 4', formId: 'formId4' },
   ],
 };
 

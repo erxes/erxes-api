@@ -8,8 +8,8 @@ import './setup.ts';
 describe('Test pipeline template model', () => {
   let pipelineTemplate: IPipelineTemplateDocument;
   const stages: IPipelineTemplateStage[] = [
-    { name: faker.random.word(), formId: faker.random.word() },
-    { name: faker.random.word(), formId: faker.random.word() },
+    { _id: Math.random().toString(), name: faker.random.word(), formId: faker.random.word() },
+    { _id: Math.random().toString(), name: faker.random.word(), formId: faker.random.word() },
   ];
 
   beforeEach(async () => {
