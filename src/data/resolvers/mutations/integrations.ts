@@ -98,8 +98,9 @@ const integrationMutations = {
     let kind = doc.kind;
 
     if (kind === 'facebook-post' || kind === 'facebook-messenger') {
-      kind = 'facebook ';
+      kind = 'facebook';
     }
+
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
