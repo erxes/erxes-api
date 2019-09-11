@@ -26,7 +26,7 @@ export const types = `
     tagIds: [String]
 
     messages: [ConversationMessage]
-    post: FacebookPost
+    facebookPost: FacebookPost
     tags: [Tag]
     customer: Customer
     integration: Integration
@@ -200,7 +200,7 @@ export const mutations = `
     internal: Boolean,
     attachments: [AttachmentInput],
   ): ConversationMessage
-  replyFacebookComment(conversationId: String, commentId: String, content: String): FacebookComment
+  conversationsReplyFacebookComment(conversationId: String, commentId: String, content: String): FacebookComment
   conversationsAssign(conversationIds: [String]!, assignedUserId: String): [Conversation]
   conversationsUnassign(_ids: [String]!): [Conversation]
   conversationsChangeStatus(_ids: [String]!, status: String!): [Conversation]

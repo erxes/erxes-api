@@ -265,7 +265,7 @@ const conversationMutations = {
     return dbMessage;
   },
 
-  async replyFacebookComment(_root, doc: IReplyFacebookComment, { user, dataSources }: IContext) {
+  async conversationsReplyFacebookComment(_root, doc: IReplyFacebookComment, { user, dataSources }: IContext) {
     const conversation = await Conversations.findOne({
       _id: doc.conversationId,
     });
