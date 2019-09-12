@@ -68,3 +68,13 @@ export const conformityFilterUtils = async (baseQuery, params, relType) => {
   }
   return baseQuery;
 };
+
+export const searchValueConverter = (value: string) => {
+  const specialChars = [...'[\\^$.|?*+()'];
+
+  value = value.replace(/ /g, '');
+
+  const result = [...value].map(char => (specialChars.includes(char) ? '.*\\' + char : '.*' + char));
+
+  return result.join('') + '.*';
+};

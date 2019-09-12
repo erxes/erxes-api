@@ -2,7 +2,7 @@ import { IConformityQueryParams } from '../../../data/modules/conformities/types
 import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils } from './utils';
+import { conformityFilterUtils, searchValueConverter } from './utils';
 
 export interface IListArgs extends IConformityQueryParams {
   page?: number;
@@ -74,15 +74,17 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
+    const regexValue = searchValueConverter(params.searchValue);
+
     const fields = [
-      { names: { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] } },
-      { primaryEmail: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { primaryPhone: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { emails: { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] } },
-      { phones: { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] } },
-      { website: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { industry: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { plan: new RegExp(`.*${params.searchValue}.*`, 'i') },
+      { names: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+      { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
+      { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
+      { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+      { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+      { website: new RegExp(`${regexValue}`, 'mui') },
+      { industry: new RegExp(`${regexValue}`, 'mui') },
+      { plan: new RegExp(`${regexValue}`, 'mui') },
     ];
 
     selector = { $or: fields };

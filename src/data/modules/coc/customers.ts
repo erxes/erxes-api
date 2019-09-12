@@ -4,7 +4,7 @@ import { IConformityQueryParams } from '../../../data/modules/conformities/types
 import { Brands, Forms, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils } from './utils';
+import { conformityFilterUtils, searchValueConverter } from './utils';
 
 interface ISortParams {
   [index: string]: number;
@@ -126,15 +126,17 @@ export class Builder {
 
   // filter by search value
   public searchFilter(value: string): { $or: any } {
+    const regexValue = searchValueConverter(value);
+
     const fields = [
-      { firstName: new RegExp(`.*${value}.*`, 'i') },
-      { lastName: new RegExp(`.*${value}.*`, 'i') },
-      { primaryEmail: new RegExp(`.*${value}.*`, 'i') },
-      { primaryPhone: new RegExp(`.*${value}.*`, 'i') },
-      { emails: { $in: [new RegExp(`.*${value}.*`, 'i')] } },
-      { phones: { $in: [new RegExp(`.*${value}.*`, 'i')] } },
-      { 'visitorContactInfo.email': new RegExp(`.*${value}.*`, 'i') },
-      { 'visitorContactInfo.phone': new RegExp(`.*${value}.*`, 'i') },
+      { firstName: new RegExp(`${regexValue}`, 'mui') },
+      { lastName: new RegExp(`${regexValue}`, 'mui') },
+      { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
+      { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
+      { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+      { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+      { 'visitorContactInfo.email': new RegExp(`${regexValue}`, 'mui') },
+      { 'visitorContactInfo.phone': new RegExp(`${regexValue}`, 'mui') },
     ];
 
     return { $or: fields };
