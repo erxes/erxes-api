@@ -12,6 +12,7 @@ import {
   pipelineSchema,
   stageSchema,
 } from './definitions/boards';
+import { getDuplicatedStages } from './PipelineTemplates';
 
 export interface IOrderInput {
   _id: string;
@@ -188,7 +189,15 @@ export const loadPipelineClass = () => {
     public static async createPipeline(doc: IPipeline, stages: IPipelineStage[]) {
       const pipeline = await Pipelines.create(doc);
 
-      if (!doc.templateId && stages) {
+      if (doc.templateId) {
+        const duplicatedStages = await getDuplicatedStages({
+          templateId: doc.templateId,
+          pipelineId: pipeline._id,
+          type: doc.type,
+        });
+
+        await createOrUpdatePipelineStages(duplicatedStages, pipeline._id, pipeline.type);
+      } else if (stages) {
         await createOrUpdatePipelineStages(stages, pipeline._id, pipeline.type);
       }
 
@@ -203,7 +212,13 @@ export const loadPipelineClass = () => {
         const pipeline = await Pipelines.getPipeline(_id);
 
         if (doc.templateId !== pipeline.templateId) {
-          await hasItem(doc.type, pipeline._id);
+          const duplicatedStages = await getDuplicatedStages({
+            templateId: doc.templateId,
+            pipelineId: _id,
+            type: doc.type,
+          });
+
+          await createOrUpdatePipelineStages(duplicatedStages, _id, doc.type);
         }
       } else if (stages) {
         await createOrUpdatePipelineStages(stages, _id, doc.type);

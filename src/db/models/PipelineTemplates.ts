@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { Forms } from '.';
 import {
   IPipelineTemplateDocument,
   IPipelineTemplateStage,
@@ -10,6 +11,38 @@ interface IDoc {
   description?: string;
   type: string;
 }
+
+export const getDuplicatedStages = async ({
+  templateId,
+  pipelineId,
+  type,
+}: {
+  templateId: string;
+  pipelineId?: string;
+  type?: string;
+}) => {
+  const template = await PipelineTemplates.findOne({ _id: templateId });
+
+  if (!template) {
+    throw new Error('Template not found');
+  }
+
+  const stages: any[] = [];
+
+  for (const stage of template.stages) {
+    const duplicated = await Forms.duplicate(stage.formId);
+
+    stages.push({
+      _id: Math.random().toString(),
+      name: stage.name,
+      pipelineId,
+      type,
+      formId: duplicated._id,
+    });
+  }
+
+  return stages;
+};
 
 export interface IPipelineTemplateModel extends Model<IPipelineTemplateDocument> {
   createPipelineTemplate(doc: IDoc, stages: IPipelineTemplateStage[]): Promise<IPipelineTemplateDocument>;
@@ -51,12 +84,14 @@ export const loadPipelineTemplateClass = () => {
       }
 
       const duplicated: IDoc = {
-        name: pipelineTemplate.name,
+        name: `${pipelineTemplate.name} duplicated`,
         description: pipelineTemplate.description || '',
         type: pipelineTemplate.type,
       };
 
-      return PipelineTemplates.createPipelineTemplate(duplicated, pipelineTemplate.stages);
+      const stages: any[] = await getDuplicatedStages({ templateId: pipelineTemplate._id });
+
+      return PipelineTemplates.createPipelineTemplate(duplicated, stages);
     }
 
     /**
@@ -67,6 +102,10 @@ export const loadPipelineTemplateClass = () => {
 
       if (!pipelineTemplate) {
         throw new Error('Pipeline template not found');
+      }
+
+      for (const stage of pipelineTemplate.stages) {
+        await Forms.removeForm(stage.formId);
       }
 
       return PipelineTemplates.deleteOne({ _id });
