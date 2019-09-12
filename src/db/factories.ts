@@ -712,15 +712,17 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
   return stage.save();
 };
 
-interface ITicketFactoryInput {
+interface IDealFactoryInput {
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
   noCloseDate?: boolean;
   assignedUserIds?: string[];
+  watchedUserIds?: string[];
+  modifiedBy?: string;
 }
 
-export const dealFactory = (params: ITicketFactoryInput = {}) => {
+export const dealFactory = (params: IDealFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     name: faker.random.word(),

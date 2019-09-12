@@ -4,6 +4,7 @@ import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { notifiedUserIds } from '../boardUtils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;
@@ -26,6 +27,14 @@ const internalNoteMutations = {
       contentTypeId: ``,
     };
 
+    const itemsNotifReceivers = async item => {
+      notifDoc.receivers = notifDoc.receivers.concat(
+        (await notifiedUserIds(item)).filter(id => {
+          return id !== user._id;
+        }),
+      );
+    };
+
     switch (args.contentType) {
       case 'deal': {
         const deal = await Deals.getDeal(args.contentTypeId);
@@ -37,6 +46,7 @@ const internalNoteMutations = {
         notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
         notifDoc.contentTypeId = deal._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
+        await itemsNotifReceivers(deal);
         break;
       }
 
@@ -75,6 +85,7 @@ const internalNoteMutations = {
         notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
         notifDoc.contentTypeId = ticket._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
+        await itemsNotifReceivers(ticket);
         break;
       }
 
@@ -88,6 +99,7 @@ const internalNoteMutations = {
         notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
         notifDoc.contentTypeId = task._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
+        await itemsNotifReceivers(task);
         break;
       }
 

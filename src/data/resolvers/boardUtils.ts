@@ -7,7 +7,7 @@ import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
-  let userIds: string[] = [item.userId];
+  let userIds: string[] = [item.modifiedBy || item.userId];
 
   if (item.assignedUserIds && item.assignedUserIds.length > 0) {
     userIds = userIds.concat(item.assignedUserIds);
