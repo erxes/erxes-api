@@ -10,8 +10,6 @@ export interface IGrowthHackModel extends Model<IGrowthHackDocument> {
   updateGrowthHack(_id: string, doc: IGrowthHack): Promise<IGrowthHackDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<IGrowthHackDocument[]>;
   watchGrowthHack(_id: string, isAdd: boolean, userId: string): void;
-  changeCustomer(newCustomerId: string, oldCustomerIds: string[]): Promise<IGrowthHackDocument>;
-  changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<IGrowthHackDocument>;
 }
 
 export const loadGrowthHackClass = () => {

@@ -1,4 +1,4 @@
-import { GrowthHacks, Stages } from '../../../db/models';
+import { GrowthHacks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -92,7 +92,7 @@ const growthHackMutations = {
    */
   async growthHacksChange(
     _root,
-    { _id, destinationStageId, formFields }: { _id: string; destinationStageId: string; formFields: JSON },
+    { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: { user: IUserDocument },
   ) {
     const growthHack = await GrowthHacks.findOne({ _id });
@@ -105,7 +105,6 @@ const growthHackMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      formFields,
     });
 
     const { content, action } = await itemsChange(growthHack, 'growthHack', destinationStageId);
@@ -120,25 +119,6 @@ const growthHackMutations = {
     });
 
     return growthHack;
-  },
-
-  /**
-   * Save growth hack form field
-   */
-  async growthHacksSaveFormFields(
-    _root,
-    { _id, stageId, formFields }: { _id: string; stageId: string; formFields: JSON },
-    { user }: { user: IUserDocument },
-  ) {
-    await GrowthHacks.updateGrowthHack(_id, {
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-      formFields,
-    });
-
-    const stage = await Stages.getStage(stageId);
-
-    return stage.formId;
   },
 
   /**
