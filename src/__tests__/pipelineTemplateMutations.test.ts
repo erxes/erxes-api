@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { pipelineTemplateFactory } from '../db/factories';
-import { PipelineTemplates } from '../db/models';
+import { formFactory, pipelineTemplateFactory } from '../db/factories';
+import { Forms, PipelineTemplates } from '../db/models';
 
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
@@ -9,17 +9,6 @@ import './setup.ts';
 /*
  * Generate test data
  */
-const args = {
-  name: faker.name.findName(),
-  description: faker.random.word(),
-  type: BOARD_TYPES.GROWTH_HACK,
-  stages: [
-    { _id: Math.random().toString(), name: 'Stage 1', formId: 'formId1' },
-    { _id: Math.random().toString(), name: 'Stage 2', formId: 'formId2' },
-    { _id: Math.random().toString(), name: 'Stage 3', formId: 'formId3' },
-    { _id: Math.random().toString(), name: 'Stage 4', formId: 'formId4' },
-  ],
-};
 
 describe('PipelineTemplates mutations', () => {
   let pipelineTemplate;
@@ -49,6 +38,18 @@ describe('PipelineTemplates mutations', () => {
     }
   `;
 
+  const args = {
+    name: faker.name.findName(),
+    description: faker.random.word(),
+    type: BOARD_TYPES.GROWTH_HACK,
+    stages: [
+      { _id: Math.random().toString(), name: 'Stage 1', formId: 'formId1' },
+      { _id: Math.random().toString(), name: 'Stage 2', formId: 'formId2' },
+      { _id: Math.random().toString(), name: 'Stage 3', formId: 'formId3' },
+      { _id: Math.random().toString(), name: 'Stage 4', formId: 'formId4' },
+    ],
+  };
+
   beforeEach(async () => {
     // Creating test data
     pipelineTemplate = await pipelineTemplateFactory();
@@ -57,6 +58,7 @@ describe('PipelineTemplates mutations', () => {
   afterEach(async () => {
     // Clearing test data
     await PipelineTemplates.deleteMany({});
+    await Forms.deleteMany({});
   });
 
   test('Add pipelineTemplate', async () => {
@@ -126,10 +128,18 @@ describe('PipelineTemplates mutations', () => {
       }
     `;
 
-    const duplicated = await graphqlRequest(mutation, 'pipelineTemplatesDuplicate', { _id: pipelineTemplate._id });
+    const form1 = await formFactory();
+    const form2 = await formFactory();
 
-    expect(duplicated.name).toBe(pipelineTemplate.name);
-    expect(duplicated.description).toBe(pipelineTemplate.description);
-    expect(duplicated.stages.length).toBe(pipelineTemplate.stages.length);
+    // Creating test data
+    const template = await pipelineTemplateFactory({
+      stages: [{ name: 'stage 1', formId: form1._id }, { name: 'stage 2', formId: form2._id }],
+    });
+
+    const duplicated = await graphqlRequest(mutation, 'pipelineTemplatesDuplicate', { _id: template._id });
+
+    expect(duplicated.description).toBe(template.description);
+    expect(duplicated.stages[0].name).toBe('stage 1');
+    expect(duplicated.stages[1].name).toBe('stage 2');
   });
 });

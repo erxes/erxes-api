@@ -205,12 +205,16 @@ export const brandFactory = (params: IBrandFactoryInput = {}) => {
   return brand.save();
 };
 
-export const pipelineTemplateFactory = () => {
+interface ITemplateInput {
+  stages?: any[];
+}
+
+export const pipelineTemplateFactory = (params: ITemplateInput = {}) => {
   const pipelineTemplate = new PipelineTemplates({
     name: faker.random.word(),
     description: faker.random.word(),
     type: BOARD_TYPES.GROWTH_HACK,
-    stages: [
+    stages: params.stages || [
       { name: faker.random.word(), formId: faker.random.word() },
       { name: faker.random.word(), formId: faker.random.word() },
     ],
