@@ -1,5 +1,5 @@
 import * as faker from 'faker';
-import { pipelineTemplateFactory } from '../db/factories';
+import { formFactory, pipelineTemplateFactory } from '../db/factories';
 import { PipelineTemplates } from '../db/models';
 import { IPipelineTemplateDocument, IPipelineTemplateStage } from '../db/models/definitions/pipelineTemplates';
 
@@ -63,13 +63,21 @@ describe('Test pipeline template model', () => {
   });
 
   test('Duplicate pipeline template', async () => {
-    const duplicated = await PipelineTemplates.duplicatePipelineTemplate(pipelineTemplate._id);
+    const form1 = await formFactory();
+    const form2 = await formFactory();
+
+    // Creating test data
+    const template = await pipelineTemplateFactory({
+      stages: [{ name: 'stage 1', formId: form1._id }, { name: 'stage 2', formId: form2._id }],
+    });
+
+    const duplicated = await PipelineTemplates.duplicatePipelineTemplate(template._id);
 
     expect(duplicated).toBeDefined();
-    expect(duplicated.name).toEqual(pipelineTemplate.name);
-    expect(duplicated.description).toEqual(pipelineTemplate.description);
-    expect(duplicated.type).toEqual(pipelineTemplate.type);
-    expect(duplicated.stages.length).toEqual(pipelineTemplate.stages.length);
+    expect(duplicated.description).toEqual(template.description);
+    expect(duplicated.type).toEqual(template.type);
+    expect(duplicated.stages[0].name).toBe('stage 1');
+    expect(duplicated.stages[1].name).toBe('stage 2');
   });
 
   test('Remove pipeline template', async () => {
