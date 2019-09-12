@@ -4,7 +4,7 @@ import { IConformityQueryParams } from '../../../data/modules/conformities/types
 import { Brands, Forms, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils, searchValueConverter } from './utils';
+import { conformityFilterUtils, stringToRegex } from './utils';
 
 interface ISortParams {
   [index: string]: number;
@@ -125,21 +125,31 @@ export class Builder {
   }
 
   // filter by search value
-  public searchFilter(value: string): { $or: any } {
-    const regexValue = searchValueConverter(value);
+  public searchFilter(value: string): { $and: any } {
+    const result: any[] = [];
 
-    const fields = [
-      { firstName: new RegExp(`${regexValue}`, 'mui') },
-      { lastName: new RegExp(`${regexValue}`, 'mui') },
-      { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
-      { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
-      { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-      { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-      { 'visitorContactInfo.email': new RegExp(`${regexValue}`, 'mui') },
-      { 'visitorContactInfo.phone': new RegExp(`${regexValue}`, 'mui') },
-    ];
+    value = value.replace(/\s\s+/g, ' ');
 
-    return { $or: fields };
+    const words = value.split(' ');
+
+    for (const word of words) {
+      const regexValue = stringToRegex(word);
+
+      const fields = [
+        { firstName: new RegExp(`${regexValue}`, 'mui') },
+        { lastName: new RegExp(`${regexValue}`, 'mui') },
+        { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
+        { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
+        { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+        { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+        { 'visitorContactInfo.email': new RegExp(`${regexValue}`, 'mui') },
+        { 'visitorContactInfo.phone': new RegExp(`${regexValue}`, 'mui') },
+      ];
+
+      result.push({ $or: fields });
+    }
+
+    return { $and: result };
   }
 
   // filter by id

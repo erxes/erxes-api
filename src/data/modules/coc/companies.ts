@@ -2,7 +2,7 @@ import { IConformityQueryParams } from '../../../data/modules/conformities/types
 import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils, searchValueConverter } from './utils';
+import { conformityFilterUtils, stringToRegex } from './utils';
 
 export interface IListArgs extends IConformityQueryParams {
   page?: number;
@@ -74,20 +74,30 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
-    const regexValue = searchValueConverter(params.searchValue);
+    const result: any[] = [];
 
-    const fields = [
-      { names: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-      { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
-      { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
-      { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-      { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-      { website: new RegExp(`${regexValue}`, 'mui') },
-      { industry: new RegExp(`${regexValue}`, 'mui') },
-      { plan: new RegExp(`${regexValue}`, 'mui') },
-    ];
+    const value = params.searchValue.replace(/\s\s+/g, ' ');
 
-    selector = { $or: fields };
+    const words = value.split(' ');
+
+    for (const word of words) {
+      const regexValue = stringToRegex(word);
+
+      const fields = [
+        { names: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+        { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
+        { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
+        { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+        { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
+        { website: new RegExp(`${regexValue}`, 'mui') },
+        { industry: new RegExp(`${regexValue}`, 'mui') },
+        { plan: new RegExp(`${regexValue}`, 'mui') },
+      ];
+
+      result.push({ $or: fields });
+    }
+
+    selector = { $and: result };
   }
 
   // Filter by related and saved Conformity

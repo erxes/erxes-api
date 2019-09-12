@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import { Conformities, Stages } from '../../../db/models';
-import { searchValueConverter } from '../../modules/coc/utils';
+import { stringToRegex } from '../../modules/coc/utils';
 import { getNextMonth, getToday } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -157,9 +157,24 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (search) {
-    const regexValue = searchValueConverter(search);
+    const result: any[] = [];
 
-    filter.$or = [{ name: new RegExp(`${regexValue}`, 'mui') }, { description: new RegExp(`${regexValue}`, 'mui') }];
+    const value = search.replace(/\s\s+/g, ' ');
+
+    const words = value.split(' ');
+
+    for (const word of words) {
+      const regexValue = stringToRegex(word);
+
+      const fields = [
+        { name: new RegExp(`${regexValue}`, 'mui') },
+        { description: new RegExp(`${regexValue}`, 'mui') },
+      ];
+
+      result.push({ $or: fields });
+    }
+
+    filter.$and = result;
   }
 
   if (stageId) {
