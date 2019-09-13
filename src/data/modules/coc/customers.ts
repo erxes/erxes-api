@@ -163,15 +163,17 @@ export class Builder {
     for (const submission of submissions) {
       const { customerId, submittedAt } = submission;
 
-      // Collecting customerIds inbetween dates only
-      if (startDate && endDate && !ids.includes(customerId)) {
-        if (moment(submittedAt).isBetween(startDate, endDate)) {
+      if (customerId) {
+        // Collecting customerIds inbetween dates only
+        if (startDate && endDate && !ids.includes(customerId)) {
+          if (moment(submittedAt).isBetween(startDate, endDate)) {
+            ids.push(customerId);
+          }
+
+          // If date is not specified collecting all customers
+        } else {
           ids.push(customerId);
         }
-
-        // If date is not specified collecting all customers
-      } else {
-        ids.push(customerId);
       }
     }
 
