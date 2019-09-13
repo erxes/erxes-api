@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { companyFactory, customerFactory, growthHackFactory, stageFactory, userFactory } from '../db/factories';
+import { growthHackFactory, stageFactory, userFactory } from '../db/factories';
 import { GrowthHacks } from '../db/models';
 
 import './setup.ts';
@@ -9,17 +9,9 @@ describe('growthHackQueries', () => {
     _id
     name
     stageId
-    companyIds
-    customerIds
     assignedUserIds
     closeDate
     description
-    companies {
-      _id
-    }
-    customers {
-      _id
-    }
     assignedUsers {
       _id
     }
@@ -29,8 +21,6 @@ describe('growthHackQueries', () => {
     query growthHacks(
       $stageId: String 
       $assignedUserIds: [String]
-      $customerIds: [String]
-      $companyIds: [String]
       $nextDay: String
       $nextWeek: String
       $nextMonth: String
@@ -39,9 +29,7 @@ describe('growthHackQueries', () => {
     ) {
       growthHacks(
         stageId: $stageId 
-        customerIds: $customerIds
         assignedUserIds: $assignedUserIds
-        companyIds: $companyIds
         nextDay: $nextDay
         nextWeek: $nextWeek
         nextMonth: $nextMonth

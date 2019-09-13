@@ -10,13 +10,9 @@ export const types = `
     stageId: String
     pipeline: Pipeline
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
     assignedUserIds: [String]
     closeDate: Date
     description: String
-    companies: [Company]
-    customers: [Customer]
     hackDescription: String
     goal: String
     hackStages: [String]
@@ -44,8 +40,6 @@ export const queries = `
     initialStageId: String
     pipelineId: String
     stageId: String
-    customerIds: [String]
-    companyIds: [String]
     date: ItemDate
     skip: Int
     search: String

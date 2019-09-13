@@ -1,29 +1,9 @@
-import { Companies, Conformities, Customers, FormSubmissions, Pipelines, Stages, Users } from '../../db/models';
+import { FormSubmissions, Pipelines, Stages, Users } from '../../db/models';
 import { IGrowthHackDocument } from '../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
 
 export default {
-  async companies(growthHack: IGrowthHackDocument) {
-    const companyIds = await Conformities.savedConformity({
-      mainType: 'growthHack',
-      mainTypeId: growthHack._id,
-      relType: 'company',
-    });
-
-    return Companies.find({ _id: { $in: companyIds || [] } });
-  },
-
-  async customers(growthHack: IGrowthHackDocument) {
-    const customerIds = await Conformities.savedConformity({
-      mainType: 'growthHack',
-      mainTypeId: growthHack._id,
-      relType: 'customer',
-    });
-
-    return Customers.find({ _id: { $in: customerIds || [] } });
-  },
-
   async formSubmissions(growthHack: IGrowthHackDocument) {
     const stage = await Stages.getStage(growthHack.stageId || '');
 

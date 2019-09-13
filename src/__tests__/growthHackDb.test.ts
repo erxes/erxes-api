@@ -1,12 +1,4 @@
-import {
-  boardFactory,
-  companyFactory,
-  customerFactory,
-  growthHackFactory,
-  pipelineFactory,
-  stageFactory,
-  userFactory,
-} from '../db/factories';
+import { boardFactory, growthHackFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
 import { Boards, GrowthHacks, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IGrowthHackDocument } from '../db/models/definitions/growthHacks';
