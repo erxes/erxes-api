@@ -79,7 +79,6 @@ describe('lead integration create model test without leadData', () => {
 
   beforeEach(async () => {
     _brand = await brandFactory({});
-    _user = await userFactory({});
     _form = await formFactory({});
   });
 
@@ -114,7 +113,6 @@ describe('create lead integration', () => {
   beforeEach(async () => {
     _brand = await brandFactory({});
     _form = await formFactory({});
-    _user = await userFactory({});
   });
 
   afterEach(async () => {
