@@ -9,6 +9,7 @@ interface IFormsEdit extends IForm {
 
 interface IFormSubmission {
   contentType: string;
+  contentTypeId: string;
   formSubmissions: JSON;
   formId: string;
 }
@@ -33,22 +34,23 @@ const formMutations = {
    */
   async formSubmissionsSave(
     _root,
-    { formId, contentType, formSubmissions }: IFormSubmission,
+    { formId, contentTypeId, contentType, formSubmissions }: IFormSubmission,
     { docModifier }: IContext,
   ) {
-    for (const key of Object.keys(formSubmissions)) {
-      const formSubmission = await FormSubmissions.findOne({ contentTypeId: key, contentType });
+    for (const formFieldId of Object.keys(formSubmissions)) {
+      const formSubmission = await FormSubmissions.findOne({ contentTypeId, contentType, formFieldId });
 
       if (formSubmission) {
-        formSubmission.value = formSubmissions[key];
+        formSubmission.value = formSubmissions[formFieldId];
 
         formSubmission.save();
       } else {
         const doc = {
-          contentTypeId: key,
+          contentTypeId,
           contentType,
+          formFieldId,
           formId,
-          value: formSubmissions[key],
+          value: formSubmissions[formFieldId],
         };
 
         FormSubmissions.createFormSubmission(docModifier(doc));

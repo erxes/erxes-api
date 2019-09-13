@@ -10,11 +10,15 @@ export default {
     const result = {};
 
     if (stage.formId) {
-      const formSubmissions = await FormSubmissions.find({ formId: stage.formId });
+      const submissions = await FormSubmissions.find({
+        contentTypeId: growthHack._id,
+        contentType: 'growthHack',
+        formId: stage.formId,
+      });
 
-      for (const submission of formSubmissions) {
-        if (submission.contentTypeId) {
-          result[submission.contentTypeId] = submission.value;
+      for (const submission of submissions) {
+        if (submission.formFieldId) {
+          result[submission.formFieldId] = submission.value;
         }
       }
     }

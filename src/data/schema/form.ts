@@ -29,6 +29,7 @@ const commonFields = `
 
 const commonFormSubmissionFields = `
   formId: String,
+  contentTypeId: String,
   contentType: String,
   formSubmissions: JSON
 `;
