@@ -72,9 +72,7 @@ export const conformityFilterUtils = async (baseQuery, params, relType) => {
 export const stringToRegex = (value: string) => {
   const specialChars = [...'[\\^$.|?*+()'];
 
-  value = value.replace(/ /g, '');
+  const result = [...value].map(char => (specialChars.includes(char) ? '.?\\' + char : '.?' + char));
 
-  const result = [...value].map(char => (specialChars.includes(char) ? '.*\\' + char : '.*' + char));
-
-  return result.join('') + '.*';
+  return '.*' + result.join('').substring(2) + '.*';
 };
