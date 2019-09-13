@@ -37,7 +37,7 @@ const formMutations = {
     { docModifier }: IContext,
   ) {
     for (const key of Object.keys(formSubmissions)) {
-      const formSubmission = await FormSubmissions.findOne({ formId, contentType });
+      const formSubmission = await FormSubmissions.findOne({ contentTypeId: key, contentType });
 
       if (formSubmission) {
         formSubmission.value = formSubmissions[key];

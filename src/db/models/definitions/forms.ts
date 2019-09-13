@@ -86,7 +86,7 @@ export interface IFormSubmission {
   contentType?: string;
   contentTypeId?: string;
   formId?: string;
-  value?: string;
+  value?: JSON;
   submittedAt?: Date;
 }
 
@@ -100,7 +100,7 @@ export const formSubmissionSchema = schemaWrapper(
     _id: field({ pkey: true }),
     customerId: field({ type: String, optional: true }),
     contentType: field({ type: String, optional: true }),
-    value: field({ type: String, optional: true }),
+    value: field({ type: Object, optional: true }),
     contentTypeId: field({ type: String, optional: true }),
     submittedAt: field({ type: Date, default: Date.now }),
     formId: field({ type: String, optional: true }),
