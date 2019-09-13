@@ -10,6 +10,19 @@ interface IInternalNotesEdit extends IInternalNote {
   _id: string;
 }
 
+const sendNotificationOfItems = async (item, doc, contentType, user) => {
+  const notifDocItems = { ...doc };
+
+  const relatedReceivers = await notifiedUserIds(item);
+  notifDocItems.receivers = relatedReceivers.filter(id => {
+    return id !== user._id;
+  });
+
+  notifDocItems.action = `added note in ${contentType}`;
+
+  await utils.sendNotification(notifDocItems);
+};
+
 const internalNoteMutations = {
   /**
    * Adds internalNote object and also adds an activity log
@@ -27,14 +40,6 @@ const internalNoteMutations = {
       contentTypeId: ``,
     };
 
-    const itemsNotifReceivers = async item => {
-      notifDoc.receivers = notifDoc.receivers.concat(
-        (await notifiedUserIds(item)).filter(id => {
-          return id !== user._id;
-        }),
-      );
-    };
-
     switch (args.contentType) {
       case 'deal': {
         const deal = await Deals.getDeal(args.contentTypeId);
@@ -46,7 +51,7 @@ const internalNoteMutations = {
         notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
         notifDoc.contentTypeId = deal._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
-        await itemsNotifReceivers(deal);
+        await sendNotificationOfItems(deal, notifDoc, args.contentType, user);
         break;
       }
 
@@ -85,7 +90,7 @@ const internalNoteMutations = {
         notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
         notifDoc.contentTypeId = ticket._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
-        await itemsNotifReceivers(ticket);
+        await sendNotificationOfItems(ticket, notifDoc, args.contentType, user);
         break;
       }
 
@@ -99,7 +104,7 @@ const internalNoteMutations = {
         notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
         notifDoc.contentTypeId = task._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
-        await itemsNotifReceivers(task);
+        await sendNotificationOfItems(task, notifDoc, args.contentType, user);
         break;
       }
 
