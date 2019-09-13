@@ -44,14 +44,14 @@ const formMutations = {
 
         formSubmission.save();
       } else {
-        const created = {
+        const doc = {
           contentTypeId: key,
           contentType,
           formId,
           value: formSubmissions[key],
         };
 
-        FormSubmissions.createFormSubmission(docModifier(created));
+        FormSubmissions.createFormSubmission(docModifier(doc));
       }
     }
 
