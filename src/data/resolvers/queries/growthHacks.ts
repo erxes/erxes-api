@@ -1,7 +1,7 @@
 import { GrowthHacks } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IListParams } from './boards';
-import { generateCommonFilters } from './boardUtils';
+import { generateGrowthHackCommonFilters } from './boardUtils';
 
 interface IGrowthHackListParams extends IListParams {
   hackDescription?: string;
@@ -13,7 +13,7 @@ const growthHackQueries = {
    * Growth hack list
    */
   async growthHacks(_root, args: IGrowthHackListParams) {
-    const filter = await generateCommonFilters(args);
+    const filter = await generateGrowthHackCommonFilters(args);
     const sort = { order: 1, createdAt: -1 };
 
     return GrowthHacks.find(filter)
