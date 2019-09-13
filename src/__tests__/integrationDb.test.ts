@@ -75,7 +75,6 @@ describe('messenger integration model edit method', () => {
 
 describe('lead integration create model test without leadData', () => {
   let _brand;
-  let _user;
   let _form;
 
   beforeEach(async () => {
@@ -110,7 +109,6 @@ describe('lead integration create model test without leadData', () => {
 
 describe('create lead integration', () => {
   let _brand;
-  let _user;
   let _form;
 
   beforeEach(async () => {
