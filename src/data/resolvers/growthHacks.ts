@@ -1,4 +1,4 @@
-import { Companies, Conformities, Customers, Pipelines, Stages, Users } from '../../db/models';
+import { Companies, Conformities, Customers, FormSubmissions, Pipelines, Stages, Users } from '../../db/models';
 import { IGrowthHackDocument } from '../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { boardId } from './boardUtils';
@@ -22,6 +22,24 @@ export default {
     });
 
     return Customers.find({ _id: { $in: customerIds || [] } });
+  },
+
+  async formSubmissions(growthHack: IGrowthHackDocument) {
+    const stage = await Stages.getStage(growthHack.stageId || '');
+
+    const result = {};
+
+    if (stage.formId) {
+      const formSubmissions = await FormSubmissions.find({ formId: stage.formId });
+
+      for (const submission of formSubmissions) {
+        if (submission.contentTypeId) {
+          result[submission.contentTypeId] = submission.value;
+        }
+      }
+    }
+
+    return result;
   },
 
   assignedUsers(growthHack: IGrowthHackDocument) {

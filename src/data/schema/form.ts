@@ -27,6 +27,12 @@ const commonFields = `
   type: String!
 `;
 
+const commonFormSubmissionFields = `
+  formId: String,
+  contentType: String,
+  formSubmissions: JSON
+`;
+
 export const queries = `
   formDetail(_id: String!): Form
   forms: [Form]
@@ -35,4 +41,5 @@ export const queries = `
 export const mutations = `
   formsAdd(${commonFields}): Form
   formsEdit(_id: String!, ${commonFields} ): Form
+  formSubmissionsSave(${commonFormSubmissionFields}): Boolean
 `;

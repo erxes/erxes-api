@@ -18,7 +18,6 @@ export const types = `
     companies: [Company]
     customers: [Customer]
     hackDescription: String
-    formFields: JSON
     goal: String
     hackStages: [String]
     priority: String
@@ -34,6 +33,7 @@ export const types = `
     isWatched: Boolean
     formId: String
     scoringType: String
+    formSubmissions: JSON
     ${commonTypes}
   }
 `;
@@ -70,7 +70,6 @@ const commonParams = `
   order: Int,
   goal: String,
   hackDescription: String,
-  formFields: JSON,
 
   hackStages: [String],
   priority: String,

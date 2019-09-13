@@ -161,6 +161,7 @@ export const calloutSchema = new Schema(
   { _id: false },
 );
 
+// TODO: remove
 // schema for lead submission details
 export const submissionSchema = new Schema(
   {
@@ -228,10 +229,6 @@ const leadDataSchema = new Schema(
     }),
     contactsGathered: field({
       type: Number,
-      optional: true,
-    }),
-    submissions: field({
-      type: [submissionSchema],
       optional: true,
     }),
     rules: field({

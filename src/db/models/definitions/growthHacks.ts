@@ -5,7 +5,6 @@ import { field } from './utils';
 export interface IGrowthHack extends IItemCommonFields {
   hackDescription?: string;
   goal?: string;
-  formFields?: JSON;
 }
 
 export interface IGrowthHackDocument extends IGrowthHack, Document {
