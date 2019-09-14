@@ -11,16 +11,21 @@ const productQueries = {
     _root,
     {
       type,
+      categoryId,
       searchValue,
       ids,
       ...pagintationArgs
-    }: { ids: string[]; type: string; searchValue: string; page: number; perPage: number },
+    }: { ids: string[]; type: string; categoryId: string; searchValue: string; page: number; perPage: number },
     { commonQuerySelector }: IContext,
   ) {
     const filter: any = commonQuerySelector;
 
     if (type) {
       filter.type = type;
+    }
+
+    if (categoryId) {
+      filter.categoryId = categoryId;
     }
 
     if (ids) {

@@ -1,6 +1,7 @@
 export const types = `
   type Product {
     _id: String!
+    categoryId: String
     name: String
     type: String
     description: String
@@ -10,6 +11,7 @@ export const types = `
 `;
 
 const params = `
+  categoryId: String,
   name: String!,
   type: String,
   description: String,
@@ -17,7 +19,7 @@ const params = `
 `;
 
 export const queries = `
-  products(type: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
+  products(type: String, categoryId: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
   productsTotalCount(type: String): Int
 `;
 

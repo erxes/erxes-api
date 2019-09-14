@@ -5,6 +5,7 @@ import { field } from './utils';
 
 export interface IProduct {
   name: string;
+  categoryId: string;
   type?: string;
   description?: string;
   sku?: string;
@@ -15,6 +16,14 @@ export interface IProductDocument extends IProduct, Document {
   _id: string;
   createdAt: Date;
 }
+
+export interface IProductCategory {
+  name: string;
+  description?: string;
+  parentId?: string;
+}
+
+export interface IProductCategoryDocument extends IProductCategory, Document {}
 
 interface IProductData extends Document {
   productId: string;
@@ -42,6 +51,7 @@ export interface IDealDocument extends IDeal, Document {
 export const productSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
+  categoryId: field({ type: String }),
   type: field({
     type: String,
     enum: PRODUCT_TYPES.ALL,
@@ -53,6 +63,13 @@ export const productSchema = new Schema({
     type: Date,
     default: new Date(),
   }),
+});
+
+export const productCategorySchema = new Schema({
+  _id: field({ pkey: true }),
+  name: field({ type: String }),
+  parentId: field({ type: String, optional: true }),
+  description: field({ type: String, optional: true }),
 });
 
 const productDataSchema = new Schema(
