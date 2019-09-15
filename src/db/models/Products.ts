@@ -71,23 +71,23 @@ export const loadProductCategoryClass = () => {
      * Create a product categorys
      */
     public static async createProductCategory(doc: IProductCategory) {
-      return ProductsCategories.create(doc);
+      return ProductCategories.create(doc);
     }
 
     /**
      * Update Product category
      */
     public static async updateProduct(_id: string, doc: IProductCategory) {
-      await ProductsCategories.updateOne({ _id }, { $set: doc });
+      await ProductCategories.updateOne({ _id }, { $set: doc });
 
-      return ProductsCategories.findOne({ _id });
+      return ProductCategories.findOne({ _id });
     }
 
     /**
      * Remove Product category
      */
     public static async removeProduct(_id: string) {
-      const productCategory = await ProductsCategories.findOne({ _id });
+      const productCategory = await ProductCategories.findOne({ _id });
 
       if (!productCategory) {
         throw new Error('Product category not found');
@@ -99,7 +99,7 @@ export const loadProductCategoryClass = () => {
         throw new Error("Can't remove a product category");
       }
 
-      return ProductsCategories.deleteOne({ _id });
+      return ProductCategories.deleteOne({ _id });
     }
   }
 
@@ -115,4 +115,4 @@ loadProductCategoryClass();
 export const Products = model<IProductDocument, IProductModel>('products', productSchema);
 
 // tslint:disable-next-line
-export const ProductsCategories = model<IProductDocument, IProductModel>('product_categories', productCategorySchema);
+export const ProductCategories = model<IProductDocument, IProductModel>('product_categories', productCategorySchema);

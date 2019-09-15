@@ -1,4 +1,11 @@
 export const types = `
+  type ProductCategories {
+    _id: String!
+    name: String
+    description: String
+    parentId: String
+  }
+
   type Product {
     _id: String!
     categoryId: String
@@ -10,7 +17,7 @@ export const types = `
   }
 `;
 
-const params = `
+const productParams = `
   categoryId: String,
   name: String!,
   type: String,
@@ -19,12 +26,15 @@ const params = `
 `;
 
 export const queries = `
+  productCategories(parentId: String, searchValue: String): [ProductCategories]
+  productCategoriesTotalCount(parentId: String): Int
+
   products(type: String, categoryId: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
   productsTotalCount(type: String): Int
 `;
 
 export const mutations = `
-  productsAdd(${params}): Product
-  productsEdit(_id: String!, ${params}): Product
+  productsAdd(${productParams}): Product
+  productsEdit(_id: String!, ${productParams}): Product
   productsRemove(_id: String!): JSON
 `;

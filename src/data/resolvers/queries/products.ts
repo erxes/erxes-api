@@ -1,4 +1,4 @@
-import { Products } from '../../../db/models';
+import { ProductCategories, Products } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
@@ -51,6 +51,34 @@ const productQueries = {
     }
 
     return Products.find(filter).countDocuments();
+  },
+
+  productCategories(
+    _root,
+    { parentId, searchValue }: { parentId: string; searchValue: string },
+    { commonQuerySelector }: IContext,
+  ) {
+    const filter: any = commonQuerySelector;
+
+    if (parentId) {
+      filter.parentId = parentId;
+    }
+
+    if (searchValue) {
+      filter.name = new RegExp(`.*${searchValue}.*`, 'i');
+    }
+
+    return ProductCategories.find(filter);
+  },
+
+  productCategoriesTotalCount(_root, { parentId }: { parentId: string }, { commonQuerySelector }: IContext) {
+    const filter: any = commonQuerySelector;
+
+    if (parentId) {
+      filter.parentId = parentId;
+    }
+
+    return ProductCategories.find(filter).countDocuments();
   },
 };
 
