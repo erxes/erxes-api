@@ -23,7 +23,10 @@ export interface IProductCategory {
   parentId?: string;
 }
 
-export interface IProductCategoryDocument extends IProductCategory, Document {}
+export interface IProductCategoryDocument extends IProductCategory, Document {
+  _id: string;
+  createdAt: Date;
+}
 
 interface IProductData extends Document {
   productId: string;
@@ -70,6 +73,10 @@ export const productCategorySchema = new Schema({
   name: field({ type: String }),
   parentId: field({ type: String, optional: true }),
   description: field({ type: String, optional: true }),
+  createdAt: field({
+    type: Date,
+    default: new Date(),
+  }),
 });
 
 const productDataSchema = new Schema(

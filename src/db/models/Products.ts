@@ -3,6 +3,7 @@ import { Deals } from '.';
 import {
   IProduct,
   IProductCategory,
+  IProductCategoryDocument,
   IProductDocument,
   productCategorySchema,
   productSchema,
@@ -59,10 +60,10 @@ export const loadProductClass = () => {
   return productSchema;
 };
 
-export interface IProductModel extends Model<IProductDocument> {
-  createProduct(doc: IProduct): Promise<IProductDocument>;
-  updateProduct(_id: string, doc: IProduct): Promise<IProductDocument>;
-  removeProduct(_id: string): void;
+export interface IProductCategoryModel extends Model<IProductCategoryDocument> {
+  createProductCategory(doc: IProductCategory): Promise<IProductCategoryDocument>;
+  updateProductCategory(_id: string, doc: IProduct): Promise<IProductCategoryDocument>;
+  removeProductCategory(_id: string): void;
 }
 
 export const loadProductCategoryClass = () => {
@@ -77,7 +78,7 @@ export const loadProductCategoryClass = () => {
     /**
      * Update Product category
      */
-    public static async updateProduct(_id: string, doc: IProductCategory) {
+    public static async updateProductCategory(_id: string, doc: IProductCategory) {
       await ProductCategories.updateOne({ _id }, { $set: doc });
 
       return ProductCategories.findOne({ _id });
@@ -86,7 +87,7 @@ export const loadProductCategoryClass = () => {
     /**
      * Remove Product category
      */
-    public static async removeProduct(_id: string) {
+    public static async removeProductCategory(_id: string) {
       const productCategory = await ProductCategories.findOne({ _id });
 
       if (!productCategory) {
@@ -115,4 +116,7 @@ loadProductCategoryClass();
 export const Products = model<IProductDocument, IProductModel>('products', productSchema);
 
 // tslint:disable-next-line
-export const ProductCategories = model<IProductDocument, IProductModel>('product_categories', productCategorySchema);
+export const ProductCategories = model<IProductCategoryDocument, IProductCategoryModel>(
+  'product_categories',
+  productCategorySchema,
+);

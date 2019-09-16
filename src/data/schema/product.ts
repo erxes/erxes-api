@@ -1,5 +1,5 @@
 export const types = `
-  type ProductCategories {
+  type ProductCategory {
     _id: String!
     name: String
     description: String
@@ -25,8 +25,14 @@ const productParams = `
   sku: String,
 `;
 
+const productCategoryParams = `
+  name: String!,
+  description: String,
+  parentId: String,
+`;
+
 export const queries = `
-  productCategories(parentId: String, searchValue: String): [ProductCategories]
+  productCategories(parentId: String, searchValue: String): [ProductCategory]
   productCategoriesTotalCount(parentId: String): Int
 
   products(type: String, categoryId: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
@@ -37,4 +43,8 @@ export const mutations = `
   productsAdd(${productParams}): Product
   productsEdit(_id: String!, ${productParams}): Product
   productsRemove(_id: String!): JSON
+
+  productCategoriesAdd(${productCategoryParams}): ProductCategory
+  productCategoriesEdit(_id: String!, ${productCategoryParams}): ProductCategory
+  productCategoriesRemove(_id: String!): JSON
 `;
