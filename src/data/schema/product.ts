@@ -6,6 +6,7 @@ export const types = `
     parentId: String
     code: String!
     order: String!
+    hasChild: Boolean
   }
 
   type Product {

@@ -23,6 +23,7 @@ import Mutation from './mutations';
 import Notification from './notification';
 import Permission from './permission';
 import Pipeline from './pipeline';
+import ProductCategory from './productCategory';
 import Query from './queries';
 import ResponseTemplate from './responseTemplate';
 import Script from './script';
@@ -63,6 +64,8 @@ const resolvers: any = {
   KnowledgeBaseTopic,
 
   Notification,
+
+  ProductCategory,
 
   ActivityLog,
   Form,
