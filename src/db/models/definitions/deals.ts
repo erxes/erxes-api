@@ -19,6 +19,8 @@ export interface IProductDocument extends IProduct, Document {
 
 export interface IProductCategory {
   name: string;
+  code: string;
+  order: string;
   description?: string;
   parentId?: string;
 }
@@ -71,6 +73,8 @@ export const productSchema = new Schema({
 export const productCategorySchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
+  code: field({ type: String, unique: true }),
+  order: field({ type: String }),
   parentId: field({ type: String, optional: true }),
   description: field({ type: String, optional: true }),
   createdAt: field({

@@ -68,15 +68,11 @@ const productQueries = {
       filter.name = new RegExp(`.*${searchValue}.*`, 'i');
     }
 
-    return ProductCategories.find(filter);
+    return ProductCategories.find(filter).sort({ order: 1 });
   },
 
-  productCategoriesTotalCount(_root, { parentId }: { parentId: string }, { commonQuerySelector }: IContext) {
+  productCategoriesTotalCount(_root, { commonQuerySelector }: IContext) {
     const filter: any = commonQuerySelector;
-
-    if (parentId) {
-      filter.parentId = parentId;
-    }
 
     return ProductCategories.find(filter).countDocuments();
   },

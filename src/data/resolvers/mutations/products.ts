@@ -87,6 +87,10 @@ const productMutations = {
    */
 
   async productCategoriesAdd(_root, doc: IProductCategory, { user, docModifier }: IContext) {
+    const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
+
+    doc.order = parentCategory ? `${parentCategory.order}/${doc.code}` : doc.code;
+
     const productCategory = await ProductCategories.createProductCategory(docModifier(doc));
 
     if (productCategory) {
@@ -110,6 +114,10 @@ const productMutations = {
    * @param {Object} param2.doc ProductCategory info
    */
   async productCategoriesEdit(_root, { _id, ...doc }: IProductCategoriesEdit, { user, docModifier }: IContext) {
+    const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
+
+    doc.order = parentCategory ? `${parentCategory.order}/${doc.code}` : doc.code;
+
     const productCategory = await ProductCategories.findOne({ _id });
     const updated = await ProductCategories.updateProductCategory(_id, docModifier(doc));
 

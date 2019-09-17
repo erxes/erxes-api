@@ -4,6 +4,8 @@ export const types = `
     name: String
     description: String
     parentId: String
+    code: String!
+    order: String!
   }
 
   type Product {
@@ -18,8 +20,8 @@ export const types = `
 `;
 
 const productParams = `
-  categoryId: String,
   name: String!,
+  categoryId: String!,
   type: String,
   description: String,
   sku: String,
@@ -27,6 +29,7 @@ const productParams = `
 
 const productCategoryParams = `
   name: String!,
+  code: String!,
   description: String,
   parentId: String,
 `;
