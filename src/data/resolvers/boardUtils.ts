@@ -112,7 +112,7 @@ export const sendNotifications = async ({
     await utils.sendNotification({
       ...notificationDoc,
       notifType: NOTIFICATION_TYPES[`CREATED_${contentType.toUpperCase()}`],
-      action: `Your created ${contentType} is changed`,
+      action: action ? `${action} (your created)` : `Your created ${contentType} has updated`,
       receivers: [item.userId],
     });
   }
