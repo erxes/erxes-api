@@ -36,21 +36,9 @@ export const types = `
 export const queries = `
   growthHackDetail(_id: String!): GrowthHack
   growthHacks(
+    pipelineId: String
     initialStageId: String
-    pipelineId: String
     stageId: String
-    skip: Int
-    search: String
-    assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
-  ): [GrowthHack]
-
-  growthHacksPriorityMatrix(
-    pipelineId: String
     skip: Int
     search: String
     assignedUserIds: [String]
@@ -61,6 +49,17 @@ export const queries = `
     overdue: String
     sortField: String
     sortDirection: Int
+  ): [GrowthHack]
+
+  growthHacksPriorityMatrix(
+    pipelineId: String
+    search: String
+    assignedUserIds: [String]
+    nextDay: String
+    nextWeek: String
+    nextMonth: String
+    noCloseDate: String
+    overdue: String
   ): [GrowthHack]
 `;
 

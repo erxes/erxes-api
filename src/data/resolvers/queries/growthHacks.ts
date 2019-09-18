@@ -1,4 +1,4 @@
-import { GrowthHacks, Stages } from '../../../db/models';
+import { GrowthHacks } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IListParams } from './boards';
 import { generateGrowthHackCommonFilters } from './boardUtils';
@@ -9,7 +9,16 @@ const growthHackQueries = {
    */
   async growthHacks(_root, args: IListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
-    const sort = { order: 1, createdAt: -1 };
+    const { sortField, sortDirection } = args;
+
+    const sort: { [key: string]: any } = {};
+
+    if (sortField) {
+      sort[sortField] = sortDirection;
+    }
+
+    sort.order = 1;
+    sort.createdAt = -1;
 
     return GrowthHacks.find(filter)
       .sort(sort)
@@ -19,26 +28,11 @@ const growthHackQueries = {
 
   async growthHacksPriorityMatrix(_root, args: IListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
-    const { pipelineId } = args;
-
-    if (pipelineId) {
-      const stageIds = await Stages.find({ pipelineId }).distinct('_id');
-
-      filter.stageId = { $in: stageIds };
-    }
 
     filter.ease = { $exists: true, $gt: 0 };
     filter.impact = { $exists: true, $gt: 0 };
 
-    const { sortField, sortDirection } = args;
-
-    const sort: { [key: string]: any } = {};
-
-    if (sortField) {
-      sort[sortField] = sortDirection;
-    }
-
-    return GrowthHacks.find(filter).sort(sort);
+    return GrowthHacks.find(filter);
   },
 
   /**

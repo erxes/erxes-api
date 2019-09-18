@@ -220,7 +220,17 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
 export const generateGrowthHackCommonFilters = async (args: any) => {
   args.type = 'growthHack';
 
-  return generateCommonFilters(args);
+  const { pipelineId } = args;
+
+  const filter = await generateCommonFilters(args);
+
+  if (pipelineId) {
+    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
+
+    filter.stageId = { $in: stageIds };
+  }
+
+  return filter;
 };
 
 interface IDate {
