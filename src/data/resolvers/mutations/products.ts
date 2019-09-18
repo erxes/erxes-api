@@ -89,7 +89,7 @@ const productMutations = {
   async productCategoriesAdd(_root, doc: IProductCategory, { user, docModifier }: IContext) {
     const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
 
-    doc.order = parentCategory ? `${parentCategory.order}/${doc.code}` : doc.code;
+    doc.order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
 
     const productCategory = await ProductCategories.createProductCategory(docModifier(doc));
 
@@ -116,9 +116,10 @@ const productMutations = {
   async productCategoriesEdit(_root, { _id, ...doc }: IProductCategoriesEdit, { user, docModifier }: IContext) {
     const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
 
-    doc.order = parentCategory ? `${parentCategory.order}/${doc.code}` : doc.code;
+    doc.order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
 
-    const productCategory = await ProductCategories.findOne({ _id });
+    const productCategory = await ProductCategories.getProductCatogery(_id);
+
     const updated = await ProductCategories.updateProductCategory(_id, docModifier(doc));
 
     if (productCategory) {

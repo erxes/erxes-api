@@ -61,6 +61,7 @@ export const loadProductClass = () => {
 };
 
 export interface IProductCategoryModel extends Model<IProductCategoryDocument> {
+  getProductCatogery(_id: string): Promise<IProductCategoryDocument>;
   createProductCategory(doc: IProductCategory): Promise<IProductCategoryDocument>;
   updateProductCategory(_id: string, doc: IProduct): Promise<IProductCategoryDocument>;
   removeProductCategory(_id: string): void;
@@ -68,6 +69,21 @@ export interface IProductCategoryModel extends Model<IProductCategoryDocument> {
 
 export const loadProductCategoryClass = () => {
   class ProductCategory {
+    /**
+     *
+     * Get Product Cagegory
+     */
+
+    public static async getProductCatogery(_id: IProductCategory) {
+      const productCategory = await ProductCategories.findOne({ _id });
+
+      if (!productCategory) {
+        throw new Error('Product & service category not foun');
+      }
+
+      return productCategory;
+    }
+
     /**
      * Create a product categorys
      */
@@ -79,6 +95,12 @@ export const loadProductCategoryClass = () => {
      * Update Product category
      */
     public static async updateProductCategory(_id: string, doc: IProductCategory) {
+      const childCategories = await ProductCategories.find({ parentId: _id });
+
+      childCategories.forEach(async category => {
+        await ProductCategories.updateOne({ _id: category._id }, { $set: { order: `${doc.order}/${category.code}` } });
+      });
+
       await ProductCategories.updateOne({ _id }, { $set: doc });
 
       return ProductCategories.findOne({ _id });
@@ -94,7 +116,8 @@ export const loadProductCategoryClass = () => {
         throw new Error('Product category not found');
       }
 
-      const count = await Products.find({ categoryId: _id }).countDocuments();
+      let count = await Products.countDocuments({ categoryId: _id });
+      count += await ProductCategories.countDocuments({ parentId: _id });
 
       if (count > 0) {
         throw new Error("Can't remove a product category");

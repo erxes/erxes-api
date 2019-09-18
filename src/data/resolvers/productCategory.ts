@@ -1,10 +1,12 @@
-import { ProductCategories } from '../../db/models';
+import { Products } from '../../db/models';
 import { IProductCategoryDocument } from '../../db/models/definitions/deals';
 
 export default {
-  async hasChild(category: IProductCategoryDocument, {}) {
-    const count = await ProductCategories.countDocuments({ parentId: category._id });
+  isRoot(category: IProductCategoryDocument, {}) {
+    return category.parentId ? false : true;
+  },
 
-    return count > 0 ? true : false;
+  async productCount(category: IProductCategoryDocument, {}) {
+    return Products.countDocuments({ categoryId: category._id });
   },
 };
