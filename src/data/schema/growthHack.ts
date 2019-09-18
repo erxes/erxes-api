@@ -48,6 +48,8 @@ export const queries = `
     noCloseDate: String
     overdue: String
     viewType: String
+    sortField: String
+    sortDirection: Int
   ): [GrowthHack]
 `;
 

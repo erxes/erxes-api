@@ -9,7 +9,16 @@ const growthHackQueries = {
    */
   async growthHacks(_root, args: IListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
-    const sort = { order: 1, createdAt: -1 };
+    const { sortField, sortDirection } = args;
+
+    const sort: { [key: string]: any } = {};
+
+    if (sortField) {
+      sort[sortField] = sortDirection;
+    }
+
+    sort.order = 1;
+    sort.createdAt = -1;
 
     return GrowthHacks.find(filter)
       .sort(sort)
