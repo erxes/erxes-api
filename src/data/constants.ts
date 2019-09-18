@@ -74,7 +74,8 @@ export const COC_LIFECYCLE_STATE_TYPES = [
 export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
-  ALL: ['customer', 'company'],
+  PRODUCT: 'product',
+  ALL: ['customer', 'company', 'product'],
 };
 
 export const CUSTOMER_BASIC_INFOS = [
