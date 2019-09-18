@@ -192,6 +192,10 @@ export const NOTIFICATION_MODULES = [
         name: 'dealDelete',
         text: 'Deal card deleted',
       },
+      {
+        name: 'createdDeal',
+        text: 'Created deal changed',
+      },
     ],
   },
 
@@ -223,6 +227,10 @@ export const NOTIFICATION_MODULES = [
         name: 'ticketDelete',
         text: 'Ticket card deleted',
       },
+      {
+        name: 'createdTicket',
+        text: 'Created ticket changed',
+      },
     ],
   },
 
@@ -253,6 +261,10 @@ export const NOTIFICATION_MODULES = [
       {
         name: 'taskDelete',
         text: 'Task card deleted',
+      },
+      {
+        name: 'createdTask',
+        text: 'Created task changed',
       },
     ],
   },

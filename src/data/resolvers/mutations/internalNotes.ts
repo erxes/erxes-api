@@ -4,18 +4,19 @@ import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { notifiedUserIds } from '../boardUtils';
+import { getNotifiedUserIds } from '../boardUtils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;
 }
 
-const sendNotificationOfItems = async (item, doc, contentType, user) => {
+const sendNotificationOfItems = async (item, doc, contentType, excludeUserIds) => {
   const notifDocItems = { ...doc };
 
-  const relatedReceivers = await notifiedUserIds(item);
+  const relatedReceivers = await getNotifiedUserIds(item);
+
   notifDocItems.receivers = relatedReceivers.filter(id => {
-    return id !== user._id;
+    return excludeUserIds.indexOf(id) < 0;
   });
 
   notifDocItems.action = `added note in ${contentType}`;
@@ -51,7 +52,8 @@ const internalNoteMutations = {
         notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
         notifDoc.contentTypeId = deal._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
-        await sendNotificationOfItems(deal, notifDoc, args.contentType, user);
+
+        await sendNotificationOfItems(deal, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 
@@ -90,7 +92,8 @@ const internalNoteMutations = {
         notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
         notifDoc.contentTypeId = ticket._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
-        await sendNotificationOfItems(ticket, notifDoc, args.contentType, user);
+
+        await sendNotificationOfItems(ticket, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 
@@ -104,7 +107,8 @@ const internalNoteMutations = {
         notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
         notifDoc.contentTypeId = task._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
-        await sendNotificationOfItems(task, notifDoc, args.contentType, user);
+
+        await sendNotificationOfItems(task, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 

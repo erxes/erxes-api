@@ -6,7 +6,7 @@ import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
 
-export const notifiedUserIds = async (item: any) => {
+export const getNotifiedUserIds = async (item: any) => {
   let userIds: string[] = [];
 
   if (item.assignedUserIds && item.assignedUserIds.length > 0) {
@@ -69,6 +69,8 @@ export const sendNotifications = async ({
 
   const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
 
+  const notifiedUserIds = await getNotifiedUserIds(item);
+
   const notificationDoc = {
     createdUser: user,
     title,
@@ -80,7 +82,7 @@ export const sendNotifications = async ({
     link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
 
     // exclude current user, invited user and removed users
-    receivers: (await notifiedUserIds(item)).filter(id => {
+    receivers: notifiedUserIds.filter(id => {
       return usersToExclude.indexOf(id) < 0;
     }),
   };
@@ -91,7 +93,6 @@ export const sendNotifications = async ({
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
       action: `removed you from ${contentType}`,
       content: `'${item.name}'`,
-      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
       receivers: removedUsers.filter(id => id !== user._id),
     });
   }
@@ -102,8 +103,17 @@ export const sendNotifications = async ({
       notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
-      link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
       receivers: invitedUsers.filter(id => id !== user._id),
+    });
+  }
+
+  // exclude notified user, current user, invited user and removed users
+  if (item.userId && ![...notifiedUserIds, ...usersToExclude].includes(item.userId)) {
+    await utils.sendNotification({
+      ...notificationDoc,
+      notifType: NOTIFICATION_TYPES[`CREATED_${contentType.toUpperCase()}`],
+      action: `Your created ${contentType} is changed`,
+      receivers: [item.userId],
     });
   }
 
