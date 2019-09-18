@@ -219,24 +219,8 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
 
 export const generateGrowthHackCommonFilters = async (args: any) => {
   args.type = 'growthHack';
-  const filter = await generateCommonFilters(args);
 
-  const { viewType } = args;
-
-  if (viewType === 'priorityMatrix') {
-    const { pipelineId } = args;
-
-    if (pipelineId) {
-      const stageIds = await Stages.find({ pipelineId }).distinct('_id');
-
-      filter.stageId = { $in: stageIds };
-    }
-
-    filter.ease = { $exists: true, $gt: 0 };
-    filter.impact = { $exists: true, $gt: 0 };
-  }
-
-  return filter;
+  return generateCommonFilters(args);
 };
 
 interface IDate {

@@ -47,7 +47,18 @@ export const queries = `
     nextMonth: String
     noCloseDate: String
     overdue: String
-    viewType: String
+  ): [GrowthHack]
+
+  growthHacksPriorityMatrix(
+    pipelineId: String
+    skip: Int
+    search: String
+    assignedUserIds: [String]
+    nextDay: String
+    nextWeek: String
+    nextMonth: String
+    noCloseDate: String
+    overdue: String
     sortField: String
     sortDirection: Int
   ): [GrowthHack]
