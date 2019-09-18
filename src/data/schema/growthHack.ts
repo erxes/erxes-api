@@ -13,8 +13,6 @@ export const types = `
     assignedUserIds: [String]
     closeDate: Date
     description: String
-    hackDescription: String
-    goal: String
     hackStages: [String]
     priority: String
     reach: Int
@@ -30,6 +28,7 @@ export const types = `
     formId: String
     scoringType: String
     formSubmissions: JSON
+    formFields: [Field]
     ${commonTypes}
   }
 `;
@@ -62,9 +61,6 @@ const commonParams = `
   closeDate: Date,
   description: String,
   order: Int,
-  goal: String,
-  hackDescription: String,
-
   hackStages: [String],
   priority: String,
   reach: Int,
