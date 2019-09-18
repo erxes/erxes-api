@@ -41,7 +41,6 @@ export const queries = `
     initialStageId: String
     pipelineId: String
     stageId: String
-    date: ItemDate
     skip: Int
     search: String
     assignedUserIds: [String]
@@ -50,6 +49,7 @@ export const queries = `
     nextMonth: String
     noCloseDate: String
     overdue: String
+    viewType: String
   ): [GrowthHack]
 `;
 

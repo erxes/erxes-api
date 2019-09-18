@@ -13,8 +13,6 @@ export const contains = (values: string[] = [], empty = false) => {
 export const generateCommonFilters = async (args: any) => {
   const {
     $and,
-    date,
-    pipelineId,
     stageId,
     search,
     overdue,
@@ -166,14 +164,6 @@ export const generateCommonFilters = async (args: any) => {
     filter.stageId = stageId;
   }
 
-  // Calendar monthly date
-  if (date) {
-    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
-
-    filter.closeDate = dateSelector(date);
-    filter.stageId = { $in: stageIds };
-  }
-
   return filter;
 };
 
@@ -184,6 +174,16 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
 
   if (productIds) {
     filter['productsData.productId'] = contains(productIds);
+  }
+
+  // Calendar monthly date
+  const { date, pipelineId } = args;
+
+  if (date) {
+    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
+
+    filter.closeDate = dateSelector(date);
+    filter.stageId = { $in: stageIds };
   }
 
   return filter;
@@ -220,6 +220,18 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
 export const generateGrowthHackCommonFilters = async (args: any) => {
   args.type = 'growthHack';
   const filter = await generateCommonFilters(args);
+
+  const { viewType } = args;
+
+  if (viewType === 'priorityMatrix') {
+    const { pipelineId } = args;
+
+    if (pipelineId) {
+      const stageIds = await Stages.find({ pipelineId }).distinct('_id');
+
+      filter.stageId = { $in: stageIds };
+    }
+  }
 
   return filter;
 };
