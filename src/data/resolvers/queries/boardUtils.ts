@@ -231,6 +231,9 @@ export const generateGrowthHackCommonFilters = async (args: any) => {
 
       filter.stageId = { $in: stageIds };
     }
+
+    filter.ease = { $exists: true, $gt: 0 };
+    filter.impact = { $exists: true, $gt: 0 };
   }
 
   return filter;
