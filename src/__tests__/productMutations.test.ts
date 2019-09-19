@@ -1,17 +1,19 @@
 import { graphqlRequest } from '../db/connection';
-import { productFactory, userFactory } from '../db/factories';
-import { Products } from '../db/models';
+import { productCategoryFactory, productFactory, userFactory } from '../db/factories';
+import { ProductCategories, Products } from '../db/models';
 
 import './setup.ts';
 
 describe('Test products mutations', () => {
   let product;
   let context;
+  let productCategory;
 
   const commonParamDefs = `
     $name: String!,
     $type: String!,
     $description: String,
+    $categoryId: String,
     $sku: String
   `;
 
@@ -19,18 +21,21 @@ describe('Test products mutations', () => {
     name: $name
     type: $type
     description: $description,
+    categoryId: $categoryId
     sku: $sku
   `;
 
   beforeEach(async () => {
     // Creating test data
     product = await productFactory({ type: 'product' });
+    productCategory = await productCategoryFactory();
     context = { user: await userFactory({}) };
   });
 
   afterEach(async () => {
     // Clearing test data
     await Products.deleteMany({});
+    await ProductCategories.deleteMany({});
   });
 
   test('Create product', async () => {
@@ -39,6 +44,7 @@ describe('Test products mutations', () => {
       type: product.type,
       sku: product.sku,
       description: product.description,
+      categoryId: productCategory._id,
     };
 
     const mutation = `
@@ -92,12 +98,12 @@ describe('Test products mutations', () => {
 
   test('Remove product', async () => {
     const mutation = `
-      mutation productsRemove($_id: String!) {
-        productsRemove(_id: $_id)
+      mutation productsRemove($productIds: [String!]) {
+        productsRemove(productIds: $productIds)
       }
     `;
 
-    await graphqlRequest(mutation, 'productsRemove', { _id: product._id }, context);
+    await graphqlRequest(mutation, 'productsRemove', { productIds: [product._id] }, context);
 
     expect(await Products.findOne({ _id: product._id })).toBe(null);
   });
