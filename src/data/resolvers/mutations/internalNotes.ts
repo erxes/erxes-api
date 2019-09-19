@@ -14,7 +14,7 @@ const sendNotificationOfItems = async (item, contentType, content, user) => {
   await sendNotifications({
     item,
     user,
-    type: NOTIFICATION_TYPES[`CREATED_${contentType.toUpperCase()}`],
+    type: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_EDIT`],
     action: `added note in ${contentType}`,
     content,
     contentType,
