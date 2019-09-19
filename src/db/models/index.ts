@@ -2,6 +2,7 @@ import ActivityLogs from './ActivityLogs';
 import { Boards, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
 import Channels from './Channels';
+import { Checklists, ChecklistItems } from './Checklists';
 import Companies from './Companies';
 import Configs from './Configs';
 import Conformities from './Conformities';
@@ -74,4 +75,6 @@ export {
   Tasks,
   GrowthHacks,
   PipelineTemplates,
+  Checklists,
+  ChecklistItems,
 };

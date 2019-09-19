@@ -11,6 +11,7 @@ import {
 import { IUserDocument } from './definitions/users';
 
 export interface IChecklistModel extends Model<IChecklistDocument> {
+  getChecklist(_id: string): Promise<IChecklistDocument>;
   createChecklist(
     { contentType, contentTypeId, ...fields }: IChecklist,
     user: IUserDocument,
@@ -22,6 +23,7 @@ export interface IChecklistModel extends Model<IChecklistDocument> {
 }
 
 export interface IChecklistItemModel extends Model<IChecklistItemDocument> {
+  getChecklistItem(_id: string): Promise<IChecklistItemDocument>;
   createChecklistItem({ checklistId, ...fields }: IChecklistItem, user: IUserDocument): Promise<IChecklistItemDocument>;
 
   updateChecklistItem(_id: string, doc: IChecklistItem): Promise<IChecklistDocument>;
@@ -31,6 +33,16 @@ export interface IChecklistItemModel extends Model<IChecklistItemDocument> {
 
 export const loadClass = () => {
   class Checklist {
+    public static async getChecklist(_id: string) {
+      const checklist = await Checklists.findOne({ _id });
+
+      if (!checklist) {
+        throw new Error('Checklist not found');
+      }
+
+      return checklist;
+    }
+
     /*
      * Create new checklist
      */
@@ -83,6 +95,16 @@ export const loadClass = () => {
 
 export const loadItemClass = () => {
   class ChecklistItem {
+    public static async getChecklistItem(_id: string) {
+      const checklistItem = await ChecklistItems.findOne({ _id });
+
+      if (!checklistItem) {
+        throw new Error('ChecklistItem not found');
+      }
+
+      return checklistItem;
+    }
+
     /*
      * Create new checklistItem
      */

@@ -115,6 +115,8 @@ import {
 
 import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
 
+import { mutations as ChecklistMutations, queries as ChecklistQueries, types as ChecklistTypes } from './checklist';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -153,6 +155,7 @@ export const types = `
   ${LogTypes}
   ${GrowthHackTypes}
   ${PipelineTemplateTypes}
+  ${ChecklistTypes}
 `;
 
 export const queries = `
@@ -190,6 +193,7 @@ export const queries = `
     ${LogQueries}
     ${GrowthHackQueries}
     ${PipelineTemplateQueries}
+    ${ChecklistQueries}
   }
 `;
 
@@ -226,6 +230,7 @@ export const mutations = `
     ${GrowthHackMutations}
     ${PipelineTemplateMutations}
     ${ConformityMutations}
+    ${ChecklistMutations}
   }
 `;
 

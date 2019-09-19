@@ -1,15 +1,4 @@
 export const types = `
-  type Checklist {
-    _id: String!
-    contentType: String!
-    contentTypeId: String
-    title: String
-    createdUserId: String
-    createdDate: Date
-
-    createdUser: User
-  }
-
   type ChecklistItem {
     _id: String!
     checklistId: String!
@@ -20,11 +9,24 @@ export const types = `
 
     createdUser: User
   }
+
+  type Checklist {
+    _id: String!
+    contentType: String!
+    contentTypeId: String
+    title: String
+    createdUserId: String
+    createdDate: Date
+
+    createdUser: User
+    checklistItems: [ChecklistItem]
+    checklistPercent: Int
+  }
+
 `;
 
 export const queries = `
   checklists(contentType: String!, contentTypeId: String): [Checklist]
-  checklistItems(checklistId: String!): [ChecklistItem]
 `;
 
 export const mutations = `
