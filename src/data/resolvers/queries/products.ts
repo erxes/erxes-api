@@ -76,6 +76,10 @@ const productQueries = {
 
     return ProductCategories.find(filter).countDocuments();
   },
+
+  productDetail(_root, { _id }: { _id: string }) {
+    return Products.findOne({ _id });
+  },
 };
 
 requireLogin(productQueries, 'productsTotalCount');

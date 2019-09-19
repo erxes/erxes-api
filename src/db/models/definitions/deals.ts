@@ -9,6 +9,7 @@ export interface IProduct {
   type?: string;
   description?: string;
   sku?: string;
+  customFieldsData?: any;
   productId?: string;
 }
 
@@ -96,6 +97,9 @@ const productDataSchema = new Schema(
     discountPercent: field({ type: Number }),
     discount: field({ type: Number }),
     amount: field({ type: Number }),
+    customFieldsData: field({
+      type: Object,
+    }),
   },
   { _id: false },
 );

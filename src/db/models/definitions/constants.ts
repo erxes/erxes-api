@@ -75,9 +75,10 @@ export const ACTIVITY_CONTENT_TYPES = {
   DEAL: 'deal',
   TICKET: 'ticket',
   TASK: 'task',
+  PRODUCT: 'product',
   GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'growthHack'],
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'product', 'growthHack'],
 };
 
 export const PUBLISH_STATUSES = {

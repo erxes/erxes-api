@@ -18,16 +18,20 @@ export const types = `
     type: String
     description: String
     sku: String
+    customFieldsData: JSON
     createdAt: Date
+
+    categoryName: String
   }
 `;
 
 const productParams = `
-  name: String!,
-  categoryId: String!,
+  name: String,
+  categoryId: String,
   type: String,
   description: String,
   sku: String,
+  customFieldsData: JSON
 `;
 
 const productCategoryParams = `
@@ -43,12 +47,13 @@ export const queries = `
 
   products(type: String, categoryId: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
   productsTotalCount(type: String): Int
+  productDetail(_id: String): Product
 `;
 
 export const mutations = `
   productsAdd(${productParams}): Product
   productsEdit(_id: String!, ${productParams}): Product
-  productsRemove(_id: String!): JSON
+  productsRemove(productIds: [String!]): JSON
 
   productCategoriesAdd(${productCategoryParams}): ProductCategory
   productCategoriesEdit(_id: String!, ${productCategoryParams}): ProductCategory
