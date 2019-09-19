@@ -27,6 +27,7 @@ export const types = `
     metric: String
     hackScoringType: String
     templateId: String
+    state: String
     ${commonTypes}
   }
 
