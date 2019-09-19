@@ -40,12 +40,14 @@ export const sendNotifications = async () => {
       if (Math.abs(diffMinute - (object.reminderMinute || 0)) < 5) {
         const content = `${object.name} ${type} is due in upcoming`;
 
+        const url = `/${type === 'ticket' ? `inbox/${type}` : { type }}/board`;
+
         utils.sendNotification({
           notifType: `${type}DueDate`,
           title: content,
           content,
           action: `Reminder:`,
-          link: `/${type}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}`,
+          link: `${url}?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${object._id}`,
           createdUser: user,
           // exclude current user
           contentType: type,
