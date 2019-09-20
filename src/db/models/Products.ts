@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Deals } from '.';
+import { Deals, Fields } from '.';
 import {
   IProduct,
   IProductCategory,
@@ -21,6 +21,8 @@ export const loadProductClass = () => {
      * Create a product
      */
     public static async createProduct(doc: IProduct) {
+      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+
       return Products.create(doc);
     }
 
@@ -28,6 +30,11 @@ export const loadProductClass = () => {
      * Update Product
      */
     public static async updateProduct(_id: string, doc: IProduct) {
+      if (doc.customFieldsData) {
+        // clean custom field values
+        doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+      }
+
       await Products.updateOne({ _id }, { $set: doc });
 
       return Products.findOne({ _id });

@@ -65,6 +65,9 @@ export const productSchema = new Schema({
   }),
   description: field({ type: String, optional: true }),
   sku: field({ type: String, optional: true }), // Stock Keeping Unit
+  customFieldsData: field({
+    type: Object,
+  }),
   createdAt: field({
     type: Date,
     default: new Date(),
@@ -97,9 +100,6 @@ const productDataSchema = new Schema(
     discountPercent: field({ type: Number }),
     discount: field({ type: Number }),
     amount: field({ type: Number }),
-    customFieldsData: field({
-      type: Object,
-    }),
   },
   { _id: false },
 );
