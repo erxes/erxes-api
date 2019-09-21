@@ -28,11 +28,6 @@ export const types = `
   type ENV {
     USE_BRAND_RESTRICTIONS: String
   }
-
-  type RobotEntry {
-    action: String
-    data: JSON
-  }
 `;
 
 export const queries = `
@@ -40,7 +35,6 @@ export const queries = `
   configsVersions: ProjectInfos
   engagesConfigDetail: EngagesConfig
   configsGetEnv: ENV
-  configsRobotEntries: [RobotEntry]
 `;
 
 export const mutations = `

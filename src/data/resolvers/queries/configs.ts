@@ -1,4 +1,4 @@
-import { Configs, RobotEntries } from '../../../db/models';
+import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { getEnv, sendRequest } from '../../utils';
@@ -58,10 +58,6 @@ const configQueries = {
     return {
       USE_BRAND_RESTRICTIONS: process.env.USE_BRAND_RESTRICTIONS,
     };
-  },
-
-  configsRobotEntries(_root) {
-    return RobotEntries.find();
   },
 
   /**
