@@ -43,10 +43,9 @@ export const importXlsFile = async (
         stream.on('finish', resolver);
         stream.on('error', rejecter);
       });
-
     // Creating streams
     const writeStream = fs.createWriteStream(downloadDir);
-    const streamObj = readStream.pipe(writeStream);
+    const streamObj = await readStream.pipe(writeStream);
 
     pipe(streamObj)
       .then(async () => {

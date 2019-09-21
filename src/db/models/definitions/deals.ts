@@ -5,7 +5,7 @@ import { field } from './utils';
 
 export interface IProduct {
   name: string;
-  categoryId: string;
+  categoryId?: string;
   type?: string;
   description?: string;
   sku?: string;
@@ -57,7 +57,7 @@ export interface IDealDocument extends IDeal, Document {
 export const productSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
-  categoryId: field({ type: String }),
+  categoryId: field({ type: String, optional: true }),
   type: field({
     type: String,
     enum: PRODUCT_TYPES.ALL,
