@@ -27,6 +27,27 @@ const robotQueries = {
 
     return result;
   },
+
+  robotOnboardingGetAvailableFeatures(_root) {
+    return [
+      { name: 'inbox', text: 'Inbox' },
+      { name: 'contacts', text: 'Contact' },
+      { name: 'deals', text: 'Deals' },
+      { name: 'tasks', text: 'Tasks' },
+      { name: 'tickets', text: 'Tickets' },
+      { name: 'growthHacks', text: 'Growth Hacks' },
+      { name: 'engages', text: 'Engages' },
+      { name: 'leads', text: 'Leads' },
+      { name: 'knowledgebase', text: 'Knowledgebase' },
+      { name: 'insights', text: 'Insights' },
+      { name: 'imports', text: 'Imports' },
+      { name: 'tags', text: 'Tags' },
+      { name: 'segments', text: 'Segments' },
+      { name: 'propertes', text: 'Properties' },
+      { name: 'permissions', text: 'Permissions' },
+      { name: 'integrations', text: 'Integrations' },
+    ];
+  },
 };
 
 moduleRequireLogin(robotQueries);

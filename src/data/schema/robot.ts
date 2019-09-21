@@ -3,9 +3,15 @@ export const types = `
     action: String
     data: JSON
   }
+
+  type RobotOnboaringFeature {
+    name: String
+    text: String
+  }
 `;
 
 export const queries = `
   robotEntries: [RobotEntry]
   robotSettingsCompleteness(settingNames: [String]): JSON
+  robotOnboardingGetAvailableFeatures: [RobotOnboaringFeature]
 `;
