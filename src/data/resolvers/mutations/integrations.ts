@@ -9,7 +9,7 @@ interface IEditMessengerIntegration extends IMessengerIntegration {
   _id: string;
 }
 
-interface IEditFormIntegration extends IIntegration {
+interface IEditLeadIntegration extends IIntegration {
   _id: string;
 }
 
@@ -74,15 +74,15 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateFormIntegration(_root, doc: IIntegration) {
-    return Integrations.createFormIntegration(doc);
+  integrationsCreateLeadIntegration(_root, doc: IIntegration) {
+    return Integrations.createLeadIntegration(doc);
   },
 
   /**
-   * Edit a form integration
+   * Edit a lead integration
    */
-  integrationsEditFormIntegration(_root, { _id, ...doc }: IEditFormIntegration) {
-    return Integrations.updateFormIntegration(_id, doc);
+  integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditLeadIntegration) {
+    return Integrations.updateLeadIntegration(_id, doc);
   },
 
   /*
@@ -95,9 +95,16 @@ const integrationMutations = {
   ) {
     const integration = await Integrations.createExternalIntegration(doc);
 
+    let kind = doc.kind;
+
+    if (kind === 'facebook-post' || kind === 'facebook-messenger') {
+      kind = 'facebook';
+    }
+
     try {
-      await dataSources.IntegrationsAPI.createIntegration(doc.kind, {
+      await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
+        kind: doc.kind,
         integrationId: integration._id,
         data: data ? JSON.stringify(data) : '',
       });
@@ -116,7 +123,7 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (['facebook', 'gmail', 'callpro'].includes(integration.kind || '')) {
+      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro'].includes(integration.kind || '')) {
         await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
       }
 
@@ -164,8 +171,8 @@ checkPermission(
   'integrationsSaveMessengerAppearanceData',
 );
 checkPermission(integrationMutations, 'integrationsSaveMessengerConfigs', 'integrationsSaveMessengerConfigs');
-checkPermission(integrationMutations, 'integrationsCreateFormIntegration', 'integrationsCreateFormIntegration');
-checkPermission(integrationMutations, 'integrationsEditFormIntegration', 'integrationsEditFormIntegration');
+checkPermission(integrationMutations, 'integrationsCreateLeadIntegration', 'integrationsCreateLeadIntegration');
+checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integrationsEditLeadIntegration');
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 
 export default integrationMutations;

@@ -47,7 +47,6 @@ export const moduleObjects = {
         use: [
           'companiesAdd',
           'companiesEdit',
-          'companiesEditCustomers',
           'companiesRemove',
           'companiesMerge',
           'showCompanies',
@@ -66,10 +65,6 @@ export const moduleObjects = {
       {
         name: 'companiesRemove',
         description: 'Remove companies',
-      },
-      {
-        name: 'companiesEditCustomers',
-        description: 'Edit companies customer',
       },
       {
         name: 'companiesMerge',
@@ -96,15 +91,7 @@ export const moduleObjects = {
       {
         name: 'customersAll',
         description: 'All',
-        use: [
-          'showCustomers',
-          'customersAdd',
-          'customersEdit',
-          'customersEditCompanies',
-          'customersMerge',
-          'customersRemove',
-          'exportCustomers',
-        ],
+        use: ['showCustomers', 'customersAdd', 'customersEdit', 'customersMerge', 'customersRemove', 'exportCustomers'],
       },
       {
         name: 'exportCustomers',
@@ -123,16 +110,31 @@ export const moduleObjects = {
         description: 'Edit customer',
       },
       {
-        name: 'customersEditCompanies',
-        description: 'Update customers companies',
-      },
-      {
         name: 'customersMerge',
         description: 'Merge customers',
       },
       {
         name: 'customersRemove',
         description: 'Remove customers',
+      },
+    ],
+  },
+  pipelineTemplates: {
+    name: 'pipelineTemplates',
+    description: 'Pipeline templates',
+    actions: [
+      {
+        name: 'pipelineTemplatesAll',
+        description: 'All',
+        use: ['showPipelineTemplates', 'managePipelineTemplates'],
+      },
+      {
+        name: 'showPipelineTemplates',
+        description: 'Show pipeline templates',
+      },
+      {
+        name: 'managePipelineTemplates',
+        description: 'Manage a pipeline template',
       },
     ],
   },
@@ -329,6 +331,104 @@ export const moduleObjects = {
       {
         name: 'ticketsWatch',
         description: 'Watch ticket',
+      },
+    ],
+  },
+  growthHacks: {
+    name: 'growthHacks',
+    description: 'GrowthHacks',
+    actions: [
+      {
+        name: 'growthHacksAll',
+        description: 'All',
+        use: [
+          'showGrowthHacks',
+          'growthHackBoardsAdd',
+          'growthHackBoardsEdit',
+          'growthHackBoardsRemove',
+          'growthHackPipelinesAdd',
+          'growthHackPipelinesEdit',
+          'growthHackPipelinesUpdateOrder',
+          'growthHackPipelinesWatch',
+          'growthHackPipelinesRemove',
+          'growthHackStagesAdd',
+          'growthHackStagesEdit',
+          'growthHackStagesUpdateOrder',
+          'growthHackStagesRemove',
+          'growthHacksAdd',
+          'growthHacksEdit',
+          'growthHacksRemove',
+          'growthHacksUpdateOrder',
+          'growthHacksWatch',
+        ],
+      },
+      {
+        name: 'showGrowthHacks',
+        description: 'Show growthHacks',
+      },
+      {
+        name: 'growthHackBoardsAdd',
+        description: 'Add growthHack board',
+      },
+      {
+        name: 'growthHackBoardsRemove',
+        description: 'Remove growthHack board',
+      },
+      {
+        name: 'growthHackPipelinesAdd',
+        description: 'Add growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesEdit',
+        description: 'Edit growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesRemove',
+        description: 'Remove growthHack pipeline',
+      },
+      {
+        name: 'growthHackPipelinesWatch',
+        description: 'Growth hack pipeline watch',
+      },
+      {
+        name: 'growthHackPipelinesUpdateOrder',
+        description: 'Update pipeline order',
+      },
+      {
+        name: 'growthHackStagesAdd',
+        description: 'Add growthHack stage',
+      },
+      {
+        name: 'growthHackStagesEdit',
+        description: 'Edit growthHack stage',
+      },
+      {
+        name: 'growthHackStagesUpdateOrder',
+        description: 'Update stage order',
+      },
+      {
+        name: 'growthHackStagesRemove',
+        description: 'Remove growthHack stage',
+      },
+      {
+        name: 'growthHacksAdd',
+        description: 'Add growthHack',
+      },
+      {
+        name: 'growthHacksEdit',
+        description: 'Edit growthHack',
+      },
+      {
+        name: 'growthHacksUpdateOrder',
+        description: 'Update growthHack order',
+      },
+      {
+        name: 'growthHacksRemove',
+        description: 'Remove growthHack',
+      },
+      {
+        name: 'growthHacksWatch',
+        description: 'Watch growthHack',
       },
     ],
   },
@@ -758,8 +858,8 @@ export const moduleObjects = {
           'integrationsEditMessengerIntegration',
           'integrationsSaveMessengerAppearanceData',
           'integrationsSaveMessengerConfigs',
-          'integrationsCreateFormIntegration',
-          'integrationsEditFormIntegration',
+          'integrationsCreateLeadIntegration',
+          'integrationsEditLeadIntegration',
           'integrationsRemove',
         ],
       },
@@ -784,12 +884,12 @@ export const moduleObjects = {
         description: 'Save messenger config',
       },
       {
-        name: 'integrationsCreateFormIntegration',
-        description: 'Create form integration',
+        name: 'integrationsCreateLeadIntegration',
+        description: 'Create lead integration',
       },
       {
-        name: 'integrationsEditFormIntegration',
-        description: 'Edit form integration',
+        name: 'integrationsEditLeadIntegration',
+        description: 'Edit lead integration',
       },
       {
         name: 'integrationsRemove',
