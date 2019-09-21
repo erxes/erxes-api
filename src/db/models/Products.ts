@@ -102,13 +102,22 @@ export const loadProductCategoryClass = () => {
      * Update Product category
      */
     public static async updateProductCategory(_id: string, doc: IProductCategory) {
-      const childCategories = await ProductCategories.find({ parentId: _id });
+      const productCategory = await ProductCategories.getProductCatogery(_id);
 
-      childCategories.forEach(async category => {
-        await ProductCategories.updateOne({ _id: category._id }, { $set: { order: `${doc.order}/${category.code}` } });
+      const childCategories = await ProductCategories.find({
+        $and: [{ order: { $regex: new RegExp(productCategory.order, 'i') } }, { _id: { $ne: _id } }],
       });
 
       await ProductCategories.updateOne({ _id }, { $set: doc });
+
+      // updating child categories order
+      childCategories.forEach(async category => {
+        let order = category.order;
+
+        order = order.replace(productCategory.order, doc.order);
+
+        await ProductCategories.updateOne({ _id: category._id }, { $set: { order } });
+      });
 
       return ProductCategories.findOne({ _id });
     }
