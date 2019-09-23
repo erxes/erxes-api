@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Customers } from '.';
+import { Conformities, Customers } from '.';
 import { graphqlPubsub } from '../../pubsub';
 import {
   activityLogSchema,
@@ -19,6 +19,7 @@ import { IConversationDocument } from './definitions/conversations';
 import { ICustomerDocument } from './definitions/customers';
 import { IDealDocument } from './definitions/deals';
 import { IEmailDeliveriesDocument } from './definitions/emailDeliveries';
+import { IGrowthHackDocument } from './definitions/growthHacks';
 import { IInternalNoteDocument } from './definitions/internalNotes';
 import { ISegmentDocument } from './definitions/segments';
 import { ITaskDocument } from './definitions/tasks';
@@ -45,6 +46,7 @@ export interface IActivityLogModel extends Model<IActivityLogDocument> {
   createSegmentLog(segment: ISegmentDocument, customer?: ICustomerDocument): Promise<IActivityLogDocument>;
   createTicketLog(ticket: ITicketDocument): Promise<IActivityLogDocument>;
   createTaskLog(task: ITaskDocument): Promise<IActivityLogDocument>;
+  createGrowthHackLog(growthHack: IGrowthHackDocument): Promise<IActivityLogDocument>;
 }
 
 export const loadClass = () => {
@@ -126,14 +128,18 @@ export const loadClass = () => {
         return;
       }
 
-      if (customer.companyIds && customer.companyIds.length > 0) {
-        for (const companyId of customer.companyIds) {
-          // check against duplication
-          const log = await cocFindOne(conversation._id, companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
+      const companyIds = await Conformities.savedConformity({
+        mainType: 'customer',
+        mainTypeId: customer._id,
+        relType: 'company',
+      });
 
-          if (!log) {
-            await cocCreate(conversation._id, conversation.content || '', companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
-          }
+      for (const companyId of companyIds) {
+        // check against duplication
+        const log = await cocFindOne(conversation._id, companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
+
+        if (!log) {
+          await cocCreate(conversation._id, conversation.content || '', companyId, ACTIVITY_CONTENT_TYPES.COMPANY);
         }
       }
 
@@ -319,6 +325,31 @@ export const loadClass = () => {
         contentType: {
           type: ACTIVITY_CONTENT_TYPES.TASK,
           id: task._id,
+        },
+        performer,
+      });
+    }
+
+    public static createGrowthHackLog(growthHack: IGrowthHackDocument) {
+      let performer;
+
+      if (growthHack.userId) {
+        performer = {
+          type: ACTIVITY_PERFORMER_TYPES.USER,
+          id: growthHack.userId,
+        };
+      }
+
+      return ActivityLogs.createDoc({
+        activity: {
+          type: ACTIVITY_TYPES.GROWTH_HACK,
+          action: ACTIVITY_ACTIONS.CREATE,
+          content: growthHack.name || '',
+          id: growthHack._id,
+        },
+        contentType: {
+          type: ACTIVITY_CONTENT_TYPES.GROWTH_HACK,
+          id: growthHack._id,
         },
         performer,
       });

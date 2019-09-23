@@ -11,6 +11,14 @@ export default class IntegrationsAPI extends RESTDataSource {
     this.httpCache = new HTTPCache();
   }
 
+  public didEncounterError(e) {
+    const error = e.extensions || {};
+    const { response } = error;
+    const { body } = response;
+
+    throw new Error(body);
+  }
+
   public async createIntegration(kind, params) {
     return this.post(`/${kind}/create-integration`, params);
   }
@@ -25,6 +33,10 @@ export default class IntegrationsAPI extends RESTDataSource {
 
   public async replyFacebook(params) {
     return this.post('/facebook/reply', params);
+  }
+
+  public async replyFacebookPost(params) {
+    return this.post('/facebook/reply-post', params);
   }
 
   public async sendEmail(params) {

@@ -1,7 +1,6 @@
 import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IExternalIntegrationParams, IMessengerIntegration } from '../../../db/models/Integrations';
-import { IntegrationsAPI } from '../../dataSources';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -10,11 +9,9 @@ interface IEditMessengerIntegration extends IMessengerIntegration {
   _id: string;
 }
 
-interface IEditFormIntegration extends IIntegration {
+interface IEditLeadIntegration extends IIntegration {
   _id: string;
 }
-
-const integrationsApi = new IntegrationsAPI();
 
 const integrationMutations = {
   /**
@@ -77,26 +74,37 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateFormIntegration(_root, doc: IIntegration) {
-    return Integrations.createFormIntegration(doc);
+  integrationsCreateLeadIntegration(_root, doc: IIntegration) {
+    return Integrations.createLeadIntegration(doc);
   },
 
   /**
-   * Edit a form integration
+   * Edit a lead integration
    */
-  integrationsEditFormIntegration(_root, { _id, ...doc }: IEditFormIntegration) {
-    return Integrations.updateFormIntegration(_id, doc);
+  integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditLeadIntegration) {
+    return Integrations.updateLeadIntegration(_id, doc);
   },
 
   /*
    * Create external integrations like twitter, facebook, gmail etc ...
    */
-  async integrationsCreateExternalIntegration(_root, { data, ...doc }: IExternalIntegrationParams & { data: object }) {
+  async integrationsCreateExternalIntegration(
+    _root,
+    { data, ...doc }: IExternalIntegrationParams & { data: object },
+    { dataSources }: IContext,
+  ) {
     const integration = await Integrations.createExternalIntegration(doc);
 
+    let kind = doc.kind;
+
+    if (kind === 'facebook-post' || kind === 'facebook-messenger') {
+      kind = 'facebook';
+    }
+
     try {
-      await integrationsApi.createIntegration(doc.kind, {
+      await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
+        kind: doc.kind,
         integrationId: integration._id,
         data: data ? JSON.stringify(data) : '',
       });
@@ -111,12 +119,12 @@ const integrationMutations = {
   /**
    * Delete an integration
    */
-  async integrationsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
+  async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (['facebook', 'gmail'].includes(integration.kind || '')) {
-        await integrationsApi.removeIntegration({ integrationId: _id });
+      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro'].includes(integration.kind || '')) {
+        await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
       }
 
       await putDeleteLog(
@@ -135,17 +143,17 @@ const integrationMutations = {
   /**
    * Delete an account
    */
-  async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
-    return integrationsApi.removeAccount({ _id });
+  async integrationsRemoveAccount(_root, { _id }: { _id: string }, { dataSources }: IContext) {
+    return dataSources.IntegrationsAPI.removeAccount({ _id });
   },
 
   /**
    * Send gmail
    */
-  async integrationSendMail(_root, args: any) {
+  async integrationSendMail(_root, args: any, { dataSources }: IContext) {
     const { erxesApiId, ...mailParams } = args;
 
-    return integrationsApi.sendEmail({
+    return dataSources.IntegrationsAPI.sendEmail({
       erxesApiId,
       data: JSON.stringify(mailParams),
     });
@@ -163,8 +171,8 @@ checkPermission(
   'integrationsSaveMessengerAppearanceData',
 );
 checkPermission(integrationMutations, 'integrationsSaveMessengerConfigs', 'integrationsSaveMessengerConfigs');
-checkPermission(integrationMutations, 'integrationsCreateFormIntegration', 'integrationsCreateFormIntegration');
-checkPermission(integrationMutations, 'integrationsEditFormIntegration', 'integrationsEditFormIntegration');
+checkPermission(integrationMutations, 'integrationsCreateLeadIntegration', 'integrationsCreateLeadIntegration');
+checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integrationsEditLeadIntegration');
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 
 export default integrationMutations;

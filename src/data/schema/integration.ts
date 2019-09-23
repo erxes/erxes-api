@@ -9,7 +9,7 @@ export const types = `
     formId: String
     tagIds: [String]
     tags: [Tag]
-    formData: JSON
+    leadData: JSON
     messengerData: JSON
     uiOptions: JSON
 
@@ -26,7 +26,7 @@ export const types = `
     byKind: JSON
   }
 
-  input IntegrationFormData {
+  input IntegrationLeadData {
     loadType: String
     successAction: String
     fromEmail: String,
@@ -37,6 +37,9 @@ export const types = `
     adminEmailContent: String
     thankContent: String
     redirectUrl: String
+    themeColor: String
+    callout: JSON,
+    rules: [InputRule]
   }
 
   input MessengerOnlineHoursSchema {
@@ -121,26 +124,26 @@ export const mutations = `
     _id: String!,
     messengerData: IntegrationMessengerData): Integration
 
-  integrationsCreateFormIntegration(
+  integrationsCreateLeadIntegration(
     name: String!,
     brandId: String!,
     languageCode: String,
     formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadData: IntegrationLeadData!): Integration
 
-  integrationsEditFormIntegration(
+  integrationsEditLeadIntegration(
     _id: String!
     name: String!,
     brandId: String!,
     languageCode: String,
     formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadData: IntegrationLeadData!): Integration
 
   integrationsCreateExternalIntegration(
     kind: String!,
     name: String!,
     brandId: String!,
-    accountId: String!,
+    accountId: String,
     data: JSON): Integration
 
   integrationsRemove(_id: String!): JSON

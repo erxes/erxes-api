@@ -1,19 +1,9 @@
-const commonTypes = `
-  order: Int
-  createdAt: Date
-`;
+import { commonTypes, conformityQueryFields } from './common';
 
 export const types = `
   type Task {
     _id: String!
-    name: String!
-    stageId: String
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
-    assignedUserIds: [String]
-    closeDate: Date
-    description: String
     priority: String
     companies: [Company]
     customers: [Customer]
@@ -22,8 +12,6 @@ export const types = `
     attachments: [Attachment]
     stage: Stage
     pipeline: Pipeline
-    modifiedAt: Date
-    modifiedBy: String
     ${commonTypes}
   }
 `;
@@ -45,25 +33,25 @@ export const queries = `
     noCloseDate: String
     overdue: String
     priority: [String]
+    ${conformityQueryFields}
   ): [Task]
 `;
 
 const commonParams = `
-  name: String!,
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,
   priority: String,
+  reminderMinute: Int,
+  isComplete: Boolean
 `;
 
 export const mutations = `
-  tasksAdd(${commonParams}): Task
-  tasksEdit(_id: String!, ${commonParams}): Task
+  tasksAdd(name: String!, ${commonParams}): Task
+  tasksEdit(_id: String!, name: String, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
   tasksRemove(_id: String!): Task

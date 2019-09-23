@@ -1,14 +1,18 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import {
+  CONVERSATION_STATUSES,
+  KIND_CHOICES,
+  NOTIFICATION_CONTENT_TYPES,
+  NOTIFICATION_TYPES,
+} from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IMessengerData } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
-import { IntegrationsAPI } from '../../dataSources';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils from '../../utils';
@@ -19,6 +23,12 @@ interface IConversationMessageAdd {
   mentionedUserIds?: string[];
   internal?: boolean;
   attachments?: any;
+}
+
+interface IReplyFacebookComment {
+  conversationId: string;
+  commentId: string;
+  content: string;
 }
 
 /**
@@ -116,12 +126,14 @@ const sendNotifications = async ({
       notifType: type,
       receivers: conversationNotifReceivers(conversation, user._id),
       action: 'updated conversation',
+      contentType: NOTIFICATION_CONTENT_TYPES.CONVERSATION,
+      contentTypeId: conversation._id,
     };
 
     switch (type) {
       case NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE:
         doc.action = `sent you a message`;
-        doc.receivers = conversationNotifReceivers(conversation, user._id, false);
+        doc.receivers = conversationNotifReceivers(conversation, user._id);
         break;
       case NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE:
         doc.action = 'has assigned you to conversation ';
@@ -154,7 +166,7 @@ const conversationMutations = {
   /**
    * Create new message in conversation
    */
-  async conversationMessageAdd(_root, doc: IConversationMessageAdd, { user }: IContext) {
+  async conversationMessageAdd(_root, doc: IConversationMessageAdd, { user, dataSources }: IContext) {
     const conversation = await Conversations.findOne({
       _id: doc.conversationId,
     });
@@ -197,7 +209,7 @@ const conversationMutations = {
     // customer's email
     const email = customer ? customer.primaryEmail : '';
 
-    if (kind === KIND_CHOICES.FORM && email) {
+    if (kind === KIND_CHOICES.LEAD && email) {
       utils.sendEmail({
         toEmails: [email],
         title: 'Reply',
@@ -207,24 +219,39 @@ const conversationMutations = {
       });
     }
 
-    const message = await ConversationMessages.addMessage(doc, user._id);
-
-    // send reply to facebook
-    if (kind === KIND_CHOICES.FACEBOOK) {
-      const integrationsApi = new IntegrationsAPI();
-
-      integrationsApi
-        .replyFacebook({
-          conversationId: conversation._id,
-          integrationId: integration._id,
-          content: strip(doc.content),
-          attachments: doc.attachments || [],
-        })
+    if (kind === KIND_CHOICES.FACEBOOK_POST) {
+      return dataSources.IntegrationsAPI.replyFacebookPost({
+        conversationId: conversation._id,
+        integrationId: integration._id,
+        content: strip(doc.content),
+        attachments: doc.attachments || [],
+      })
         .then(response => {
           debugExternalApi(response);
         })
         .catch(e => {
           debugExternalApi(e.message);
+          return e;
+        });
+    }
+
+    const message = await ConversationMessages.addMessage(doc, user._id);
+
+    // send reply to facebook
+    if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
+      dataSources.IntegrationsAPI.replyFacebook({
+        conversationId: conversation._id,
+        integrationId: integration._id,
+        content: strip(doc.content),
+        attachments: doc.attachments || [],
+      })
+        .then(response => {
+          debugExternalApi(response);
+        })
+        .catch(e => {
+          debugExternalApi(e.message);
+
+          return ConversationMessages.deleteOne({ _id: message._id });
         });
     }
 
@@ -236,6 +263,45 @@ const conversationMutations = {
     publishMessage(dbMessage, conversation.customerId);
 
     return dbMessage;
+  },
+
+  async conversationsReplyFacebookComment(_root, doc: IReplyFacebookComment, { user, dataSources }: IContext) {
+    const conversation = await Conversations.findOne({
+      _id: doc.conversationId,
+    });
+
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    const integration = await Integrations.findOne({
+      _id: conversation.integrationId,
+    });
+
+    if (!integration) {
+      throw new Error('Integration not found');
+    }
+
+    await sendNotifications({
+      user,
+      conversations: [conversation],
+      type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
+      mobile: true,
+      messageContent: doc.content || '',
+    });
+
+    return dataSources.IntegrationsAPI.replyFacebookPost({
+      conversationId: doc.commentId,
+      integrationId: integration._id,
+      content: strip(doc.content),
+    })
+      .then(response => {
+        debugExternalApi(response);
+      })
+      .catch(e => {
+        debugExternalApi(e.message);
+        return e;
+      });
   },
 
   /**

@@ -1,10 +1,10 @@
-import { Tasks } from '../../../db/models';
+import { Conformities, Tasks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { itemsChange, sendNotifications } from '../boardUtils';
+import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface ITasksEdit extends ITask {
@@ -37,11 +37,7 @@ const taskMutations = {
    * Edit task
    */
   async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
-    const oldTask = await Tasks.findOne({ _id });
-
-    if (!oldTask) {
-      throw new Error('Task not found');
-    }
+    const oldTask = await Tasks.getTask(_id);
 
     const updatedTask = await Tasks.updateTask(_id, {
       ...doc,
@@ -49,16 +45,21 @@ const taskMutations = {
       modifiedBy: user._id,
     });
 
-    const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds || [], doc.assignedUserIds || []);
-
-    await sendNotifications({
+    const notificationDoc: IBoardNotificationParams = {
       item: updatedTask,
       user,
       type: NOTIFICATION_TYPES.TASK_EDIT,
-      invitedUsers: addedUserIds,
-      removedUsers: removedUserIds,
       contentType: 'task',
-    });
+    };
+
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds || [], doc.assignedUserIds);
+
+      notificationDoc.invitedUsers = addedUserIds;
+      notificationDoc.removedUsers = removedUserIds;
+    }
+
+    await sendNotifications(notificationDoc);
 
     return updatedTask;
   },
@@ -71,13 +72,15 @@ const taskMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const task = await Tasks.updateTask(_id, {
+    const task = await Tasks.getTask(_id);
+
+    await Tasks.updateTask(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(Tasks, task, 'task', destinationStageId);
+    const { content, action } = await itemsChange(task, 'task', destinationStageId);
 
     await sendNotifications({
       item: task,
@@ -102,11 +105,7 @@ const taskMutations = {
    * Remove task
    */
   async tasksRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const task = await Tasks.findOne({ _id });
-
-    if (!task) {
-      throw new Error('Task not found');
-    }
+    const task = await Tasks.getTask(_id);
 
     await sendNotifications({
       item: task,
@@ -117,6 +116,8 @@ const taskMutations = {
       contentType: 'task',
     });
 
+    await Conformities.removeConformity({ mainType: 'task', mainTypeId: task._id });
+
     return task.remove();
   },
 
@@ -124,12 +125,6 @@ const taskMutations = {
    * Watch task
    */
   async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
-    const task = await Tasks.findOne({ _id });
-
-    if (!task) {
-      throw new Error('Task not found');
-    }
-
     return Tasks.watchTask(_id, isAdd, user._id);
   },
 };

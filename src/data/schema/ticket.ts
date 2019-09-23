@@ -1,19 +1,9 @@
-const commonTypes = `
-  order: Int
-  createdAt: Date
-`;
+import { commonTypes, conformityQueryFields } from './common';
 
 export const types = `
   type Ticket {
     _id: String!
-    name: String!
-    stageId: String
     boardId: String
-    companyIds: [String]
-    customerIds: [String]
-    assignedUserIds: [String]
-    closeDate: Date
-    description: String
     priority: String
     source: String
     companies: [Company]
@@ -23,8 +13,6 @@ export const types = `
     attachments: [Attachment]
     stage: Stage
     pipeline: Pipeline
-    modifiedAt: Date
-    modifiedBy: String
     ${commonTypes}
   }
 `;
@@ -47,26 +35,27 @@ export const queries = `
     overdue: String
     priority: [String]
     source: [String]
+    ${conformityQueryFields}
   ): [Ticket]
 `;
 
 const commonParams = `
-  name: String!,
+  name: String,
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
   attachments: [AttachmentInput],
-  customerIds: [String],
   closeDate: Date,
   description: String,
   order: Int,
   priority: String,
-  source: String
+  source: String,
+  reminderMinute: Int,
+  isComplete: Boolean
 `;
 
 export const mutations = `
-  ticketsAdd(${commonParams}): Ticket
-  ticketsEdit(_id: String!, ${commonParams}): Ticket
+  ticketsAdd(name: String!, ${commonParams}): Ticket
+  ticketsEdit(_id: String!, name: String, ${commonParams}): Ticket
   ticketsChange( _id: String!, destinationStageId: String): Ticket
   ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]
   ticketsRemove(_id: String!): Ticket

@@ -1,10 +1,10 @@
-import { Tickets } from '../../../db/models';
+import { Conformities, Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { itemsChange, sendNotifications } from '../boardUtils';
+import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface ITicketsEdit extends ITicket {
@@ -37,11 +37,7 @@ const ticketMutations = {
    * Edit ticket
    */
   async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }: IContext) {
-    const oldTicket = await Tickets.findOne({ _id });
-
-    if (!oldTicket) {
-      throw new Error('Ticket not found');
-    }
+    const oldTicket = await Tickets.getTicket(_id);
 
     const updatedTicket = await Tickets.updateTicket(_id, {
       ...doc,
@@ -49,16 +45,21 @@ const ticketMutations = {
       modifiedBy: user._id,
     });
 
-    const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds || [], doc.assignedUserIds || []);
-
-    await sendNotifications({
+    const notificationDoc: IBoardNotificationParams = {
       item: updatedTicket,
       user,
       type: NOTIFICATION_TYPES.TICKET_EDIT,
-      invitedUsers: addedUserIds,
-      removedUsers: removedUserIds,
       contentType: 'ticket',
-    });
+    };
+
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds || [], doc.assignedUserIds);
+
+      notificationDoc.invitedUsers = addedUserIds;
+      notificationDoc.removedUsers = removedUserIds;
+    }
+
+    await sendNotifications(notificationDoc);
 
     return updatedTicket;
   },
@@ -71,13 +72,15 @@ const ticketMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const ticket = await Tickets.updateTicket(_id, {
+    const ticket = await Tickets.getTicket(_id);
+
+    await Tickets.updateTicket(_id, {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(Tickets, ticket, 'ticket', destinationStageId);
+    const { content, action } = await itemsChange(ticket, 'ticket', destinationStageId);
 
     await sendNotifications({
       item: ticket,
@@ -102,11 +105,7 @@ const ticketMutations = {
    * Remove ticket
    */
   async ticketsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const ticket = await Tickets.findOne({ _id });
-
-    if (!ticket) {
-      throw new Error('ticket not found');
-    }
+    const ticket = await Tickets.getTicket(_id);
 
     await sendNotifications({
       item: ticket,
@@ -117,6 +116,8 @@ const ticketMutations = {
       contentType: 'ticket',
     });
 
+    await Conformities.removeConformity({ mainType: 'ticket', mainTypeId: ticket._id });
+
     return ticket.remove();
   },
 
@@ -124,12 +125,6 @@ const ticketMutations = {
    * Watch ticket
    */
   async ticketsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
-    const ticket = await Tickets.findOne({ _id });
-
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
     return Tickets.watchTicket(_id, isAdd, user._id);
   },
 };

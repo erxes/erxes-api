@@ -2,7 +2,7 @@ import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES, INTEGRATION_KIND_CHOI
 import { Brands, Companies, Customers, Fields, FieldsGroups, Integrations } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 
-interface IFieldsQuery {
+export interface IFieldsQuery {
   contentType: string;
   contentTypeId?: string;
 }
@@ -162,7 +162,7 @@ const fieldQueries = {
 requireLogin(fieldQueries, 'fieldsCombinedByContentType');
 requireLogin(fieldQueries, 'fieldsDefaultColumnsConfig');
 
-checkPermission(fieldQueries, 'fields', 'showFields', []);
+checkPermission(fieldQueries, 'fields', 'showForms', []);
 
 const fieldsGroupQueries = {
   /**
@@ -178,6 +178,6 @@ const fieldsGroupQueries = {
   },
 };
 
-checkPermission(fieldsGroupQueries, 'fieldsGroups', 'showFieldsGroups', []);
+checkPermission(fieldsGroupQueries, 'fieldsGroups', 'showForms', []);
 
 export { fieldQueries, fieldsGroupQueries };

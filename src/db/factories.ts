@@ -10,6 +10,7 @@ import {
   Channels,
   Companies,
   Configs,
+  Conformities,
   ConversationMessages,
   Conversations,
   Customers,
@@ -19,6 +20,8 @@ import {
   Fields,
   FieldsGroups,
   Forms,
+  FormSubmissions,
+  GrowthHacks,
   ImportHistory,
   Integrations,
   InternalNotes,
@@ -46,6 +49,7 @@ import {
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
   BOARD_TYPES,
+  FORM_TYPES,
   NOTIFICATION_TYPES,
   PRODUCT_TYPES,
   STATUSES,
@@ -53,6 +57,7 @@ import {
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
+import PipelineTemplates from './models/PipelineTemplates';
 
 interface IActivityLogFactoryInput {
   performer?: IActionPerformer;
@@ -200,6 +205,24 @@ export const brandFactory = (params: IBrandFactoryInput = {}) => {
   return brand.save();
 };
 
+interface ITemplateInput {
+  stages?: any[];
+}
+
+export const pipelineTemplateFactory = (params: ITemplateInput = {}) => {
+  const pipelineTemplate = new PipelineTemplates({
+    name: faker.random.word(),
+    description: faker.random.word(),
+    type: BOARD_TYPES.GROWTH_HACK,
+    stages: params.stages || [
+      { name: faker.random.word(), formId: faker.random.word() },
+      { name: faker.random.word(), formId: faker.random.word() },
+    ],
+  });
+
+  return pipelineTemplate.save();
+};
+
 interface IEmailTemplateFactoryInput {
   content?: string;
 }
@@ -343,7 +366,6 @@ interface ICustomerFactoryInput {
   lifecycleState?: string;
   messengerData?: any;
   customFieldsData?: any;
-  companyIds?: string[];
   tagIds?: string[];
   ownerId?: string;
   hasValidEmail?: boolean;
@@ -364,7 +386,6 @@ export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMeth
     lifecycleState: params.lifecycleState || 'lead',
     messengerData: params.messengerData || {},
     customFieldsData: params.customFieldsData || {},
-    companyIds: params.companyIds || [faker.random.number(), faker.random.number()],
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || false,
@@ -497,7 +518,7 @@ interface IIntegrationFactoryInput {
   kind?: string;
   brandId?: string;
   formId?: string;
-  formData?: any | string;
+  leadData?: any | string;
   tagIds?: string[];
 }
 
@@ -510,35 +531,43 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     brandId: params.brandId || Random.id(),
     formId: params.formId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
-    formData: params.formData === 'form' ? params.formData : kind === 'form' ? { thankContent: 'thankContent' } : null,
+    leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds || [],
   };
 
   return Integrations.create(doc);
 };
 
-interface IFormSubmission {
-  customerId: string;
-  submittedAt: Date;
-}
-
 interface IFormFactoryInput {
   title?: string;
   code?: string;
+  type?: string;
   description?: string;
   createdUserId?: string;
-  submissions?: IFormSubmission[];
 }
 
 export const formFactory = async (params: IFormFactoryInput = {}) => {
-  const { title, description, code, submissions, createdUserId } = params;
+  const { title, description, code, type, createdUserId } = params;
 
   return Forms.create({
     title: title || faker.random.word(),
     description: description || faker.random.word(),
     code: code || Random.id(),
-    submissions: submissions || [],
+    type: type || FORM_TYPES.GROWTH_HACK,
     createdUserId: createdUserId || (await userFactory({})),
+  });
+};
+
+interface IFormSubmissionFactoryInput {
+  customerId?: string;
+  formId?: string;
+}
+
+export const formSubmissionFactory = async (params: IFormSubmissionFactoryInput = {}) => {
+  return FormSubmissions.create({
+    submittedAt: new Date(),
+    customerId: params.customerId || faker.random.word(),
+    formId: params.formId || faker.random.word(),
   });
 };
 
@@ -713,23 +742,19 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
   return stage.save();
 };
 
-interface ITicketFactoryInput {
+interface IDealFactoryInput {
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
-  customerIds?: string[];
-  companyIds?: string[];
   noCloseDate?: boolean;
   assignedUserIds?: string[];
 }
 
-export const dealFactory = (params: ITicketFactoryInput = {}) => {
+export const dealFactory = (params: IDealFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     name: faker.random.word(),
     stageId: params.stageId || faker.random.word(),
-    companyIds: params.companyIds || [faker.random.word()],
-    customerIds: params.customerIds || [faker.random.word()],
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
@@ -742,8 +767,6 @@ export const dealFactory = (params: ITicketFactoryInput = {}) => {
 interface ITaskFactoryInput {
   stageId?: string;
   closeDate?: Date;
-  customerIds?: string[];
-  companyIds?: string[];
   noCloseDate?: boolean;
   assignedUserIds?: string[];
 }
@@ -753,8 +776,6 @@ export const taskFactory = (params: ITaskFactoryInput = {}) => {
     ...params,
     name: faker.random.word(),
     stageId: params.stageId || faker.random.word(),
-    companyIds: params.companyIds || [faker.random.word()],
-    customerIds: params.customerIds || [faker.random.word()],
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
@@ -766,8 +787,6 @@ export const taskFactory = (params: ITaskFactoryInput = {}) => {
 interface ITicketFactoryInput {
   stageId?: string;
   closeDate?: Date;
-  customerIds?: string[];
-  companyIds?: string[];
   noCloseDate?: boolean;
   assignedUserIds?: string[];
 }
@@ -777,14 +796,38 @@ export const ticketFactory = (params: ITicketFactoryInput = {}) => {
     ...params,
     name: faker.random.word(),
     stageId: params.stageId || faker.random.word(),
-    companyIds: params.companyIds || [faker.random.word()],
-    customerIds: params.customerIds || [faker.random.word()],
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
   });
 
   return ticket.save();
+};
+
+interface IGrowthHackFactoryInput {
+  stageId?: string;
+  closeDate?: Date;
+  customerIds?: string[];
+  companyIds?: string[];
+  noCloseDate?: boolean;
+  assignedUserIds?: string[];
+  hackStages?: string[];
+}
+
+export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
+  const growthHack = new GrowthHacks({
+    ...params,
+    name: faker.random.word(),
+    stageId: params.stageId || faker.random.word(),
+    companyIds: params.companyIds || [faker.random.word()],
+    customerIds: params.customerIds || [faker.random.word()],
+    ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
+    description: faker.random.word(),
+    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    hackStages: params.hackStages || [faker.random.word()],
+  });
+
+  return growthHack.save();
 };
 
 interface IProductFactoryInput {
@@ -908,4 +951,19 @@ export const usersGroupFactory = () => {
   });
 
   return usersGroup.save();
+};
+
+interface IConformityFactoryInput {
+  mainType: string;
+  mainTypeId: string;
+  relType: string;
+  relTypeId: string;
+}
+
+export const conformityFactory = (params: IConformityFactoryInput) => {
+  const doc = {
+    ...params,
+  };
+
+  return Conformities.addConformity(doc);
 };

@@ -1,11 +1,11 @@
-import { Deals } from '../../../db/models';
+import { Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { itemsChange, sendNotifications } from '../boardUtils';
+import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface IDealsEdit extends IDeal {
@@ -50,11 +50,7 @@ const dealMutations = {
    * Edit deal
    */
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
-    const oldDeal = await Deals.findOne({ _id });
-
-    if (!oldDeal) {
-      throw new Error('Deal not found');
-    }
+    const oldDeal = await Deals.getDeal(_id);
 
     const updatedDeal = await Deals.updateDeal(_id, {
       ...doc,
@@ -62,18 +58,23 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds || []);
-
-    await sendNotifications({
+    const notificationDoc: IBoardNotificationParams = {
       item: updatedDeal,
       user,
       type: NOTIFICATION_TYPES.DEAL_EDIT,
-      invitedUsers: addedUserIds,
-      removedUsers: removedUserIds,
       action: `has updated deal`,
       content: `${updatedDeal.name}`,
       contentType: 'deal',
-    });
+    };
+
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds);
+
+      notificationDoc.invitedUsers = addedUserIds;
+      notificationDoc.removedUsers = removedUserIds;
+    }
+
+    await sendNotifications(notificationDoc);
 
     if (updatedDeal) {
       await putUpdateLog(
@@ -97,11 +98,7 @@ const dealMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: IContext,
   ) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
+    const deal = await Deals.getDeal(_id);
 
     await Deals.updateDeal(_id, {
       modifiedAt: new Date(),
@@ -109,7 +106,7 @@ const dealMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(Deals, deal, 'deal', destinationStageId);
+    const { content, action } = await itemsChange(deal, 'deal', destinationStageId);
 
     await sendNotifications({
       item: deal,
@@ -134,11 +131,7 @@ const dealMutations = {
    * Remove deal
    */
   async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
+    const deal = await Deals.getDeal(_id);
 
     await sendNotifications({
       item: deal,
@@ -160,6 +153,8 @@ const dealMutations = {
       user,
     );
 
+    await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
+
     return removed;
   },
 
@@ -167,12 +162,6 @@ const dealMutations = {
    * Watch deal
    */
   async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
-    const deal = await Deals.findOne({ _id });
-
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-
     return Deals.watchDeal(_id, isAdd, user._id);
   },
 };
