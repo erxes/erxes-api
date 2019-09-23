@@ -15,6 +15,7 @@ describe('Test products mutations', () => {
     $description: String,
     $categoryId: String,
     $sku: String
+    $code: String
   `;
 
   const commonParams = `
@@ -23,6 +24,7 @@ describe('Test products mutations', () => {
     description: $description,
     categoryId: $categoryId
     sku: $sku
+    code: $code
   `;
 
   beforeEach(async () => {
@@ -45,6 +47,7 @@ describe('Test products mutations', () => {
       sku: product.sku,
       description: product.description,
       categoryId: productCategory._id,
+      code: '123',
     };
 
     const mutation = `
@@ -55,6 +58,7 @@ describe('Test products mutations', () => {
           type
           description
           sku
+          code
         }
       }
     `;
@@ -65,6 +69,7 @@ describe('Test products mutations', () => {
     expect(createdProduct.type).toEqual(args.type);
     expect(createdProduct.description).toEqual(args.description);
     expect(createdProduct.sku).toEqual(args.sku);
+    expect(createdProduct.code).toEqual(args.code);
   });
 
   test('Update product', async () => {
@@ -74,6 +79,7 @@ describe('Test products mutations', () => {
       type: product.type,
       sku: product.sku,
       description: product.description,
+      code: product.code,
     };
 
     const mutation = `
@@ -84,6 +90,7 @@ describe('Test products mutations', () => {
           type
           description
           sku
+          code
         }
       }
     `;

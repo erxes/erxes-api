@@ -843,6 +843,7 @@ export const productFactory = (params: IProductFactoryInput = {}) => {
     type: params.type || PRODUCT_TYPES.PRODUCT,
     description: params.description || faker.random.word(),
     sku: faker.random.word(),
+    code: faker.random.word(),
     createdAt: new Date(),
   });
 
