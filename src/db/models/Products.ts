@@ -22,7 +22,7 @@ export const loadProductClass = () => {
      */
     public static async createProduct(doc: IProduct) {
       if (doc.categoryCode) {
-        const category = await ProductCategories.findOne({ code: doc.categoryCode });
+        const category = await ProductCategories.getProductCatogery({ code: doc.categoryCode });
         doc.categoryId = category ? category._id : '';
       }
 
@@ -73,7 +73,7 @@ export const loadProductClass = () => {
 };
 
 export interface IProductCategoryModel extends Model<IProductCategoryDocument> {
-  getProductCatogery(_id: string): Promise<IProductCategoryDocument>;
+  getProductCatogery(selector: any): Promise<IProductCategoryDocument>;
   createProductCategory(doc: IProductCategory): Promise<IProductCategoryDocument>;
   updateProductCategory(_id: string, doc: IProduct): Promise<IProductCategoryDocument>;
   removeProductCategory(_id: string): void;
@@ -86,8 +86,8 @@ export const loadProductCategoryClass = () => {
      * Get Product Cagegory
      */
 
-    public static async getProductCatogery(_id: IProductCategory) {
-      const productCategory = await ProductCategories.findOne({ _id });
+    public static async getProductCatogery(selector: any) {
+      const productCategory = await ProductCategories.findOne(selector);
 
       if (!productCategory) {
         throw new Error('Product & service category not found');
@@ -100,6 +100,11 @@ export const loadProductCategoryClass = () => {
      * Create a product categorys
      */
     public static async createProductCategory(doc: IProductCategory) {
+      const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
+
+      // Generating order
+      doc.order = await this.generateOrder(parentCategory, doc);
+
       return ProductCategories.create(doc);
     }
 
@@ -107,7 +112,16 @@ export const loadProductCategoryClass = () => {
      * Update Product category
      */
     public static async updateProductCategory(_id: string, doc: IProductCategory) {
-      const productCategory = await ProductCategories.getProductCatogery(_id);
+      const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
+
+      if (parentCategory && parentCategory.parentId === _id) {
+        throw new Error('Cannot change category');
+      }
+
+      // Generating  order
+      doc.order = await this.generateOrder(parentCategory, doc);
+
+      const productCategory = await ProductCategories.getProductCatogery({ _id });
 
       const childCategories = await ProductCategories.find({
         $and: [{ order: { $regex: new RegExp(productCategory.order, 'i') } }, { _id: { $ne: _id } }],
@@ -131,7 +145,7 @@ export const loadProductCategoryClass = () => {
      * Remove Product category
      */
     public static async removeProductCategory(_id: string) {
-      await ProductCategories.getProductCatogery(_id);
+      await ProductCategories.getProductCatogery({ _id });
 
       let count = await Products.countDocuments({ categoryId: _id });
       count += await ProductCategories.countDocuments({ parentId: _id });
@@ -141,6 +155,15 @@ export const loadProductCategoryClass = () => {
       }
 
       return ProductCategories.deleteOne({ _id });
+    }
+
+    /**
+     * Generatin order
+     */
+    public static async generateOrder(parentCategory: IProductCategory, doc: IProductCategory) {
+      const order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
+
+      return order;
     }
   }
 
