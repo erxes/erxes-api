@@ -8,6 +8,10 @@ export const types = `
     name: String
     text: String
   }
+
+  type OnboardingNotification {
+    type: String
+  }
 `;
 
 export const queries = `

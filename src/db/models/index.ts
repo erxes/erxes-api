@@ -25,7 +25,7 @@ import { Permissions, UsersGroups } from './Permissions';
 import PipelineTemplates from './PipelineTemplates';
 import Products from './Products';
 import ResponseTemplates from './ResponseTemplates';
-import RobotEntries from './RobotEntries';
+import { RobotEntries } from './Robot';
 import Scripts from './Scripts';
 import Segments from './Segments';
 import Tags from './Tags';
