@@ -22,7 +22,7 @@ export const types = `
     customFieldsData: JSON
     createdAt: Date
 
-    categoryName: String
+    category: ProductCategory
   }
 `;
 
