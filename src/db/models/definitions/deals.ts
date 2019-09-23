@@ -6,6 +6,7 @@ import { field } from './utils';
 export interface IProduct {
   name: string;
   categoryId?: string;
+  categoryCode?: string;
   type?: string;
   description?: string;
   sku?: string;

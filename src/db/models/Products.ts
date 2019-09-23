@@ -21,6 +21,11 @@ export const loadProductClass = () => {
      * Create a product
      */
     public static async createProduct(doc: IProduct) {
+      if (doc.categoryCode) {
+        const category = await ProductCategories.findOne({ code: doc.categoryCode });
+        doc.categoryId = category ? category._id : '';
+      }
+
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
       return Products.create(doc);

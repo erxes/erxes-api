@@ -1,5 +1,5 @@
 import { Conformities, Fields } from '../../../db/models';
-import { COMPANY_BASIC_INFOS, CUSTOMER_BASIC_INFOS } from '../../constants';
+import { COMPANY_BASIC_INFOS, CUSTOMER_BASIC_INFOS, PRODUCT_BASIC_INFOS } from '../../constants';
 
 // Checking field names, All field names must be configured correctly
 export const checkFieldNames = async (type: string, fields: string[]) => {
@@ -9,9 +9,17 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
     basicInfos = COMPANY_BASIC_INFOS;
   }
 
+  if (type === 'product') {
+    basicInfos = PRODUCT_BASIC_INFOS;
+  }
+
   const properties: any[] = [];
 
   for (const fieldName of fields) {
+    if (!fieldName) {
+      return properties;
+    }
+
     const property: { [key: string]: any } = {};
 
     const fieldObj = await Fields.findOne({ text: fieldName });
