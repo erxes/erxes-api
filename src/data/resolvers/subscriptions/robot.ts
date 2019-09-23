@@ -2,11 +2,11 @@ import { withFilter } from 'apollo-server-express';
 import { graphqlPubsub } from '../../../pubsub';
 
 export default {
-  onboardingHistoryChanged: {
+  onboardingChanged: {
     subscribe: withFilter(
-      () => graphqlPubsub.asyncIterator('onboardingHistoryChanged'),
+      () => graphqlPubsub.asyncIterator('onboardingChanged'),
       (payload, variables) => {
-        return payload.onboardingHistory.userId === variables.userId;
+        return payload.onboardingChanged.userId === variables.userId;
       },
     ),
   },

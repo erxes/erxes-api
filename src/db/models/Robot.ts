@@ -38,29 +38,27 @@ export const loadOnboardingHistoryClass = () => {
     public static async getOrCreate({ type, user }: IGetOrCreateDoc): Promise<IGetOrCreateResponse> {
       const action = `${type}Create`;
 
-      let prevEntry = await OnboardingHistories.findOne({ userId: user._id, isCompleted: true });
+      const prevEntry = await OnboardingHistories.findOne({ userId: user._id });
 
-      if (prevEntry) {
+      if (!prevEntry) {
+        const entry = await OnboardingHistories.create({ userId: user._id, completedActions: [action] });
+        return { status: 'created', entry };
+      }
+
+      if (prevEntry.isCompleted) {
         return { status: 'completed', entry: prevEntry };
       }
 
-      prevEntry = await OnboardingHistories.findOne({ userId: user._id, completedActions: { $in: [action] } });
-
-      if (prevEntry) {
+      if (prevEntry.completedActions.includes(action)) {
         return { status: 'prev', entry: prevEntry };
       }
 
-      prevEntry = await OnboardingHistories.findOne({ userId: user._id });
+      const updatedEntry = await OnboardingHistories.update(
+        { userId: user._id },
+        { $push: { completedActions: action } },
+      );
 
-      if (prevEntry) {
-        await OnboardingHistories.update({ userId: user._id }, { $push: { completedActions: action } });
-
-        return { status: 'prev', entry: prevEntry };
-      }
-
-      const entry = await OnboardingHistories.create({ userId: user._id, completedActions: [action] });
-
-      return { status: 'created', entry };
+      return { status: 'prev', entry: updatedEntry };
     }
   }
 

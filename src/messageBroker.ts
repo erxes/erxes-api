@@ -99,6 +99,19 @@ const initConsumer = async () => {
     connection = await amqplib.connect(RABBITMQ_HOST);
     channel = await connection.createChannel();
 
+    // graphql subscriptions call =========
+    await channel.assertQueue('callPublish');
+
+    channel.consume('callPublish', async msg => {
+      if (msg !== null) {
+        const params = JSON.parse(msg.content.toString());
+
+        graphqlPubsub.publish(params.name, params.data);
+
+        channel.ack(msg);
+      }
+    });
+
     // listen for widgets api =========
     await channel.assertQueue('widgetNotification');
 

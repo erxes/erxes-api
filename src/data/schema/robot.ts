@@ -10,7 +10,8 @@ export const types = `
   }
 
   type OnboardingNotification {
-    type: String
+    userId: String
+    action: String
   }
 `;
 

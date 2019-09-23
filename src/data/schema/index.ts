@@ -245,7 +245,7 @@ export const subscriptions = `
     activityLogsChanged: Boolean
     importHistoryChanged(_id: String!): ImportHistory
     notificationInserted(userId: String): Notification
-    onboardingHistoryChanged(userId: String): OnboardingNotification
+    onboardingChanged(userId: String!): OnboardingNotification
   }
 `;
 
