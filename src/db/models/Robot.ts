@@ -29,8 +29,13 @@ interface IGetOrCreateResponse {
   entry: IOnboardingHistoryDocument;
 }
 
+interface IActionsCompletenessResponse {
+  [key: string]: boolean;
+}
+
 export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocument> {
   getOrCreate(doc: IGetOrCreateDoc): Promise<IGetOrCreateResponse>;
+  actionsCompletness(actions: string[], user: IUserDocument): IActionsCompletenessResponse;
 }
 
 export const loadOnboardingHistoryClass = () => {
@@ -59,6 +64,20 @@ export const loadOnboardingHistoryClass = () => {
       );
 
       return { status: 'prev', entry: updatedEntry };
+    }
+
+    public static async actionsCompletness(
+      actions: string[],
+      user: IUserDocument,
+    ): Promise<IActionsCompletenessResponse> {
+      const result: IActionsCompletenessResponse = {};
+
+      for (const action of actions) {
+        const selector = { userId: user._id, completedActions: { $in: [action] } };
+        result[action] = (await OnboardingHistories.find(selector).countDocuments()) > 0;
+      }
+
+      return result;
     }
   }
 

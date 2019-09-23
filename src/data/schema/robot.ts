@@ -4,9 +4,22 @@ export const types = `
     data: JSON
   }
 
+  type OnboaringFeatureAction {
+    name: String
+    url: String
+  }
+
   type OnboaringFeature {
     name: String
     text: String
+    description: String
+    videoUrl: String
+    actions: [OnboaringFeatureAction]
+  }
+
+  type OnboardingGetAvailableFeaturesResponse {
+    feature: OnboaringFeature
+    isComplete: Boolean
   }
 
   type OnboardingNotification {
@@ -18,5 +31,5 @@ export const types = `
 export const queries = `
   robotEntries: [RobotEntry]
   onboardingActionsCompleteness(actions: [String]): JSON
-  onboardingGetAvailableFeatures: [OnboaringFeature]
+  onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]
 `;
