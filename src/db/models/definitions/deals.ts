@@ -58,7 +58,7 @@ export interface IDealDocument extends IDeal, Document {
 export const productSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
-  categoryId: field({ type: String, optional: true }),
+  categoryId: field({ type: String }),
   type: field({
     type: String,
     enum: PRODUCT_TYPES.ALL,
