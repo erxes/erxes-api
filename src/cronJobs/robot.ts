@@ -8,21 +8,27 @@ export const checkOnboarding = async () => {
   const users = await Users.find({}).lean();
 
   for (const user of users) {
-    if ((await OnboardingHistories.find({ userId: user._id, isCompleted: true }).countDocuments()) > 0) {
+    const entry = await OnboardingHistories.findOne({ userId: user._id });
+
+    if (entry && entry.isCompleted) {
       continue;
     }
 
-    if (!(await OnboardingHistories.findOne({ userId: user._id }))) {
-      sendMessage('callPublish', {
-        name: 'onboardingChanged',
-        data: {
-          onboardingChanged: {
-            userId: user._id,
-            type: 'initial',
-          },
-        },
-      });
+    let type = 'initial';
+
+    if (entry) {
+      type = 'inComplete';
     }
+
+    sendMessage('callPublish', {
+      name: 'onboardingChanged',
+      data: {
+        onboardingChanged: {
+          userId: user._id,
+          type,
+        },
+      },
+    });
   }
 };
 
