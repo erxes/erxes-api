@@ -45,7 +45,7 @@ const productCategoryParams = `
 
 export const queries = `
   productCategories(parentId: String, searchValue: String): [ProductCategory]
-  productCategoriesTotalCount(parentId: String): Int
+  productCategoriesTotalCount: Int
 
   products(type: String, categoryId: String, searchValue: String, page: Int, perPage: Int ids: [String]): [Product]
   productsTotalCount(type: String): Int
