@@ -22,7 +22,7 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
 
     const property: { [key: string]: any } = {};
 
-    const fieldObj = await Fields.findOne({ text: fieldName });
+    const fieldObj = await Fields.findOne({ text: fieldName, contentType: type });
 
     // Collecting basic fields
     if (basicInfos.includes(fieldName)) {
