@@ -120,7 +120,7 @@ const productMutations = {
     const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
 
     if (parentCategory && parentCategory.parentId === _id) {
-      throw new Error('Cannont change category');
+      throw new Error('Cannot change category');
     }
 
     // Generating  order

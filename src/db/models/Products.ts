@@ -90,7 +90,7 @@ export const loadProductCategoryClass = () => {
       const productCategory = await ProductCategories.findOne({ _id });
 
       if (!productCategory) {
-        throw new Error('Product & service category not foun');
+        throw new Error('Product & service category not found');
       }
 
       return productCategory;
@@ -131,7 +131,7 @@ export const loadProductCategoryClass = () => {
      * Remove Product category
      */
     public static async removeProductCategory(_id: string) {
-      const productCategory = await ProductCategories.findOne({ _id });
+      const productCategory = await ProductCategories.getProductCatogery(_id);
 
       if (!productCategory) {
         throw new Error('Product category not found');
