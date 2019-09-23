@@ -29,6 +29,7 @@ describe('Test products model', () => {
       description: product.description,
       sku: product.sku,
       categoryId: productCategory._id,
+      code: '123',
     });
 
     expect(productObj).toBeDefined();
@@ -45,6 +46,7 @@ describe('Test products model', () => {
       description: `${product.description}-update`,
       sku: `${product.sku}-update`,
       categoryId: productCategory._id,
+      code: '321',
     });
 
     expect(productObj).toBeDefined();
