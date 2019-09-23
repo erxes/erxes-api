@@ -1,34 +1,24 @@
-import { Brands, Channels, Integrations, RobotEntries } from '../../../db/models';
+import { RobotEntries } from '../../../db/models';
+import { OnboardingHistories } from '../../../db/models/Robot';
 import { moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 
 const robotQueries = {
   robotEntries(_root) {
     return RobotEntries.find();
   },
 
-  async robotSettingsCompleteness(_root, { settingNames }: { settingNames: string[] }) {
+  async onboardingActionsCompleteness(_root, { actions }: { actions: string[] }, { user }: IContext) {
     const result: { [key: string]: boolean } = {};
 
-    for (const settingName of settingNames) {
-      switch (settingName) {
-        case 'brands': {
-          result.brands = Boolean(await Brands.find().count());
-        }
-
-        case 'channels': {
-          result.channels = Boolean(await Channels.find().count());
-        }
-
-        case 'integrations': {
-          result.integrations = Boolean(await Integrations.find().count());
-        }
-      }
+    for (const action of actions) {
+      result[action] = (await OnboardingHistories.find({ userId: user._id, action }).countDocuments()) > 0;
     }
 
     return result;
   },
 
-  robotOnboardingGetAvailableFeatures(_root) {
+  onboardingGetAvailableFeatures(_root) {
     return [
       { name: 'inbox', text: 'Inbox' },
       { name: 'contacts', text: 'Contact' },

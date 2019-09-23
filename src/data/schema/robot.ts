@@ -4,7 +4,7 @@ export const types = `
     data: JSON
   }
 
-  type RobotOnboaringFeature {
+  type OnboaringFeature {
     name: String
     text: String
   }
@@ -17,6 +17,6 @@ export const types = `
 
 export const queries = `
   robotEntries: [RobotEntry]
-  robotSettingsCompleteness(settingNames: [String]): JSON
-  robotOnboardingGetAvailableFeatures: [RobotOnboaringFeature]
+  onboardingActionsCompleteness(actions: [String]): JSON
+  onboardingGetAvailableFeatures: [OnboaringFeature]
 `;

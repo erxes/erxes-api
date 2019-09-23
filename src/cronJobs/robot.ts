@@ -37,7 +37,7 @@ export const checkOnboarding = async () => {
  * │    └──────────────────── minute (0 - 59)
  * └───────────────────────── second (0 - 59, OPTIONAL)
  */
-schedule.scheduleJob('*/5 * * * * *', () => {
+schedule.scheduleJob('*/10 * * * * *', () => {
   debugCrons('Checked onboarding');
 
   checkOnboarding();
