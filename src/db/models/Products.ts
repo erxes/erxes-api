@@ -23,7 +23,7 @@ export const loadProductClass = () => {
     public static async createProduct(doc: IProduct) {
       if (doc.categoryCode) {
         const category = await ProductCategories.getProductCatogery({ code: doc.categoryCode });
-        doc.categoryId = category ? category._id : '';
+        doc.categoryId = category._id;
       }
 
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
