@@ -102,7 +102,7 @@ export const loadProductCategoryClass = () => {
     public static async createProductCategory(doc: IProductCategory) {
       const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
 
-      // Generating order
+      // Generatingg order
       doc.order = await this.generateOrder(parentCategory, doc);
 
       return ProductCategories.create(doc);
@@ -118,7 +118,7 @@ export const loadProductCategoryClass = () => {
         throw new Error('Cannot change category');
       }
 
-      // Generating  order
+      // Generatingg  order
       doc.order = await this.generateOrder(parentCategory, doc);
 
       const productCategory = await ProductCategories.getProductCatogery({ _id });
@@ -158,7 +158,7 @@ export const loadProductCategoryClass = () => {
     }
 
     /**
-     * Generatin order
+     * Generating order
      */
     public static async generateOrder(parentCategory: IProductCategory, doc: IProductCategory) {
       const order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
