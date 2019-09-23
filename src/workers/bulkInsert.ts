@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as xlsxPopulate from 'xlsx-populate';
-import { checkFieldNames } from '../data/modules/coc/utils';
+import { checkFieldNames } from '../data/modules/fields/utils';
 import { can } from '../data/permissions/utils';
 import { ImportHistory } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
