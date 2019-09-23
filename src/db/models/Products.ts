@@ -131,11 +131,7 @@ export const loadProductCategoryClass = () => {
      * Remove Product category
      */
     public static async removeProductCategory(_id: string) {
-      const productCategory = await ProductCategories.getProductCatogery(_id);
-
-      if (!productCategory) {
-        throw new Error('Product category not found');
-      }
+      await ProductCategories.getProductCatogery(_id);
 
       let count = await Products.countDocuments({ categoryId: _id });
       count += await ProductCategories.countDocuments({ parentId: _id });
