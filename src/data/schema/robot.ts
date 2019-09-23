@@ -11,7 +11,7 @@ export const types = `
 
   type OnboardingNotification {
     userId: String
-    action: String
+    type: String
   }
 `;
 

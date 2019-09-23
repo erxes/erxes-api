@@ -572,7 +572,13 @@ export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
   const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
 
   OnboardingHistories.getOrCreate({ type: doc.type, user })
-    .then(() => debugBase('ok'))
+    .then(({ status }) => {
+      if (status === 'created') {
+        graphqlPubsub.publish('onboardingChanged', {
+          onboardingChanged: { userId: user._id, type: 'actionPerformed' },
+        });
+      }
+    })
     .catch(e => debugBase(e));
 
   return putLog(doc, user);

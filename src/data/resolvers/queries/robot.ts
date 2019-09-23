@@ -12,7 +12,9 @@ const robotQueries = {
     const result: { [key: string]: boolean } = {};
 
     for (const action of actions) {
-      result[action] = (await OnboardingHistories.find({ userId: user._id, action }).countDocuments()) > 0;
+      result[action] =
+        (await OnboardingHistories.find({ userId: user._id, completedActions: { $in: [action] } }).countDocuments()) >
+        0;
     }
 
     return result;

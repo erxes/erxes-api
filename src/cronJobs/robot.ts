@@ -18,7 +18,7 @@ export const checkOnboarding = async () => {
         data: {
           onboardingChanged: {
             userId: user._id,
-            action: 'initial',
+            type: 'initial',
           },
         },
       });
