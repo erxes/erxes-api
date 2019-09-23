@@ -13,11 +13,12 @@ export const types = `
 
   type Product {
     _id: String!
-    categoryId: String
     name: String
+    code: String
     type: String
     description: String
     sku: String
+    categoryId: String
     customFieldsData: JSON
     createdAt: Date
 
@@ -31,6 +32,7 @@ const productParams = `
   type: String,
   description: String,
   sku: String,
+  code: String,
   customFieldsData: JSON
 `;
 

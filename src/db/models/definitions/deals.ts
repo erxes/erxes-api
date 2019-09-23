@@ -10,6 +10,7 @@ export interface IProduct {
   type?: string;
   description?: string;
   sku?: string;
+  code: string;
   customFieldsData?: any;
   productId?: string;
 }
@@ -58,6 +59,7 @@ export interface IDealDocument extends IDeal, Document {
 export const productSchema = new Schema({
   _id: field({ pkey: true }),
   name: field({ type: String }),
+  code: field({ type: String, unique: true }),
   categoryId: field({ type: String }),
   type: field({
     type: String,
