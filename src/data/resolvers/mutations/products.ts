@@ -119,6 +119,10 @@ const productMutations = {
   async productCategoriesEdit(_root, { _id, ...doc }: IProductCategoriesEdit, { user, docModifier }: IContext) {
     const parentCategory = await ProductCategories.findOne({ _id: doc.parentId }).lean();
 
+    if (parentCategory && parentCategory.parentId === _id) {
+      throw new Error('Cannont change category');
+    }
+
     // Generating  order
     doc.order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
 
