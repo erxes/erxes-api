@@ -71,10 +71,8 @@ const productQueries = {
     return ProductCategories.find(filter).sort({ order: 1 });
   },
 
-  productCategoriesTotalCount(_root, { commonQuerySelector }: IContext) {
-    const filter: any = commonQuerySelector;
-
-    return ProductCategories.find(filter).countDocuments();
+  productCategoriesTotalCount(_root) {
+    return ProductCategories.find().countDocuments();
   },
 
   productDetail(_root, { _id }: { _id: string }) {
