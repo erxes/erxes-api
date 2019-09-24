@@ -42,35 +42,35 @@ const checklistMutations = {
    * Adds checklist object and also adds an activity log
    */
   async checklistsAdd(_root, args: IChecklist, { user }: IContext) {
-    switch (args.contentType) {
-      case 'deal': {
-        const deal = await Deals.getDeal(args.contentTypeId);
-
-        await sendNotificationOfItems(deal, args.contentType, `"${deal.name}"`, user);
-        break;
-      }
-
-      case 'ticket': {
-        const ticket = await Tickets.getTicket(args.contentTypeId);
-
-        await sendNotificationOfItems(ticket, args.contentType, `"${ticket.name}"`, user);
-        break;
-      }
-
-      case 'task': {
-        const task = await Tasks.getTask(args.contentTypeId);
-
-        await sendNotificationOfItems(task, args.contentType, `"${task.name}"`, user);
-        break;
-      }
-
-      default:
-        break;
-    }
-
     const checklist = await Checklists.createChecklist(args, user);
 
     if (checklist) {
+      switch (args.contentType) {
+        case 'deal': {
+          const deal = await Deals.getDeal(args.contentTypeId);
+
+          await sendNotificationOfItems(deal, args.contentType, `"${deal.name}"`, user);
+          break;
+        }
+
+        case 'ticket': {
+          const ticket = await Tickets.getTicket(args.contentTypeId);
+
+          await sendNotificationOfItems(ticket, args.contentType, `"${ticket.name}"`, user);
+          break;
+        }
+
+        case 'task': {
+          const task = await Tasks.getTask(args.contentTypeId);
+
+          await sendNotificationOfItems(task, args.contentType, `"${task.name}"`, user);
+          break;
+        }
+
+        default:
+          break;
+      }
+
       await putCreateLog(
         {
           type: 'checklist',
