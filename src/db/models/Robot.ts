@@ -36,6 +36,7 @@ interface IActionsCompletenessResponse {
 export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocument> {
   getOrCreate(doc: IGetOrCreateDoc): Promise<IGetOrCreateResponse>;
   actionsCompletness(actions: string[], user: IUserDocument): IActionsCompletenessResponse;
+  forceComplete(userId: string): void;
 }
 
 export const loadOnboardingHistoryClass = () => {
@@ -78,6 +79,10 @@ export const loadOnboardingHistoryClass = () => {
       }
 
       return result;
+    }
+
+    public static async forceComplete(userId: string): Promise<void> {
+      return OnboardingHistories.updateOne({ userId }, { $set: { isCompleted: true } });
     }
   }
 

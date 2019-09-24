@@ -113,7 +113,7 @@ import {
   types as PipelineTemplateTypes,
 } from './pipelineTemplate';
 
-import { queries as RobotQueries, types as RobotTypes } from './robot';
+import { mutations as RobotMutations, queries as RobotQueries, types as RobotTypes } from './robot';
 
 import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
 
@@ -230,6 +230,7 @@ export const mutations = `
     ${GrowthHackMutations}
     ${PipelineTemplateMutations}
     ${ConformityMutations}
+    ${RobotMutations}
   }
 `;
 

@@ -33,3 +33,7 @@ export const queries = `
   onboardingActionsCompleteness(actions: [String]): JSON
   onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]
 `;
+
+export const mutations = `
+  onboardingForceComplete: JSON
+`;
