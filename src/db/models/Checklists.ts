@@ -108,7 +108,7 @@ export const loadItemClass = () => {
     /*
      * Create new checklistItem
      */
-    public static async createChecklist({ checklistId, ...fields }: IChecklistItem, user: IUserDocument) {
+    public static async createChecklistItem({ checklistId, ...fields }: IChecklistItem, user: IUserDocument) {
       const checklistItem = await ChecklistItems.create({
         checklistId,
         createdUserId: user._id,
@@ -131,7 +131,7 @@ export const loadItemClass = () => {
     /*
      * Remove checklist
      */
-    public static async removeChecklist(_id: string) {
+    public static async removeChecklistItem(_id: string) {
       const checklistItem = await ChecklistItems.findOne({ _id });
 
       if (!checklistItem) {

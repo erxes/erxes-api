@@ -2,12 +2,12 @@ import { ChecklistItems } from '../../db/models';
 import { IChecklistDocument } from '../../db/models/definitions/checklists';
 
 export default {
-  async checklistItems(checklist: IChecklistDocument) {
+  checklistItems(checklist: IChecklistDocument) {
     return ChecklistItems.find({ checklistId: checklist._id });
   },
 
   async checklistPercent(checklist: IChecklistDocument) {
-    const checklistItems = await this.checklistItems(checklist);
+    const checklistItems = await ChecklistItems.find({ checklistId: checklist._id });
 
     if (checklistItems.length === 0) {
       return 0;

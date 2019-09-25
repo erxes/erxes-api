@@ -5,7 +5,7 @@ const checklistQueries = {
   /**
    * Checklists list
    */
-  checklists(_root, { contentType, contentTypeId }: { contentType: string; contentTypeId: string }) {
+  async checklists(_root, { contentType, contentTypeId }: { contentType: string; contentTypeId: string }) {
     return Checklists.find({ contentType, contentTypeId }).sort({
       createdDate: 1,
     });

@@ -1,11 +1,8 @@
 export const types = `
   type ChecklistItem {
     _id: String!
-    checklistId: String
-    content: String
     isChecked: Boolean
-    createdUserId: String
-    createdDate: Date
+    content: String
   }
 
   type Checklist {
@@ -16,9 +13,8 @@ export const types = `
     createdUserId: String
     createdDate: Date
     checklistItems: [ChecklistItem]
-    checklistPercent: Int
+    checklistPercent: Float
   }
-
 `;
 
 export const queries = `
@@ -30,7 +26,7 @@ export const mutations = `
   checklistsEdit(_id: String!, title: String): Checklist
   checklistsRemove(_id: String!): Checklist
 
-  checklistItemsAdd(checklistId: String, content: String, mentionedUserIds: [String]): ChecklistItem
+  checklistItemsAdd(checklistId: String, content: String, isChecked: Boolean, mentionedUserIds: [String]): ChecklistItem
   checklistItemsEdit(_id: String!, content: String, isChecked: Boolean, mentionedUserIds: [String]): ChecklistItem
   checklistItemsRemove(_id: String!): ChecklistItem
 `;
