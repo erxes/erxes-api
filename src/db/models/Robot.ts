@@ -60,7 +60,7 @@ export const loadOnboardingHistoryClass = () => {
         return { status: 'prev', entry: prevEntry };
       }
 
-      const updatedEntry = await OnboardingHistories.update(
+      const updatedEntry = await OnboardingHistories.updateOne(
         { userId: user._id },
         { $push: { completedActions: action } },
       );

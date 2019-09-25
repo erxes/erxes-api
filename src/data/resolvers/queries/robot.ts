@@ -59,7 +59,7 @@ const robotQueries = {
     const results: Array<{ feature: IFeature; isComplete: boolean }> = [];
 
     for (const feature of FEATURES) {
-      const selector = { userId: user._id, completedActions: { $in: (feature.actions || []).map(a => a.name) } };
+      const selector = { userId: user._id, completedActions: { $all: (feature.actions || []).map(a => a.name) } };
 
       results.push({
         feature,
