@@ -2,22 +2,16 @@ import * as schedule from 'node-schedule';
 import { Users } from '../db/models';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugCrons } from '../debuggers';
-import { sendMessage } from './messageBroker';
+import { sendMessage } from '../messageBroker';
 
-export const checkOnboarding = async () => {
+const checkOnboarding = async () => {
   const users = await Users.find({}).lean();
 
   for (const user of users) {
-    const entry = await OnboardingHistories.findOne({ userId: user._id });
+    const status = await OnboardingHistories.userStatus(user._id);
 
-    if (entry && entry.isCompleted) {
+    if (status === 'completed') {
       continue;
-    }
-
-    let type = 'initial';
-
-    if (entry) {
-      type = 'inComplete';
     }
 
     sendMessage('callPublish', {
@@ -25,7 +19,7 @@ export const checkOnboarding = async () => {
       data: {
         onboardingChanged: {
           userId: user._id,
-          type,
+          type: status,
         },
       },
     });
@@ -43,7 +37,7 @@ export const checkOnboarding = async () => {
  * │    └──────────────────── minute (0 - 59)
  * └───────────────────────── second (0 - 59, OPTIONAL)
  */
-schedule.scheduleJob('*/10 * * * * *', () => {
+schedule.scheduleJob('0 45 23 * * *', () => {
   debugCrons('Checked onboarding');
 
   checkOnboarding();

@@ -35,5 +35,6 @@ export const queries = `
 `;
 
 export const mutations = `
+  onboardingCheckStatus: String
   onboardingForceComplete: JSON
 `;

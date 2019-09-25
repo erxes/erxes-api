@@ -37,6 +37,7 @@ export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocumen
   getOrCreate(doc: IGetOrCreateDoc): Promise<IGetOrCreateResponse>;
   actionsCompletness(actions: string[], user: IUserDocument): IActionsCompletenessResponse;
   forceComplete(userId: string): void;
+  userStatus(userId: string): string;
 }
 
 export const loadOnboardingHistoryClass = () => {
@@ -83,6 +84,20 @@ export const loadOnboardingHistoryClass = () => {
 
     public static async forceComplete(userId: string): Promise<void> {
       return OnboardingHistories.updateOne({ userId }, { $set: { isCompleted: true } });
+    }
+
+    public static async userStatus(userId: string): Promise<string> {
+      const entry = await OnboardingHistories.findOne({ userId });
+
+      if (entry && entry.isCompleted) {
+        return 'completed';
+      }
+
+      if (entry) {
+        return 'inComplete';
+      }
+
+      return 'initial';
     }
   }
 
