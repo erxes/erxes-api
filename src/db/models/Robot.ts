@@ -65,7 +65,7 @@ export const loadOnboardingHistoryClass = () => {
         { $push: { completedActions: action } },
       );
 
-      return { status: 'prev', entry: updatedEntry };
+      return { status: 'created', entry: updatedEntry };
     }
 
     public static async actionsCompletness(

@@ -575,7 +575,7 @@ export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
     .then(({ status }) => {
       if (status === 'created') {
         graphqlPubsub.publish('onboardingChanged', {
-          onboardingChanged: { userId: user._id, type: 'actionPerformed' },
+          onboardingChanged: { userId: user._id, type: doc.type },
         });
       }
     })
