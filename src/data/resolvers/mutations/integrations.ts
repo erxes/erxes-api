@@ -105,8 +105,6 @@ const integrationMutations = {
       kind = 'facebook';
     }
 
-    console.log(kind, doc.platform);
-
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
