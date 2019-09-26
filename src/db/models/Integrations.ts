@@ -153,7 +153,13 @@ export const loadClass = () => {
       const customerIds = customers.map(cus => cus._id);
 
       for (const customerId of customerIds) {
-        await Customers.removeCustomer(customerId);
+        const otherConversationsCount = await Conversations.countDocuments({
+          $and: [{ integrationId: { $ne: _id } }, { customerId }],
+        }).lean();
+
+        if (otherConversationsCount <= 0) {
+          await Customers.removeCustomer(customerId);
+        }
       }
 
       // Remove form
