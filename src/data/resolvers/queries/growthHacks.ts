@@ -30,6 +30,15 @@ const growthHackQueries = {
       .limit(10);
   },
 
+  /**
+   * Get all users count. We will use it in pager
+   */
+  async growthHacksTotalCount(_root, args: IGrowthHackListParams) {
+    const filter = await generateGrowthHackCommonFilters(args);
+
+    return GrowthHacks.find(filter).countDocuments();
+  },
+
   async growthHacksPriorityMatrix(_root, args: IListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
 

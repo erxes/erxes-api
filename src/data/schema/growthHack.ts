@@ -52,6 +52,21 @@ export const queries = `
     sortDirection: Int
   ): [GrowthHack]
 
+  growthHacksTotalCount(
+    pipelineId: String
+    initialStageId: String
+    stageId: String
+    skip: Int
+    search: String
+    assignedUserIds: [String]
+    nextDay: String
+    nextWeek: String
+    nextMonth: String
+    noCloseDate: String
+    overdue: String
+    hackStage: String
+  ): Int
+
   growthHacksPriorityMatrix(
     pipelineId: String
     search: String
