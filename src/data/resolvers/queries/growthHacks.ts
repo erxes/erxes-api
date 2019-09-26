@@ -3,11 +3,15 @@ import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers'
 import { IListParams } from './boards';
 import { generateGrowthHackCommonFilters } from './boardUtils';
 
+interface IGrowthHackListParams extends IListParams {
+  hackStage?: string;
+}
+
 const growthHackQueries = {
   /**
    * Growth hack list
    */
-  async growthHacks(_root, args: IListParams) {
+  async growthHacks(_root, args: IGrowthHackListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
     const { sortField, sortDirection } = args;
 

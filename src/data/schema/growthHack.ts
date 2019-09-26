@@ -47,6 +47,7 @@ export const queries = `
     nextMonth: String
     noCloseDate: String
     overdue: String
+    hackStage: String
     sortField: String
     sortDirection: Int
   ): [GrowthHack]

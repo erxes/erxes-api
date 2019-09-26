@@ -220,7 +220,7 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
 export const generateGrowthHackCommonFilters = async (args: any) => {
   args.type = 'growthHack';
 
-  const { pipelineId } = args;
+  const { pipelineId, hackStage } = args;
 
   const filter = await generateCommonFilters(args);
 
@@ -228,6 +228,10 @@ export const generateGrowthHackCommonFilters = async (args: any) => {
     const stageIds = await Stages.find({ pipelineId }).distinct('_id');
 
     filter.stageId = { $in: stageIds };
+  }
+
+  if (hackStage) {
+    filter.hackStages = { $in: [hackStage] };
   }
 
   return filter;
