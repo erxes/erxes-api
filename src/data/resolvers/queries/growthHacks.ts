@@ -5,6 +5,7 @@ import { generateGrowthHackCommonFilters } from './boardUtils';
 
 interface IGrowthHackListParams extends IListParams {
   hackStage?: string;
+  limit?: number;
 }
 
 const growthHackQueries = {
@@ -13,7 +14,7 @@ const growthHackQueries = {
    */
   async growthHacks(_root, args: IGrowthHackListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
-    const { sortField, sortDirection } = args;
+    const { sortField, sortDirection, skip = 0, limit = 10 } = args;
 
     const sort: { [key: string]: any } = {};
 
@@ -26,8 +27,8 @@ const growthHackQueries = {
 
     return GrowthHacks.find(filter)
       .sort(sort)
-      .skip(args.skip || 0)
-      .limit(10);
+      .skip(skip)
+      .limit(limit);
   },
 
   /**

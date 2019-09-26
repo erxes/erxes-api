@@ -40,6 +40,7 @@ export const queries = `
     initialStageId: String
     stageId: String
     skip: Int
+    limit: Int
     search: String
     assignedUserIds: [String]
     nextDay: String
