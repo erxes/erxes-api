@@ -97,9 +97,15 @@ const integrationMutations = {
 
     let kind = doc.kind;
 
-    if (kind === 'facebook-post' || kind === 'facebook-messenger') {
+    if (doc.platform === 'nylas') {
+      kind = 'nylas';
+    }
+
+    if (kind.includes('facebook')) {
       kind = 'facebook';
     }
+
+    console.log(kind, doc.platform);
 
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {

@@ -141,6 +141,7 @@ export const mutations = `
 
   integrationsCreateExternalIntegration(
     kind: String!,
+    platform: String,
     name: String!,
     brandId: String!,
     accountId: String,
