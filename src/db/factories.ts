@@ -33,6 +33,7 @@ import {
   Notifications,
   Permissions,
   Pipelines,
+  ProductCategories,
   Products,
   ResponseTemplates,
   Segments,
@@ -844,10 +845,29 @@ export const productFactory = (params: IProductFactoryInput = {}) => {
     type: params.type || PRODUCT_TYPES.PRODUCT,
     description: params.description || faker.random.word(),
     sku: faker.random.word(),
+    code: faker.random.word(),
     createdAt: new Date(),
   });
 
   return product.save();
+};
+
+interface IProductCategoryFactoryInput {
+  name?: string;
+  description?: string;
+  parentId?: string;
+  code?: string;
+}
+
+export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}) => {
+  const productCategory = new ProductCategories({
+    name: params.name || faker.random.word(),
+    description: params.description || faker.random.word(),
+    parentId: params.parentId || faker.random.word(),
+    createdAt: new Date(),
+  });
+
+  return productCategory.save();
 };
 
 interface IConfigFactoryInput {
@@ -963,9 +983,5 @@ interface IConformityFactoryInput {
 }
 
 export const conformityFactory = (params: IConformityFactoryInput) => {
-  const doc = {
-    ...params,
-  };
-
-  return Conformities.addConformity(doc);
+  return Conformities.addConformity(params);
 };
