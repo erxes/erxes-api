@@ -1,4 +1,4 @@
-import { GrowthHacks, Stages } from '../../../db/models';
+import { GrowthHacks } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IListParams } from './boards';
 import { generateGrowthHackCommonFilters } from './boardUtils';
@@ -42,14 +42,6 @@ const growthHackQueries = {
 
   async growthHacksPriorityMatrix(_root, args: IListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
-
-    const { pipelineId } = args;
-
-    if (pipelineId) {
-      const stageIds = await Stages.find({ pipelineId }).distinct('_id');
-
-      filter.stageId = { $in: stageIds };
-    }
 
     filter.ease = { $exists: true, $gt: 0 };
     filter.impact = { $exists: true, $gt: 0 };
