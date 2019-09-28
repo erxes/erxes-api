@@ -83,7 +83,7 @@ const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean;
   }
 
   for (const permission of features[moduleName].settingsPermissions) {
-    if (actionsMap.includes(permission)) {
+    if (!actionsMap.includes(permission)) {
       showSettings = false;
       break;
     }
