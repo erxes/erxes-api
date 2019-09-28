@@ -5,31 +5,75 @@ import { getUserAllowedActions, IModuleMap } from '../../permissions/utils';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
-const featureActions: { [key: string]: string[] } = {
-  inbox: ['manageBrands', 'manageChannels', 'integrationCreate'],
-  customers: [],
-  deals: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd'],
-  tasks: ['taskBoardsAdd', 'taskPipelinesAdd', 'taskStagesAdd'],
-  tickets: ['ticketBoardsAdd', 'ticketPipelinesAdd', 'ticketStagesAdd'],
-  growthHacks: ['growthHackBoardsAdd', 'growthHackPipelinesAdd', 'growthHackStagesAdd', 'managePipelineTemplates'],
-  engages: ['manageEmailTemplate', 'manageTags'],
-  leads: ['manageBrands'],
-  knowledgeBase: ['manageKnowledgeBase'],
-  tags: ['manageTags'],
-  insights: [],
-  importHistories: [],
-  segments: [],
-  properties: [],
-  permissions: [],
-  integrations: ['manageBrands', 'manageChannels'],
+const features: { [key: string]: { settings: string[]; settingsPermissions: string[] } } = {
+  inbox: {
+    settings: ['brandCreate', 'channelCreate', 'integrationCreate'],
+    settingsPermissions: ['manageBrands', 'manageChannels', 'integrationCreate'],
+  },
+  customers: { settings: [], settingsPermissions: [] },
+  deals: {
+    settings: ['boardCreate', 'pipelineCreate', 'dealCreate'],
+    settingsPermissions: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd'],
+  },
+  tasks: {
+    settings: ['boardCreate', 'pipelineCreate', 'taskCreate'],
+    settingsPermissions: ['taskBoardsAdd', 'taskPipelinesAdd', 'taskStagesAdd'],
+  },
+  tickets: {
+    settings: ['boardCreate', 'pipelineCreate', 'ticketCreate'],
+    settingsPermissions: ['ticketBoardsAdd', 'ticketPipelinesAdd', 'ticketStagesAdd'],
+  },
+  growthHacks: {
+    settings: ['boardCreate', 'pipelineCreate', 'growthHackCreate'],
+    settingsPermissions: ['growthHackBoardsAdd', 'growthHackPipelinesAdd', 'growthHackStagesAdd'],
+  },
+  engages: {
+    settings: ['emailTemplateCreate', 'tagCreate'],
+    settingsPermissions: ['manageEmailTemplate', 'manageTags'],
+  },
+  leads: {
+    settings: ['brandCreate'],
+    settingsPermissions: ['manageBrands'],
+  },
+  knowledgeBase: {
+    settings: ['knowledgeBaseTopicCreate', 'knowledgeBaseCategoryCreate', 'knowledgeBaseArticleCreate'],
+    settingsPermissions: ['manageKnowledgeBase'],
+  },
+  tags: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  insights: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  importHistories: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  segments: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  properties: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  permissions: {
+    settings: [],
+    settingsPermissions: [],
+  },
+  integrations: {
+    settings: ['brandCreate', 'channelCreate'],
+    settingsPermissions: ['manageBrands', 'manageChannels'],
+  },
 };
 
-const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean; showActions: boolean } => {
-  const actions = featureActions[moduleName];
+const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean; showSettings: boolean } => {
   const module: IModuleMap = moduleObjects[moduleName];
 
   let showModule = false;
-  let showActions = true;
+  let showSettings = true;
 
   for (const action of module.actions || []) {
     if (actionsMap.includes(action.name || '')) {
@@ -38,16 +82,16 @@ const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean;
     }
   }
 
-  for (const action of actions) {
-    if (actionsMap.includes(action)) {
-      showActions = false;
+  for (const permission of features[moduleName].settingsPermissions) {
+    if (actionsMap.includes(permission)) {
+      showSettings = false;
       break;
     }
   }
 
   return {
     showModule,
-    showActions,
+    showSettings,
   };
 };
 
@@ -56,22 +100,25 @@ const robotQueries = {
     return RobotEntries.find();
   },
 
-  onboardingActionsCompleteness(_root, { actions }: { actions: string[] }, { user }: IContext) {
-    return OnboardingHistories.actionsCompletness(actions, user);
+  onboardingStepsCompleteness(_root, { steps }: { steps: string[] }, { user }: IContext) {
+    return OnboardingHistories.stepsCompletness(steps, user);
   },
 
   async onboardingGetAvailableFeatures(_root, _args, { user }: IContext) {
-    const results: Array<{ name: string; isComplete: boolean; actions?: string[]; showActions?: boolean }> = [];
+    const results: Array<{ name: string; isComplete: boolean; settings?: string[]; showSettings?: boolean }> = [];
     const actionsMap = await getUserAllowedActions(user);
 
-    for (const feature of Object.keys(featureActions)) {
+    for (const feature of Object.keys(features)) {
+      const { settings } = features[feature];
+
       if (['leads', 'properties'].includes(feature)) {
-        const selector = { userId: user._id, completedActions: { $all: [`${feature}Show`] } };
+        const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`] } };
         const isComplete = (await OnboardingHistories.find(selector).countDocuments()) > 0;
 
         if (actionsMap.includes('integrationsCreateLeadIntegration')) {
           results.push({
             name: feature,
+            settings,
             isComplete,
           });
         }
@@ -79,6 +126,7 @@ const robotQueries = {
         if (actionsMap.includes('manageForms')) {
           results.push({
             name: feature,
+            settings,
             isComplete,
           });
         }
@@ -86,16 +134,15 @@ const robotQueries = {
         continue;
       }
 
-      const { showModule, showActions } = checkShowModule(actionsMap, feature);
+      const { showModule, showSettings } = checkShowModule(actionsMap, feature);
 
       if (showModule) {
-        const actions = featureActions[feature] || [];
-        const selector = { userId: user._id, completedActions: { $all: [`${feature}Show`, ...actions] } };
+        const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`, ...settings] } };
 
         results.push({
           name: feature,
-          actions,
-          showActions,
+          settings,
+          showSettings,
           isComplete: (await OnboardingHistories.find(selector).countDocuments()) > 0,
         });
       }

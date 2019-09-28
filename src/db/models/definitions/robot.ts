@@ -22,7 +22,7 @@ export interface IOnboardingHistory {
   userId: string;
   totalPoint: number;
   isCompleted: boolean;
-  completedActions: string[];
+  completedSteps: string[];
 }
 
 export interface IOnboardingHistoryDocument extends IOnboardingHistory, Document {
@@ -34,5 +34,5 @@ export const onboardingHistorySchema = new Schema({
   userId: field({ type: String }),
   totalPoint: field({ type: Number }),
   isCompleted: field({ type: Boolean }),
-  completedActions: field({ type: [String] }),
+  completedSteps: field({ type: [String] }),
 });

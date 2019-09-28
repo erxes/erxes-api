@@ -6,8 +6,8 @@ export const types = `
 
   type OnboardingGetAvailableFeaturesResponse {
     name: String
-    actions: [String]
-    showActions: Boolean
+    settings: [String]
+    showSettings: Boolean
     isComplete: Boolean
   }
 
@@ -19,7 +19,7 @@ export const types = `
 
 export const queries = `
   robotEntries: [RobotEntry]
-  onboardingActionsCompleteness(actions: [String]): JSON
+  onboardingStepsCompleteness(steps: [String]): JSON
   onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]
 `;
 

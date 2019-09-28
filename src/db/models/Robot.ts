@@ -29,13 +29,13 @@ interface IGetOrCreateResponse {
   entry: IOnboardingHistoryDocument;
 }
 
-interface IActionsCompletenessResponse {
+interface IStepsCompletenessResponse {
   [key: string]: boolean;
 }
 
 export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocument> {
   getOrCreate(doc: IGetOrCreateDoc): Promise<IGetOrCreateResponse>;
-  actionsCompletness(actions: string[], user: IUserDocument): IActionsCompletenessResponse;
+  stepsCompletness(steps: string[], user: IUserDocument): IStepsCompletenessResponse;
   forceComplete(userId: string): void;
   userStatus(userId: string): string;
 }
@@ -43,12 +43,12 @@ export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocumen
 export const loadOnboardingHistoryClass = () => {
   class OnboardingHistory {
     public static async getOrCreate({ type, user }: IGetOrCreateDoc): Promise<IGetOrCreateResponse> {
-      const action = `${type}Create`;
+      const step = `${type}Create`;
 
       const prevEntry = await OnboardingHistories.findOne({ userId: user._id });
 
       if (!prevEntry) {
-        const entry = await OnboardingHistories.create({ userId: user._id, completedActions: [action] });
+        const entry = await OnboardingHistories.create({ userId: user._id, completedSteps: [step] });
         return { status: 'created', entry };
       }
 
@@ -56,27 +56,24 @@ export const loadOnboardingHistoryClass = () => {
         return { status: 'completed', entry: prevEntry };
       }
 
-      if (prevEntry.completedActions.includes(action)) {
+      if (prevEntry.completedSteps.includes(step)) {
         return { status: 'prev', entry: prevEntry };
       }
 
       const updatedEntry = await OnboardingHistories.updateOne(
         { userId: user._id },
-        { $push: { completedActions: action } },
+        { $push: { completedSteps: step } },
       );
 
       return { status: 'created', entry: updatedEntry };
     }
 
-    public static async actionsCompletness(
-      actions: string[],
-      user: IUserDocument,
-    ): Promise<IActionsCompletenessResponse> {
-      const result: IActionsCompletenessResponse = {};
+    public static async stepsCompletness(steps: string[], user: IUserDocument): Promise<IStepsCompletenessResponse> {
+      const result: IStepsCompletenessResponse = {};
 
-      for (const action of actions) {
-        const selector = { userId: user._id, completedActions: { $in: [action] } };
-        result[action] = (await OnboardingHistories.find(selector).countDocuments()) > 0;
+      for (const step of steps) {
+        const selector = { userId: user._id, completedSteps: { $in: [step] } };
+        result[step] = (await OnboardingHistories.find(selector).countDocuments()) > 0;
       }
 
       return result;
