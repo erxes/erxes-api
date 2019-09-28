@@ -21,6 +21,10 @@ const robotMutations = {
   onboardingForceComplete(_root, _args, { user }: IContext) {
     return OnboardingHistories.forceComplete(user._id);
   },
+
+  onboardingCompleteShowStep(_root, { step }: { step: string }, { user }: IContext) {
+    return OnboardingHistories.completeShowStep(step, user._id);
+  },
 };
 
 export default robotMutations;

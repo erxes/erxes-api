@@ -36,6 +36,7 @@ interface IStepsCompletenessResponse {
 export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocument> {
   getOrCreate(doc: IGetOrCreateDoc): Promise<IGetOrCreateResponse>;
   stepsCompletness(steps: string[], user: IUserDocument): IStepsCompletenessResponse;
+  completeShowStep(step: string, userId: string): void;
   forceComplete(userId: string): void;
   userStatus(userId: string): string;
 }
@@ -81,6 +82,10 @@ export const loadOnboardingHistoryClass = () => {
 
     public static async forceComplete(userId: string): Promise<void> {
       return OnboardingHistories.updateOne({ userId }, { $set: { isCompleted: true } });
+    }
+
+    public static async completeShowStep(step: string, userId: string): Promise<void> {
+      return OnboardingHistories.updateOne({ userId }, { $push: { completedSteps: step } }, { upsert: true });
     }
 
     public static async userStatus(userId: string): Promise<string> {

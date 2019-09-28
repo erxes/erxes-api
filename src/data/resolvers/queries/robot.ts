@@ -115,20 +115,19 @@ const robotQueries = {
         const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`] } };
         const isComplete = (await OnboardingHistories.find(selector).countDocuments()) > 0;
 
+        const params = {
+          name: feature,
+          settings,
+          showSettings: false,
+          isComplete,
+        };
+
         if (actionsMap.includes('integrationsCreateLeadIntegration')) {
-          results.push({
-            name: feature,
-            settings,
-            isComplete,
-          });
+          results.push(params);
         }
 
         if (actionsMap.includes('manageForms')) {
-          results.push({
-            name: feature,
-            settings,
-            isComplete,
-          });
+          results.push(params);
         }
 
         continue;
