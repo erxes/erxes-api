@@ -61,22 +61,25 @@ const robotQueries = {
   },
 
   async onboardingGetAvailableFeatures(_root, _args, { user }: IContext) {
-    const results: Array<{ feature: string; isComplete: boolean; actions?: string[]; showActions?: boolean }> = [];
+    const results: Array<{ name: string; isComplete: boolean; actions?: string[]; showActions?: boolean }> = [];
     const actionsMap = await getUserAllowedActions(user);
 
     for (const feature of Object.keys(featureActions)) {
       if (['leads', 'properties'].includes(feature)) {
+        const selector = { userId: user._id, completedActions: { $all: [`${feature}Show`] } };
+        const isComplete = (await OnboardingHistories.find(selector).countDocuments()) > 0;
+
         if (actionsMap.includes('integrationsCreateLeadIntegration')) {
           results.push({
-            feature: 'leads',
-            isComplete: true,
+            name: feature,
+            isComplete,
           });
         }
 
         if (actionsMap.includes('manageForms')) {
           results.push({
-            feature: 'properties',
-            isComplete: true,
+            name: feature,
+            isComplete,
           });
         }
 
@@ -87,10 +90,10 @@ const robotQueries = {
 
       if (showModule) {
         const actions = featureActions[feature] || [];
-        const selector = { userId: user._id, completedActions: { $all: actions } };
+        const selector = { userId: user._id, completedActions: { $all: [`${feature}Show`, ...actions] } };
 
         results.push({
-          feature,
+          name: feature,
           actions,
           showActions,
           isComplete: (await OnboardingHistories.find(selector).countDocuments()) > 0,

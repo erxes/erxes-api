@@ -4,21 +4,10 @@ export const types = `
     data: JSON
   }
 
-  type OnboaringFeatureAction {
-    name: String
-    url: String
-  }
-
-  type OnboaringFeature {
-    name: String
-    text: String
-    description: String
-    videoUrl: String
-    actions: [OnboaringFeatureAction]
-  }
-
   type OnboardingGetAvailableFeaturesResponse {
-    feature: OnboaringFeature
+    name: String
+    actions: [String]
+    showActions: Boolean
     isComplete: Boolean
   }
 
