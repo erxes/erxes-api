@@ -32,8 +32,8 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     settingsPermissions: ['manageEmailTemplate', 'manageTags'],
   },
   leads: {
-    settings: ['brandCreate'],
-    settingsPermissions: ['manageBrands'],
+    settings: [],
+    settingsPermissions: [],
   },
   knowledgeBase: {
     settings: ['knowledgeBaseTopicCreate', 'knowledgeBaseCategoryCreate', 'knowledgeBaseArticleCreate'],
@@ -136,7 +136,13 @@ const robotQueries = {
       const { showModule, showSettings } = checkShowModule(actionsMap, feature);
 
       if (showModule) {
-        const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`, ...settings] } };
+        let steps = [`${feature}Show`];
+
+        if (showSettings) {
+          steps = [...steps, ...settings];
+        }
+
+        const selector = { userId: user._id, completedSteps: { $all: steps } };
 
         results.push({
           name: feature,
