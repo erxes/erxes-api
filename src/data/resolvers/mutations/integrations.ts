@@ -101,6 +101,10 @@ const integrationMutations = {
       kind = 'facebook';
     }
 
+    if (kind === 'twitter-dm') {
+      kind = 'twitter';
+    }
+
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
