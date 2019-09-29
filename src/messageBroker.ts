@@ -2,7 +2,7 @@ import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
 import { sendMobileNotification } from './data/utils';
-import { ActivityLogs, Companies, Conversations, Customers, RobotEntries } from './db/models';
+import { ActivityLogs, Conversations, Customers, RobotEntries } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 import { get, set } from './redisClient';
@@ -142,55 +142,7 @@ const initConsumer = async () => {
       if (msg !== null) {
         debugBase(`Received spark notification ${msg.content.toString()}`);
 
-        const data = JSON.parse(msg.content.toString());
-
-        if (data.action === 'mergeCustomers') {
-          const customerIds = data.customerIds;
-          const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } });
-
-          if (randomCustomer) {
-            await Customers.mergeCustomers(customerIds, randomCustomer);
-            await RobotEntries.create({ action: 'mergeCustomers', data: { customerIds } });
-          }
-        }
-
-        if (data.action === 'fillCompanyInfo') {
-          await Companies.update({ _id: data._id }, { $set: data.modifier });
-          await RobotEntries.create({ action: 'fillCompanyInfo', data: { modifier: data.modifier } });
-        }
-
-        if (data.action === 'customerScoring') {
-          const modifier = data.scoreMap.map(entry => ({
-            updateOne: {
-              filter: {
-                _id: entry._id,
-              },
-              update: {
-                $set: { profileScore: entry.score },
-              },
-            },
-          }));
-
-          await Customers.bulkWrite(modifier);
-
-          await RobotEntries.create({ action: 'customerScoring', data: { scoreMap: data.scoreMap } });
-        }
-
-        if (data.action === 'channelsWithoutIntegration') {
-          await RobotEntries.create({ action: 'channelsWithoutIntegration', data: { channelIds: data.channelIds } });
-        }
-
-        if (data.action === 'channelsWithoutMembers') {
-          await RobotEntries.create({ action: 'channelsWithoutMembers', data: { channelIds: data.channelIds } });
-        }
-
-        if (data.action === 'brandsWithoutIntegration') {
-          await RobotEntries.create({ action: 'brandsWithoutIntegration', data: { brandIds: data.brandIds } });
-        }
-
-        if (data.action === 'featureSuggestion') {
-          await RobotEntries.create({ action: 'featureSuggestion', data: { message: data.message } });
-        }
+        await RobotEntries.createEntry(JSON.parse(msg.content.toString()));
 
         channel.ack(msg);
       }

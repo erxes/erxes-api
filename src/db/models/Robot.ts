@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { Companies, Customers } from '.';
 import {
   IOnboardingHistoryDocument,
   IRobotEntryDocument,
@@ -8,10 +9,72 @@ import {
 import { IUserDocument } from './definitions/users';
 
 // entries ==========================
-export interface IRobotEntryModel extends Model<IRobotEntryDocument> {}
+export interface IRobotEntryModel extends Model<IRobotEntryDocument> {
+  createEntry(data): Promise<IRobotEntryDocument | undefined>;
+}
 
 export const loadClass = () => {
-  class RobotEntry {}
+  class RobotEntry {
+    public static async createEntry(data): Promise<IRobotEntryDocument | undefined> {
+      if (data.action === 'mergeCustomers') {
+        const customerIds = data.customerIds;
+        const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } });
+
+        if (randomCustomer) {
+          await Customers.mergeCustomers(customerIds, randomCustomer);
+          return RobotEntries.create({ action: 'mergeCustomers', data: { customerIds } });
+        }
+      }
+
+      if (data.action === 'fillCompanyInfo') {
+        const results = data.results;
+
+        const parent = await RobotEntries.create({ action: 'fillCompanyInfo', data: { count: results.length } });
+
+        for (const result of results) {
+          const { _id, modifier } = result;
+
+          await Companies.update({ _id }, { $set: modifier });
+          return RobotEntries.create({ action: 'fillCompanyInfo', parentId: parent._id, data: { modifier } });
+        }
+
+        return parent;
+      }
+
+      if (data.action === 'customerScoring') {
+        const modifier = data.scoreMap.map(entry => ({
+          updateOne: {
+            filter: {
+              _id: entry._id,
+            },
+            update: {
+              $set: { profileScore: entry.score },
+            },
+          },
+        }));
+
+        await Customers.bulkWrite(modifier);
+
+        return RobotEntries.create({ action: 'customerScoring', data: { scoreMap: data.scoreMap } });
+      }
+
+      if (data.action === 'channelsWithoutIntegration') {
+        return RobotEntries.create({ action: 'channelsWithoutIntegration', data: { channelIds: data.channelIds } });
+      }
+
+      if (data.action === 'channelsWithoutMembers') {
+        return RobotEntries.create({ action: 'channelsWithoutMembers', data: { channelIds: data.channelIds } });
+      }
+
+      if (data.action === 'brandsWithoutIntegration') {
+        return RobotEntries.create({ action: 'brandsWithoutIntegration', data: { brandIds: data.brandIds } });
+      }
+
+      if (data.action === 'featureSuggestion') {
+        return RobotEntries.create({ action: 'featureSuggestion', data: { message: data.message } });
+      }
+    }
+  }
 
   robotEntrySchema.loadClass(RobotEntry);
 
