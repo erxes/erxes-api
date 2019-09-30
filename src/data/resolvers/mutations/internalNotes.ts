@@ -4,23 +4,22 @@ import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { sendNotifications } from '../boardUtils';
+import { notifiedUserIds } from '../boardUtils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;
 }
 
-const sendNotificationOfItems = async (item, contentType, content, user) => {
-  await sendNotifications({
-    item,
-    user,
-    type: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_EDIT`],
-    action: `added note in ${contentType}`,
-    content,
-    contentType,
-    invitedUsers: [],
-    removedUsers: [],
+const sendNotificationOfItems = async (item, doc, contentType, excludeUserIds) => {
+  const notifDocItems = { ...doc };
+  const relatedReceivers = await notifiedUserIds(item);
+  notifDocItems.action = `added note in ${contentType}`;
+
+  notifDocItems.receivers = relatedReceivers.filter(id => {
+    return excludeUserIds.indexOf(id) < 0;
   });
+
+  utils.sendNotification(notifDocItems);
 };
 
 const internalNoteMutations = {
@@ -52,7 +51,7 @@ const internalNoteMutations = {
         notifDoc.contentTypeId = deal._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
 
-        await sendNotificationOfItems(deal, args.contentType, notifDoc.content, user);
+        await sendNotificationOfItems(deal, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 
@@ -92,7 +91,7 @@ const internalNoteMutations = {
         notifDoc.contentTypeId = ticket._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
 
-        await sendNotificationOfItems(ticket, args.contentType, notifDoc.content, user);
+        await sendNotificationOfItems(ticket, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 
@@ -107,7 +106,7 @@ const internalNoteMutations = {
         notifDoc.contentTypeId = task._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
 
-        await sendNotificationOfItems(task, args.contentType, notifDoc.content, user);
+        await sendNotificationOfItems(task, notifDoc, args.contentType, [...(args.mentionedUserIds || []), user._id]);
         break;
       }
 

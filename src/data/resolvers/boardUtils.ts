@@ -6,7 +6,7 @@ import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
 
-export const getNotifiedUserIds = async (item: any) => {
+export const notifiedUserIds = async (item: any) => {
   let userIds: string[] = [];
 
   if (item.assignedUserIds && item.assignedUserIds.length > 0) {
@@ -67,9 +67,7 @@ export const sendNotifications = async ({
     route = '/inbox';
   }
 
-  const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
-
-  const notifiedUserIds = await getNotifiedUserIds(item);
+  const usersToExclude = [...(removedUsers || []), ...(invitedUsers || [])];
 
   const notificationDoc = {
     createdUser: user,
@@ -82,7 +80,7 @@ export const sendNotifications = async ({
     link: `${route}/${contentType}/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${item._id}`,
 
     // exclude current user, invited user and removed users
-    receivers: notifiedUserIds.filter(id => {
+    receivers: (await notifiedUserIds(item)).filter(id => {
       return usersToExclude.indexOf(id) < 0;
     }),
   };
@@ -104,16 +102,6 @@ export const sendNotifications = async ({
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
       receivers: invitedUsers.filter(id => id !== user._id),
-    });
-  }
-
-  // exclude notified user, current user, invited user and removed users
-  if (item.userId && ![...notifiedUserIds, ...usersToExclude].includes(item.userId)) {
-    await utils.sendNotification({
-      ...notificationDoc,
-      notifType: NOTIFICATION_TYPES[`CREATED_${contentType.toUpperCase()}`],
-      action: action ? `${action} (your created)` : `Your created ${contentType} has updated`,
-      receivers: [item.userId],
     });
   }
 

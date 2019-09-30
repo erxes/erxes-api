@@ -16,6 +16,8 @@ const ticketMutations = {
    * Create new ticket
    */
   async ticketsAdd(_root, doc: ITicket, { user }: IContext) {
+    doc.watchedUserIds = (doc.watchedUserIds || []).concat(user._id);
+
     const ticket = await Tickets.createTicket({
       ...doc,
       modifiedBy: user._id,
