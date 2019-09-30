@@ -46,7 +46,30 @@ const growthHackQueries = {
     filter.ease = { $exists: true, $gt: 0 };
     filter.impact = { $exists: true, $gt: 0 };
 
-    return GrowthHacks.find(filter);
+    return GrowthHacks.aggregate([
+      {
+        $match: filter,
+      },
+      {
+        $group: {
+          _id: {
+            impact: '$impact',
+            ease: '$ease',
+          },
+          names: { $push: '$name' },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          x: '$_id.ease',
+          y: '$_id.impact',
+          names: 1,
+          count: 1,
+        },
+      },
+    ]);
   },
 
   /**

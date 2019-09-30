@@ -77,7 +77,7 @@ export const queries = `
     nextMonth: String
     noCloseDate: String
     overdue: String
-  ): [GrowthHack]
+  ): JSON
 `;
 
 const commonParams = `
