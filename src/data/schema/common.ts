@@ -36,4 +36,5 @@ export const commonTypes = `
   modifiedBy: String
   reminderMinute: Int,
   isComplete: Boolean,
+  checklistsState: ChecklistsState
 `;

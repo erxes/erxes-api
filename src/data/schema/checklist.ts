@@ -12,8 +12,13 @@ export const types = `
     title: String
     createdUserId: String
     createdDate: Date
-    checklistItems: [ChecklistItem]
-    checklistPercent: Float
+    items: [ChecklistItem]
+    percent: Float
+  }
+
+  type ChecklistsState {
+    completed: Float
+    all: Float
   }
 `;
 

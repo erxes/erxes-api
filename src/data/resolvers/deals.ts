@@ -1,4 +1,15 @@
-import { Companies, Conformities, Customers, Notifications, Pipelines, Products, Stages, Users } from '../../db/models';
+import {
+  ChecklistItems,
+  Checklists,
+  Companies,
+  Conformities,
+  Customers,
+  Notifications,
+  Pipelines,
+  Products,
+  Stages,
+  Users,
+} from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -91,5 +102,18 @@ export default {
 
   hasNotified(deal: IDealDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
+  },
+
+  async checklistsState(deal: IDealDocument) {
+    const checklists = await Checklists.find({ contentType: 'deal', contentTypeId: deal._id });
+    if (!checklists) {
+      return null;
+    }
+
+    const checklistIds = checklists.map(checklist => checklist._id);
+    const checkItems = await ChecklistItems.find({ checklistId: { $in: checklistIds } });
+    const completedItems = checkItems.filter(item => item.isChecked);
+
+    return { completed: completedItems.length, all: checkItems.length };
   },
 };
