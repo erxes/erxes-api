@@ -67,7 +67,7 @@ export const sendNotifications = async ({
     route = '/inbox';
   }
 
-  const usersToExclude = [...(removedUsers || []), ...(invitedUsers || [])];
+  const usersToExclude = [...(removedUsers || []), ...(invitedUsers || []), user._id];
 
   const notificationDoc = {
     createdUser: user,
