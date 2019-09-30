@@ -96,8 +96,14 @@ const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean;
 };
 
 const robotQueries = {
-  robotEntries(_root) {
-    return RobotEntries.find({ parentId: { $ne: null } });
+  robotEntries(_root, { isNotified }: { isNotified: boolean }) {
+    const selector: any = { parentId: null };
+
+    if (typeof isNotified !== 'undefined') {
+      selector.isNotified = isNotified;
+    }
+
+    return RobotEntries.find(selector);
   },
 
   onboardingStepsCompleteness(_root, { steps }: { steps: string[] }, { user }: IContext) {
