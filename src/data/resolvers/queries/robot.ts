@@ -97,7 +97,7 @@ const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean;
 
 const robotQueries = {
   robotEntries(_root) {
-    return RobotEntries.find();
+    return RobotEntries.find({ parentId: { $ne: null } });
   },
 
   onboardingStepsCompleteness(_root, { steps }: { steps: string[] }, { user }: IContext) {

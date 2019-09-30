@@ -11,10 +11,15 @@ import { IUserDocument } from './definitions/users';
 // entries ==========================
 export interface IRobotEntryModel extends Model<IRobotEntryDocument> {
   createEntry(data): Promise<IRobotEntryDocument | undefined>;
+  updateOrCreate(action: string, data): Promise<IRobotEntryDocument>;
 }
 
 export const loadClass = () => {
   class RobotEntry {
+    public static async updateOrCreate(action: string, data): Promise<IRobotEntryDocument> {
+      return RobotEntries.findOneAndUpdate({ action, data }, { isNotified: false }, { new: true, upsert: true });
+    }
+
     public static async createEntry(data): Promise<IRobotEntryDocument | undefined> {
       if (data.action === 'mergeCustomers') {
         const customerIds = data.customerIds;
@@ -42,7 +47,13 @@ export const loadClass = () => {
       }
 
       if (data.action === 'customerScoring') {
-        const modifier = data.scoreMap.map(entry => ({
+        const { scoreMap } = data;
+
+        if (!scoreMap || scoreMap.length === 0) {
+          return undefined;
+        }
+
+        const modifier = scoreMap.map(entry => ({
           updateOne: {
             filter: {
               _id: entry._id,
@@ -55,23 +66,23 @@ export const loadClass = () => {
 
         await Customers.bulkWrite(modifier);
 
-        return RobotEntries.create({ action: 'customerScoring', data: { scoreMap: data.scoreMap } });
+        return RobotEntries.create({ action: 'customerScoring', data: { scoreMap } });
       }
 
       if (data.action === 'channelsWithoutIntegration') {
-        return RobotEntries.create({ action: 'channelsWithoutIntegration', data: { channelIds: data.channelIds } });
+        return RobotEntries.updateOrCreate('channelsWithoutIntegration', { channelIds: data.channelIds });
       }
 
       if (data.action === 'channelsWithoutMembers') {
-        return RobotEntries.create({ action: 'channelsWithoutMembers', data: { channelIds: data.channelIds } });
+        return RobotEntries.updateOrCreate('channelsWithoutMembers', { channelIds: data.channelIds });
       }
 
       if (data.action === 'brandsWithoutIntegration') {
-        return RobotEntries.create({ action: 'brandsWithoutIntegration', data: { brandIds: data.brandIds } });
+        return RobotEntries.updateOrCreate('brandsWithoutIntegration', { brandIds: data.brandIds });
       }
 
       if (data.action === 'featureSuggestion') {
-        return RobotEntries.create({ action: 'featureSuggestion', data: { message: data.message } });
+        return RobotEntries.updateOrCreate('featureSuggestion', { message: data.message });
       }
     }
   }

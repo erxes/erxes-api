@@ -142,7 +142,13 @@ const initConsumer = async () => {
       if (msg !== null) {
         debugBase(`Received spark notification ${msg.content.toString()}`);
 
-        await RobotEntries.createEntry(JSON.parse(msg.content.toString()));
+        const data = JSON.parse(msg.content.toString());
+
+        delete data.subdomain;
+
+        RobotEntries.createEntry(data)
+          .then(() => debugBase('success'))
+          .catch(e => debugBase(e.message));
 
         channel.ack(msg);
       }

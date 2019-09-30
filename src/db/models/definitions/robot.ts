@@ -4,6 +4,7 @@ import { field } from './utils';
 // entry ====================
 export interface IRobotEntry {
   parentId?: string;
+  isNotified: boolean;
   action: string;
   data: object;
 }
@@ -15,6 +16,7 @@ export interface IRobotEntryDocument extends IRobotEntry, Document {
 export const robotEntrySchema = new Schema({
   _id: field({ pkey: true }),
   parentId: field({ type: String, optional: true }),
+  isNotified: field({ type: Boolean, default: false }),
   action: field({ type: String }),
   data: field({ type: Object }),
 });
