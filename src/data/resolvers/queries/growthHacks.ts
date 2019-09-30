@@ -32,7 +32,7 @@ const growthHackQueries = {
   },
 
   /**
-   * Get all users count. We will use it in pager
+   * Get all growth hacks count. We will use it in pager
    */
   async growthHacksTotalCount(_root, args: IGrowthHackListParams) {
     const filter = await generateGrowthHackCommonFilters(args);
