@@ -11,6 +11,7 @@ import { IUserDocument } from './definitions/users';
 // entries ==========================
 export interface IRobotEntryModel extends Model<IRobotEntryDocument> {
   createEntry(data): Promise<IRobotEntryDocument | undefined>;
+  markAsNotified(_id: string): Promise<IRobotEntryDocument>;
   updateOrCreate(action: string, data): Promise<IRobotEntryDocument>;
 }
 
@@ -18,6 +19,10 @@ export const loadClass = () => {
   class RobotEntry {
     public static async updateOrCreate(action: string, data): Promise<IRobotEntryDocument> {
       return RobotEntries.findOneAndUpdate({ action, data }, { isNotified: false }, { new: true, upsert: true });
+    }
+
+    public static async markAsNotified(_id: string): Promise<IRobotEntryDocument> {
+      return RobotEntries.updateOne({ _id }, { $set: { isNotified: true } });
     }
 
     public static async createEntry(data): Promise<IRobotEntryDocument | undefined> {

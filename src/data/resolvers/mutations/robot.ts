@@ -1,8 +1,12 @@
-import { OnboardingHistories } from '../../../db/models/Robot';
+import { OnboardingHistories, RobotEntries } from '../../../db/models/Robot';
 import { graphqlPubsub } from '../../../pubsub';
 import { IContext } from '../../types';
 
 const robotMutations = {
+  robotEntriesMarkAsNotified(_root, { _id }: { _id: string }) {
+    return RobotEntries.markAsNotified(_id);
+  },
+
   async onboardingCheckStatus(_root, _args, { user }: IContext) {
     const status = await OnboardingHistories.userStatus(user._id);
 

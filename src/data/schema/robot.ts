@@ -24,6 +24,7 @@ export const queries = `
 `;
 
 export const mutations = `
+  robotEntriesMarkAsNotified(_id: String): [RobotEntry]
   onboardingCheckStatus: String
   onboardingForceComplete: JSON
   onboardingCompleteShowStep(step: String): JSON
