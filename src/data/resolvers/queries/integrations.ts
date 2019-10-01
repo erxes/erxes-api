@@ -47,6 +47,7 @@ const integrationQueries = {
       page: number;
       perPage: number;
       kind: string;
+      platform?: string;
       searchValue: string;
       channelId: string;
       brandId: string;

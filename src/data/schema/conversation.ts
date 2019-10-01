@@ -70,7 +70,7 @@ export const types = `
     messengerAppData: JSON
     user: User
     customer: Customer
-    gmailData: Gmail
+    details: MessageDetails
   }
 
   type FacebookPost {
@@ -99,24 +99,25 @@ export const types = `
     commentCount: Int
   }
 
-  type Gmail {
+  type MessageDetails {
     messageId: String,
-    headerId: String,
-    from: String,
-    to: String,
-    cc: String,
-    bcc: String,
-    reply: [String],
-    references: String,
     threadId: String,
     subject: String,
-    textPlain: String,
-    textHtml: String,
-    attachments: [GmailAttachment],
+    body: String,
     integrationEmail: String,
+    to: [JSON],
+    from: [JSON],
+    cc: [JSON],
+    bcc: [JSON],
+    accountId: String,
+    replyToMessageId: [JSON],
+    replyTo: [JSON],
+    reply: [String],
+    references: String,
+    headerId: String,
   }
 
-  type GmailAttachment {
+  type MailAttachment {
     filename: String,
     mimeType: String,
     size: Int,

@@ -39,8 +39,8 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post('/facebook/reply-post', params);
   }
 
-  public async sendEmail(params) {
-    return this.post('/gmail/send', params);
+  public async sendEmail(kind, params) {
+    return this.post(`/${kind}/send`, params);
   }
 
   public async fetchApi(path, params) {

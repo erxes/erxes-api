@@ -152,14 +152,14 @@ const integrationMutations = {
   },
 
   /**
-   * Send gmail
+   * Send mail
    */
   async integrationSendMail(_root, args: any, { dataSources }: IContext) {
-    const { erxesApiId, ...mailParams } = args;
+    const { erxesApiId, kind, ...doc } = args;
 
-    return dataSources.IntegrationsAPI.sendEmail({
+    return dataSources.IntegrationsAPI.sendEmail(kind, {
       erxesApiId,
-      data: JSON.stringify(mailParams),
+      data: JSON.stringify(doc),
     });
   },
 };

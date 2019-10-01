@@ -129,16 +129,16 @@ app.get('/read-file', async (req: any, res) => {
   }
 });
 
-// get gmail attachment file
-app.get('/read-gmail-attachment', async (req: any, res) => {
-  const { messageId, attachmentId, integrationId, filename } = req.query;
+// get mail attachment file
+app.get('/read-mail-attachment', async (req: any, res) => {
+  const { messageId, attachmentId, kind, integrationId, filename } = req.query;
 
   if (!messageId || !attachmentId || !integrationId) {
     return res.status(404).send('Attachment not found');
   }
 
   res.redirect(
-    `${INTEGRATIONS_API_DOMAIN}/gmail/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
+    `${INTEGRATIONS_API_DOMAIN}/${kind}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
   );
 });
 

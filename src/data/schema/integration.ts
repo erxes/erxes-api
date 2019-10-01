@@ -7,6 +7,7 @@ export const types = `
     languageCode: String
     code: String
     formId: String
+    platform: String
     tagIds: [String]
     tags: [Tag]
     leadData: JSON
@@ -153,14 +154,16 @@ export const mutations = `
   integrationSendMail(
     erxesApiId: String!
     subject: String!
-    textHtml: String!
-    textPlain: String!
+    body: String
     to: String!
     cc: String
     bcc: String
     from: String!
     headerId: String
     threadId: String
+    messageId: String
+    replyToMessageId: String
+    kind: String
     references: String
     attachments: [gmailAttachmentData]
   ): JSON
