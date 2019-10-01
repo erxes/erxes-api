@@ -50,4 +50,8 @@ export default class IntegrationsAPI extends RESTDataSource {
   public async replyTwitterDm(params) {
     return this.post('/twitter/reply', params);
   }
+
+  public async twitterUpload(params) {
+    return this.post('/twitter/upload', params);
+  }
 }

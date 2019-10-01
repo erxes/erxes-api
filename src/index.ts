@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
+import IntegrationsAPI from './data/dataSources/integrations';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
@@ -18,7 +19,6 @@ import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
-
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
@@ -146,7 +146,7 @@ app.get('/read-gmail-attachment', async (req: any, res) => {
 app.post('/upload-file', async (req, res) => {
   const form = new formidable.IncomingForm();
 
-  form.parse(req, async (_error, _fields, response) => {
+  form.parse(req, async (_error, fields, response) => {
     const file = response.file || response.upload;
 
     // check file ====
@@ -154,6 +154,16 @@ app.post('/upload-file', async (req, res) => {
 
     if (status === 'ok') {
       try {
+        if (fields && fields.kind === 'twitter-dm') {
+          const twitterApi = new IntegrationsAPI();
+
+          const apiResponse = await twitterApi.twitterUpload({ file });
+
+          const jsonResponse = JSON.parse(apiResponse.response);
+
+          return res.send(jsonResponse.media_id_string);
+        }
+
         const result = await uploadFile(file, response.upload ? true : false);
 
         return res.send(result);
