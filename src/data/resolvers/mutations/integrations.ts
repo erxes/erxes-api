@@ -127,7 +127,7 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro'].includes(integration.kind || '')) {
+      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'twitter-dm'].includes(integration.kind || '')) {
         await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
       }
 
