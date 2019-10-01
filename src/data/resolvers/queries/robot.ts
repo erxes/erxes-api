@@ -142,7 +142,8 @@ const robotQueries = {
       const { showModule, showSettings } = checkShowModule(actionsMap, feature);
 
       if (showModule) {
-        let steps = [`${feature}Show`];
+        let steps: string[] = [];
+        // let steps = [`${feature}Show`];
 
         if (showSettings) {
           steps = [...steps, ...settings];
