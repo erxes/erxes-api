@@ -159,7 +159,13 @@ export const loadOnboardingHistoryClass = () => {
       return result;
     }
 
-    public static async forceComplete(userId: string): Promise<void> {
+    public static async forceComplete(userId: string): Promise<IOnboardingHistoryDocument> {
+      const entry = await OnboardingHistories.findOne({ userId });
+
+      if (!entry) {
+        return OnboardingHistories.create({ userId, isCompleted: true });
+      }
+
       return OnboardingHistories.updateOne({ userId }, { $set: { isCompleted: true } });
     }
 
