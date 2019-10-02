@@ -134,7 +134,6 @@ export const loadItemClass = () => {
      */
     public static async updateOrderItems(orders: IOrderInput[]) {
       const ids: string[] = [];
-      console.log('Models', orders);
 
       for (const { _id, order } of orders) {
         ids.push(_id);

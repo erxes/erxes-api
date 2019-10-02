@@ -247,7 +247,6 @@ const checklistMutations = {
    * Update item orders
    */
   updateOrderItems(_root, { orders }: { orders: IOrderInput[] }) {
-    console.log('mutationsorders', orders);
     return ChecklistItems.updateOrderItems(orders);
   },
 
