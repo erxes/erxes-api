@@ -115,6 +115,7 @@ export const types = `
     reply: [String],
     references: String,
     headerId: String,
+    attachments: [MailAttachment]
   }
 
   type MailAttachment {
