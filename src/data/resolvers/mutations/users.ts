@@ -57,7 +57,7 @@ const userMutations = {
     const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
     const link = `${MAIN_APP_DOMAIN}/reset-password?token=${token}`;
-    console.log(link);
+
     utils.sendEmail({
       toEmails: [email],
       title: 'Reset password',
