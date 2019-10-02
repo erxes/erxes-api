@@ -1,5 +1,4 @@
 import {
-  ChecklistItems,
   Checklists,
   Companies,
   Conformities,
@@ -67,15 +66,6 @@ export default {
   },
 
   async checklistsState(task: ITaskDocument, _args) {
-    const checklists = await Checklists.find({ contentType: 'task', contentTypeId: task._id });
-    if (!checklists) {
-      return null;
-    }
-
-    const checklistIds = checklists.map(checklist => checklist._id);
-    const checkItems = await ChecklistItems.find({ checklistId: { $in: checklistIds } });
-    const completedItems = checkItems.filter(item => item.isChecked);
-
-    return { complete: completedItems.length, all: checkItems.length };
+    return Checklists.getChecklistsState('task', task._id);
   },
 };

@@ -13,6 +13,7 @@ import { IUserDocument } from './definitions/users';
 
 export interface IChecklistModel extends Model<IChecklistDocument> {
   getChecklist(_id: string): Promise<IChecklistDocument>;
+  getChecklistsState(contentType: string, contentTypeId: string): Promise<{ complete: number; all: number }>;
   createChecklist(
     { contentType, contentTypeId, ...fields }: IChecklist,
     user: IUserDocument,
@@ -42,6 +43,19 @@ export const loadClass = () => {
       }
 
       return checklist;
+    }
+
+    public static async getChecklistsState(contentType: string, contentTypeId: string) {
+      const checklists = await Checklists.find({ contentType, contentTypeId });
+      if (!checklists) {
+        return null;
+      }
+
+      const checklistIds = checklists.map(checklist => checklist._id);
+      const checkItems = await ChecklistItems.find({ checklistId: { $in: checklistIds } });
+      const completedItems = checkItems.filter(item => item.isChecked);
+
+      return { complete: completedItems.length, all: checkItems.length };
     }
 
     /*
