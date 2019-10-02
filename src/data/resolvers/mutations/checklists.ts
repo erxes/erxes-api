@@ -1,5 +1,5 @@
 import { ChecklistItems, Checklists, Deals, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
-import { IChecklist, IChecklistItem } from '../../../db/models/definitions/checklists';
+import { IChecklist, IChecklistItem, IOrderInput } from '../../../db/models/definitions/checklists';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -241,6 +241,14 @@ const checklistMutations = {
     );
 
     return updated;
+  },
+
+  /**
+   * Update item orders
+   */
+  updateOrderItems(_root, { orders }: { orders: IOrderInput[] }) {
+    console.log('mutationsorders', orders);
+    return ChecklistItems.updateOrderItems(orders);
   },
 
   /**

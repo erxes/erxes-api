@@ -114,6 +114,6 @@ export default {
     const checkItems = await ChecklistItems.find({ checklistId: { $in: checklistIds } });
     const completedItems = checkItems.filter(item => item.isChecked);
 
-    return { completed: completedItems.length, all: checkItems.length };
+    return { complete: completedItems.length, all: checkItems.length };
   },
 };

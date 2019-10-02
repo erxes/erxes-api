@@ -7,6 +7,7 @@ import {
   IChecklistDocument,
   IChecklistItem,
   IChecklistItemDocument,
+  IOrderInput,
 } from './definitions/checklists';
 import { IUserDocument } from './definitions/users';
 
@@ -27,7 +28,7 @@ export interface IChecklistItemModel extends Model<IChecklistItemDocument> {
   createChecklistItem({ checklistId, ...fields }: IChecklistItem, user: IUserDocument): Promise<IChecklistItemDocument>;
 
   updateChecklistItem(_id: string, doc: IChecklistItem): Promise<IChecklistDocument>;
-
+  updateOrderItems(orders: IOrderInput[]): Promise<IChecklistItemDocument[]>;
   removeChecklistItem(_id: string): void;
 }
 
@@ -126,6 +127,23 @@ export const loadItemClass = () => {
       await ChecklistItems.updateOne({ _id }, { $set: doc });
 
       return ChecklistItems.findOne({ _id });
+    }
+
+    /*
+     * Update given items orders
+     */
+    public static async updateOrderItems(orders: IOrderInput[]) {
+      const ids: string[] = [];
+      console.log('Models', orders);
+
+      for (const { _id, order } of orders) {
+        ids.push(_id);
+
+        // update each fields order
+        await ChecklistItems.updateOne({ _id }, { order });
+      }
+
+      return ChecklistItems.find({ _id: { $in: ids } }).sort({ order: 1 });
     }
 
     /*
