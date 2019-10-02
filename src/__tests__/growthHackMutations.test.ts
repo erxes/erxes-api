@@ -182,4 +182,36 @@ describe('Test growthHacks mutations', () => {
 
     expect(watchRemoveGrowthHack.isWatched).toBe(false);
   });
+
+  test('Vote growthHack', async () => {
+    const mutation = `
+      mutation growthHacksVote($_id: String!, $isVote: Boolean!) {
+        growthHacksVote(_id: $_id, isVote: $isVote) {
+          _id
+          voteCount
+          votedUserIds
+        }
+      }
+    `;
+
+    const votedGrowthHack = await graphqlRequest(
+      mutation,
+      'growthHacksVote',
+      { _id: growthHack._id, isVote: true },
+      context,
+    );
+
+    expect(votedGrowthHack.voteCount).toBe(1);
+    expect(votedGrowthHack.votedUserIds[0]).toBe(context.user._id);
+
+    const unvotedGrowthHack = await graphqlRequest(
+      mutation,
+      'growthHacksVote',
+      { _id: growthHack._id, isVote: false },
+      context,
+    );
+
+    expect(unvotedGrowthHack.voteCount).toBe(0);
+    expect(unvotedGrowthHack.votedUserIds.length).toBe(0);
+  });
 });

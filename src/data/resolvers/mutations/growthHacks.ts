@@ -180,18 +180,11 @@ const growthHackMutations = {
   },
 
   /**
-   * Update growth hack orders (not sendNotifaction, ordered card to change)
+   * Vote a growth hack
    */
-  // growthHacksVote(_root, { _id }: { _id: string }) {
-  //   return GrowthHacks.(stageId, orders);
-  // },
-
-  // /**
-  //  * Update growth hack orders (not sendNotifaction, ordered card to change)
-  //  */
-  // growthHacksUnVote(_root, { _id }: { _id: string }) {
-  //   return GrowthHacks.updateOrder(stageId, orders);
-  // },
+  growthHacksVote(_root, { _id, isVote }: { _id: string; isVote: boolean }, { user }: { user: IUserDocument }) {
+    return GrowthHacks.voteGrowthHack(_id, isVote, user._id);
+  },
 };
 
 checkPermission(growthHackMutations, 'growthHacksAdd', 'growthHacksAdd');

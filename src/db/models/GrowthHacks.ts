@@ -79,13 +79,17 @@ export const loadGrowthHackClass = () => {
 
       if (isVote) {
         voteUserIds.push(userId);
+
         voteCount++;
       } else {
         voteUserIds = voteUserIds.filter(id => id !== userId);
+
         voteCount--;
       }
 
       const doc = { voteUserIds, voteCount };
+
+      console.log('doc: ', doc);
 
       await GrowthHacks.updateOne({ _id }, { $set: doc });
 
