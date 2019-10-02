@@ -34,10 +34,10 @@ const brandQueries = {
     return brands.sort({ createdAt: -1 });
   },
 
-  allBrands() {
+  allBrands(_root, {}, { brandIdSelector }: IContext) {
     const sort = { createdAt: -1 };
 
-    return Brands.find().sort(sort);
+    return Brands.find(brandIdSelector).sort(sort);
   },
 
   /**
