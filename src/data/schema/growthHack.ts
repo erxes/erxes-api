@@ -26,7 +26,8 @@ export const types = `
     attachments: [Attachment]
     isWatched: Boolean
     voteCount: Int
-    votedUserIds: [String]
+    votedUsers: [User]
+    isVoted: Boolean
     formId: String
     scoringType: String
     formSubmissions: JSON

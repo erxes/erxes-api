@@ -74,22 +74,20 @@ export const loadGrowthHackClass = () => {
     public static async voteGrowthHack(_id: string, isVote: boolean, userId: string) {
       const growthHack = await GrowthHack.getGrowthHack(_id);
 
-      let voteUserIds = growthHack.votedUserIds || [];
+      let votedUserIds = growthHack.votedUserIds || [];
       let voteCount = growthHack.voteCount || 0;
 
       if (isVote) {
-        voteUserIds.push(userId);
+        votedUserIds.push(userId);
 
         voteCount++;
       } else {
-        voteUserIds = voteUserIds.filter(id => id !== userId);
+        votedUserIds = votedUserIds.filter(id => id !== userId);
 
         voteCount--;
       }
 
-      const doc = { voteUserIds, voteCount };
-
-      console.log('doc: ', doc);
+      const doc = { votedUserIds, voteCount };
 
       await GrowthHacks.updateOne({ _id }, { $set: doc });
 

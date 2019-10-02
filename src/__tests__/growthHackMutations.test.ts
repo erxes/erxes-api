@@ -189,7 +189,10 @@ describe('Test growthHacks mutations', () => {
         growthHacksVote(_id: $_id, isVote: $isVote) {
           _id
           voteCount
-          votedUserIds
+          isVoted
+          votedUsers {
+            _id
+          }
         }
       }
     `;
@@ -202,7 +205,8 @@ describe('Test growthHacks mutations', () => {
     );
 
     expect(votedGrowthHack.voteCount).toBe(1);
-    expect(votedGrowthHack.votedUserIds[0]).toBe(context.user._id);
+    expect(votedGrowthHack.votedUsers[0]._id).toBe(context.user._id);
+    expect(votedGrowthHack.isVoted).toBe(true);
 
     const unvotedGrowthHack = await graphqlRequest(
       mutation,
@@ -212,6 +216,7 @@ describe('Test growthHacks mutations', () => {
     );
 
     expect(unvotedGrowthHack.voteCount).toBe(0);
-    expect(unvotedGrowthHack.votedUserIds.length).toBe(0);
+    expect(unvotedGrowthHack.votedUsers.length).toBe(0);
+    expect(unvotedGrowthHack.isVoted).toBe(false);
   });
 });
