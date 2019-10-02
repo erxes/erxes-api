@@ -18,6 +18,9 @@ export interface IGrowthHackDocument extends IGrowthHack, Document {
 export const growthHackSchema = new Schema({
   ...commonItemFieldsSchema,
 
+  voteCount: field({ type: Number, default: 0, optional: true }),
+  votedUserIds: field({ type: [String], optional: true }),
+
   hackStages: field({ type: [String], optional: true }),
   priority: field({ type: String, optional: true }),
   reach: field({ type: Number, optional: true }),
