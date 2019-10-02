@@ -10,9 +10,9 @@ interface IListArgs {
 }
 
 const queryBuilder = async (params: IListArgs, brandIdSelector: any) => {
-  const { searchValue } = params;
-
   const selector: any = { ...brandIdSelector };
+
+  const { searchValue } = params;
 
   if (searchValue) {
     selector.name = new RegExp(`.*${params.searchValue}.*`, 'i');
