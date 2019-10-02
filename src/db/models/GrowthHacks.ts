@@ -10,6 +10,7 @@ export interface IGrowthHackModel extends Model<IGrowthHackDocument> {
   updateGrowthHack(_id: string, doc: IGrowthHack): Promise<IGrowthHackDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<IGrowthHackDocument[]>;
   watchGrowthHack(_id: string, isAdd: boolean, userId: string): void;
+  voteGrowthHack(_id: string, isVote: boolean, userId: string): Promise<IGrowthHackDocument>;
 }
 
 export const loadGrowthHackClass = () => {
@@ -65,6 +66,30 @@ export const loadGrowthHackClass = () => {
      */
     public static async watchGrowthHack(_id: string, isAdd: boolean, userId: string) {
       return watchItem(GrowthHacks, _id, isAdd, userId);
+    }
+
+    /**
+     * Vote growth hack
+     */
+    public static async voteGrowthHack(_id: string, isVote: boolean, userId: string) {
+      const growthHack = await GrowthHack.getGrowthHack(_id);
+
+      let voteUserIds = growthHack.votedUserIds || [];
+      let voteCount = growthHack.voteCount || 0;
+
+      if (isVote) {
+        voteUserIds.push(userId);
+        voteCount++;
+      } else {
+        voteUserIds = voteUserIds.filter(id => id !== userId);
+        voteCount--;
+      }
+
+      const doc = { voteUserIds, voteCount };
+
+      await GrowthHacks.updateOne({ _id }, { $set: doc });
+
+      return GrowthHacks.findOne({ _id });
     }
   }
 

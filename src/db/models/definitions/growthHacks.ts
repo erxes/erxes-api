@@ -3,6 +3,9 @@ import { commonItemFieldsSchema, IItemCommonFields } from './boards';
 import { field } from './utils';
 
 export interface IGrowthHack extends IItemCommonFields {
+  voteCount?: number;
+  votedUserIds?: string[];
+
   hackStages?: string;
   priority?: string;
   reach?: number;

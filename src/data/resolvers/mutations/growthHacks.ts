@@ -178,6 +178,20 @@ const growthHackMutations = {
 
     return GrowthHacks.watchGrowthHack(_id, isAdd, user._id);
   },
+
+  /**
+   * Update growth hack orders (not sendNotifaction, ordered card to change)
+   */
+  // growthHacksVote(_root, { _id }: { _id: string }) {
+  //   return GrowthHacks.(stageId, orders);
+  // },
+
+  // /**
+  //  * Update growth hack orders (not sendNotifaction, ordered card to change)
+  //  */
+  // growthHacksUnVote(_root, { _id }: { _id: string }) {
+  //   return GrowthHacks.updateOrder(stageId, orders);
+  // },
 };
 
 checkPermission(growthHackMutations, 'growthHacksAdd', 'growthHacksAdd');
