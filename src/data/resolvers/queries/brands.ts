@@ -12,12 +12,10 @@ interface IListArgs {
 const queryBuilder = async (params: IListArgs, brandIdSelector) => {
   const { searchValue } = params;
 
-  const selector: any = { $and: [{ ...brandIdSelector }] };
+  const selector: any = { ...brandIdSelector };
 
   if (searchValue) {
-    const fields = { name: new RegExp(`.*${params.searchValue}.*`, 'i') };
-
-    selector.$and.push(fields);
+    selector.name = new RegExp(`.*${params.searchValue}.*`, 'i');
   }
 
   return selector;
