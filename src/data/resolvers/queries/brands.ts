@@ -9,7 +9,7 @@ interface IListArgs {
   searchValue?: string;
 }
 
-const queryBuilder = async (params: IListArgs, brandIdSelector) => {
+const queryBuilder = async (params: IListArgs, brandIdSelector: any) => {
   const { searchValue } = params;
 
   const selector: any = { ...brandIdSelector };
