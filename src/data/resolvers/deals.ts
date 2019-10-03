@@ -44,8 +44,13 @@ export default {
 
       if (customFieldsData) {
         const customFields = {};
+        const fieldIds: string[] = [];
 
-        const fields = await Fields.find({ contentType: 'product' });
+        Object.keys(customFieldsData).forEach(_id => {
+          fieldIds.push(_id);
+        });
+
+        const fields = await Fields.find({ _id: { $in: fieldIds }, contentType: 'product' });
 
         for (const field of fields) {
           customFields[field.text] = customFieldsData[field._id];
