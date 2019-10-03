@@ -1,6 +1,6 @@
 import * as faker from 'faker';
-import { companyFactory, customerFactory, internalNoteFactory, userFactory } from '../db/factories';
-import { InternalNotes, Users } from '../db/models';
+import { checklistFactory, checklistItemFactory, dealFactory, userFactory } from '../db/factories';
+import { ChecklistItems, Checklists, Users } from '../db/models';
 import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 
 import './setup.ts';
@@ -9,135 +9,161 @@ import './setup.ts';
  * Generate test data
  */
 const generateData = () => ({
-  contentType: 'customer',
+  contentType: 'deal',
   contentTypeId: 'DFDFAFSFSDDSF',
+  title: faker.random.word(),
+});
+
+const generateItemData = checklistId => ({
+  checklistId,
   content: faker.random.word(),
+  isChecked: false,
+  order: 0,
 });
 
 /*
  * Check values
  */
-const checkValues = (internalNoteObj, doc) => {
-  expect(internalNoteObj.contentType).toBe(doc.contentType);
-  expect(internalNoteObj.contentTypeId).toBe(doc.contentTypeId);
-  expect(internalNoteObj.content).toBe(doc.content);
+const checkValues = (checklistObj, doc) => {
+  expect(checklistObj.contentType).toBe(doc.contentType);
+  expect(checklistObj.contentTypeId).toBe(doc.contentTypeId);
+  expect(checklistObj.title).toBe(doc.title);
 };
 
-describe('InternalNotes model test', () => {
+describe('Checklists model test', () => {
   let _user;
-  let _internalNote;
+  let _checklist;
+  let _checklistItem;
 
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({});
-    _internalNote = await internalNoteFactory({});
+    _checklist = await checklistFactory({});
+    _checklistItem = await checklistItemFactory({ checklistId: _checklist._id });
   });
 
   afterEach(async () => {
     // Clearing test data
-    await InternalNotes.deleteMany({});
+    await ChecklistItems.deleteMany({});
+    await Checklists.deleteMany({});
     await Users.deleteMany({});
   });
 
-  test('Create internalNote', async () => {
+  test('Create Checklist, item', async () => {
     // valid
     const doc = generateData();
 
-    const internalNoteObj = await InternalNotes.createInternalNote(doc, _user);
+    const checklistObj = await Checklists.createChecklist(doc, _user);
 
-    checkValues(internalNoteObj, doc);
-    expect(internalNoteObj.createdUserId).toBe(_user._id);
+    checkValues(checklistObj, doc);
+    expect(checklistObj.createdUserId).toBe(_user._id);
+
+    const docItem = generateItemData(checklistObj._id);
+
+    const checklistItemObj = await ChecklistItems.createChecklistItem(docItem, _user);
+
+    checkValues(checklistItemObj, docItem);
+    expect(checklistItemObj.createdUserId).toBe(_user._id);
   });
 
-  test('Edit internalNote valid', async () => {
+  test('Edit checklist, item valid', async () => {
     const doc = generateData();
 
-    const internalNoteObj = await InternalNotes.updateInternalNote(_internalNote._id, doc);
+    const checklistObj = await Checklists.updateChecklist(_checklist._id, doc);
 
-    checkValues(internalNoteObj, doc);
+    const docItem = generateItemData(checklistObj._id);
+    const checklistItemObj = await ChecklistItems.updateChecklistItem(_checklistItem._id, docItem);
+
+    checkValues(checklistObj, doc);
+    checkValues(checklistItemObj, docItem);
   });
 
-  test('Remove internalNote valid', async () => {
+  test('Remove checklist and item valid', async () => {
     try {
-      await InternalNotes.removeInternalNote('DFFFDSFD');
+      await Checklists.removeChecklist('DFFFDSFD');
     } catch (e) {
-      expect(e.message).toBe('InternalNote not found with id DFFFDSFD');
+      expect(e.message).toBe('Checklist not found with id DFFFDSFD');
     }
 
-    let count = await InternalNotes.find({ _id: _internalNote._id }).countDocuments();
+    try {
+      await ChecklistItems.removeChecklistItem('DFFFDSFD');
+    } catch (e) {
+      expect(e.message).toBe("Checklist's item not found with id DFFFDSFD");
+    }
+
+    let count = await Checklists.find({ _id: _checklist._id }).countDocuments();
+
+    await checklistItemFactory({ checklistId: _checklist._id });
+    await checklistItemFactory({ checklistId: _checklist._id });
+
+    let itemCount = await ChecklistItems.find({ checklistId: _checklist._id }).countDocuments();
     expect(count).toBe(1);
+    expect(itemCount).toBe(3);
 
-    await InternalNotes.removeInternalNote(_internalNote._id);
+    await ChecklistItems.removeChecklistItem(_checklistItem._id);
 
-    count = await InternalNotes.find({ _id: _internalNote._id }).countDocuments();
+    itemCount = await ChecklistItems.find({ checklistId: _checklist._id }).countDocuments();
+    expect(itemCount).toBe(2);
+
+    await Checklists.removeChecklist(_checklist._id);
+
+    count = await Checklists.find({ _id: _checklist._id }).countDocuments();
+    itemCount = await ChecklistItems.find({ checklistId: _checklist._id }).countDocuments();
     expect(count).toBe(0);
+    expect(itemCount).toBe(0);
   });
 
-  test('changeCustomer', async () => {
-    const customer = await customerFactory({});
-    const newCustomer = await customerFactory({});
+  test('remove Deal and to remove Checklists', async () => {
+    const deal = await dealFactory({});
 
-    await internalNoteFactory({
-      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-      contentTypeId: customer._id,
+    const checklist = await checklistFactory({
+      contentType: ACTIVITY_CONTENT_TYPES.DEAL,
+      contentTypeId: deal._id,
     });
 
-    const updatedInternalNotes = await InternalNotes.changeCustomer(newCustomer._id, [customer._id]);
+    await checklistItemFactory({ checklistId: checklist._id });
 
-    for (const internalNote of updatedInternalNotes) {
-      expect(internalNote.contentTypeId).toEqual(newCustomer._id);
-    }
+    await Checklists.removeChecklists(ACTIVITY_CONTENT_TYPES.DEAL, deal._id);
+
+    const checklists = await Checklists.find({
+      contentType: ACTIVITY_CONTENT_TYPES.DEAL,
+      contentTypeId: deal._id,
+    });
+
+    const checklistItems = await ChecklistItems.find({ checklistId: checklist._id });
+
+    expect(checklists).toHaveLength(0);
+    expect(checklistItems).toHaveLength(0);
   });
 
-  test('changeCompany', async () => {
-    const company = await companyFactory({});
-    const newCompany = await companyFactory({});
+  test('getChecklistsState', async () => {
+    const deal = await dealFactory({});
+    const checklist = await checklistFactory({ contentType: ACTIVITY_CONTENT_TYPES.DEAL, contentTypeId: deal._id });
+    await checklistItemFactory({ checklistId: checklist._id, isChecked: true });
+    await checklistItemFactory({ checklistId: checklist._id, isChecked: true });
+    await checklistItemFactory({ checklistId: checklist._id });
 
-    await internalNoteFactory({
-      contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
-      contentTypeId: company._id,
-    });
+    const state = await Checklists.getChecklistsState(ACTIVITY_CONTENT_TYPES.DEAL, deal._id);
 
-    const updatedInternalNotes = await InternalNotes.changeCompany(newCompany._id, [company._id]);
-
-    for (const internalNote of updatedInternalNotes) {
-      expect(internalNote.contentTypeId).toEqual(newCompany._id);
-    }
+    expect(state).toEqual({ complete: 2, all: 3 });
   });
 
-  test('removeCustomerInternalNotes', async () => {
-    const customer = await customerFactory({});
+  test('updateOrder items', async () => {
+    const checklist = await checklistFactory({});
+    const item0 = await checklistItemFactory({ checklistId: checklist._id, order: 0 });
+    const item1 = await checklistItemFactory({ checklistId: checklist._id, order: 1 });
+    const item2 = await checklistItemFactory({ checklistId: checklist._id, order: 2 });
 
-    await internalNoteFactory({
-      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-      contentTypeId: customer._id,
-    });
+    await Checklists.updateOrderItems([
+      { _id: item2._id, order: 0 },
+      { _id: item0._id, order: 1 },
+      { _id: item1._id, order: 2 },
+    ]);
 
-    await InternalNotes.removeCustomerInternalNotes(customer._id);
+    const items = await ChecklistItems.find({ checklistId: checklist._id }).sort({ order: 1 });
 
-    const internalNote = await InternalNotes.find({
-      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-      contentTypeId: customer._id,
-    });
-
-    expect(internalNote).toHaveLength(0);
-  });
-
-  test('removeCompanyInternalNotes', async () => {
-    const company = await companyFactory({});
-
-    await internalNoteFactory({
-      contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
-      contentTypeId: company._id,
-    });
-
-    await InternalNotes.removeCompanyInternalNotes(company._id);
-
-    const internalNote = await InternalNotes.find({
-      contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
-      contentTypeId: company._id,
-    });
-
-    expect(internalNote).toHaveLength(0);
+    expect(items[0]._id).toEqual(item2._id);
+    expect(items[1]._id).toEqual(item0._id);
+    expect(items[2]._id).toEqual(item1._id);
   });
 });

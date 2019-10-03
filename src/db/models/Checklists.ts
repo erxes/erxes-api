@@ -21,6 +21,7 @@ export interface IChecklistModel extends Model<IChecklistDocument> {
   ): Promise<IChecklistDocument>;
 
   updateChecklist(_id: string, doc: IChecklist): Promise<IChecklistDocument>;
+  updateOrderItems(orders: IOrderInput[]): Promise<IChecklistItemDocument[]>;
 
   removeChecklist(_id: string): void;
 }
@@ -30,7 +31,6 @@ export interface IChecklistItemModel extends Model<IChecklistItemDocument> {
   createChecklistItem({ checklistId, ...fields }: IChecklistItem, user: IUserDocument): Promise<IChecklistItemDocument>;
 
   updateChecklistItem(_id: string, doc: IChecklistItem): Promise<IChecklistDocument>;
-  updateOrderItems(orders: IOrderInput[]): Promise<IChecklistItemDocument[]>;
   removeChecklistItem(_id: string): void;
 }
 
@@ -100,6 +100,22 @@ export const loadClass = () => {
     }
 
     /*
+     * Update given items orders
+     */
+    public static async updateOrderItems(orders: IOrderInput[]) {
+      const ids: string[] = [];
+
+      for (const { _id, order } of orders) {
+        ids.push(_id);
+
+        // update each fields order
+        await ChecklistItems.updateOne({ _id }, { order });
+      }
+
+      return ChecklistItems.find({ _id: { $in: ids } }).sort({ order: 1 });
+    }
+
+    /*
      * Remove checklist
      */
     public static async removeChecklist(_id: string) {
@@ -155,22 +171,6 @@ export const loadItemClass = () => {
       await ChecklistItems.updateOne({ _id }, { $set: doc });
 
       return ChecklistItems.findOne({ _id });
-    }
-
-    /*
-     * Update given items orders
-     */
-    public static async updateOrderItems(orders: IOrderInput[]) {
-      const ids: string[] = [];
-
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-
-        // update each fields order
-        await ChecklistItems.updateOne({ _id }, { order });
-      }
-
-      return ChecklistItems.find({ _id: { $in: ids } }).sort({ order: 1 });
     }
 
     /*
