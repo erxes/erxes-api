@@ -14,6 +14,7 @@ import { IUserDocument } from './definitions/users';
 export interface IChecklistModel extends Model<IChecklistDocument> {
   getChecklist(_id: string): Promise<IChecklistDocument>;
   getChecklistsState(contentType: string, contentTypeId: string): Promise<{ complete: number; all: number }>;
+  removeChecklists(contentType: string, contentTypeId: string): void;
   createChecklist(
     { contentType, contentTypeId, ...fields }: IChecklist,
     user: IUserDocument,
@@ -56,6 +57,19 @@ export const loadClass = () => {
       const completedItems = checkItems.filter(item => item.isChecked);
 
       return { complete: completedItems.length, all: checkItems.length };
+    }
+
+    public static async removeChecklists(contentType: string, contentTypeId: string) {
+      const checklists = await Checklists.find({ contentType, contentTypeId });
+      if (!checklists) {
+        return;
+      }
+
+      const checklistIds = checklists.map(list => list._id);
+
+      await ChecklistItems.deleteMany({ checklistId: { $in: checklistIds } });
+
+      await Checklists.deleteMany({ _id: { $in: checklistIds } });
     }
 
     /*

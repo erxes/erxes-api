@@ -1,4 +1,4 @@
-import { Conformities, Deals } from '../../../db/models';
+import { Checklists, Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
@@ -142,8 +142,6 @@ const dealMutations = {
       contentType: 'deal',
     });
 
-    const removed = deal.remove();
-
     await putDeleteLog(
       {
         type: 'deal',
@@ -154,8 +152,9 @@ const dealMutations = {
     );
 
     await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
+    await Checklists.removeChecklists('deal', deal._id);
 
-    return removed;
+    return deal.remove();
   },
 
   /**
