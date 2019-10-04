@@ -19,6 +19,7 @@ import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageQueue';
 
+import { IntegrationsAPI } from './data/dataSources';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
@@ -146,7 +147,7 @@ app.get('/read-mail-attachment', async (req: any, res) => {
 app.post('/upload-file', async (req, res) => {
   const form = new formidable.IncomingForm();
 
-  form.parse(req, async (_error, _fields, response) => {
+  form.parse(req, async (_error, fields, response) => {
     const file = response.file || response.upload;
 
     // check file ====
@@ -154,6 +155,13 @@ app.post('/upload-file', async (req, res) => {
 
     if (status === 'ok') {
       try {
+        if (fields && fields.kind === 'nylas') {
+          const nylasApi = new IntegrationsAPI();
+          const apiResponse = await nylasApi.nylasUpload(file);
+
+          return res.send(apiResponse.id);
+        }
+
         const result = await uploadFile(file, response.upload ? true : false);
 
         return res.send(result);
