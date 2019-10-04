@@ -48,7 +48,7 @@ describe('checklistQueries', () => {
       contentType: 'deal',
       contentTypeId,
     });
-    console.log('responses', responses);
+
     expect(responses.length).toBe(1);
     expect(responses[0].items.length).toBe(4);
     expect(responses[0].percent).toBe(50);
