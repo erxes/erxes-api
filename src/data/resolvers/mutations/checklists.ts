@@ -219,7 +219,7 @@ const checklistMutations = {
       );
     }
 
-    return checklist;
+    return checklistItem;
   },
 
   /**
