@@ -16,7 +16,7 @@ const taskMutations = {
    * Create new task
    */
   async tasksAdd(_root, doc: ITask, { user }: IContext) {
-    doc.watchedUserIds = (doc.watchedUserIds || []).concat(user._id);
+    doc.watchedUserIds = [user._id];
 
     const task = await Tasks.createTask({
       ...doc,

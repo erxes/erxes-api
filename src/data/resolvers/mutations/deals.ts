@@ -18,7 +18,7 @@ const dealMutations = {
    */
   async dealsAdd(_root, doc: IDeal, { user }: IContext) {
     doc.initialStageId = doc.stageId;
-    doc.watchedUserIds = (doc.watchedUserIds || []).concat(user._id);
+    doc.watchedUserIds = [user._id];
 
     const deal = await Deals.createDeal({
       ...doc,

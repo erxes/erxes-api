@@ -18,7 +18,7 @@ const growthHackMutations = {
    */
   async growthHacksAdd(_root, doc: IGrowthHack, { user }: { user: IUserDocument }) {
     doc.initialStageId = doc.stageId;
-    doc.watchedUserIds = (doc.watchedUserIds || []).concat(user._id);
+    doc.watchedUserIds = [user._id];
 
     const growthHack = await GrowthHacks.createGrowthHack({
       ...doc,

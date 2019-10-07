@@ -1,6 +1,9 @@
 import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
+import { ITaskDocument } from '../../../db/models/definitions/tasks';
+import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -10,7 +13,12 @@ interface IInternalNotesEdit extends IInternalNote {
   _id: string;
 }
 
-const sendNotificationOfItems = async (item, doc, contentType, excludeUserIds) => {
+const sendNotificationOfItems = async (
+  item: IDealDocument | ITicketDocument | ITaskDocument,
+  doc: ISendNotification,
+  contentType: string,
+  excludeUserIds: string[],
+) => {
   const notifDocItems = { ...doc };
   const relatedReceivers = await notifiedUserIds(item);
   notifDocItems.action = `added note in ${contentType}`;
