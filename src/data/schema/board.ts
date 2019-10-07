@@ -21,6 +21,7 @@ export const types = `
     members: [User]
     bgColor: String
     isWatched: Boolean
+    itemsTotalCount: Int
     
     startDate: Date
     endDate: Date

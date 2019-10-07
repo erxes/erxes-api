@@ -1,7 +1,13 @@
-import { Users } from '../../db/models';
+import { Deals, GrowthHacks, Tasks, Tickets, Users } from '../../db/models';
 import { IPipelineDocument } from '../../db/models/definitions/boards';
-import { PIPELINE_VISIBLITIES } from '../../db/models/definitions/constants';
+import { BOARD_TYPES, PIPELINE_VISIBLITIES } from '../../db/models/definitions/constants';
 import { IContext } from '../types';
+import {
+  generateDealCommonFilters,
+  generateGrowthHackCommonFilters,
+  generateTaskCommonFilters,
+  generateTicketCommonFilters,
+} from './queries/boardUtils';
 
 export default {
   members(pipeline: IPipelineDocument, {}) {
@@ -39,5 +45,30 @@ export default {
     }
 
     return '';
+  },
+
+  async itemsTotalCount(pipeline: IPipelineDocument) {
+    switch (pipeline.type) {
+      case BOARD_TYPES.DEAL: {
+        const filter = await generateDealCommonFilters({ pipelineId: pipeline._id });
+
+        return Deals.find(filter).countDocuments();
+      }
+      case BOARD_TYPES.TICKET: {
+        const filter = await generateTicketCommonFilters({ pipelineId: pipeline._id });
+
+        return Tickets.find(filter).countDocuments();
+      }
+      case BOARD_TYPES.TASK: {
+        const filter = await generateTaskCommonFilters({ pipelineId: pipeline._id });
+
+        return Tasks.find(filter).countDocuments();
+      }
+      case BOARD_TYPES.GROWTH_HACK: {
+        const filter = await generateGrowthHackCommonFilters({ pipelineId: pipeline._id });
+
+        return GrowthHacks.find(filter).countDocuments();
+      }
+    }
   },
 };
