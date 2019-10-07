@@ -24,14 +24,14 @@ export default {
       return null;
     }
 
-    const { kind, platform } = integration;
+    const { kind } = integration;
 
     // Not mail
-    if (!platform && kind !== 'gmail') {
+    if (!kind.includes('gmail')) {
       return null;
     }
 
-    const path = platform ? `/${platform}/get-message` : `/${kind}/get-message`;
+    const path = kind.includes('nylas') ? `/nylas/get-message` : `/${kind}/get-message`;
 
     return dataSources.IntegrationsAPI.fetchApi(path, {
       erxesApiMessageId: message._id,

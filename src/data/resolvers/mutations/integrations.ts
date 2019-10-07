@@ -97,7 +97,7 @@ const integrationMutations = {
 
     let kind = doc.kind;
 
-    if (doc.platform === 'nylas') {
+    if (kind.includes('nylas')) {
       kind = 'nylas';
     }
 

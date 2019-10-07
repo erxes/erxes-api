@@ -90,7 +90,6 @@ export interface IUiOptionsDocument extends IUiOptions, Document {}
 
 export interface IIntegration {
   kind?: string;
-  platform?: string;
   name?: string;
   brandId?: string;
   languageCode?: string;
@@ -257,11 +256,6 @@ export const integrationSchema = new Schema({
   kind: field({
     type: String,
     enum: KIND_CHOICES.ALL,
-  }),
-
-  platform: field({
-    type: String,
-    optional: true,
   }),
 
   name: field({ type: String }),

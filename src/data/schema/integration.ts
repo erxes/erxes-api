@@ -7,7 +7,6 @@ export const types = `
     languageCode: String
     code: String
     formId: String
-    platform: String
     tagIds: [String]
     tags: [Tag]
     leadData: JSON
@@ -142,7 +141,6 @@ export const mutations = `
 
   integrationsCreateExternalIntegration(
     kind: String!,
-    platform: String,
     name: String!,
     brandId: String!,
     accountId: String,

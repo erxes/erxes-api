@@ -19,7 +19,6 @@ export interface IMessengerIntegration {
 
 export interface IExternalIntegrationParams {
   kind: string;
-  platform?: string;
   name: string;
   brandId: string;
   accountId: string;
