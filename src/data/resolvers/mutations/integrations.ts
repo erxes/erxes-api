@@ -155,7 +155,13 @@ const integrationMutations = {
    * Send mail
    */
   async integrationSendMail(_root, args: any, { dataSources }: IContext) {
-    const { erxesApiId, kind, ...doc } = args;
+    const { erxesApiId, ...doc } = args;
+
+    let kind = doc.kind;
+
+    if (kind.includes('nylas')) {
+      kind = 'nylas';
+    }
 
     return dataSources.IntegrationsAPI.sendEmail(kind, {
       erxesApiId,
