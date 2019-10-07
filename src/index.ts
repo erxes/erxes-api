@@ -138,8 +138,10 @@ app.get('/read-mail-attachment', async (req: any, res) => {
     return res.status(404).send('Attachment not found');
   }
 
+  const integrationPath = kind.includes('nylas') ? 'nylas' : kind;
+
   res.redirect(
-    `${INTEGRATIONS_API_DOMAIN}/${kind}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
+    `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
   );
 });
 
@@ -157,9 +159,13 @@ app.post('/upload-file', async (req, res) => {
       try {
         if (fields && fields.kind === 'nylas') {
           const nylasApi = new IntegrationsAPI();
-          const apiResponse = await nylasApi.nylasUpload(file);
 
-          return res.send(apiResponse.id);
+          const apiResponse = await nylasApi.nylasUpload({
+            ...file,
+            erxesApiId: fields.erxesApiId,
+          });
+
+          return res.send(apiResponse);
         }
 
         const result = await uploadFile(file, response.upload ? true : false);

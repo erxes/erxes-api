@@ -119,6 +119,8 @@ export const types = `
   }
 
   type MailAttachment {
+    id: String,
+    content_type: String,
     filename: String,
     mimeType: String,
     size: Int,
