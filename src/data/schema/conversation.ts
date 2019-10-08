@@ -99,19 +99,23 @@ export const types = `
     commentCount: Int
   }
 
+  type Email {
+    email: String
+  }
+
   type MessageDetails {
     messageId: String,
     threadId: String,
     subject: String,
     body: String,
     integrationEmail: String,
-    to: [JSON],
-    from: [JSON],
-    cc: [JSON],
-    bcc: [JSON],
+    to: [Email],
+    from: [Email],
+    cc: [Email],
+    bcc: [Email],
     accountId: String,
-    replyToMessageId: [JSON],
-    replyTo: [JSON],
+    replyToMessageId: [String],
+    replyTo: [String],
     reply: [String],
     references: String,
     headerId: String,
