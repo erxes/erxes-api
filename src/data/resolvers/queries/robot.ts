@@ -96,8 +96,8 @@ const checkShowModule = (actionsMap, moduleName: string): { showModule: boolean;
 };
 
 const robotQueries = {
-  robotEntries(_root, { isNotified }: { isNotified: boolean }) {
-    const selector: any = { parentId: null };
+  robotEntries(_root, { isNotified, action }: { isNotified: boolean; action: string }) {
+    const selector: any = { parentId: null, action };
 
     if (typeof isNotified !== 'undefined') {
       selector.isNotified = isNotified;
