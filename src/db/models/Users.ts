@@ -544,7 +544,7 @@ export const loadClass = () => {
 
       if (!valid) {
         // bad password
-        // throw new Error('Invalid login');
+        throw new Error('Invalid login');
       }
 
       // create tokens
