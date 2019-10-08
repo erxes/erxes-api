@@ -26,6 +26,7 @@ import { permissionQueries as permissions, usersGroupQueries as usersGroups } fr
 import pipelineTemplates from './pipelineTemplates';
 import products from './products';
 import responseTemplates from './responseTemplates';
+import robot from './robot';
 import scripts from './scripts';
 import segments from './segments';
 import tags from './tags';
@@ -70,4 +71,5 @@ export default {
   ...growthHack,
   ...pipelineTemplates,
   ...checklists,
+  ...robot,
 };

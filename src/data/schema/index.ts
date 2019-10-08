@@ -113,6 +113,8 @@ import {
   types as PipelineTemplateTypes,
 } from './pipelineTemplate';
 
+import { mutations as RobotMutations, queries as RobotQueries, types as RobotTypes } from './robot';
+
 import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
 
 import { mutations as ChecklistMutations, queries as ChecklistQueries, types as ChecklistTypes } from './checklist';
@@ -156,6 +158,7 @@ export const types = `
   ${GrowthHackTypes}
   ${PipelineTemplateTypes}
   ${ChecklistTypes}
+  ${RobotTypes}
 `;
 
 export const queries = `
@@ -194,6 +197,7 @@ export const queries = `
     ${GrowthHackQueries}
     ${PipelineTemplateQueries}
     ${ChecklistQueries}
+    ${RobotQueries}
   }
 `;
 
@@ -231,6 +235,7 @@ export const mutations = `
     ${PipelineTemplateMutations}
     ${ConformityMutations}
     ${ChecklistMutations}
+    ${RobotMutations}
   }
 `;
 
@@ -246,6 +251,7 @@ export const subscriptions = `
     activityLogsChanged: Boolean
     importHistoryChanged(_id: String!): ImportHistory
     notificationInserted(userId: String): Notification
+    onboardingChanged(userId: String!): OnboardingNotification
   }
 `;
 
