@@ -11,7 +11,7 @@ export default {
     return Customers.findOne({ _id: message.customerId });
   },
 
-  async details(message: IMessageDocument, _args, { dataSources }: IContext) {
+  async MailData(message: IMessageDocument, _args, { dataSources }: IContext) {
     const conversation = await Conversations.findOne({ _id: message.conversationId }).lean();
 
     if (!conversation || message.internal) {
