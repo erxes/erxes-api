@@ -55,7 +55,7 @@
   "dependencies": {
     "@axelspringer/graphql-google-pubsub": "^1.2.1",
     "@google-cloud/pubsub": "0.18.0",
-    "@google-cloud/storage": "^2.5.0",
+    "@google-cloud/storage": "^3.0.0",
     "apollo-datasource-rest": "^0.5.1",
     "amqplib": "0.5.3",
     "apollo-server-express": "^2.3.1",
