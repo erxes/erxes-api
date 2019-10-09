@@ -88,7 +88,7 @@ export const sendNotifications = async ({
   if (removedUsers && removedUsers.length > 0) {
     await utils.sendNotification({
       ...notificationDoc,
-      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_REMOVE_ASSIGN`],
+      notifType: NOTIFICATION_TYPES[`${getNotifType(contentType)}_REMOVE_ASSIGN`],
       action: `removed you from ${contentType}`,
       content: `'${item.name}'`,
       receivers: removedUsers.filter(id => id !== user._id),
@@ -98,7 +98,7 @@ export const sendNotifications = async ({
   if (invitedUsers && invitedUsers.length > 0) {
     await utils.sendNotification({
       ...notificationDoc,
-      notifType: NOTIFICATION_TYPES[`${contentType.toUpperCase()}_ADD`],
+      notifType: NOTIFICATION_TYPES[`${getNotifType(contentType)}_ADD`],
       action: `invited you to the ${contentType}: `,
       content: `'${item.name}'`,
       receivers: invitedUsers.filter(id => id !== user._id),
@@ -108,6 +108,17 @@ export const sendNotifications = async ({
   await utils.sendNotification({
     ...notificationDoc,
   });
+};
+
+/**
+ * Regex convert string camelCase to camel_case
+ * @param {String} type
+ */
+const getNotifType = (type: string): string => {
+  return type
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, '_')
+    .toUpperCase();
 };
 
 export const itemsChange = async (item: any, type: string, destinationStageId: string) => {
