@@ -8,15 +8,20 @@ import { IContext } from '../../types';
 
 const features: { [key: string]: { settings: string[]; settingsPermissions: string[] } } = {
   growthHacks: {
-    settings: ['boardCreate', 'pipelineCreate', 'growthHackCreate'],
+    settings: ['growthHackBoardsCreate', 'growthHackPipelinesCreate', 'growthHackCreate'],
     settingsPermissions: ['growthHackBoardsAdd', 'growthHackPipelinesAdd', 'growthHackStagesAdd'],
   },
   inbox: {
-    settings: ['brandCreate', 'channelCreate', 'integrationCreate'],
-    settingsPermissions: ['manageBrands', 'manageChannels', 'integrationCreate'],
+    settings: ['brandCreate', 'channelCreate', 'integrationCreate', 'responseTemplateCreate'],
+    settingsPermissions: [
+      'manageBrands',
+      'manageChannels',
+      'integrationsCreateMessengerIntegration',
+      'manageResponseTemplate',
+    ],
   },
   deals: {
-    settings: ['boardCreate', 'pipelineCreate', 'dealCreate'],
+    settings: ['dealBoardsCreate', 'dealPipelinesCreate', 'dealCreate'],
     settingsPermissions: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd'],
   },
   leads: {
@@ -24,49 +29,52 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     settingsPermissions: [],
   },
   engages: {
-    settings: ['emailTemplateCreate', 'tagCreate'],
-    settingsPermissions: ['manageEmailTemplate', 'manageTags'],
+    settings: ['emailTemplateCreate', 'tagCreate', 'engageCreate'],
+    settingsPermissions: ['manageEmailTemplate', 'manageTags', 'engageMessageAdd'],
   },
   tasks: {
-    settings: ['boardCreate', 'pipelineCreate', 'taskCreate'],
+    settings: ['taskBoardsCreate', 'taskPipelinesCreate', 'taskCreate'],
     settingsPermissions: ['taskBoardsAdd', 'taskPipelinesAdd', 'taskStagesAdd'],
   },
   tickets: {
-    settings: ['boardCreate', 'pipelineCreate', 'ticketCreate'],
+    settings: ['ticketBoardsCreate', 'ticketPipelinesCreate', 'ticketCreate'],
     settingsPermissions: ['ticketBoardsAdd', 'ticketPipelinesAdd', 'ticketStagesAdd'],
   },
   knowledgeBase: {
     settings: ['knowledgeBaseTopicCreate', 'knowledgeBaseCategoryCreate', 'knowledgeBaseArticleCreate'],
     settingsPermissions: ['manageKnowledgeBase'],
   },
-  customers: { settings: [], settingsPermissions: [] },
+  customers: {
+    settings: ['customerCreate', 'companyCreate', 'productCreate'],
+    settingsPermissions: ['customersAdd', 'companiesAdd', 'manageProducts'],
+  },
   segments: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['customerSegmentCreate', 'companySegmentCreate'],
+    settingsPermissions: ['manageSegments'],
   },
   tags: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['customerTagCreate', 'companyTagCreate'],
+    settingsPermissions: ['manageTags'],
   },
   properties: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['customerFieldCreate', 'companyFieldCreate'],
+    settingsPermissions: ['manageForms'],
   },
   permissions: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['permissionCreate'],
+    settingsPermissions: ['managePermissions'],
   },
   integrations: {
     settings: ['brandCreate', 'channelCreate'],
     settingsPermissions: ['manageBrands', 'manageChannels'],
   },
   insights: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['showInsights'],
+    settingsPermissions: ['showInsights'],
   },
   importHistories: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['customer_template.xlsxDownload', 'company_template.xlsxDownload'],
+    settingsPermissions: ['importXlsFile'],
   },
 };
 
@@ -84,10 +92,28 @@ const checkShowModule = (
 
   const module: IModuleMap = moduleObjects[moduleName];
 
+  interface IAction {
+    name: string;
+    description?: string;
+  }
+
+  let actions: IAction[] = [];
   let showModule = false;
   let showSettings = true;
 
-  for (const action of module.actions || []) {
+  if (!module) {
+    if (moduleName === 'leads') {
+      actions = [{ name: 'integrationsCreateLeadIntegration' }];
+    }
+
+    if (moduleName === 'properties') {
+      actions = [{ name: 'manageForms' }];
+    }
+  } else {
+    actions = module.actions as IAction[];
+  }
+
+  for (const action of actions) {
     if (actionsMap.includes(action.name || '')) {
       showModule = true;
       break;
@@ -128,29 +154,6 @@ const robotQueries = {
 
     for (const feature of Object.keys(features)) {
       const { settings } = features[feature];
-
-      if (['leads', 'properties'].includes(feature)) {
-        const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`] } };
-        const isComplete = (await OnboardingHistories.find(selector).countDocuments()) > 0;
-
-        const params = {
-          name: feature,
-          settings,
-          showSettings: false,
-          isComplete,
-        };
-
-        if (actionsMap.includes('integrationsCreateLeadIntegration')) {
-          results.push(params);
-        }
-
-        if (actionsMap.includes('manageForms')) {
-          results.push(params);
-        }
-
-        continue;
-      }
-
       const { showModule, showSettings } = checkShowModule(user, actionsMap, feature);
 
       if (showModule) {
