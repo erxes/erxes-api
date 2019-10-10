@@ -70,7 +70,7 @@ export const types = `
     messengerAppData: JSON
     user: User
     customer: Customer
-    MailData: MailData
+    mailData: MailData
   }
 
   type FacebookPost {
