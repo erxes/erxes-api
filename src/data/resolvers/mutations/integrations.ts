@@ -20,17 +20,15 @@ const integrationMutations = {
   async integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration, { user }: IContext) {
     const integration = await Integrations.createMessengerIntegration(doc);
 
-    if (integration) {
-      await putCreateLog(
-        {
-          type: 'integration',
-          newData: JSON.stringify(doc),
-          object: integration,
-          description: `${integration.name} has been created`,
-        },
-        user,
-      );
-    }
+    await putCreateLog(
+      {
+        type: 'messengerIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
+      },
+      user,
+    );
 
     return integration;
   },
@@ -74,8 +72,20 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateLeadIntegration(_root, doc: IIntegration) {
-    return Integrations.createLeadIntegration(doc);
+  async integrationsCreateLeadIntegration(_root, doc: IIntegration, { user }: IContext) {
+    const integration = await Integrations.createLeadIntegration(doc);
+
+    await putCreateLog(
+      {
+        type: 'leadIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
+      },
+      user,
+    );
+
+    return integration;
   },
 
   /**
@@ -91,13 +101,17 @@ const integrationMutations = {
   async integrationsCreateExternalIntegration(
     _root,
     { data, ...doc }: IExternalIntegrationParams & { data: object },
-    { dataSources }: IContext,
+    { user, dataSources }: IContext,
   ) {
     const integration = await Integrations.createExternalIntegration(doc);
 
     let kind = doc.kind;
 
-    if (kind === 'facebook-post' || kind === 'facebook-messenger') {
+    if (kind.includes('nylas')) {
+      kind = 'nylas';
+    }
+
+    if (kind.includes('facebook')) {
       kind = 'facebook';
     }
 
@@ -108,6 +122,16 @@ const integrationMutations = {
         integrationId: integration._id,
         data: data ? JSON.stringify(data) : '',
       });
+
+      await putCreateLog(
+        {
+          type: `${kind}Integration`,
+          newData: JSON.stringify(doc),
+          object: integration,
+          description: `${integration.name} has been created`,
+        },
+        user,
+      );
     } catch (e) {
       await Integrations.remove({ _id: integration._id });
       throw new Error(e);
@@ -123,7 +147,7 @@ const integrationMutations = {
     const integration = await Integrations.findOne({ _id });
 
     if (integration) {
-      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro'].includes(integration.kind || '')) {
+      if (['facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'nylas-gmail'].includes(integration.kind || '')) {
         await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
       }
 
@@ -148,14 +172,20 @@ const integrationMutations = {
   },
 
   /**
-   * Send gmail
+   * Send mail
    */
   async integrationSendMail(_root, args: any, { dataSources }: IContext) {
-    const { erxesApiId, ...mailParams } = args;
+    const { erxesApiId, ...doc } = args;
 
-    return dataSources.IntegrationsAPI.sendEmail({
+    let kind = doc.kind;
+
+    if (kind.includes('nylas')) {
+      kind = 'nylas';
+    }
+
+    return dataSources.IntegrationsAPI.sendEmail(kind, {
       erxesApiId,
-      data: JSON.stringify(mailParams),
+      data: JSON.stringify(doc),
     });
   },
 };

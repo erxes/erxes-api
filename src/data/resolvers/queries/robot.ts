@@ -13,15 +13,20 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
   },
   inbox: {
     settings: ['brandCreate', 'channelCreate', 'integrationCreate', 'responseTemplateCreate'],
-    settingsPermissions: ['manageBrands', 'manageChannels', 'integrationCreate', 'manageResponseTemplate'],
+    settingsPermissions: [
+      'manageBrands',
+      'manageChannels',
+      'integrationsCreateMessengerIntegration',
+      'manageResponseTemplate',
+    ],
   },
   deals: {
     settings: ['dealBoardsCreate', 'dealPipelinesCreate', 'dealCreate'],
     settingsPermissions: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd'],
   },
   leads: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['leadIntegrationCreate'],
+    settingsPermissions: ['integrationsCreateLeadIntegration'],
   },
   engages: {
     settings: ['emailTemplateCreate', 'tagCreate', 'engageCreate'],
@@ -52,16 +57,16 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     settingsPermissions: ['manageTags'],
   },
   properties: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['customerFieldCreate', 'companyFieldCreate'],
+    settingsPermissions: ['manageForms'],
   },
   permissions: {
     settings: ['permissionCreate'],
     settingsPermissions: ['managePermissions'],
   },
   integrations: {
-    settings: ['brandCreate', 'channelCreate'],
-    settingsPermissions: ['manageBrands', 'manageChannels'],
+    settings: ['messengerIntegrationCreate', 'facebookIntegrationCreate'],
+    settingsPermissions: ['integrationsCreateMessengerIntegration'],
   },
   insights: {
     settings: ['showInsights'],
@@ -87,10 +92,28 @@ const checkShowModule = (
 
   const module: IModuleMap = moduleObjects[moduleName];
 
+  interface IAction {
+    name: string;
+    description?: string;
+  }
+
+  let actions: IAction[] = [];
   let showModule = false;
   let showSettings = true;
 
-  for (const action of module.actions || []) {
+  if (!module) {
+    if (moduleName === 'leads') {
+      actions = [{ name: 'integrationsCreateLeadIntegration' }];
+    }
+
+    if (moduleName === 'properties') {
+      actions = [{ name: 'manageForms' }];
+    }
+  } else {
+    actions = module.actions as IAction[];
+  }
+
+  for (const action of actions) {
     if (actionsMap.includes(action.name || '')) {
       showModule = true;
       break;
@@ -131,29 +154,6 @@ const robotQueries = {
 
     for (const feature of Object.keys(features)) {
       const { settings } = features[feature];
-
-      if (['leads', 'properties'].includes(feature)) {
-        const selector = { userId: user._id, completedSteps: { $all: [`${feature}Show`] } };
-        const isComplete = (await OnboardingHistories.find(selector).countDocuments()) > 0;
-
-        const params = {
-          name: feature,
-          settings,
-          showSettings: false,
-          isComplete,
-        };
-
-        if (actionsMap.includes('integrationsCreateLeadIntegration')) {
-          results.push(params);
-        }
-
-        if (actionsMap.includes('manageForms')) {
-          results.push(params);
-        }
-
-        continue;
-      }
-
       const { showModule, showSettings } = checkShowModule(user, actionsMap, feature);
 
       if (showModule) {
