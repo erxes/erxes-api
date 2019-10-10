@@ -1,3 +1,4 @@
+import * as safe from 'safe-regex';
 import { ResponseTemplates } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -19,7 +20,7 @@ const generateFilter = (commonSelector, args: IListParams) => {
     filter.brandId = brandId;
   }
 
-  if (searchValue) {
+  if (searchValue && safe(searchValue)) {
     filter.$or = [
       { name: new RegExp(`.*${searchValue || ''}.*`, 'i') },
       { content: new RegExp(`.*${searchValue || ''}.*`, 'i') },

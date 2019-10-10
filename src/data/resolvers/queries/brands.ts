@@ -1,3 +1,4 @@
+import * as safe from 'safe-regex';
 import { Brands } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -11,11 +12,10 @@ interface IListArgs {
 
 const queryBuilder = async (params: IListArgs, brandIdSelector: any) => {
   const selector: any = { ...brandIdSelector };
-
   const { searchValue } = params;
 
-  if (searchValue) {
-    selector.name = new RegExp(`.*${params.searchValue}.*`, 'i');
+  if (searchValue && safe(searchValue)) {
+    selector.name = new RegExp(`.*${searchValue}.*`, 'i');
   }
 
   return selector;

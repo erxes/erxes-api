@@ -1,3 +1,4 @@
+import * as safe from 'safe-regex';
 import { ProductCategories, Products } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -33,7 +34,7 @@ const productQueries = {
     }
 
     // search =========
-    if (searchValue) {
+    if (searchValue && safe(searchValue)) {
       filter.name = new RegExp(`.*${searchValue}.*`, 'i');
     }
 
@@ -64,7 +65,7 @@ const productQueries = {
       filter.parentId = parentId;
     }
 
-    if (searchValue) {
+    if (searchValue && safe(searchValue)) {
       filter.name = new RegExp(`.*${searchValue}.*`, 'i');
     }
 

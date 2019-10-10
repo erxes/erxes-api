@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+import * as safe from 'safe-regex';
 import { Conformities, Stages } from '../../../db/models';
 import { getNextMonth, getToday } from '../../utils';
 
@@ -153,7 +154,7 @@ export const generateCommonFilters = async (args: any) => {
     filter.closeDate = { $lt: today };
   }
 
-  if (search) {
+  if (search && safe(search)) {
     filter.$or = [
       { name: new RegExp(`.*${search || ''}.*`, 'i') },
       { description: new RegExp(`.*${search || ''}.*`, 'i') },

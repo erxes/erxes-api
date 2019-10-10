@@ -1,3 +1,4 @@
+import * as safe from 'safe-regex';
 import { Conversations, Users } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -20,11 +21,11 @@ const queryBuilder = async (params: IListArgs) => {
     isActive,
   };
 
-  if (searchValue) {
+  if (searchValue && safe(searchValue)) {
     const fields = [
-      { email: new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { 'details.fullName': new RegExp(`.*${params.searchValue}.*`, 'i') },
-      { 'details.position': new RegExp(`.*${params.searchValue}.*`, 'i') },
+      { email: new RegExp(`.*${searchValue}.*`, 'i') },
+      { 'details.fullName': new RegExp(`.*${searchValue}.*`, 'i') },
+      { 'details.position': new RegExp(`.*${searchValue}.*`, 'i') },
     ];
 
     selector.$or = fields;

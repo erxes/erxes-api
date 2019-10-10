@@ -1,3 +1,4 @@
+import * as safe from 'safe-regex';
 import { Brands, Channels, Integrations, Tags } from '../../../db/models';
 import { KIND_CHOICES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
@@ -25,7 +26,7 @@ const generateFilterQuery = async ({ kind, channelId, brandId, searchValue, tag 
     query.brandId = brandId;
   }
 
-  if (searchValue) {
+  if (searchValue && safe(searchValue)) {
     query.name = new RegExp(`.*${searchValue}.*`, 'i');
   }
 
