@@ -811,3 +811,27 @@ export default {
   readFile,
   createTransporter,
 };
+
+const stringToRegex = (value: string) => {
+  const specialChars = [...'{}[]\\^$.|?*+()'];
+
+  const result = [...value].map(char => (specialChars.includes(char) ? '.?\\' + char : '.?' + char));
+
+  return '.*' + result.join('').substring(2) + '.*';
+};
+
+export const regexSearchMultiFields = (searchValue: string, perFunc: (value: string) => any[]) => {
+  const result: any[] = [];
+
+  searchValue = searchValue.replace(/\s\s+/g, ' ');
+
+  const words = searchValue.split(' ');
+
+  for (const word of words) {
+    const regexValue = stringToRegex(word);
+
+    result.push({ $or: perFunc(regexValue) });
+  }
+
+  return { $and: result };
+};

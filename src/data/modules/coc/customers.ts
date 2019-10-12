@@ -3,8 +3,9 @@ import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Brands, FormSubmissions, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import { regexSearchMultiFields } from '../../utils';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils, stringToRegex } from './utils';
+import { conformityFilterUtils } from './utils';
 
 interface ISortParams {
   [index: string]: number;
@@ -126,30 +127,19 @@ export class Builder {
 
   // filter by search value
   public searchFilter(value: string): { $and: any } {
-    const result: any[] = [];
-
-    value = value.replace(/\s\s+/g, ' ');
-
-    const words = value.split(' ');
-
-    for (const word of words) {
-      const regexValue = stringToRegex(word);
-
-      const fields = [
-        { firstName: new RegExp(`${regexValue}`, 'mui') },
-        { lastName: new RegExp(`${regexValue}`, 'mui') },
-        { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
-        { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
-        { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-        { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-        { 'visitorContactInfo.email': new RegExp(`${regexValue}`, 'mui') },
-        { 'visitorContactInfo.phone': new RegExp(`${regexValue}`, 'mui') },
+    const perWordSearch = word => {
+      return [
+        { firstName: new RegExp(`${word}`, 'mui') },
+        { lastName: new RegExp(`${word}`, 'mui') },
+        { primaryEmail: new RegExp(`${word}`, 'mui') },
+        { primaryPhone: new RegExp(`${word}`, 'mui') },
+        { emails: { $in: [new RegExp(`${word}`, 'mui')] } },
+        { phones: { $in: [new RegExp(`${word}`, 'mui')] } },
+        { 'visitorContactInfo.email': new RegExp(`${word}`, 'mui') },
+        { 'visitorContactInfo.phone': new RegExp(`${word}`, 'mui') },
       ];
-
-      result.push({ $or: fields });
-    }
-
-    return { $and: result };
+    };
+    return regexSearchMultiFields(value, perWordSearch);
   }
 
   // filter by id

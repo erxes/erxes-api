@@ -24,11 +24,3 @@ export const conformityFilterUtils = async (baseQuery, params, relType) => {
   }
   return baseQuery;
 };
-
-export const stringToRegex = (value: string) => {
-  const specialChars = [...'[\\^$.|?*+()'];
-
-  const result = [...value].map(char => (specialChars.includes(char) ? '.?\\' + char : '.?' + char));
-
-  return '.*' + result.join('').substring(2) + '.*';
-};

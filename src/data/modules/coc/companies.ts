@@ -1,8 +1,9 @@
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import { regexSearchMultiFields } from '../../utils';
 import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils, stringToRegex } from './utils';
+import { conformityFilterUtils } from './utils';
 
 export interface IListArgs extends IConformityQueryParams {
   page?: number;
@@ -74,30 +75,19 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
-    const result: any[] = [];
-
-    const value = params.searchValue.replace(/\s\s+/g, ' ');
-
-    const words = value.split(' ');
-
-    for (const word of words) {
-      const regexValue = stringToRegex(word);
-
-      const fields = [
-        { names: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-        { primaryEmail: new RegExp(`${regexValue}`, 'mui') },
-        { primaryPhone: new RegExp(`${regexValue}`, 'mui') },
-        { emails: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-        { phones: { $in: [new RegExp(`${regexValue}`, 'mui')] } },
-        { website: new RegExp(`${regexValue}`, 'mui') },
-        { industry: new RegExp(`${regexValue}`, 'mui') },
-        { plan: new RegExp(`${regexValue}`, 'mui') },
+    const perWordSearch = word => {
+      return [
+        { names: { $in: [new RegExp(`${word}`, 'mui')] } },
+        { primaryEmail: new RegExp(`${word}`, 'mui') },
+        { primaryPhone: new RegExp(`${word}`, 'mui') },
+        { emails: { $in: [new RegExp(`${word}`, 'mui')] } },
+        { phones: { $in: [new RegExp(`${word}`, 'mui')] } },
+        { website: new RegExp(`${word}`, 'mui') },
+        { industry: new RegExp(`${word}`, 'mui') },
+        { plan: new RegExp(`${word}`, 'mui') },
       ];
-
-      result.push({ $or: fields });
-    }
-
-    selector = { $and: result };
+    };
+    return regexSearchMultiFields(params.searchValue, perWordSearch);
   }
 
   // Filter by related and saved Conformity
