@@ -18,19 +18,17 @@ const integrationMutations = {
    * Create a new messenger integration
    */
   async integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration, { user }: IContext) {
-    const integration = await Integrations.createMessengerIntegration(doc);
+    const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
-    if (integration) {
-      await putCreateLog(
-        {
-          type: 'integration',
-          newData: JSON.stringify(doc),
-          object: integration,
-          description: `${integration.name} has been created`,
-        },
-        user,
-      );
-    }
+    await putCreateLog(
+      {
+        type: 'messengerIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
+      },
+      user,
+    );
 
     return integration;
   },
@@ -74,8 +72,20 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateLeadIntegration(_root, doc: IIntegration) {
-    return Integrations.createLeadIntegration(doc);
+  async integrationsCreateLeadIntegration(_root, doc: IIntegration, { user }: IContext) {
+    const integration = await Integrations.createLeadIntegration(doc, user._id);
+
+    await putCreateLog(
+      {
+        type: 'leadIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
+      },
+      user,
+    );
+
+    return integration;
   },
 
   /**
@@ -91,9 +101,9 @@ const integrationMutations = {
   async integrationsCreateExternalIntegration(
     _root,
     { data, ...doc }: IExternalIntegrationParams & { data: object },
-    { dataSources }: IContext,
+    { user, dataSources }: IContext,
   ) {
-    const integration = await Integrations.createExternalIntegration(doc);
+    const integration = await Integrations.createExternalIntegration(doc, user._id);
 
     let kind = doc.kind;
 
@@ -112,6 +122,16 @@ const integrationMutations = {
         integrationId: integration._id,
         data: data ? JSON.stringify(data) : '',
       });
+
+      await putCreateLog(
+        {
+          type: `${kind}Integration`,
+          newData: JSON.stringify(doc),
+          object: integration,
+          description: `${integration.name} has been created`,
+        },
+        user,
+      );
     } catch (e) {
       await Integrations.remove({ _id: integration._id });
       throw new Error(e);

@@ -12,7 +12,13 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     settingsPermissions: ['growthHackBoardsAdd', 'growthHackPipelinesAdd', 'growthHackStagesAdd'],
   },
   inbox: {
-    settings: ['brandCreate', 'channelCreate', 'integrationCreate', 'responseTemplateCreate'],
+    settings: [
+      'brandCreate',
+      'channelCreate',
+      'messengerIntegrationCreate',
+      'responseTemplateCreate',
+      'connectIntegrationsToChannel',
+    ],
     settingsPermissions: [
       'manageBrands',
       'manageChannels',
@@ -21,12 +27,12 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     ],
   },
   deals: {
-    settings: ['dealBoardsCreate', 'dealPipelinesCreate', 'dealCreate'],
-    settingsPermissions: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd'],
+    settings: ['dealBoardsCreate', 'dealPipelinesCreate', 'dealCreate', 'configure.dealCurrency', 'configure.dealUOM'],
+    settingsPermissions: ['dealBoardsAdd', 'dealPipelinesAdd', 'dealStagesAdd', 'manageGeneralSettings'],
   },
   leads: {
-    settings: [],
-    settingsPermissions: [],
+    settings: ['leadIntegrationCreate', 'leadIntegrationInstalled'],
+    settingsPermissions: ['integrationsCreateLeadIntegration'],
   },
   engages: {
     settings: ['emailTemplateCreate', 'tagCreate', 'engageCreate'],
@@ -65,8 +71,8 @@ const features: { [key: string]: { settings: string[]; settingsPermissions: stri
     settingsPermissions: ['managePermissions'],
   },
   integrations: {
-    settings: ['brandCreate', 'channelCreate'],
-    settingsPermissions: ['manageBrands', 'manageChannels'],
+    settings: ['messengerIntegrationCreate', 'facebookIntegrationCreate'],
+    settingsPermissions: ['integrationsCreateMessengerIntegration'],
   },
   insights: {
     settings: ['showInsights'],
