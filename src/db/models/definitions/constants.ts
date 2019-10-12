@@ -57,8 +57,9 @@ export const KIND_CHOICES = {
   FACEBOOK_MESSENGER: 'facebook-messenger',
   FACEBOOK_POST: 'facebook-post',
   GMAIL: 'gmail',
+  NYLAS_GMAIL: 'nylas-gmail',
   CALLPRO: 'callpro',
-  ALL: ['messenger', 'lead', 'facebook-messenger', 'facebook-post', 'gmail', 'callpro'],
+  ALL: ['messenger', 'lead', 'facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'nylas-gmail'],
 };
 
 // messenger data availability constants
@@ -75,9 +76,10 @@ export const ACTIVITY_CONTENT_TYPES = {
   DEAL: 'deal',
   TICKET: 'ticket',
   TASK: 'task',
+  PRODUCT: 'product',
   GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'growthHack'],
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'product', 'growthHack'],
 };
 
 export const PUBLISH_STATUSES = {
@@ -148,13 +150,15 @@ export const PIPELINE_VISIBLITIES = {
 export const HACK_SCORING_TYPES = {
   RICE: 'rice',
   ICE: 'ice',
-  ALL: ['rice', 'ice'],
+  PIE: 'pie',
+  ALL: ['rice', 'ice', 'pie'],
 };
 
 export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
-  ALL: ['customer', 'company'],
+  PRODUCT: 'product',
+  ALL: ['customer', 'company', 'product'],
 };
 
 export const CUSTOMER_LEAD_STATUS_TYPES = [
@@ -288,7 +292,9 @@ export const PROBABILITY = {
   NINETY: '90%',
   WON: 'Won',
   LOST: 'Lost',
-  ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost'],
+  DONE: 'Done',
+  RESOLVED: 'Resolved',
+  ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost', 'Done', 'Resolved'],
 };
 
 export const STATUSES = {
@@ -317,12 +323,12 @@ export const NOTIFICATION_TYPES = {
   DEAL_CHANGE: 'dealChange',
   DEAL_DUE_DATE: 'dealDueDate',
   DEAL_DELETE: 'dealDelete',
-  GROWTH_HACK_ADD: 'growthHackAdd',
-  GROWTH_HACK_REMOVE_ASSIGN: 'growthHackRemoveAssign',
-  GROWTH_HACK_EDIT: 'growthHackEdit',
-  GROWTH_HACK_CHANGE: 'growthHackChange',
-  GROWTH_HACK_DUE_DATE: 'growthHackDueDate',
-  GROWTH_HACK_DELETE: 'growthHackDelete',
+  GROWTHHACK_ADD: 'growthHackAdd',
+  GROWTHHACK_REMOVE_ASSIGN: 'growthHackRemoveAssign',
+  GROWTHHACK_EDIT: 'growthHackEdit',
+  GROWTHHACK_CHANGE: 'growthHackChange',
+  GROWTHHACK_DUE_DATE: 'growthHackDueDate',
+  GROWTHHACK_DELETE: 'growthHackDelete',
   TICKET_ADD: 'ticketAdd',
   TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
   TICKET_EDIT: 'ticketEdit',

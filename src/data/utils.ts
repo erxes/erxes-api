@@ -9,7 +9,8 @@ import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
-import { debugEmail, debugExternalApi } from '../debuggers';
+import { OnboardingHistories } from '../db/models/Robot';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -390,8 +391,11 @@ export const sendNotification = async (doc: ISendNotification) => {
   const { createdUser, receivers, title, content, notifType, action, contentType, contentTypeId } = doc;
   let link = doc.link;
 
+  // remove duplicated ids
+  const receiverIds = [...new Set(receivers)];
+
   // collecting emails
-  const recipients = await Users.find({ _id: { $in: receivers } });
+  const recipients = await Users.find({ _id: { $in: receiverIds } });
 
   // collect recipient emails
   const toEmails: string[] = [];
@@ -403,7 +407,7 @@ export const sendNotification = async (doc: ISendNotification) => {
   }
 
   // loop through receiver ids
-  for (const receiverId of receivers) {
+  for (const receiverId of receiverIds) {
     try {
       // send web and mobile notification
       const notification = await Notifications.createNotification(
@@ -570,8 +574,21 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
 export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
   const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
 
+  registerOnboardHistory({ type: `${doc.type}Create`, user });
+
   return putLog(doc, user);
 };
+
+export const registerOnboardHistory = ({ type, user }: { type: string; user: IUserDocument }) =>
+  OnboardingHistories.getOrCreate({ type, user })
+    .then(({ status }) => {
+      if (status === 'created') {
+        graphqlPubsub.publish('onboardingChanged', {
+          onboardingChanged: { userId: user._id, type },
+        });
+      }
+    })
+    .catch(e => debugBase(e));
 
 /**
  * Prepares a create log request to log server

@@ -4,6 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
+import { putCreateLog } from '../../utils';
 import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -16,9 +17,12 @@ const ticketMutations = {
    * Create new ticket
    */
   async ticketsAdd(_root, doc: ITicket, { user }: IContext) {
+    doc.watchedUserIds = [user._id];
+
     const ticket = await Tickets.createTicket({
       ...doc,
       modifiedBy: user._id,
+      userId: user._id,
     });
 
     await sendNotifications({
@@ -29,6 +33,16 @@ const ticketMutations = {
       content: `'${ticket.name}'.`,
       contentType: 'ticket',
     });
+
+    await putCreateLog(
+      {
+        type: 'ticket',
+        newData: JSON.stringify(doc),
+        object: ticket,
+        description: `${ticket.name} has been created`,
+      },
+      user,
+    );
 
     return ticket;
   },

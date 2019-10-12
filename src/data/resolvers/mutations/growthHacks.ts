@@ -18,15 +18,18 @@ const growthHackMutations = {
    */
   async growthHacksAdd(_root, doc: IGrowthHack, { user }: { user: IUserDocument }) {
     doc.initialStageId = doc.stageId;
+    doc.watchedUserIds = [user._id];
+
     const growthHack = await GrowthHacks.createGrowthHack({
       ...doc,
       modifiedBy: user._id,
+      userId: user._id,
     });
 
     await sendNotifications({
       item: growthHack,
       user,
-      type: NOTIFICATION_TYPES.GROWTH_HACK_ADD,
+      type: NOTIFICATION_TYPES.GROWTHHACK_ADD,
       action: 'invited you to the growthHack',
       content: `'${growthHack.name}'.`,
       contentType: 'growthHack',
@@ -60,7 +63,7 @@ const growthHackMutations = {
     const notificationDoc: IBoardNotificationParams = {
       item: updatedGrowthHack,
       user,
-      type: NOTIFICATION_TYPES.GROWTH_HACK_EDIT,
+      type: NOTIFICATION_TYPES.GROWTHHACK_EDIT,
       action: `has updated a growth hack`,
       content: `${updatedGrowthHack.name}`,
       contentType: 'growthHack',
@@ -117,7 +120,7 @@ const growthHackMutations = {
     await sendNotifications({
       item: growthHack,
       user,
-      type: NOTIFICATION_TYPES.GROWTH_HACK_CHANGE,
+      type: NOTIFICATION_TYPES.GROWTHHACK_CHANGE,
       content,
       action,
       contentType: 'growthHack',
@@ -146,7 +149,7 @@ const growthHackMutations = {
     await sendNotifications({
       item: growthHack,
       user,
-      type: NOTIFICATION_TYPES.GROWTH_HACK_DELETE,
+      type: NOTIFICATION_TYPES.GROWTHHACK_DELETE,
       action: `deleted growth hack:`,
       content: `'${growthHack.name}'`,
       contentType: 'growthHack',
@@ -177,6 +180,13 @@ const growthHackMutations = {
     }
 
     return GrowthHacks.watchGrowthHack(_id, isAdd, user._id);
+  },
+
+  /**
+   * Vote a growth hack
+   */
+  growthHacksVote(_root, { _id, isVote }: { _id: string; isVote: boolean }, { user }: { user: IUserDocument }) {
+    return GrowthHacks.voteGrowthHack(_id, isVote, user._id);
   },
 };
 

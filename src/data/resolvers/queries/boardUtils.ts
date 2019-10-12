@@ -14,8 +14,6 @@ export const contains = (values: string[] = [], empty = false) => {
 export const generateCommonFilters = async (args: any) => {
   const {
     $and,
-    date,
-    pipelineId,
     stageId,
     search,
     overdue,
@@ -116,8 +114,8 @@ export const generateCommonFilters = async (args: any) => {
     const tommorrow = moment().add(1, 'days');
 
     filter.closeDate = {
-      $gte: new Date(tommorrow.startOf('day').format('YYYY-MM-DD')),
-      $lte: new Date(tommorrow.endOf('day').format('YYYY-MM-DD')),
+      $gte: new Date(tommorrow.startOf('day').toISOString()),
+      $lte: new Date(tommorrow.endOf('day').toISOString()),
     };
   }
 
@@ -181,14 +179,6 @@ export const generateCommonFilters = async (args: any) => {
     filter.stageId = stageId;
   }
 
-  // Calendar monthly date
-  if (date) {
-    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
-
-    filter.closeDate = dateSelector(date);
-    filter.stageId = { $in: stageIds };
-  }
-
   return filter;
 };
 
@@ -199,6 +189,16 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
 
   if (productIds) {
     filter['productsData.productId'] = contains(productIds);
+  }
+
+  // Calendar monthly date
+  const { date, pipelineId } = args;
+
+  if (date) {
+    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
+
+    filter.closeDate = dateSelector(date);
+    filter.stageId = { $in: stageIds };
   }
 
   return filter;
@@ -232,9 +232,26 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
   return filter;
 };
 
-export const generateGrowthHackCommonFilters = async (args: any) => {
+export const generateGrowthHackCommonFilters = async (args: any, extraParams?: any) => {
   args.type = 'growthHack';
+
+  const { hackStage, priority, pipelineId, stageId } = extraParams || args;
+
   const filter = await generateCommonFilters(args);
+
+  if (hackStage) {
+    filter.hackStages = { $in: [hackStage] };
+  }
+
+  if (priority) {
+    filter.priority = priority;
+  }
+
+  if (!stageId && pipelineId) {
+    const stageIds = await Stages.find({ pipelineId }).distinct('_id');
+
+    filter.stageId = { $in: stageIds };
+  }
 
   return filter;
 };
