@@ -25,6 +25,9 @@ export const types = `
     stage: Stage
     attachments: [Attachment]
     isWatched: Boolean
+    voteCount: Int
+    votedUsers: [User]
+    isVoted: Boolean
     formId: String
     scoringType: String
     formSubmissions: JSON
@@ -33,39 +36,33 @@ export const types = `
   }
 `;
 
+const commonQueryFields = `
+  pipelineId: String
+  initialStageId: String
+  stageId: String
+  skip: Int
+  limit: Int
+  search: String
+  assignedUserIds: [String]
+  nextDay: String
+  nextWeek: String
+  nextMonth: String
+  noCloseDate: String
+  overdue: String
+  hackStage: String
+  priority: String
+`;
+
 export const queries = `
   growthHackDetail(_id: String!): GrowthHack
   growthHacks(
-    pipelineId: String
-    initialStageId: String
-    stageId: String
-    skip: Int
-    limit: Int
-    search: String
-    assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
-    hackStage: String
+    ${commonQueryFields}
     sortField: String
     sortDirection: Int
   ): [GrowthHack]
 
   growthHacksTotalCount(
-    pipelineId: String
-    initialStageId: String
-    stageId: String
-    skip: Int
-    search: String
-    assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
-    hackStage: String
+    ${commonQueryFields}
   ): Int
 
   growthHacksPriorityMatrix(
@@ -102,4 +99,5 @@ export const mutations = `
   growthHacksUpdateOrder(stageId: String!, orders: [OrderItem]): [GrowthHack]
   growthHacksRemove(_id: String!): GrowthHack
   growthHacksWatch(_id: String, isAdd: Boolean): GrowthHack
+  growthHacksVote(_id: String!, isVote: Boolean): GrowthHack
 `;
