@@ -4,6 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITask } from '../../../db/models/definitions/tasks';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
+import { putCreateLog } from '../../utils';
 import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -16,9 +17,12 @@ const taskMutations = {
    * Create new task
    */
   async tasksAdd(_root, doc: ITask, { user }: IContext) {
+    doc.watchedUserIds = [user._id];
+
     const task = await Tasks.createTask({
       ...doc,
       modifiedBy: user._id,
+      userId: user._id,
     });
 
     await sendNotifications({
@@ -29,6 +33,16 @@ const taskMutations = {
       content: `'${task.name}'.`,
       contentType: 'task',
     });
+
+    await putCreateLog(
+      {
+        type: 'task',
+        newData: JSON.stringify(doc),
+        object: task,
+        description: `${task.name} has been created`,
+      },
+      user,
+    );
 
     return task;
   },

@@ -11,14 +11,14 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
-import IntegrationsAPI from './data/dataSources/integrations';
+import { IntegrationsAPI } from './data/dataSources';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { checkFile, getEnv, readFileRequest, uploadFile } from './data/utils';
+import { checkFile, getEnv, readFileRequest, registerOnboardHistory, uploadFile } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
-import './messageQueue';
+import './messageBroker';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
@@ -75,6 +75,14 @@ app.use(userMiddleware);
 
 app.use('/static', express.static(path.join(__dirname, 'private')));
 
+app.get('/download-template', (req: any, res) => {
+  const name = req.query.name;
+
+  registerOnboardHistory({ type: `${name}Download`, user: req.user });
+
+  return res.redirect(`/static/importTemplates/${name}`);
+});
+
 // for health check
 app.get('/status', async (_req, res) => {
   res.end('ok');
@@ -129,16 +137,18 @@ app.get('/read-file', async (req: any, res) => {
   }
 });
 
-// get gmail attachment file
-app.get('/read-gmail-attachment', async (req: any, res) => {
-  const { messageId, attachmentId, integrationId, filename } = req.query;
+// get mail attachment file
+app.get('/read-mail-attachment', async (req: any, res) => {
+  const { messageId, attachmentId, kind, integrationId, filename } = req.query;
 
   if (!messageId || !attachmentId || !integrationId) {
     return res.status(404).send('Attachment not found');
   }
 
+  const integrationPath = kind.includes('nylas') ? 'nylas' : kind;
+
   res.redirect(
-    `${INTEGRATIONS_API_DOMAIN}/gmail/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
+    `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}`,
   );
 });
 
@@ -164,6 +174,17 @@ app.post('/upload-file', async (req, res) => {
           return res.send(jsonResponse.media_id_string);
         }
 
+        if (fields && fields.kind === 'nylas') {
+          const nylasApi = new IntegrationsAPI();
+
+          const apiResponse = await nylasApi.nylasUpload({
+            ...file,
+            erxesApiId: fields.erxesApiId,
+          });
+
+          return res.send(apiResponse);
+        }
+
         const result = await uploadFile(file, response.upload ? true : false);
 
         return res.send(result);
@@ -182,9 +203,9 @@ app.get('/connect-integration', async (req: any, res, _next) => {
     return res.end('forbidden');
   }
 
-  const link = req.query.link;
+  const { link, kind } = req.query;
 
-  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}`);
+  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}?kind=${kind}`);
 });
 
 // file import
