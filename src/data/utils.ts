@@ -820,7 +820,7 @@ const stringToRegex = (value: string) => {
   return '.*' + result.join('').substring(2) + '.*';
 };
 
-export const regexSearchMultiFields = (searchValue: string, customFieldsSearch: (value: string) => any[]) => {
+export const regexSearchMultiFields = (searchValue: string, customFieldsSearch: (value: RegExp) => any[]) => {
   const result: any[] = [];
 
   searchValue = searchValue.replace(/\s\s+/g, ' ');
@@ -828,9 +828,9 @@ export const regexSearchMultiFields = (searchValue: string, customFieldsSearch: 
   const words = searchValue.split(' ');
 
   for (const word of words) {
-    const regexValue = stringToRegex(word);
+    const regexStr = new RegExp(`${stringToRegex(word)}`, 'mui');
 
-    result.push({ $or: customFieldsSearch(regexValue) });
+    result.push({ $or: customFieldsSearch(regexStr) });
   }
 
   return { $and: result };

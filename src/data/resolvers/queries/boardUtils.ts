@@ -154,8 +154,8 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (search) {
-    const perWordSearch = word => {
-      return [{ name: new RegExp(`${word}`, 'mui') }, { description: new RegExp(`${word}`, 'mui') }];
+    const perWordSearch = regexStr => {
+      return [{ name: regexStr }, { description: regexStr }];
     };
 
     Object.assign(filter, regexSearchMultiFields(search, perWordSearch));

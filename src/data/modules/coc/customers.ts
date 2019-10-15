@@ -127,18 +127,19 @@ export class Builder {
 
   // filter by search value
   public searchFilter(value: string): { $and: any } {
-    const perWordSearch = word => {
+    const perWordSearch = regexStr => {
       return [
-        { firstName: new RegExp(`${word}`, 'mui') },
-        { lastName: new RegExp(`${word}`, 'mui') },
-        { primaryEmail: new RegExp(`${word}`, 'mui') },
-        { primaryPhone: new RegExp(`${word}`, 'mui') },
-        { emails: { $in: [new RegExp(`${word}`, 'mui')] } },
-        { phones: { $in: [new RegExp(`${word}`, 'mui')] } },
-        { 'visitorContactInfo.email': new RegExp(`${word}`, 'mui') },
-        { 'visitorContactInfo.phone': new RegExp(`${word}`, 'mui') },
+        { firstName: regexStr },
+        { lastName: regexStr },
+        { primaryEmail: regexStr },
+        { primaryPhone: regexStr },
+        { emails: { $in: [regexStr] } },
+        { phones: { $in: [regexStr] } },
+        { 'visitorContactInfo.email': regexStr },
+        { 'visitorContactInfo.phone': regexStr },
       ];
     };
+
     return regexSearchMultiFields(value, perWordSearch);
   }
 

@@ -75,18 +75,19 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
-    const perWordSearch = word => {
+    const perWordSearch = regexStr => {
       return [
-        { names: { $in: [new RegExp(`${word}`, 'mui')] } },
-        { primaryEmail: new RegExp(`${word}`, 'mui') },
-        { primaryPhone: new RegExp(`${word}`, 'mui') },
-        { emails: { $in: [new RegExp(`${word}`, 'mui')] } },
-        { phones: { $in: [new RegExp(`${word}`, 'mui')] } },
-        { website: new RegExp(`${word}`, 'mui') },
-        { industry: new RegExp(`${word}`, 'mui') },
-        { plan: new RegExp(`${word}`, 'mui') },
+        { names: { $in: [regexStr] } },
+        { primaryEmail: regexStr },
+        { primaryPhone: regexStr },
+        { emails: { $in: [regexStr] } },
+        { phones: { $in: [regexStr] } },
+        { website: regexStr },
+        { industry: regexStr },
+        { plan: regexStr },
       ];
     };
+
     return regexSearchMultiFields(params.searchValue, perWordSearch);
   }
 
