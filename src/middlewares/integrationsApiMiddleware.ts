@@ -17,6 +17,7 @@ const integrationsApiMiddleware = async (req, res) => {
   const doc = JSON.parse(payload || '{}');
 
   if (action === 'get-create-update-customer') {
+    console.log(doc);
     const integration = await Integrations.findOne({ _id: doc.integrationId });
 
     if (!integration) {
@@ -38,7 +39,14 @@ const integrationsApiMiddleware = async (req, res) => {
       }
     }
 
-    customer = await getCustomer({ primaryEmail });
+    if (primaryPhone) {
+      customer = await getCustomer({ primaryEmail });
+
+      if (customer) {
+        await Customers.updateCustomer(customer._id, doc);
+        return res.json({ _id: customer._id });
+      }
+    }
 
     if (customer) {
       return res.json({ _id: customer._id });
