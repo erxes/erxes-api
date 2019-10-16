@@ -64,7 +64,7 @@ const userQueries = {
    * All users
    */
   allUsers(_root, args: IUserParams, { userBrandIdsSelector }: IContext) {
-    const selector: { isActive?: boolean } = userBrandIdsSelector || {};
+    const selector: { isActive?: boolean } = userBrandIdsSelector;
 
     if (args.isActive) {
       selector.isActive = true;
