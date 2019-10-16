@@ -17,7 +17,6 @@ const integrationsApiMiddleware = async (req, res) => {
   const doc = JSON.parse(payload || '{}');
 
   if (action === 'get-create-update-customer') {
-    console.log(doc);
     const integration = await Integrations.findOne({ _id: doc.integrationId });
 
     if (!integration) {

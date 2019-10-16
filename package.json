@@ -90,7 +90,6 @@
     "request": "^2.88.0",
     "requestify": "^0.2.5",
     "sha256": "^0.2.0",
-    "smooch-core": "^8.7.3",
     "strip": "^3.0.0",
     "twit": "^2.2.9",
     "underscore": "^1.8.3",
