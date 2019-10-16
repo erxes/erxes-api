@@ -164,16 +164,6 @@ app.post('/upload-file', async (req, res) => {
 
     if (status === 'ok') {
       try {
-        if (fields && fields.kind === 'twitter-dm') {
-          const twitterApi = new IntegrationsAPI();
-
-          const apiResponse = await twitterApi.twitterUpload({ file });
-
-          const jsonResponse = JSON.parse(apiResponse.response);
-
-          return res.send(jsonResponse.media_id_string);
-        }
-
         if (fields && fields.kind === 'nylas') {
           const nylasApi = new IntegrationsAPI();
 
