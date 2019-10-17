@@ -3,7 +3,7 @@ import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Brands, FormSubmissions, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
-import { regexSearchMultiFields } from '../../utils';
+import { regexSearchText } from '../../utils';
 import QueryBuilder from '../segments/queryBuilder';
 import { conformityFilterUtils } from './utils';
 
@@ -127,20 +127,7 @@ export class Builder {
 
   // filter by search value
   public searchFilter(value: string): { $and: any } {
-    const perWordSearch = regexStr => {
-      return [
-        { firstName: regexStr },
-        { lastName: regexStr },
-        { primaryEmail: regexStr },
-        { primaryPhone: regexStr },
-        { emails: { $in: [regexStr] } },
-        { phones: { $in: [regexStr] } },
-        { 'visitorContactInfo.email': regexStr },
-        { 'visitorContactInfo.phone': regexStr },
-      ];
-    };
-
-    return regexSearchMultiFields(value, perWordSearch);
+    return regexSearchText(value);
   }
 
   // filter by id

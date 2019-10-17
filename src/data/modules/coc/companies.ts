@@ -1,7 +1,7 @@
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
-import { regexSearchMultiFields } from '../../utils';
+import { regexSearchText } from '../../utils';
 import QueryBuilder from '../segments/queryBuilder';
 import { conformityFilterUtils } from './utils';
 
@@ -75,20 +75,7 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
-    const perWordSearch = regexStr => {
-      return [
-        { names: { $in: [regexStr] } },
-        { primaryEmail: regexStr },
-        { primaryPhone: regexStr },
-        { emails: { $in: [regexStr] } },
-        { phones: { $in: [regexStr] } },
-        { website: regexStr },
-        { industry: regexStr },
-        { plan: regexStr },
-      ];
-    };
-
-    return regexSearchMultiFields(params.searchValue, perWordSearch);
+    Object.assign(regexSearchText(params.searchValue));
   }
 
   // Filter by related and saved Conformity

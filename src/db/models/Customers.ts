@@ -12,6 +12,7 @@ interface ICustomerFieldsInput {
 
 export interface ICustomerModel extends Model<ICustomerDocument> {
   checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string): never;
+  fillSearchText(doc: ICustomer): string;
   getCustomer(_id: string): Promise<ICustomerDocument>;
   createCustomer(doc: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   updateCustomer(_id: string, doc: ICustomer): Promise<ICustomerDocument>;
@@ -82,6 +83,20 @@ export const loadClass = () => {
       }
     }
 
+    public static fillSearchText(doc: ICustomer) {
+      return [
+        doc.firstName || '',
+        doc.lastName || '',
+        doc.primaryEmail || '',
+        doc.primaryPhone || '',
+        (doc.emails || []).join(' '),
+        (doc.phones || []).join(' '),
+        doc.visitorContactInfo
+          ? (doc.visitorContactInfo.email || '').concat(' ', doc.visitorContactInfo.phone || '')
+          : '',
+      ].join(' ');
+    }
+
     /**
      * Retreives customer
      */
@@ -117,6 +132,7 @@ export const loadClass = () => {
       const customer = await Customers.create({
         createdAt: new Date(),
         modifiedAt: new Date(),
+        searchText: Customers.fillSearchText(doc),
         ...doc,
       });
 
@@ -149,7 +165,10 @@ export const loadClass = () => {
       // calculateProfileScore
       await Customers.updateProfileScore(_id, true);
 
-      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+      await Customers.updateOne(
+        { _id },
+        { $set: { ...doc, searchText: Customers.fillSearchText(doc), modifiedAt: new Date() } },
+      );
 
       return Customers.findOne({ _id });
     }

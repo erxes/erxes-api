@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import { Conformities, Stages } from '../../../db/models';
-import { getNextMonth, getToday, regexSearchMultiFields } from '../../utils';
+import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
   if (empty) {
@@ -154,11 +154,7 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (search) {
-    const perWordSearch = regexStr => {
-      return [{ name: regexStr }, { description: regexStr }];
-    };
-
-    Object.assign(filter, regexSearchMultiFields(search, perWordSearch));
+    Object.assign(filter, regexSearchText(search));
   }
 
   if (stageId) {
