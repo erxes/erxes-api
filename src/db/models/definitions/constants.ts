@@ -11,7 +11,8 @@ export const TAG_TYPES = {
   ENGAGE_MESSAGE: 'engageMessage',
   COMPANY: 'company',
   INTEGRATION: 'integration',
-  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration'],
+  PRODUCT: 'product',
+  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration', 'product'],
 };
 
 export const MESSENGER_KINDS = {
@@ -59,7 +60,8 @@ export const KIND_CHOICES = {
   GMAIL: 'gmail',
   NYLAS_GMAIL: 'nylas-gmail',
   CALLPRO: 'callpro',
-  ALL: ['messenger', 'lead', 'facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'nylas-gmail'],
+  CHATFUEL: 'chatfuel',
+  ALL: ['messenger', 'lead', 'facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'chatfuel', 'nylas-gmail'],
 };
 
 // messenger data availability constants
