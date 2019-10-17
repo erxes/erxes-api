@@ -75,7 +75,7 @@ export const filter = async (params: IListArgs) => {
   }
 
   if (params.searchValue) {
-    Object.assign(regexSearchText(params.searchValue));
+    Object.assign(selector, regexSearchText(params.searchValue));
   }
 
   // Filter by related and saved Conformity
