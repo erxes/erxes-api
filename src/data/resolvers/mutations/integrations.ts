@@ -141,6 +141,13 @@ const integrationMutations = {
   },
 
   /**
+   * Create account
+   */
+  async integrationAddImapAccount(_root, data, { dataSources }) {
+    return dataSources.IntegrationsAPI.createImapAccount(data);
+  },
+
+  /**
    * Delete an integration
    */
   async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
