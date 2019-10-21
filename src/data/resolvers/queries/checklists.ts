@@ -10,6 +10,13 @@ const checklistQueries = {
       createdDate: 1,
     });
   },
+
+  /**
+   * Checklist
+   */
+  async checklistDetail(_root, { _id }: { _id: string }) {
+    return Checklists.findOne({ _id });
+  },
 };
 
 moduleRequireLogin(checklistQueries);

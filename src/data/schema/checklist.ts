@@ -1,6 +1,7 @@
 export const types = `
   type ChecklistItem {
     _id: String!
+    checklistId: String
     isChecked: Boolean
     content: String
     order: Int
@@ -30,6 +31,7 @@ export const types = `
 
 export const queries = `
   checklists(contentType: String, contentTypeId: String): [Checklist]
+  checklistDetail(_id: String!): Checklist
 `;
 
 export const mutations = `
