@@ -38,15 +38,6 @@ const integrationsApiMiddleware = async (req, res) => {
       }
     }
 
-    if (primaryPhone) {
-      customer = await getCustomer({ primaryEmail });
-
-      if (customer) {
-        await Customers.updateCustomer(customer._id, doc);
-        return res.json({ _id: customer._id });
-      }
-    }
-
     if (primaryEmail) {
       customer = await getCustomer({ primaryEmail });
     }
