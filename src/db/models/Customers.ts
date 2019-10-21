@@ -146,10 +146,10 @@ export const loadClass = () => {
         doc.hasValidEmail = isValid;
       }
 
+      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+
       // calculateProfileScore
       await Customers.updateProfileScore(_id, true);
-
-      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
 
       return Customers.findOne({ _id });
     }
