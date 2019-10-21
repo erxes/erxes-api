@@ -12,7 +12,6 @@ interface ICustomerFieldsInput {
 
 export interface ICustomerModel extends Model<ICustomerDocument> {
   checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string): never;
-  fillSearchText(doc: ICustomer): string;
   getCustomer(_id: string): Promise<ICustomerDocument>;
   createCustomer(doc: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   updateCustomer(_id: string, doc: ICustomer): Promise<ICustomerDocument>;
@@ -83,20 +82,6 @@ export const loadClass = () => {
       }
     }
 
-    public static fillSearchText(doc: ICustomer) {
-      return [
-        doc.firstName || '',
-        doc.lastName || '',
-        doc.primaryEmail || '',
-        doc.primaryPhone || '',
-        (doc.emails || []).join(' '),
-        (doc.phones || []).join(' '),
-        doc.visitorContactInfo
-          ? (doc.visitorContactInfo.email || '').concat(' ', doc.visitorContactInfo.phone || '')
-          : '',
-      ].join(' ');
-    }
-
     /**
      * Retreives customer
      */
@@ -132,7 +117,6 @@ export const loadClass = () => {
       const customer = await Customers.create({
         createdAt: new Date(),
         modifiedAt: new Date(),
-        searchText: Customers.fillSearchText(doc),
         ...doc,
       });
 
@@ -165,10 +149,7 @@ export const loadClass = () => {
       // calculateProfileScore
       await Customers.updateProfileScore(_id, true);
 
-      await Customers.updateOne(
-        { _id },
-        { $set: { ...doc, searchText: Customers.fillSearchText(doc), modifiedAt: new Date() } },
-      );
+      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
 
       return Customers.findOne({ _id });
     }
@@ -204,45 +185,56 @@ export const loadClass = () => {
      * Update customer profile score
      */
     public static async updateProfileScore(customerId: string, save: boolean) {
-      let score = 0;
-
-      const nullValues = ['', null];
       const customer = await Customers.findOne({ _id: customerId });
 
       if (!customer) {
         return 0;
       }
 
-      if (!nullValues.includes(customer.firstName || '')) {
+      const nullValues = ['', null];
+      let score = 0;
+      let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
+
+      if (customer.firstName && !nullValues.includes(customer.firstName || '')) {
         score += 10;
+        searchText = searchText.concat(' ', customer.firstName);
       }
 
-      if (!nullValues.includes(customer.lastName || '')) {
+      if (customer.lastName && !nullValues.includes(customer.lastName || '')) {
         score += 5;
+        searchText = searchText.concat(' ', customer.lastName);
       }
 
-      if (!nullValues.includes(customer.primaryEmail || '')) {
+      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail || '')) {
         score += 15;
+        searchText = searchText.concat(' ', customer.primaryEmail);
       }
 
-      if (!nullValues.includes(customer.primaryPhone || '')) {
+      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone || '')) {
         score += 10;
+        searchText = searchText.concat(' ', customer.primaryPhone);
       }
 
       if (customer.visitorContactInfo != null) {
         score += 5;
+        searchText = searchText.concat(
+          ' ',
+          customer.visitorContactInfo.email || '',
+          ' ',
+          customer.visitorContactInfo.phone || '',
+        );
       }
 
       if (!save) {
         return {
           updateOne: {
             filter: { _id: customerId },
-            update: { $set: { profileScore: score } },
+            update: { $set: { profileScore: score, searchText } },
           },
         };
       }
 
-      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score } });
+      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score, searchText } });
     }
     /**
      * Removes customer

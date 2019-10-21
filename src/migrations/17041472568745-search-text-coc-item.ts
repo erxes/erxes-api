@@ -1,6 +1,7 @@
 import { connect } from '../db/connection';
 import { Companies, Customers, Deals, GrowthHacks, Tasks, Tickets } from '../db/models';
 import { fillSearchTextItem } from '../db/models/boardUtils';
+import { ICustomer } from '../db/models/definitions/customers';
 
 module.exports.up = async () => {
   await connect();
@@ -15,7 +16,21 @@ module.exports.up = async () => {
     }
   };
 
-  await executer(Customers, Customers.fillSearchText);
+  const fillSearchTextCustomer = (doc: ICustomer) => {
+    return [
+      doc.firstName || '',
+      doc.lastName || '',
+      doc.primaryEmail || '',
+      doc.primaryPhone || '',
+      (doc.emails || []).join(' '),
+      (doc.phones || []).join(' '),
+      doc.visitorContactInfo
+        ? (doc.visitorContactInfo.email || '').concat(' ', doc.visitorContactInfo.phone || '')
+        : '',
+    ].join(' ');
+  };
+
+  await executer(Customers, fillSearchTextCustomer);
 
   await executer(Companies, Companies.fillSearchText);
 
