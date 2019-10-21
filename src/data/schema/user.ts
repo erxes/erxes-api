@@ -58,6 +58,7 @@ export const types = `
     groupIds: [String]
     brandIds: [String]
 
+    brands: [Brand]
     isOwner: Boolean
     permissionActions: JSON
   }
@@ -81,12 +82,13 @@ const commonParams = `
 const commonSelector = `
   searchValue: String,
   isActive: Boolean,
+  requireUsername: Boolean,
   ids: [String]
 `;
 
 export const queries = `
   users(page: Int, perPage: Int, status: String ${commonSelector}): [User]
-  allUsers: [User]
+  allUsers(isActive: Boolean): [User]
   userDetail(_id: String): User
   usersTotalCount(${commonSelector}): Int
   currentUser: User

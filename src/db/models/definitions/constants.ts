@@ -11,7 +11,8 @@ export const TAG_TYPES = {
   ENGAGE_MESSAGE: 'engageMessage',
   COMPANY: 'company',
   INTEGRATION: 'integration',
-  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration'],
+  PRODUCT: 'product',
+  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration', 'product'],
 };
 
 export const MESSENGER_KINDS = {
@@ -58,8 +59,22 @@ export const KIND_CHOICES = {
   FACEBOOK_POST: 'facebook-post',
   GMAIL: 'gmail',
   NYLAS_GMAIL: 'nylas-gmail',
+  NYLAS_imap: 'nylas-imap',
   CALLPRO: 'callpro',
-  ALL: ['messenger', 'lead', 'facebook-messenger', 'facebook-post', 'gmail', 'callpro', 'nylas-gmail'],
+  TWITTER_DM: 'twitter-dm',
+  CHATFUEL: 'chatfuel',
+  ALL: [
+    'messenger',
+    'lead',
+    'facebook-messenger',
+    'facebook-post',
+    'gmail',
+    'callpro',
+    'chatfuel',
+    'nylas-gmail',
+    'nylas-imap',
+    'twitter-dm',
+  ],
 };
 
 // messenger data availability constants
@@ -254,6 +269,7 @@ export const COMPANY_INDUSTRY_TYPES = [
   'Finance, Insurance & Real Estate',
   'Food & Beverage',
   'Foundations, Philanthropists & Non-Profits',
+  'Government Organization',
   'Health',
   'Hotels, Motels & Tourism',
   'Insurance',
