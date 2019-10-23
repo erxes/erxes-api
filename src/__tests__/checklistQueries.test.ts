@@ -36,7 +36,6 @@ describe('checklistQueries', () => {
             _id
             isChecked
             content
-            order
           }
           percent
         }

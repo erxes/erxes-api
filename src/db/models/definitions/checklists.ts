@@ -14,17 +14,11 @@ export interface IChecklistDocument extends IChecklist, Document {
   createdDate: Date;
 }
 
-export interface IOrderInput {
-  _id: string;
-  order: number;
-}
-
 export interface IChecklistItem {
   checklistId: string;
   content: string;
   mentionedUserIds?: string[];
   isChecked: boolean;
-  order: number;
 }
 
 export interface IChecklistItemDocument extends IChecklistItem, Document {
@@ -52,7 +46,6 @@ export const checklistItemSchema = new Schema({
   checklistId: field({ type: String }),
   content: field({ type: String }),
   isChecked: field({ type: Boolean }),
-  order: field({ type: Number }),
   mentionedUserIds: field({ type: [String] }),
   createdUserId: field({ type: String }),
   createdDate: field({ type: Date }),

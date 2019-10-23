@@ -97,8 +97,7 @@ describe('Checklists mutations', () => {
       checklistId: checklist._id,
       isChecked: false,
       content: `@${user.details.fullName}`,
-      mentionedUserIds: user._id,
-      order: 1,
+      mentionedUserIds: [user._id],
     };
 
     const mutation = `
@@ -107,19 +106,16 @@ describe('Checklists mutations', () => {
         $isChecked: Boolean,
         $content: String,
         $mentionedUserIds: [String],
-        $order: Int
       ) {
         checklistItemsAdd(
           checklistId: $checklistId,
           isChecked: $isChecked,
           content: $content,
           mentionedUserIds: $mentionedUserIds,
-          order: $order
         ) {
           _id
           isChecked
           content
-          order
         }
       }
     `;
@@ -136,7 +132,6 @@ describe('Checklists mutations', () => {
 
     expect(checklistItem.content).toBe(args.content);
     expect(checklistItem.isChecked).toBe(args.isChecked);
-    expect(checklistItem.order).toBe(args.order);
   });
 
   test('Edit checklist', async () => {
@@ -221,40 +216,5 @@ describe('Checklists mutations', () => {
     await graphqlRequest(mutation, 'checklistItemsRemove', { _id: _checklistItem._id }, context);
 
     expect(await ChecklistItems.findOne({ _id: _checklistItem._id })).toBe(null);
-  });
-
-  test('update order items', async () => {
-    const item1 = await checklistItemFactory({ checklistId: _checklist._id, order: 3 });
-    const item2 = await checklistItemFactory({ checklistId: _checklist._id, order: 4 });
-    const item3 = await checklistItemFactory({ checklistId: _checklist._id, order: 5 });
-
-    const args = {
-      orders: [
-        { _id: item2._id, order: 0 },
-        { _id: item3._id, order: 1 },
-        { _id: item1._id, order: 2 },
-        { _id: _checklistItem._id, order: 3 },
-      ],
-    };
-
-    const mutation = `
-      mutation updateOrderItems(
-        $orders: [OrderInput]
-      ) {
-        updateOrderItems (
-          orders: $orders
-        ) {
-          _id
-        }
-      }
-    `;
-
-    await graphqlRequest(mutation, 'updateOrderItems', args, context);
-
-    const items = await ChecklistItems.find({ checklistId: _checklist._id }).sort({ order: 1 });
-    expect(items[0]._id).toEqual(item2._id);
-    expect(items[1]._id).toEqual(item3._id);
-    expect(items[2]._id).toEqual(item1._id);
-    expect(items[3]._id).toEqual(_checklistItem._id);
   });
 });
