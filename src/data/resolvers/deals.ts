@@ -1,5 +1,4 @@
 import {
-  Checklists,
   Companies,
   Conformities,
   Customers,
@@ -124,9 +123,5 @@ export default {
 
   hasNotified(deal: IDealDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
-  },
-
-  async checklistsState(deal: IDealDocument) {
-    return Checklists.getChecklistsState('deal', deal._id);
   },
 };

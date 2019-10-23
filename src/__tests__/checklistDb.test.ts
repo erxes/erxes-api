@@ -18,7 +18,6 @@ const generateItemData = checklistId => ({
   checklistId,
   content: faker.random.word(),
   isChecked: false,
-  order: 0,
 });
 
 /*
@@ -134,36 +133,5 @@ describe('Checklists model test', () => {
 
     expect(checklists).toHaveLength(0);
     expect(checklistItems).toHaveLength(0);
-  });
-
-  test('getChecklistsState', async () => {
-    const deal = await dealFactory({});
-    const checklist = await checklistFactory({ contentType: ACTIVITY_CONTENT_TYPES.DEAL, contentTypeId: deal._id });
-    await checklistItemFactory({ checklistId: checklist._id, isChecked: true });
-    await checklistItemFactory({ checklistId: checklist._id, isChecked: true });
-    await checklistItemFactory({ checklistId: checklist._id });
-
-    const state = await Checklists.getChecklistsState(ACTIVITY_CONTENT_TYPES.DEAL, deal._id);
-
-    expect(state).toEqual({ complete: 2, all: 3 });
-  });
-
-  test('updateOrder items', async () => {
-    const checklist = await checklistFactory({});
-    const item0 = await checklistItemFactory({ checklistId: checklist._id, order: 0 });
-    const item1 = await checklistItemFactory({ checklistId: checklist._id, order: 1 });
-    const item2 = await checklistItemFactory({ checklistId: checklist._id, order: 2 });
-
-    await Checklists.updateOrderItems([
-      { _id: item2._id, order: 0 },
-      { _id: item0._id, order: 1 },
-      { _id: item1._id, order: 2 },
-    ]);
-
-    const items = await ChecklistItems.find({ checklistId: checklist._id }).sort({ order: 1 });
-
-    expect(items[0]._id).toEqual(item2._id);
-    expect(items[1]._id).toEqual(item0._id);
-    expect(items[2]._id).toEqual(item1._id);
   });
 });

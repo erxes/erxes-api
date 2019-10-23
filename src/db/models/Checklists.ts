@@ -7,13 +7,11 @@ import {
   IChecklistDocument,
   IChecklistItem,
   IChecklistItemDocument,
-  IOrderInput,
 } from './definitions/checklists';
 import { IUserDocument } from './definitions/users';
 
 export interface IChecklistModel extends Model<IChecklistDocument> {
   getChecklist(_id: string): Promise<IChecklistDocument>;
-  getChecklistsState(contentType: string, contentTypeId: string): Promise<{ complete: number; all: number }>;
   removeChecklists(contentType: string, contentTypeId: string): void;
   createChecklist(
     { contentType, contentTypeId, ...fields }: IChecklist,
@@ -21,7 +19,6 @@ export interface IChecklistModel extends Model<IChecklistDocument> {
   ): Promise<IChecklistDocument>;
 
   updateChecklist(_id: string, doc: IChecklist): Promise<IChecklistDocument>;
-  updateOrderItems(orders: IOrderInput[]): Promise<IChecklistItemDocument[]>;
 
   removeChecklist(_id: string): void;
 }
@@ -44,19 +41,6 @@ export const loadClass = () => {
       }
 
       return checklist;
-    }
-
-    public static async getChecklistsState(contentType: string, contentTypeId: string) {
-      const checklists = await Checklists.find({ contentType, contentTypeId });
-      if (!checklists) {
-        return null;
-      }
-
-      const checklistIds = checklists.map(checklist => checklist._id);
-      const checkItems = await ChecklistItems.find({ checklistId: { $in: checklistIds } });
-      const completedItems = checkItems.filter(item => item.isChecked);
-
-      return { complete: completedItems.length, all: checkItems.length };
     }
 
     public static async removeChecklists(contentType: string, contentTypeId: string) {
@@ -97,22 +81,6 @@ export const loadClass = () => {
       await Checklists.updateOne({ _id }, { $set: doc });
 
       return Checklists.findOne({ _id });
-    }
-
-    /*
-     * Update given items orders
-     */
-    public static async updateOrderItems(orders: IOrderInput[]) {
-      const ids: string[] = [];
-
-      for (const { _id, order } of orders) {
-        ids.push(_id);
-
-        // update each fields order
-        await ChecklistItems.updateOne({ _id }, { order });
-      }
-
-      return ChecklistItems.find({ _id: { $in: ids } }).sort({ order: 1 });
     }
 
     /*

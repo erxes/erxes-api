@@ -1,13 +1,4 @@
-import {
-  Checklists,
-  Companies,
-  Conformities,
-  Customers,
-  Notifications,
-  Pipelines,
-  Stages,
-  Users,
-} from '../../db/models';
+import { Companies, Conformities, Customers, Notifications, Pipelines, Stages, Users } from '../../db/models';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -63,9 +54,5 @@ export default {
 
   hasNotified(deal: ITaskDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
-  },
-
-  async checklistsState(task: ITaskDocument, _args) {
-    return Checklists.getChecklistsState('task', task._id);
   },
 };

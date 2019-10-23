@@ -1,13 +1,4 @@
-import {
-  Checklists,
-  Companies,
-  Conformities,
-  Customers,
-  Notifications,
-  Pipelines,
-  Stages,
-  Users,
-} from '../../db/models';
+import { Companies, Conformities, Customers, Notifications, Pipelines, Stages, Users } from '../../db/models';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
@@ -63,9 +54,5 @@ export default {
 
   hasNotified(deal: ITicketDocument, _args, { user }: IContext) {
     return Notifications.checkIfRead(user._id, deal._id);
-  },
-
-  async checklistsState(ticket: ITicketDocument, _args) {
-    return Checklists.getChecklistsState('ticket', ticket._id);
   },
 };

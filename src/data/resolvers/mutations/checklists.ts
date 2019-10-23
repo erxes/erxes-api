@@ -1,5 +1,6 @@
+import { IUserDocument } from '../../../../../erxes-widgets-api/src/db/models/definitions/users';
 import { ChecklistItems, Checklists, Deals, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
-import { IChecklist, IChecklistItem, IOrderInput } from '../../../db/models/definitions/checklists';
+import { IChecklist, IChecklistDocument, IChecklistItem } from '../../../db/models/definitions/checklists';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -13,6 +14,70 @@ interface IChecklistsEdit extends IChecklist {
 interface IChecklistItemsEdit extends IChecklistItem {
   _id: string;
 }
+
+const sendNotificationItemsMention = async (
+  checklist: IChecklistDocument,
+  args: IChecklistItem,
+  user: IUserDocument,
+) => {
+  const notifDoc: ISendNotification = {
+    title: `${checklist.contentType.toUpperCase()} updated`,
+    createdUser: user,
+    action: `mentioned you in ${checklist.contentType}'s checklist`,
+    receivers: args.mentionedUserIds || [],
+    content: ``,
+    link: ``,
+    notifType: ``,
+    contentType: ``,
+    contentTypeId: ``,
+  };
+
+  switch (checklist.contentType) {
+    case 'deal': {
+      const deal = await Deals.getDeal(checklist.contentTypeId);
+      const stage = await Stages.getStage(deal.stageId || '');
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+      notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
+      notifDoc.content = `"${deal.name}"`;
+      notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
+      notifDoc.contentTypeId = deal._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
+      break;
+    }
+
+    case 'ticket': {
+      const ticket = await Tickets.getTicket(checklist.contentTypeId);
+      const stage = await Stages.getStage(ticket.stageId || '');
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+      notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
+      notifDoc.content = `"${ticket.name}"`;
+      notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
+      notifDoc.contentTypeId = ticket._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
+      break;
+    }
+
+    case 'task': {
+      const task = await Tasks.getTask(checklist.contentTypeId);
+      const stage = await Stages.getStage(task.stageId || '');
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+
+      notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
+      notifDoc.content = `"${task.name}"`;
+      notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
+      notifDoc.contentTypeId = task._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  await utils.sendNotification(notifDoc);
+};
 
 const checklistMutations = {
   /**
@@ -147,63 +212,9 @@ const checklistMutations = {
   async checklistItemsAdd(_root, args: IChecklistItem, { user }: IContext) {
     const checklist = await Checklists.getChecklist(args.checklistId);
 
-    const notifDoc: ISendNotification = {
-      title: `${checklist.contentType.toUpperCase()} updated`,
-      createdUser: user,
-      action: `mentioned you in ${checklist.contentType}'s checklist`,
-      receivers: args.mentionedUserIds || [],
-      content: ``,
-      link: ``,
-      notifType: ``,
-      contentType: ``,
-      contentTypeId: ``,
-    };
-
-    switch (checklist.contentType) {
-      case 'deal': {
-        const deal = await Deals.getDeal(checklist.contentTypeId);
-        const stage = await Stages.getStage(deal.stageId || '');
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-        notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
-        notifDoc.content = `"${deal.name}"`;
-        notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
-        notifDoc.contentTypeId = deal._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
-        break;
-      }
-
-      case 'ticket': {
-        const ticket = await Tickets.getTicket(checklist.contentTypeId);
-        const stage = await Stages.getStage(ticket.stageId || '');
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-        notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
-        notifDoc.content = `"${ticket.name}"`;
-        notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
-        notifDoc.contentTypeId = ticket._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
-        break;
-      }
-
-      case 'task': {
-        const task = await Tasks.getTask(checklist.contentTypeId);
-        const stage = await Stages.getStage(task.stageId || '');
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-        notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
-        notifDoc.content = `"${task.name}"`;
-        notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
-        notifDoc.contentTypeId = task._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
-        break;
-      }
-
-      default:
-        break;
+    if (args.mentionedUserIds) {
+      await sendNotificationItemsMention(checklist, args, user);
     }
-
-    await utils.sendNotification(notifDoc);
 
     const checklistItem = await ChecklistItems.createChecklistItem(args, user);
 
@@ -230,6 +241,10 @@ const checklistMutations = {
     const checklist = await Checklists.getChecklist(checklistItem.checklistId);
     const updated = await ChecklistItems.updateChecklistItem(_id, doc);
 
+    if (doc.mentionedUserIds) {
+      await sendNotificationItemsMention(checklist, doc, user);
+    }
+
     await putUpdateLog(
       {
         type: 'checklistItem',
@@ -241,13 +256,6 @@ const checklistMutations = {
     );
 
     return updated;
-  },
-
-  /**
-   * Update item orders
-   */
-  updateOrderItems(_root, { orders }: { orders: IOrderInput[] }) {
-    return Checklists.updateOrderItems(orders);
   },
 
   /**
