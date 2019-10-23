@@ -41,7 +41,7 @@ const sendConversationToIntegrations = (
   doc: IConversationMessageAdd,
   dataSources: any,
 ) => {
-  if (dataSources) {
+  if (dataSources && dataSources.IntegrationsAPI) {
     return dataSources.IntegrationsAPI[requestName]({
       conversationId,
       integrationId,
