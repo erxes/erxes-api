@@ -41,12 +41,14 @@ const sendConversationToIntegrations = (
   doc: IConversationMessageAdd,
   dataSources: any,
 ) => {
-  return dataSources.IntegrationsAPI[requestName]({
-    conversationId,
-    integrationId,
-    content: strip(doc.content),
-    attachments: doc.attachments || [],
-  });
+  if (dataSources) {
+    return dataSources.IntegrationsAPI[requestName]({
+      conversationId,
+      integrationId,
+      content: strip(doc.content),
+      attachments: doc.attachments || [],
+    });
+  }
 };
 
 /**
