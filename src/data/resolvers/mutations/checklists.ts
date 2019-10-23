@@ -1,7 +1,7 @@
-import { IUserDocument } from '../../../../../erxes-widgets-api/src/db/models/definitions/users';
 import { ChecklistItems, Checklists, Deals, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
 import { IChecklist, IChecklistDocument, IChecklistItem } from '../../../db/models/definitions/checklists';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
