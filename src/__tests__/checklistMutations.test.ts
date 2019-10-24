@@ -97,7 +97,6 @@ describe('Checklists mutations', () => {
       checklistId: checklist._id,
       isChecked: false,
       content: `@${user.details.fullName}`,
-      mentionedUserIds: [user._id],
     };
 
     const mutation = `
@@ -105,13 +104,11 @@ describe('Checklists mutations', () => {
         $checklistId: String,
         $isChecked: Boolean,
         $content: String,
-        $mentionedUserIds: [String],
       ) {
         checklistItemsAdd(
           checklistId: $checklistId,
           isChecked: $isChecked,
           content: $content,
-          mentionedUserIds: $mentionedUserIds,
         ) {
           _id
           isChecked
@@ -121,14 +118,6 @@ describe('Checklists mutations', () => {
     `;
 
     const checklistItem = await graphqlRequest(mutation, 'checklistItemsAdd', args, context);
-
-    const notification = await Notifications.findOne({ receiver: user._id });
-
-    if (!notification) {
-      throw new Error('Notification not found');
-    }
-
-    expect(notification).toBeDefined();
 
     expect(checklistItem.content).toBe(args.content);
     expect(checklistItem.isChecked).toBe(args.isChecked);
