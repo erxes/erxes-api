@@ -74,6 +74,7 @@ export const KIND_CHOICES = {
     'chatfuel',
     'nylas-gmail',
     'nylas-imap',
+    'nylas-office365',
     'twitter-dm',
   ],
 };
