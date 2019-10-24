@@ -1,10 +1,8 @@
-import { ChecklistItems, Checklists, Deals, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
+import { ChecklistItems, Checklists } from '../../../db/models';
 import { IChecklist, IChecklistItem } from '../../../db/models/definitions/checklists';
-import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { notifiedUserIds } from '../boardUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IChecklistsEdit extends IChecklist {
   _id: string;
@@ -22,70 +20,6 @@ const checklistMutations = {
     const checklist = await Checklists.createChecklist(args, user);
 
     if (checklist) {
-      const notifDoc: ISendNotification = {
-        title: `${checklist.contentType.toUpperCase()} updated`,
-        createdUser: user,
-        action: `added checklist in ${args.contentType}`,
-        receivers: [],
-        content: ``,
-        link: ``,
-        notifType: ``,
-        contentType: ``,
-        contentTypeId: ``,
-      };
-
-      switch (args.contentType) {
-        case 'deal': {
-          const deal = await Deals.getDeal(args.contentTypeId);
-          const stage = await Stages.getStage(deal.stageId || '');
-          const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-          notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
-          notifDoc.content = `"${deal.name}"`;
-          notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
-          notifDoc.contentTypeId = deal._id;
-          notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
-          notifDoc.receivers = await notifiedUserIds(deal);
-
-          break;
-        }
-
-        case 'ticket': {
-          const ticket = await Tickets.getTicket(checklist.contentTypeId);
-          const stage = await Stages.getStage(ticket.stageId || '');
-          const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-          notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
-          notifDoc.content = `"${ticket.name}"`;
-          notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
-          notifDoc.contentTypeId = ticket._id;
-          notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
-          notifDoc.receivers = await notifiedUserIds(ticket);
-
-          break;
-        }
-
-        case 'task': {
-          const task = await Tasks.getTask(checklist.contentTypeId);
-          const stage = await Stages.getStage(task.stageId || '');
-          const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-
-          notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
-          notifDoc.content = `"${task.name}"`;
-          notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
-          notifDoc.contentTypeId = task._id;
-          notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
-          notifDoc.receivers = await notifiedUserIds(task);
-
-          break;
-        }
-
-        default:
-          break;
-      }
-
-      await utils.sendNotification(notifDoc);
-
       await putCreateLog(
         {
           type: 'checklist',

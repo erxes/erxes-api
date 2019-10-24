@@ -7,7 +7,7 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { ChecklistItems, Checklists, Notifications, Users } from '../db/models';
+import { ChecklistItems, Checklists, Users } from '../db/models';
 
 import './setup.ts';
 
@@ -68,14 +68,6 @@ describe('Checklists mutations', () => {
     `;
 
     const checklist = await graphqlRequest(mutation, 'checklistsAdd', args, context);
-
-    const notification = await Notifications.findOne({ receiver: user._id });
-
-    if (!notification) {
-      throw new Error('Notification not found');
-    }
-
-    expect(notification).toBeDefined();
 
     expect(checklist.contentType).toBe(args.contentType);
     expect(checklist.contentTypeId).toBe(args.contentTypeId);

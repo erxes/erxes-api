@@ -4,7 +4,6 @@ export const types = `
     checklistId: String
     isChecked: Boolean
     content: String
-    order: Int
   }
 
   type Checklist {
@@ -18,15 +17,6 @@ export const types = `
     percent: Float
   }
 
-  input OrderInput {
-    _id: String
-    order: Int
-  }
-
-  type ChecklistsState {
-    complete: Float
-    all: Float
-  }
 `;
 
 export const queries = `
@@ -38,9 +28,8 @@ export const mutations = `
   checklistsAdd(contentType: String, contentTypeId: String, title: String): Checklist
   checklistsEdit(_id: String!, title: String, contentType: String, contentTypeId: String,): Checklist
   checklistsRemove(_id: String!): Checklist
-  updateOrderItems(orders: [OrderInput]): [ChecklistItem]
 
-  checklistItemsAdd(checklistId: String, content: String, isChecked: Boolean, order: Int): ChecklistItem
-  checklistItemsEdit(_id: String!, checklistId: String, content: String, isChecked: Boolean, order: Int): ChecklistItem
+  checklistItemsAdd(checklistId: String, content: String, isChecked: Boolean): ChecklistItem
+  checklistItemsEdit(_id: String!, checklistId: String, content: String, isChecked: Boolean): ChecklistItem
   checklistItemsRemove(_id: String!): ChecklistItem
 `;

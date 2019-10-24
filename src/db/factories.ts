@@ -333,8 +333,6 @@ interface IChecklistItemFactoryInput {
   checklistId?: string;
   content?: string;
   isChecked?: boolean;
-  order?: number;
-  mentionedUserIds?: string[];
 }
 
 export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
@@ -342,8 +340,6 @@ export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
     checklistId: params.checklistId || faker.random.uuid().toString,
     content: params.content || faker.random.uuid().toString,
     isChecked: params.isChecked || false,
-    order: params.order || faker.random.number(),
-    mentionedUserIds: params.mentionedUserIds || [],
   });
 
   return checklistItem.save();
