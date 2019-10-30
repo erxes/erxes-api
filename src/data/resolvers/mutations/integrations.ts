@@ -174,6 +174,7 @@ const integrationMutations = {
           'nylas-gmail',
           'nylas-imap',
           'nylas-office365',
+          'nylas-outlook',
           'chatfuel',
           'twitter-dm',
         ].includes(integration.kind || '')
