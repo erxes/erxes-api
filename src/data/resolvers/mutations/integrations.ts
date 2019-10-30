@@ -145,10 +145,17 @@ const integrationMutations = {
   },
 
   /**
-   * Create account
+   * Create IMAP account
    */
   async integrationAddImapAccount(_root, data, { dataSources }) {
-    return dataSources.IntegrationsAPI.createImapAccount(data);
+    return dataSources.IntegrationsAPI.createAccount(data);
+  },
+
+  /**
+   * Create Outlook account
+   */
+  async integrationAddOutlookAccount(_root, data, { dataSources }) {
+    return dataSources.IntegrationsAPI.createAccount(data);
   },
 
   /**
