@@ -115,7 +115,7 @@ import {
 
 import { mutations as RobotMutations, queries as RobotQueries, types as RobotTypes } from './robot';
 
-import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
+import { mutations as ConformityMutations, queries as ConformityQueries, types as ConformityTypes } from './conformity';
 
 import { mutations as ChecklistMutations, queries as ChecklistQueries, types as ChecklistTypes } from './checklist';
 import {
@@ -190,6 +190,7 @@ export const queries = `
     ${KnowledgeBaseQueries}
     ${NotificationQueries}
     ${ActivityLogQueries}
+    ${ConformityQueries}
     ${DealQueries}
     ${ProductQueries}
     ${ConfigQueries}

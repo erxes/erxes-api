@@ -3,6 +3,6 @@ import { IInternalNoteDocument } from '../../db/models/definitions/internalNotes
 
 export default {
   createdUser(note: IInternalNoteDocument) {
-    return Users.findOne({ _id: note.createdUserId });
+    return Users.findOne({ _id: note._id });
   },
 };

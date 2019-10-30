@@ -5,6 +5,7 @@ import Brand from './brand';
 import Channel from './channel';
 import Checklist from './checklists';
 import Company from './company';
+import Conformity from './conformity';
 import Conversation from './conversation';
 import ConversationMessage from './conversationMessage';
 import Customer from './customer';
@@ -70,6 +71,8 @@ const resolvers: any = {
 
   Product,
   ProductCategory,
+
+  Conformity,
 
   ActivityLog,
   Form,

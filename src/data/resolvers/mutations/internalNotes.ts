@@ -132,7 +132,7 @@ const internalNoteMutations = {
           type: 'internalNote',
           newData: JSON.stringify(args),
           object: internalNote,
-          description: `${internalNote.contentType} has been created`,
+          description: `${args.contentType} has been created`,
         },
         user,
       );
@@ -154,7 +154,7 @@ const internalNoteMutations = {
           type: 'internalNote',
           object: internalNote,
           newData: JSON.stringify(doc),
-          description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
+          description: `${internalNote.contentType} written at has been edited`,
         },
         user,
       );
@@ -175,7 +175,7 @@ const internalNoteMutations = {
         {
           type: 'internalNote',
           object: internalNote,
-          description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,
+          description: `${internalNote.contentType} written at has been removed`,
         },
         user,
       );

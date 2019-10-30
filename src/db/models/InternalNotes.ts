@@ -1,14 +1,11 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs } from '.';
+import Conformities from './Conformities';
 import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { IInternalNote, IInternalNoteDocument, internalNoteSchema } from './definitions/internalNotes';
 import { IUserDocument } from './definitions/users';
 
 export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
-  createInternalNote(
-    { contentType, contentTypeId, ...fields }: IInternalNote,
-    user: IUserDocument,
-  ): Promise<IInternalNoteDocument>;
+  createInternalNote({ ...fields }: IInternalNote, user: IUserDocument): Promise<IInternalNoteDocument>;
 
   updateInternalNote(_id: string, doc: IInternalNote): Promise<IInternalNoteDocument>;
 
@@ -27,20 +24,18 @@ export const loadClass = () => {
     /*
      * Create new internalNote
      */
-    public static async createInternalNote(
-      { contentType, contentTypeId, ...fields }: IInternalNote,
-      user: IUserDocument,
-    ) {
+    public static async createInternalNote({ ...fields }: IInternalNote, user: IUserDocument) {
       const internalNote = await InternalNotes.create({
-        contentType,
-        contentTypeId,
-        createdUserId: user._id,
-        createdDate: new Date(),
         ...fields,
       });
 
-      // create log
-      await ActivityLogs.createInternalNoteLog(internalNote);
+      await Conformities.addConformity({
+        relType: 'note',
+        relTypeId: internalNote._id,
+        mainType: fields.contentType,
+        mainTypeId: fields.contentTypeId,
+        createdBy: user._id,
+      });
 
       return internalNote;
     }
@@ -64,6 +59,8 @@ export const loadClass = () => {
         throw new Error(`InternalNote not found with id ${_id}`);
       }
 
+      await Conformities.removeConformity({ mainType: 'note', mainTypeId: _id });
+
       return internalNoteObj.remove();
     }
 
@@ -71,13 +68,12 @@ export const loadClass = () => {
      * Transfers customers' internal notes to another customer
      */
     public static async changeCustomer(newCustomerId: string, customerIds: string[]) {
-      // Updating every internal notes of customer
-      await InternalNotes.updateMany(
+      await Conformities.updateMany(
         {
-          contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-          contentTypeId: { $in: customerIds || [] },
+          mainType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
+          mainTypeId: { $in: customerIds || [] },
         },
-        { contentTypeId: newCustomerId },
+        { mainTypeId: newCustomerId },
       );
 
       // Returning updated list of internal notes of new customer

@@ -1043,6 +1043,7 @@ interface IConformityFactoryInput {
   mainTypeId: string;
   relType: string;
   relTypeId: string;
+  content: string;
 }
 
 export const conformityFactory = (params: IConformityFactoryInput) => {

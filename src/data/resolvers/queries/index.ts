@@ -5,6 +5,7 @@ import channels from './channels';
 import checklists from './checklists';
 import companies from './companies';
 import configs from './configs';
+import conformity from './conformity';
 import conversations from './conversations';
 import customers from './customers';
 import dealInsights from './dealInsights';
@@ -55,6 +56,7 @@ export default {
   ...insights,
   ...knowledgeBase,
   ...notifications,
+  ...conformity,
   ...activityLogs,
   ...deals,
   ...boards,

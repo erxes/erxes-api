@@ -1,12 +1,8 @@
 export const types = `
   type InternalNote {
     _id: String!
-    contentType: String!
-    contentTypeId: String
     content: String
-    createdUserId: String
-    createdDate: Date
-
+    
     createdUser: User
   }
 `;

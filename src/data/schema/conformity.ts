@@ -5,6 +5,10 @@ export const types = `
     mainTypeId: String
     relType: String
     relTypeId: String
+    content: String
+    editAble: Boolean
+
+    createdUser: User
   }
 
   type SuccessResult {
@@ -24,6 +28,10 @@ const commonParamsCreate = `
   mainTypeId: String
   relType: String
   relTypeIds: [String]
+`;
+
+export const queries = `
+  conformitiesForLog(mainType: String!, mainTypeId: String!, relType: String, limit: Int): [Conformity]
 `;
 
 export const mutations = `

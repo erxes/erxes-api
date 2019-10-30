@@ -5,8 +5,8 @@ const internalNoteQueries = {
   /**
    * InternalNotes list
    */
-  internalNotes(_root, { contentType, contentTypeId }: { contentType: string; contentTypeId: string }) {
-    return InternalNotes.find({ contentType, contentTypeId }).sort({
+  internalNotes(_root) {
+    return InternalNotes.find({}).sort({
       createdDate: 1,
     });
   },

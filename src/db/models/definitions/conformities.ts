@@ -8,19 +8,17 @@ export interface IConformity {
   relTypeId: string;
   content: string;
   editAble: boolean;
-  createdAt: Date;
   createdBy: string;
 }
 
 export interface IConformityAdd {
-  mainType: string;
-  mainTypeId: string;
-  relType: string;
-  relTypeId: string;
-  content: string;
-  editAble: boolean;
-  createdAt: Date;
-  createdBy: string;
+  mainType?: string;
+  mainTypeId?: string;
+  relType?: string;
+  relTypeId?: string;
+  content?: string;
+  editAble?: boolean;
+  createdBy?: string;
 }
 
 export interface IConformityEdit {
@@ -64,7 +62,10 @@ export const conformitySchema = new Schema({
   relType: field({ type: String, index: true }),
   relTypeId: field({ type: String }),
   content: field({ type: String }),
-  editAble: field({ type: Boolean }),
-  createdAt: field({ type: Date }),
   createdBy: field({ type: String }),
+  editAble: field({ type: Boolean, default: true }),
+  createdAt: field({
+    type: Date,
+    default: new Date(),
+  }),
 });

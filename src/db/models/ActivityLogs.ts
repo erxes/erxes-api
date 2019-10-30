@@ -252,7 +252,7 @@ export const loadClass = () => {
         },
         performer: {
           type: ACTIVITY_PERFORMER_TYPES.USER,
-          id: internalNote.createdUserId,
+          id: 'asdjhjk',
         },
       });
     }
