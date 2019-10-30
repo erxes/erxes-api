@@ -152,9 +152,9 @@ const integrationMutations = {
   },
 
   /**
-   * Create Outlook account
+   * Create Yahoo, Outlook account
    */
-  async integrationAddOutlookAccount(_root, data, { dataSources }) {
+  async integrationAddMailAccount(_root, data, { dataSources }) {
     return dataSources.IntegrationsAPI.createAccount(data);
   },
 

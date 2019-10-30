@@ -169,7 +169,7 @@ export const mutations = `
     kind: String!
   ): JSON
 
-  integrationAddOutlookAccount(
+  integrationAddMailAccount(
     email: String!
     password: String!
     kind: String!
