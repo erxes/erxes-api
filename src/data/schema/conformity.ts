@@ -31,7 +31,7 @@ const commonParamsCreate = `
 `;
 
 export const queries = `
-  conformitiesForLog(mainType: String!, mainTypeId: String!, relType: String, limit: Int): [Conformity]
+  conformitiesForActivity(contentType: String!, contentId: String!, activityType: String, limit: Int): [Conformity]
 `;
 
 export const mutations = `
