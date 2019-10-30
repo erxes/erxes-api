@@ -1,5 +1,7 @@
+import { Deals, GrowthHacks, Tasks, Tickets } from '.';
 import { validSearchText } from '../../data/utils';
 import { IItemCommonFields, IOrderInput } from './definitions/boards';
+import { BOARD_TYPES } from './definitions/constants';
 
 export const updateOrder = async (collection: any, orders: IOrderInput[], stageId?: string) => {
   if (orders.length === 0) {
@@ -61,4 +63,33 @@ export const fillSearchTextItem = (doc: IItemCommonFields, item?: IItemCommonFie
   Object.assign(document, doc);
 
   return validSearchText([document.name || '', document.description || '']);
+};
+
+export const getCollection = (type: string) => {
+  let collection;
+
+  switch (type) {
+    case BOARD_TYPES.DEAL: {
+      collection = Deals;
+
+      break;
+    }
+    case BOARD_TYPES.GROWTH_HACK: {
+      collection = GrowthHacks;
+
+      break;
+    }
+    case BOARD_TYPES.TASK: {
+      collection = Tasks;
+
+      break;
+    }
+    case BOARD_TYPES.TICKET: {
+      collection = Tickets;
+
+      break;
+    }
+  }
+
+  return collection;
 };
