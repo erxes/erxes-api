@@ -18,6 +18,7 @@ test('Edit conformity mutations', async () => {
   const company1 = await companyFactory({});
   const customer1 = await customerFactory({});
   const customer2 = await customerFactory({});
+  const customer3 = await customerFactory({});
 
   const mutation = `
     mutation conformityEdit(
@@ -41,7 +42,7 @@ test('Edit conformity mutations', async () => {
     mainType: 'company',
     mainTypeId: company._id,
     relType: 'customer',
-    relTypeIds: [customer1._id, customer2._id],
+    relTypeIds: [customer3._id],
   };
   await graphqlRequest(mutation, 'conformityEdit', args);
 
@@ -52,7 +53,7 @@ test('Edit conformity mutations', async () => {
   });
 
   let savedCustomer = await Customers.find({ _id: { $in: relTypeIds } });
-  expect(savedCustomer.length).toEqual(2);
+  expect(savedCustomer.length).toEqual(1);
 
   args = {
     mainType: 'company',
