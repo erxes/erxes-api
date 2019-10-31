@@ -65,6 +65,8 @@ describe('boardQueries', () => {
     const response = await graphqlRequest(qry, 'boardDetail', args);
 
     expect(response._id).toBe(board._id);
+    expect(response.name).toBe(board.name);
+    expect(response.type).toBe(board.type);
   });
 
   test('Board get last', async () => {
@@ -78,7 +80,7 @@ describe('boardQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'boardGetLast', { type: 'deal' });
+    const response = await graphqlRequest(qry, 'boardGetLast', { type: BOARD_TYPES.DEAL });
 
     expect(board._id).toBe(response._id);
   });
@@ -103,6 +105,24 @@ describe('boardQueries', () => {
     const response = await graphqlRequest(qry, 'pipelines', args);
 
     expect(response.length).toBe(3);
+  });
+
+  test('Pipeline detail', async () => {
+    const pipeline = await pipelineFactory();
+
+    const args = { _id: pipeline._id };
+
+    const qry = `
+      query pipelineDetail($_id: String!) {
+        pipelineDetail(_id: $_id) {
+          ${commonPipelineTypes}
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'pipelineDetail', args);
+
+    expect(response._id).toBe(pipeline._id);
   });
 
   test('Stages', async () => {

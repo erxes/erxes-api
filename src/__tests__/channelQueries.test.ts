@@ -39,15 +39,15 @@ describe('channelQueries', () => {
     `;
 
     // channels response ==================
-    const args = { page: 1, perPage: 3 };
+    const args: any = { page: 1, perPage: 3 };
     let responses = await graphqlRequest(qry, 'channels', args);
 
     expect(responses.length).toBe(3);
 
     // channels response by memberIds =====
-    responses = await graphqlRequest(qry, 'channels', {
-      memberIds: [user._id],
-    });
+    const memberIds = [user._id];
+
+    responses = await graphqlRequest(qry, 'channels', { memberIds });
 
     expect(responses.length).toBe(2);
   });
@@ -90,9 +90,6 @@ describe('channelQueries', () => {
 
   test('Get last channel', async () => {
     // Create test data
-    await channelFactory();
-    await channelFactory();
-
     const channel = await channelFactory();
 
     const qry = `

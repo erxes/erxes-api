@@ -84,7 +84,7 @@ const conversationQueries = {
    */
   async conversations(_root, params: IListArgs, { user }: IContext) {
     // filter by ids of conversations
-    if (params && params.ids) {
+    if (params && params.ids && params.ids.length > 0) {
       return Conversations.find({ _id: { $in: params.ids } }).sort({
         createdAt: -1,
       });

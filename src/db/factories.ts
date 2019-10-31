@@ -191,12 +191,13 @@ export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) =>
 
 interface IBrandFactoryInput {
   code?: string;
+  name?: string;
   description?: string;
 }
 
 export const brandFactory = (params: IBrandFactoryInput = {}) => {
   const brand = new Brands({
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     code: params.code || faker.random.word(),
     userId: Random.id(),
     description: params.description || faker.random.word(),
