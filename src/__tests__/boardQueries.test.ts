@@ -2,6 +2,7 @@ import { graphqlRequest } from '../db/connection';
 import { boardFactory, pipelineFactory, stageFactory } from '../db/factories';
 import { Boards, Pipelines, Stages } from '../db/models';
 
+import { BOARD_TYPES, PROBABILITY } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('boardQueries', () => {
@@ -67,7 +68,7 @@ describe('boardQueries', () => {
   });
 
   test('Board get last', async () => {
-    const board = await boardFactory();
+    const board = await boardFactory({ type: BOARD_TYPES.DEAL });
 
     const qry = `
       query boardGetLast($type: String!) {
@@ -107,23 +108,35 @@ describe('boardQueries', () => {
   test('Stages', async () => {
     const pipeline = await pipelineFactory();
 
-    const args = { pipelineId: pipeline._id };
+    const args = { pipelineId: pipeline._id, probability: PROBABILITY.LOST };
 
     await stageFactory(args);
     await stageFactory(args);
     await stageFactory(args);
 
     const qry = `
-      query stages($pipelineId: String!) {
-        stages(pipelineId: $pipelineId) {
+      query stages($pipelineId: String!, $isNotLost: Boolean) {
+        stages(pipelineId: $pipelineId, isNotLost: $isNotLost) {
           ${commonStageTypes}
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'stages', args);
+    const filter = { pipelineId: pipeline._id, isNotLost: false };
+
+    let response = await graphqlRequest(qry, 'stages', filter);
 
     expect(response.length).toBe(3);
+
+    args.probability = PROBABILITY.WON;
+
+    await stageFactory(args);
+    await stageFactory(args);
+
+    filter.isNotLost = true;
+    response = await graphqlRequest(qry, 'stages', filter);
+
+    expect(response.length).toBe(2);
   });
 
   test('Stage detail', async () => {

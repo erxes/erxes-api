@@ -55,6 +55,7 @@ import {
   BOARD_TYPES,
   FORM_TYPES,
   NOTIFICATION_TYPES,
+  PROBABILITY,
   PRODUCT_TYPES,
   STATUSES,
 } from './models/definitions/constants';
@@ -790,6 +791,7 @@ export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
 interface IStageFactoryInput {
   pipelineId?: string;
   type?: string;
+  probability?: string;
 }
 
 export const stageFactory = (params: IStageFactoryInput = {}) => {
@@ -797,6 +799,7 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
     name: faker.random.word(),
     pipelineId: params.pipelineId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
+    probability: params.probability || PROBABILITY.TEN,
   });
 
   return stage.save();

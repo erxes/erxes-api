@@ -1,7 +1,7 @@
 module.exports = {
   roots: ['<rootDir>/src/__tests__'],
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.ts$': 'ts-jest',
   },
   testRegex: '/__tests__/.*\\.(ts|js)$',
   testEnvironment: 'node',
@@ -9,7 +9,7 @@ module.exports = {
   modulePathIgnorePatterns: ['utils.ts', 'setup.ts'],
   globals: {
     'ts-jest': {
-      tsConfigFile: 'tsconfig.json'
-    }
-  }
+      tsConfigFile: 'tsconfig.json',
+    },
+  },
 };

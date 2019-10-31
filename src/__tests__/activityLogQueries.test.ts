@@ -48,7 +48,7 @@ describe('activityLogQueries', () => {
 
   test('Activity log list', async () => {
     const contentType = ACTIVITY_CONTENT_TYPES.CUSTOMER;
-    const activityType = ACTIVITY_TYPES.INTERNAL_NOTE;
+    const activityType = ACTIVITY_TYPES.CUSTOMER;
     const contentId = faker.random.uuid();
 
     for (let i = 0; i < 3; i++) {
@@ -60,9 +60,20 @@ describe('activityLogQueries', () => {
 
     const args = { contentType, activityType, contentId };
 
-    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+    let responses = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
 
     expect(responses.length).toBe(3);
+
+    await activityLogFactory({
+      contentType: { type: contentType, id: contentId },
+    });
+
+    // filtering when no activity type
+    args.activityType = '';
+
+    responses = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+
+    expect(responses.length).toBe(4);
 
     const responsesWithLimit = await graphqlRequest(qryActivityLogs, 'activityLogs', { ...args, limit: 2 });
 

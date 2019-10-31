@@ -343,8 +343,9 @@ const conversationMutations = {
       );
       return debugExternalApi(response);
     } catch (e) {
+      console.log('e message: ', e.message);
       debugExternalApi(e.message);
-      return e;
+      throw new Error(e.message);
     }
   },
 
