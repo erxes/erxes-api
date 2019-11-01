@@ -116,38 +116,6 @@ describe('Conversation message mutations', () => {
     expect(leadMessage.internal).toBe(args.internal);
   });
 
-  test('Add conversation reply facebook comment (Connection failed)', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = '';
-
-    const args = {
-      conversationId: leadConversation._id,
-      commentId: 'commentId',
-      content: 'content',
-    };
-
-    const mutation = `
-      mutation conversationsReplyFacebookComment(
-        $conversationId: String
-        $commentId: String
-        $content: String
-      ) {
-        conversationsReplyFacebookComment(
-          conversationId: $conversationId
-          commentId: $commentId
-          content: $content
-        ) {
-          conversationId
-        }
-      }
-    `;
-
-    try {
-      await graphqlRequest(mutation, 'conversationsReplyFacebookComment', args, context);
-    } catch (e) {
-      expect(e[0].message).toEqual('Connection failed');
-    }
-  });
-
   test('Assign conversation', async () => {
     process.env.DEFAULT_EMAIL_SERIVCE = ' ';
     process.env.COMPANY_EMAIL_FROM = ' ';
