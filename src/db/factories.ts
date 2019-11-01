@@ -259,13 +259,14 @@ export const emailTemplateFactory = (params: IEmailTemplateFactoryInput = {}) =>
 };
 
 interface IResponseTemplateFactoryInput {
+  name?: string;
   content?: string;
   brandId?: string;
 }
 
 export const responseTemplateFactory = (params: IResponseTemplateFactoryInput = {}) => {
   const responseTemplate = new ResponseTemplates({
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     content: params.content || faker.random.word(),
     brandId: params.brandId || Random.id(),
     files: [faker.random.image()],
@@ -907,16 +908,20 @@ interface IProductFactoryInput {
   name?: string;
   type?: string;
   description?: string;
+  tagIds?: string[];
+  categoryId?: string;
 }
 
 export const productFactory = (params: IProductFactoryInput = {}) => {
   const product = new Products({
     name: params.name || faker.random.word(),
+    categoryId: params.categoryId || faker.random.word(),
     type: params.type || PRODUCT_TYPES.PRODUCT,
     description: params.description || faker.random.word(),
     sku: faker.random.word(),
     code: faker.random.word(),
     createdAt: new Date(),
+    tagIds: params.tagIds || [],
   });
 
   return product.save();
