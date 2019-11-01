@@ -660,7 +660,7 @@ interface INotificationFactoryInput {
   content?: string;
   link?: string;
   createdUser?: any;
-  requireRead?: boolean;
+  isRead?: boolean;
 }
 
 export const notificationFactory = async (params: INotificationFactoryInput) => {
@@ -677,6 +677,7 @@ export const notificationFactory = async (params: INotificationFactoryInput) => 
     link: params.link || 'new Notification link',
     receiver: receiver._id || faker.random.word(),
     createdUser: params.createdUser || faker.random.word(),
+    isRead: params.isRead || false,
   });
 };
 
@@ -880,6 +881,8 @@ interface IGrowthHackFactoryInput {
   noCloseDate?: boolean;
   assignedUserIds?: string[];
   hackStages?: string[];
+  ease?: number;
+  impact?: number;
 }
 
 export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
@@ -893,6 +896,8 @@ export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     hackStages: params.hackStages || [faker.random.word()],
+    ease: params.ease || 0,
+    impact: params.impact || 0,
   });
 
   return growthHack.save();
@@ -929,6 +934,7 @@ export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}
     name: params.name || faker.random.word(),
     description: params.description || faker.random.word(),
     parentId: params.parentId || faker.random.word(),
+    code: params.code || faker.random.word(),
     createdAt: new Date(),
   });
 
@@ -1004,7 +1010,7 @@ interface IMessengerApp {
 export function messengerAppFactory(params: IMessengerApp) {
   return MessengerApps.create({
     name: params.name || faker.random.word(),
-    kind: params.kind || 'knowledgebase',
+    kind: params.kind,
     credentials: params.credentials,
   });
 }

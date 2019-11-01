@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { productFactory } from '../db/factories';
+import { productCategoryFactory, productFactory } from '../db/factories';
 import { Products } from '../db/models';
 import { PRODUCT_TYPES } from '../db/models/definitions/constants';
 
@@ -55,5 +55,33 @@ describe('productQueries', () => {
     const response = await graphqlRequest(qry, 'productsTotalCount', args);
 
     expect(response).toBe(2);
+  });
+
+  test('Product categories', async () => {
+    const parent = await productCategoryFactory({ code: '1' });
+    await productCategoryFactory({ parentId: parent._id, code: '2' });
+    await productCategoryFactory({ parentId: parent._id, code: '3' });
+
+    const qry = `
+      query productCategories($parentId: String $searchValue: String) {
+        productCategories(parentId: $parentId searchValue: $searchValue) {
+          _id
+          name
+          parentId
+        }
+      }
+    `;
+
+    let response = await graphqlRequest(qry, 'productCategories');
+
+    expect(response.length).toBe(3);
+
+    response = await graphqlRequest(qry, 'productCategories', { parentId: parent._id });
+
+    expect(response.length).toBe(2);
+
+    response = await graphqlRequest(qry, 'productCategories', { searchValue: parent.name });
+
+    expect(response[0].name).toBe(parent.name);
   });
 });

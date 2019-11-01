@@ -7,6 +7,7 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   modulePathIgnorePatterns: ['utils.ts', 'setup.ts'],
+  mapCoverage: true,
   globals: {
     'ts-jest': {
       tsConfigFile: 'tsconfig.json',

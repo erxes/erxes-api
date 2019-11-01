@@ -19,7 +19,7 @@ const articlesQuery = async ({ categoryIds }: { categoryIds: string[] }) => {
     let articleIds: any = [];
 
     for (const category of categories) {
-      articleIds = articleIds.concat(category.articleIds || []);
+      articleIds = articleIds.concat(category.articleIds);
     }
 
     query._id = {
@@ -45,7 +45,7 @@ const categoriesQuery = async ({ topicIds }: { topicIds: string[] }) => {
     });
 
     for (const topic of topics) {
-      categoryIds = categoryIds.concat(topic.categoryIds || []);
+      categoryIds = categoryIds.concat(topic.categoryIds);
     }
 
     query._id = {
