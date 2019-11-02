@@ -1,9 +1,10 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { brandFactory, channelFactory, integrationFactory, tagsFactory } from '../db/factories';
+import { brandFactory, channelFactory, integrationFactory, tagsFactory, userFactory } from '../db/factories';
 import { Brands, Channels, Integrations } from '../db/models';
 import { TAG_TYPES } from '../db/models/definitions/constants';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('integrationQueries', () => {
@@ -216,5 +217,27 @@ describe('integrationQueries', () => {
     const response = await graphqlRequest(qryCount, 'integrationsTotalCount', {});
 
     expect(response.byBrand[brand._id]).toBe(2);
+  });
+
+  test('Fetch integration api', async () => {
+    const qry = `
+      query integrationsFetchApi($path: String!, $params: JSON!) {
+        integrationsFetchApi(path: $path, params: $params)
+      }
+  `;
+
+    const user = await userFactory();
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    try {
+      await graphqlRequest(
+        qry,
+        'integrationsFetchApi',
+        { path: '/', params: { type: 'facebook' } },
+        { user, dataSources },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 });

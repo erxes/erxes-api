@@ -39,6 +39,7 @@ import {
   ProductCategories,
   Products,
   ResponseTemplates,
+  Scripts,
   Segments,
   Stages,
   Tags,
@@ -827,6 +828,7 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
+    productsDate: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     labelIds: params.labelIds || [],
   });
@@ -989,6 +991,7 @@ interface IImportHistoryFactoryInput {
   failed?: number;
   total?: number;
   success?: string;
+  errorMsgs?: string[];
   ids?: string[];
 }
 
@@ -1001,6 +1004,7 @@ export const importHistoryFactory = async (params: IImportHistoryFactoryInput) =
     success: params.success || faker.random.number(),
     ids: params.ids || [],
     contentType: params.contentType || 'customer',
+    errorMsgs: params.errorMsgs,
   };
 
   return ImportHistory.create({ ...doc, ...params, userId: user._id });
@@ -1017,6 +1021,26 @@ export function messengerAppFactory(params: IMessengerApp) {
     name: params.name || faker.random.word(),
     kind: params.kind,
     credentials: params.credentials,
+  });
+}
+
+interface IScript {
+  name?: string;
+  messengerId?: string;
+  messengerBrandCode?: string;
+  leadIds?: string[];
+  leadMaps?: Array<{ formCode: string; brandCode: string }>;
+  kbTopicId?: string;
+}
+
+export function scriptFactory(params: IScript) {
+  return Scripts.create({
+    name: params.name || faker.random.word(),
+    messengerId: params.messengerId,
+    messengerBrandCode: params.messengerBrandCode,
+    leadIds: params.leadIds,
+    leadMaps: params.leadMaps,
+    kbTopicId: params.kbTopicId,
   });
 }
 

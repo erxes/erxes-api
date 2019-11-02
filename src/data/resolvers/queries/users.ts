@@ -14,10 +14,6 @@ interface IListArgs {
   status?: string;
 }
 
-interface IUserParams {
-  isActive?: boolean;
-}
-
 const queryBuilder = async (params: IListArgs) => {
   const { searchValue, isActive, requireUsername, ids, status } = params;
 

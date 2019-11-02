@@ -74,7 +74,7 @@ describe('form update', () => {
   });
 });
 
-describe('form remove', async () => {
+describe('form remove', () => {
   let _form;
 
   beforeEach(async () => {

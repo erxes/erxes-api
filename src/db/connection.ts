@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import { graphql } from 'graphql';
 import { makeExecutableSchema } from 'graphql-tools';
 import mongoose = require('mongoose');
-import { EngagesAPI, IntegrationsAPI } from '../data/dataSources';
 import resolvers from '../data/resolvers';
 import typeDefs from '../data/schema';
 import { getEnv } from '../data/utils';

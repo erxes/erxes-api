@@ -19,5 +19,7 @@ beforeAll(async done => {
 });
 
 afterAll(() => {
-  return db.connection.dropDatabase();
+  db.connection.dropDatabase();
+
+  db.connection.close();
 });

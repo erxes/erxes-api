@@ -124,6 +124,6 @@ describe('Test tags mutations', () => {
       throw new Error('Engage message not found');
     }
 
-    expect(engageMessage.tagIds).toContain(args.tagIds);
+    expect(engageMessage.tagIds).toContain(args.tagIds[0]);
   });
 });

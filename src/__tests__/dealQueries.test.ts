@@ -5,6 +5,7 @@ import {
   conformityFactory,
   customerFactory,
   dealFactory,
+  pipelineFactory,
   productFactory,
   stageFactory,
   userFactory,
@@ -240,6 +241,59 @@ describe('dealQueries', () => {
     const response = await graphqlRequest(qry, 'dealDetail', args);
 
     expect(response._id).toBe(deal._id);
+  });
+
+  test('Deal total amount', async () => {
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({
+      pipelineId: pipeline._id,
+    });
+
+    const product = await productFactory();
+    const productsData = [
+      {
+        productId: product._id,
+        currency: 'USD',
+        amount: 200,
+      },
+    ];
+
+    const args = {
+      stageId: stage._id,
+      productsData,
+    };
+
+    await dealFactory(args);
+    await dealFactory(args);
+    await dealFactory(args);
+
+    const filter = { pipelineId: pipeline._id };
+
+    const qry = `
+      query dealsTotalAmounts($pipelineId: String!) {
+        dealsTotalAmounts(pipelineId: $pipelineId) {
+          _id
+          dealCount
+          totalForType {
+            _id
+            name
+            currencies {
+              name
+              amount
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'dealsTotalAmounts', filter);
+
+    console.log('response: ', response.totalForType[0].currencies[0].name);
+
+    expect(response.dealCount).toBe(3);
+    expect(response.dealCount).toBe(3);
+    expect(response.totalForType[0].currencies[0].name).toBe('USD');
+    expect(response.totalForType[0].currencies[0].amount).toBe(600);
   });
 
   test('Deal (=ticket, task) filter by conformity saved and related', async () => {

@@ -113,7 +113,7 @@ describe('Notification model tests', () => {
   });
 });
 
-describe('NotificationConfiguration model tests', async () => {
+describe('NotificationConfiguration model tests', () => {
   test('test if model methods are working correctly', async () => {
     // creating new notification configuration ==========
     const user = await userFactory({});

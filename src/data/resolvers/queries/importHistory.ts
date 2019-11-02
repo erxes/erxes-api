@@ -14,13 +14,9 @@ const importHistoryQueries = {
   },
 
   async importHistoryDetail(_root, { _id }: { _id: string }) {
-    const importHistory = await ImportHistory.findOne({ _id });
+    const importHistory = await ImportHistory.getImportHistory(_id);
 
-    if (!importHistory) {
-      throw new Error('Import history not found');
-    }
-
-    importHistory.errorMsgs = (importHistory.errorMsgs || []).slice(0, 100);
+    importHistory.errorMsgs = importHistory.errorMsgs.slice(0, 100);
 
     return importHistory;
   },
