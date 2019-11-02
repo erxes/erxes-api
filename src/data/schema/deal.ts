@@ -54,6 +54,7 @@ const commonQueryParams = `
   noCloseDate: String
   overdue: String
   labelIds: [String]
+  search: String
 `;
 
 export const queries = `
@@ -62,7 +63,6 @@ export const queries = `
     initialStageId: String
     stageId: String
     skip: Int
-    search: String
     ${commonQueryParams}
     ${conformityQueryFields}
   ): [Deal]
