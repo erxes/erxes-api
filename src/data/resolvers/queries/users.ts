@@ -68,10 +68,10 @@ const userQueries = {
   /**
    * All users
    */
-  allUsers(_root, args: IUserParams, { userBrandIdsSelector }: IContext) {
+  allUsers(_root, { isActive }: { isActive: boolean }, { userBrandIdsSelector }: IContext) {
     const selector: { isActive?: boolean } = userBrandIdsSelector;
 
-    if (args.isActive) {
+    if (isActive) {
       selector.isActive = true;
     }
 

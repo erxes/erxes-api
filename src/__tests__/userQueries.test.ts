@@ -13,43 +13,70 @@ describe('userQueries', () => {
 
   test('Users', async () => {
     // Creating test data
+    const user1 = await userFactory({ email: 'example@email.com' });
+    const user2 = await userFactory();
+    const user3 = await userFactory({ isActive: false });
+    await userFactory({ registrationToken: 'token' });
+
+    const qry = `
+      query users($page: Int $perPage: Int $searchValue: String $requireUsername: Boolean $isActive: Boolean $ids: [String] $status: String) {
+        users(page: $page perPage: $perPage searchValue: $searchValue requireUsername: $requireUsername isActive: $isActive ids: $ids status: $status) {
+          _id
+        }
+      }
+    `;
+
+    let response = await graphqlRequest(qry, 'users');
+
+    // 1 in graphRequest + above active 3
+    expect(response.length).toBe(4);
+
+    response = await graphqlRequest(qry, 'users', { searchValue: 'example@email.com' });
+
+    expect(response[0]._id).toBe(user1._id);
+
+    response = await graphqlRequest(qry, 'users', { requireUsername: true });
+
+    // 3 in graphRequest + above active 3
+    expect(response.length).toBe(6);
+
+    response = await graphqlRequest(qry, 'users', { isActive: false });
+
+    expect(response[0]._id).toBe(user3._id);
+
+    response = await graphqlRequest(qry, 'users', { ids: [user1.id, user2._id] });
+
+    expect(response.length).toBe(2);
+
+    response = await graphqlRequest(qry, 'users', { status: 'status' });
+
+    // 6 in graphRequest + above 2
+    expect(response.length).toBe(8);
+  });
+
+  test('All users', async () => {
+    // Creating test data
     await userFactory({});
     await userFactory({});
     await userFactory({});
     await userFactory({ isActive: false });
 
     const qry = `
-      query users($page: Int $perPage: Int) {
-        users(page: $page perPage: $perPage) {
+      query allUsers($isActive: Boolean) {
+        allUsers(isActive: $isActive) {
           _id
-          username
-          email
-          details {
-            avatar
-            fullName
-            position
-            location
-            description
-          }
-          links {
-            linkedIn
-            twitter
-            facebook
-            github
-            youtube
-            website
-          }
-          emailSignatures
-          getNotificationByEmail
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'users', {
-      page: 1,
-      perPage: 20,
-    });
+    let response = await graphqlRequest(qry, 'allUsers');
 
+    // 1 in graphRequest + above 4
+    expect(response.length).toBe(5);
+
+    response = await graphqlRequest(qry, 'allUsers', { isActive: true });
+
+    // 2 in graphRequest + above active 3
     expect(response.length).toBe(5);
   });
 
@@ -76,15 +103,15 @@ describe('userQueries', () => {
     await userFactory({ isActive: false });
 
     const qry = `
-      query usersTotalCount {
-        usersTotalCount
+      query usersTotalCount($isActive: Boolean) {
+        usersTotalCount(isActive: $isActive)
       }
     `;
 
     const response = await graphqlRequest(qry, 'usersTotalCount');
 
-    // 1 in graphRequest + above 3
-    expect(response).toBe(4);
+    // 1 in graphRequest + above active 2
+    expect(response).toBe(3);
   });
 
   test('Current user', async () => {
@@ -98,9 +125,13 @@ describe('userQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'currentUser', {}, { user });
+    let response = await graphqlRequest(qry, 'currentUser', {}, { user });
 
     expect(response._id).toBe(user._id);
+
+    response = await graphqlRequest(qry, 'currentUser', {}, {});
+
+    expect(response).toBe(null);
   });
 
   test('User conversations', async () => {
