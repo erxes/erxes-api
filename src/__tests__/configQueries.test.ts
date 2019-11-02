@@ -4,7 +4,7 @@ import { configFactory } from '../db/factories';
 import './setup.ts';
 
 describe('configQueries', () => {
-  it('config detail', async () => {
+  test('config detail', async () => {
     const config = await configFactory();
 
     const args = { code: config.code };
@@ -22,5 +22,26 @@ describe('configQueries', () => {
     const response = await graphqlRequest(qry, 'configsDetail', args);
 
     expect(response.code).toBe(config.code);
+  });
+
+  test('config versions', async () => {
+    const qry = `
+      query configsVersions {
+        configsVersions {
+          erxesVersion {
+            packageVersion
+            branch
+            sha
+            abbreviatedSha
+          }
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'configsVersions');
+
+    // expect(response).toBe({});
+
+    console.log('response: ', response);
   });
 });
