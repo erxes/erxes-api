@@ -8,6 +8,7 @@ export const types = `
 `;
 
 export const queries = `
+  internalNoteDetail(_id: String!): InternalNote
   internalNotes(contentType: String!, contentTypeId: String): [InternalNote]
 `;
 
