@@ -40,8 +40,38 @@ describe('configQueries', () => {
 
     const response = await graphqlRequest(qry, 'configsVersions');
 
-    // expect(response).toBe({});
+    expect(response.erxesVersion).toBe(null);
+  });
 
-    console.log('response: ', response);
+  test('config get env', async () => {
+    process.env.USE_BRAND_RESTRICTIONS = 'false';
+
+    const qry = `
+      query configsGetEnv {
+        configsGetEnv {
+          USE_BRAND_RESTRICTIONS
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'configsGetEnv');
+
+    expect(response.USE_BRAND_RESTRICTIONS).toBe('false');
+  });
+
+  test('config get env', async () => {
+    const qry = `
+      query engagesConfigDetail {
+        engagesConfigDetail {
+          accessKeyId
+          secretAccessKey
+          region
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'engagesConfigDetail');
+
+    expect(response).toBe(null);
   });
 });

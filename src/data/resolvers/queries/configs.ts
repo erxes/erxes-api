@@ -24,7 +24,9 @@ const configQueries = {
 
     try {
       erxesVersion = await sendRequest({ url: `${erxesDomain}/version.json`, method: 'GET' });
+      console.log('erxes version: ', erxesVersion);
     } catch (e) {
+      console.log('e: ', e);
       erxesVersion = {};
     }
 
