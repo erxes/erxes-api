@@ -288,8 +288,6 @@ describe('dealQueries', () => {
 
     const response = await graphqlRequest(qry, 'dealsTotalAmounts', filter);
 
-    console.log('response: ', response.totalForType[0].currencies[0].name);
-
     expect(response.dealCount).toBe(3);
     expect(response.dealCount).toBe(3);
     expect(response.totalForType[0].currencies[0].name).toBe('USD');

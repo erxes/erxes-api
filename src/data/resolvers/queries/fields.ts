@@ -82,18 +82,17 @@ const fieldQueries = {
         if (brand && integration && lastCustomers.length > 0) {
           const [lastCustomer] = lastCustomers;
 
-          if (lastCustomer.messengerData) {
-            const customDataFields = Object.keys(lastCustomer.messengerData.customData || {});
+          // @ts-ignore: will never happen ts error
+          const customDataFields = Object.keys(lastCustomer.messengerData.customData);
 
-            for (const customDataField of customDataFields) {
-              fields.push({
-                _id: Math.random(),
-                name: `messengerData.customData.${customDataField}`,
-                label: customDataField,
-                brandName: brand.name,
-                brandId: brand._id,
-              });
-            }
+          for (const customDataField of customDataFields) {
+            fields.push({
+              _id: Math.random(),
+              name: `messengerData.customData.${customDataField}`,
+              label: customDataField,
+              brandName: brand.name,
+              brandId: brand._id,
+            });
           }
         }
       }
@@ -144,19 +143,16 @@ const fieldQueries = {
       ];
     }
 
-    if (contentType === FIELD_CONTENT_TYPES.COMPANY) {
-      return [
-        { name: 'primaryName', label: 'Primary Name', order: 1 },
-        { name: 'size', label: 'Size', order: 2 },
-        { name: 'links.website', label: 'Website', order: 3 },
-        { name: 'industry', label: 'Industry', order: 4 },
-        { name: 'plan', label: 'Plan', order: 5 },
-        { name: 'lastSeenAt', label: 'Last seen at', order: 6 },
-        { name: 'sessionCount', label: 'Session count', order: 7 },
-      ];
-    }
-
-    return [];
+    // if contentType is company
+    return [
+      { name: 'primaryName', label: 'Primary Name', order: 1 },
+      { name: 'size', label: 'Size', order: 2 },
+      { name: 'links.website', label: 'Website', order: 3 },
+      { name: 'industry', label: 'Industry', order: 4 },
+      { name: 'plan', label: 'Plan', order: 5 },
+      { name: 'lastSeenAt', label: 'Last seen at', order: 6 },
+      { name: 'sessionCount', label: 'Session count', order: 7 },
+    ];
   },
 };
 

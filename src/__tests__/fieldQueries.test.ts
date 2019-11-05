@@ -1,8 +1,9 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { fieldFactory, fieldGroupFactory } from '../db/factories';
+import { brandFactory, customerFactory, fieldFactory, fieldGroupFactory, integrationFactory } from '../db/factories';
 import { Companies, Customers, Fields, FieldsGroups } from '../db/models';
 
+import { INTEGRATION_KIND_CHOICES } from '../data/constants';
 import './setup.ts';
 
 describe('fieldQueries', () => {
@@ -25,20 +26,6 @@ describe('fieldQueries', () => {
       query fields($contentType: String! $contentTypeId: String) {
         fields(contentType: $contentType contentTypeId: $contentTypeId) {
           _id
-          contentType
-          contentTypeId
-          type
-          validation
-          text
-          description
-          options
-          isRequired
-          order
-          isVisible
-          isDefinedByErxes
-          groupId
-          lastUpdatedUser { _id }
-          lastUpdatedUserId
         }
       }
     `;
@@ -77,7 +64,9 @@ describe('fieldQueries', () => {
   test('Fields combined by content type', async () => {
     // Creating test data
     await fieldFactory({ contentType: 'company' });
+    await fieldFactory({ contentType: 'company', isVisible: false });
     await fieldFactory({ contentType: 'customer' });
+    await fieldFactory({ contentType: 'customer', isVisible: false });
 
     const qry = `
       query fieldsCombinedByContentType($contentType: String!) {
@@ -101,6 +90,23 @@ describe('fieldQueries', () => {
     expect(responseFields.name).toBe(companyFields.name);
 
     // customer =======================
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id, kind: INTEGRATION_KIND_CHOICES.MESSENGER });
+    const integration1 = await integrationFactory({ brandId: brand._id, kind: INTEGRATION_KIND_CHOICES.MESSENGER });
+    const integration2 = await integrationFactory({ brandId: brand._id, kind: INTEGRATION_KIND_CHOICES.MESSENGER });
+    const integration3 = await integrationFactory({ brandId: brand._id, kind: INTEGRATION_KIND_CHOICES.MESSENGER });
+
+    await customerFactory({ integrationId: integration._id });
+    await customerFactory({ integrationId: integration1._id, messengerData: {} });
+    await customerFactory({
+      integrationId: integration2._id,
+      messengerData: { customData: {} },
+    });
+    await customerFactory({
+      integrationId: integration3._id,
+      messengerData: { customData: { data1: 'data1', data2: 'data2' } },
+    });
+
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
       contentType: 'customer',
     });
@@ -165,9 +171,7 @@ describe('fieldQueries', () => {
     `;
 
     // customer content type ============
-    let responses = await graphqlRequest(qry, 'fieldsGroups', {
-      contentType: 'customer',
-    });
+    let responses = await graphqlRequest(qry, 'fieldsGroups');
 
     expect(responses.length).toBe(1);
 

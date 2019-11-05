@@ -2,6 +2,7 @@ import * as faker from 'faker';
 import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
 import {
+  brandFactory,
   customerFactory,
   formFactory,
   formSubmissionFactory,
@@ -282,7 +283,27 @@ describe('customerQueries', () => {
     expect(responses.totalCount).toBe(4);
   });
 
-  test('Count customers', async () => {
+  test('Count customers by segment', async () => {
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+
+    // Creating test data
+    await segmentFactory({ contentType: 'customer' });
+
+    const args = { only: 'bySegment' };
+
+    let response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+
+    response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+  });
+
+  test('Count customers by brand', async () => {
+    const brand = await brandFactory({});
+
     await customerFactory({}, true);
     await customerFactory({}, true);
 
@@ -290,10 +311,10 @@ describe('customerQueries', () => {
     await segmentFactory({ contentType: 'customer' });
 
     const response = await graphqlRequest(qryCount, 'customerCounts', {
-      only: 'bySegment',
+      only: 'byBrand',
     });
 
-    expect(count(response.bySegment)).toBe(1);
+    expect(response.byBrand[brand._id]).toBe(0);
   });
 
   test('Customer count by tag', async () => {
@@ -308,20 +329,6 @@ describe('customerQueries', () => {
     });
 
     expect(count(response.byTag)).toBe(1);
-  });
-
-  test('Customer count by segment', async () => {
-    await customerFactory({}, true);
-    await customerFactory({}, true);
-
-    await segmentFactory({ contentType: 'customer' });
-    await segmentFactory({ contentType: 'company' });
-
-    const response = await graphqlRequest(qryCount, 'customerCounts', {
-      only: 'bySegment',
-    });
-
-    expect(count(response.bySegment)).toBe(1);
   });
 
   test('Customer count by fake segment', async () => {
@@ -344,6 +351,21 @@ describe('customerQueries', () => {
     });
 
     expect(response.byFakeSegment).toBe(1);
+  });
+
+  test('Customer count by form', async () => {
+    const form = await formFactory({});
+
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byForm',
+    });
+
+    expect(response.byForm[form._id]).toBe(0);
   });
 
   test('Customer count by leadStatus', async () => {
@@ -374,22 +396,17 @@ describe('customerQueries', () => {
     expect(response.byLifecycleState.lead).toBe(2);
   });
 
-  test('Customer detail', async () => {
-    const customer = await customerFactory({}, true);
+  test('Customer count by IntegrationType', async () => {
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
-    const qry = `
-      query customerDetail($_id: String!) {
-        customerDetail(_id: $_id) {
-          _id
-        }
-      }
-    `;
-
-    const response = await graphqlRequest(qry, 'customerDetail', {
-      _id: customer._id,
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byIntegrationType',
     });
 
-    expect(response._id).toBe(customer._id);
+    expect(response.byIntegrationType.messenger).toBe(0);
   });
 
   test('Customer filtered by submitted form', async () => {
@@ -444,5 +461,47 @@ describe('customerQueries', () => {
     const responses = await graphqlRequest(qryCustomersMain, 'customersMain', {});
 
     expect(responses.list.length).toBe(2);
+  });
+
+  test('Customer list for segment preview', async () => {
+    const headSegment = await segmentFactory({});
+    const segment = await segmentFactory({ subOf: headSegment._id });
+
+    const messengerData = { sessionCount: 10 };
+
+    await customerFactory({ messengerData });
+    await customerFactory();
+
+    const qry = `
+      query customerListForSegmentPreview($segment: JSON, $limit: Int) {
+        customerListForSegmentPreview(segment: $segment, limit: $limit) {
+          _id
+        }
+      }
+    `;
+
+    const args = { segment };
+
+    const responses = await graphqlRequest(qry, 'customerListForSegmentPreview', args);
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Customer detail', async () => {
+    const customer = await customerFactory({}, true);
+
+    const qry = `
+      query customerDetail($_id: String!) {
+        customerDetail(_id: $_id) {
+          _id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customer._id,
+    });
+
+    expect(response._id).toBe(customer._id);
   });
 });
