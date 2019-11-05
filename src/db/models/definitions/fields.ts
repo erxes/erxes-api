@@ -38,8 +38,6 @@ export interface IFieldGroupDocument extends IFieldGroup, Document {
 
 // Mongoose schemas =============
 export const fieldSchema = new Schema({
-  _id: field({ pkey: true }),
-
   // form, customer, company
   contentType: field({ type: String }),
 
@@ -70,7 +68,6 @@ export const fieldSchema = new Schema({
 
 export const fieldGroupSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     // customer, company
     contentType: field({ type: String, enum: FIELDS_GROUPS_CONTENT_TYPES.ALL }),

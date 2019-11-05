@@ -16,7 +16,6 @@ export interface IScriptDocument extends IScript, Document {
 
 export const scriptSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     messengerId: field({ type: String }),
     messengerBrandCode: field({ type: String }),

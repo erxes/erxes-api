@@ -29,7 +29,6 @@ export interface IChecklistItemDocument extends IChecklistItem, Document {
 // Mongoose schemas =======================
 
 export const checklistSchema = new Schema({
-  _id: field({ pkey: true }),
   contentType: field({
     type: String,
     enum: ACTIVITY_CONTENT_TYPES.ALL,
@@ -41,7 +40,6 @@ export const checklistSchema = new Schema({
 });
 
 export const checklistItemSchema = new Schema({
-  _id: field({ pkey: true }),
   checklistId: field({ type: String }),
   content: field({ type: String }),
   isChecked: field({ type: Boolean }),

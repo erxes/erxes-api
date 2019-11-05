@@ -93,7 +93,6 @@ const linkSchema = new Schema(
 
 // User schema
 export const userSchema = new Schema({
-  _id: field({ pkey: true }),
   username: field({ type: String }),
   password: field({ type: String }),
   resetPasswordToken: field({ type: String }),

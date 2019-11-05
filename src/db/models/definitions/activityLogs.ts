@@ -128,7 +128,6 @@ const contentTypeSchema = new Schema(
 );
 
 export const activityLogSchema = new Schema({
-  _id: field({ pkey: true }),
   activity: { type: activitySchema },
   performedBy: { type: actionPerformerSchema, optional: true },
   contentType: { type: contentTypeSchema },

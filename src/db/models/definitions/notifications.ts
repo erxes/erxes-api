@@ -22,7 +22,6 @@ export interface INotificationDocument extends INotification, Document {
 }
 
 export const notificationSchema = new Schema({
-  _id: field({ pkey: true }),
   notifType: field({
     type: String,
     enum: NOTIFICATION_TYPES.ALL,
@@ -59,7 +58,6 @@ export interface IConfigDocument extends IConfig, Document {
 }
 
 export const configSchema = new Schema({
-  _id: field({ pkey: true }),
   // to whom this config is related
   user: field({ type: String }),
   notifType: field({

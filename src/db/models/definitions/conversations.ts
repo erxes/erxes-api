@@ -34,7 +34,6 @@ export interface IConversationDocument extends IConversation, Document {
 
 // Conversation schema
 export const conversationSchema = new Schema({
-  _id: field({ pkey: true }),
   content: field({ type: String }),
   integrationId: field({ type: String, index: true }),
   customerId: field({ type: String }),

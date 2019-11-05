@@ -13,7 +13,6 @@ export interface IConfigDocument extends IConfig, Document {
 // Mongoose schemas ===========
 
 export const configSchema = new Schema({
-  _id: field({ pkey: true }),
   code: field({ type: String }),
   value: field({ type: [String] }),
 });

@@ -98,7 +98,6 @@ const messengerSchema = new Schema(
 
 export const engageMessageSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     kind: field({ type: String }),
     segmentId: field({ type: String, optional: true }), // TODO Remove
     segmentIds: field({

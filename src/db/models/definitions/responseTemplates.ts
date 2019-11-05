@@ -14,7 +14,6 @@ export interface IResponseTemplateDocument extends IResponseTemplate, Document {
 
 export const responseTemplateSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     content: field({ type: String }),
     brandId: field({ type: String }),

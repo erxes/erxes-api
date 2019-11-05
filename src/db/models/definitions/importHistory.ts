@@ -19,7 +19,6 @@ export interface IImportHistoryDocument extends IImportHistory, Document {
 }
 
 export const importHistorySchema = new Schema({
-  _id: field({ pkey: true }),
   success: field({ type: Number, default: 0 }),
   failed: field({ type: Number, default: 0 }),
   total: field({ type: Number }),

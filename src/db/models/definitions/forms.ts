@@ -33,7 +33,6 @@ export interface IFormDocument extends IForm, Document {
 // schema for form document
 export const formSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     title: field({ type: String, optional: true }),
     type: field({ type: String, enum: FORM_TYPES.ALL, required: true }),
     description: field({
@@ -98,7 +97,6 @@ export interface IFormSubmissionDocument extends IFormSubmission, Document {
 // schema for form submission document
 export const formSubmissionSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     customerId: field({ type: String, optional: true }),
     contentType: field({ type: String, optional: true }),
     contentTypeId: field({ type: String, optional: true }),

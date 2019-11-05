@@ -153,8 +153,6 @@ const linkSchema = new Schema(
 
 export const customerSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
-
     createdAt: field({ type: Date, label: 'Created at' }),
     modifiedAt: field({ type: Date, label: 'Modified at' }),
     avatar: field({ type: String, optional: true }),

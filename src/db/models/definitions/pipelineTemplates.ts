@@ -32,8 +32,6 @@ const stageSchema = new Schema(
 );
 
 export const pipelineTemplateSchema = new Schema({
-  _id: field({ pkey: true }),
-
   name: field({ type: String }),
   type: field({ type: String }),
   description: field({ type: String, optional: true }),

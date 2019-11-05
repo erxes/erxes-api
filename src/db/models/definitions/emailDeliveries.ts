@@ -39,7 +39,6 @@ const attachmentSchema = new Schema(
 );
 
 export const emailDeliverySchema = new Schema({
-  _id: field({ pkey: true }),
   cocType: field({ type: String }),
   cocId: field({ type: String }),
   subject: field({ type: String, optional: true }),

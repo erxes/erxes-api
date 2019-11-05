@@ -17,7 +17,6 @@ export interface IChannelDocument extends IChannel, Document {
 }
 
 export const channelSchema = new Schema({
-  _id: field({ pkey: true }),
   createdAt: field({ type: Date }),
   name: field({ type: String }),
   description: field({

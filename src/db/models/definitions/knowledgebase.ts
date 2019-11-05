@@ -62,7 +62,6 @@ const commonFields = {
 };
 
 export const articleSchema = new Schema({
-  _id: field({ pkey: true }),
   title: field({ type: String }),
   summary: field({ type: String, optional: true }),
   content: field({ type: String }),
@@ -77,7 +76,6 @@ export const articleSchema = new Schema({
 });
 
 export const categorySchema = new Schema({
-  _id: field({ pkey: true }),
   title: field({ type: String }),
   description: field({ type: String, optional: true }),
   articleIds: field({ type: [String] }),
@@ -87,7 +85,6 @@ export const categorySchema = new Schema({
 
 export const topicSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     title: field({ type: String }),
     description: field({ type: String, optional: true }),
     brandId: field({ type: String, optional: true }),

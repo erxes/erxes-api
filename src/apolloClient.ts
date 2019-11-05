@@ -1,5 +1,6 @@
 import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as dotenv from 'dotenv';
+import { Types } from 'mongoose';
 import { EngagesAPI, IntegrationsAPI } from './data/dataSources';
 import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
@@ -27,6 +28,11 @@ if (NODE_ENV !== 'production') {
     },
   };
 }
+
+const { ObjectId } = Types;
+ObjectId.prototype.valueOf = function() {
+  return this.toString();
+};
 
 const apolloServer = new ApolloServer({
   typeDefs,

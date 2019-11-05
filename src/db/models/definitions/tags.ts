@@ -16,7 +16,6 @@ export interface ITagDocument extends ITag, Document {
 
 export const tagSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     type: field({
       type: String,

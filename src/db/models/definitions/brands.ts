@@ -32,7 +32,6 @@ const brandEmailConfigSchema = new Schema({
 });
 
 export const brandSchema = new Schema({
-  _id: field({ pkey: true }),
   code: field({ type: String }),
   name: field({ type: String }),
   description: field({ type: String, optional: true }),

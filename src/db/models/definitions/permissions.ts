@@ -24,7 +24,6 @@ export interface IPermissionDocument extends IPermission, Document {
 }
 
 export const permissionSchema = new Schema({
-  _id: field({ pkey: true }),
   module: field({ type: String }),
   action: field({ type: String }),
   userId: field({ type: String }),
@@ -43,7 +42,6 @@ export interface IUserGroupDocument extends IUserGroup, Document {
 }
 
 export const userGroupSchema = new Schema({
-  _id: field({ pkey: true }),
   name: field({ type: String, unique: true }),
   description: field({ type: String }),
 });

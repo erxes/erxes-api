@@ -60,7 +60,6 @@ export interface IDealDocument extends IDeal, Document {
 
 export const productSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     code: field({ type: String, unique: true }),
     categoryId: field({ type: String }),
@@ -85,7 +84,6 @@ export const productSchema = schemaWrapper(
 
 export const productCategorySchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     code: field({ type: String, unique: true }),
     order: field({ type: String }),

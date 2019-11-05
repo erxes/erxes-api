@@ -18,7 +18,6 @@ export interface IInternalNoteDocument extends IInternalNote, Document {
 // Mongoose schemas =======================
 
 export const internalNoteSchema = new Schema({
-  _id: field({ pkey: true }),
   contentType: field({
     type: String,
     enum: ACTIVITY_CONTENT_TYPES.ALL,

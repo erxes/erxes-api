@@ -103,7 +103,6 @@ const commonFieldsSchema = {
 };
 
 export const commonItemFieldsSchema = {
-  _id: field({ pkey: true }),
   userId: field({ type: String }),
   createdAt: field({
     type: Date,
@@ -131,14 +130,12 @@ export const commonItemFieldsSchema = {
 
 export const boardSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
     name: field({ type: String }),
     ...commonFieldsSchema,
   }),
 );
 
 export const pipelineSchema = new Schema({
-  _id: field({ pkey: true }),
   name: field({ type: String }),
   boardId: field({ type: String }),
   visibility: field({
@@ -162,7 +159,6 @@ export const pipelineSchema = new Schema({
 });
 
 export const stageSchema = new Schema({
-  _id: field({ pkey: true }),
   name: field({ type: String }),
   probability: field({
     type: String,

@@ -14,7 +14,6 @@ export interface IRobotEntryDocument extends IRobotEntry, Document {
 }
 
 export const robotEntrySchema = new Schema({
-  _id: field({ pkey: true }),
   parentId: field({ type: String, optional: true }),
   isNotified: field({ type: Boolean, default: false }),
   action: field({ type: String }),
@@ -34,7 +33,6 @@ export interface IOnboardingHistoryDocument extends IOnboardingHistory, Document
 }
 
 export const onboardingHistorySchema = new Schema({
-  _id: field({ pkey: true }),
   userId: field({ type: String }),
   totalPoint: field({ type: Number }),
   isCompleted: field({ type: Boolean }),

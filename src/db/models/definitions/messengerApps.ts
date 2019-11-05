@@ -35,8 +35,6 @@ export interface IMessengerAppDocument extends IMessengerApp, Document {
 // Messenger apps ===============
 export const messengerAppSchema = schemaWrapper(
   new Schema({
-    _id: field({ pkey: true }),
-
     kind: field({
       type: String,
       enum: ['googleMeet', 'knowledgebase', 'lead'],

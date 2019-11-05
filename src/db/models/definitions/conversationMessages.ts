@@ -79,7 +79,6 @@ const engageDataSchema = new Schema(
 );
 
 export const messageSchema = new Schema({
-  _id: field({ pkey: true }),
   content: field({ type: String }),
   attachments: [attachmentSchema],
   mentionedUserIds: field({ type: [String] }),
