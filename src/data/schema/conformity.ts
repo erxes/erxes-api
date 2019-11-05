@@ -7,6 +7,7 @@ export const types = `
     relTypeId: String
     content: String
     editAble: Boolean
+    createdAt: Date
 
     createdUser: User
   }

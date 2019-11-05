@@ -66,6 +66,6 @@ export const conformitySchema = new Schema({
   editAble: field({ type: Boolean, default: true }),
   createdAt: field({
     type: Date,
-    default: new Date(),
+    default: Date.now,
   }),
 });

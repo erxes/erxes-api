@@ -3,6 +3,7 @@ import Conformities from './Conformities';
 import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { IInternalNote, IInternalNoteDocument, internalNoteSchema } from './definitions/internalNotes';
 import { IUserDocument } from './definitions/users';
+import { graphqlPubsub } from '../../pubsub';
 
 export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
   createInternalNote({ ...fields }: IInternalNote, user: IUserDocument): Promise<IInternalNoteDocument>;
@@ -36,6 +37,8 @@ export const loadClass = () => {
         mainTypeId: fields.contentTypeId,
         createdBy: user._id,
       });
+
+      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
       return internalNote;
     }
