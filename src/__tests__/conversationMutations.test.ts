@@ -3,7 +3,6 @@ import { graphqlRequest } from '../db/connection';
 import { conversationFactory, customerFactory, integrationFactory, userFactory } from '../db/factories';
 import { Conversations, Customers, Integrations, Users } from '../db/models';
 
-import { IntegrationsAPI } from '../data/dataSources';
 import { KIND_CHOICES } from '../db/models/definitions/constants';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -21,7 +20,6 @@ describe('Conversation message mutations', () => {
   let leadConversation: IConversationDocument;
   let user: IUserDocument;
   let customer: ICustomerDocument;
-  let context;
 
   beforeEach(async () => {
     user = await userFactory({});
@@ -34,13 +32,6 @@ describe('Conversation message mutations', () => {
       customerId: customer._id,
       assignedUserId: user._id,
     });
-
-    context = {
-      user,
-      dataSources: {
-        IntegrationsAPI: new IntegrationsAPI(),
-      },
-    };
   });
 
   afterEach(async () => {

@@ -11,7 +11,7 @@ module.exports = {
   collectCoverageFrom: [
     'src/data/resolvers/queries/**',
     '!src/data/resolvers/queries/insights.ts',
-    '!src/data/resolvers/queries/dealInsights.ts',
+    '!src/data/resolvers/queries/configs.ts',
     '!src/data/resolvers/queries/robot.ts',
     '!src/data/resolvers/queries/permissions.ts',
     '!src/data/resolvers/queries/boardUtils.ts',

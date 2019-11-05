@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { graphql } from 'graphql';
 import { makeExecutableSchema } from 'graphql-tools';
 import mongoose = require('mongoose');
+import { EngagesAPI, IntegrationsAPI } from '../data/dataSources';
 import resolvers from '../data/resolvers';
 import typeDefs from '../data/schema';
 import { getEnv } from '../data/utils';
@@ -66,6 +67,10 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
   finalContext.commonQuerySelector = {};
   finalContext.userBrandIdsSelector = {};
   finalContext.brandIdSelector = {};
+  finalContext.dataSources = {
+    EngagesAPI: new EngagesAPI(),
+    IntegrationsAPI: new IntegrationsAPI(),
+  };
 
   const response: any = await graphql(schema, source, rootValue, finalContext, args);
 

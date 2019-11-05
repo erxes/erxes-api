@@ -15,7 +15,7 @@ export default class EngagesAPI extends RESTDataSource {
   public didEncounterError(e) {
     const error = e.extensions || {};
     const { response } = error;
-    const { body } = response;
+    const { body } = response || { body: 'Connection failed' };
 
     throw new Error(body);
   }

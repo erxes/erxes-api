@@ -4,7 +4,6 @@ import { brandFactory, channelFactory, integrationFactory, tagsFactory, userFact
 import { Brands, Channels, Integrations } from '../db/models';
 import { TAG_TYPES } from '../db/models/definitions/constants';
 
-import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('integrationQueries', () => {
@@ -220,22 +219,16 @@ describe('integrationQueries', () => {
   });
 
   test('Fetch integration api', async () => {
+    process.env.ENGAGES_API_DOMAIN = 'http://localhost';
+
     const qry = `
       query integrationsFetchApi($path: String!, $params: JSON!) {
         integrationsFetchApi(path: $path, params: $params)
       }
   `;
 
-    const user = await userFactory();
-    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
-
     try {
-      await graphqlRequest(
-        qry,
-        'integrationsFetchApi',
-        { path: '/', params: { type: 'facebook' } },
-        { user, dataSources },
-      );
+      await graphqlRequest(qry, 'integrationsFetchApi', { path: '/', params: { type: 'facebook' } });
     } catch (e) {
       expect(e[0].message).toBe('Connection failed');
     }

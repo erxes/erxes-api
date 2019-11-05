@@ -1,7 +1,6 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
-import EngagesAPI from '../data/dataSources/engages';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -28,7 +27,6 @@ import {
   Users,
 } from '../db/models';
 
-import { IntegrationsAPI } from '../data/dataSources';
 import { STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
@@ -41,7 +39,6 @@ describe('engage message mutation tests', () => {
   let _customer;
   let _integration;
   let _doc;
-  let context;
   let spy;
 
   const commonParamDefs = `
@@ -140,8 +137,6 @@ describe('engage message mutation tests', () => {
         ],
       },
     };
-
-    context = { user: _user, dataSources: { EngagesAPI: new EngagesAPI(), IntegrationsAPI: new IntegrationsAPI() } };
 
     spy = jest.spyOn(engageUtils, 'send');
   });
@@ -347,7 +342,7 @@ describe('engage message mutation tests', () => {
       throw new Error('User not found');
     }
 
-    const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
+    const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
@@ -405,7 +400,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
@@ -443,7 +438,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id }, context);
+    await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
 
     expect(await EngageMessages.findOne({ _id: _message._id })).toBe(null);
   });
@@ -456,7 +451,7 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
 
     expect(engageMessage.isLive).toBe(true);
   });
@@ -470,7 +465,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetPause', { _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetPause', { _id: _message._id });
 
     expect(engageMessage.isLive).toBe(false);
   });
@@ -513,7 +508,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLiveManual', { _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLiveManual', { _id: _message._id });
 
     if (!conversationMessage.engageData) {
       throw new Error('Conversation engageData not found');
