@@ -85,14 +85,12 @@ export default {
    * 1. created on this stage initially
    * 2. moved to other stage which has probability other than Lost
    */
-  async inProcessDealsTotalCount(stage: IStageDocument, _args, _context, { variableValues: args }) {
-    const filter = await generateDealCommonFilters(
-      {
-        ...args,
-        $and: [{ pipelineId: stage.pipelineId }, { probability: { $ne: 'Lost' } }, { _id: { $ne: stage._id } }],
-      },
-      args.extraParams,
-    );
+  async inProcessDealsTotalCount(stage: IStageDocument) {
+    const filter = {
+      pipelineId: stage.pipelineId,
+      probability: { $ne: 'Lost' },
+      id: { $ne: stage._id },
+    };
 
     const deals = await Stages.aggregate([
       {
@@ -138,23 +136,16 @@ export default {
    * Compare current stage with next stage
    * by initial and current deals count
    */
-  async compareNextStage(stage: IStageDocument, _args, _context, { variableValues: args }) {
+  async compareNextStage(stage: IStageDocument) {
     const result: { count?: number; percent?: number } = {};
 
     const { order = 1 } = stage;
 
-    const filter = await generateDealCommonFilters(
-      {
-        ...args,
-        order: { $in: [order, order + 1] },
-        probability: { $ne: 'Lost' },
-      },
-      args.extraParams,
-    );
-
-    console.log('filter: ', filter);
-
-    filter.pipelineId = stage.pipelineId;
+    const filter = {
+      order: { $in: [order, order + 1] },
+      probability: { $ne: 'Lost' },
+      pipelineId: stage.pipelineId,
+    };
 
     const stages = await Stages.aggregate([
       {

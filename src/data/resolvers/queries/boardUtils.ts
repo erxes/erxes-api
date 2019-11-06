@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { Conformities, Stages } from '../../../db/models';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
-export const contains = (values: string[] = [], empty = false) => {
+const contains = (values: string[] = [], empty = false) => {
   if (empty) {
     return [];
   }
@@ -12,7 +12,6 @@ export const contains = (values: string[] = [], empty = false) => {
 
 export const generateCommonFilters = async (args: any) => {
   const {
-    $and,
     stageId,
     search,
     overdue,
@@ -27,8 +26,6 @@ export const generateCommonFilters = async (args: any) => {
     conformityMainTypeId,
     conformityIsRelated,
     conformityIsSaved,
-    order,
-    probability,
     initialStageId,
     type,
     labelIds,
@@ -46,10 +43,6 @@ export const generateCommonFilters = async (args: any) => {
     const notAssigned = assignedToNoOne(assignedUserIds);
 
     filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
-  }
-
-  if ($and) {
-    filter.$and = $and;
   }
 
   if (customerIds && type) {
@@ -73,7 +66,7 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (customerIds || companyIds) {
-    filter._id = contains(filterIds || []);
+    filter._id = contains(filterIds);
   }
 
   if (conformityMainType && conformityMainTypeId) {
@@ -84,7 +77,7 @@ export const generateCommonFilters = async (args: any) => {
         relType: type,
       });
 
-      filter._id = contains(relIds || []);
+      filter._id = contains(relIds);
     }
 
     if (conformityIsRelated) {
@@ -94,16 +87,8 @@ export const generateCommonFilters = async (args: any) => {
         relType: type,
       });
 
-      filter._id = contains(relIds || []);
+      filter._id = contains(relIds);
     }
-  }
-
-  if (order) {
-    filter.order = order;
-  }
-
-  if (probability) {
-    filter.probability = probability;
   }
 
   if (initialStageId) {

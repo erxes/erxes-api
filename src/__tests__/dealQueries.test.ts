@@ -57,6 +57,7 @@ describe('dealQueries', () => {
       $pipelineId: String
       $date: ItemDate
       $labelIds: [String]
+      $initialStageId: String
     ) {
       deals(
         search: $search
@@ -77,6 +78,7 @@ describe('dealQueries', () => {
         pipelineId: $pipelineId
         date: $date
         labelIds: $labelIds
+        initialStageId: $initialStageId
       ) {
         ${commonDealTypes}
       }
@@ -98,7 +100,7 @@ describe('dealQueries', () => {
   });
 
   test('Filter by search', async () => {
-    await dealFactory({ name: 'name' });
+    await dealFactory({ searchText: 'name' });
 
     const response = await graphqlRequest(qryDealFilter, 'deals', { search: 'name' });
 
@@ -179,9 +181,16 @@ describe('dealQueries', () => {
 
     await dealFactory({ assignedUserIds: [_id] });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { assignedUserIds: [_id] });
+    let response = await graphqlRequest(qryDealFilter, 'deals', { assignedUserIds: [_id] });
 
     expect(response.length).toBe(1);
+
+    await dealFactory();
+
+    // Filter by assigned to no one
+    response = await graphqlRequest(qryDealFilter, 'deals', { assignedUserIds: [''] });
+
+    expect(response.length).toBe(0);
   });
 
   test('Deal filter by customers', async () => {

@@ -812,7 +812,6 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
 };
 
 interface IDealFactoryInput {
-  name?: string;
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -823,6 +822,7 @@ interface IDealFactoryInput {
   modifiedBy?: string;
   order?: number;
   probability?: string;
+  searchText?: string;
 }
 
 export const dealFactory = (params: IDealFactoryInput = {}) => {
@@ -831,7 +831,7 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     initialStageId: stageId,
-    name: params.name || faker.random.word(),
+    name: faker.random.word(),
     stageId,
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
@@ -841,6 +841,7 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
     labelIds: params.labelIds || [],
     order: params.order,
     probability: params.probability,
+    searchText: params.searchText,
   });
 
   return deal.save();
