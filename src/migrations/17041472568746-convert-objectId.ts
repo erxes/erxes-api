@@ -10,7 +10,6 @@ module.exports.up = async () => {
     const entries = await objOnDb.find().toArray();
 
     for (const entry of entries) {
-      console.log('************************************************');
       const oldId = entry._id;
 
       const doc = { ...entry, oldId };
@@ -122,7 +121,7 @@ module.exports.up = async () => {
       { coll: mongoClient.db.collection('permissions'), fi: 'userId' },
       { coll: mongoClient.db.collection('onboarding_histories'), fi: 'userId' },
     ],
-    [],
+    [{ coll: mongoClient.db.collection('internal_notes'), type: 'user' }],
     '',
   );
 
@@ -137,7 +136,7 @@ module.exports.up = async () => {
       { coll: mongoClient.db.collection('integrations'), fi: 'brandId' },
       { coll: mongoClient.db.collection('knowledgebase_topics'), fi: 'brandId' },
       { coll: mongoClient.db.collection('response_templates'), fi: 'brandId' },
-      { coll: mongoClient.db.collection('segments'), fi: 'brandId' },
+      { coll: mongoClient.db.collection('segments'), fi: 'conditions.brandId' },
       { coll: mongoClient.db.collection('users'), fi: 'brandIds', isMany },
       { coll: mongoClient.db.collection('emailSignature'), fi: 'brandId' },
     ],
@@ -147,7 +146,12 @@ module.exports.up = async () => {
 
   await executer(mongoClient.db.collection('activity_logs'), [], [], '');
 
-  await executer(mongoClient.db.collection('channels'), [], [], '');
+  await executer(
+    mongoClient.db.collection('channels'),
+    [],
+    [{ coll: mongoClient.db.collection('notifications'), type: 'channel' }],
+    '',
+  );
 
   await executer(mongoClient.db.collection('checklist_items'), [], [], '');
 
@@ -164,6 +168,8 @@ module.exports.up = async () => {
     [
       { coll: mongoClient.db.collection('fields_groups'), type: 'company' },
       { coll: mongoClient.db.collection('fields'), type: 'company' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'company' },
+      { coll: mongoClient.db.collection('notifications'), type: 'company' },
     ],
     'company',
   );
@@ -180,7 +186,7 @@ module.exports.up = async () => {
       { coll: mongoClient.db.collection('conversation_messages'), fi: 'conversationId' },
       { coll: mongoClient.db.collection('users'), fi: 'starredConversationIds', isMany },
     ],
-    [],
+    [{ coll: mongoClient.db.collection('notifications'), type: 'conversation' }],
     '',
   );
 
@@ -196,6 +202,8 @@ module.exports.up = async () => {
     [
       { coll: mongoClient.db.collection('fields_groups'), type: 'customer' },
       { coll: mongoClient.db.collection('fields'), type: 'customer' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'customer' },
+      { coll: mongoClient.db.collection('notifications'), type: 'customer' },
     ],
     'customer',
   );
@@ -224,6 +232,96 @@ module.exports.up = async () => {
     mongoClient.db.collection('forms'),
     [],
     [{ coll: mongoClient.db.collection('fields'), type: 'form' }],
+    '',
+  );
+
+  await executer(mongoClient.db.collection('import_history'), [], [], '');
+
+  await executer(
+    mongoClient.db.collection('integrations'),
+    [
+      { coll: mongoClient.db.collection('channels'), type: 'integrationIds', isMany },
+      { coll: mongoClient.db.collection('conversations'), type: 'integrationId' },
+      { coll: mongoClient.db.collection('customers'), type: 'integrationId' },
+    ],
+    [],
+    '',
+  );
+
+  await executer(mongoClient.db.collection('internal_notes'), [], [], '');
+
+  await executer(
+    mongoClient.db.collection('knowledgebase_articles'),
+    [{ coll: mongoClient.db.collection('knowledgebase_categories'), type: 'articleIds', isMany }],
+    [],
+    '',
+  );
+
+  await executer(
+    mongoClient.db.collection('knowledgebase_categories'),
+    [{ coll: mongoClient.db.collection('knowledgebase_topics'), type: 'categoryIds', isMany }],
+    [],
+    '',
+  );
+
+  await executer(
+    mongoClient.db.collection('knowledgebase_topics'),
+    [{ coll: mongoClient.db.collection('scripts'), type: 'kbTopicId' }],
+    [],
+    '',
+  );
+
+  await executer(mongoClient.db.collection('messenger_apps'), [], [], '');
+
+  await executer(mongoClient.db.collection('notifications'), [], [], '');
+
+  await executer(mongoClient.db.collection('permissions'), [], [], '');
+
+  await executer(
+    mongoClient.db.collection('user_groups'),
+    [{ coll: mongoClient.db.collection('permissions'), fi: 'groupId' }],
+    [],
+    '',
+  );
+
+  await executer(
+    mongoClient.db.collection('pipeline_templates'),
+    [{ coll: mongoClient.db.collection('pipelines'), fi: 'templateId' }],
+    [],
+    '',
+  );
+
+  await executer(mongoClient.db.collection('response_templates'), [], [], '');
+
+  await executer(
+    mongoClient.db.collection('robot_entries'),
+    [{ coll: mongoClient.db.collection('robot_entries'), fi: 'parentId' }],
+    [],
+    '',
+  );
+
+  await executer(mongoClient.db.collection('onboarding_histories'), [], [], '');
+
+  await executer(mongoClient.db.collection('scripts'), [], [], '');
+
+  await executer(
+    mongoClient.db.collection('segments'),
+    [{ coll: mongoClient.db.collection('engage_messages'), fi: 'segmentIds', isMany }],
+    [],
+    '',
+  );
+
+  await executer(
+    mongoClient.db.collection('tags'),
+    [
+      { coll: mongoClient.db.collection('companies'), fi: 'tagIds', isMany },
+      { coll: mongoClient.db.collection('conversations'), fi: 'tagIds', isMany },
+      { coll: mongoClient.db.collection('customers'), fi: 'tagIds', isMany },
+      { coll: mongoClient.db.collection('products'), fi: 'tagIds', isMany },
+      { coll: mongoClient.db.collection('engages'), fi: 'tagIds', isMany },
+      { coll: mongoClient.db.collection('integrations'), fi: 'tagIds', isMany },
+    ],
+    [],
     '',
   );
 
@@ -259,28 +357,44 @@ module.exports.up = async () => {
   await executer(
     mongoClient.db.collection('deals'),
     [],
-    [{ coll: mongoClient.db.collection('checklists'), type: 'deal' }],
+    [
+      { coll: mongoClient.db.collection('checklists'), type: 'deal' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'deal' },
+      { coll: mongoClient.db.collection('notifications'), type: 'deal' },
+    ],
     'deal',
   );
 
   await executer(
     mongoClient.db.collection('tickets'),
     [],
-    [{ coll: mongoClient.db.collection('checklists'), type: 'ticket' }],
+    [
+      { coll: mongoClient.db.collection('checklists'), type: 'ticket' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'ticket' },
+      { coll: mongoClient.db.collection('notifications'), type: 'ticket' },
+    ],
     'ticket',
   );
 
   await executer(
     mongoClient.db.collection('tasks'),
     [],
-    [{ coll: mongoClient.db.collection('checklists'), type: 'task' }],
+    [
+      { coll: mongoClient.db.collection('checklists'), type: 'task' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'task' },
+      { coll: mongoClient.db.collection('notifications'), type: 'task' },
+    ],
     'task',
   );
 
   await executer(
     mongoClient.db.collection('growth_hacks'),
     [],
-    [{ coll: mongoClient.db.collection('checklists'), type: 'growthHack' }],
+    [
+      { coll: mongoClient.db.collection('checklists'), type: 'growthHack' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'growthHack' },
+      { coll: mongoClient.db.collection('notifications'), type: 'growthHack' },
+    ],
     'growthHack',
   );
 
@@ -294,7 +408,10 @@ module.exports.up = async () => {
   await executer(
     mongoClient.db.collection('products'),
     [{ coll: mongoClient.db.collection('deals'), fi: 'productsData.productId' }],
-    [{ coll: mongoClient.db.collection('fields_groups'), type: 'product' }],
+    [
+      { coll: mongoClient.db.collection('fields_groups'), type: 'product' },
+      { coll: mongoClient.db.collection('internal_notes'), type: 'product' },
+    ],
     '',
   );
 
