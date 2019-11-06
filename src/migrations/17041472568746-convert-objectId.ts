@@ -1,26 +1,62 @@
-import * as mongoose from 'mongoose';
+import { createConnection, Types } from 'mongoose';
 
 module.exports.up = async () => {
-  const mongoClient = await mongoose.createConnection(process.env.MONGO_URL || '', {
+  const mongoClient = await createConnection(process.env.MONGO_URL || '', {
     useNewUrlParser: true,
     useCreateIndex: true,
   });
 
-  const executer = async (objOnDb, relModels, contentTypes, conformity = '') => {
-    const entries = await objOnDb.find().toArray();
+  interface IRelModels {
+    coll: string;
+    fi: string;
+    kind?: string;
+  }
+
+  interface IContentTypes {
+    coll: string;
+    type: string;
+  }
+
+  const executer = async (
+    mainCollection: string,
+    relModels: IRelModels[],
+    contentTypes: IContentTypes[],
+    conformity: string,
+    unique: string = '',
+  ) => {
+    console.log(mainCollection);
+    const objOnDb = mongoClient.db.collection(mainCollection);
+    const entries = await objOnDb.find({ oldId: { $exists: false } }).toArray();
+    console.log(entries.length);
 
     for (const entry of entries) {
       const oldId = entry._id;
+      let uniqueVal = '';
 
       const doc = { ...entry, oldId };
-      delete doc._id;
-      const response = await objOnDb.insertOne(doc);
 
-      if (!response.insertedId) {
-        continue;
+      if (unique) {
+        uniqueVal = entry[unique];
+        delete doc[unique];
       }
 
-      const newId = response.insertedId.toString();
+      delete doc._id;
+
+      // check duplicate oldId
+      const duplicatedNew = await objOnDb.find({ oldId }).toArray();
+
+      let newId = '';
+
+      if (duplicatedNew.length > 0) {
+        newId = duplicatedNew[0].oldId;
+      } else {
+        const response = await objOnDb.insertOne(doc);
+        newId = response.insertedId.toString();
+      }
+
+      if (!newId) {
+        continue;
+      }
 
       if (conformity) {
         await mongoClient.db
@@ -33,7 +69,9 @@ module.exports.up = async () => {
 
       if (contentTypes) {
         for (const contentType of contentTypes) {
-          contentType.coll.updateMany(
+          const contentTypeColl = mongoClient.db.collection(contentType.coll);
+
+          contentTypeColl.updateMany(
             { contentType: contentType.type, contentTypeId: oldId },
             { $set: { contentTypeId: newId } },
           );
@@ -41,377 +79,336 @@ module.exports.up = async () => {
       }
 
       for (const relModel of relModels) {
-        if (relModel.isMany) {
-          const relEntries = await relModel.find({ [relModel.fi]: { $in: oldId } }, { _id: 1, [relModel.fi]: 1 });
+        const relCollection = mongoClient.db.collection(relModel.coll);
 
-          for (const relEntry of relEntries) {
-            const oldList = relEntry[relModel.fi];
-            const index = oldList.indexof(oldId);
+        switch (relModel.kind) {
+          case 'many': {
+            const relEntries = await relCollection
+              .aggregate([{ $match: { [relModel.fi]: { $in: [oldId] } } }, { $project: { _id: 1, [relModel.fi]: 1 } }])
+              .toArray();
 
-            if (index !== -1) {
-              oldList[index] = newId;
-              await relModel.coll.updateOne({ _id: relEntry._id }, { $set: { [relModel.fi]: oldList } });
+            for (const relEntry of relEntries) {
+              const oldList = relEntry[relModel.fi];
+              const index = oldList.indexOf(oldId);
+
+              if (index !== -1) {
+                oldList[index] = newId;
+                await relCollection.updateOne({ _id: relEntry._id }, { $set: { [relModel.fi]: oldList } });
+              }
             }
+            break;
           }
-        } else {
-          await relModel.coll.updateMany({ [relModel.fi]: oldId }, { $set: { [relModel.fi]: newId } });
+
+          case 'manyOne': {
+            const manyFi = relModel.fi.split('.')[0];
+            const oneFi = relModel.fi.split('.')[1];
+
+            const relEntries = await relCollection
+              .aggregate([{ $match: { [relModel.fi]: { $in: [oldId] } } }, { $project: { _id: 1, [manyFi]: 1 } }])
+              .toArray();
+
+            for (const relEntry of relEntries) {
+              const oldList = relEntry[manyFi];
+
+              oldList.forEach((subItem, index) => {
+                if (subItem[oneFi] === oldId) {
+                  oldList[index][oneFi] = newId;
+                }
+              });
+
+              await relCollection.updateOne({ _id: relEntry._id }, { $set: { [manyFi]: oldList } });
+            }
+
+            break;
+          }
+
+          default: {
+            await relCollection.updateMany({ [relModel.fi]: oldId }, { $set: { [relModel.fi]: newId } });
+            break;
+          }
         }
       }
 
       await objOnDb.deleteOne({ _id: oldId });
+
+      if (unique && uniqueVal) {
+        await objOnDb.updateOne({ _id: Types.ObjectId(newId) }, { $set: { [unique]: uniqueVal } });
+      }
     }
   };
 
-  const isMany = true;
+  const kind = 'many';
 
   await executer(
-    mongoClient.db.collection('users'),
+    'users',
     [
-      { coll: mongoClient.db.collection('brands'), fi: 'userId' },
-      { coll: mongoClient.db.collection('channels'), fi: 'userId' },
-      { coll: mongoClient.db.collection('boards'), fi: 'userId' },
-      { coll: mongoClient.db.collection('pipelines'), fi: 'userId', isMany },
-      { coll: mongoClient.db.collection('pipelines'), fi: 'watchedUserIds', isMany },
-      { coll: mongoClient.db.collection('stages'), fi: 'UserId' },
-      { coll: mongoClient.db.collection('deals'), fi: 'userId' },
-      { coll: mongoClient.db.collection('tasks'), fi: 'userId' },
-      { coll: mongoClient.db.collection('tickets'), fi: 'userId' },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'userId' },
-      { coll: mongoClient.db.collection('deals'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('tasks'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('tickets'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('deals'), fi: 'assignedUserIds', isMany },
-      { coll: mongoClient.db.collection('tasks'), fi: 'assignedUserIds', isMany },
-      { coll: mongoClient.db.collection('tickets'), fi: 'assignedUserIds', isMany },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'assignedUserIds', isMany },
-      { coll: mongoClient.db.collection('deals'), fi: 'watchedUserIds', isMany },
-      { coll: mongoClient.db.collection('tasks'), fi: 'watchedUserIds', isMany },
-      { coll: mongoClient.db.collection('tickets'), fi: 'watchedUserIds', isMany },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'watchedUserIds', isMany },
-      { coll: mongoClient.db.collection('checklists'), fi: 'createdUserId' },
-      { coll: mongoClient.db.collection('checklist_items'), fi: 'createdUserId' },
-      { coll: mongoClient.db.collection('knowledgebase_articles'), fi: 'createdBy' },
-      { coll: mongoClient.db.collection('knowledgebase_categories'), fi: 'createdBy' },
-      { coll: mongoClient.db.collection('knowledgebase_topics'), fi: 'createdBy' },
-      { coll: mongoClient.db.collection('knowledgebase_articles'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('knowledgebase_categories'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('knowledgebase_topics'), fi: 'modifiedBy' },
-      { coll: mongoClient.db.collection('pipeline_labels'), fi: 'createdBy' },
-      { coll: mongoClient.db.collection('pipeline_templates'), fi: 'createdBy' },
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'userId' },
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'engageData.fromUserId' },
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'mentionedUserIds', isMany },
-      { coll: mongoClient.db.collection('conversations'), fi: 'userId' },
-      { coll: mongoClient.db.collection('conversations'), fi: 'assignedUserId' },
-      { coll: mongoClient.db.collection('conversations'), fi: 'participatedUserIds', isMany },
-      { coll: mongoClient.db.collection('conversations'), fi: 'readUserIds', isMany },
-      { coll: mongoClient.db.collection('conversations'), fi: 'closedUserId' },
-      { coll: mongoClient.db.collection('conversations'), fi: 'firstRespondedUserId' },
-      { coll: mongoClient.db.collection('email_deliveries'), fi: 'userId' },
-      { coll: mongoClient.db.collection('engage_messages'), fi: 'fromUserId' },
-      { coll: mongoClient.db.collection('fields'), fi: 'lastUpdatedUserId' },
-      { coll: mongoClient.db.collection('fields_groups'), fi: 'lastUpdatedUserId' },
-      { coll: mongoClient.db.collection('forms'), fi: 'createdUserId' },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'votedUserIds', isMany },
-      { coll: mongoClient.db.collection('import_history'), fi: 'userId' },
-      { coll: mongoClient.db.collection('integrations'), fi: 'createdUserId' },
-      { coll: mongoClient.db.collection('internal_notes'), fi: 'createdUserId' },
-      { coll: mongoClient.db.collection('internal_notes'), fi: 'mentionedUserIds', isMany },
-      { coll: mongoClient.db.collection('permissions'), fi: 'userId' },
-      { coll: mongoClient.db.collection('onboarding_histories'), fi: 'userId' },
+      { coll: 'brands', fi: 'userId' },
+      { coll: 'channels', fi: 'userId' },
+      { coll: 'boards', fi: 'userId' },
+      { coll: 'pipelines', fi: 'userId' },
+      { coll: 'pipelines', fi: 'watchedUserIds', kind },
+      { coll: 'stages', fi: 'UserId' },
+      { coll: 'deals', fi: 'userId' },
+      { coll: 'tasks', fi: 'userId' },
+      { coll: 'tickets', fi: 'userId' },
+      { coll: 'growth_hacks', fi: 'userId' },
+      { coll: 'deals', fi: 'modifiedBy' },
+      { coll: 'tasks', fi: 'modifiedBy' },
+      { coll: 'tickets', fi: 'modifiedBy' },
+      { coll: 'growth_hacks', fi: 'modifiedBy' },
+      { coll: 'deals', fi: 'assignedUserIds', kind },
+      { coll: 'tasks', fi: 'assignedUserIds', kind },
+      { coll: 'tickets', fi: 'assignedUserIds', kind },
+      { coll: 'growth_hacks', fi: 'assignedUserIds', kind },
+      { coll: 'deals', fi: 'watchedUserIds', kind },
+      { coll: 'tasks', fi: 'watchedUserIds', kind },
+      { coll: 'tickets', fi: 'watchedUserIds', kind },
+      { coll: 'growth_hacks', fi: 'watchedUserIds', kind },
+      { coll: 'checklists', fi: 'createdUserId' },
+      { coll: 'checklist_items', fi: 'createdUserId' },
+      { coll: 'knowledgebase_articles', fi: 'createdBy' },
+      { coll: 'knowledgebase_categories', fi: 'createdBy' },
+      { coll: 'knowledgebase_topics', fi: 'createdBy' },
+      { coll: 'knowledgebase_articles', fi: 'modifiedBy' },
+      { coll: 'knowledgebase_categories', fi: 'modifiedBy' },
+      { coll: 'knowledgebase_topics', fi: 'modifiedBy' },
+      { coll: 'pipeline_labels', fi: 'createdBy' },
+      { coll: 'pipeline_templates', fi: 'createdBy' },
+      { coll: 'conversation_messages', fi: 'userId' },
+      { coll: 'conversation_messages', fi: 'engageData.fromUserId' },
+      { coll: 'conversation_messages', fi: 'mentionedUserIds', kind },
+      { coll: 'conversations', fi: 'userId' },
+      { coll: 'conversations', fi: 'assignedUserId' },
+      { coll: 'conversations', fi: 'participatedUserIds', kind },
+      { coll: 'conversations', fi: 'readUserIds', kind },
+      { coll: 'conversations', fi: 'closedUserId' },
+      { coll: 'conversations', fi: 'firstRespondedUserId' },
+      { coll: 'email_deliveries', fi: 'userId' },
+      { coll: 'engage_messages', fi: 'fromUserId' },
+      { coll: 'fields', fi: 'lastUpdatedUserId' },
+      { coll: 'fields_groups', fi: 'lastUpdatedUserId' },
+      { coll: 'forms', fi: 'createdUserId' },
+      { coll: 'growth_hacks', fi: 'votedUserIds', kind },
+      { coll: 'import_history', fi: 'userId' },
+      { coll: 'integrations', fi: 'createdUserId' },
+      { coll: 'internal_notes', fi: 'createdUserId' },
+      { coll: 'internal_notes', fi: 'mentionedUserIds', kind },
+      { coll: 'permissions', fi: 'userId' },
+      { coll: 'onboarding_histories', fi: 'userId' },
     ],
-    [{ coll: mongoClient.db.collection('internal_notes'), type: 'user' }],
+    [{ coll: 'internal_notes', type: 'user' }],
     '',
+    'email',
   );
 
   await executer(
-    mongoClient.db.collection('brands'),
+    'brands',
     [
-      { coll: mongoClient.db.collection('companies'), fi: 'scopeBrandIds', isMany },
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'brandId' },
-      { coll: mongoClient.db.collection('customers'), fi: 'scopeBrandIds', isMany },
-      { coll: mongoClient.db.collection('engage_messages'), fi: 'brandIds', isMany },
-      { coll: mongoClient.db.collection('engage_messages'), fi: 'messenger.brandId' },
-      { coll: mongoClient.db.collection('integrations'), fi: 'brandId' },
-      { coll: mongoClient.db.collection('knowledgebase_topics'), fi: 'brandId' },
-      { coll: mongoClient.db.collection('response_templates'), fi: 'brandId' },
-      { coll: mongoClient.db.collection('segments'), fi: 'conditions.brandId' },
-      { coll: mongoClient.db.collection('users'), fi: 'brandIds', isMany },
-      { coll: mongoClient.db.collection('emailSignature'), fi: 'brandId' },
+      { coll: 'companies', fi: 'scopeBrandIds', kind },
+      { coll: 'conversation_messages', fi: 'brandId' },
+      { coll: 'customers', fi: 'scopeBrandIds', kind },
+      { coll: 'engage_messages', fi: 'brandIds', kind },
+      { coll: 'engage_messages', fi: 'messenger.brandId' },
+      { coll: 'integrations', fi: 'brandId' },
+      { coll: 'knowledgebase_topics', fi: 'brandId' },
+      { coll: 'response_templates', fi: 'brandId' },
+      { coll: 'segments', fi: 'conditions.brandId', kind: 'manyOne' },
+      { coll: 'users', fi: 'brandIds', kind },
+      { coll: 'emailSignature', fi: 'brandId' },
     ],
     [],
     '',
   );
 
-  await executer(mongoClient.db.collection('activity_logs'), [], [], '');
+  await executer('activity_logs', [], [], '');
+
+  await executer('channels', [], [{ coll: 'notifications', type: 'channel' }], '');
+
+  await executer('checklist_items', [], [], '');
+
+  await executer('checklists', [{ coll: 'checklist_items', fi: 'checklistId' }], [], '');
 
   await executer(
-    mongoClient.db.collection('channels'),
-    [],
-    [{ coll: mongoClient.db.collection('notifications'), type: 'channel' }],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('checklist_items'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('checklists'),
-    [{ coll: mongoClient.db.collection('checklist_items'), fi: 'checklistId' }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('companies'),
+    'companies',
     [],
     [
-      { coll: mongoClient.db.collection('fields_groups'), type: 'company' },
-      { coll: mongoClient.db.collection('fields'), type: 'company' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'company' },
-      { coll: mongoClient.db.collection('notifications'), type: 'company' },
+      { coll: 'fields_groups', type: 'company' },
+      { coll: 'fields', type: 'company' },
+      { coll: 'internal_notes', type: 'company' },
+      { coll: 'notifications', type: 'company' },
     ],
     'company',
   );
 
-  await executer(mongoClient.db.collection('configs'), [], [], '');
+  await executer('configs', [], [], '');
 
-  await executer(mongoClient.db.collection('conformities'), [], [], '');
+  await executer('conformities', [], [], '');
 
-  await executer(mongoClient.db.collection('conversation_messages'), [], [], '');
+  await executer('conversation_messages', [], [], '');
 
   await executer(
-    mongoClient.db.collection('conversations'),
-    [
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'conversationId' },
-      { coll: mongoClient.db.collection('users'), fi: 'starredConversationIds', isMany },
-    ],
-    [{ coll: mongoClient.db.collection('notifications'), type: 'conversation' }],
+    'conversations',
+    [{ coll: 'conversation_messages', fi: 'conversationId' }, { coll: 'users', fi: 'starredConversationIds', kind }],
+    [{ coll: 'notifications', type: 'conversation' }],
     '',
   );
 
   await executer(
-    mongoClient.db.collection('customers'),
+    'customers',
     [
-      { coll: mongoClient.db.collection('conversation_messages'), fi: 'customerId' },
-      { coll: mongoClient.db.collection('conversations'), fi: 'customerId' },
-      { coll: mongoClient.db.collection('engage_messages'), fi: 'customerIds', isMany },
-      { coll: mongoClient.db.collection('engage_messages'), fi: 'messengerReceivedCustomerIds', isMany },
-      { coll: mongoClient.db.collection('forms'), fi: 'customerId' },
+      { coll: 'conversation_messages', fi: 'customerId' },
+      { coll: 'conversations', fi: 'customerId' },
+      { coll: 'engage_messages', fi: 'customerIds', kind },
+      { coll: 'engage_messages', fi: 'messengerReceivedCustomerIds', kind },
+      { coll: 'forms', fi: 'customerId' },
     ],
     [
-      { coll: mongoClient.db.collection('fields_groups'), type: 'customer' },
-      { coll: mongoClient.db.collection('fields'), type: 'customer' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'customer' },
-      { coll: mongoClient.db.collection('notifications'), type: 'customer' },
+      { coll: 'fields_groups', type: 'customer' },
+      { coll: 'fields', type: 'customer' },
+      { coll: 'internal_notes', type: 'customer' },
+      { coll: 'notifications', type: 'customer' },
     ],
     'customer',
   );
 
-  await executer(mongoClient.db.collection('email_deliveries'), [], [], '');
+  await executer('email_deliveries', [], [], '');
+
+  await executer('email_templates', [{ coll: 'engage_emails', fi: 'templateId' }], [], '');
+
+  await executer('engage_messages', [], [], '');
+
+  await executer('fields', [{ coll: 'pipelines', fi: 'boardId' }], [], '');
+
+  await executer('form_submissions', [], [], '');
+
+  await executer('forms', [], [{ coll: 'fields', type: 'form' }], '');
+
+  await executer('import_history', [], [], '');
 
   await executer(
-    mongoClient.db.collection('email_templates'),
-    [{ coll: mongoClient.db.collection('engage_emails'), fi: 'templateId' }],
-    [],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('engage_messages'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('fields'),
-    [{ coll: mongoClient.db.collection('pipelines'), fi: 'boardId' }],
-    [],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('form_submissions'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('forms'),
-    [],
-    [{ coll: mongoClient.db.collection('fields'), type: 'form' }],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('import_history'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('integrations'),
+    'integrations',
     [
-      { coll: mongoClient.db.collection('channels'), type: 'integrationIds', isMany },
-      { coll: mongoClient.db.collection('conversations'), type: 'integrationId' },
-      { coll: mongoClient.db.collection('customers'), type: 'integrationId' },
+      { coll: 'channels', fi: 'integrationIds', kind },
+      { coll: 'conversations', fi: 'integrationId' },
+      { coll: 'customers', fi: 'integrationId' },
     ],
     [],
     '',
   );
 
-  await executer(mongoClient.db.collection('internal_notes'), [], [], '');
+  await executer('internal_notes', [], [], '');
+
+  await executer('knowledgebase_articles', [{ coll: 'knowledgebase_categories', fi: 'articleIds', kind }], [], '');
+
+  await executer('knowledgebase_categories', [{ coll: 'knowledgebase_topics', fi: 'categoryIds', kind }], [], '');
+
+  await executer('knowledgebase_topics', [{ coll: 'scripts', fi: 'kbTopicId' }], [], '');
+
+  await executer('messenger_apps', [], [], '');
+
+  await executer('notifications', [], [], '');
+
+  await executer('permissions', [], [], '');
+
+  await executer('user_groups', [{ coll: 'permissions', fi: 'groupId' }], [], '', 'name');
+
+  await executer('pipeline_templates', [{ coll: 'pipelines', fi: 'templateId' }], [], '');
+
+  await executer('response_templates', [], [], '');
+
+  await executer('robot_entries', [{ coll: 'robot_entries', fi: 'parentId' }], [], '');
+
+  await executer('onboarding_histories', [], [], '');
+
+  await executer('scripts', [], [], '');
+
+  await executer('segments', [{ coll: 'engage_messages', fi: 'segmentIds', kind }], [], '');
 
   await executer(
-    mongoClient.db.collection('knowledgebase_articles'),
-    [{ coll: mongoClient.db.collection('knowledgebase_categories'), type: 'articleIds', isMany }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('knowledgebase_categories'),
-    [{ coll: mongoClient.db.collection('knowledgebase_topics'), type: 'categoryIds', isMany }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('knowledgebase_topics'),
-    [{ coll: mongoClient.db.collection('scripts'), type: 'kbTopicId' }],
-    [],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('messenger_apps'), [], [], '');
-
-  await executer(mongoClient.db.collection('notifications'), [], [], '');
-
-  await executer(mongoClient.db.collection('permissions'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('user_groups'),
-    [{ coll: mongoClient.db.collection('permissions'), fi: 'groupId' }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('pipeline_templates'),
-    [{ coll: mongoClient.db.collection('pipelines'), fi: 'templateId' }],
-    [],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('response_templates'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('robot_entries'),
-    [{ coll: mongoClient.db.collection('robot_entries'), fi: 'parentId' }],
-    [],
-    '',
-  );
-
-  await executer(mongoClient.db.collection('onboarding_histories'), [], [], '');
-
-  await executer(mongoClient.db.collection('scripts'), [], [], '');
-
-  await executer(
-    mongoClient.db.collection('segments'),
-    [{ coll: mongoClient.db.collection('engage_messages'), fi: 'segmentIds', isMany }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('tags'),
+    'tags',
     [
-      { coll: mongoClient.db.collection('companies'), fi: 'tagIds', isMany },
-      { coll: mongoClient.db.collection('conversations'), fi: 'tagIds', isMany },
-      { coll: mongoClient.db.collection('customers'), fi: 'tagIds', isMany },
-      { coll: mongoClient.db.collection('products'), fi: 'tagIds', isMany },
-      { coll: mongoClient.db.collection('engages'), fi: 'tagIds', isMany },
-      { coll: mongoClient.db.collection('integrations'), fi: 'tagIds', isMany },
+      { coll: 'companies', fi: 'tagIds', kind },
+      { coll: 'conversations', fi: 'tagIds', kind },
+      { coll: 'customers', fi: 'tagIds', kind },
+      { coll: 'products', fi: 'tagIds', kind },
+      { coll: 'engages', fi: 'tagIds', kind },
+      { coll: 'integrations', fi: 'tagIds', kind },
+    ],
+    [],
+    '',
+  );
+
+  await executer('boards', [{ coll: 'pipelines', fi: 'boardId' }], [], '');
+
+  await executer(
+    'pipelines',
+    [{ coll: 'stages', fi: 'pipelineId' }, { coll: 'pipeline_label', fi: 'pipelineId' }],
+    [],
+    '',
+  );
+
+  await executer(
+    'stages',
+    [
+      { coll: 'deals', fi: 'stageId' },
+      { coll: 'tasks', fi: 'stageId' },
+      { coll: 'tickets', fi: 'stageId' },
+      { coll: 'growth_hacks', fi: 'stageId' },
     ],
     [],
     '',
   );
 
   await executer(
-    mongoClient.db.collection('boards'),
-    [{ coll: mongoClient.db.collection('pipelines'), fi: 'boardId' }],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('pipelines'),
-    [
-      { coll: mongoClient.db.collection('stages'), fi: 'pipelineId' },
-      { coll: mongoClient.db.collection('pipeline_label'), fi: 'pipelineId' },
-    ],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('stages'),
-    [
-      { coll: mongoClient.db.collection('deals'), fi: 'stageId' },
-      { coll: mongoClient.db.collection('tasks'), fi: 'stageId' },
-      { coll: mongoClient.db.collection('tickets'), fi: 'stageId' },
-      { coll: mongoClient.db.collection('growth_hacks'), fi: 'stageId' },
-    ],
-    [],
-    '',
-  );
-
-  await executer(
-    mongoClient.db.collection('deals'),
+    'deals',
     [],
     [
-      { coll: mongoClient.db.collection('checklists'), type: 'deal' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'deal' },
-      { coll: mongoClient.db.collection('notifications'), type: 'deal' },
+      { coll: 'checklists', type: 'deal' },
+      { coll: 'internal_notes', type: 'deal' },
+      { coll: 'notifications', type: 'deal' },
     ],
     'deal',
   );
 
   await executer(
-    mongoClient.db.collection('tickets'),
+    'tickets',
     [],
     [
-      { coll: mongoClient.db.collection('checklists'), type: 'ticket' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'ticket' },
-      { coll: mongoClient.db.collection('notifications'), type: 'ticket' },
+      { coll: 'checklists', type: 'ticket' },
+      { coll: 'internal_notes', type: 'ticket' },
+      { coll: 'notifications', type: 'ticket' },
     ],
     'ticket',
   );
 
   await executer(
-    mongoClient.db.collection('tasks'),
+    'tasks',
     [],
     [
-      { coll: mongoClient.db.collection('checklists'), type: 'task' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'task' },
-      { coll: mongoClient.db.collection('notifications'), type: 'task' },
+      { coll: 'checklists', type: 'task' },
+      { coll: 'internal_notes', type: 'task' },
+      { coll: 'notifications', type: 'task' },
     ],
     'task',
   );
 
   await executer(
-    mongoClient.db.collection('growth_hacks'),
+    'growth_hacks',
     [],
     [
-      { coll: mongoClient.db.collection('checklists'), type: 'growthHack' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'growthHack' },
-      { coll: mongoClient.db.collection('notifications'), type: 'growthHack' },
+      { coll: 'checklists', type: 'growthHack' },
+      { coll: 'internal_notes', type: 'growthHack' },
+      { coll: 'notifications', type: 'growthHack' },
     ],
     'growthHack',
   );
 
-  await executer(
-    mongoClient.db.collection('product_categories'),
-    [{ coll: mongoClient.db.collection('products'), fi: 'categoryId' }],
-    [],
-    '',
-  );
+  await executer('product_categories', [{ coll: 'products', fi: 'categoryId' }], [], '', 'code');
 
   await executer(
-    mongoClient.db.collection('products'),
-    [{ coll: mongoClient.db.collection('deals'), fi: 'productsData.productId' }],
-    [
-      { coll: mongoClient.db.collection('fields_groups'), type: 'product' },
-      { coll: mongoClient.db.collection('internal_notes'), type: 'product' },
-    ],
+    'products',
+    [{ coll: 'deals', fi: 'productsData.productId' }],
+    [{ coll: 'fields_groups', type: 'product' }, { coll: 'internal_notes', type: 'product' }],
     '',
   );
 
