@@ -89,7 +89,7 @@ export interface IUiOptions {
 export interface IUiOptionsDocument extends IUiOptions, Document {}
 
 export interface IIntegration {
-  kind?: string;
+  kind: string;
   name?: string;
   brandId?: string;
   languageCode?: string;

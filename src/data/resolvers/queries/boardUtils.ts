@@ -248,7 +248,7 @@ interface IDate {
   year: number;
 }
 
-export const dateSelector = (date: IDate) => {
+const dateSelector = (date: IDate) => {
   const { year, month } = date;
   const currentDate = new Date();
 

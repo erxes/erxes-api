@@ -85,21 +85,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const spySendMobileNotification = jest.spyOn(utils, 'sendMobileNotification').mockReturnValueOnce({});
-    const spySendEmail = jest.spyOn(utils, 'sendEmail').mockReturnValueOnce({});
-
-    const leadMessage = await graphqlRequest(mutation, 'conversationMessageAdd', args, context);
-
-    const calledArgs = spySendMobileNotification.mock.calls[0][0];
-    expect(calledArgs.title).toBe('Conversation updated');
-    expect(calledArgs.body).toBe(args.content);
-    expect(calledArgs.receivers).toEqual([leadConversation.assignedUserId]);
-    expect(calledArgs.customerId).toEqual(leadConversation.customerId);
-
-    const spySendEmailCalledArgs = spySendEmail.mock.calls[0][0];
-    expect(spySendEmailCalledArgs.title).toBe('Reply');
-    expect(spySendEmailCalledArgs.toEmails[0]).toBe(customer.primaryEmail);
-    expect(spySendEmailCalledArgs.template.data).toBe(args.content);
+    const leadMessage = await graphqlRequest(mutation, 'conversationMessageAdd', args);
 
     expect(leadMessage.content).toBe(args.content);
     expect(leadMessage.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
@@ -132,7 +118,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const [conversation] = await graphqlRequest(mutation, 'conversationsAssign', args, context);
+    const [conversation] = await graphqlRequest(mutation, 'conversationsAssign', args);
 
     expect(conversation.assignedUser._id).toEqual(args.assignedUserId);
   });
@@ -195,12 +181,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const conversation = await graphqlRequest(
-      mutation,
-      'conversationMarkAsRead',
-      { _id: leadConversation._id },
-      context,
-    );
+    const conversation = await graphqlRequest(mutation, 'conversationMarkAsRead', { _id: leadConversation._id });
 
     expect(conversation.readUserIds).toContain(user._id);
   });

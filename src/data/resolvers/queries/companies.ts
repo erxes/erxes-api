@@ -21,6 +21,8 @@ const count = async (query: any, args: ICountArgs) => {
 
   const findQuery = { ...selector, ...query };
 
+  // console.log('findQuery: ', findQuery)
+
   return Companies.find(findQuery).countDocuments();
 };
 

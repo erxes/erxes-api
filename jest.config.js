@@ -9,9 +9,9 @@ module.exports = {
   modulePathIgnorePatterns: ['utils.ts', 'setup.ts'],
   collectCoverage: true,
   collectCoverageFrom: [
-    'src/db/models/**',
+    '!src/db/models/**',
     '!src/db/models/definitions/**',
-    'src/data/resolvers/mutations/**',
+    '!src/data/resolvers/mutations/**',
     '!src/data/resolvers/mutations/robot.ts',
     'src/data/resolvers/queries/**',
     '!src/data/resolvers/queries/insights.ts',

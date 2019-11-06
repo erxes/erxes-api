@@ -12,6 +12,7 @@ import {
 } from '../db/factories';
 import { Customers, FormSubmissions, Segments, Tags } from '../db/models';
 
+import { KIND_CHOICES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 const count = response => {
@@ -283,6 +284,21 @@ describe('customerQueries', () => {
     expect(responses.totalCount).toBe(4);
   });
 
+  test('Count customers', async () => {
+    const customer1 = await customerFactory({}, true);
+    const customer2 = await customerFactory({}, true);
+    const customer3 = await customerFactory({}, true);
+
+    // Creating test data
+    await segmentFactory({ contentType: 'customer' });
+
+    const args = { only: 'bySegment', ids: [customer1._id, customer2._id, customer3._id] };
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+  });
+
   test('Count customers by segment', async () => {
     await customerFactory({}, true);
     await customerFactory({}, true);
@@ -292,13 +308,70 @@ describe('customerQueries', () => {
 
     const args = { only: 'bySegment' };
 
-    let response = await graphqlRequest(qryCount, 'customerCounts', args);
+    const response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+  });
+
+  test('Count companies by segment', async () => {
+    // Creating test data
+    await customerFactory({});
+    await customerFactory({});
+
+    await segmentFactory({ contentType: 'customer' });
+
+    let response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'bySegment',
+    });
 
     expect(count(response.bySegment)).toBe(1);
 
-    response = await graphqlRequest(qryCount, 'customerCounts', args);
+    const args: any = {
+      contentType: 'customer',
+      conditions: [
+        {
+          field: 'primaryName',
+          operator: 'c',
+          value: 'name',
+          type: 'date',
+        },
+      ],
+    };
 
-    expect(count(response.bySegment)).toBe(1);
+    await segmentFactory(args);
+
+    try {
+      response = await graphqlRequest(qryCount, 'customerCounts', {
+        only: 'bySegment',
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('TypeError: str.replace is not a function');
+    }
+  });
+
+  test('Customer count by segment (CastError)', async () => {
+    await customerFactory({});
+    await customerFactory({});
+
+    const args = {
+      contentType: 'customer',
+      conditions: [
+        {
+          field: 'profileScore',
+          operator: 'igt',
+          value: 'name',
+          type: 'string',
+        },
+      ],
+    };
+
+    const segment = await segmentFactory(args);
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'bySegment',
+    });
+
+    expect(response.bySegment[segment._id]).toBe(0);
   });
 
   test('Count customers by brand', async () => {
@@ -397,10 +470,13 @@ describe('customerQueries', () => {
   });
 
   test('Customer count by IntegrationType', async () => {
-    await customerFactory({}, true);
-    await customerFactory({}, true);
-    await customerFactory({}, true);
-    await customerFactory({}, true);
+    const messengerIntegration = await integrationFactory({ kind: KIND_CHOICES.MESSENGER });
+    const integration = await integrationFactory({ kind: '' });
+
+    await customerFactory({ integrationId: messengerIntegration._id });
+    await customerFactory({ integrationId: messengerIntegration._id });
+    await customerFactory({ integrationId: integration._id });
+    await customerFactory({ integrationId: integration._id });
 
     const response = await graphqlRequest(qryCount, 'customerCounts', {
       only: 'byIntegrationType',

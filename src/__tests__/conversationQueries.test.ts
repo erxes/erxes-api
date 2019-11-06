@@ -180,13 +180,45 @@ describe('conversationQueries', () => {
       }
     `;
 
-    const responses = await graphqlRequest(qry, 'conversationMessages', {
+    let responses = await graphqlRequest(qry, 'conversationMessages', {
       conversationId: conversation._id,
       skip: 1,
       limit: 3,
     });
 
     expect(responses.length).toBe(3);
+
+    responses = await graphqlRequest(qry, 'conversationMessages', {
+      conversationId: conversation._id,
+      limit: 3,
+    });
+
+    expect(responses.length).toBe(3);
+
+    responses = await graphqlRequest(qry, 'conversationMessages', {
+      conversationId: conversation._id,
+    });
+
+    expect(responses.length).toBe(4);
+  });
+
+  test('Conversation messages total count', async () => {
+    const conversation = await conversationFactory();
+
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+
+    const qry = `
+      query conversationMessagesTotalCount($conversationId: String!) {
+        conversationMessagesTotalCount(conversationId: $conversationId)
+      }
+    `;
+
+    const responses = await graphqlRequest(qry, 'conversationMessagesTotalCount', { conversationId: conversation._id });
+
+    expect(responses).toBe(4);
   });
 
   test('Conversations filtered by ids', async () => {
@@ -211,11 +243,21 @@ describe('conversationQueries', () => {
     await conversationFactory();
     await conversationFactory();
 
-    const responses = await graphqlRequest(qryConversations, 'conversations', {
+    let responses = await graphqlRequest(qryConversations, 'conversations', {
       channelId: channel._id,
     });
 
     expect(responses.length).toBe(1);
+
+    const channelNoIntegration = await channelFactory({
+      memberIds: [user._id],
+    });
+
+    responses = await graphqlRequest(qryConversations, 'conversations', {
+      channelId: channelNoIntegration._id,
+    });
+
+    expect(responses.length).toBe(0);
   });
 
   test('Conversations filtered by brand', async () => {
@@ -773,5 +815,23 @@ describe('conversationQueries', () => {
     const response = await graphqlRequest(qryTotalUnread, 'conversationsTotalUnreadCount', {}, { user });
 
     expect(response).toBe(1);
+  });
+
+  test('Facebook comments', async () => {
+    process.env.INTEGRATION_API_DOMAIN = 'http://localhost';
+
+    const qry = `
+      query facebookComments($postId: String!) {
+        facebookComments(postId: $postId) {
+          postId
+        }
+      }
+  `;
+
+    try {
+      await graphqlRequest(qry, 'facebookComments', { postId: 'postId' });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 });

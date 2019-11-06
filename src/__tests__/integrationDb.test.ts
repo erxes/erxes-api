@@ -31,6 +31,7 @@ describe('messenger integration model add method', () => {
     const doc = {
       name: 'Integration test',
       brandId: _brand._id,
+      kind: KIND_CHOICES.MESSENGER,
     };
 
     const integration = await Integrations.createMessengerIntegration(doc, _user._id);
@@ -100,6 +101,7 @@ describe('lead integration create model test without leadData', () => {
       name: 'lead integration test',
       brandId: _brand._id,
       formId: _form._id,
+      kind: KIND_CHOICES.LEAD,
     };
 
     try {
@@ -133,6 +135,7 @@ describe('create lead integration', () => {
       name: 'lead integration test',
       brandId: _brand._id,
       formId: _form._id,
+      kind: KIND_CHOICES.LEAD,
     };
 
     const leadData = {
@@ -193,6 +196,7 @@ describe('edit lead integration', () => {
       name: 'lead integration test 2',
       brandId: _brand2._id,
       formId: _form._id,
+      kind: KIND_CHOICES.LEAD,
     };
 
     const leadData = {

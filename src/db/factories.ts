@@ -279,7 +279,7 @@ export const responseTemplateFactory = (params: IResponseTemplateFactoryInput = 
 interface IConditionsInput {
   field?: string;
   operator?: string;
-  value?: string;
+  value?: any;
   dateUnit?: string;
   type?: string;
 }
@@ -695,7 +695,7 @@ export const channelFactory = async (params: IChannelFactoryInput = {}) => {
   const obj = {
     name: faker.random.word(),
     description: faker.lorem.sentence,
-    integrationIds: params.integrationIds || [],
+    integrationIds: params.integrationIds,
     memberIds: params.userId || [user._id],
     userId: user._id,
     conversationCount: 0,
@@ -841,6 +841,7 @@ interface ITaskFactoryInput {
   closeDate?: Date;
   noCloseDate?: boolean;
   assignedUserIds?: string[];
+  priority?: string;
 }
 
 export const taskFactory = (params: ITaskFactoryInput = {}) => {
@@ -851,6 +852,7 @@ export const taskFactory = (params: ITaskFactoryInput = {}) => {
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    priority: params.priority,
   });
 
   return task.save();
@@ -861,6 +863,8 @@ interface ITicketFactoryInput {
   closeDate?: Date;
   noCloseDate?: boolean;
   assignedUserIds?: string[];
+  priority?: string;
+  source?: string;
 }
 
 export const ticketFactory = (params: ITicketFactoryInput = {}) => {
@@ -871,6 +875,8 @@ export const ticketFactory = (params: ITicketFactoryInput = {}) => {
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    priority: params.priority,
+    source: params.source,
   });
 
   return ticket.save();
@@ -884,6 +890,7 @@ interface IGrowthHackFactoryInput {
   noCloseDate?: boolean;
   assignedUserIds?: string[];
   hackStages?: string[];
+  priority?: string;
   ease?: number;
   impact?: number;
 }
@@ -901,6 +908,7 @@ export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
     hackStages: params.hackStages || [faker.random.word()],
     ease: params.ease || 0,
     impact: params.impact || 0,
+    priority: params.priority,
   });
 
   return growthHack.save();

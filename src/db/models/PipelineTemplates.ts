@@ -45,7 +45,7 @@ export const getDuplicatedStages = async ({
 };
 
 export interface IPipelineTemplateModel extends Model<IPipelineTemplateDocument> {
-  getPipelineTemplate(_id: string): Promise<IPipelineTemplateStage>;
+  getPipelineTemplate(_id: string): Promise<IPipelineTemplateDocument>;
   createPipelineTemplate(doc: IDoc, stages: IPipelineTemplateStage[]): Promise<IPipelineTemplateDocument>;
   updatePipelineTemplate(_id: string, doc: IDoc, stages: IPipelineTemplateStage[]): Promise<IPipelineTemplateDocument>;
   removePipelineTemplate(_id: string): void;

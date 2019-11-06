@@ -8,6 +8,7 @@ describe('test channel creation error', () => {
     try {
       Channels.createChannel({
         name: 'Channel test',
+        integrationIds: [],
       });
     } catch (e) {
       expect(e.message).toBe('userId must be supplied');
@@ -128,6 +129,7 @@ describe('channel update', () => {
     // testing whether the updated field is not overwriting whole document ========
     channel = await Channels.updateChannel(channel._id, {
       name: 'Channel test 2',
+      integrationIds: [],
     });
 
     expect(channel.description).toBe('Channel test description');
@@ -142,6 +144,7 @@ describe('channel remove', () => {
     _channel = await Channels.createChannel(
       {
         name: 'Channel test',
+        integrationIds: [],
       },
       user._id,
     );

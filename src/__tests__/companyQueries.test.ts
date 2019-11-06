@@ -300,11 +300,58 @@ describe('companyQueries', () => {
 
     await segmentFactory({ contentType: 'company' });
 
-    const response = await graphqlRequest(qryCount, 'companyCounts', {
+    let response = await graphqlRequest(qryCount, 'companyCounts', {
       only: 'bySegment',
     });
 
     expect(count(response.bySegment)).toBe(1);
+
+    const args: any = {
+      contentType: 'company',
+      conditions: [
+        {
+          field: 'primaryName',
+          operator: 'c',
+          value: name,
+          type: 'date',
+        },
+      ],
+    };
+
+    await segmentFactory(args);
+
+    try {
+      response = await graphqlRequest(qryCount, 'companyCounts', {
+        only: 'bySegment',
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('TypeError: str.replace is not a function');
+    }
+  });
+
+  test('Company count by segment (CastError)', async () => {
+    await companyFactory({});
+    await companyFactory({});
+
+    const args = {
+      contentType: 'company',
+      conditions: [
+        {
+          field: 'size',
+          operator: 'igt',
+          value: name,
+          type: 'string',
+        },
+      ],
+    };
+
+    const segment = await segmentFactory(args);
+
+    const response = await graphqlRequest(qryCount, 'companyCounts', {
+      only: 'bySegment',
+    });
+
+    expect(response.bySegment[segment._id]).toBe(0);
   });
 
   test('Company count by tag', async () => {
@@ -347,20 +394,6 @@ describe('companyQueries', () => {
 
     expect(response.byLifecycleState.subscriber).toBe(2);
     expect(response.byLifecycleState.lead).toBe(2);
-  });
-
-  test('Company count by segment', async () => {
-    await companyFactory({});
-    await companyFactory({});
-
-    await segmentFactory({ contentType: 'company' });
-    await segmentFactory();
-
-    const response = await graphqlRequest(qryCount, 'companyCounts', {
-      only: 'bySegment',
-    });
-
-    expect(count(response.bySegment)).toBe(1);
   });
 
   test('Company count by brand', async () => {

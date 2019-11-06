@@ -52,6 +52,8 @@ describe('dealQueries', () => {
       $mainTypeId: String
       $isRelated: Boolean
       $isSaved: Boolean
+      $pipelineId: String
+      $date: ItemDate
     ) {
       deals(
         stageId: $stageId
@@ -68,6 +70,8 @@ describe('dealQueries', () => {
         conformityMainTypeId: $mainTypeId
         conformityIsRelated: $isRelated
         conformityIsSaved: $isSaved
+        pipelineId: $pipelineId
+        date: $date
       ) {
         ${commonDealTypes}
       }
@@ -201,6 +205,23 @@ describe('dealQueries', () => {
     response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [company1._id] });
 
     expect(response.length).toBe(0);
+  });
+
+  test('Deal filter by date', async () => {
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+
+    const date = new Date();
+    await dealFactory({ closeDate: date, stageId: stage._id });
+
+    const args = {
+      date: { year: date.getFullYear(), month: date.getMonth() },
+      pipelineId: pipeline._id,
+    };
+
+    const response = await graphqlRequest(qryDealFilter, 'deals', args);
+
+    expect(response.length).toBe(1);
   });
 
   test('Deals', async () => {

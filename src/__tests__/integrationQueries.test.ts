@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { brandFactory, channelFactory, integrationFactory, tagsFactory, userFactory } from '../db/factories';
+import { brandFactory, channelFactory, integrationFactory, tagsFactory } from '../db/factories';
 import { Brands, Channels, Integrations } from '../db/models';
 import { TAG_TYPES } from '../db/models/definitions/constants';
 

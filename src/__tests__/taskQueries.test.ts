@@ -41,6 +41,7 @@ describe('taskQueries', () => {
       $nextMonth: String
       $noCloseDate: String
       $overdue: String
+      $priority: [String]
     ) {
       tasks(
         stageId: $stageId
@@ -52,6 +53,7 @@ describe('taskQueries', () => {
         nextMonth: $nextMonth
         noCloseDate: $noCloseDate
         overdue: $overdue
+        priority: $priority
       ) {
         ${commonTaskTypes}
       }
@@ -103,6 +105,14 @@ describe('taskQueries', () => {
     });
 
     const response = await graphqlRequest(qryTaskFilter, 'tasks', { companyIds: [_id] });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Task filter by priority', async () => {
+    await taskFactory({ priority: 'critical' });
+
+    const response = await graphqlRequest(qryTaskFilter, 'tasks', { priority: ['critical'] });
 
     expect(response.length).toBe(1);
   });

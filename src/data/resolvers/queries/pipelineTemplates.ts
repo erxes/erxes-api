@@ -17,7 +17,7 @@ const pipelineTemplateQueries = {
    *  Pipeline template detail
    */
   async pipelineTemplateDetail(_root, { _id }: { _id: string }, { user }: IContext) {
-    const pipelineTemplate = await PipelineTemplates.getPipelineTemplate({ _id });
+    const pipelineTemplate = await PipelineTemplates.getPipelineTemplate(_id);
 
     await checkPermission(pipelineTemplate.type, user, 'showTemplates');
 

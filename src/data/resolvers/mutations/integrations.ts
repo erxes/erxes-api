@@ -1,13 +1,9 @@
 import { Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
-import { IExternalIntegrationParams, IMessengerIntegration } from '../../../db/models/Integrations';
+import { IExternalIntegrationParams } from '../../../db/models/Integrations';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-
-interface IEditMessengerIntegration extends IMessengerIntegration {
-  _id: string;
-}
 
 interface IEditLeadIntegration extends IIntegration {
   _id: string;
@@ -17,7 +13,7 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  async integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration, { user }: IContext) {
+  async integrationsCreateMessengerIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
     await putCreateLog(
@@ -36,7 +32,7 @@ const integrationMutations = {
   /**
    * Update messenger integration
    */
-  async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditMessengerIntegration, { user }: IContext) {
+  async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditLeadIntegration, { user }: IContext) {
     const integration = await Integrations.findOne({ _id });
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 

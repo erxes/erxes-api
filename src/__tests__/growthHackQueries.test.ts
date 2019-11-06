@@ -28,6 +28,8 @@ describe('growthHackQueries', () => {
       $nextMonth: String
       $noCloseDate: String
       $overdue: String
+      $priority: String
+      $hackStage: String
     ) {
       growthHacks(
         stageId: $stageId 
@@ -37,6 +39,8 @@ describe('growthHackQueries', () => {
         nextMonth: $nextMonth
         noCloseDate: $noCloseDate
         overdue: $overdue
+        priority: $priority
+        hackStage: $hackStage
       ) {
         ${commonGrowthHackTypes}
       }
@@ -112,6 +116,22 @@ describe('growthHackQueries', () => {
     await growthHackFactory({ assignedUserIds: [_id] });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { assignedUserIds: [_id] });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Filter by priority', async () => {
+    await growthHackFactory({ priority: 'critical' });
+
+    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { priority: 'critical' });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Filter by hack stage', async () => {
+    await growthHackFactory({ hackStages: ['Awareness'] });
+
+    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { hackStage: 'Awareness' });
 
     expect(response.length).toBe(1);
   });

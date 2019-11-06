@@ -103,7 +103,7 @@ const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
   integrations.forEach(element => {
     rawIntegrationIds.push(element._id);
     integrationMap[element._id] = element.kind;
-    counts[element.kind || ''] = 0;
+    counts[element.kind] = 0;
   });
 
   const query = { integrationId: { $in: rawIntegrationIds } };
@@ -212,16 +212,11 @@ const customerQueries = {
 
     let mainQuery = { ...commonQuerySelector, ...qb.mainQuery() };
 
-    console.log('mainQuery: ', mainQuery);
-
     // if passed at least one filter other than perPage
     // then find all filtered customers then add subsequent filter to it
     if (Object.keys(params).length > 1) {
-      console.log('aaa');
       const customers = await Customers.find(mainQuery, { _id: 1 });
       const customerIds = customers.map(customer => customer._id);
-
-      console.log('customerIds: ', customerIds);
 
       mainQuery = { _id: { $in: customerIds } };
     }

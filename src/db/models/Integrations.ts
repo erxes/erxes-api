@@ -12,6 +12,7 @@ import {
 } from './definitions/integrations';
 
 export interface IMessengerIntegration {
+  kind: string;
   name: string;
   brandId: string;
   languageCode: string;

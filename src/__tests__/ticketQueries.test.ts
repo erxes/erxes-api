@@ -41,6 +41,8 @@ describe('ticketQueries', () => {
       $nextMonth: String
       $noCloseDate: String
       $overdue: String
+      $priority: [String]
+      $source: [String]
     ) {
       tickets(
         stageId: $stageId
@@ -52,6 +54,8 @@ describe('ticketQueries', () => {
         nextMonth: $nextMonth
         noCloseDate: $noCloseDate
         overdue: $overdue
+        priority: $priority
+        source: $source
       ) {
         ${commonTicketTypes}
       }
@@ -103,6 +107,22 @@ describe('ticketQueries', () => {
     });
 
     const response = await graphqlRequest(qryTicketFilter, 'tickets', { companyIds: [_id] });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Ticket filter by priority', async () => {
+    await ticketFactory({ priority: 'critical' });
+
+    const response = await graphqlRequest(qryTicketFilter, 'tickets', { priority: ['critical'] });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Ticket filter by source', async () => {
+    await ticketFactory({ source: 'messenger' });
+
+    const response = await graphqlRequest(qryTicketFilter, 'tickets', { source: ['messenger'] });
 
     expect(response.length).toBe(1);
   });
