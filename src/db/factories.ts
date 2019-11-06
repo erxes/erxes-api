@@ -234,6 +234,7 @@ interface ILabelInput {
   name?: string;
   colorCode?: string;
   pipelineId?: string;
+  type?: string;
 }
 
 export const pipelineLabelFactory = (params: ILabelInput = {}) => {
@@ -241,6 +242,7 @@ export const pipelineLabelFactory = (params: ILabelInput = {}) => {
     name: params.name || faker.random.word(),
     colorCode: params.colorCode || faker.random.word(),
     pipelineId: params.pipelineId || faker.random.word(),
+    type: params.type || BOARD_TYPES.DEAL,
   });
 
   return pipelineLabel.save();
@@ -810,6 +812,7 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
 };
 
 interface IDealFactoryInput {
+  name?: string;
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -818,19 +821,26 @@ interface IDealFactoryInput {
   watchedUserIds?: string[];
   labelIds?: string[];
   modifiedBy?: string;
+  order?: number;
+  probability?: string;
 }
 
 export const dealFactory = (params: IDealFactoryInput = {}) => {
+  const stageId = params.stageId || faker.random.word();
+
   const deal = new Deals({
     ...params,
-    name: faker.random.word(),
-    stageId: params.stageId || faker.random.word(),
+    initialStageId: stageId,
+    name: params.name || faker.random.word(),
+    stageId,
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     productsDate: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     labelIds: params.labelIds || [],
+    order: params.order,
+    probability: params.probability,
   });
 
   return deal.save();

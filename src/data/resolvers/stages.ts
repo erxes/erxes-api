@@ -152,6 +152,8 @@ export default {
       args.extraParams,
     );
 
+    console.log('filter: ', filter);
+
     filter.pipelineId = stage.pipelineId;
 
     const stages = await Stages.aggregate([

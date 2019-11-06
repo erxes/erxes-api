@@ -6,6 +6,7 @@ import {
   customerFactory,
   dealFactory,
   pipelineFactory,
+  pipelineLabelFactory,
   productFactory,
   stageFactory,
   userFactory,
@@ -38,6 +39,7 @@ describe('dealQueries', () => {
 
   const qryDealFilter = `
     query deals(
+      $search: String
       $stageId: String
       $assignedUserIds: [String]
       $customerIds: [String]
@@ -54,8 +56,10 @@ describe('dealQueries', () => {
       $isSaved: Boolean
       $pipelineId: String
       $date: ItemDate
+      $labelIds: [String]
     ) {
       deals(
+        search: $search
         stageId: $stageId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
@@ -72,6 +76,7 @@ describe('dealQueries', () => {
         conformityIsSaved: $isSaved
         pipelineId: $pipelineId
         date: $date
+        labelIds: $labelIds
       ) {
         ${commonDealTypes}
       }
@@ -81,6 +86,23 @@ describe('dealQueries', () => {
   afterEach(async () => {
     // Clearing test data
     await Deals.deleteMany({});
+  });
+
+  test('Filter by initialStageId', async () => {
+    const stage = await stageFactory();
+    await dealFactory({ stageId: stage._id });
+
+    const response = await graphqlRequest(qryDealFilter, 'deals', { initialStageId: stage._id });
+
+    expect(response.length).toBe(1);
+  });
+
+  test('Filter by search', async () => {
+    await dealFactory({ name: 'name' });
+
+    const response = await graphqlRequest(qryDealFilter, 'deals', { search: 'name' });
+
+    expect(response.length).toBe(1);
   });
 
   test('Filter by next day', async () => {
@@ -205,6 +227,16 @@ describe('dealQueries', () => {
     response = await graphqlRequest(qryDealFilter, 'deals', { companyIds: [company1._id] });
 
     expect(response.length).toBe(0);
+  });
+
+  test('Deal filter by label', async () => {
+    const { _id } = await pipelineLabelFactory();
+
+    await dealFactory({ labelIds: [_id] });
+
+    const response = await graphqlRequest(qryDealFilter, 'deals', { labelIds: [_id] });
+
+    expect(response.length).toBe(1);
   });
 
   test('Deal filter by date', async () => {
