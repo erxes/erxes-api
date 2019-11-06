@@ -1,9 +1,20 @@
-import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
+import {
+  Companies,
+  Conformities,
+  Customers,
+  Deals,
+  InternalNotes,
+  Pipelines,
+  Stages,
+  Tasks,
+  Tickets,
+} from '../../../db/models';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
+import { graphqlPubsub } from '../../../pubsub';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -124,9 +135,19 @@ const internalNoteMutations = {
 
     await utils.sendNotification(notifDoc);
 
-    const internalNote = await InternalNotes.createInternalNote(args, user);
+    const internalNote = await InternalNotes.createInternalNote(args);
 
     if (internalNote) {
+      await Conformities.addConformity({
+        relType: 'note',
+        relTypeId: internalNote._id,
+        mainType: args.contentType,
+        mainTypeId: args.contentTypeId,
+        createdBy: user._id,
+      });
+
+      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
+
       await putCreateLog(
         {
           type: 'internalNote',

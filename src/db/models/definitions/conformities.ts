@@ -26,6 +26,7 @@ export interface IConformityEdit {
   mainTypeId: string;
   relType: string;
   relTypeIds: string[];
+  createdBy?: string;
 }
 
 export interface IConformitySaved {

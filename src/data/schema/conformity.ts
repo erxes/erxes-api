@@ -32,7 +32,7 @@ const commonParamsCreate = `
 `;
 
 export const queries = `
-  conformitiesForActivity(contentType: String!, contentId: String!, activityType: String, limit: Int): [Conformity]
+  conformitiesForActivity(conformityTypes: [String], contentId: String!, conformityType: String, limit: Int): [Conformity]
 `;
 
 export const mutations = `

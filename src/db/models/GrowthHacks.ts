@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs } from '.';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { growthHackSchema, IGrowthHack, IGrowthHackDocument } from './definitions/growthHacks';
@@ -39,9 +38,6 @@ export const loadGrowthHackClass = () => {
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });
-
-      // create log
-      await ActivityLogs.createGrowthHackLog(growthHack);
 
       return growthHack;
     }

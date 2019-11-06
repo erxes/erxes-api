@@ -1,4 +1,5 @@
-import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { createConformotyForConversation } from '../data/resolvers/mutations/conformitesUtils';
+import { ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 import { graphqlPubsub } from '../pubsub';
 
@@ -65,7 +66,7 @@ const integrationsApiMiddleware = async (req, res) => {
 
     const conversation = await Conversations.createConversation(doc);
 
-    await ActivityLogs.createConversationLog(conversation);
+    await createConformotyForConversation(conversation);
 
     return res.json({ _id: conversation._id });
   }

@@ -65,6 +65,7 @@ export const loadConformityClass = () => {
 
       // insert on new relTypeIds
       const insertTypes = await addedTypeIds.map(relTypeId => ({
+        createdBy: doc.createdBy,
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,
         relType: doc.relType,

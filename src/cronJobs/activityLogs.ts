@@ -1,6 +1,6 @@
 import * as schedule from 'node-schedule';
 import QueryBuilder from '../data/modules/segments/queryBuilder';
-import { ActivityLogs, Customers, Segments } from '../db/models';
+import { Conformities, Customers, Segments } from '../db/models';
 
 /**
  * Send conversation messages to customer
@@ -13,7 +13,12 @@ export const createActivityLogsFromSegments = async () => {
     const customers = await Customers.find(selector);
 
     for (const customer of customers) {
-      await ActivityLogs.createSegmentLog(segment, customer);
+      await Conformities.addConformity({
+        mainType: 'customer',
+        mainTypeId: customer._id,
+        relType: 'segment',
+        relTypeId: segment._id,
+      });
     }
   }
 };

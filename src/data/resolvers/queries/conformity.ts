@@ -3,8 +3,8 @@ import { moduleRequireLogin } from '../../permissions/wrappers';
 
 interface IListArgs {
   contentId: string;
-  contentType: string;
-  activityType?: string;
+  conformityType?: string;
+  conformityTypes: string[];
   limit: number;
 }
 
@@ -13,17 +13,11 @@ const conformityQueries = {
    * Get activity log list
    */
   conformitiesForActivity(_root, doc: IListArgs) {
-    const { contentId, contentType, activityType, limit } = doc;
+    const { contentId, conformityType, conformityTypes, limit } = doc;
 
     const filter: any = { mainTypeId: contentId };
 
-    if (activityType) {
-      filter.relType = activityType;
-    } else {
-      filter.$or = [{ relType: { $in: ['task', 'note', 'conversation', 'email', contentType] } }];
-    }
-
-    console.log(filter);
+    filter.relType = conformityType || { $in: conformityTypes };
 
     const sort = { createdAt: -1 };
 

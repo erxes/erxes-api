@@ -2,11 +2,9 @@ import { Model, model } from 'mongoose';
 import Conformities from './Conformities';
 import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { IInternalNote, IInternalNoteDocument, internalNoteSchema } from './definitions/internalNotes';
-import { IUserDocument } from './definitions/users';
-import { graphqlPubsub } from '../../pubsub';
 
 export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
-  createInternalNote({ ...fields }: IInternalNote, user: IUserDocument): Promise<IInternalNoteDocument>;
+  createInternalNote({ ...fields }: IInternalNote): Promise<IInternalNoteDocument>;
 
   updateInternalNote(_id: string, doc: IInternalNote): Promise<IInternalNoteDocument>;
 
@@ -25,20 +23,10 @@ export const loadClass = () => {
     /*
      * Create new internalNote
      */
-    public static async createInternalNote({ ...fields }: IInternalNote, user: IUserDocument) {
+    public static async createInternalNote({ ...fields }: IInternalNote) {
       const internalNote = await InternalNotes.create({
         ...fields,
       });
-
-      await Conformities.addConformity({
-        relType: 'note',
-        relTypeId: internalNote._id,
-        mainType: fields.contentType,
-        mainTypeId: fields.contentTypeId,
-        createdBy: user._id,
-      });
-
-      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
       return internalNote;
     }

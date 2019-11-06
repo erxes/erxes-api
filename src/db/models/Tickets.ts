@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs } from '.';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
@@ -41,9 +40,6 @@ export const loadTicketClass = () => {
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });
-
-      // create log
-      await ActivityLogs.createTicketLog(ticket);
 
       return ticket;
     }

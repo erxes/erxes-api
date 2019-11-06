@@ -2,9 +2,8 @@ import { dateType } from 'aws-sdk/clients/sts'; // tslint:disable-line
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import { FIELDS_GROUPS_CONTENT_TYPES } from '../data/constants';
-import { IActionPerformer, IActivity, IContentType } from '../db/models/definitions/activityLogs';
+
 import {
-  ActivityLogs,
   Boards,
   Brands,
   Channels,
@@ -48,10 +47,7 @@ import {
   UsersGroups,
 } from './models';
 import {
-  ACTIVITY_ACTIONS,
   ACTIVITY_CONTENT_TYPES,
-  ACTIVITY_PERFORMER_TYPES,
-  ACTIVITY_TYPES,
   BOARD_TYPES,
   FORM_TYPES,
   NOTIFICATION_TYPES,
@@ -62,34 +58,6 @@ import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
 import PipelineTemplates from './models/PipelineTemplates';
-
-interface IActivityLogFactoryInput {
-  performer?: IActionPerformer;
-  performedBy?: IActionPerformer;
-  activity?: IActivity;
-  contentType?: IContentType;
-}
-
-export const activityLogFactory = (params: IActivityLogFactoryInput) => {
-  const doc = {
-    activity: {
-      type: ACTIVITY_TYPES.INTERNAL_NOTE,
-      action: ACTIVITY_ACTIONS.CREATE,
-      id: faker.random.uuid(),
-      content: faker.random.word(),
-    },
-    performer: {
-      type: ACTIVITY_PERFORMER_TYPES.USER,
-      id: faker.random.uuid(),
-    },
-    contentType: {
-      type: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-      id: faker.random.uuid(),
-    },
-  };
-
-  return ActivityLogs.createDoc({ ...doc, ...params });
-};
 
 interface IUserFactoryInput {
   username?: string;
