@@ -25,9 +25,12 @@ let connection;
 let channel;
 
 const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
+  console.log('sjdkaaaaasjdkljkl');
+
   if (NODE_ENV === 'test') {
     return;
   }
+  console.log('sjdkasjdkljkl');
 
   if (action === 'callPublish') {
     if (data.trigger === 'conversationMessageInserted') {
