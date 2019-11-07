@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validSearchText } from '../../data/utils';
-import { Conformities, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
@@ -116,7 +116,7 @@ export const loadClass = () => {
       });
 
       // create log
-      // await ActivityLogs.createCompanyLog(company);
+      await ActivityLogs.createCocLog({ coc: company, type: 'company' });
 
       return company;
     }

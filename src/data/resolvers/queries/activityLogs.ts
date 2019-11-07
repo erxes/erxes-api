@@ -53,9 +53,12 @@ const activityLogQueries = {
         collectActivities(await ActivityLogs.find({ typeId: contentId, action: 'CREATE' }));
         collectActivities(await ActivityLogs.find({ typeId: { $in: relatedItemIds } }));
         collectActivities(await InternalNotes.find({ contentTypeId: contentId }), 'note');
+        collectActivities(await Conversations.find({ customerId: contentId }));
 
         break;
     }
+
+    console.log(activities);
 
     return activities;
   },

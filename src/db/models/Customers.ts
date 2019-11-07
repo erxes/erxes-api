@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail, validSearchText } from '../../data/utils';
-import { Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -123,8 +123,7 @@ export const loadClass = () => {
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
 
-      // create log
-      // await ActivityLogs.createCustomerLog(customer);
+      await ActivityLogs.createCocLog({ coc: customer, type: 'customer' });
 
       return customer;
     }

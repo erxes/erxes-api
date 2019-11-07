@@ -12,9 +12,10 @@ export interface IActivityLog {
   type: string;
   typeId: string;
   action: string;
-  content?: any;
+  content?: object;
   createdBy: string;
 }
+
 export interface IActivityLogDocument extends IActivityLog, Document {
   _id: string;
   createdAt: Date;
@@ -25,8 +26,7 @@ export const activityLogSchema = new Schema({
   type: field({ type: String }),
   typeId: field({ type: String }),
   action: field({ type: String }),
-  content: field({ type: Object }),
-  // TODO: remove
+  content: Schema.Types.Mixed,
   createdBy: field({ type: String }),
   createdAt: field({
     type: Date,
