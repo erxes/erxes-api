@@ -53,6 +53,26 @@ describe('conversationQueries', () => {
     query conversations(${commonParamDefs}) {
       conversations(${commonParams}) {
         _id
+      }
+    }
+  `;
+
+  const qryCount = `
+    query conversationCounts(${commonParamDefs}, $only: String) {
+      conversationCounts(${commonParams}, only: $only)
+    }
+  `;
+
+  const qryTotalCount = `
+    query conversationsTotalCount(${commonParamDefs}) {
+      conversationsTotalCount(${commonParams})
+    }
+  `;
+
+  const qryConversationDetail = `
+    query conversationDetail($_id: String!) {
+      conversationDetail(_id: $_id) {
+        _id
         content
         integrationId
         customerId
@@ -101,26 +121,10 @@ describe('conversationQueries', () => {
         assignedUser { _id }
         participatedUsers { _id }
         participatorCount
-      }
-    }
-  `;
-
-  const qryCount = `
-    query conversationCounts(${commonParamDefs}, $only: String) {
-      conversationCounts(${commonParams}, only: $only)
-    }
-  `;
-
-  const qryTotalCount = `
-    query conversationsTotalCount(${commonParamDefs}) {
-      conversationsTotalCount(${commonParams})
-    }
-  `;
-
-  const qryConversationDetail = `
-    query conversationDetail($_id: String!) {
-      conversationDetail(_id: $_id) {
-        _id
+        idleTime
+        facebookPost {
+          postId
+        }
       }
     }
   `;
@@ -785,6 +789,18 @@ describe('conversationQueries', () => {
     );
 
     expect(response._id).toBe(conversation._id);
+    expect(response.facebookPost).toBe(null);
+
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+    const facebookIntegration = await integrationFactory({ kind: 'facebook-post' });
+    const facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
+
+    try {
+      await graphqlRequest(qryConversationDetail, 'conversationDetail', { _id: facebookConversation._id }, { user });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 
   test('Get last conversation by channel', async () => {

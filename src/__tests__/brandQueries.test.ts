@@ -44,6 +44,9 @@ describe('brandQueries', () => {
       query brandDetail($_id: String!) {
         brandDetail(_id: $_id) {
           _id
+          integrations {
+            _id
+          }
         }
       }
     `;

@@ -45,42 +45,6 @@ describe('companyQueries', () => {
     query companies(${commonParamDefs}) {
       companies(${commonParams}) {
         _id
-        createdAt
-        modifiedAt
-
-        primaryName
-        names
-        size
-        industry
-        plan
-
-        parentCompanyId
-        primaryEmail
-        emails
-        ownerId
-        primaryPhone
-        phones
-        leadStatus
-        lifecycleState
-        businessType
-        description
-        doNotDisturb
-        links {
-          linkedIn
-          twitter
-          facebook
-          github
-          youtube
-          website
-        }
-        owner { _id }
-        parentCompany { _id }
-
-        tagIds
-
-        customFieldsData
-
-        getTags { _id }
       }
     }
   `;
@@ -230,7 +194,6 @@ describe('companyQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].primaryName).toBe(name);
 
     // companies by industry ==========
     responses = await graphqlRequest(qryCompanies, 'companies', {
@@ -238,7 +201,6 @@ describe('companyQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].industry).toBe('Banks');
 
     // companies by plan ==============
     responses = await graphqlRequest(qryCompanies, 'companies', {
@@ -246,7 +208,6 @@ describe('companyQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].plan).toBe(plan);
   });
 
   test('Companies filtered by brandId', async () => {
@@ -448,6 +409,43 @@ describe('companyQueries', () => {
       query companyDetail($_id: String!) {
         companyDetail(_id: $_id) {
           _id
+          createdAt
+          modifiedAt
+
+          primaryName
+          names
+          size
+          industry
+          plan
+
+          parentCompanyId
+          primaryEmail
+          emails
+          ownerId
+          primaryPhone
+          phones
+          leadStatus
+          lifecycleState
+          businessType
+          description
+          doNotDisturb
+          links {
+            linkedIn
+            twitter
+            facebook
+            github
+            youtube
+            website
+          }
+          customers { _id }
+          owner { _id }
+          parentCompany { _id }
+
+          tagIds
+
+          customFieldsData
+
+          getTags { _id }
         }
       }
     `;

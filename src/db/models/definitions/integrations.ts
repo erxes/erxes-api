@@ -268,7 +268,7 @@ export const integrationSchema = new Schema({
     type: String,
     optional: true,
   }),
-  tagIds: field({ type: [String], optional: true }),
+  tagIds: { type: [String] },
   formId: field({ type: String }),
   leadData: field({ type: leadDataSchema }),
   // TODO: remove

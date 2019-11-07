@@ -598,7 +598,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     formId: params.formId || Random.id(),
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
-    tagIds: params.tagIds || [],
+    ...(params.tagIds ? { tagIds: params.tagIds } : {}),
   };
 
   return Integrations.create(doc);
@@ -1074,7 +1074,7 @@ interface IPermissionParams {
 
 export const permissionFactory = async (params: IPermissionParams = {}) => {
   const permission = new Permissions({
-    module: faker.random.word(),
+    module: params.module || faker.random.word(),
     action: params.action || faker.random.word(),
     allowed: params.allowed || false,
     userId: params.userId || Random.id(),

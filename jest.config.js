@@ -13,7 +13,7 @@ module.exports = {
     '!src/db/models/definitions/**',
     '!src/data/resolvers/mutations/**',
     '!src/data/resolvers/mutations/robot.ts',
-    'src/data/resolvers/queries/**',
+    'src/data/resolvers/**',
     '!src/data/resolvers/queries/insights.ts',
     '!src/data/resolvers/queries/robot.ts',
     '!src/data/resolvers/queries/logs.ts',

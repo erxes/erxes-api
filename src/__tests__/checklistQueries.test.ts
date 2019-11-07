@@ -17,12 +17,12 @@ describe('checklistQueries', () => {
     const contentTypeId = (faker && faker.random ? faker.random.number() : 999).toString();
 
     const checklist1 = await checklistFactory({ contentType: 'deal', contentTypeId });
-    const checklist2 = await checklistFactory({ contentType: 'task', contentTypeId });
+    await checklistFactory({ contentType: 'task', contentTypeId });
+
     await checklistItemFactory({ checklistId: checklist1._id, isChecked: true });
     await checklistItemFactory({ checklistId: checklist1._id, isChecked: true });
     await checklistItemFactory({ checklistId: checklist1._id });
     await checklistItemFactory({ checklistId: checklist1._id });
-    await checklistItemFactory({ checklistId: checklist2._id });
 
     const qry = `
       query checklists($contentType: String! $contentTypeId: String) {
@@ -60,7 +60,6 @@ describe('checklistQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].items.length).toBe(1);
     expect(responses[0].percent).toBe(0);
   });
 

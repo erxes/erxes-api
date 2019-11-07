@@ -27,19 +27,6 @@ describe('integrationQueries', () => {
         tag: $tag
       ) {
         _id
-        kind
-        name
-        brandId
-        languageCode
-        code
-        formId
-        leadData
-        messengerData
-        uiOptions
-
-        brand { _id }
-        form { _id }
-        channels { _id }
       }
     }
   `;
@@ -161,19 +148,48 @@ describe('integrationQueries', () => {
   test('Integration detail', async () => {
     const integration = await integrationFactory();
 
+    console.log('integration: ', integration);
+
     const qry = `
       query integrationDetail($_id: String!) {
         integrationDetail(_id: $_id) {
           _id
+          kind
+          name
+          brandId
+          languageCode
+          code
+          formId
+          leadData
+          messengerData
+          uiOptions
+
+          brand { _id }
+          form { _id }
+          channels { _id }
+          tags { _id }
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'integrationDetail', {
+    let response = await graphqlRequest(qry, 'integrationDetail', {
       _id: integration._id,
     });
 
     expect(response._id).toBe(integration._id);
+    expect(response.tags.length).toBe(0);
+
+    const tag = await tagsFactory();
+    const integrationWithTag = await integrationFactory({ tagIds: [tag._id] });
+
+    console.log('integrationWithTag: ', integrationWithTag);
+
+    response = await graphqlRequest(qry, 'integrationDetail', {
+      _id: integrationWithTag._id,
+    });
+
+    expect(response._id).toBe(integrationWithTag._id);
+    expect(response.tags.length).toBe(1);
   });
 
   test('Get total count of integrations by kind', async () => {

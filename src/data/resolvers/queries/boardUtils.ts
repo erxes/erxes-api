@@ -2,11 +2,7 @@ import * as moment from 'moment';
 import { Conformities, Stages } from '../../../db/models';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
-const contains = (values: string[] = [], empty?: boolean) => {
-  if (empty) {
-    return [];
-  }
-
+const contains = (values: string[]) => {
   return { $in: values };
 };
 
@@ -42,7 +38,7 @@ export const generateCommonFilters = async (args: any) => {
     // Filter by assigned to no one
     const notAssigned = assignedToNoOne(assignedUserIds);
 
-    filter.assignedUserIds = notAssigned ? contains([], true) : contains(assignedUserIds);
+    filter.assignedUserIds = notAssigned ? [] : contains(assignedUserIds);
   }
 
   if (customerIds && type) {
