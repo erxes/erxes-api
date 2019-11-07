@@ -2,7 +2,7 @@ import * as moment from 'moment';
 import { Conformities, Stages } from '../../../db/models';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
-const contains = (values: string[] = [], empty = false) => {
+const contains = (values: string[] = [], empty?: boolean) => {
   if (empty) {
     return [];
   }
