@@ -17,6 +17,25 @@ module.exports.up = async () => {
     type: string;
   }
 
+  const checkKeys = (dic: any) => {
+    Object.keys(dic).forEach(key => {
+      if (key.includes('.') || key.includes('\\') || key.includes('$')) {
+        const validKey = key
+          .replace(/\\/g, '\\\\')
+          .replace(/^\$/, '\\$')
+          .replace(/\./g, '\\_');
+        dic[validKey] = dic[key];
+        delete dic[key];
+      }
+
+      if (dic[key] && dic[key].constructor === Object) {
+        dic[key] = checkKeys(dic[key]);
+      }
+    });
+
+    return dic;
+  };
+
   const executer = async (
     mainCollection: string,
     relModels: IRelModels[],
@@ -27,20 +46,12 @@ module.exports.up = async () => {
     console.log(mainCollection);
     const objOnDb = mongoClient.db.collection(mainCollection);
     const entries = await objOnDb.find({ oldId: { $exists: false } }).toArray();
+    // const entries = await objOnDb.find().toArray();
     console.log(entries.length);
 
     for (const entry of entries) {
-      const oldId = entry._id;
+      const oldId = entry.oldId || entry._id;
       let uniqueVal = '';
-
-      const doc = { ...entry, oldId };
-
-      if (unique) {
-        uniqueVal = entry[unique];
-        delete doc[unique];
-      }
-
-      delete doc._id;
 
       // check duplicate oldId
       const duplicatedNew = await objOnDb.find({ oldId }).toArray();
@@ -48,13 +59,26 @@ module.exports.up = async () => {
       let newId = '';
 
       if (duplicatedNew.length > 0) {
-        newId = duplicatedNew[0].oldId;
+        // repair
+        newId = duplicatedNew[0]._id.toString();
       } else {
+        // insert and
+        const doc = checkKeys({ ...entry, oldId });
+
+        if (unique) {
+          uniqueVal = entry[unique];
+          delete doc[unique];
+        }
+
+        delete doc._id;
+
         const response = await objOnDb.insertOne(doc);
         newId = response.insertedId.toString();
       }
 
       if (!newId) {
+        // fail
+        console.log('fail of', oldId);
         continue;
       }
 
@@ -129,8 +153,10 @@ module.exports.up = async () => {
         }
       }
 
+      // delete
       await objOnDb.deleteOne({ _id: oldId });
 
+      // unique field update
       if (unique && uniqueVal) {
         await objOnDb.updateOne({ _id: Types.ObjectId(newId) }, { $set: { [unique]: uniqueVal } });
       }
@@ -232,7 +258,6 @@ module.exports.up = async () => {
     'companies',
     [],
     [
-      { coll: 'fields_groups', type: 'company' },
       { coll: 'fields', type: 'company' },
       { coll: 'internal_notes', type: 'company' },
       { coll: 'notifications', type: 'company' },
@@ -263,7 +288,6 @@ module.exports.up = async () => {
       { coll: 'forms', fi: 'customerId' },
     ],
     [
-      { coll: 'fields_groups', type: 'customer' },
       { coll: 'fields', type: 'customer' },
       { coll: 'internal_notes', type: 'customer' },
       { coll: 'notifications', type: 'customer' },
@@ -278,6 +302,8 @@ module.exports.up = async () => {
   await executer('engage_messages', [], [], '');
 
   await executer('fields', [{ coll: 'pipelines', fi: 'boardId' }], [], '');
+
+  await executer('fields_groups', [{ coll: 'fields', fi: 'groupId' }], [], '');
 
   await executer('form_submissions', [], [], '');
 
@@ -310,7 +336,13 @@ module.exports.up = async () => {
 
   await executer('permissions', [], [], '');
 
-  await executer('user_groups', [{ coll: 'permissions', fi: 'groupId' }], [], '', 'name');
+  await executer(
+    'user_groups',
+    [{ coll: 'permissions', fi: 'groupId' }, { coll: 'users', fi: 'groupIds', kind }],
+    [],
+    '',
+    'name',
+  );
 
   await executer('pipeline_templates', [{ coll: 'pipelines', fi: 'templateId' }], [], '');
 
@@ -407,8 +439,8 @@ module.exports.up = async () => {
 
   await executer(
     'products',
-    [{ coll: 'deals', fi: 'productsData.productId' }],
-    [{ coll: 'fields_groups', type: 'product' }, { coll: 'internal_notes', type: 'product' }],
+    [{ coll: 'deals', fi: 'productsData.productId', kind: 'manyOne' }],
+    [{ coll: 'internal_notes', type: 'product' }],
     '',
   );
 
