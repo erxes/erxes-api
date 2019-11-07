@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { updateOrder, watchItem } from './boardUtils';
+import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
 
@@ -39,6 +39,7 @@ export const loadTicketClass = () => {
         ...doc,
         order: ticketsCount,
         modifiedAt: new Date(),
+        searchText: fillSearchTextItem(doc),
       });
 
       // create log
@@ -51,7 +52,9 @@ export const loadTicketClass = () => {
      * Update Ticket
      */
     public static async updateTicket(_id: string, doc: ITicket) {
-      await Tickets.updateOne({ _id }, { $set: doc });
+      const searchText = fillSearchTextItem(doc, await Tickets.getTicket(_id));
+
+      await Tickets.updateOne({ _id }, { $set: doc, searchText });
 
       return Tickets.findOne({ _id });
     }

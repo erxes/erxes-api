@@ -145,10 +145,17 @@ const integrationMutations = {
   },
 
   /**
-   * Create account
+   * Create IMAP account
    */
   async integrationAddImapAccount(_root, data, { dataSources }) {
-    return dataSources.IntegrationsAPI.createImapAccount(data);
+    return dataSources.IntegrationsAPI.createAccount(data);
+  },
+
+  /**
+   * Create Yahoo, Outlook account
+   */
+  async integrationAddMailAccount(_root, data, { dataSources }) {
+    return dataSources.IntegrationsAPI.createAccount(data);
   },
 
   /**
@@ -166,6 +173,9 @@ const integrationMutations = {
           'callpro',
           'nylas-gmail',
           'nylas-imap',
+          'nylas-office365',
+          'nylas-outlook',
+          'nylas-yahoo',
           'chatfuel',
           'twitter-dm',
         ].includes(integration.kind || '')
@@ -190,7 +200,8 @@ const integrationMutations = {
    * Delete an account
    */
   async integrationsRemoveAccount(_root, { _id }: { _id: string }, { dataSources }: IContext) {
-    return dataSources.IntegrationsAPI.removeAccount({ _id });
+    const { erxesApiIds } = await dataSources.IntegrationsAPI.removeAccount({ _id });
+    return Integrations.deleteMany({ _id: erxesApiIds });
   },
 
   /**

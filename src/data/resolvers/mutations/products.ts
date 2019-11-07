@@ -40,9 +40,9 @@ const productMutations = {
    * @param {string} param2._id Product id
    * @param {Object} param2.doc Product info
    */
-  async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user, docModifier }: IContext) {
+  async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user }: IContext) {
     const product = await Products.findOne({ _id });
-    const updated = await Products.updateProduct(_id, docModifier(doc));
+    const updated = await Products.updateProduct(_id, doc);
 
     if (product) {
       await putUpdateLog(
@@ -64,20 +64,19 @@ const productMutations = {
    * @param {string} param1._id Product id
    */
   async productsRemove(_root, { productIds }: { productIds: string[] }, { user }: IContext) {
-    for (const productId of productIds) {
-      const product = await Products.findOne({ _id: productId });
-      const removed = await Products.removeProduct(productId);
+    const products = await Products.find({ _id: { $in: productIds } }, { name: 1 }).lean();
 
-      if (product && removed) {
-        await putDeleteLog(
-          {
-            type: 'product',
-            object: product,
-            description: `${product.name} has been removed`,
-          },
-          user,
-        );
-      }
+    await Products.removeProducts(productIds);
+
+    for (const product of products) {
+      await putDeleteLog(
+        {
+          type: 'product',
+          object: product,
+          description: `${product.name} has been removed`,
+        },
+        user,
+      );
     }
 
     return productIds;
@@ -111,10 +110,10 @@ const productMutations = {
    * @param {string} param2._id ProductCategory id
    * @param {Object} param2.doc ProductCategory info
    */
-  async productCategoriesEdit(_root, { _id, ...doc }: IProductCategoriesEdit, { user, docModifier }: IContext) {
+  async productCategoriesEdit(_root, { _id, ...doc }: IProductCategoriesEdit, { user }: IContext) {
     const productCategory = await ProductCategories.getProductCatogery({ _id });
 
-    const updated = await ProductCategories.updateProductCategory(_id, docModifier(doc));
+    const updated = await ProductCategories.updateProductCategory(_id, doc);
 
     if (productCategory) {
       await putUpdateLog(

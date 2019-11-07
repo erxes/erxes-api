@@ -1,5 +1,6 @@
 export const types = `
   type RobotEntry {
+    _id: String
     action: String
     data: JSON
   }
@@ -18,7 +19,7 @@ export const types = `
 `;
 
 export const queries = `
-  robotEntries(isNotified: Boolean, action: String): [RobotEntry]
+  robotEntries(isNotified: Boolean, action: String, parentId: String): [RobotEntry]
   onboardingStepsCompleteness(steps: [String]): JSON
   onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]
 `;

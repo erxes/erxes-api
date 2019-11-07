@@ -3,15 +3,9 @@ import { commonTypes, conformityQueryFields } from './common';
 export const types = `
   type Task {
     _id: String!
-    boardId: String
     priority: String
     companies: [Company]
     customers: [Customer]
-    assignedUsers: [User]
-    isWatched: Boolean
-    attachments: [Attachment]
-    stage: Stage
-    pipeline: Pipeline
     ${commonTypes}
   }
 `;
@@ -33,6 +27,7 @@ export const queries = `
     noCloseDate: String
     overdue: String
     priority: [String]
+    labelIds: [String]
     ${conformityQueryFields}
   ): [Task]
 `;

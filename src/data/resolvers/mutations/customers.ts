@@ -31,9 +31,9 @@ const customerMutations = {
   /**
    * Update customer
    */
-  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user, docModifier }: IContext) {
+  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: IContext) {
     const customer = await Customers.findOne({ _id });
-    const updated = await Customers.updateCustomer(_id, docModifier(doc));
+    const updated = await Customers.updateCustomer(_id, doc);
 
     if (customer) {
       await putUpdateLog(
@@ -61,12 +61,12 @@ const customerMutations = {
    * Remove customers
    */
   async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: IContext) {
-    for (const customerId of customerIds) {
-      // Removing every customer and modules associated with
-      const customer = await Customers.findOne({ _id: customerId });
-      const removed = await Customers.removeCustomer(customerId);
+    const customers = await Customers.find({ _id: { $in: customerIds } }, { firstName: 1 }).lean();
 
-      if (customer && removed) {
+    await Customers.removeCustomers(customerIds);
+
+    for (const customer of customers) {
+      if (customer) {
         await putDeleteLog(
           {
             type: 'customer',

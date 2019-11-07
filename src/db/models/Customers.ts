@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { validateEmail } from '../../data/utils';
+import { validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
@@ -17,7 +17,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   updateCustomer(_id: string, doc: ICustomer): Promise<ICustomerDocument>;
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
-  removeCustomer(customerId: string): void;
+  removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
@@ -146,10 +146,10 @@ export const loadClass = () => {
         doc.hasValidEmail = isValid;
       }
 
+      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+
       // calculateProfileScore
       await Customers.updateProfileScore(_id, true);
-
-      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
 
       return Customers.findOne({ _id });
     }
@@ -185,58 +185,71 @@ export const loadClass = () => {
      * Update customer profile score
      */
     public static async updateProfileScore(customerId: string, save: boolean) {
-      let score = 0;
-
-      const nullValues = ['', null];
       const customer = await Customers.findOne({ _id: customerId });
 
       if (!customer) {
         return 0;
       }
 
-      if (!nullValues.includes(customer.firstName || '')) {
+      const nullValues = ['', null];
+      let score = 0;
+      let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
+
+      if (customer.firstName && !nullValues.includes(customer.firstName || '')) {
         score += 10;
+        searchText = searchText.concat(' ', customer.firstName);
       }
 
-      if (!nullValues.includes(customer.lastName || '')) {
+      if (customer.lastName && !nullValues.includes(customer.lastName || '')) {
         score += 5;
+        searchText = searchText.concat(' ', customer.lastName);
       }
 
-      if (!nullValues.includes(customer.primaryEmail || '')) {
+      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail || '')) {
         score += 15;
       }
 
-      if (!nullValues.includes(customer.primaryPhone || '')) {
+      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone || '')) {
         score += 10;
       }
 
       if (customer.visitorContactInfo != null) {
         score += 5;
+        searchText = searchText.concat(
+          ' ',
+          customer.visitorContactInfo.email || '',
+          ' ',
+          customer.visitorContactInfo.phone || '',
+        );
       }
+
+      searchText = validSearchText([searchText]);
 
       if (!save) {
         return {
           updateOne: {
             filter: { _id: customerId },
-            update: { $set: { profileScore: score } },
+            update: { $set: { profileScore: score, searchText } },
           },
         };
       }
 
-      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score } });
+      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score, searchText } });
     }
     /**
-     * Removes customer
+     * Remove customers
      */
-    public static async removeCustomer(customerId: string) {
+    public static async removeCustomers(customerIds: string[]) {
       // Removing every modules that associated with customer
-      await Conversations.removeCustomerConversations(customerId);
-      await EngageMessages.removeCustomerEngages(customerId);
-      await InternalNotes.removeCustomerInternalNotes(customerId);
+      await Conversations.removeCustomersConversations(customerIds);
+      await EngageMessages.removeCustomersEngages(customerIds);
+      await InternalNotes.removeCustomersInternalNotes(customerIds);
 
-      await Conformities.removeConformity({ mainType: 'customer', mainTypeId: customerId });
+      for (const customerId of customerIds) {
+        await Conformities.removeConformity({ mainType: 'customer', mainTypeId: customerId });
+      }
 
-      return Customers.deleteOne({ _id: customerId });
+      return Customers.deleteMany({ _id: { $in: customerIds } });
     }
 
     /**

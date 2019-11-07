@@ -28,9 +28,10 @@ export const loadClass = () => {
     public static async createEntry(data): Promise<IRobotEntryDocument | undefined> {
       if (data.action === 'mergeCustomers') {
         const customerIds = data.customerIds;
-        const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } });
+        const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } }).lean();
 
         if (randomCustomer) {
+          delete randomCustomer._id;
           await Customers.mergeCustomers(customerIds, randomCustomer);
           return RobotEntries.create({ action: 'mergeCustomers', data: { customerIds } });
         }
@@ -45,7 +46,7 @@ export const loadClass = () => {
           const { _id, modifier } = result;
 
           await Companies.update({ _id }, { $set: modifier });
-          return RobotEntries.create({ action: 'fillCompanyInfo', parentId: parent._id, data: { modifier } });
+          return RobotEntries.create({ action: 'fillCompanyInfo', parentId: parent._id, data: { _id, modifier } });
         }
 
         return parent;

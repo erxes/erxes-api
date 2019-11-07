@@ -3,17 +3,11 @@ import { commonTypes, conformityQueryFields } from './common';
 export const types = `
   type Deal {
     _id: String!
-    pipeline: Pipeline
-    boardId: String
     amount: JSON
     companies: [Company]
     customers: [Customer]
     products: JSON
     productsData: JSON
-    assignedUsers: [User]
-    stage: Stage
-    attachments: [Attachment]
-    isWatched: Boolean
     ${commonTypes}
   }
 
@@ -35,43 +29,7 @@ export const types = `
   }
 `;
 
-export const queries = `
-  dealDetail(_id: String!): Deal
-  deals(
-    initialStageId: String
-    pipelineId: String
-    stageId: String
-    customerIds: [String]
-    companyIds: [String]
-    date: ItemDate
-    skip: Int
-    search: String
-    assignedUserIds: [String]
-    productIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
-    ${conformityQueryFields}
-  ): [Deal]
-  dealsTotalAmounts(
-    date: ItemDate
-    pipelineId: String
-    customerIds: [String]
-    companyIds: [String]
-    assignedUserIds: [String]
-    productIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
-    ${conformityQueryFields}
-  ): DealTotalAmounts
-`;
-
-const commonParams = `
+const commonMutationParams = `
   stageId: String,
   assignedUserIds: [String],
   attachments: [AttachmentInput],
@@ -83,9 +41,40 @@ const commonParams = `
   isComplete: Boolean
 `;
 
+const commonQueryParams = `
+  date: ItemDate
+  pipelineId: String
+  customerIds: [String]
+  companyIds: [String]
+  assignedUserIds: [String]
+  productIds: [String]
+  nextDay: String
+  nextWeek: String
+  nextMonth: String
+  noCloseDate: String
+  overdue: String
+  labelIds: [String]
+  search: String
+`;
+
+export const queries = `
+  dealDetail(_id: String!): Deal
+  deals(
+    initialStageId: String
+    stageId: String
+    skip: Int
+    ${commonQueryParams}
+    ${conformityQueryFields}
+  ): [Deal]
+  dealsTotalAmounts(
+    ${commonQueryParams}
+    ${conformityQueryFields}
+  ): DealTotalAmounts
+`;
+
 export const mutations = `
-  dealsAdd(name: String!, ${commonParams}): Deal
-  dealsEdit(_id: String!, name: String, ${commonParams}): Deal
+  dealsAdd(name: String!, ${commonMutationParams}): Deal
+  dealsEdit(_id: String!, name: String, ${commonMutationParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal

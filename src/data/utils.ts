@@ -325,8 +325,9 @@ export const sendEmail = async ({
   template?: { name?: string; data?: any; isCustom?: boolean };
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' });
+  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
+  const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: '' });
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -357,6 +358,9 @@ export const sendEmail = async ({
       to: toEmail,
       subject: title,
       html,
+      headers: {
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
+      },
     };
 
     return transporter.sendMail(mailOptions, (error, info) => {
@@ -811,4 +815,36 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
+};
+
+export const validSearchText = (values: string[]) => {
+  const value = values.join(' ');
+
+  if (value.length < 512) {
+    return value;
+  }
+
+  return value.substring(0, 511);
+};
+
+const stringToRegex = (value: string) => {
+  const specialChars = [...'{}[]\\^$.|?*+()'];
+
+  const result = [...value].map(char => (specialChars.includes(char) ? '.?\\' + char : '.?' + char));
+
+  return '.*' + result.join('').substring(2) + '.*';
+};
+
+export const regexSearchText = (searchValue: string) => {
+  const result: any[] = [];
+
+  searchValue = searchValue.replace(/\s\s+/g, ' ');
+
+  const words = searchValue.split(' ');
+
+  for (const word of words) {
+    result.push({ searchText: new RegExp(`${stringToRegex(word)}`, 'mui') });
+  }
+
+  return { $and: result };
 };
