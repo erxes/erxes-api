@@ -2,9 +2,7 @@ import { dateType } from 'aws-sdk/clients/sts'; // tslint:disable-line
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import { FIELDS_GROUPS_CONTENT_TYPES } from '../data/constants';
-import { IActionPerformer, IActivity, IContentType } from '../db/models/definitions/activityLogs';
 import {
-  ActivityLogs,
   Boards,
   Brands,
   Channels,
@@ -64,10 +62,10 @@ import { IUserDocument } from './models/definitions/users';
 import PipelineTemplates from './models/PipelineTemplates';
 
 interface IActivityLogFactoryInput {
-  performer?: IActionPerformer;
-  performedBy?: IActionPerformer;
-  activity?: IActivity;
-  contentType?: IContentType;
+  performer?: any;
+  performedBy?: any;
+  activity?: any;
+  contentType?: any;
 }
 
 export const activityLogFactory = (params: IActivityLogFactoryInput) => {
@@ -88,7 +86,7 @@ export const activityLogFactory = (params: IActivityLogFactoryInput) => {
     },
   };
 
-  return ActivityLogs.createDoc({ ...doc, ...params });
+  return { ...doc, ...params };
 };
 
 interface IUserFactoryInput {

@@ -1,5 +1,4 @@
 import { Users } from '../../db/models';
-import { IActivityLogDocument } from '../../db/models/definitions/activityLogs';
 import { ACTIVITY_PERFORMER_TYPES } from '../../db/models/definitions/constants';
 
 /*
@@ -9,28 +8,28 @@ export default {
   /**
    * Finds id of the activity
    */
-  id(obj: IActivityLogDocument) {
+  id(obj: any) {
     return obj.activity.id;
   },
 
   /**
    * Finds action of the activity
    */
-  action(obj: IActivityLogDocument) {
+  action(obj: any) {
     return `${obj.activity.type}-${obj.activity.action}`;
   },
 
   /**
    * Finds content of the activity
    */
-  content(obj: IActivityLogDocument) {
+  content(obj: any) {
     return obj.activity.content;
   },
 
   /**
    * Finds content of the activity
    */
-  async by(obj: IActivityLogDocument) {
+  async by(obj: any) {
     const performedBy = obj.performedBy;
 
     if (!performedBy) {

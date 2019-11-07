@@ -1,25 +1,63 @@
-import { ActivityLogs } from '../../../db/models';
-import { IActivityLog } from '../../../db/models/definitions/activityLogs';
+import { ActivityLogs, Conformities, Conversations, InternalNotes } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 
 const activityLogQueries = {
   /**
    * Get activity log list
    */
-  activityLogs(_root, doc: IActivityLog) {
-    const { contentType, contentId, activityType, limit } = doc;
+  async activityLogs(_root, doc: any) {
+    const { contentType, contentId, activityType } = doc;
 
-    const query = { 'contentType.type': contentType, 'contentType.id': contentId };
+    const activities = [] as any;
 
-    if (activityType) {
-      query['activity.type'] = activityType;
+    const collectActivities = (items: any, type?: string) => {
+      if (items) {
+        items.map(item => {
+          const result = item.toJSON();
+
+          if (type) {
+            result.type = type;
+          }
+
+          activities.push(result);
+        });
+      }
+    };
+
+    switch (activityType) {
+      case 'conversation':
+        collectActivities(await Conversations.find({ customerId: contentId }));
+        break;
+
+      case 'internal_note':
+        collectActivities(await InternalNotes.find({ contentTypeId: contentId }), 'note');
+        break;
+
+      case 'task':
+        const relatedTaskIds = await Conformities.savedConformity({
+          mainType: contentType,
+          mainTypeId: contentId,
+          relType: 'task',
+        });
+
+        collectActivities(await ActivityLogs.find({ typeId: { $in: relatedTaskIds } }));
+        break;
+
+      default:
+        const relatedItemIds = await Conformities.savedConformity({
+          mainType: contentType,
+          mainTypeId: contentId,
+          relTypes: ['task', 'deal', 'ticket'],
+        });
+
+        collectActivities(await ActivityLogs.find({ typeId: contentId, action: 'CREATE' }));
+        collectActivities(await ActivityLogs.find({ typeId: { $in: relatedItemIds } }));
+        collectActivities(await InternalNotes.find({ contentTypeId: contentId }), 'note');
+
+        break;
     }
 
-    const sort = { createdAt: -1 };
-
-    return ActivityLogs.find(query)
-      .sort(sort)
-      .limit(limit);
+    return activities;
   },
 };
 

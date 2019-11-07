@@ -98,15 +98,17 @@ export const loadConformityClass = () => {
     }
 
     public static async savedConformity(doc: IConformitySaved) {
+      const relTypes = [...doc.relTypes || [], doc.relType] || [];
+
       const relTypeIds = await Conformities.aggregate([
         {
           $match: {
             $or: [
               {
-                $and: [{ mainType: doc.mainType }, { mainTypeId: doc.mainTypeId }, { relType: doc.relType }],
+                $and: [{ mainType: doc.mainType }, { mainTypeId: doc.mainTypeId }, { relType: { $in: relTypes } }],
               },
               {
-                $and: [{ mainType: doc.relType }, { relType: doc.mainType }, { relTypeId: doc.mainTypeId }],
+                $and: [{ mainType: { $in: relTypes } }, { relType: doc.mainType }, { relTypeId: doc.mainTypeId }],
               },
             ],
           },
@@ -200,7 +202,7 @@ export const loadConformityClass = () => {
         },
         {
           $project: {
-            relTypeId: getProjectCondition(doc.relType, 'relTypeId', 'mainTypeId'),
+            relTypeId: getProjectCondition(doc.relType || '', 'relTypeId', 'mainTypeId'),
           },
         },
       ]);
