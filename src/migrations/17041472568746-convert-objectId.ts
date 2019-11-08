@@ -17,6 +17,11 @@ module.exports.up = async () => {
     type: string;
   }
 
+  interface IKeyInId {
+    coll: string;
+    mainKey: string;
+  }
+
   const checkKeys = (dic: any) => {
     Object.keys(dic).forEach(key => {
       if (key.includes('.') || key.includes('\\') || key.includes('$')) {
@@ -42,11 +47,12 @@ module.exports.up = async () => {
     contentTypes: IContentTypes[],
     conformity: string,
     unique: string = '',
+    keyInIds?: IKeyInId[],
   ) => {
     console.log(mainCollection);
     const objOnDb = mongoClient.db.collection(mainCollection);
-    const entries = await objOnDb.find({ oldId: { $exists: false } }).toArray();
-    // const entries = await objOnDb.find().toArray();
+    // const entries = await objOnDb.find({ oldId: { $exists: false } }).toArray();
+    const entries = await objOnDb.find().toArray();
     console.log(entries.length);
 
     for (const entry of entries) {
@@ -80,6 +86,31 @@ module.exports.up = async () => {
         // fail
         console.log('fail of', oldId);
         continue;
+      }
+
+      if (keyInIds) {
+        for (const inKeyObj of keyInIds) {
+          const inKeyCollection = mongoClient.db.collection(inKeyObj.coll);
+          const inKeyEntries = await inKeyCollection
+            .aggregate([
+              { $match: { [inKeyObj.mainKey]: { $exists: true } } },
+              { $project: { _id: 1, [inKeyObj.mainKey]: 1 } },
+              // { $match: key filter }
+            ])
+            .toArray();
+
+          for (const inKeyEntry of inKeyEntries) {
+            const inKeyDic = inKeyEntry[inKeyObj.mainKey];
+            Object.keys(inKeyDic).forEach(key => {
+              if (key === oldId) {
+                inKeyDic[newId] = inKeyDic[key];
+                delete inKeyDic[key];
+              }
+            });
+
+            inKeyCollection.updateOne({ _id: inKeyEntry._id }, { $set: { [inKeyObj.mainKey]: inKeyDic } });
+          }
+        }
       }
 
       if (conformity) {
@@ -221,6 +252,7 @@ module.exports.up = async () => {
       { coll: 'internal_notes', fi: 'mentionedUserIds', kind },
       { coll: 'permissions', fi: 'userId' },
       { coll: 'onboarding_histories', fi: 'userId' },
+      { coll: 'customers', fi: 'ownerId' },
     ],
     [{ coll: 'internal_notes', type: 'user' }],
     '',
@@ -240,7 +272,7 @@ module.exports.up = async () => {
       { coll: 'response_templates', fi: 'brandId' },
       { coll: 'segments', fi: 'conditions.brandId', kind: 'manyOne' },
       { coll: 'users', fi: 'brandIds', kind },
-      { coll: 'emailSignature', fi: 'brandId' },
+      { coll: 'users', fi: 'emailSignatures.brandId', kind: 'manyOne' },
     ],
     [],
     '',
@@ -257,11 +289,7 @@ module.exports.up = async () => {
   await executer(
     'companies',
     [],
-    [
-      { coll: 'fields', type: 'company' },
-      { coll: 'internal_notes', type: 'company' },
-      { coll: 'notifications', type: 'company' },
-    ],
+    [{ coll: 'internal_notes', type: 'company' }, { coll: 'notifications', type: 'company' }],
     'company',
   );
 
@@ -286,12 +314,9 @@ module.exports.up = async () => {
       { coll: 'engage_messages', fi: 'customerIds', kind },
       { coll: 'engage_messages', fi: 'messengerReceivedCustomerIds', kind },
       { coll: 'forms', fi: 'customerId' },
+      { coll: 'form_submissions', fi: 'customerId' },
     ],
-    [
-      { coll: 'fields', type: 'customer' },
-      { coll: 'internal_notes', type: 'customer' },
-      { coll: 'notifications', type: 'customer' },
-    ],
+    [{ coll: 'internal_notes', type: 'customer' }, { coll: 'notifications', type: 'customer' }],
     'customer',
   );
 
@@ -301,13 +326,17 @@ module.exports.up = async () => {
 
   await executer('engage_messages', [], [], '');
 
-  await executer('fields', [{ coll: 'pipelines', fi: 'boardId' }], [], '');
+  await executer('fields', [{ coll: 'form_submissions', fi: 'formFieldId' }], [], '', '', [
+    { coll: 'customers', mainKey: 'customFieldsData' },
+    { coll: 'companies', mainKey: 'customFieldsData' },
+    { coll: 'products', mainKey: 'customFieldsData' },
+  ]);
 
   await executer('fields_groups', [{ coll: 'fields', fi: 'groupId' }], [], '');
 
   await executer('form_submissions', [], [], '');
 
-  await executer('forms', [], [{ coll: 'fields', type: 'form' }], '');
+  await executer('forms', [{ coll: 'form_submissions', fi: 'formId' }], [], '');
 
   await executer('import_history', [], [], '');
 
@@ -431,6 +460,7 @@ module.exports.up = async () => {
       { coll: 'checklists', type: 'growthHack' },
       { coll: 'internal_notes', type: 'growthHack' },
       { coll: 'notifications', type: 'growthHack' },
+      { coll: 'form_submissions', type: 'growthHack' },
     ],
     'growthHack',
   );
