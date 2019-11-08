@@ -64,12 +64,10 @@ export default {
       }
 
       // Add product object to resulting list
-      if (data && product) {
-        products.push({
-          ...data.toJSON(),
-          product: product.toJSON(),
-        });
-      }
+      products.push({
+        ...data.toJSON(),
+        product: product.toJSON(),
+      });
     }
 
     return products;
@@ -99,7 +97,7 @@ export default {
   },
 
   async pipeline(deal: IDealDocument) {
-    const stage = await Stages.getStage(deal.stageId || '');
+    const stage = await Stages.getStage(deal.stageId);
 
     return Pipelines.findOne({ _id: stage.pipelineId });
   },

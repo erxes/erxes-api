@@ -52,44 +52,6 @@ describe('customerQueries', () => {
     query customers(${commonParamDefs}) {
       customers(${commonParams}) {
         _id
-        createdAt
-        modifiedAt
-        integrationId
-        firstName
-        lastName
-        primaryEmail
-        emails
-        primaryPhone
-        phones
-        isUser
-        tagIds
-        remoteAddress
-        internalNotes
-        location
-        visitorContactInfo
-        customFieldsData
-        messengerData
-        ownerId
-        position
-        department
-        leadStatus
-        lifecycleState
-        hasAuthority
-        description
-        doNotDisturb
-        links {
-          linkedIn
-          twitter
-          facebook
-          youtube
-          github
-          website
-        }
-        conversations { _id }
-        getIntegrationData
-        getMessengerCustomData
-        getTags { _id }
-        owner { _id }
       }
     }
   `;
@@ -237,7 +199,6 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].firstName).toBe('firstName');
 
     // customers by lastName ===========
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -245,7 +206,6 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].lastName).toBe('lastName');
 
     // customers by email ==========
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -253,7 +213,6 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].primaryEmail).toBe(primaryEmail);
 
     // customers by phone ==============
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -261,7 +220,6 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].primaryPhone).toBe(primaryPhone);
 
     // customer by contains name
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -565,19 +523,73 @@ describe('customerQueries', () => {
 
   test('Customer detail', async () => {
     const customer = await customerFactory({}, true);
+    const customerWithCustomData = await customerFactory({ messengerData: { customData: { data: 'data' } } });
+    const customerNoMessengerData = await customerFactory();
 
     const qry = `
       query customerDetail($_id: String!) {
         customerDetail(_id: $_id) {
           _id
+          createdAt
+          modifiedAt
+          integrationId
+          firstName
+          lastName
+          primaryEmail
+          emails
+          primaryPhone
+          phones
+          isUser
+          tagIds
+          remoteAddress
+          internalNotes
+          location
+          visitorContactInfo
+          customFieldsData
+          messengerData
+          ownerId
+          position
+          department
+          leadStatus
+          lifecycleState
+          hasAuthority
+          description
+          doNotDisturb
+          links {
+            linkedIn
+            twitter
+            facebook
+            youtube
+            github
+            website
+          }
+          conversations { _id }
+          getIntegrationData
+          getMessengerCustomData
+          getTags { _id }
+          owner { _id }
+          integration { _id }
+          companies { _id }
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'customerDetail', {
+    let response = await graphqlRequest(qry, 'customerDetail', {
       _id: customer._id,
     });
 
     expect(response._id).toBe(customer._id);
+
+    response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customerWithCustomData._id,
+    });
+
+    expect(response._id).toBe(customerWithCustomData._id);
+
+    response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customerNoMessengerData._id,
+    });
+
+    expect(response._id).toBe(customerNoMessengerData._id);
   });
 });

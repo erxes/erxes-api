@@ -21,7 +21,7 @@ export interface IItemCommonFields {
   notifiedUserIds?: string[];
   labelIds?: string[];
   attachments?: any[];
-  stageId?: string;
+  stageId: string;
   initialStageId?: string;
   modifiedAt?: Date;
   modifiedBy?: string;

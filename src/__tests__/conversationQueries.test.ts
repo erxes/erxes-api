@@ -11,6 +11,7 @@ import {
 } from '../db/factories';
 import { Brands, Channels, Conversations, Integrations, Tags, Users } from '../db/models';
 
+import { async } from 'q';
 import './setup.ts';
 
 describe('conversationQueries', () => {
@@ -143,6 +144,20 @@ describe('conversationQueries', () => {
     }
   `;
 
+  const qryConversationMessage = `
+      query conversationMessages($conversationId: String! $skip: Int $limit: Int) {
+        conversationMessages(conversationId: $conversationId skip: $skip limit: $limit) {
+          _id
+          internal
+          user { _id }
+          customer { _id }
+          mailData {
+            messageId
+          }
+        }
+      }
+    `;
+
   beforeEach(async () => {
     brand = await brandFactory();
     user = await userFactory({});
@@ -176,15 +191,7 @@ describe('conversationQueries', () => {
     await conversationMessageFactory({ conversationId: conversation._id });
     await conversationMessageFactory({ conversationId: conversation._id });
 
-    const qry = `
-      query conversationMessages($conversationId: String! $skip: Int $limit: Int) {
-        conversationMessages(conversationId: $conversationId skip: $skip limit: $limit) {
-          _id
-        }
-      }
-    `;
-
-    let responses = await graphqlRequest(qry, 'conversationMessages', {
+    let responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
       conversationId: conversation._id,
       skip: 1,
       limit: 3,
@@ -192,18 +199,90 @@ describe('conversationQueries', () => {
 
     expect(responses.length).toBe(3);
 
-    responses = await graphqlRequest(qry, 'conversationMessages', {
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
       conversationId: conversation._id,
       limit: 3,
     });
 
     expect(responses.length).toBe(3);
 
-    responses = await graphqlRequest(qry, 'conversationMessages', {
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
       conversationId: conversation._id,
     });
 
     expect(responses.length).toBe(4);
+
+    // conversation is fake
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: 'fakeConversationId',
+    });
+
+    expect(responses.length).toBe(0);
+
+    // internal is true
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: conversation._id,
+    });
+
+    expect(responses.length).toBe(4);
+  });
+
+  test('Conversation messages (messenger kind)', async () => {
+    const messageIntegration = await integrationFactory({ kind: 'messenger' });
+    const messageIntegrationConversation = await conversationFactory({ integrationId: messageIntegration._id });
+
+    await conversationMessageFactory({ conversationId: messageIntegrationConversation._id, internal: false });
+
+    const responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: messageIntegrationConversation._id,
+    });
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Conversation messages (No integration)', async () => {
+    // no integration
+    const noIntegrationConversation = await conversationFactory();
+
+    await conversationMessageFactory({ conversationId: noIntegrationConversation._id, internal: false });
+
+    const responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: noIntegrationConversation._id,
+    });
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Conversation messages (Connection failed)', async () => {
+    const nyalsGmailIntegration = await integrationFactory({ kind: 'nylas-gmail' });
+    const nyalsGmailConversation = await conversationFactory({ integrationId: nyalsGmailIntegration._id });
+
+    await conversationMessageFactory({ conversationId: nyalsGmailConversation._id, internal: false });
+
+    const gmailIntegration = await integrationFactory({ kind: 'gmail' });
+    const gmailConversation = await conversationFactory({ integrationId: gmailIntegration._id });
+
+    await conversationMessageFactory({ conversationId: gmailConversation._id, internal: false });
+
+    try {
+      process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+      await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+        conversationId: nyalsGmailConversation._id,
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+
+    try {
+      process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+      await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+        conversationId: gmailConversation._id,
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 
   test('Conversation messages total count', async () => {
@@ -842,7 +921,7 @@ describe('conversationQueries', () => {
           postId
         }
       }
-  `;
+    `;
 
     try {
       await graphqlRequest(qry, 'facebookComments', { postId: 'postId' });

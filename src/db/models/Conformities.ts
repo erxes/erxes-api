@@ -118,8 +118,6 @@ export const loadConformityClass = () => {
         },
       ]);
 
-      console.log('relTypeIds: ', relTypeIds);
-
       return relTypeIds.map(item => String(item.relTypeId));
     }
 

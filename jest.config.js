@@ -7,6 +7,7 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   modulePathIgnorePatterns: ['utils.ts', 'setup.ts'],
+  coverageDirectory: 'src/__tests__/coverage/',
   collectCoverage: true,
   collectCoverageFrom: [
     '!src/db/models/**',
@@ -14,6 +15,7 @@ module.exports = {
     '!src/data/resolvers/mutations/**',
     '!src/data/resolvers/mutations/robot.ts',
     'src/data/resolvers/**',
+    '!src/data/resolvers/customScalars.ts',
     '!src/data/resolvers/queries/insights.ts',
     '!src/data/resolvers/queries/robot.ts',
     '!src/data/resolvers/queries/logs.ts',

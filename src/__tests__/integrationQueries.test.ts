@@ -146,7 +146,7 @@ describe('integrationQueries', () => {
   });
 
   test('Integration detail', async () => {
-    const integration = await integrationFactory();
+    const integration = await integrationFactory({ tagIds: undefined });
 
     console.log('integration: ', integration);
 

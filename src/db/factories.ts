@@ -450,7 +450,7 @@ export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMeth
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
-    messengerData: params.messengerData || {},
+    messengerData: params.messengerData,
     customFieldsData: params.customFieldsData || {},
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
@@ -570,7 +570,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     attachments: {},
     mentionedUserIds: params.mentionedUserIds || [Random.id()],
     conversationId,
-    internal: params.internal || true,
+    internal: params.internal === undefined || params.internal === null ? true : params.internal,
     customerId: params.customerId || Random.id(),
     userId,
     isCustomerRead: params.isCustomerRead || true,
@@ -838,6 +838,7 @@ export const dealFactory = (params: IDealFactoryInput = {}) => {
     description: faker.random.word(),
     productsDate: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    watchedUserIds: params.watchedUserIds,
     labelIds: params.labelIds || [],
     order: params.order,
     probability: params.probability,
@@ -931,6 +932,7 @@ interface IProductFactoryInput {
   description?: string;
   tagIds?: string[];
   categoryId?: string;
+  customFieldsData?: object;
 }
 
 export const productFactory = (params: IProductFactoryInput = {}) => {
@@ -938,6 +940,7 @@ export const productFactory = (params: IProductFactoryInput = {}) => {
     name: params.name || faker.random.word(),
     categoryId: params.categoryId || faker.random.word(),
     type: params.type || PRODUCT_TYPES.PRODUCT,
+    customFieldsData: params.customFieldsData,
     description: params.description || faker.random.word(),
     sku: faker.random.word(),
     code: faker.random.word(),
