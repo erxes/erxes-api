@@ -165,7 +165,7 @@ export const generateCommonFilters = async (args: any) => {
   if (labelIds) {
     const isEmpty = isListEmpty(labelIds);
 
-    filter.labelIds = isEmpty ? null : { $in: labelIds };
+    filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
   }
 
   return filter;
