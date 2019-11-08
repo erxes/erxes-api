@@ -4,7 +4,7 @@
 
 import { Model, model } from 'mongoose';
 import * as validator from 'validator';
-import { Customers, Forms } from '.';
+import { Companies, Customers, Forms, Products } from '.';
 import { FIELD_CONTENT_TYPES } from '../../data/constants';
 import {
   fieldGroupSchema,
@@ -119,6 +119,8 @@ export const loadFieldClass = () => {
       // Removing field value from customer
       const index = `customFieldsData.${_id}`;
       await Customers.updateMany({ [index]: { $exists: true } }, { $unset: { [index]: 1 } });
+      await Companies.updateMany({ [index]: { $exists: true } }, { $unset: { [index]: 1 } });
+      await Products.updateMany({ [index]: { $exists: true } }, { $unset: { [index]: 1 } });
 
       return fieldObj.remove();
     }
