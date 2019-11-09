@@ -19,15 +19,15 @@ describe('ticketQueries', () => {
     assignedUserIds
     closeDate
     description
-    companies {
-      _id
-    }
-    customers {
-      _id
-    }
-    assignedUsers {
-      _id
-    }
+    companies { _id }
+    customers { _id }
+    assignedUsers { _id }
+    boardId
+    pipeline { _id }
+    stage { _id }
+    isWatched
+    hasNotified
+    labels { _id }
   `;
 
   const qryTicketFilter = `
@@ -162,8 +162,22 @@ describe('ticketQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'ticketDetail', args);
+    let response = await graphqlRequest(qry, 'ticketDetail', args);
 
     expect(response._id).toBe(ticket._id);
+
+    const user = await userFactory();
+    const watchedTask = await ticketFactory({ watchedUserIds: [user._id] });
+    response = await graphqlRequest(
+      qry,
+      'ticketDetail',
+      {
+        _id: watchedTask._id,
+      },
+      { user },
+    );
+
+    expect(response._id).toBe(watchedTask._id);
+    expect(response.isWatched).toBe(true);
   });
 });

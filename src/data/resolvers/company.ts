@@ -13,7 +13,7 @@ export default {
   },
 
   getTags(company: ICompanyDocument) {
-    return Tags.find({ _id: { $in: company.tagIds || [] } });
+    return Tags.find({ _id: { $in: company.tagIds } });
   },
 
   owner(company: ICompanyDocument) {

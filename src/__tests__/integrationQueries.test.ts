@@ -146,10 +146,6 @@ describe('integrationQueries', () => {
   });
 
   test('Integration detail', async () => {
-    const integration = await integrationFactory({ tagIds: undefined });
-
-    console.log('integration: ', integration);
-
     const qry = `
       query integrationDetail($_id: String!) {
         integrationDetail(_id: $_id) {
@@ -172,23 +168,14 @@ describe('integrationQueries', () => {
       }
     `;
 
-    let response = await graphqlRequest(qry, 'integrationDetail', {
+    const tag = await tagsFactory();
+    const integration = await integrationFactory({ tagIds: [tag._id] });
+
+    const response = await graphqlRequest(qry, 'integrationDetail', {
       _id: integration._id,
     });
 
     expect(response._id).toBe(integration._id);
-    expect(response.tags.length).toBe(0);
-
-    const tag = await tagsFactory();
-    const integrationWithTag = await integrationFactory({ tagIds: [tag._id] });
-
-    console.log('integrationWithTag: ', integrationWithTag);
-
-    response = await graphqlRequest(qry, 'integrationDetail', {
-      _id: integrationWithTag._id,
-    });
-
-    expect(response._id).toBe(integrationWithTag._id);
     expect(response.tags.length).toBe(1);
   });
 

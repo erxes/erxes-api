@@ -82,8 +82,7 @@ const fieldQueries = {
         if (brand && integration && lastCustomers.length > 0) {
           const [lastCustomer] = lastCustomers;
 
-          // @ts-ignore: will never happen ts error
-          const customDataFields = Object.keys(lastCustomer.messengerData.customData);
+          const customDataFields = Object.keys(lastCustomer.messengerData && lastCustomer.messengerData.customData);
 
           for (const customDataField of customDataFields) {
             fields.push({

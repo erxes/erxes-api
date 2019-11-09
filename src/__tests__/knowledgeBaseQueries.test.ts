@@ -22,6 +22,23 @@ describe('knowledgeBaseQueries', () => {
       query knowledgeBaseTopics($page: Int $perPage: Int) {
         knowledgeBaseTopics(page: $page perPage: $perPage) {
           _id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'knowledgeBaseTopics', {
+      page: 1,
+      perPage: 2,
+    });
+
+    expect(response.length).toBe(2);
+  });
+
+  test('Knowledge base topic detail', async () => {
+    const qry = `
+      query knowledgeBaseTopicDetail($_id: String!) {
+        knowledgeBaseTopicDetail(_id: $_id) {
+          _id
           title
           description
           categories { _id }
@@ -36,30 +53,19 @@ describe('knowledgeBaseQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'knowledgeBaseTopics', {
-      page: 1,
-      perPage: 2,
-    });
-
-    expect(response.length).toBe(2);
-  });
-
-  test('Knowledge base topic detail', async () => {
     const knowledgeBaseTopic = await knowledgeBaseTopicFactory();
-
-    const qry = `
-      query knowledgeBaseTopicDetail($_id: String!) {
-        knowledgeBaseTopicDetail(_id: $_id) {
-          _id
-        }
-      }
-    `;
-
-    const response = await graphqlRequest(qry, 'knowledgeBaseTopicDetail', {
+    let response = await graphqlRequest(qry, 'knowledgeBaseTopicDetail', {
       _id: knowledgeBaseTopic._id,
     });
 
     expect(response._id).toBe(knowledgeBaseTopic._id);
+
+    const knowledgeBaseTopicWithColor = await knowledgeBaseTopicFactory({ color: '#fff' });
+    response = await graphqlRequest(qry, 'knowledgeBaseTopicDetail', {
+      _id: knowledgeBaseTopicWithColor._id,
+    });
+
+    expect(response._id).toBe(knowledgeBaseTopicWithColor._id);
   });
 
   test('Get total count of knowledge base topic', async () => {

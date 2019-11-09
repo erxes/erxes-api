@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { conversationFactory, userFactory } from '../db/factories';
+import { brandFactory, conversationFactory, userFactory } from '../db/factories';
 import { Conversations, Users } from '../db/models';
 
 import './setup.ts';
@@ -81,19 +81,32 @@ describe('userQueries', () => {
   });
 
   test('User detail', async () => {
-    const user = await userFactory({});
-
     const qry = `
       query userDetail($_id: String) {
         userDetail(_id: $_id) {
           _id
+          status
+          brands { _id }
+          permissionActions
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'userDetail', { _id: user._id });
+    // checking not verified
+    let user = await userFactory({ isOwner: true, registrationToken: 'registrationToken' });
+    let response = await graphqlRequest(qry, 'userDetail', { _id: user._id }, { user });
 
     expect(response._id).toBe(user._id);
+    expect(response.status).toBe('Not verified');
+
+    // checking brand ids
+    const brand = await brandFactory();
+    user = await userFactory({ isOwner: false, brandIds: [brand._id] });
+    response = await graphqlRequest(qry, 'userDetail', { _id: user._id }, { user });
+
+    expect(response._id).toBe(user._id);
+    expect(response.status).toBe('Verified');
+    expect(response.brands[0]._id).toBe(brand._id);
   });
 
   test('Get total count of users', async () => {

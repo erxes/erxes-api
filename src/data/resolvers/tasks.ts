@@ -20,7 +20,7 @@ export default {
       relType: 'company',
     });
 
-    return Companies.find({ _id: { $in: companyIds || [] } });
+    return Companies.find({ _id: { $in: companyIds } });
   },
 
   async customers(task: ITaskDocument) {
@@ -30,7 +30,7 @@ export default {
       relType: 'customer',
     });
 
-    return Customers.find({ _id: { $in: customerIds || [] } });
+    return Customers.find({ _id: { $in: customerIds } });
   },
 
   assignedUsers(task: ITaskDocument) {
@@ -38,7 +38,7 @@ export default {
   },
 
   async pipeline(task: ITaskDocument) {
-    const stage = await Stages.getStage(task.stageId || '');
+    const stage = await Stages.getStage(task.stageId);
 
     return Pipelines.findOne({ _id: stage.pipelineId });
   },
@@ -48,13 +48,13 @@ export default {
   },
 
   stage(task: ITaskDocument) {
-    return Stages.getStage(task.stageId || '');
+    return Stages.getStage(task.stageId);
   },
 
   isWatched(task: ITaskDocument, _args, { user }: IContext) {
-    const watchedUserIds = task.watchedUserIds || [];
+    const watchedUserIds = task.watchedUserIds;
 
-    if (watchedUserIds.includes(user._id)) {
+    if (watchedUserIds && watchedUserIds.includes(user._id)) {
       return true;
     }
 

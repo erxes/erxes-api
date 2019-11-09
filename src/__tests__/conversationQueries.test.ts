@@ -11,7 +11,6 @@ import {
 } from '../db/factories';
 import { Brands, Channels, Conversations, Integrations, Tags, Users } from '../db/models';
 
-import { async } from 'q';
 import './setup.ts';
 
 describe('conversationQueries', () => {

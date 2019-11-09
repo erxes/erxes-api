@@ -1,7 +1,7 @@
 import { permissionQueries, usersGroupQueries } from '../data/resolvers/queries/permissions';
 
 import { graphqlRequest } from '../db/connection';
-import { permissionFactory, usersGroupFactory } from '../db/factories';
+import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, UsersGroups } from '../db/models';
 import './setup.ts';
 
@@ -123,6 +123,8 @@ describe('permissionQueries', () => {
       query permissions(${commonParamDefs}) {
         permissions(${commonParams}) {
           _id
+          user { _id }
+          group { _id }
         }
       }
     `;
@@ -204,12 +206,16 @@ describe('usersGroupQueries', () => {
   test(`User groups`, async () => {
     await usersGroupFactory();
     await usersGroupFactory();
-    await usersGroupFactory();
+    const userGroup = await usersGroupFactory();
+
+    await userFactory({ groupIds: [userGroup._id] });
 
     const qry = `
       query usersGroups($page: Int $perPage: Int) {
         usersGroups(page: $page perPage: $perPage) {
           _id
+          memberIds
+          members { _id }
         }
       }
     `;

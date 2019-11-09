@@ -1,6 +1,13 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { brandFactory, customerFactory, fieldFactory, fieldGroupFactory, integrationFactory } from '../db/factories';
+import {
+  brandFactory,
+  customerFactory,
+  fieldFactory,
+  fieldGroupFactory,
+  integrationFactory,
+  usersGroupFactory,
+} from '../db/factories';
 import { Companies, Customers, Fields, FieldsGroups } from '../db/models';
 
 import { INTEGRATION_KIND_CHOICES } from '../data/constants';
@@ -26,6 +33,9 @@ describe('fieldQueries', () => {
       query fields($contentType: String! $contentTypeId: String) {
         fields(contentType: $contentType contentTypeId: $contentTypeId) {
           _id
+          lastUpdatedUser {
+            _id
+          }
         }
       }
     `;
@@ -63,10 +73,13 @@ describe('fieldQueries', () => {
 
   test('Fields combined by content type', async () => {
     // Creating test data
+    const visibleGroup = await usersGroupFactory({ isVisible: true });
+    const invisibleGroup = await usersGroupFactory({ isVisible: false });
+
     await fieldFactory({ contentType: 'company' });
-    await fieldFactory({ contentType: 'company', isVisible: false });
-    await fieldFactory({ contentType: 'customer' });
-    await fieldFactory({ contentType: 'customer', isVisible: false });
+    await fieldFactory({ contentType: 'company' });
+    await fieldFactory({ contentType: 'customer', groupId: visibleGroup._id });
+    await fieldFactory({ contentType: 'customer', groupId: invisibleGroup._id });
 
     const qry = `
       query fieldsCombinedByContentType($contentType: String!) {
@@ -166,6 +179,12 @@ describe('fieldQueries', () => {
       query fieldsGroups($contentType: String) {
         fieldsGroups(contentType: $contentType) {
           _id
+          lastUpdatedUser {
+            _id
+          }
+          fields {
+            _id
+          }
         }
       }
     `;

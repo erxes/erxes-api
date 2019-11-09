@@ -91,6 +91,8 @@ describe('productQueries', () => {
           _id
           name
           parentId
+          isRoot
+          productCount
         }
       }
     `;
@@ -130,6 +132,8 @@ describe('productQueries', () => {
       query productDetail($_id: String!) {
         productDetail(_id: $_id) {
           _id
+          category { _id }
+          getTags { _id }
         }
       }
     `;

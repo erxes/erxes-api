@@ -187,6 +187,7 @@ describe('dealQueries', () => {
     const customFieldsData = { [field1._id]: 'text' };
 
     const product = await productFactory({ customFieldsData });
+    const productNoCustomData = await productFactory();
     const productId = product._id;
 
     const productsData = [
@@ -200,7 +201,7 @@ describe('dealQueries', () => {
         currency: 'USD',
       },
       {
-        productId: product._id,
+        productId: productNoCustomData._id,
       },
     ];
 

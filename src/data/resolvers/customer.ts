@@ -34,7 +34,7 @@ export default {
   },
 
   getTags(customer: ICustomerDocument) {
-    return Tags.find({ _id: { $in: customer.tagIds || [] } });
+    return Tags.find({ _id: { $in: customer.tagIds } });
   },
 
   conversations(customer: ICustomerDocument) {

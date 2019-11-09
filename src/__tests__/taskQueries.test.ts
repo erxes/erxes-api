@@ -28,6 +28,12 @@ describe('taskQueries', () => {
     assignedUsers {
       _id
     }
+    isWatched
+    hasNotified
+    labels { _id }
+    pipeline { _id }
+    boardId
+    stage { _id }
   `;
 
   const qryTaskFilter = `
@@ -140,10 +146,6 @@ describe('taskQueries', () => {
   });
 
   test('Task detail', async () => {
-    const task = await taskFactory();
-
-    const args = { _id: task._id };
-
     const qry = `
       query taskDetail($_id: String!) {
         taskDetail(_id: $_id) {
@@ -152,8 +154,23 @@ describe('taskQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'taskDetail', args);
+    const task = await taskFactory();
+    let response = await graphqlRequest(qry, 'taskDetail', { _id: task._id });
 
     expect(response._id).toBe(task._id);
+
+    const user = await userFactory();
+    const watchedTask = await taskFactory({ watchedUserIds: [user._id] });
+    response = await graphqlRequest(
+      qry,
+      'taskDetail',
+      {
+        _id: watchedTask._id,
+      },
+      { user },
+    );
+
+    expect(response._id).toBe(watchedTask._id);
+    expect(response.isWatched).toBe(true);
   });
 });

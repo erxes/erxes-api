@@ -17,7 +17,7 @@ export const notifiedUserIds = async (item: any) => {
     userIds = userIds.concat(item.watchedUserIds);
   }
 
-  const stage = await Stages.getStage(item.stageId || '');
+  const stage = await Stages.getStage(item.stageId);
   const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
   if (pipeline.watchedUserIds && pipeline.watchedUserIds.length > 0) {
@@ -51,7 +51,7 @@ export const sendNotifications = async ({
   invitedUsers,
   removedUsers,
 }: IBoardNotificationParams) => {
-  const stage = await Stages.getStage(item.stageId || '');
+  const stage = await Stages.getStage(item.stageId);
 
   const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
@@ -111,7 +111,7 @@ export const sendNotifications = async ({
 };
 
 export const itemsChange = async (item: any, type: string, destinationStageId: string) => {
-  const oldStageId = item ? item.stageId || '' : '';
+  const oldStageId = item ? item.stageId : '';
 
   let action = `changed order of your ${type}:`;
   let content = `'${item.name}'`;

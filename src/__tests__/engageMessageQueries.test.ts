@@ -1,5 +1,12 @@
 import { graphqlRequest } from '../db/connection';
-import { brandFactory, engageMessageFactory, segmentFactory, tagsFactory, userFactory } from '../db/factories';
+import {
+  brandFactory,
+  engageMessageFactory,
+  integrationFactory,
+  segmentFactory,
+  tagsFactory,
+  userFactory,
+} from '../db/factories';
 import { Brands, EngageMessages, Segments, Tags, Users } from '../db/models';
 
 import './setup.ts';
@@ -25,26 +32,6 @@ describe('engageQueries', () => {
         ids: $ids
       ) {
         _id
-        kind
-        segmentIds
-        brandIds
-        tagIds
-        customerIds
-        title
-        fromUserId
-        method
-        isDraft
-        isLive
-        stopDate
-        createdDate
-        messengerReceivedCustomerIds
-
-        email
-        messenger
-
-        segments { _id }
-        fromUser { _id }
-        getTags { _id }
       }
     }
   `;
@@ -184,13 +171,46 @@ describe('engageQueries', () => {
       query engageMessageDetail($_id: String) {
         engageMessageDetail(_id: $_id) {
           _id
+          kind
+          segmentIds
+          brandIds
+          tagIds
+          customerIds
+          title
+          fromUserId
+          method
+          isDraft
+          isLive
+          stopDate
+          createdDate
+          messengerReceivedCustomerIds
+
+          email
+          messenger
+
+          stats
+          brands { _id }
+          segments { _id }
+          brand { _id }
+          tags { _id }
+          fromUser { _id }
+          getTags { _id }
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessage._id });
+    let response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessage._id });
 
     expect(response._id).toBe(engageMessage._id);
+
+    const brand = await brandFactory();
+    const messenger = { brandId: brand._id };
+    const engageMessageWithBrand = await engageMessageFactory({ messenger });
+
+    response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessageWithBrand._id });
+
+    expect(response._id).toBe(engageMessageWithBrand._id);
+    expect(response.brand._id).toBe(brand._id);
   });
 
   test('Count engage messsage by kind', async () => {

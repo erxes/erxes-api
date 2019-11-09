@@ -50,7 +50,7 @@ const internalNoteMutations = {
     switch (args.contentType) {
       case 'deal': {
         const deal = await Deals.getDeal(args.contentTypeId);
-        const stage = await Stages.getStage(deal.stageId || '');
+        const stage = await Stages.getStage(deal.stageId);
         const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
         notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
@@ -90,7 +90,7 @@ const internalNoteMutations = {
 
       case 'ticket': {
         const ticket = await Tickets.getTicket(args.contentTypeId);
-        const stage = await Stages.getStage(ticket.stageId || '');
+        const stage = await Stages.getStage(ticket.stageId);
         const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
         notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
@@ -105,7 +105,7 @@ const internalNoteMutations = {
 
       case 'task': {
         const task = await Tasks.getTask(args.contentTypeId);
-        const stage = await Stages.getStage(task.stageId || '');
+        const stage = await Stages.getStage(task.stageId);
         const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
 
         notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;

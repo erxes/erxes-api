@@ -109,6 +109,7 @@ interface IUserFactoryInput {
   isOwner?: boolean;
   isActive?: boolean;
   groupIds?: string[];
+  brandIds?: string[];
   registrationToken?: string;
   registrationTokenExpires?: Date;
 }
@@ -136,6 +137,7 @@ export const userFactory = (params: IUserFactoryInput = {}) => {
     isOwner: typeof params.isOwner !== 'undefined' ? params.isOwner : true,
     isActive: typeof params.isActive !== 'undefined' ? params.isActive : true,
     groupIds: params.groupIds || [],
+    brandIds: params.brandIds,
   });
 
   return user.save();
@@ -490,7 +492,7 @@ export const fieldFactory = async (params: IFieldFactoryInput) => {
     throw new Error('Failed to create fieldGroup');
   }
 
-  const field = new Fields({
+  return Fields.create({
     contentType: params.contentType || 'form',
     contentTypeId: params.contentTypeId || faker.random.uuid(),
     type: params.type || 'input',
@@ -502,11 +504,6 @@ export const fieldFactory = async (params: IFieldFactoryInput) => {
     isVisible: params.visible || true,
     groupId: params.groupId || (groupObj ? groupObj._id : ''),
   });
-
-  await field.save();
-  await Fields.updateOne({ _id: field._id }, { $set: { ...params } });
-
-  return Fields.findOne({ _id: field._id });
 };
 
 interface IConversationFactoryInput {
@@ -627,13 +624,21 @@ export const formFactory = async (params: IFormFactoryInput = {}) => {
 interface IFormSubmissionFactoryInput {
   customerId?: string;
   formId?: string;
+  contentType?: string;
+  contentTypeId?: string;
+  formFieldId?: string;
+  value?: string;
 }
 
 export const formSubmissionFactory = async (params: IFormSubmissionFactoryInput = {}) => {
   return FormSubmissions.create({
     submittedAt: new Date(),
     customerId: params.customerId || faker.random.word(),
+    contentType: params.contentType,
+    contentTypeId: params.contentTypeId,
     formId: params.formId || faker.random.word(),
+    formFieldId: params.formFieldId,
+    value: params.value,
   });
 };
 
@@ -711,6 +716,7 @@ export const channelFactory = async (params: IChannelFactoryInput = {}) => {
 
 interface IKnowledgeBaseTopicFactoryInput {
   userId?: string;
+  color?: string;
   categoryIds?: string[];
 }
 
@@ -720,6 +726,7 @@ export const knowledgeBaseTopicFactory = async (params: IKnowledgeBaseTopicFacto
     description: faker.lorem.sentence,
     brandId: faker.random.word(),
     catgoryIds: [faker.random.word()],
+    color: params.color,
   };
 
   return KnowledgeBaseTopics.create({
@@ -780,24 +787,35 @@ interface IPipelineFactoryInput {
   boardId?: string;
   type?: string;
   bgColor?: string;
+  hackScoringType?: string;
+  visibility?: string;
+  memberIds?: string[];
+  watchedUserIds?: string[];
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
-  const pipeline = new Pipelines({
+  return Pipelines.create({
     name: faker.random.word(),
     boardId: params.boardId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
-    visibility: 'public',
+    visibility: params.visibility || 'public',
     bgColor: params.bgColor || 'fff',
+    hackScoringType: params.hackScoringType,
+    memberIds: params.memberIds,
+    watchedUserIds: params.watchedUserIds,
+    startDate: params.startDate,
+    endDate: params.endDate,
   });
-
-  return pipeline.save();
 };
 
 interface IStageFactoryInput {
   pipelineId?: string;
   type?: string;
   probability?: string;
+  formId?: string;
+  order?: number;
 }
 
 export const stageFactory = (params: IStageFactoryInput = {}) => {
@@ -806,6 +824,8 @@ export const stageFactory = (params: IStageFactoryInput = {}) => {
     pipelineId: params.pipelineId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
     probability: params.probability || PROBABILITY.TEN,
+    formId: params.formId,
+    order: params.order,
   });
 
   return stage.save();
@@ -854,17 +874,22 @@ interface ITaskFactoryInput {
   noCloseDate?: boolean;
   assignedUserIds?: string[];
   priority?: string;
+  watchedUserIds?: string[];
 }
 
-export const taskFactory = (params: ITaskFactoryInput = {}) => {
+export const taskFactory = async (params: ITaskFactoryInput = {}) => {
+  const pipeline = await pipelineFactory();
+  const stage = await stageFactory({ pipelineId: pipeline._id });
+
   const task = new Tasks({
     ...params,
     name: faker.random.word(),
-    stageId: params.stageId || faker.random.word(),
+    stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     priority: params.priority,
+    watchedUserIds: params.watchedUserIds,
   });
 
   return task.save();
@@ -877,18 +902,23 @@ interface ITicketFactoryInput {
   assignedUserIds?: string[];
   priority?: string;
   source?: string;
+  watchedUserIds?: string[];
 }
 
-export const ticketFactory = (params: ITicketFactoryInput = {}) => {
+export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
+  const pipeline = await pipelineFactory();
+  const stage = await stageFactory({ pipelineId: pipeline._id });
+
   const ticket = new Tickets({
     ...params,
     name: faker.random.word(),
-    stageId: params.stageId || faker.random.word(),
+    stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     priority: params.priority,
     source: params.source,
+    watchedUserIds: params.watchedUserIds,
   });
 
   return ticket.save();
@@ -901,10 +931,12 @@ interface IGrowthHackFactoryInput {
   companyIds?: string[];
   noCloseDate?: boolean;
   assignedUserIds?: string[];
+  watchedUserIds?: string[];
   hackStages?: string[];
   priority?: string;
   ease?: number;
   impact?: number;
+  votedUserIds?: string[];
 }
 
 export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
@@ -918,6 +950,8 @@ export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     hackStages: params.hackStages || [faker.random.word()],
+    votedUserIds: params.votedUserIds,
+    watchedUserIds: params.watchedUserIds,
     ease: params.ease || 0,
     impact: params.impact || 0,
     priority: params.priority,
@@ -962,7 +996,7 @@ export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}
   const productCategory = new ProductCategories({
     name: params.name || faker.random.word(),
     description: params.description || faker.random.word(),
-    parentId: params.parentId || faker.random.word(),
+    parentId: params.parentId,
     code: params.code || faker.random.word(),
     createdAt: new Date(),
   });
@@ -1088,10 +1122,15 @@ export const permissionFactory = async (params: IPermissionParams = {}) => {
   return permission.save();
 };
 
-export const usersGroupFactory = () => {
+interface IUserGroupParams {
+  isVisible?: boolean;
+}
+
+export const usersGroupFactory = (params: IUserGroupParams = {}) => {
   const usersGroup = new UsersGroups({
     name: faker.random.word(),
     description: faker.random.word(),
+    isVisible: params.isVisible === undefined || params.isVisible === null ? true : params.isVisible,
   });
 
   return usersGroup.save();

@@ -22,7 +22,7 @@ export default {
       relType: 'company',
     });
 
-    return Companies.find({ _id: { $in: companyIds || [] } });
+    return Companies.find({ _id: { $in: companyIds } });
   },
 
   async customers(deal: IDealDocument) {
@@ -32,13 +32,14 @@ export default {
       relType: 'customer',
     });
 
-    return Customers.find({ _id: { $in: customerIds || [] } });
+    return Customers.find({ _id: { $in: customerIds } });
   },
 
   async products(deal: IDealDocument) {
     const products: any = [];
 
-    for (const data of deal.productsData || []) {
+    // @ts-ignore
+    for (const data of deal.productsData) {
       const product = await Products.getProduct({ _id: data.productId });
 
       const { customFieldsData } = product;
@@ -74,9 +75,10 @@ export default {
   },
 
   amount(deal: IDealDocument) {
-    const data = deal.productsData || [];
+    const data = deal.productsData;
     const amountsMap = {};
 
+    // @ts-ignore
     data.forEach(product => {
       const type = product.currency;
 
@@ -107,13 +109,13 @@ export default {
   },
 
   stage(deal: IDealDocument) {
-    return Stages.getStage(deal.stageId || '');
+    return Stages.getStage(deal.stageId);
   },
 
   isWatched(deal: IDealDocument, _args, { user }: IContext) {
-    const watchedUserIds = deal.watchedUserIds || [];
+    const watchedUserIds = deal.watchedUserIds;
 
-    if (watchedUserIds.includes(user._id)) {
+    if (watchedUserIds && watchedUserIds.includes(user._id)) {
       return true;
     }
 

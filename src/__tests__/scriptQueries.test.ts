@@ -22,6 +22,9 @@ describe('responseTemplateQueries', () => {
       query scripts($page: Int, $perPage: Int) {
         scripts(page: $page, perPage: $perPage) {
           _id
+          messenger { _id }
+          kbTopic { _id }
+          leads { _id }
         }
       }
     `;
