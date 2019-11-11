@@ -5,7 +5,7 @@ export const types = `
     contentTypeId: String
     content: String
     createdUserId: String
-    createdDate: Date
+    createdAt: Date
 
     createdUser: User
   }

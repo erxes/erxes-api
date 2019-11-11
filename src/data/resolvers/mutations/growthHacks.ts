@@ -115,7 +115,7 @@ const growthHackMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(growthHack, 'growthHack', destinationStageId);
+    const { content, action } = await itemsChange(user._id, growthHack, 'growthHack', destinationStageId);
 
     await sendNotifications({
       item: growthHack,

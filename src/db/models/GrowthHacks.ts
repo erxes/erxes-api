@@ -41,7 +41,7 @@ export const loadGrowthHackClass = () => {
       });
 
       // create log
-      await ActivityLogs.createBoardItemLog({ item: growthHack, type: 'growtHack' });
+      await ActivityLogs.createBoardItemLog({ item: growthHack, contentType: 'growtHack' });
 
       return growthHack;
     }

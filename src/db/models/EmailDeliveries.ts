@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-// import { ActivityLogs } from '.';
 import { emailDeliverySchema, IEmailDeliveries, IEmailDeliveriesDocument } from './definitions/emailDeliveries';
 
 export interface IEmailDeliveryModel extends Model<IEmailDeliveriesDocument> {
@@ -13,9 +12,6 @@ export const loadClass = () => {
      */
     public static async createEmailDelivery(doc: IEmailDeliveries) {
       const emailDelivery = await EmailDeliveries.create(doc);
-
-      // create log
-      // await ActivityLogs.createEmailDeliveryLog(emailDelivery);
 
       return emailDelivery;
     }

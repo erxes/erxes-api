@@ -123,7 +123,7 @@ export const loadClass = () => {
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
 
-      await ActivityLogs.createCocLog({ coc: customer, type: 'customer' });
+      await ActivityLogs.createCocLog({ coc: customer, contentType: 'customer' });
 
       return customer;
     }

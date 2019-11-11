@@ -1,4 +1,4 @@
-import { Boards, Pipelines, Stages } from '../../db/models';
+import { ActivityLogs, Boards, Pipelines, Stages } from '../../db/models';
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
@@ -110,7 +110,7 @@ export const sendNotifications = async ({
   });
 };
 
-export const itemsChange = async (item: any, type: string, destinationStageId: string) => {
+export const itemsChange = async (userId: string, item: any, type: string, destinationStageId: string) => {
   const oldStageId = item ? item.stageId || '' : '';
 
   let action = `changed order of your ${type}:`;
@@ -129,6 +129,14 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
     action = `moved '${item.name}' from ${oldBoard.name}-${oldPipeline.name}-${oldStage.name} to `;
 
     content = `${board.name}-${pipeline.name}-${stage.name}`;
+
+    const activityLogContent = {
+      oldStageId,
+      destinationStageId,
+      text: `moved deal from ${oldStage.name} to ${stage.name}`,
+    };
+
+    ActivityLogs.createBoardItemMovementLog(item, type, userId, activityLogContent);
   }
 
   return { content, action };

@@ -94,7 +94,7 @@ const ticketMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(ticket, 'ticket', destinationStageId);
+    const { content, action } = await itemsChange(user._id, ticket, 'ticket', destinationStageId);
 
     await sendNotifications({
       item: ticket,

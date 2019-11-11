@@ -35,12 +35,9 @@ export const loadClass = () => {
         contentType,
         contentTypeId,
         createdUserId: user._id,
-        createdAt: new Date(),
+        createdAt: Date.now(),
         ...fields,
       });
-
-      // create log
-      // await ActivityLogs.createInternalNoteLog(internalNote);
 
       return internalNote;
     }

@@ -65,8 +65,6 @@ const integrationsApiMiddleware = async (req, res) => {
 
     const conversation = await Conversations.createConversation(doc);
 
-    // await ActivityLogs.createConversationLog(conversation);
-
     return res.json({ _id: conversation._id });
   }
 
