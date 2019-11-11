@@ -20,17 +20,15 @@ const engageMutations = {
 
     await send(engageMessage);
 
-    if (engageMessage) {
-      await putCreateLog(
-        {
-          type: 'engage',
-          newData: JSON.stringify(doc),
-          object: engageMessage,
-          description: `${engageMessage.title} has been created`,
-        },
-        user,
-      );
-    }
+    await putCreateLog(
+      {
+        type: 'engage',
+        newData: JSON.stringify(doc),
+        object: engageMessage,
+        description: `${engageMessage.title} has been created`,
+      },
+      user,
+    );
 
     return engageMessage;
   },
@@ -39,26 +37,20 @@ const engageMutations = {
    * Edit message
    */
   async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: IContext) {
-    const engageMessage = await EngageMessages.findOne({ _id });
+    const engageMessage = await EngageMessages.getEngageMessage(_id);
     const updated = await EngageMessages.updateEngageMessage(_id, doc);
 
-    try {
-      await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
-    } catch (e) {
-      debugExternalApi(`Error occurred : ${e.body || e.message}`);
-    }
+    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
 
-    if (engageMessage) {
-      await putUpdateLog(
-        {
-          type: 'engage',
-          object: engageMessage,
-          newData: JSON.stringify(updated),
-          description: `${engageMessage.title} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'engage',
+        object: engageMessage,
+        newData: JSON.stringify(updated),
+        description: `${engageMessage.title} has been edited`,
+      },
+      user,
+    );
 
     return EngageMessages.findOne({ _id });
   },
@@ -67,26 +59,20 @@ const engageMutations = {
    * Remove message
    */
   async engageMessageRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const engageMessage = await EngageMessages.findOne({ _id });
+    const engageMessage = await EngageMessages.getEngageMessage(_id);
 
-    try {
-      await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
-    } catch (e) {
-      debugExternalApi(`Error occurred : ${e.body || e.message}`);
-    }
+    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
 
     const removed = await EngageMessages.removeEngageMessage(_id);
 
-    if (engageMessage) {
-      await putDeleteLog(
-        {
-          type: 'engage',
-          object: engageMessage,
-          description: `${engageMessage.title} has been removed`,
-        },
-        user,
-      );
-    }
+    await putDeleteLog(
+      {
+        type: 'engage',
+        object: engageMessage,
+        description: `${engageMessage.title} has been removed`,
+      },
+      user,
+    );
 
     return removed;
   },
@@ -99,16 +85,12 @@ const engageMutations = {
 
     const { kind } = engageMessage;
 
-    if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
-      try {
-        await fetchCronsApi({
-          path: '/create-schedule',
-          method: 'POST',
-          body: { message: JSON.stringify(engageMessage) },
-        });
-      } catch (e) {
-        debugExternalApi(`Error occurred : ${e.body || e.message}`);
-      }
+    if (kind !== MESSAGE_KINDS.MANUAL) {
+      await fetchCronsApi({
+        path: '/create-schedule',
+        method: 'POST',
+        body: { message: JSON.stringify(engageMessage) },
+      });
     }
 
     return engageMessage;

@@ -547,6 +547,7 @@ interface IConversationMessageFactoryInput {
   isCustomerRead?: boolean;
   engageData?: any;
   formWidgetData?: any;
+  kind?: string;
 }
 
 export const conversationMessageFactory = async (params: IConversationMessageFactoryInput) => {

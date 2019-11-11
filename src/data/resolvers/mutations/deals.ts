@@ -69,8 +69,8 @@ const dealMutations = {
       contentType: 'deal',
     };
 
-    if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds);
+    if (oldDeal.assignedUserIds && doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -78,17 +78,16 @@ const dealMutations = {
 
     await sendNotifications(notificationDoc);
 
-    if (updatedDeal) {
-      await putUpdateLog(
-        {
-          type: 'deal',
-          object: updatedDeal,
-          newData: JSON.stringify(doc),
-          description: `${updatedDeal.name} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'deal',
+        object: updatedDeal,
+        newData: JSON.stringify(doc),
+        description: `${updatedDeal.name} has been edited`,
+      },
+      user,
+    );
+
     return updatedDeal;
   },
 

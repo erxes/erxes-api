@@ -37,7 +37,7 @@ export const sendChannelNotifications = async (
     link: `/inbox/index?channelId=${channel._id}`,
 
     // exclude current user
-    receivers: receivers ? receivers : (channel.memberIds || []).filter(id => id !== channel.userId),
+    receivers: receivers || channel.memberIds.filter(id => id !== channel.userId),
   });
 };
 
@@ -67,15 +67,11 @@ const channelMutations = {
    * Update channel data
    */
   async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: IContext) {
-    const channel = await Channels.findOne({ _id });
-
-    if (!channel) {
-      throw new Error('Channel not found');
-    }
+    const channel = await Channels.getChannel(_id);
 
     const { memberIds } = doc;
 
-    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
+    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds, memberIds);
 
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);
@@ -92,7 +88,7 @@ const channelMutations = {
       user,
     );
 
-    if ((channel.integrationIds || []).toString() !== (updated.integrationIds || []).toString()) {
+    if (channel.integrationIds.toString() !== updated.integrationIds.toString()) {
       registerOnboardHistory({ type: 'connectIntegrationsToChannel', user });
     }
 
@@ -103,11 +99,7 @@ const channelMutations = {
    * Remove a channel
    */
   async channelsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const channel = await Channels.findOne({ _id });
-
-    if (!channel) {
-      throw new Error('Channel not found');
-    }
+    const channel = await Channels.getChannel(_id);
 
     await sendChannelNotifications(channel, 'removed', user);
 

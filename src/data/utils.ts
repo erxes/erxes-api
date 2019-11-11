@@ -553,10 +553,14 @@ export const sendRequest = async (
 export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
   const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
 
-  return sendRequest(
-    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
-    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
-  );
+  try {
+    return sendRequest(
+      { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+      'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+    );
+  } catch (e) {
+    debugExternalApi(`Error occurred : ${e.body || e.message}`);
+  }
 };
 
 /**

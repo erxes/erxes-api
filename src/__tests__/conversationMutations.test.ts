@@ -181,7 +181,12 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const conversation = await graphqlRequest(mutation, 'conversationMarkAsRead', { _id: leadConversation._id });
+    const conversation = await graphqlRequest(
+      mutation,
+      'conversationMarkAsRead',
+      { _id: leadConversation._id },
+      { user },
+    );
 
     expect(conversation.readUserIds).toContain(user._id);
   });

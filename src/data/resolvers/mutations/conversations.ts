@@ -187,21 +187,8 @@ const conversationMutations = {
    * Create new message in conversation
    */
   async conversationMessageAdd(_root, doc: IConversationMessageAdd, { user, dataSources }: IContext) {
-    const conversation = await Conversations.findOne({
-      _id: doc.conversationId,
-    });
-
-    if (!conversation) {
-      throw new Error('Conversation not found');
-    }
-
-    const integration = await Integrations.findOne({
-      _id: conversation.integrationId,
-    });
-
-    if (!integration) {
-      throw new Error('Integration not found');
-    }
+    const conversation = await Conversations.getConversation(doc.conversationId);
+    const integration = await Integrations.getIntegration(conversation.integrationId);
 
     await sendNotifications({
       user,
@@ -305,21 +292,8 @@ const conversationMutations = {
   },
 
   async conversationsReplyFacebookComment(_root, doc: IReplyFacebookComment, { user, dataSources }: IContext) {
-    const conversation = await Conversations.findOne({
-      _id: doc.conversationId,
-    });
-
-    if (!conversation) {
-      throw new Error('Conversation not found');
-    }
-
-    const integration = await Integrations.findOne({
-      _id: conversation.integrationId,
-    });
-
-    if (!integration) {
-      throw new Error('Integration not found');
-    }
+    const conversation = await Conversations.getConversation(doc.conversationId);
+    const integration = await Integrations.getIntegration(conversation.integrationId);
 
     await sendNotifications({
       user,
@@ -343,7 +317,6 @@ const conversationMutations = {
       );
       return debugExternalApi(response);
     } catch (e) {
-      console.log('e message: ', e.message);
       debugExternalApi(e.message);
       throw new Error(e.message);
     }
@@ -402,21 +375,8 @@ const conversationMutations = {
 
     for (const conversation of conversations) {
       if (status === CONVERSATION_STATUSES.CLOSED) {
-        const customer = await Customers.findOne({
-          _id: conversation.customerId,
-        });
-
-        if (!customer) {
-          throw new Error('Customer not found');
-        }
-
-        const integration = await Integrations.findOne({
-          _id: conversation.integrationId,
-        });
-
-        if (!integration) {
-          throw new Error('Integration not found');
-        }
+        const customer = await Customers.getCustomer(conversation.customerId);
+        const integration = await Integrations.getIntegration(conversation.integrationId);
 
         const messengerData: IMessengerData = integration.messengerData || {};
         const notifyCustomer = messengerData.notifyCustomer || false;

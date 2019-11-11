@@ -135,23 +135,9 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
 };
 
 export const boardId = async (item: any) => {
-  const stage = await Stages.findOne({ _id: item.stageId });
-
-  if (!stage) {
-    return null;
-  }
-
-  const pipeline = await Pipelines.findOne({ _id: stage.pipelineId });
-
-  if (!pipeline) {
-    return null;
-  }
-
-  const board = await Boards.findOne({ _id: pipeline.boardId });
-
-  if (!board) {
-    return null;
-  }
+  const stage = await Stages.getStage(item.stageId);
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+  const board = await Boards.getBoard(pipeline.boardId || '');
 
   return board._id;
 };

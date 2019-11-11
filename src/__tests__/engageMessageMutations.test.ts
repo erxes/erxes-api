@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
-import { INTEGRATION_KIND_CHOICES } from '../data/constants';
+import { INTEGRATION_KIND_CHOICES, MESSAGE_KINDS } from '../data/constants';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -451,9 +451,16 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
 
-    expect(engageMessage.isLive).toBe(true);
+    let response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
+
+    expect(response.isLive).toBe(true);
+
+    const manualMessage = await engageMessageFactory({ kind: MESSAGE_KINDS.MANUAL });
+
+    response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: manualMessage._id });
+
+    expect(response.isLive).toBe(true);
   });
 
   test('Set pause engage message', async () => {

@@ -12,6 +12,7 @@ interface ISTATUSES {
 }
 
 export interface IConversationModel extends Model<IConversationDocument> {
+  getConversation(_id: string): IConversationDocument;
   getConversationStatuses(): ISTATUSES;
   createConversation(doc: IConversation): Promise<IConversationDocument>;
   checkExistanceConversations(ids: string[]): any;
@@ -39,6 +40,19 @@ export interface IConversationModel extends Model<IConversationDocument> {
 
 export const loadClass = () => {
   class Conversation {
+    /**
+     * Retreives conversation
+     */
+    public static async getConversation(_id: string) {
+      const conversation = await Conversations.findOne({ _id });
+
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+
+      return conversation;
+    }
+
     public static getConversationStatuses() {
       return CONVERSATION_STATUSES;
     }

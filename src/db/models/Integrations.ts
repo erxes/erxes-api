@@ -26,6 +26,7 @@ export interface IExternalIntegrationParams {
 }
 
 export interface IIntegrationModel extends Model<IIntegrationDocument> {
+  getIntegration(_id: string): IIntegrationDocument;
   generateLeadDoc(mainDoc: IIntegration, leadData: ILeadData): IIntegration;
   createIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
   createMessengerIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
@@ -40,6 +41,19 @@ export interface IIntegrationModel extends Model<IIntegrationDocument> {
 
 export const loadClass = () => {
   class Integration {
+    /**
+     * Retreives integration
+     */
+    public static async getIntegration(_id: string) {
+      const integration = await Integrations.findOne({ _id });
+
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      return integration;
+    }
+
     /**
      * Generate lead integration data based on the given lead data (leadData)
      * and integration data (mainDoc)

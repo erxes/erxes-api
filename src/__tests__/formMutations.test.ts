@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { formFactory, userFactory } from '../db/factories';
+import { formFactory } from '../db/factories';
 import { Forms, FormSubmissions, Users } from '../db/models';
 
 import { FORM_TYPES } from '../db/models/definitions/constants';
@@ -16,9 +16,7 @@ const args = {
 };
 
 describe('form and formField mutations', () => {
-  let _user;
   let _form;
-  let context;
 
   const commonParamDefs = `
     $title: String!
@@ -34,10 +32,7 @@ describe('form and formField mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
-    _user = await userFactory({});
     _form = await formFactory({});
-
-    context = { user: _user };
   });
 
   afterEach(async () => {
@@ -57,7 +52,7 @@ describe('form and formField mutations', () => {
       }
     `;
 
-    const form = await graphqlRequest(mutation, 'formsAdd', args, context);
+    const form = await graphqlRequest(mutation, 'formsAdd', args);
 
     expect(form.title).toBe(args.title);
     expect(form.description).toBe(args.description);
@@ -74,10 +69,31 @@ describe('form and formField mutations', () => {
       }
     `;
 
-    const form = await graphqlRequest(mutation, 'formsEdit', { _id: _form._id, ...args }, context);
+    const form = await graphqlRequest(mutation, 'formsEdit', { _id: _form._id, ...args });
 
     expect(form._id).toBe(_form._id);
     expect(form.title).toBe(args.title);
     expect(form.description).toBe(args.description);
+  });
+
+  test('Form submission save', async () => {
+    const mutation = `
+      mutation formSubmissionsSave($formId: String $contentTypeId: String $contentType: String $formSubmission: JSON) {
+        formSubmissionsSave(formId: $formId contentTypeId: $contentTypeId contentType: $contentType formSubmission: $formSubmission)
+      }
+    `;
+
+    const form = await formFactory();
+
+    const args = {
+      formId: String,
+      contentTypeId: String,
+      contentType: String,
+      formSubmissions: JSON,
+    };
+
+    const formSubmission = await graphqlRequest(mutation, 'formSubmissionsSave', args);
+
+    expect(formSubmission._id).toBe(_form._id);
   });
 });
