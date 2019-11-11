@@ -1,10 +1,15 @@
+import * as dotenv from 'dotenv';
 import { createConnection, Types } from 'mongoose';
 
+dotenv.config();
+
+const options = {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+};
+
 const main = async () => {
-  const mongoClient = await createConnection(process.env.MONGO_URL || '', {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-  });
+  const mongoClient = await createConnection(process.env.MONGO_URL || '', options);
 
   interface IRelModels {
     coll: string;
@@ -15,6 +20,8 @@ const main = async () => {
   interface IContentTypes {
     coll: string;
     type: string;
+    typeField?: string;
+    idField?: string;
   }
 
   interface IKeyInId {
@@ -124,11 +131,13 @@ const main = async () => {
 
       if (contentTypes) {
         for (const contentType of contentTypes) {
+          const contType = contentType.typeField || 'contentType';
+          const contTypeId = contentType.idField || 'contentTypeId';
           const contentTypeColl = mongoClient.db.collection(contentType.coll);
 
           contentTypeColl.updateMany(
-            { contentType: contentType.type, contentTypeId: oldId },
-            { $set: { contentTypeId: newId } },
+            { [contType]: contentType.type, [contTypeId]: oldId },
+            { $set: { [contTypeId]: newId } },
           );
         }
       }
@@ -201,8 +210,10 @@ const main = async () => {
     [
       { coll: 'brands', fi: 'userId' },
       { coll: 'channels', fi: 'userId' },
+      { coll: 'channels', fi: 'memberIds', kind },
       { coll: 'boards', fi: 'userId' },
       { coll: 'pipelines', fi: 'userId' },
+      { coll: 'pipelines', fi: 'memberIds', kind },
       { coll: 'pipelines', fi: 'watchedUserIds', kind },
       { coll: 'stages', fi: 'UserId' },
       { coll: 'deals', fi: 'userId' },
@@ -246,15 +257,24 @@ const main = async () => {
       { coll: 'fields_groups', fi: 'lastUpdatedUserId' },
       { coll: 'forms', fi: 'createdUserId' },
       { coll: 'growth_hacks', fi: 'votedUserIds', kind },
-      { coll: 'import_history', fi: 'userId' },
+      { coll: 'import_histories', fi: 'userId' },
       { coll: 'integrations', fi: 'createdUserId' },
       { coll: 'internal_notes', fi: 'createdUserId' },
       { coll: 'internal_notes', fi: 'mentionedUserIds', kind },
       { coll: 'permissions', fi: 'userId' },
       { coll: 'onboarding_histories', fi: 'userId' },
       { coll: 'customers', fi: 'ownerId' },
+      { coll: 'companies', fi: 'ownerId' },
+      { coll: 'notification_configs', fi: 'user' },
+      { coll: 'notifications', fi: 'createdUser' },
+      { coll: 'notifications', fi: 'receiver' },
+      { coll: 'integrations', fi: 'messengerData.supporterIds', kind },
     ],
-    [{ coll: 'internal_notes', type: 'user' }],
+    [
+      { coll: 'activity_logs', type: 'user', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'USER', typeField: 'performedBy.type', idField: 'performedBy.id' },
+      { coll: 'internal_notes', type: 'user' },
+    ],
     '',
     'email',
   );
@@ -267,12 +287,14 @@ const main = async () => {
       { coll: 'customers', fi: 'scopeBrandIds', kind },
       { coll: 'engage_messages', fi: 'brandIds', kind },
       { coll: 'engage_messages', fi: 'messenger.brandId' },
+      { coll: 'conversation_messages', fi: 'engageData.brandId' },
       { coll: 'integrations', fi: 'brandId' },
       { coll: 'knowledgebase_topics', fi: 'brandId' },
       { coll: 'response_templates', fi: 'brandId' },
       { coll: 'segments', fi: 'conditions.brandId', kind: 'manyOne' },
       { coll: 'users', fi: 'brandIds', kind },
       { coll: 'users', fi: 'emailSignatures.brandId', kind: 'manyOne' },
+      { coll: 'robot_entries', fi: 'data.brandIds', kind },
     ],
     [],
     '',
@@ -280,16 +302,29 @@ const main = async () => {
 
   await executer('activity_logs', [], [], '');
 
+  await executer('accounts', [{ coll: 'messenger_apps', fi: 'accountId' }], [], '');
+
   await executer('channels', [], [{ coll: 'notifications', type: 'channel' }], '');
 
   await executer('checklist_items', [], [], '');
 
-  await executer('checklists', [{ coll: 'checklist_items', fi: 'checklistId' }], [], '');
+  await executer(
+    'checklists',
+    [{ coll: 'checklist_items', fi: 'checklistId' }],
+    [{ coll: 'activity_logs', type: 'checklist', typeField: 'activity.type', idField: 'activity.id' }],
+    '',
+  );
 
   await executer(
     'companies',
-    [],
-    [{ coll: 'internal_notes', type: 'company' }, { coll: 'notifications', type: 'company' }],
+    [{ coll: 'companies', fi: 'parentCompanyId' }, { coll: 'companies', fi: 'mergedIds', kind }],
+    [
+      { coll: 'activity_logs', type: 'company', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'company', typeField: 'activity.type', idField: 'activity.id' },
+      { coll: 'email_deliveries', type: 'company', typeField: 'cocType', idField: 'cocId' },
+      { coll: 'internal_notes', type: 'company' },
+      { coll: 'notifications', type: 'company' },
+    ],
     'company',
   );
 
@@ -302,7 +337,10 @@ const main = async () => {
   await executer(
     'conversations',
     [{ coll: 'conversation_messages', fi: 'conversationId' }, { coll: 'users', fi: 'starredConversationIds', kind }],
-    [{ coll: 'notifications', type: 'conversation' }],
+    [
+      { coll: 'notifications', type: 'conversation' },
+      { coll: 'activity_logs', type: 'conversation', typeField: 'activity.type', idField: 'activity.id' },
+    ],
     '',
   );
 
@@ -315,16 +353,30 @@ const main = async () => {
       { coll: 'engage_messages', fi: 'messengerReceivedCustomerIds', kind },
       { coll: 'forms', fi: 'customerId' },
       { coll: 'form_submissions', fi: 'customerId' },
+      { coll: 'customers', fi: 'mergedIds', kind },
     ],
-    [{ coll: 'internal_notes', type: 'customer' }, { coll: 'notifications', type: 'customer' }],
+    [
+      { coll: 'activity_logs', type: 'customer', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'customer', typeField: 'activity.type', idField: 'activity.id' },
+      { coll: 'activity_logs', type: 'CUSTOMER', typeField: 'performedBy.type', idField: 'performedBy.id' },
+      { coll: 'email_deliveries', type: 'customer', typeField: 'cocType', idField: 'cocId' },
+      // { coll: 'import_histories', type: 'customer', typeField: 'contentType', idField: 'ids' },
+      { coll: 'internal_notes', type: 'customer' },
+      { coll: 'notifications', type: 'customer' },
+    ],
     'customer',
   );
 
-  await executer('email_deliveries', [], [], '');
+  await executer(
+    'email_deliveries',
+    [],
+    [{ coll: 'activity_logs', type: 'email', typeField: 'activity.type', idField: 'activity.id' }],
+    '',
+  );
 
   await executer('email_templates', [{ coll: 'engage_emails', fi: 'templateId' }], [], '');
 
-  await executer('engage_messages', [], [], '');
+  await executer('engage_messages', [{ coll: 'conversation_messages', fi: 'engageData.messageId' }], [], '');
 
   await executer('fields', [{ coll: 'form_submissions', fi: 'formFieldId' }], [], '', '', [
     { coll: 'customers', mainKey: 'customFieldsData' },
@@ -336,9 +388,18 @@ const main = async () => {
 
   await executer('form_submissions', [], [], '');
 
-  await executer('forms', [{ coll: 'form_submissions', fi: 'formId' }], [], '');
+  await executer(
+    'forms',
+    [
+      { coll: 'form_submissions', fi: 'formId' },
+      { coll: 'pipeline_templates', fi: 'stages.formId', kind: 'ManyOne' },
+      { coll: 'integrations', fi: 'formId' },
+    ],
+    [],
+    '',
+  );
 
-  await executer('import_history', [], [], '');
+  await executer('import_histories', [], [], '');
 
   await executer(
     'integrations',
@@ -346,22 +407,35 @@ const main = async () => {
       { coll: 'channels', fi: 'integrationIds', kind },
       { coll: 'conversations', fi: 'integrationId' },
       { coll: 'customers', fi: 'integrationId' },
+      { coll: 'messenger_apps', fi: 'credentials.integrationId' },
     ],
     [],
     '',
   );
 
-  await executer('internal_notes', [], [], '');
+  await executer(
+    'internal_notes',
+    [],
+    [{ coll: 'activity_logs', type: 'internal_note', typeField: 'activity.type', idField: 'activity.id' }],
+    '',
+  );
 
   await executer('knowledgebase_articles', [{ coll: 'knowledgebase_categories', fi: 'articleIds', kind }], [], '');
 
   await executer('knowledgebase_categories', [{ coll: 'knowledgebase_topics', fi: 'categoryIds', kind }], [], '');
 
-  await executer('knowledgebase_topics', [{ coll: 'scripts', fi: 'kbTopicId' }], [], '');
+  await executer(
+    'knowledgebase_topics',
+    [{ coll: 'scripts', fi: 'kbTopicId' }, { coll: 'messenger_apps', fi: 'credentials.topicId' }],
+    [],
+    '',
+  );
 
   await executer('messenger_apps', [], [], '');
 
   await executer('notifications', [], [], '');
+
+  await executer('notification_configs', [], [], '');
 
   await executer('permissions', [], [], '');
 
@@ -374,6 +448,7 @@ const main = async () => {
   );
 
   await executer('pipeline_templates', [{ coll: 'pipelines', fi: 'templateId' }], [], '');
+  await executer('pipeline_labels', [], [], '');
 
   await executer('response_templates', [], [], '');
 
@@ -383,7 +458,12 @@ const main = async () => {
 
   await executer('scripts', [], [], '');
 
-  await executer('segments', [{ coll: 'engage_messages', fi: 'segmentIds', kind }], [], '');
+  await executer(
+    'segments',
+    [{ coll: 'engage_messages', fi: 'segmentIds', kind }, { coll: 'segments', fi: 'subOf' }],
+    [{ coll: 'activity_logs', type: 'segment', typeField: 'activity.type', idField: 'activity.id' }],
+    '',
+  );
 
   await executer(
     'tags',
@@ -403,7 +483,7 @@ const main = async () => {
 
   await executer(
     'pipelines',
-    [{ coll: 'stages', fi: 'pipelineId' }, { coll: 'pipeline_label', fi: 'pipelineId' }],
+    [{ coll: 'stages', fi: 'pipelineId' }, { coll: 'pipeline_labels', fi: 'pipelineId' }],
     [],
     '',
   );
@@ -412,6 +492,7 @@ const main = async () => {
     'stages',
     [
       { coll: 'deals', fi: 'stageId' },
+      { coll: 'deals', fi: 'initialStageId' },
       { coll: 'tasks', fi: 'stageId' },
       { coll: 'tickets', fi: 'stageId' },
       { coll: 'growth_hacks', fi: 'stageId' },
@@ -424,6 +505,8 @@ const main = async () => {
     'deals',
     [],
     [
+      { coll: 'activity_logs', type: 'deal', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'deal', typeField: 'activity.type', idField: 'activity.id' },
       { coll: 'checklists', type: 'deal' },
       { coll: 'internal_notes', type: 'deal' },
       { coll: 'notifications', type: 'deal' },
@@ -435,6 +518,8 @@ const main = async () => {
     'tickets',
     [],
     [
+      { coll: 'activity_logs', type: 'ticket', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'ticket', typeField: 'activity.type', idField: 'activity.id' },
       { coll: 'checklists', type: 'ticket' },
       { coll: 'internal_notes', type: 'ticket' },
       { coll: 'notifications', type: 'ticket' },
@@ -446,6 +531,8 @@ const main = async () => {
     'tasks',
     [],
     [
+      { coll: 'activity_logs', type: 'task', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'task', typeField: 'activity.type', idField: 'activity.id' },
       { coll: 'checklists', type: 'task' },
       { coll: 'internal_notes', type: 'task' },
       { coll: 'notifications', type: 'task' },
@@ -457,6 +544,8 @@ const main = async () => {
     'growth_hacks',
     [],
     [
+      { coll: 'activity_logs', type: 'growthHack', typeField: 'contentType.type', idField: 'contentType.id' },
+      { coll: 'activity_logs', type: 'growthHack', typeField: 'activity.type', idField: 'activity.id' },
       { coll: 'checklists', type: 'growthHack' },
       { coll: 'internal_notes', type: 'growthHack' },
       { coll: 'notifications', type: 'growthHack' },
@@ -465,7 +554,13 @@ const main = async () => {
     'growthHack',
   );
 
-  await executer('product_categories', [{ coll: 'products', fi: 'categoryId' }], [], '', 'code');
+  await executer(
+    'product_categories',
+    [{ coll: 'products', fi: 'categoryId' }, { coll: 'product_categories', fi: 'parentId' }],
+    [],
+    '',
+    'code',
+  );
 
   await executer(
     'products',
@@ -474,7 +569,76 @@ const main = async () => {
     '',
   );
 
-  return Promise.resolve('ok');
+  // check _id
+  console.log('check ++++++++++++++++++++++++++++++');
+
+  const checkId = (coll, entryId, field, val) => {
+    if (field === 'oldId') {
+      return false;
+    }
+    if (val.includes('.')) {
+      return false;
+    }
+    if (val.includes(' ')) {
+      return false;
+    }
+    if (val.includes('-')) {
+      return false;
+    }
+    if (val.includes('/')) {
+      return false;
+    }
+    if (val === 'lastUpdatedUserId') {
+      return false;
+    }
+    if (typeof val !== 'string') {
+      return false;
+    }
+    if (val.length !== 17) {
+      return false;
+    }
+
+    console.log(coll, entryId, field, val);
+  };
+
+  const checkDicCells = (coll, entryId, entry) => {
+    Object.keys(entry).forEach(key => {
+      checkId(coll, entryId, 'key', key);
+
+      const value = entry[key];
+
+      if (value) {
+        if (typeof value === 'string') {
+          checkId(coll, entryId, key, value);
+        }
+
+        if (value.constructor === Object || value.constructor === Array) {
+          checkDicCells(coll, entryId, value);
+        }
+      }
+    });
+  };
+
+  const colls = await mongoClient.db.listCollections().toArray();
+
+  for (const collection of colls) {
+    const coll = collection.name;
+    console.log(coll);
+    if (['engage_messages', 'activity_logs'].includes(coll)) {
+      continue;
+    }
+    const entries = await mongoClient.db
+      .collection(coll)
+      .find({})
+      .toArray();
+    console.log(entries.length);
+
+    for (const entry of entries) {
+      checkDicCells(coll, entry._id, entry);
+    }
+  }
+
+  process.exit();
 };
 
 main();

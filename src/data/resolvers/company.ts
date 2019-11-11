@@ -21,6 +21,10 @@ export default {
   },
 
   parentCompany(company: ICompanyDocument) {
+    if (!company.parentCompanyId) {
+      return null;
+    }
+
     return Companies.findOne({ _id: company.parentCompanyId });
   },
 };
