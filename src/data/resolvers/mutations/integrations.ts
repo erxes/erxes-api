@@ -203,7 +203,7 @@ const integrationMutations = {
     const { erxesApiIds } = await dataSources.IntegrationsAPI.removeAccount({ _id });
 
     for (const id of erxesApiIds) {
-      return Integrations.removeIntegration(id);
+      await Integrations.removeIntegration(id);
     }
 
     return 'success';
