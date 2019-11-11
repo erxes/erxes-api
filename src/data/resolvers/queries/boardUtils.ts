@@ -27,7 +27,7 @@ export const generateCommonFilters = async (args: any) => {
     labelIds,
   } = args;
 
-  const assignedToNoOne = value => {
+  const isListEmpty = value => {
     return value.length === 1 && value[0].length === 0;
   };
 
@@ -36,7 +36,7 @@ export const generateCommonFilters = async (args: any) => {
 
   if (assignedUserIds) {
     // Filter by assigned to no one
-    const notAssigned = assignedToNoOne(assignedUserIds);
+    const notAssigned = isListEmpty(assignedUserIds);
 
     filter.assignedUserIds = notAssigned ? [] : contains(assignedUserIds);
   }
@@ -144,7 +144,9 @@ export const generateCommonFilters = async (args: any) => {
   }
 
   if (labelIds) {
-    filter.labelIds = { $in: labelIds };
+    const isEmpty = isListEmpty(labelIds);
+
+    filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
   }
 
   return filter;
