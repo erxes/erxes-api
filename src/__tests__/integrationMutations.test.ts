@@ -8,8 +8,6 @@ import './setup.ts';
 describe('mutations', () => {
   let _integration;
   let _brand;
-  let _user;
-  let context;
 
   const commonParamDefs = `
     $name: String!
@@ -41,11 +39,8 @@ describe('mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
-    _user = await userFactory({});
     _integration = await integrationFactory({});
     _brand = await brandFactory({});
-
-    context = { user: _user };
   });
 
   afterEach(async () => {
@@ -136,20 +131,17 @@ describe('mutations', () => {
       }
     `;
 
-    const messengerAppearanceData = await graphqlRequest(
-      mutation,
-      'integrationsSaveMessengerAppearanceData',
-      args,
-      context,
-    );
+    const messengerAppearanceData = await graphqlRequest(mutation, 'integrationsSaveMessengerAppearanceData', args);
 
     expect(messengerAppearanceData._id).toBe(args._id);
     expect(messengerAppearanceData.uiOptions.toJSON()).toEqual(args.uiOptions);
   });
 
   test('Save messenger integration config', async () => {
+    const user = await userFactory({});
+
     const messengerData = {
-      supporterIds: [_user.id],
+      supporterIds: [user.id],
       notifyCustomer: false,
       isOnline: false,
       availabilityMethod: 'auto',
@@ -275,5 +267,50 @@ describe('mutations', () => {
     expect(leadIntegration.brandId).toBe(args.brandId);
     expect(leadIntegration.languageCode).toBe(args.languageCode);
     expect(leadIntegration.formId).toBe(args.formId);
+  });
+
+  test('integrationsCreateExternalIntegration', async () => {
+    const mutation = `
+      mutation integrationsCreateExternalIntegration(
+        $kind: String!
+        $name: String!
+        $brandId: String!
+        $accountId: String,
+        $data: JSON
+      ) {
+        integrationsCreateExternalIntegration(
+          kind: $kind
+          name: $name
+          brandId: $brandId
+          accountId: $accountId
+          data: $data
+        ) {
+          _id
+          name
+          kind
+          brandId
+        }
+      }
+    `;
+
+    const brand = await brandFactory();
+
+    const args = {
+      kind: 'nylas-gmail',
+      name: 'Nyals gmail integration',
+      brandId: brand._id,
+    };
+
+    let response;
+
+    try {
+      response = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+
+    expect(response.name).toBe(args.name);
+    expect(response.kind).toBe(args.kind);
+    expect(response.brandId).toBe(args.brandId);
   });
 });

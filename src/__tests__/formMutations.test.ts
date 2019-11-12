@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { formFactory } from '../db/factories';
+import { fieldFactory, formFactory, growthHackFactory } from '../db/factories';
 import { Forms, FormSubmissions, Users } from '../db/models';
 
 import { FORM_TYPES } from '../db/models/definitions/constants';
@@ -78,22 +78,39 @@ describe('form and formField mutations', () => {
 
   test('Form submission save', async () => {
     const mutation = `
-      mutation formSubmissionsSave($formId: String $contentTypeId: String $contentType: String $formSubmission: JSON) {
-        formSubmissionsSave(formId: $formId contentTypeId: $contentTypeId contentType: $contentType formSubmission: $formSubmission)
+      mutation formSubmissionsSave($formId: String $contentTypeId: String $contentType: String $formSubmissions: JSON) {
+        formSubmissionsSave(formId: $formId contentTypeId: $contentTypeId contentType: $contentType formSubmissions: $formSubmissions)
       }
     `;
 
+    const growthHack = await growthHackFactory();
     const form = await formFactory();
+    const formField = await fieldFactory({ text: 'age', contentType: 'form', contentTypeId: form._id });
 
-    const args = {
-      formId: String,
-      contentTypeId: String,
-      contentType: String,
-      formSubmissions: JSON,
+    const formSubmissionArgs: any = {
+      formId: form._id,
+      contentTypeId: growthHack._id,
+      contentType: 'growthHack',
+      formSubmissions: {
+        [formField._id]: 10,
+      },
     };
 
-    const formSubmission = await graphqlRequest(mutation, 'formSubmissionsSave', args);
+    let response = await graphqlRequest(mutation, 'formSubmissionsSave', formSubmissionArgs);
 
-    expect(formSubmission._id).toBe(_form._id);
+    expect(response).toBe(true);
+
+    formSubmissionArgs.formSubmissions = null;
+    response = await graphqlRequest(mutation, 'formSubmissionsSave', formSubmissionArgs);
+
+    expect(response).toBe(true);
+
+    formSubmissionArgs.formSubmissions = {
+      [formField._id]: 20,
+    };
+
+    response = await graphqlRequest(mutation, 'formSubmissionsSave', formSubmissionArgs);
+
+    expect(response).toBe(true);
   });
 });

@@ -33,20 +33,18 @@ const integrationMutations = {
    * Update messenger integration
    */
   async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditLeadIntegration, { user }: IContext) {
-    const integration = await Integrations.findOne({ _id });
+    const integration = await Integrations.getIntegration(_id);
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
-    if (integration) {
-      await putUpdateLog(
-        {
-          type: 'integration',
-          object: integration,
-          newData: JSON.stringify(fields),
-          description: `${integration.name} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: integration,
+        newData: JSON.stringify(fields),
+        description: `${integration.name} has been edited`,
+      },
+      user,
+    );
 
     return updated;
   },
@@ -158,36 +156,34 @@ const integrationMutations = {
    * Delete an integration
    */
   async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
-    const integration = await Integrations.findOne({ _id });
+    const integration = await Integrations.getIntegration(_id);
 
-    if (integration) {
-      if (
-        [
-          'facebook-messenger',
-          'facebook-post',
-          'gmail',
-          'callpro',
-          'nylas-gmail',
-          'nylas-imap',
-          'nylas-office365',
-          'nylas-outlook',
-          'nylas-yahoo',
-          'chatfuel',
-          'twitter-dm',
-        ].includes(integration.kind || '')
-      ) {
-        await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
-      }
-
-      await putDeleteLog(
-        {
-          type: 'integration',
-          object: integration,
-          description: `${integration.name} has been removed`,
-        },
-        user,
-      );
+    if (
+      [
+        'facebook-messenger',
+        'facebook-post',
+        'gmail',
+        'callpro',
+        'nylas-gmail',
+        'nylas-imap',
+        'nylas-office365',
+        'nylas-outlook',
+        'nylas-yahoo',
+        'chatfuel',
+        'twitter-dm',
+      ].includes(integration.kind || '')
+    ) {
+      await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }
+
+    await putDeleteLog(
+      {
+        type: 'integration',
+        object: integration,
+        description: `${integration.name} has been removed`,
+      },
+      user,
+    );
 
     return Integrations.removeIntegration(_id);
   },

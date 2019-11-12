@@ -569,10 +569,14 @@ export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) =>
 export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
   const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
 
-  return sendRequest(
-    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
-    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
-  );
+  try {
+    return sendRequest(
+      { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+      'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+    );
+  } catch (e) {
+    debugExternalApi(`Error occurred : ${e.body || e.message}`);
+  }
 };
 
 /**

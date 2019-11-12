@@ -69,11 +69,8 @@ const growthHackMutations = {
       contentType: 'growthHack',
     };
 
-    if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(
-        oldGrowthHack.assignedUserIds || [],
-        doc.assignedUserIds || [],
-      );
+    if (doc.assignedUserIds && doc.assignedUserIds.length > 0 && oldGrowthHack.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldGrowthHack.assignedUserIds, doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -81,17 +78,16 @@ const growthHackMutations = {
 
     await sendNotifications(notificationDoc);
 
-    if (updatedGrowthHack) {
-      await putUpdateLog(
-        {
-          type: 'growthHack',
-          object: updatedGrowthHack,
-          newData: JSON.stringify(doc),
-          description: `${updatedGrowthHack.name} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'growthHack',
+        object: updatedGrowthHack,
+        newData: JSON.stringify(doc),
+        description: `${updatedGrowthHack.name} has been edited`,
+      },
+      user,
+    );
+
     return updatedGrowthHack;
   },
 
@@ -103,11 +99,7 @@ const growthHackMutations = {
     { _id, destinationStageId }: { _id: string; destinationStageId: string },
     { user }: { user: IUserDocument },
   ) {
-    const growthHack = await GrowthHacks.findOne({ _id });
-
-    if (!growthHack) {
-      throw new Error('Growth hack not found');
-    }
+    const growthHack = await GrowthHacks.getGrowthHack(_id);
 
     await GrowthHacks.updateGrowthHack(_id, {
       modifiedAt: new Date(),
@@ -140,11 +132,7 @@ const growthHackMutations = {
    * Remove a growth hack
    */
   async growthHacksRemove(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
-    const growthHack = await GrowthHacks.findOne({ _id });
-
-    if (!growthHack) {
-      throw new Error('Growth hack not found');
-    }
+    const growthHack = await GrowthHacks.getGrowthHack(_id);
 
     await sendNotifications({
       item: growthHack,
@@ -172,13 +160,7 @@ const growthHackMutations = {
   /**
    * Watch a growth hack
    */
-  async growthHacksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
-    const growthHack = await GrowthHacks.findOne({ _id });
-
-    if (!growthHack) {
-      throw new Error('Growth hack not found');
-    }
-
+  growthHacksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: { user: IUserDocument }) {
     return GrowthHacks.watchGrowthHack(_id, isAdd, user._id);
   },
 

@@ -1059,7 +1059,7 @@ export const importHistoryFactory = async (params: IImportHistoryFactoryInput) =
     failed: params.failed || faker.random.number(),
     total: params.total || faker.random.number(),
     success: params.success || faker.random.number(),
-    ids: params.ids || [],
+    ids: params.ids,
     contentType: params.contentType || 'customer',
     errorMsgs: params.errorMsgs,
   };

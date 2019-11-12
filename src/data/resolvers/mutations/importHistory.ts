@@ -9,11 +9,7 @@ const importHistoryMutations = {
    * @param {string} param1._id ImportHistory id
    */
   async importHistoriesRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const importHistory = await ImportHistory.findOne({ _id });
-
-    if (!importHistory) {
-      throw new Error('History not found');
-    }
+    const importHistory = await ImportHistory.getImportHistory(_id);
 
     await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
@@ -21,7 +17,7 @@ const importHistoryMutations = {
       path: '/import-remove',
       method: 'POST',
       body: {
-        targetIds: JSON.stringify(importHistory.ids || []),
+        targetIds: JSON.stringify(importHistory.ids),
         contentType: importHistory.contentType,
         importHistoryId: importHistory._id,
       },
