@@ -62,7 +62,10 @@ const fieldQueries = {
     let fields: Array<{ _id: number; name: string; label?: string; brandName?: string; brandId?: string }> = [];
 
     if (contentType === FIELD_CONTENT_TYPES.CUSTOMER) {
-      const messengerIntegrations = await Integrations.find({ kind: INTEGRATION_KIND_CHOICES.MESSENGER });
+      const messengerIntegrations = await Integrations.find({
+        kind: INTEGRATION_KIND_CHOICES.MESSENGER,
+        isActive: true,
+      });
 
       // generate messengerData.customData fields
       for (const integration of messengerIntegrations) {

@@ -66,7 +66,7 @@ const integrationQueries = {
     const usedTypes: Array<{ _id: string; name: string }> = [];
 
     for (const kind of KIND_CHOICES.ALL) {
-      if ((await Integrations.find({ kind }).countDocuments()) > 0) {
+      if ((await Integrations.find({ kind, isActive: true }).countDocuments()) > 0) {
         usedTypes.push({ _id: kind, name: INTEGRATION_NAMES_MAP[kind] });
       }
     }
