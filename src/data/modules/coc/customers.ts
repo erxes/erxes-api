@@ -108,6 +108,7 @@ export class Builder {
   public async integrationFilter(integration: string): Promise<IIntegrationIds> {
     const integrations = await Integrations.find({
       kind: integration,
+      isActive: true,
     });
     /**
      * Since both of brand and integration filters use a same integrationId field
