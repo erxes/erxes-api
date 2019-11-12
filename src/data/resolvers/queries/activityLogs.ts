@@ -73,6 +73,10 @@ const activityLogQueries = {
         break;
     }
 
+    activities.sort((a, b) => {
+      return b.createdAt - a.createdAt;
+    });
+
     return activities;
   },
 };

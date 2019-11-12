@@ -4,6 +4,7 @@ import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
+import { graphqlPubsub } from '../../../pubsub';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -125,6 +126,8 @@ const internalNoteMutations = {
     await utils.sendNotification(notifDoc);
 
     const internalNote = await InternalNotes.createInternalNote(args, user);
+
+    graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
     if (internalNote) {
       await putCreateLog(
