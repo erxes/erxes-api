@@ -224,7 +224,7 @@ export const generateGrowthHackCommonFilters = async (args: any, extraParams?: a
   const filter = await generateCommonFilters(args);
 
   if (hackStage) {
-    filter.hackStages = { $in: [hackStage] };
+    filter.hackStages = contains(hackStage);
   }
 
   if (!stageId && pipelineId) {

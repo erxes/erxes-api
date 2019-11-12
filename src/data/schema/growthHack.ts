@@ -32,7 +32,7 @@ const commonQueryFields = `
   nextMonth: String
   noCloseDate: String
   overdue: String
-  hackStage: String
+  hackStage: [String]
   priority: [String]
 `;
 
