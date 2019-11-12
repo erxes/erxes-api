@@ -102,7 +102,6 @@ const main = async () => {
             .aggregate([
               { $match: { [inKeyObj.mainKey]: { $exists: true } } },
               { $project: { _id: 1, [inKeyObj.mainKey]: 1 } },
-              // { $match: key filter }
             ])
             .toArray();
 
@@ -135,7 +134,7 @@ const main = async () => {
           const contTypeId = contentType.idField || 'contentTypeId';
           const contentTypeColl = mongoClient.db.collection(contentType.coll);
 
-          contentTypeColl.updateMany(
+          await contentTypeColl.updateMany(
             { [contType]: contentType.type, [contTypeId]: oldId },
             { $set: { [contTypeId]: newId } },
           );
@@ -181,6 +180,32 @@ const main = async () => {
               });
 
               await relCollection.updateOne({ _id: relEntry._id }, { $set: { [manyFi]: oldList } });
+            }
+
+            break;
+          }
+
+          case 'oneMany': {
+            const oneFi = relModel.fi.split('.')[0];
+            const manyFi = relModel.fi.split('.')[1];
+
+            const relEntries = await relCollection
+              .aggregate([{ $match: { [relModel.fi]: { $in: [oldId] } } }, { $project: { _id: 1, [oneFi]: 1 } }])
+              .toArray();
+
+            for (const relEntry of relEntries) {
+              const oldList = relEntry[oneFi][manyFi];
+
+              oldList.forEach((subItem, index) => {
+                if (subItem === oldId) {
+                  oldList[index] = newId;
+                }
+              });
+
+              const oneSub = relEntry[oneFi];
+              oneSub[manyFi] = oldList;
+
+              await relCollection.updateOne({ _id: relEntry._id }, { $set: { [oneFi]: oneSub } });
             }
 
             break;
@@ -268,7 +293,7 @@ const main = async () => {
       { coll: 'notification_configs', fi: 'user' },
       { coll: 'notifications', fi: 'createdUser' },
       { coll: 'notifications', fi: 'receiver' },
-      { coll: 'integrations', fi: 'messengerData.supporterIds', kind },
+      { coll: 'integrations', fi: 'messengerData.supporterIds', kind: 'oneMany' },
     ],
     [
       { coll: 'activity_logs', type: 'user', typeField: 'contentType.type', idField: 'contentType.id' },
@@ -294,7 +319,7 @@ const main = async () => {
       { coll: 'segments', fi: 'conditions.brandId', kind: 'manyOne' },
       { coll: 'users', fi: 'brandIds', kind },
       { coll: 'users', fi: 'emailSignatures.brandId', kind: 'manyOne' },
-      { coll: 'robot_entries', fi: 'data.brandIds', kind },
+      { coll: 'robot_entries', fi: 'data.brandIds', kind: 'oneMany' },
     ],
     [],
     '',
@@ -304,7 +329,12 @@ const main = async () => {
 
   await executer('accounts', [{ coll: 'messenger_apps', fi: 'accountId' }], [], '');
 
-  await executer('channels', [], [{ coll: 'notifications', type: 'channel' }], '');
+  await executer(
+    'channels',
+    [{ coll: 'robot_entries', fi: 'data.channelIds', kind: 'oneMany' }],
+    [{ coll: 'notifications', type: 'channel' }],
+    '',
+  );
 
   await executer('checklist_items', [], [], '');
 
@@ -392,7 +422,7 @@ const main = async () => {
     'forms',
     [
       { coll: 'form_submissions', fi: 'formId' },
-      { coll: 'pipeline_templates', fi: 'stages.formId', kind: 'ManyOne' },
+      { coll: 'pipeline_templates', fi: 'stages.formId', kind: 'manyOne' },
       { coll: 'integrations', fi: 'formId' },
     ],
     [],
@@ -408,6 +438,8 @@ const main = async () => {
       { coll: 'conversations', fi: 'integrationId' },
       { coll: 'customers', fi: 'integrationId' },
       { coll: 'messenger_apps', fi: 'credentials.integrationId' },
+      { coll: 'scripts', fi: 'messengerId' },
+      { coll: 'scripts', fi: 'leadIds', kind },
     ],
     [],
     '',
