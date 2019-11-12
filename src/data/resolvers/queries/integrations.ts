@@ -1,5 +1,5 @@
 import { Brands, Channels, Integrations, Tags } from '../../../db/models';
-import { KIND_CHOICES, TAG_TYPES } from '../../../db/models/definitions/constants';
+import { INTEGRATION_NAMES_MAP, KIND_CHOICES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
@@ -57,6 +57,21 @@ const integrationQueries = {
     const integrations = paginate(Integrations.find(query), args);
 
     return integrations.sort({ name: 1 });
+  },
+
+  /**
+   * Get used integration types
+   */
+  async integrationsGetUsedTypes(_root, {}) {
+    const usedTypes: Array<{ _id: string; name: string }> = [];
+
+    for (const kind of KIND_CHOICES.ALL) {
+      if ((await Integrations.find({ kind }).countDocuments()) > 0) {
+        usedTypes.push({ _id: kind, name: INTEGRATION_NAMES_MAP[kind] });
+      }
+    }
+
+    return usedTypes;
   },
 
   /**
