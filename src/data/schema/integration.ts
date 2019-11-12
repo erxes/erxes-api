@@ -12,7 +12,7 @@ export const types = `
     leadData: JSON
     messengerData: JSON
     uiOptions: JSON
-    isArchived: Boolean
+    isActive: Boolean
 
     brand: Brand
     form: Form
@@ -150,7 +150,7 @@ export const mutations = `
   integrationsRemove(_id: String!): JSON
   integrationsRemoveAccount(_id: String!): JSON
 
-  integrationsArchive(_id: String!, isArchived: Boolean): Integration
+  integrationsToggleStatus(_id: String!, isActive: Boolean): Integration
 
   integrationSendMail(
     erxesApiId: String!

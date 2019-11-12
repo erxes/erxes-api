@@ -276,5 +276,5 @@ export const integrationSchema = new Schema({
   formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),
-  isArchived: field({ type: Boolean, optional: true, default: false }),
+  isActive: field({ type: Boolean, optional: true, default: true }),
 });

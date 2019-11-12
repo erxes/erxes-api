@@ -227,17 +227,17 @@ const integrationMutations = {
     });
   },
 
-  async integrationsArchive(_root, { _id, isArchived }: { _id: string; isArchived: boolean }, { user }: IContext) {
+  async integrationsToggleStatus(_root, { _id, isActive }: { _id: string; isActive: boolean }, { user }: IContext) {
     const integration = await Integrations.findOne({ _id });
-    await Integrations.updateOne({ _id }, { $set: { isArchived } });
+    await Integrations.updateOne({ _id }, { $set: { isActive } });
 
     if (integration) {
       await putUpdateLog(
         {
           type: 'integration',
           object: integration,
-          newData: JSON.stringify({ isArchived }),
-          description: `Integration "${integration.name}" has been ${isArchived ? 'archived' : 'unarchived'}`,
+          newData: JSON.stringify({ isActive }),
+          description: `Integration "${integration.name}" has been ${isActive ? 'activated' : 'deactivated'}`,
         },
         user,
       );
