@@ -226,6 +226,25 @@ const integrationMutations = {
       data: JSON.stringify(doc),
     });
   },
+
+  async integrationsArchive(_root, { _id, isArchived }: { _id: string; isArchived: boolean }, { user }: IContext) {
+    const integration = await Integrations.findOne({ _id });
+    await Integrations.updateOne({ _id }, { $set: { isArchived } });
+
+    if (integration) {
+      await putUpdateLog(
+        {
+          type: 'integration',
+          object: integration,
+          newData: JSON.stringify({ isArchived }),
+          description: `Integration "${integration.name}" has been ${isArchived ? 'archived' : 'unarchived'}`,
+        },
+        user,
+      );
+    }
+
+    return Integrations.findOne({ _id });
+  },
 };
 
 checkPermission(
