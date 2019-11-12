@@ -3,6 +3,7 @@ import { Brands, Forms, Integrations } from '.';
 import { IScript, IScriptDocument, scriptSchema } from './definitions/scripts';
 
 export interface IScriptModel extends Model<IScriptDocument> {
+  getScript(_id: string): Promise<IScriptDocument>;
   createScript(fields: IScript): Promise<IScriptDocument>;
   updateScript(_id: string, fields: IScript): Promise<IScriptDocument>;
   removeScript(_id: string): void;
@@ -12,6 +13,19 @@ type LeadMaps = Array<{ formCode?: string; brandCode?: string }>;
 
 export const loadClass = () => {
   class Script {
+    /*
+     * Get a script
+     */
+    public static async getScript(_id: string) {
+      const script = await Scripts.findOne({ _id });
+
+      if (!script) {
+        throw new Error('Script not found');
+      }
+
+      return script;
+    }
+
     public static async calculateAutoFields(fields: IScript) {
       const autoFields: { messengerBrandCode?: string; leadMaps?: LeadMaps } = {};
 

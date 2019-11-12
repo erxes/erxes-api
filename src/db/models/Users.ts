@@ -22,6 +22,7 @@ interface IUpdateUser extends IEditProfile {
 }
 
 export interface IUserModel extends Model<IUserDocument> {
+  getUser(_id: string): Promise<IUserDocument>;
   checkDuplication({
     email,
     idsToExclude,
@@ -82,6 +83,15 @@ export interface IUserModel extends Model<IUserDocument> {
 
 export const loadClass = () => {
   class User {
+    public static async getUser(_id: string) {
+      const user = await Users.findOne({ _id });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      return user;
+    }
     /**
      * Checking if user has duplicated properties
      */

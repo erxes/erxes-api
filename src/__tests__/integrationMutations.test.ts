@@ -67,7 +67,7 @@ describe('mutations', () => {
       }
     `;
 
-    const integration = await graphqlRequest(mutation, 'integrationsCreateMessengerIntegration', args, context);
+    const integration = await graphqlRequest(mutation, 'integrationsCreateMessengerIntegration', args);
 
     expect(integration.name).toBe(args.name);
     expect(integration.brandId).toBe(args.brandId);
@@ -99,7 +99,7 @@ describe('mutations', () => {
       }
     `;
 
-    const integration = await graphqlRequest(mutation, 'integrationsEditMessengerIntegration', args, context);
+    const integration = await graphqlRequest(mutation, 'integrationsEditMessengerIntegration', args);
 
     expect(integration._id).toBe(args._id);
     expect(integration.name).toBe(args.name);
@@ -186,7 +186,7 @@ describe('mutations', () => {
       }
     `;
 
-    const messengerConfig = await graphqlRequest(mutation, 'integrationsSaveMessengerConfigs', args, context);
+    const messengerConfig = await graphqlRequest(mutation, 'integrationsSaveMessengerConfigs', args);
 
     expect(messengerConfig._id).toBe(args._id);
     expect(messengerConfig.messengerData.toJSON()).toEqual(args.messengerData);
@@ -220,7 +220,7 @@ describe('mutations', () => {
       }
     `;
 
-    const leadIntegration = await graphqlRequest(mutation, 'integrationsCreateLeadIntegration', args, context);
+    const leadIntegration = await graphqlRequest(mutation, 'integrationsCreateLeadIntegration', args);
 
     expect(leadIntegration.name).toBe(args.name);
     expect(leadIntegration.brandId).toBe(args.brandId);
@@ -260,7 +260,7 @@ describe('mutations', () => {
       }
     `;
 
-    const leadIntegration = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args, context);
+    const leadIntegration = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
 
     expect(leadIntegration._id).toBe(args._id);
     expect(leadIntegration.name).toBe(args.name);
@@ -270,6 +270,8 @@ describe('mutations', () => {
   });
 
   test('integrationsCreateExternalIntegration', async () => {
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
     const mutation = `
       mutation integrationsCreateExternalIntegration(
         $kind: String!
@@ -295,22 +297,188 @@ describe('mutations', () => {
 
     const brand = await brandFactory();
 
-    const args = {
+    const args: any = {
       kind: 'nylas-gmail',
       name: 'Nyals gmail integration',
       brandId: brand._id,
     };
 
-    let response;
+    try {
+      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Error: Connection failed');
+    }
+
+    args.kind = 'facebook-post';
+    try {
+      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Error: Connection failed');
+    }
+
+    args.kind = 'twitter-dm';
+    args.data = { data: 'data' };
 
     try {
-      response = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Error: Connection failed');
+    }
+  });
+
+  test('integrationAddMailAccount', async () => {
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+    const mutation = `
+      mutation integrationAddMailAccount(
+        $email: String!
+        $password: String!
+        $kind: String!
+      ) {
+        integrationAddMailAccount(
+          email: $email
+          password: $password
+          kind: $kind
+        )
+      }
+    `;
+
+    const args = {
+      email: 'email',
+      password: 'pass',
+      kind: 'facebook-post',
+    };
+
+    try {
+      await graphqlRequest(mutation, 'integrationAddMailAccount', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+  });
+
+  test('integrationAddImapAccount', async () => {
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+    const mutation = `
+      mutation integrationAddImapAccount(
+        $email: String!
+        $password: String!
+        $imapHost: String!
+        $imapPort: Int!
+        $smtpHost: String!
+        $smtpPort: Int!
+        $kind: String!
+      ) {
+        integrationAddImapAccount(
+          email: $email
+          password: $password
+          imapHost: $imapHost
+          imapPort: $imapPort
+          smtpHost: $smtpHost
+          smtpPort: $smtpPort
+          kind: $kind
+        )
+      }
+    `;
+
+    const args = {
+      email: 'email@yahoo.com',
+      password: 'pass',
+      imapHost: 'imapHost',
+      imapPort: 10,
+      smtpHost: 'smtpHost',
+      smtpPort: 10,
+      kind: 'facebook-post',
+    };
+
+    try {
+      await graphqlRequest(mutation, 'integrationAddImapAccount', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+  });
+
+  test('integrationsRemoveAccount', async () => {
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+    const mutation = `
+      mutation integrationsRemoveAccount($_id: String!) {
+        integrationsRemoveAccount(_id: $_id)
+      }
+    `;
+
+    try {
+      await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+  });
+
+  test('integrationSendMail', async () => {
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+
+    const mutation = `
+      mutation integrationSendMail(
+        $erxesApiId: String!
+        $subject: String!
+        $to: String!
+        $from: String!
+        $kind: String
+      ) {
+        integrationSendMail(
+          erxesApiId: $erxesApiId
+          subject: $subject
+          to: $to
+          from: $from
+          kind: $kind
+        )
+      }
+    `;
+
+    const args = {
+      erxesApiId: 'erxesApiId',
+      subject: 'Subject',
+      to: 'to',
+      from: 'from',
+      kind: 'nylas-gmail',
+    };
+
+    try {
+      await graphqlRequest(mutation, 'integrationSendMail', args);
     } catch (e) {
       expect(e[0].message).toBe('Connection failed');
     }
 
-    expect(response.name).toBe(args.name);
-    expect(response.kind).toBe(args.kind);
-    expect(response.brandId).toBe(args.brandId);
+    args.kind = 'facebook-post';
+    try {
+      await graphqlRequest(mutation, 'integrationSendMail', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+  });
+
+  test('Integrations remove', async () => {
+    const mutation = `
+      mutation integrationsRemove($_id: String!) {
+        integrationsRemove(_id: $_id)
+      }
+    `;
+
+    const messengerIntegration = await integrationFactory({ kind: 'messenger' });
+    await graphqlRequest(mutation, 'integrationsRemove', {
+      _id: messengerIntegration._id,
+    });
+
+    expect(await Integrations.findOne({ _id: messengerIntegration._id })).toBe(null);
+
+    const facebookPostIntegration = await integrationFactory({ kind: 'facebook-post' });
+
+    try {
+      await graphqlRequest(mutation, 'integrationsRemove', {
+        _id: facebookPostIntegration._id,
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 });

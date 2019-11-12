@@ -129,11 +129,7 @@ const userMutations = {
     },
     { user }: IContext,
   ) {
-    const userOnDb = await Users.findOne({ _id: user._id });
-
-    if (!userOnDb) {
-      throw new Error('User not found');
-    }
+    const userOnDb = await Users.getUser(user._id);
 
     const valid = await Users.comparePassword(password, userOnDb.password);
 

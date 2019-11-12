@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { notificationFactory, userFactory } from '../db/factories';
+import { dealFactory, notificationFactory, userFactory } from '../db/factories';
 import { Notifications, Users } from '../db/models';
 
 import './setup.ts';
@@ -45,17 +45,29 @@ describe('testing mutations', () => {
 
   test('Mark as read notification', async () => {
     const mutation = `
-      mutation notificationsMarkAsRead($_ids: [String]) {
-        notificationsMarkAsRead(_ids: $_ids)
+      mutation notificationsMarkAsRead($_ids: [String], $contentTypeId: String) {
+        notificationsMarkAsRead(_ids: $_ids, contentTypeId: $contentTypeId)
       }
     `;
 
     await graphqlRequest(mutation, 'notificationsMarkAsRead', { _ids: [_notification._id] }, context);
 
-    const [notification] = await Notifications.find({
-      _id: { $in: _notification._id },
-    });
+    const [notification] = await Notifications.find({ _id: _notification._id });
 
     expect(notification.isRead).toBe(true);
+
+    const deal = await dealFactory();
+    const _dealNotification = await notificationFactory({
+      contentType: 'deal',
+      contentTypeId: deal._id,
+      createdUser: _user,
+    });
+
+    // filter by contentTypeId
+    await graphqlRequest(mutation, 'notificationsMarkAsRead', { contentTypeId: deal._id }, context);
+
+    const [dealNotification] = await Notifications.find({ _id: _dealNotification._id });
+
+    expect(dealNotification.isRead).toBe(true);
   });
 });

@@ -12,13 +12,10 @@ import {
 } from '../db/factories';
 import { GrowthHacks } from '../db/models';
 
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('growthHackQueries', () => {
-  let board;
-  let pipeline;
-  let stage;
-
   const commonGrowthHackTypes = `
     _id
     name
@@ -70,13 +67,6 @@ describe('growthHackQueries', () => {
     }
   `;
 
-  beforeEach(async () => {
-    // Creating test data
-    board = await boardFactory();
-    pipeline = await pipelineFactory({ boardId: board._id, hackScoringType: 'ice' });
-    stage = await stageFactory({ pipelineId: pipeline._id });
-  });
-
   afterEach(async () => {
     // Clearing test data
     await GrowthHacks.deleteMany({});
@@ -88,7 +78,7 @@ describe('growthHackQueries', () => {
       .endOf('day')
       .format('YYYY-MM-DD');
 
-    await growthHackFactory({ stageId: stage._id, closeDate: new Date(tomorrow) });
+    await growthHackFactory({ closeDate: new Date(tomorrow) });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextDay: 'true' });
 
@@ -100,7 +90,7 @@ describe('growthHackQueries', () => {
       .day(8)
       .format('YYYY-MM-DD');
 
-    await growthHackFactory({ stageId: stage._id, closeDate: new Date(nextWeek) });
+    await growthHackFactory({ closeDate: new Date(nextWeek) });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextWeek: 'true' });
 
@@ -112,7 +102,7 @@ describe('growthHackQueries', () => {
       .add(1, 'months')
       .format('YYYY-MM-01');
 
-    await growthHackFactory({ stageId: stage._id, closeDate: new Date(nextMonth) });
+    await growthHackFactory({ closeDate: new Date(nextMonth) });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextMonth: 'true' });
 
@@ -120,7 +110,7 @@ describe('growthHackQueries', () => {
   });
 
   test('Filter by has no close date', async () => {
-    await growthHackFactory({ stageId: stage._id, noCloseDate: true });
+    await growthHackFactory({ noCloseDate: true });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { noCloseDate: 'true' });
 
@@ -133,7 +123,7 @@ describe('growthHackQueries', () => {
       .subtract(1, 'days')
       .toDate();
 
-    await growthHackFactory({ stageId: stage._id, closeDate: yesterday });
+    await growthHackFactory({ closeDate: yesterday });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { overdue: 'true' });
 
@@ -143,7 +133,7 @@ describe('growthHackQueries', () => {
   test('Filter by team members', async () => {
     const { _id } = await userFactory();
 
-    await growthHackFactory({ stageId: stage._id, assignedUserIds: [_id] });
+    await growthHackFactory({ assignedUserIds: [_id] });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { assignedUserIds: [_id] });
 
@@ -151,7 +141,7 @@ describe('growthHackQueries', () => {
   });
 
   test('Filter by priority', async () => {
-    await growthHackFactory({ stageId: stage._id, priority: 'critical' });
+    await growthHackFactory({ priority: 'critical' });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { priority: 'critical' });
 
@@ -159,7 +149,7 @@ describe('growthHackQueries', () => {
   });
 
   test('Filter by hack stage', async () => {
-    await growthHackFactory({ stageId: stage._id, hackStages: ['Awareness'] });
+    await growthHackFactory({ hackStages: ['Awareness'] });
 
     const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { hackStage: 'Awareness' });
 
@@ -167,36 +157,37 @@ describe('growthHackQueries', () => {
   });
 
   test('Growth hacks', async () => {
-    const args = { stageId: stage._id };
+    const board = await boardFactory({ type: BOARD_TYPES.GROWTH_HACK });
+    const pipeline = await pipelineFactory({ boardId: board._id });
+    const stage = await stageFactory({ pipelineId: pipeline._id });
 
-    await growthHackFactory({ ...args, impact: 5 });
-    await growthHackFactory({ ...args, impact: 10 });
-    await growthHackFactory({ ...args, impact: 2 });
+    await growthHackFactory({ impact: 5, stageId: stage._id });
+    await growthHackFactory({ impact: 10, stageId: stage._id });
+    await growthHackFactory({ impact: 2, stageId: stage._id });
 
     const qry = `
-      query growthHacks($stageId: String!, $sortField: String, $sortDirection: Int) {
+      query growthHacks($stageId: String, $sortField: String, $sortDirection: Int) {
         growthHacks(stageId: $stageId, sortField: $sortField, sortDirection: $sortDirection) {
           ${commonGrowthHackTypes}
         }
       }
     `;
 
-    let response = await graphqlRequest(qry, 'growthHacks', args);
+    let response = await graphqlRequest(qry, 'growthHacks', { stageId: stage._id });
 
     expect(response.length).toBe(3);
 
-    response = await graphqlRequest(qry, 'growthHacks', { ...args, sortField: 'impact', sortDirection: -1 });
+    // sort descending by impact
+    response = await graphqlRequest(qry, 'growthHacks', { stageId: stage._id, sortField: 'impact', sortDirection: -1 });
 
     expect(response[0].impact).toBe(10);
   });
 
   test('Growth hacks total count', async () => {
-    const args = { stageId: stage._id };
-
-    await growthHackFactory({ ...args, hackStages: ['Awareness'] });
-    await growthHackFactory({ ...args, hackStages: ['Awareness'] });
-    await growthHackFactory({ ...args });
-    await growthHackFactory({ ...args });
+    await growthHackFactory({ hackStages: ['Awareness'] });
+    await growthHackFactory({ hackStages: ['Awareness'] });
+    await growthHackFactory();
+    await growthHackFactory();
 
     const qry = `
       query growthHacksTotalCount($hackStage: String) {
@@ -212,11 +203,14 @@ describe('growthHackQueries', () => {
   });
 
   test('Growth hacks priority matrix', async () => {
-    await growthHackFactory({ stageId: stage._id, impact: 5, ease: 4 });
-    await growthHackFactory({ stageId: stage._id, impact: 7, ease: 2 });
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
 
-    await growthHackFactory({ stageId: stage._id, impact: 5 });
-    await growthHackFactory({ stageId: stage._id, impact: 5, ease: 0 });
+    await growthHackFactory({ impact: 5, ease: 4, stageId: stage._id });
+    await growthHackFactory({ impact: 7, ease: 2, stageId: stage._id });
+
+    await growthHackFactory({ impact: 5, stageId: stage._id });
+    await growthHackFactory({ impact: 5, ease: 0, stageId: stage._id });
     await growthHackFactory({ stageId: stage._id });
 
     const qry = `
@@ -237,7 +231,8 @@ describe('growthHackQueries', () => {
       contentTypeId: form._id,
     });
 
-    const pipelineWithForm = await pipelineFactory();
+    const boardWithForm = await boardFactory({ type: BOARD_TYPES.GROWTH_HACK });
+    const pipelineWithForm = await pipelineFactory({ boardId: boardWithForm._id });
     const stageWithForm = await stageFactory({ pipelineId: pipelineWithForm._id, formId: form._id });
 
     const user = await userFactory();
@@ -276,7 +271,7 @@ describe('growthHackQueries', () => {
     expect(response.formSubmissions[field._id]).toBe('Hey');
     expect(response.isVoted).toBe(true);
 
-    const growthHack = await growthHackFactory({ stageId: stage._id });
+    const growthHack = await growthHackFactory();
     response = await graphqlRequest(qry, 'growthHackDetail', { _id: growthHack._id });
 
     expect(response._id).toBe(growthHack._id);

@@ -671,6 +671,8 @@ interface INotificationFactoryInput {
   link?: string;
   createdUser?: any;
   isRead?: boolean;
+  contentTypeId?: string;
+  contentType?: string;
 }
 
 export const notificationFactory = async (params: INotificationFactoryInput) => {
@@ -688,6 +690,8 @@ export const notificationFactory = async (params: INotificationFactoryInput) => 
     receiver: receiver._id || faker.random.word(),
     createdUser: params.createdUser || faker.random.word(),
     isRead: params.isRead || false,
+    contentTypeId: params.contentTypeId,
+    contentType: params.contentType,
   });
 };
 
@@ -846,8 +850,12 @@ interface IDealFactoryInput {
   searchText?: string;
 }
 
-export const dealFactory = (params: IDealFactoryInput = {}) => {
-  const stageId = params.stageId || faker.random.word();
+export const dealFactory = async (params: IDealFactoryInput = {}) => {
+  const board = await boardFactory({ type: BOARD_TYPES.DEAL });
+  const pipeline = await pipelineFactory({ boardId: board._id });
+  const stage = await stageFactory({ pipelineId: pipeline._id });
+
+  const stageId = params.stageId || stage._id;
 
   const deal = new Deals({
     ...params,
@@ -888,7 +896,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
-    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    assignedUserIds: params.assignedUserIds,
     priority: params.priority,
     watchedUserIds: params.watchedUserIds,
   });
@@ -916,7 +924,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
-    assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    assignedUserIds: params.assignedUserIds,
     priority: params.priority,
     source: params.source,
     watchedUserIds: params.watchedUserIds,
@@ -940,11 +948,15 @@ interface IGrowthHackFactoryInput {
   votedUserIds?: string[];
 }
 
-export const growthHackFactory = (params: IGrowthHackFactoryInput = {}) => {
+export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) => {
+  const board = await boardFactory({ type: BOARD_TYPES.GROWTH_HACK });
+  const pipeline = await pipelineFactory({ boardId: board._id });
+  const stage = await stageFactory({ pipelineId: pipeline._id });
+
   const growthHack = new GrowthHacks({
     ...params,
     name: faker.random.word(),
-    stageId: params.stageId || faker.random.word(),
+    stageId: params.stageId || stage._id,
     companyIds: params.companyIds || [faker.random.word()],
     customerIds: params.customerIds || [faker.random.word()],
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
@@ -1115,9 +1127,9 @@ export const permissionFactory = async (params: IPermissionParams = {}) => {
     module: params.module || faker.random.word(),
     action: params.action || faker.random.word(),
     allowed: params.allowed || false,
-    userId: params.userId || Random.id(),
+    userId: params.userId,
     requiredActions: params.requiredActions || [],
-    groupId: params.groupId || faker.random.word(),
+    groupId: params.groupId,
   });
 
   return permission.save();

@@ -1,11 +1,12 @@
 import { graphqlRequest } from '../db/connection';
 import {
+  companyFactory,
   customerFactory,
   dealFactory,
   internalNoteFactory,
   notificationConfigurationFactory,
-  pipelineFactory,
-  stageFactory,
+  taskFactory,
+  ticketFactory,
   userFactory,
 } from '../db/factories';
 import { InternalNotes, Notifications, Users } from '../db/models';
@@ -33,7 +34,6 @@ describe('InternalNotes mutations', () => {
   });
 
   test('Add internal note', async () => {
-    const customer = await customerFactory({});
     const user = await userFactory({});
     await notificationConfigurationFactory({ isAllowed: true, user, notifType: NOTIFICATION_TYPES.CUSTOMER_MENTION });
 
@@ -41,7 +41,9 @@ describe('InternalNotes mutations', () => {
       throw new Error('User not found');
     }
 
-    let args = {
+    const customer = await customerFactory({});
+
+    let args: any = {
       contentType: 'customer',
       contentTypeId: customer._id,
       content: `@${user.details.fullName}`,
@@ -92,13 +94,10 @@ describe('InternalNotes mutations', () => {
       throw new Error('User not found');
     }
 
-    const pipeline = await pipelineFactory();
-    const stage = await stageFactory({ pipelineId: pipeline._id });
     const deal = await dealFactory({
       watchedUserIds: [watchedUser._id],
       assignedUserIds: [assignedUser._id],
       modifiedBy: modifiedUser._id,
-      stageId: stage._id,
     });
 
     await notificationConfigurationFactory({ isAllowed: true, user, notifType: NOTIFICATION_TYPES.DEAL_EDIT });
@@ -124,6 +123,40 @@ describe('InternalNotes mutations', () => {
     expect(internalNote.contentType).toBe(args.contentType);
     expect(internalNote.contentTypeId).toBe(args.contentTypeId);
     expect(internalNote.content).toBe(args.content);
+
+    // task
+    const task = await taskFactory();
+
+    args.contentType = 'task';
+    args.contentTypeId = task._id;
+
+    internalNote = await graphqlRequest(mutation, 'internalNotesAdd', args, context);
+
+    expect(internalNote.contentType).toBe('task');
+    expect(internalNote.contentTypeId).toBe(task._id);
+
+    // ticket
+    const ticket = await ticketFactory();
+
+    args.contentType = 'ticket';
+    args.contentTypeId = ticket._id;
+
+    internalNote = await graphqlRequest(mutation, 'internalNotesAdd', args, context);
+
+    expect(internalNote.contentType).toBe('ticket');
+    expect(internalNote.contentTypeId).toBe(ticket._id);
+
+    // company
+    const company = await companyFactory();
+
+    args.contentType = 'company';
+    args.contentTypeId = company._id;
+    args.mentionedUserIds = undefined;
+
+    internalNote = await graphqlRequest(mutation, 'internalNotesAdd', args, context);
+
+    expect(internalNote.contentType).toBe('company');
+    expect(internalNote.contentTypeId).toBe(company._id);
   });
 
   test('Edit internal note', async () => {

@@ -12,6 +12,7 @@ import {
 } from './definitions/forms';
 
 export interface IFormModel extends Model<IFormDocument> {
+  getForm(_id: string): Promise<IFormDocument>;
   generateCode(): string;
   createForm(doc: IForm, createdUserId: string): Promise<IFormDocument>;
 
@@ -23,6 +24,15 @@ export interface IFormModel extends Model<IFormDocument> {
 
 export const loadFormClass = () => {
   class Form {
+    public static async getForm(_id: string) {
+      const form = await Forms.findOne({ _id });
+
+      if (!form) {
+        throw new Error('Form not found');
+      }
+
+      return form;
+    }
     /**
      * Generates a random and unique 6 letter code
      */

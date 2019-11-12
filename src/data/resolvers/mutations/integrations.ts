@@ -141,14 +141,14 @@ const integrationMutations = {
   /**
    * Create IMAP account
    */
-  async integrationAddImapAccount(_root, data, { dataSources }) {
+  integrationAddImapAccount(_root, data, { dataSources }) {
     return dataSources.IntegrationsAPI.createAccount(data);
   },
 
   /**
    * Create Yahoo, Outlook account
    */
-  async integrationAddMailAccount(_root, data, { dataSources }) {
+  integrationAddMailAccount(_root, data, { dataSources }) {
     return dataSources.IntegrationsAPI.createAccount(data);
   },
 
@@ -171,7 +171,7 @@ const integrationMutations = {
         'nylas-yahoo',
         'chatfuel',
         'twitter-dm',
-      ].includes(integration.kind || '')
+      ].includes(integration.kind)
     ) {
       await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }

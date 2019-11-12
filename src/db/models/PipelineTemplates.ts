@@ -21,11 +21,7 @@ export const getDuplicatedStages = async ({
   pipelineId?: string;
   type?: string;
 }) => {
-  const template = await PipelineTemplates.findOne({ _id: templateId });
-
-  if (!template) {
-    throw new Error('Template not found');
-  }
+  const template = await PipelineTemplates.getPipelineTemplate(templateId);
 
   const stages: any[] = [];
 

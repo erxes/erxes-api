@@ -856,3 +856,36 @@ export const regexSearchText = (searchValue: string) => {
 
   return { $and: result };
 };
+
+export const customerName = data => {
+  if (data.firstName || data.lastName) {
+    return (data.firstName || '') + ' ' + (data.lastName || '');
+  }
+
+  if (data.primaryEmail || data.primaryPhone) {
+    return data.primaryEmail || data.primaryPhone;
+  }
+
+  const { visitorContactInfo } = data;
+
+  if (visitorContactInfo) {
+    return visitorContactInfo.phone || visitorContactInfo.email || 'Unknown';
+  }
+
+  return 'Unknown';
+};
+
+export const companyName = company => {
+  return company.primaryName || company.primaryEmail || company.primaryPhone || 'Unknown';
+};
+
+/**
+ * Check user ids whether its added or removed from array of ids
+ */
+export const checkUserIds = (oldUserIds: string[], newUserIds: string[]) => {
+  const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
+
+  const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
+
+  return { addedUserIds, removedUserIds };
+};

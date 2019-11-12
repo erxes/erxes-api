@@ -4,8 +4,7 @@ import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/mode
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
-import { checkUserIds } from './notifications';
+import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
