@@ -25,10 +25,27 @@ const activityLogQueries = {
             result.contentType = type;
           }
 
+          if (type === 'taskDetail') {
+            result.contentType = type;
+            result.createdAt = item.closeDate;
+          }
+
           activities.push(result);
         });
       }
     };
+
+    const relatedItemIds = await Conformities.savedConformity({
+      mainType: contentType,
+      mainTypeId: contentId,
+      relTypes: contentType !== 'task' ? ['deal', 'ticket'] : ['deal', 'ticket', 'task'],
+    });
+
+    const relatedTaskIds = await Conformities.savedConformity({
+      mainType: contentType,
+      mainTypeId: contentId,
+      relType: 'task',
+    });
 
     switch (activityType) {
       case 'conversation':
@@ -40,25 +57,15 @@ const activityLogQueries = {
         break;
 
       case 'task':
-        const relatedTaskIds = await Conformities.savedConformity({
-          mainType: contentType,
-          mainTypeId: contentId,
-          relType: 'task',
-        });
-
-        collectActivities(await Tasks.find({ typeId: { $in: relatedTaskIds } }).sort({ closeDate: 1 }));
+        collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
         break;
 
       default:
-        const relatedItemIds = await Conformities.savedConformity({
-          mainType: contentType,
-          mainTypeId: contentId,
-          relTypes: ['task', 'deal', 'ticket'],
-        });
+        if (contentType !== 'task') {
+          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
+        }
 
-        console.log(relatedItemIds);
-
-        collectActivities(await ActivityLogs.find({ contentId, action: 'moved' }));
+        collectActivities(await ActivityLogs.find({ contentId }));
         collectActivities(await ActivityLogs.find({ contentId: { $in: relatedItemIds }, action: 'moved' }));
         collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
         collectActivities(await Conversations.find({ customerId: contentId }));
