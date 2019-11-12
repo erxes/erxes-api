@@ -261,5 +261,6 @@ checkPermission(integrationMutations, 'integrationsSaveMessengerConfigs', 'integ
 checkPermission(integrationMutations, 'integrationsCreateLeadIntegration', 'integrationsCreateLeadIntegration');
 checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integrationsEditLeadIntegration');
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
+checkPermission(integrationMutations, 'integrationsToggleStatus', 'integrationsToggleStatus');
 
 export default integrationMutations;
