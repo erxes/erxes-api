@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { Conformities, Stages } from '../../../db/models';
+import { Conformities, Pipelines, Stages } from '../../../db/models';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -10,9 +10,10 @@ export const contains = (values: string[] = [], empty = false) => {
   return { $in: values };
 };
 
-export const generateCommonFilters = async (args: any) => {
+export const generateCommonFilters = async (currentUserId: string, args: any) => {
   const {
     $and,
+    pipelineId,
     stageId,
     search,
     overdue,
@@ -168,12 +169,19 @@ export const generateCommonFilters = async (args: any) => {
     filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
   }
 
+  if (pipelineId) {
+    const pipeline = await Pipelines.getPipeline(pipelineId);
+    if (pipeline.onlySelf && !(pipeline.dominantUserIds || []).includes(currentUserId)) {
+      Object.assign(filter, { $or: [{ assignedUserIds: { $in: [currentUserId] } }, { userId: currentUserId }] });
+    }
+  }
+
   return filter;
 };
 
-export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
+export const generateDealCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'deal';
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
   const { productIds } = extraParams || args;
 
   if (productIds) {
@@ -193,9 +201,9 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
   return filter;
 };
 
-export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
+export const generateTicketCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'ticket';
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
   const { priority, source } = extraParams || args;
 
   if (priority) {
@@ -209,9 +217,9 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
   return filter;
 };
 
-export const generateTaskCommonFilters = async (args: any, extraParams?: any) => {
+export const generateTaskCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'task';
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
   const { priority } = extraParams || args;
 
   if (priority) {
@@ -221,12 +229,12 @@ export const generateTaskCommonFilters = async (args: any, extraParams?: any) =>
   return filter;
 };
 
-export const generateGrowthHackCommonFilters = async (args: any, extraParams?: any) => {
+export const generateGrowthHackCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'growthHack';
 
   const { hackStage, priority, pipelineId, stageId } = extraParams || args;
 
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
 
   if (hackStage) {
     filter.hackStages = { $in: [hackStage] };

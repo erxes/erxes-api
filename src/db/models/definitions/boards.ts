@@ -52,6 +52,8 @@ export interface IPipeline extends ICommonFields {
   metric?: string;
   hackScoringType?: string;
   templateId?: string;
+  onlySelf?: boolean;
+  dominantUserIds?: string[];
 }
 
 export interface IPipelineDocument extends IPipeline, Document {
@@ -158,6 +160,8 @@ export const pipelineSchema = new Schema({
     enum: HACK_SCORING_TYPES.ALL,
   }),
   templateId: field({ type: String, optional: true }),
+  onlySelf: field({ type: Boolean, optional: true }),
+  dominantUserIds: field({ type: [String], optional: true }),
   ...commonFieldsSchema,
 });
 

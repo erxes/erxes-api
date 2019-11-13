@@ -1,5 +1,6 @@
 import { Deals } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { IListParams } from './boards';
 import { generateDealCommonFilters } from './boardUtils';
 
@@ -11,8 +12,8 @@ const dealQueries = {
   /**
    * Deals list
    */
-  async deals(_root, args: IDealListParams) {
-    const filter = await generateDealCommonFilters(args);
+  async deals(_root, args: IDealListParams, { user }: IContext) {
+    const filter = await generateDealCommonFilters(user._id, args);
     const sort = { order: 1, createdAt: -1 };
 
     return Deals.find(filter)
@@ -24,8 +25,8 @@ const dealQueries = {
   /**
    *  Deal total amounts
    */
-  async dealsTotalAmounts(_root, args: IDealListParams) {
-    const filter = await generateDealCommonFilters(args);
+  async dealsTotalAmounts(_root, args: IDealListParams, { user }: IContext) {
+    const filter = await generateDealCommonFilters(user._id, args);
 
     const dealCount = await Deals.find(filter).countDocuments();
     const amountList = await Deals.aggregate([

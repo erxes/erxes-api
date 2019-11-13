@@ -1,5 +1,6 @@
 import { Tickets } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import { IListParams } from './boards';
 import { generateTicketCommonFilters } from './boardUtils';
 
@@ -7,8 +8,8 @@ const ticketQueries = {
   /**
    * Tickets list
    */
-  async tickets(_root, args: IListParams) {
-    const filter = await generateTicketCommonFilters(args);
+  async tickets(_root, args: IListParams, { user }: IContext) {
+    const filter = await generateTicketCommonFilters(user._id, args);
     const sort = { order: 1, createdAt: -1 };
 
     return Tickets.find(filter)
