@@ -96,7 +96,7 @@ export default class Builder {
     nestedIntegrationIds.push(activeIds);
 
     // ['id1']
-    const integrationids: any = _.intersection(...nestedIntegrationIds);
+    const integrationids: string[] = _.intersection(...nestedIntegrationIds);
 
     return {
       integrationId: { $in: integrationids },
@@ -178,8 +178,8 @@ export default class Builder {
   }
 
   // filter by starred
-  public starredFilter(): { _id: IIn | { $in: any[] } } {
-    let ids: any = [];
+  public starredFilter(): { _id: IIn | { $in: string[] } } {
+    let ids: string[] = [];
 
     if (this.user) {
       ids = this.user.starredConversationIds || [];
