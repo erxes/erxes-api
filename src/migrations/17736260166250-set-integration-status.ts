@@ -11,7 +11,7 @@ module.exports.up = async () => {
   for (const perm of permissions) {
     const requiredActions = perm.requiredActions;
 
-    requiredActions.push('integrationsToggleStatus');
+    requiredActions.push('integrationsArchive');
 
     await Permissions.update({ _id: perm._id }, { $set: { requiredActions } });
   }

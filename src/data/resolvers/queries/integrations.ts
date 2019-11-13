@@ -8,7 +8,7 @@ import { paginate } from '../../utils';
  * Common helper for integrations & integrationsTotalCount
  */
 const generateFilterQuery = async ({ kind, channelId, brandId, searchValue, tag }) => {
-  const query: any = {};
+  const query: any = { isActive: true };
 
   if (kind) {
     query.kind = kind;
@@ -94,7 +94,7 @@ const integrationQueries = {
     };
 
     const count = query => {
-      return Integrations.find(query).countDocuments();
+      return Integrations.find({ ...query, isActive: true }).countDocuments();
     };
 
     // Counting integrations by tag
