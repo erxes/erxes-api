@@ -90,7 +90,7 @@ const userMutations = {
    * Update user
    */
   async usersEdit(_root, args: IUsersEdit) {
-    const { _id, username, email, channelIds = [], groupIds = [], brandIds = [], details, links } = args;
+    const { _id, username, email, channelIds, groupIds = [], brandIds = [], details, links } = args;
 
     const updatedUser = await Users.updateUser(_id, {
       username,
@@ -102,7 +102,7 @@ const userMutations = {
     });
 
     // add new user to channels
-    await Channels.updateUserChannels(channelIds, _id);
+    await Channels.updateUserChannels(channelIds || [], _id);
 
     resetPermissionsCache();
 

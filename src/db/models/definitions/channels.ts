@@ -5,7 +5,7 @@ export interface IChannel {
   name?: string;
   description?: string;
   integrationIds: string[];
-  memberIds: string[];
+  memberIds?: string[];
   userId?: string;
   conversationCount?: number;
   openConversationCount?: number;

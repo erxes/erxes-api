@@ -48,7 +48,7 @@ describe('Test configs mutations', () => {
     try {
       await graphqlRequest(mutation, 'engagesConfigSave');
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Engages api is not running');
     }
   });
 });

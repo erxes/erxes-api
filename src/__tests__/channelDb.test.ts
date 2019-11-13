@@ -31,6 +31,20 @@ describe('channel creation', () => {
     await Integrations.deleteMany({});
   });
 
+  test('Get channel', async () => {
+    const channel = await channelFactory();
+
+    try {
+      await Channels.getChannel('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Channel not found');
+    }
+
+    const response = await Channels.getChannel(channel._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('check if channel is getting created successfully', async () => {
     const user = await userFactory({});
 
