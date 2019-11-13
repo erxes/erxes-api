@@ -65,10 +65,18 @@ export class Builder {
     this.params = params;
   }
 
-  public defaultFilters(): { status: {}; profileScore: { $gt: number } } {
+  public async defaultFilters(): Promise<any> {
+    const activeIntegrations = await Integrations.find({ isActive: true }, { _id: 1 });
+
     return {
       status: { $ne: STATUSES.DELETED },
       profileScore: { $gt: 0 },
+      $or: [
+        {
+          integrationId: { $nin: [null, undefined, ''] },
+        },
+        { integrationId: { $in: activeIntegrations.map(integration => integration._id) } },
+      ],
     };
   }
 
@@ -99,7 +107,7 @@ export class Builder {
 
   // filter by integration kind
   public async integrationTypeFilter(kind: string): Promise<IIntegrationIds> {
-    const integrations = await Integrations.find({ kind });
+    const integrations = await Integrations.find({ kind, isActive: true });
 
     return { integrationId: { $in: integrations.map(i => i._id) } };
   }
