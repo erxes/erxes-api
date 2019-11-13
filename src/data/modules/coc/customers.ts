@@ -73,7 +73,7 @@ export class Builder {
       profileScore: { $gt: 0 },
       $or: [
         {
-          integrationId: { $nin: [null, undefined, ''] },
+          integrationId: { $in: [null, undefined, ''] },
         },
         { integrationId: { $in: activeIntegrations.map(integration => integration._id) } },
       ],
@@ -183,7 +183,7 @@ export class Builder {
    */
   public async buildAllQueries(): Promise<void> {
     this.queries = {
-      default: this.defaultFilters(),
+      default: await this.defaultFilters(),
       type: {},
       segment: {},
       tag: {},

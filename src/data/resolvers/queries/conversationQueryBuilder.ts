@@ -58,7 +58,7 @@ export default class Builder {
     this.user = user;
   }
 
-  public defaultFilters(): { [index: string]: {} } {
+  public async defaultFilters(): Promise<any> {
     let statusFilter = this.statusFilter([CONVERSATION_STATUSES.NEW, CONVERSATION_STATUSES.OPEN]);
 
     if (this.params.status === 'closed') {
@@ -80,7 +80,10 @@ export default class Builder {
     };
   }
 
-  public intersectIntegrationIds(...queries: any[]): { integrationId: IIn } {
+  public async intersectIntegrationIds(...queries: any[]): Promise<{ integrationId: IIn }> {
+    const activeIntegrations = await Integrations.find({ isActive: { $ne: false } });
+    const activeIds = activeIntegrations.map(integration => integration._id);
+
     // filter only queries with $in field
     const withIn = queries.filter(q => q.integrationId && q.integrationId.$in && q.integrationId.$in.length > 0);
 
@@ -89,6 +92,8 @@ export default class Builder {
 
     // [['id1', 'id2'], ['id3', 'id1', 'id4']]
     const nestedIntegrationIds = _.pluck($ins, '$in');
+
+    nestedIntegrationIds.push(activeIds);
 
     // ['id1']
     const integrationids: any = _.intersection(...nestedIntegrationIds);
@@ -107,7 +112,7 @@ export default class Builder {
     };
 
     // find all posssible integrations
-    let availIntegrationIds: any = [];
+    let availIntegrationIds: string[] = [];
 
     const channels = await Channels.find(channelFilter);
 
@@ -115,7 +120,9 @@ export default class Builder {
       availIntegrationIds = _.union(availIntegrationIds, channel.integrationIds || '');
     });
 
-    const nestedIntegrationIds: any = [{ integrationId: { $in: availIntegrationIds } }];
+    const nestedIntegrationIds: Array<{ integrationId: { $in: string[] } }> = [
+      { integrationId: { $in: availIntegrationIds } },
+    ];
 
     // filter by channel
     if (this.params.channelId) {
@@ -225,7 +232,7 @@ export default class Builder {
    */
   public async buildAllQueries(): Promise<void> {
     this.queries = {
-      default: this.defaultFilters(),
+      default: await this.defaultFilters(),
       starred: {},
       status: {},
       unassigned: {},
