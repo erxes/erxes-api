@@ -5,11 +5,12 @@ import {
   conformityFactory,
   customerFactory,
   dealFactory,
+  pipelineFactory,
   productFactory,
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Deals } from '../db/models';
+import { Deals, Pipelines } from '../db/models';
 
 import './setup.ts';
 
@@ -38,6 +39,7 @@ describe('dealQueries', () => {
   const qryDealFilter = `
     query deals(
       $stageId: String
+      $pipelineId: String
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
@@ -54,6 +56,7 @@ describe('dealQueries', () => {
     ) {
       deals(
         stageId: $stageId
+        pipelineId: $pipelineId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
@@ -203,25 +206,40 @@ describe('dealQueries', () => {
   });
 
   test('Deals', async () => {
-    const stage = await stageFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const currentUser = await userFactory({});
 
     const args = { stageId: stage._id };
 
-    await dealFactory(args);
+    const deal = await dealFactory(args);
     await dealFactory(args);
     await dealFactory(args);
 
+    Object.assign(args, { pipelineId: stage.pipelineId });
     const qry = `
-      query deals($stageId: String!) {
-        deals(stageId: $stageId) {
+      query deals($stageId: String!, $pipelineId: String) {
+        deals(stageId: $stageId, pipelineId: $pipelineId) {
           ${commonDealTypes}
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'deals', args);
+    let response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
 
     expect(response.length).toBe(3);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { onlySelf: true } });
+
+    response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
+
+    expect(response.length).toBe(0);
+
+    await Deals.updateOne({ _id: deal._id }, { $set: { assignedUserIds: [currentUser._id] } });
+
+    response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
+
+    expect(response.length).toBe(1);
   });
 
   test('Deal detail', async () => {
