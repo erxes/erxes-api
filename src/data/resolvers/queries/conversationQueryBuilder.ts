@@ -142,13 +142,10 @@ export default class Builder {
   // filter by channel
   public async channelFilter(channelId: string): Promise<{ integrationId: IIn }> {
     const channel = await Channels.findOne({ _id: channelId });
-    const activeIntegrations = await Integrations.find({ isActive: { $ne: false } });
 
     if (channel && channel.integrationIds) {
-      const intersectingIds = _.intersection(channel.integrationIds, activeIntegrations.map(i => i._id));
-
       return {
-        integrationId: { $in: intersectingIds },
+        integrationId: { $in: channel.integrationIds },
       };
     }
 
