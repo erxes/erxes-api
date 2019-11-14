@@ -154,7 +154,7 @@ export default class Builder {
 
   // filter by brand
   public async brandFilter(brandId: string): Promise<{ integrationId: IIn }> {
-    const integrations = await Integrations.find({ brandId, isActive: { $ne: false } });
+    const integrations = await Integrations.find({ brandId });
     const integrationIds = _.pluck(integrations, '_id');
 
     return {
