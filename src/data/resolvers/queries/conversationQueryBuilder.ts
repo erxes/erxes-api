@@ -81,9 +81,6 @@ export default class Builder {
   }
 
   public async intersectIntegrationIds(...queries: any[]): Promise<{ integrationId: IIn }> {
-    const activeIntegrations = await Integrations.find({ isActive: { $ne: false } });
-    const activeIds = activeIntegrations.map(integration => integration._id);
-
     // filter only queries with $in field
     const withIn = queries.filter(q => q.integrationId && q.integrationId.$in && q.integrationId.$in.length > 0);
 
@@ -92,8 +89,6 @@ export default class Builder {
 
     // [['id1', 'id2'], ['id3', 'id1', 'id4']]
     const nestedIntegrationIds = _.pluck($ins, '$in');
-
-    nestedIntegrationIds.push(activeIds);
 
     // ['id1']
     const integrationids: string[] = _.intersection(...nestedIntegrationIds);
