@@ -36,7 +36,7 @@ export const sendChannelNotifications = async (
     link: `/inbox/index?channelId=${channel._id}`,
 
     // exclude current user
-    receivers: receivers || channel.memberIds.filter(id => id !== channel.userId),
+    receivers: receivers || (channel.memberIds || []).filter(id => id !== channel.userId),
   });
 };
 
@@ -70,7 +70,7 @@ const channelMutations = {
 
     const { memberIds } = doc;
 
-    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds, memberIds);
+    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
 
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);

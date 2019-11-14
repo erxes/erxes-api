@@ -1,5 +1,4 @@
 import * as faker from 'faker';
-import integrations from '../data/resolvers/mutations/integrations';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, integrationFactory, userFactory } from '../db/factories';
 import { Brands, Integrations, Users } from '../db/models';

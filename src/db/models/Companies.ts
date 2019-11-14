@@ -43,7 +43,7 @@ export const loadClass = () => {
 
       // Adding exclude operator to the query
       if (idsToExclude) {
-        query._id = idsToExclude instanceof Array ? { $nin: idsToExclude } : { $ne: idsToExclude };
+        query._id = { $nin: idsToExclude };
       }
 
       if (companyFields.primaryName) {
@@ -128,10 +128,8 @@ export const loadClass = () => {
       // Checking duplicated fields of company
       await Companies.checkDuplication(doc, [_id]);
 
-      if (doc.customFieldsData) {
-        // clean custom field values
-        doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
-      }
+      // clean custom field values
+      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
       const searchText = Companies.fillSearchText(Object.assign(await Companies.getCompany(_id), doc) as ICompany);
 
@@ -170,36 +168,34 @@ export const loadClass = () => {
 
       // Merging company tags
       for (const companyId of companyIds) {
-        const companyObj = await Companies.findOne({ _id: companyId });
+        const companyObj = await Companies.getCompany(companyId);
 
-        if (companyObj) {
-          const companyTags = companyObj.tagIds || [];
-          const companyNames = companyObj.names || [];
-          const companyEmails = companyObj.emails || [];
-          const companyPhones = companyObj.phones || [];
+        const companyTags = companyObj.tagIds || [];
+        const companyNames = companyObj.names || [];
+        const companyEmails = companyObj.emails || [];
+        const companyPhones = companyObj.phones || [];
 
-          // Merging scopeBrandIds
-          scopeBrandIds = [...scopeBrandIds, ...(companyObj.scopeBrandIds || [])];
+        // Merging scopeBrandIds
+        scopeBrandIds = [...scopeBrandIds, ...(companyObj.scopeBrandIds || [])];
 
-          // merge custom fields data
-          customFieldsData = { ...customFieldsData, ...(companyObj.customFieldsData || {}) };
+        // merge custom fields data
+        customFieldsData = { ...customFieldsData, ...(companyObj.customFieldsData || {}) };
 
-          // Merging company's tag into 1 array
-          tagIds = tagIds.concat(companyTags);
+        // Merging company's tag into 1 array
+        tagIds = tagIds.concat(companyTags);
 
-          // Merging company names
-          names = names.concat(companyNames);
+        // Merging company names
+        names = names.concat(companyNames);
 
-          // Merging company emails
-          emails = emails.concat(companyEmails);
+        // Merging company emails
+        emails = emails.concat(companyEmails);
 
-          // Merging company phones
-          phones = phones.concat(companyPhones);
+        // Merging company phones
+        phones = phones.concat(companyPhones);
 
-          companyObj.status = STATUSES.DELETED;
+        companyObj.status = STATUSES.DELETED;
 
-          await Companies.findByIdAndUpdate(companyId, { $set: { status: STATUSES.DELETED } });
-        }
+        await Companies.findByIdAndUpdate(companyId, { $set: { status: STATUSES.DELETED } });
       }
 
       // Removing Duplicates

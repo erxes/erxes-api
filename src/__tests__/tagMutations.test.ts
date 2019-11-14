@@ -1,6 +1,6 @@
 import { graphqlRequest } from '../db/connection';
 import { conversationFactory, engageMessageFactory, tagsFactory, userFactory } from '../db/factories';
-import { ConversationMessages, Conversations, EngageMessages, Tags, Users } from '../db/models';
+import { Conversations, EngageMessages, Tags, Users } from '../db/models';
 
 import './setup.ts';
 

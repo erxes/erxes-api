@@ -503,6 +503,7 @@ export const fieldFactory = async (params: IFieldFactoryInput) => {
     order: params.order || 0,
     isVisible: params.visible || true,
     groupId: params.groupId || (groupObj ? groupObj._id : ''),
+    isDefinedByErxes: params.isDefinedByErxes,
   });
 };
 
@@ -1044,7 +1045,6 @@ export const fieldGroupFactory = async (params: IFieldGroupFactoryInput) => {
     contentType: params.contentType || FIELDS_GROUPS_CONTENT_TYPES.CUSTOMER,
     description: faker.random.word(),
     isDefinedByErxes: params.isDefinedByErxes || false,
-    order: 1,
     isVisible: true,
   };
 

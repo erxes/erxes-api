@@ -5,6 +5,7 @@ import {
   dealFactory,
   fieldFactory,
   internalNoteFactory,
+  userFactory,
 } from '../db/factories';
 import { Companies, Conformities, Customers, Deals, InternalNotes } from '../db/models';
 import { ICompany, ICompanyDocument } from '../db/models/definitions/companies';
@@ -55,8 +56,20 @@ describe('Companies model tests', () => {
     await Companies.deleteMany({});
   });
 
+  test('Get company', async () => {
+    try {
+      await Companies.getCompany('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Company not found');
+    }
+
+    const response = await Companies.getCompany(_company._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create company', async () => {
-    expect.assertions(15);
+    expect.assertions(4);
 
     // check duplication ==============
     try {
@@ -71,11 +84,17 @@ describe('Companies model tests', () => {
       expect(e.message).toBe('Duplicated name');
     }
 
+    let companyObj = await Companies.createCompany({}, await userFactory());
+
+    expect(companyObj).toBeDefined();
+
     const doc = generateDoc();
+    // primary name is empty
+    doc.primaryName = '';
 
-    const companyObj = await Companies.createCompany(doc);
+    companyObj = await Companies.createCompany(doc);
 
-    check(companyObj, doc);
+    expect(companyObj.primaryName).toBe('');
   });
 
   test('Create company: with company fields validation error', async () => {
