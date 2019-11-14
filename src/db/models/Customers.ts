@@ -260,6 +260,7 @@ export const loadClass = () => {
 
       let scopeBrandIds: string[] = [];
       let tagIds: string[] = [];
+      let customFieldsData = {};
 
       let emails: string[] = [];
       let phones: string[] = [];
@@ -272,13 +273,15 @@ export const loadClass = () => {
         phones.push(customerFields.primaryPhone);
       }
 
-      // Merging customer tags and companies
       for (const customerId of customerIds) {
         const customerObj = await Customers.findOne({ _id: customerId });
 
         if (customerObj) {
           // get last customer's integrationId
           customerFields.integrationId = customerObj.integrationId;
+
+          // merge custom fields data
+          customFieldsData = { ...customFieldsData, ...(customerObj.customFieldsData || {}) };
 
           // Merging scopeBrandIds
           scopeBrandIds = [...scopeBrandIds, ...(customerObj.scopeBrandIds || [])];
@@ -308,6 +311,7 @@ export const loadClass = () => {
       const customer = await this.createCustomer({
         ...customerFields,
         scopeBrandIds,
+        customFieldsData,
         tagIds,
         mergedIds: customerIds,
         emails,
