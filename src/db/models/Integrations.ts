@@ -63,7 +63,7 @@ export const loadClass = () => {
      * Create an integration, intended as a private method
      */
     public static createIntegration(doc: IIntegration, userId: string) {
-      return Integrations.create({ ...doc, createdUserId: userId });
+      return Integrations.create({ ...doc, isActive: true, createdUserId: userId });
     }
 
     /**

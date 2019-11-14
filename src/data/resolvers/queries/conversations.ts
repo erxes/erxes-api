@@ -265,6 +265,7 @@ const conversationQueries = {
   async conversationsTotalUnreadCount(_root, _args, { user }: IContext) {
     // initiate query builder
     const qb = new QueryBuilder({}, { _id: user._id });
+    await qb.buildAllQueries();
 
     // get all possible integration ids
     const integrationsFilter = await qb.integrationsFilter();
