@@ -142,18 +142,22 @@ export default class Builder {
   // filter by channel
   public async channelFilter(channelId: string): Promise<{ integrationId: IIn }> {
     const channel = await Channels.findOne({ _id: channelId });
+    const activeIntegrations = await Integrations.find({ isActive: { $ne: false } });
+
     if (channel && channel.integrationIds) {
+      const intersectingIds = _.intersection(channel.integrationIds, activeIntegrations.map(i => i._id));
+
       return {
-        integrationId: { $in: channel.integrationIds },
+        integrationId: { $in: intersectingIds },
       };
-    } else {
-      return { integrationId: { $in: [] } };
     }
+
+    return { integrationId: { $in: [] } };
   }
 
   // filter by brand
   public async brandFilter(brandId: string): Promise<{ integrationId: IIn }> {
-    const integrations = await Integrations.find({ brandId, isActive: true });
+    const integrations = await Integrations.find({ brandId, isActive: { $ne: false } });
     const integrationIds = _.pluck(integrations, '_id');
 
     return {
@@ -198,7 +202,7 @@ export default class Builder {
 
   // filter by integration type
   public async integrationTypeFilter(integrationType: string): Promise<{ $and: IIntersectIntegrationIds[] }> {
-    const integrations = await Integrations.find({ kind: integrationType, isActive: true });
+    const integrations = await Integrations.find({ kind: integrationType, isActive: { $ne: false } });
 
     return {
       $and: [
