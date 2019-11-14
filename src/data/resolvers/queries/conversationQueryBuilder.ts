@@ -52,6 +52,7 @@ export default class Builder {
   public user: IUserArgs;
   public queries: any;
   public unassignedQuery?: IUnassignedFilter;
+  public activeIntegrationIds: string[] = [];
 
   constructor(params: IListArgs, user: IUserArgs) {
     this.params = params;
@@ -59,6 +60,9 @@ export default class Builder {
   }
 
   public async defaultFilters(): Promise<any> {
+    const activeIntegrations = await Integrations.findIntegrations({}, { _id: 1 });
+    this.activeIntegrationIds = activeIntegrations.map(integ => integ._id);
+
     let statusFilter = this.statusFilter([CONVERSATION_STATUSES.NEW, CONVERSATION_STATUSES.OPEN]);
 
     if (this.params.status === 'closed') {
@@ -102,17 +106,16 @@ export default class Builder {
    * find integrationIds from channel && brand
    */
   public async integrationsFilter(): Promise<IIntersectIntegrationIds> {
-    const channelFilter = {
-      memberIds: this.user._id,
-    };
-
     // find all posssible integrations
     let availIntegrationIds: string[] = [];
 
-    const channels = await Channels.find(channelFilter);
+    const channels = await Channels.find({ memberIds: this.user._id });
 
     channels.forEach(channel => {
-      availIntegrationIds = _.union(availIntegrationIds, channel.integrationIds || '');
+      availIntegrationIds = _.union(
+        availIntegrationIds,
+        (channel.integrationIds || []).filter(id => this.activeIntegrationIds.includes(id)),
+      );
     });
 
     const nestedIntegrationIds: Array<{ integrationId: { $in: string[] } }> = [
@@ -140,7 +143,7 @@ export default class Builder {
 
     if (channel && channel.integrationIds) {
       return {
-        integrationId: { $in: channel.integrationIds },
+        integrationId: { $in: channel.integrationIds.filter(id => this.activeIntegrationIds.includes(id)) },
       };
     }
 
