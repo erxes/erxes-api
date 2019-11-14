@@ -71,7 +71,7 @@ const countByBrands = async (qb: any): Promise<ICountBy> => {
   for (const brand of brands) {
     byBrands[brand._id] = await count({
       ...qb.mainQuery(),
-      ...qb.intersectIntegrationIds(qb.queries.channel, await qb.brandFilter(brand._id)),
+      ...(await qb.intersectIntegrationIds(qb.queries.channel, await qb.brandFilter(brand._id))),
     });
   }
 
