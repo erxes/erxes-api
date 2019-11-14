@@ -44,7 +44,7 @@ export const loadClass = () => {
      * Find integrations
      */
     public static findIntegrations(query, options) {
-      return Integrations.find({ ...query, isActive: true }, options);
+      return Integrations.find({ ...query, isActive: { $ne: false } }, options);
     }
 
     /**
