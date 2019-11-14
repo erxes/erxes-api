@@ -2,7 +2,7 @@ import { GrowthHacks } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { IListParams } from './boards';
-import { generateGrowthHackCommonFilters } from './boardUtils';
+import { checkItemPermByUser, generateGrowthHackCommonFilters } from './boardUtils';
 
 interface IGrowthHackListParams extends IListParams {
   hackStage?: string;
@@ -76,8 +76,10 @@ const growthHackQueries = {
   /**
    * Growth hack detail
    */
-  growthHackDetail(_root, { _id }: { _id: string }) {
-    return GrowthHacks.findOne({ _id });
+  async growthHackDetail(_root, { _id }: { _id: string }, { user }: IContext) {
+    const growthHack = await GrowthHacks.getGrowthHack(_id);
+
+    return checkItemPermByUser(user._id, growthHack);
   },
 };
 

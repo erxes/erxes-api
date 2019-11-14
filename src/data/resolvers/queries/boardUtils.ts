@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { Conformities, Pipelines, Stages } from '../../../db/models';
+import { IItemCommonFields } from '../../../db/models/definitions/boards';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -269,4 +270,21 @@ export const dateSelector = (date: IDate) => {
     $gte: new Date(start),
     $lte: new Date(end),
   };
+};
+
+export const checkItemPermByUser = async (currentUserId: string, item: IItemCommonFields) => {
+  const stage = await Stages.getStage(item.stageId || '');
+
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+
+  if (
+    (pipeline.visibility === 'private' && !(pipeline.memberIds || []).includes(currentUserId)) ||
+    (pipeline.onlySelf &&
+      !(pipeline.dominantUserIds || []).includes(currentUserId) &&
+      !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId))
+  ) {
+    return null;
+  }
+
+  return item;
 };

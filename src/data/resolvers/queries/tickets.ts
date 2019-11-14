@@ -2,7 +2,7 @@ import { Tickets } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { IListParams } from './boards';
-import { generateTicketCommonFilters } from './boardUtils';
+import { checkItemPermByUser, generateTicketCommonFilters } from './boardUtils';
 
 const ticketQueries = {
   /**
@@ -21,8 +21,10 @@ const ticketQueries = {
   /**
    * Tickets detail
    */
-  ticketDetail(_root, { _id }: { _id: string }) {
-    return Tickets.findOne({ _id });
+  async ticketDetail(_root, { _id }: { _id: string }, { user }: IContext) {
+    const ticket = await Tickets.getTicket(_id);
+
+    return checkItemPermByUser(user._id, ticket);
   },
 };
 

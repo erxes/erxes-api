@@ -243,7 +243,10 @@ describe('dealQueries', () => {
   });
 
   test('Deal detail', async () => {
-    const deal = await dealFactory();
+    const currentUser = await userFactory({});
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const deal = await dealFactory({ stageId: stage._id });
 
     const args = { _id: deal._id };
 
@@ -255,8 +258,28 @@ describe('dealQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'dealDetail', args);
+    let response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
 
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'private' } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response).toBe(null);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { memberIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'public', onlySelf: true } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response).toBe(null);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { dominantUserIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { dominantUserIds: [], onlySelf: true } });
+    await Deals.updateOne({ _id: deal._id }, { $set: { assignedUserIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
     expect(response._id).toBe(deal._id);
   });
 

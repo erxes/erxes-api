@@ -2,7 +2,7 @@ import { Deals } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { IListParams } from './boards';
-import { generateDealCommonFilters } from './boardUtils';
+import { checkItemPermByUser, generateDealCommonFilters } from './boardUtils';
 
 interface IDealListParams extends IListParams {
   productIds?: [string];
@@ -105,8 +105,10 @@ const dealQueries = {
   /**
    * Deal detail
    */
-  dealDetail(_root, { _id }: { _id: string }) {
-    return Deals.findOne({ _id });
+  async dealDetail(_root, { _id }: { _id: string }, { user }: IContext) {
+    const deal = await Deals.getDeal(_id);
+
+    return checkItemPermByUser(user._id, deal);
   },
 };
 

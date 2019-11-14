@@ -2,7 +2,7 @@ import { Tasks } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { IListParams } from './boards';
-import { generateTaskCommonFilters } from './boardUtils';
+import { checkItemPermByUser, generateTaskCommonFilters } from './boardUtils';
 
 const taskQueries = {
   /**
@@ -21,8 +21,10 @@ const taskQueries = {
   /**
    * Tasks detail
    */
-  taskDetail(_root, { _id }: { _id: string }) {
-    return Tasks.findOne({ _id });
+  async taskDetail(_root, { _id }: { _id: string }, { user }: IContext) {
+    const task = await Tasks.getTask(_id);
+
+    return checkItemPermByUser(user._id, task);
   },
 };
 
