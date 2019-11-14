@@ -9,7 +9,7 @@ export const types = `
     createdBy: String
 
     createdByDetail: JSON
-    contentDetail: String
+    contentDetail: JSON
   }
 `;
 

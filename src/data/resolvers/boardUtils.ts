@@ -133,7 +133,7 @@ export const itemsChange = async (userId: string, item: any, type: string, desti
     const activityLogContent = {
       oldStageId,
       destinationStageId,
-      text: `moved deal from ${oldStage.name} to ${stage.name}`,
+      text: `${oldStage.name} to ${stage.name}`,
     };
 
     ActivityLogs.createBoardItemMovementLog(item, type, userId, activityLogContent);

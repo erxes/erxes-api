@@ -1,4 +1,4 @@
-import { Brands, Integrations, Stages, Users } from '../../db/models';
+import { Brands, Deals, GrowthHacks, Integrations, Stages, Tasks, Tickets, Users } from '../../db/models';
 import { IActivityLog } from '../../db/models/definitions/activityLogs';
 import { ACTIVITY_ACTIONS } from '../../db/models/definitions/constants';
 
@@ -22,10 +22,25 @@ export default {
   },
 
   async contentDetail(activityLog: IActivityLog) {
-    const { action } = activityLog;
+    const { action, content, contentType, contentId } = activityLog;
 
     if (action === ACTIVITY_ACTIONS.MOVED) {
-      const { content } = activityLog;
+      let item = {};
+
+      switch (contentType) {
+        case 'deal':
+          item = await Deals.getDeal(contentId);
+          break;
+        case 'task':
+          item = await Tasks.getTask(contentId);
+          break;
+        case 'growthHack':
+          item = await GrowthHacks.getGrowthHack(contentId);
+          break;
+        case 'ticket':
+          item = await Tickets.getTicket(contentId);
+          break;
+      }
 
       const { oldStageId, destinationStageId } = content;
 
@@ -33,10 +48,16 @@ export default {
       const oldStage = await Stages.getStage(oldStageId);
 
       if (destinationStage && oldStage) {
-        return `moved deal from ${oldStage.name} to ${destinationStage.name}`;
+        return {
+          destinationStage: destinationStage.name,
+          oldStage: destinationStage.name,
+          item,
+        };
       }
 
-      return content.text;
+      return {
+        text: content.text,
+      };
     }
   },
 };
