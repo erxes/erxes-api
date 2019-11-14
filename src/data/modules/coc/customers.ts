@@ -66,7 +66,7 @@ export class Builder {
   }
 
   public async defaultFilters(): Promise<any> {
-    const activeIntegrations = await Integrations.find({ isActive: true }, { _id: 1 });
+    const activeIntegrations = await Integrations.findIntegrations({}, { _id: 1 });
 
     return {
       status: { $ne: STATUSES.DELETED },
@@ -88,7 +88,7 @@ export class Builder {
     const brands = await Brands.find({});
 
     for (const brand of brands) {
-      const integrations = await Integrations.find({ brandId: brand._id });
+      const integrations = await Integrations.findIntegrations({ brandId: brand._id });
 
       const integrationIds = integrations.map(integration => integration._id);
 
@@ -100,24 +100,21 @@ export class Builder {
 
   // filter by brand
   public async brandFilter(brandId: string): Promise<IIntegrationIds> {
-    const integrations = await Integrations.find({ brandId });
+    const integrations = await Integrations.findIntegrations({ brandId });
 
     return { integrationId: { $in: integrations.map(i => i._id) } };
   }
 
   // filter by integration kind
   public async integrationTypeFilter(kind: string): Promise<IIntegrationIds> {
-    const integrations = await Integrations.find({ kind, isActive: true });
+    const integrations = await Integrations.findIntegrations({ kind });
 
     return { integrationId: { $in: integrations.map(i => i._id) } };
   }
 
   // filter by integration
   public async integrationFilter(integration: string): Promise<IIntegrationIds> {
-    const integrations = await Integrations.find({
-      kind: integration,
-      isActive: true,
-    });
+    const integrations = await Integrations.findIntegrations({ kind: integration });
     /**
      * Since both of brand and integration filters use a same integrationId field
      * we need to intersect two arrays of integration ids.

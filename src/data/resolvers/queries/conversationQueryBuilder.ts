@@ -149,7 +149,7 @@ export default class Builder {
 
   // filter by brand
   public async brandFilter(brandId: string): Promise<{ integrationId: IIn }> {
-    const integrations = await Integrations.find({ brandId });
+    const integrations = await Integrations.findIntegrations({ brandId });
     const integrationIds = _.pluck(integrations, '_id');
 
     return {
@@ -194,7 +194,7 @@ export default class Builder {
 
   // filter by integration type
   public async integrationTypeFilter(integrationType: string): Promise<{ $and: IIntersectIntegrationIds[] }> {
-    const integrations = await Integrations.find({ kind: integrationType });
+    const integrations = await Integrations.findIntegrations({ kind: integrationType });
 
     return {
       $and: [
