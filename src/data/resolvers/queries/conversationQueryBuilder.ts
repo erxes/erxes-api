@@ -199,7 +199,7 @@ export default class Builder {
 
   // filter by integration type
   public async integrationTypeFilter(integrationType: string): Promise<{ $and: IIntersectIntegrationIds[] }> {
-    const integrations = await Integrations.find({ kind: integrationType, isActive: { $ne: false } });
+    const integrations = await Integrations.find({ kind: integrationType });
 
     return {
       $and: [
