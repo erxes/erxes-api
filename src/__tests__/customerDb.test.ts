@@ -7,6 +7,7 @@ import {
   fieldFactory,
   integrationFactory,
   internalNoteFactory,
+  userFactory,
 } from '../db/factories';
 import {
   Conformities,
@@ -39,8 +40,20 @@ describe('Customers model tests', () => {
     await ImportHistory.deleteMany({});
   });
 
+  test('Get customer', async () => {
+    try {
+      await Customers.getCustomer('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
+
+    const response = await Customers.getCustomer(_customer._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create customer', async () => {
-    expect.assertions(12);
+    expect.assertions(13);
 
     // check duplication ===============
     try {
@@ -77,7 +90,7 @@ describe('Customers model tests', () => {
       phones: ['12312132'],
     };
 
-    const customerObj = await Customers.createCustomer(doc);
+    let customerObj = await Customers.createCustomer(doc);
 
     expect(customerObj.createdAt).toBeDefined();
     expect(customerObj.modifiedAt).toBeDefined();
@@ -87,6 +100,10 @@ describe('Customers model tests', () => {
     expect(customerObj.emails).toEqual(expect.arrayContaining(doc.emails));
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
     expect(customerObj.phones).toEqual(expect.arrayContaining(doc.phones));
+
+    customerObj = await Customers.createCustomer({}, await userFactory());
+
+    expect(customerObj).toBeDefined();
   });
 
   test('Create customer: with customer fields validation error', async () => {
@@ -393,5 +410,13 @@ describe('Customers model tests', () => {
     });
 
     expect(deals).toHaveLength(1);
+  });
+
+  test('Mark customer as active', async () => {
+    const customer = await customerFactory({});
+
+    const response = await Customers.markCustomerAsActive(customer._id);
+
+    expect(response.messengerData && response.messengerData.isActive).toBeTruthy();
   });
 });

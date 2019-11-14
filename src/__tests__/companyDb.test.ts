@@ -208,6 +208,7 @@ describe('Companies model tests', () => {
       names: ['company1'],
       phones: ['phone1'],
       emails: ['email1'],
+      scopeBrandIds: ['123'],
     });
 
     const company2 = await companyFactory({
@@ -216,6 +217,8 @@ describe('Companies model tests', () => {
       phones: ['phone2'],
       emails: ['email2'],
     });
+
+    const company3 = await companyFactory();
 
     const customer1 = await customerFactory({});
     await conformityFactory({
@@ -233,7 +236,7 @@ describe('Companies model tests', () => {
       relTypeId: company2._id,
     });
 
-    const companyIds = [company1._id, company2._id];
+    const companyIds = [company1._id, company2._id, company3._id];
     const mergedTagIds = ['123', '456', '1234', '1231', 'asd12'];
 
     // test duplication =================

@@ -170,13 +170,15 @@ export const loadClass = () => {
       for (const companyId of companyIds) {
         const companyObj = await Companies.getCompany(companyId);
 
-        const companyTags = companyObj.tagIds || [];
-        const companyNames = companyObj.names || [];
-        const companyEmails = companyObj.emails || [];
-        const companyPhones = companyObj.phones || [];
+        const companyTags = companyObj.tagIds && companyObj.tagIds.length > 0 ? companyObj.tagIds : [];
+        const companyNames = companyObj.names && companyObj.names.length > 0 ? companyObj.names : [];
+        const companyEmails = companyObj.emails && companyObj.emails.length > 0 ? companyObj.emails : [];
+        const companyPhones = companyObj.phones && companyObj.phones.length > 0 ? companyObj.phones : [];
+        const companyScopeBrandIds =
+          companyObj.scopeBrandIds && companyObj.scopeBrandIds.length > 0 ? companyObj.scopeBrandIds : [];
 
         // Merging scopeBrandIds
-        scopeBrandIds = [...scopeBrandIds, ...(companyObj.scopeBrandIds || [])];
+        scopeBrandIds = [...scopeBrandIds, ...companyScopeBrandIds];
 
         // merge custom fields data
         customFieldsData = { ...customFieldsData, ...(companyObj.customFieldsData || {}) };

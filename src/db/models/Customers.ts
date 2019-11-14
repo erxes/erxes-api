@@ -136,10 +136,8 @@ export const loadClass = () => {
       // Checking duplicated fields of customer
       await Customers.checkDuplication(doc, _id);
 
-      if (doc.customFieldsData) {
-        // clean custom field values
-        doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
-      }
+      // clean custom field values
+      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
       if (doc.primaryEmail) {
         const isValid = await validateEmail(doc.primaryEmail);

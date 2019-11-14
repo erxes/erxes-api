@@ -377,6 +377,7 @@ interface ICompanyFactoryInput {
   industry?: string;
   website?: string;
   tagIds?: string[];
+  scopeBrandIds?: string[];
   plan?: string;
   leadStatus?: string;
   status?: string;
@@ -392,17 +393,18 @@ interface ICompanyFactoryInput {
 export const companyFactory = (params: ICompanyFactoryInput = {}) => {
   const companyDoc = {
     primaryName: params.primaryName || faker.random.word(),
-    names: params.names || [faker.random.word()],
+    names: params.names || [],
     size: params.size || faker.random.number(),
     industry: params.industry || 'Airlines',
     website: params.website || faker.internet.domainName(),
-    tagIds: params.tagIds || [faker.random.number()],
+    tagIds: params.tagIds || [],
     plan: params.plan || faker.random.word(),
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
     phones: params.phones || [],
     emails: params.emails || [],
+    scopeBrandIds: params.scopeBrandIds || [],
     primaryPhone: params.primaryPhone || '',
     primaryEmail: params.primaryEmail || '',
   };
