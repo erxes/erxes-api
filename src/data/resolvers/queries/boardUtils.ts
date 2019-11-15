@@ -172,7 +172,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
 
   if (pipelineId) {
     const pipeline = await Pipelines.getPipeline(pipelineId);
-    if (pipeline.onlySelf && !(pipeline.dominantUserIds || []).includes(currentUserId)) {
+    if (pipeline.isCheckUser && !(pipeline.excludeCheckUserIds || []).includes(currentUserId)) {
       Object.assign(filter, { $or: [{ assignedUserIds: { $in: [currentUserId] } }, { userId: currentUserId }] });
     }
   }
@@ -285,8 +285,8 @@ export const checkItemPermByUser = async (currentUserId: string, item: IItemComm
   // and current user nothing dominant users
   // current user hans't this carts assigned and created
   if (
-    pipeline.onlySelf &&
-    !(pipeline.dominantUserIds || []).includes(currentUserId) &&
+    pipeline.isCheckUser &&
+    !(pipeline.excludeCheckUserIds || []).includes(currentUserId) &&
     !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId)
   ) {
     throw new Error('You do not have permission to view.');

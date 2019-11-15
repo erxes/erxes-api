@@ -229,7 +229,7 @@ describe('dealQueries', () => {
 
     expect(response.length).toBe(3);
 
-    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { onlySelf: true } });
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { isCheckUser: true } });
 
     response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
 
@@ -262,22 +262,28 @@ describe('dealQueries', () => {
     expect(response._id).toBe(deal._id);
 
     await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'private' } });
-    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
-    expect(response).toBe(null);
+    try {
+      response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    } catch (e) {
+      expect(e[0].message).toEqual('You do not have permission to view.');
+    }
 
     await Pipelines.updateOne({ _id: pipeline._id }, { $set: { memberIds: [currentUser._id] } });
     response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
     expect(response._id).toBe(deal._id);
 
-    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'public', onlySelf: true } });
-    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
-    expect(response).toBe(null);
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'public', isCheckUser: true } });
+    try {
+      response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    } catch (e) {
+      expect(e[0].message).toEqual('You do not have permission to view.');
+    }
 
-    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { dominantUserIds: [currentUser._id] } });
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { excludeCheckUserIds: [currentUser._id] } });
     response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
     expect(response._id).toBe(deal._id);
 
-    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { dominantUserIds: [], onlySelf: true } });
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { excludeCheckUserIds: [], isCheckUser: true } });
     await Deals.updateOne({ _id: deal._id }, { $set: { assignedUserIds: [currentUser._id] } });
     response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
     expect(response._id).toBe(deal._id);

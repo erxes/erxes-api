@@ -29,8 +29,8 @@ export const types = `
     hackScoringType: String
     templateId: String
     state: String
-    onlySelf: Boolean
-    dominantUserIds: [String]
+    isCheckUser: Boolean
+    excludeCheckUserIds: [String]
     ${commonTypes}
   }
 
@@ -83,8 +83,8 @@ const pipelineParams = `
   metric: String,
   hackScoringType: String,
   templateId: String,
-  onlySelf: Boolean
-  dominantUserIds: [String],
+  isCheckUser: Boolean
+  excludeCheckUserIds: [String],
 `;
 
 export const mutations = `
