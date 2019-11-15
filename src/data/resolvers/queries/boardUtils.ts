@@ -277,13 +277,19 @@ export const checkItemPermByUser = async (currentUserId: string, item: IItemComm
 
   const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
+  if (pipeline.visibility === 'private' && !(pipeline.memberIds || []).includes(currentUserId)) {
+    throw new Error('You do not have permission to view.');
+  }
+
+  // pipeline is Show only the users assigned(created) cards checked
+  // and current user nothing dominant users
+  // current user hans't this carts assigned and created
   if (
-    (pipeline.visibility === 'private' && !(pipeline.memberIds || []).includes(currentUserId)) ||
-    (pipeline.onlySelf &&
-      !(pipeline.dominantUserIds || []).includes(currentUserId) &&
-      !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId))
+    pipeline.onlySelf &&
+    !(pipeline.dominantUserIds || []).includes(currentUserId) &&
+    !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId)
   ) {
-    return null;
+    throw new Error('You do not have permission to view.');
   }
 
   return item;
