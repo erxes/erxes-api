@@ -34,6 +34,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
     initialStageId,
     type,
     labelIds,
+    priority,
   } = args;
 
   const isListEmpty = value => {
@@ -170,6 +171,10 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
     filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
   }
 
+  if (priority) {
+    filter.priority = contains(priority);
+  }
+
   if (pipelineId) {
     const pipeline = await Pipelines.getPipeline(pipelineId);
     if (pipeline.isCheckUser && !(pipeline.excludeCheckUserIds || []).includes(currentUserId)) {
@@ -205,11 +210,7 @@ export const generateDealCommonFilters = async (currentUserId: string, args: any
 export const generateTicketCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'ticket';
   const filter = await generateCommonFilters(currentUserId, args);
-  const { priority, source } = extraParams || args;
-
-  if (priority) {
-    filter.priority = contains(priority);
-  }
+  const { source } = extraParams || args;
 
   if (source) {
     filter.source = contains(source);
@@ -218,31 +219,21 @@ export const generateTicketCommonFilters = async (currentUserId: string, args: a
   return filter;
 };
 
-export const generateTaskCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
+export const generateTaskCommonFilters = async (currentUserId: string, args: any) => {
   args.type = 'task';
-  const filter = await generateCommonFilters(currentUserId, args);
-  const { priority } = extraParams || args;
 
-  if (priority) {
-    filter.priority = contains(priority);
-  }
-
-  return filter;
+  return generateCommonFilters(currentUserId, args);
 };
 
 export const generateGrowthHackCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'growthHack';
 
-  const { hackStage, priority, pipelineId, stageId } = extraParams || args;
+  const { hackStage, pipelineId, stageId } = extraParams || args;
 
   const filter = await generateCommonFilters(currentUserId, args);
 
   if (hackStage) {
-    filter.hackStages = { $in: [hackStage] };
-  }
-
-  if (priority) {
-    filter.priority = priority;
+    filter.hackStages = contains(hackStage);
   }
 
   if (!stageId && pipelineId) {

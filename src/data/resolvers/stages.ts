@@ -72,11 +72,11 @@ export default {
         return Tickets.find(filter).countDocuments();
       }
       case BOARD_TYPES.TASK: {
-        const filter = await generateTaskCommonFilters(
-          user._id,
-          { ...args, stageId: stage._id, pipelineId: stage.pipelineId },
-          args.extraParams,
-        );
+        const filter = await generateTaskCommonFilters(user._id, {
+          ...args,
+          stageId: stage._id,
+          pipelineId: stage.pipelineId,
+        });
 
         return Tasks.find(filter).countDocuments();
       }
