@@ -3,7 +3,7 @@ import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/defi
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog } from '../../utils';
+import { createConformity, putCreateLog } from '../../utils';
 import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
@@ -24,25 +24,12 @@ const taskMutations = {
       userId: user._id,
     });
 
-    const { customerIds = [], companyIds = [] } = doc;
-
-    for (const companyId of companyIds) {
-      await Conformities.addConformity({
-        mainType: 'task',
-        mainTypeId: task._id,
-        relType: 'company',
-        relTypeId: companyId,
-      });
-    }
-
-    for (const customerId of customerIds) {
-      await Conformities.addConformity({
-        mainType: 'task',
-        mainTypeId: task._id,
-        relType: 'customer',
-        relTypeId: customerId,
-      });
-    }
+    await createConformity({
+      mainType: 'task',
+      mainTypeId: task._id,
+      companyIds: doc.companyIds,
+      customerIds: doc.customerIds,
+    });
 
     await sendNotifications({
       item: task,

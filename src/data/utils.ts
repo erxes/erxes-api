@@ -7,7 +7,7 @@ import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Customers, Notifications, Users } from '../db/models';
+import { Conformities, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
@@ -847,4 +847,34 @@ export const regexSearchText = (searchValue: string) => {
   }
 
   return { $and: result };
+};
+
+export const createConformity = async ({
+  companyIds = [],
+  customerIds = [],
+  mainType,
+  mainTypeId,
+}: {
+  companyIds?: string[];
+  customerIds?: string[];
+  mainType: string;
+  mainTypeId: string;
+}) => {
+  for (const companyId of companyIds) {
+    await Conformities.addConformity({
+      mainType,
+      mainTypeId,
+      relType: 'company',
+      relTypeId: companyId,
+    });
+  }
+
+  for (const customerId of customerIds) {
+    await Conformities.addConformity({
+      mainType,
+      mainTypeId,
+      relType: 'customer',
+      relTypeId: customerId,
+    });
+  }
 };
