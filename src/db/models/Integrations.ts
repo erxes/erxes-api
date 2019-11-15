@@ -1,4 +1,4 @@
-import { Model, model } from 'mongoose';
+import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
 import { ConversationMessages, Conversations, Customers, Forms } from '.';
 import { KIND_CHOICES } from './definitions/constants';
@@ -27,6 +27,7 @@ export interface IExternalIntegrationParams {
 
 export interface IIntegrationModel extends Model<IIntegrationDocument> {
   getIntegration(_id: string): IIntegrationDocument;
+  findIntegrations(query: any, options?: any): Query<IIntegrationDocument[]>;
   generateLeadDoc(mainDoc: IIntegration, leadData: ILeadData): IIntegration;
   createIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
   createMessengerIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
@@ -55,6 +56,13 @@ export const loadClass = () => {
     }
 
     /**
+     * Find integrations
+     */
+    public static findIntegrations(query, options) {
+      return Integrations.find({ ...query, isActive: { $ne: false } }, options);
+    }
+
+    /**
      * Generate lead integration data based on the given lead data (leadData)
      * and integration data (mainDoc)
      */
@@ -70,7 +78,7 @@ export const loadClass = () => {
      * Create an integration, intended as a private method
      */
     public static createIntegration(doc: IIntegration, userId: string) {
-      return Integrations.create({ ...doc, createdUserId: userId });
+      return Integrations.create({ ...doc, isActive: true, createdUserId: userId });
     }
 
     /**

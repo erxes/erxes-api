@@ -602,7 +602,9 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     ...(params.tagIds ? { tagIds: params.tagIds } : {}),
   };
 
-  return Integrations.create(doc);
+  const user = await userFactory({});
+
+  return Integrations.createIntegration(doc, user._id);
 };
 
 interface IFormFactoryInput {
