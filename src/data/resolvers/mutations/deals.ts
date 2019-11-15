@@ -26,6 +26,26 @@ const dealMutations = {
       userId: user._id,
     });
 
+    const { companyIds = [], customerIds = [] } = doc;
+
+    for (const companyId of companyIds) {
+      await Conformities.addConformity({
+        mainType: 'deal',
+        mainTypeId: deal._id,
+        relType: 'company',
+        relTypeId: companyId,
+      });
+    }
+
+    for (const customerId of customerIds) {
+      await Conformities.addConformity({
+        mainType: 'deal',
+        mainTypeId: deal._id,
+        relType: 'customer',
+        relTypeId: customerId,
+      });
+    }
+
     await sendNotifications({
       item: deal,
       user,
