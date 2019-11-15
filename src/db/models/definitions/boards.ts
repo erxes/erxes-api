@@ -29,6 +29,7 @@ export interface IItemCommonFields {
   createdAt?: Date;
   order?: number;
   searchText?: string;
+  priority?: string;
 }
 
 export interface IItemCommonFieldsDocument extends IItemCommonFields, Document {
@@ -131,6 +132,7 @@ export const commonItemFieldsSchema = {
   }),
   modifiedBy: field({ type: String }),
   searchText: field({ type: String, optional: true, index: true }),
+  priority: field({ type: String, optional: true }),
 };
 
 export const boardSchema = schemaWrapper(
