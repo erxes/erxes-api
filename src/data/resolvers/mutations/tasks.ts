@@ -24,6 +24,26 @@ const taskMutations = {
       userId: user._id,
     });
 
+    const { customerIds = [], companyIds = [] } = doc;
+
+    for (const companyId of companyIds) {
+      await Conformities.addConformity({
+        mainType: 'task',
+        mainTypeId: task._id,
+        relType: 'company',
+        relTypeId: companyId,
+      });
+    }
+
+    for (const customerId of customerIds) {
+      await Conformities.addConformity({
+        mainType: 'task',
+        mainTypeId: task._id,
+        relType: 'customer',
+        relTypeId: customerId,
+      });
+    }
+
     await sendNotifications({
       item: task,
       user,
