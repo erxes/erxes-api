@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { validateEmail, validSearchText } from '../../data/utils';
+import { arrayChecker, validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
@@ -20,7 +20,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
-  updateProfileScore(customerId: string, save: boolean): never;
+  updateProfileScore(customerId: string, save: boolean): any;
 }
 
 export const loadClass = () => {
@@ -191,23 +191,31 @@ export const loadClass = () => {
 
       const nullValues = ['', null];
       let score = 0;
-      let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
+      let searchText = '';
 
-      if (customer.firstName && !nullValues.includes(customer.firstName || '')) {
+      if (customer.emails && customer.emails.length > 0) {
+        searchText = searchText.concat(' ', customer.emails.join(' '));
+      }
+
+      if (customer.phones && customer.phones.length > 0) {
+        searchText = searchText.concat(' ', customer.phones.join(' '));
+      }
+
+      if (customer.firstName && !nullValues.includes(customer.firstName)) {
         score += 10;
         searchText = searchText.concat(' ', customer.firstName);
       }
 
-      if (customer.lastName && !nullValues.includes(customer.lastName || '')) {
+      if (customer.lastName && !nullValues.includes(customer.lastName)) {
         score += 5;
         searchText = searchText.concat(' ', customer.lastName);
       }
 
-      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail || '')) {
+      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail)) {
         score += 15;
       }
 
-      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone || '')) {
+      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone)) {
         score += 10;
       }
 
@@ -283,16 +291,16 @@ export const loadClass = () => {
           customFieldsData = { ...customFieldsData, ...(customerObj.customFieldsData || {}) };
 
           // Merging scopeBrandIds
-          scopeBrandIds = [...scopeBrandIds, ...(customerObj.scopeBrandIds || [])];
+          scopeBrandIds = [...scopeBrandIds, ...arrayChecker(customerObj.scopeBrandIds)];
 
-          const customerTags: string[] = customerObj.tagIds || [];
+          const customerTags: string[] = arrayChecker(customerObj.tagIds);
 
           // Merging customer's tag and companies into 1 array
           tagIds = tagIds.concat(customerTags);
 
           // Merging emails, phones
-          emails = [...emails, ...(customerObj.emails || [])];
-          phones = [...phones, ...(customerObj.phones || [])];
+          emails = [...emails, ...arrayChecker(customerObj.emails)];
+          phones = [...phones, ...arrayChecker(customerObj.phones)];
 
           await Customers.findByIdAndUpdate(customerId, { $set: { status: STATUSES.DELETED } });
         }

@@ -889,3 +889,11 @@ export const checkUserIds = (oldUserIds: string[], newUserIds: string[]) => {
 
   return { addedUserIds, removedUserIds };
 };
+
+export const arrayChecker = (list?: any[]) => {
+  if (list && list.length > 0) {
+    return list;
+  }
+
+  return [];
+};

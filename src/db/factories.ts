@@ -449,8 +449,8 @@ export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMeth
     lastName: params.lastName || faker.random.word(),
     primaryEmail: params.primaryEmail || faker.internet.email(),
     primaryPhone: params.primaryPhone || faker.phone.phoneNumber(),
-    emails: params.emails || [faker.internet.email()],
-    phones: params.phones || [faker.phone.phoneNumber()],
+    emails: params.emails || [],
+    phones: params.phones || [],
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
@@ -587,6 +587,7 @@ interface IIntegrationFactoryInput {
   formId?: string;
   leadData?: any | string;
   tagIds?: string[];
+  isActive?: boolean;
 }
 
 export const integrationFactory = async (params: IIntegrationFactoryInput = {}) => {
@@ -595,11 +596,12 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
   const doc = {
     name: params.name || faker.random.word(),
     kind,
-    brandId: params.brandId || Random.id(),
-    formId: params.formId || Random.id(),
+    brandId: params.brandId,
+    formId: params.formId,
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
-    ...(params.tagIds ? { tagIds: params.tagIds } : {}),
+    tagIds: params.tagIds,
+    isActive: params.isActive === undefined || params.isActive === null ? true : params.isActive,
   };
 
   const user = await userFactory({});
@@ -735,7 +737,6 @@ export const knowledgeBaseTopicFactory = async (params: IKnowledgeBaseTopicFacto
     title: faker.random.word(),
     description: faker.lorem.sentence,
     brandId: faker.random.word(),
-    catgoryIds: [faker.random.word()],
     color: params.color,
   };
 
@@ -756,7 +757,7 @@ export const knowledgeBaseCategoryFactory = async (params: IKnowledgeBaseCategor
   const doc = {
     title: faker.random.word(),
     description: faker.lorem.sentence,
-    articleIds: params.articleIds || [faker.random.word(), faker.random.word()],
+    articleIds: params.articleIds,
     icon: faker.random.word(),
   };
 
@@ -1086,7 +1087,7 @@ export const importHistoryFactory = async (params: IImportHistoryFactoryInput) =
 interface IMessengerApp {
   name?: string;
   kind?: string;
-  credentials: IMessengerAppCrendentials;
+  credentials?: IMessengerAppCrendentials;
 }
 
 export function messengerAppFactory(params: IMessengerApp) {

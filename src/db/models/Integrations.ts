@@ -124,7 +124,7 @@ export const loadClass = () => {
     public static createLeadIntegration({ leadData = {}, ...mainDoc }: IIntegration, userId: string) {
       const doc = this.generateLeadDoc({ ...mainDoc }, leadData);
 
-      if (Object.keys(leadData || {}).length === 0) {
+      if (Object.keys(leadData).length === 0) {
         throw new Error('leadData must be supplied');
       }
 

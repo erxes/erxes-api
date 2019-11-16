@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { arrayChecker } from '../../data/utils';
 import {
   articleSchema,
   categorySchema,
@@ -58,7 +59,7 @@ export const loadArticleClass = () => {
         });
 
         for (const category of categories) {
-          const articleIds = category.toJSON().articleIds || [];
+          const articleIds = category.toJSON().articleIds;
 
           articleIds.push(article._id.toString());
 
@@ -90,11 +91,7 @@ export const loadArticleClass = () => {
         },
       );
 
-      const article = await KnowledgeBaseArticles.findOne({ _id });
-
-      if (!article) {
-        throw new Error('Article not found');
-      }
+      const article = await KnowledgeBaseArticles.getArticle(_id);
 
       // add new article id to categories's articleIds field
       if ((categoryIds || []).length > 0) {
@@ -103,7 +100,7 @@ export const loadArticleClass = () => {
         });
 
         for (const category of categories) {
-          const articleIds = category.toJSON().articleIds || [];
+          const articleIds = category.toJSON().articleIds;
 
           // check previous entry
           if (!articleIds.includes(article._id)) {
@@ -176,7 +173,7 @@ export const loadCategoryClass = () => {
 
         // add new category to topics's categoryIds field
         for (const topic of topics) {
-          const categoryIds = topic.toJSON().categoryIds || [];
+          const categoryIds = topic.toJSON().categoryIds;
 
           categoryIds.push(category._id.toString());
 
@@ -208,17 +205,13 @@ export const loadCategoryClass = () => {
         },
       );
 
-      const category = await KnowledgeBaseCategories.findOne({ _id });
-
-      if (!category) {
-        throw new Error('Category not found');
-      }
+      const category = await KnowledgeBaseCategories.getCategory(_id);
 
       if ((topicIds || []).length > 0) {
         const topics = await KnowledgeBaseTopics.find({ _id: { $in: topicIds } });
 
         for (const topic of topics) {
-          const categoryIds = topic.categoryIds || [];
+          const categoryIds = arrayChecker(topic.categoryIds);
 
           // add categoryId to topics's categoryIds list
           if (!categoryIds.includes(category._id.toString())) {
@@ -244,7 +237,7 @@ export const loadCategoryClass = () => {
         throw new Error('Category not found');
       }
 
-      if (category.articleIds) {
+      if (category.articleIds && category.articleIds.length > 0) {
         await KnowledgeBaseArticles.deleteMany({ _id: { $in: category.articleIds } });
       }
 

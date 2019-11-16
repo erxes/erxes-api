@@ -3,6 +3,7 @@ import {
   brandFactory,
   conversationFactory,
   conversationMessageFactory,
+  customerFactory,
   fieldFactory,
   formFactory,
   integrationFactory,
@@ -25,6 +26,28 @@ describe('messenger integration model add method', () => {
   afterEach(async () => {
     await Brands.deleteMany({});
     await Integrations.deleteMany({});
+  });
+
+  test('Get integration', async () => {
+    const integration = await integrationFactory({});
+
+    try {
+      await Integrations.getIntegration('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+
+    const response = await Integrations.getIntegration(integration._id);
+
+    expect(response).toBeDefined();
+  });
+
+  test('Find integration', async () => {
+    const integration = await integrationFactory({});
+
+    const response = await Integrations.findIntegrations({ _id: integration._id });
+
+    expect(response.length).toBe(1);
   });
 
   test('check if messenger integration create method is running successfully', async () => {
@@ -191,6 +214,24 @@ describe('edit lead integration', () => {
     await Forms.deleteMany({});
   });
 
+  test('create external integration', async () => {
+    const brand = await brandFactory();
+    const user = await userFactory();
+
+    const doc = {
+      name: 'external',
+      kind: KIND_CHOICES.FACEBOOK_MESSENGER,
+      brandId: brand._id,
+      accountId: 'accountId',
+    };
+
+    const integration = await Integrations.createExternalIntegration(doc, user._id);
+
+    expect(integration.name).toBe(doc.name);
+    expect(integration.kind).toBe(doc.kind);
+    expect(integration.brandId).toBe(doc.brandId);
+  });
+
   test('test if integration lead update method is running successfully', async () => {
     const mainDoc = {
       name: 'lead integration test 2',
@@ -216,6 +257,13 @@ describe('edit lead integration', () => {
     expect(integration.formId).toEqual(_form._id);
     expect(integration.brandId).toEqual(_brand2._id);
     expect(integration.leadData.loadType).toEqual(LEAD_LOAD_TYPES.SHOUTBOX);
+
+    const integrationNoLeadData = await Integrations.updateLeadIntegration(_leadIntegration._id, {
+      ...mainDoc,
+    });
+
+    expect(integrationNoLeadData.leadData && integrationNoLeadData.leadData.adminEmails).toHaveLength(0);
+    expect(integrationNoLeadData.leadData && integrationNoLeadData.leadData.rules).toHaveLength(0);
   });
 });
 
@@ -244,6 +292,8 @@ describe('remove integration model method test', () => {
 
     await conversationMessageFactory({ conversationId: _conversation._id });
     await conversationMessageFactory({ conversationId: _conversation._id });
+
+    await customerFactory({ integrationId: _integration._id });
   });
 
   afterEach(async () => {
@@ -255,11 +305,23 @@ describe('remove integration model method test', () => {
   });
 
   test('test if remove lead integration model method is working successfully', async () => {
+    try {
+      await Integrations.removeIntegration('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+
     await Integrations.removeIntegration(_integration._id);
 
     expect(await Integrations.find({}).countDocuments()).toEqual(0);
     expect(await ConversationMessages.find({}).countDocuments()).toBe(0);
     expect(await Forms.find({}).countDocuments()).toBe(0);
+
+    const integrationNoForm = await integrationFactory();
+
+    await Integrations.removeIntegration(integrationNoForm._id);
+
+    expect(await Integrations.find({}).countDocuments()).toEqual(0);
   });
 });
 

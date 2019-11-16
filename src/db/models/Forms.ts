@@ -42,7 +42,7 @@ export const loadFormClass = () => {
 
       do {
         code = Random.id().substr(0, 6);
-        foundForm = (await Forms.findOne({ code })) ? true : false;
+        foundForm = Boolean(await Forms.findOne({ code }));
       } while (foundForm);
 
       return code;
@@ -84,11 +84,7 @@ export const loadFormClass = () => {
      * Duplicates form and form fields of the form
      */
     public static async duplicate(_id: string) {
-      const form = await Forms.findOne({ _id });
-
-      if (!form) {
-        throw new Error('Form not found');
-      }
+      const form = await Forms.getForm(_id);
 
       // duplicate form ===================
       const newForm = await this.createForm(

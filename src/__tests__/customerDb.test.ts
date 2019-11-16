@@ -101,7 +101,12 @@ describe('Customers model tests', () => {
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
     expect(customerObj.phones).toEqual(expect.arrayContaining(doc.phones));
 
-    customerObj = await Customers.createCustomer({}, await userFactory());
+    customerObj = await Customers.createCustomer(
+      {
+        visitorContactInfo: {},
+      },
+      await userFactory(),
+    );
 
     expect(customerObj).toBeDefined();
   });
@@ -127,7 +132,7 @@ describe('Customers model tests', () => {
   });
 
   test('Update customer', async () => {
-    expect.assertions(5);
+    expect.assertions(6);
 
     const previousCustomer = await customerFactory({
       primaryEmail: 'dombo@yahoo.com',
@@ -152,12 +157,16 @@ describe('Customers model tests', () => {
     // remove previous duplicated entry
     await Customers.deleteOne({ _id: previousCustomer._id });
 
-    const customerObj = await Customers.updateCustomer(_customer._id, doc);
+    let customerObj = await Customers.updateCustomer(_customer._id, doc);
 
     expect(customerObj.modifiedAt).toBeDefined();
     expect(customerObj.firstName).toBe(doc.firstName);
     expect(customerObj.primaryEmail).toBe(doc.primaryEmail);
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
+
+    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' });
+
+    expect(customerObj.primaryEmail).toBe('');
   });
 
   test('Mark customer as inactive', async () => {
@@ -242,6 +251,18 @@ describe('Customers model tests', () => {
 
     expect(merged.emails).toContain('merged@gmail.com');
     expect(merged.phones).toContain('2555225');
+  });
+
+  test('Merge customers: without primaryEmail and primaryPhone', async () => {
+    const visitor1 = await customerFactory({});
+    const visitor2 = await customerFactory({});
+
+    const customerIds = [visitor1._id, visitor2._id];
+
+    const merged = await Customers.mergeCustomers(customerIds, {});
+
+    expect(merged.emails).toHaveLength(0);
+    expect(merged.phones).toHaveLength(0);
   });
 
   test('Merge customers', async () => {
@@ -343,7 +364,7 @@ describe('Customers model tests', () => {
       ownerId: '456',
     };
 
-    const mergedCustomer = await Customers.mergeCustomers(customerIds, doc);
+    const mergedCustomer = await Customers.mergeCustomers([...customerIds, 'fakeId'], doc);
 
     if (!mergedCustomer || !mergedCustomer.messengerData || !mergedCustomer.visitorContactInfo) {
       throw new Error('Merged customer not found');
@@ -412,7 +433,19 @@ describe('Customers model tests', () => {
     expect(deals).toHaveLength(1);
   });
 
-  test('Mark customer as active', async () => {
+  test('Update profile score', async () => {
+    let response = await Customers.updateProfileScore('fakeId', true);
+
+    expect(response).toBe(0);
+
+    const customer = await customerFactory({});
+
+    response = await Customers.updateProfileScore(customer._id, false);
+
+    expect(response.updateOne.filter._id).toBe(customer._id);
+  });
+
+  test('Mark as active', async () => {
     const customer = await customerFactory({});
 
     const response = await Customers.markCustomerAsActive(customer._id);
