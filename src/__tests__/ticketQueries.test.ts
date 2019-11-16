@@ -3,6 +3,7 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
+  pipelineFactory,
   stageFactory,
   ticketFactory,
   userFactory,
@@ -36,22 +37,14 @@ describe('ticketQueries', () => {
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
+      $closeDateType: String
     ) {
       tickets(
         stageId: $stageId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
+        closeDateType: $closeDateType
       ) {
         ${commonTicketTypes}
       }
@@ -130,7 +123,9 @@ describe('ticketQueries', () => {
   });
 
   test('Ticket detail', async () => {
-    const ticket = await ticketFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const ticket = await ticketFactory({ stageId: stage._id });
 
     const args = { _id: ticket._id };
 
