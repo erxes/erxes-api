@@ -50,6 +50,7 @@ describe('growthHackQueries', () => {
       $overdue: String
       $priority: String
       $hackStage: String
+      $closeDateType: String
     ) {
       growthHacks(
         stageId: $stageId 
@@ -61,6 +62,7 @@ describe('growthHackQueries', () => {
         overdue: $overdue
         priority: $priority
         hackStage: $hackStage
+        closeDateType: $closeDateType
       ) {
         ${commonGrowthHackTypes}
       }

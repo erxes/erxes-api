@@ -3,6 +3,7 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
+  pipelineFactory,
   stageFactory,
   ticketFactory,
   userFactory,
@@ -43,6 +44,7 @@ describe('ticketQueries', () => {
       $overdue: String
       $priority: [String]
       $source: [String]
+      $closeDateType: String
     ) {
       tickets(
         stageId: $stageId
@@ -56,6 +58,7 @@ describe('ticketQueries', () => {
         overdue: $overdue
         priority: $priority
         source: $source
+        closeDateType: $closeDateType
       ) {
         ${commonTicketTypes}
       }
@@ -150,7 +153,9 @@ describe('ticketQueries', () => {
   });
 
   test('Ticket detail', async () => {
-    const ticket = await ticketFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const ticket = await ticketFactory({ stageId: stage._id });
 
     const args = { _id: ticket._id };
 

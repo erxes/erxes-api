@@ -3,6 +3,7 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
+  pipelineFactory,
   stageFactory,
   taskFactory,
   userFactory,
@@ -48,6 +49,7 @@ describe('taskQueries', () => {
       $noCloseDate: String
       $overdue: String
       $priority: [String]
+      $closeDateType: String
     ) {
       tasks(
         stageId: $stageId
@@ -60,6 +62,7 @@ describe('taskQueries', () => {
         noCloseDate: $noCloseDate
         overdue: $overdue
         priority: $priority
+        closeDateType: $closeDateType
       ) {
         ${commonTaskTypes}
       }
