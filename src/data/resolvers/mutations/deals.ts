@@ -4,8 +4,8 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { createConformity, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface IDealsEdit extends IDeal {
