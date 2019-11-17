@@ -23,6 +23,18 @@ describe('User db utils', () => {
     await Users.deleteMany({});
   });
 
+  test('Get user', async () => {
+    try {
+      await Users.getUser('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('User not found');
+    }
+
+    const response = await Users.getUser(_user._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create user', async () => {
     const testPassword = 'test';
 

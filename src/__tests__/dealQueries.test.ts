@@ -53,7 +53,6 @@ describe('dealQueries', () => {
       $mainTypeId: String
       $isRelated: Boolean
       $isSaved: Boolean
-      $pipelineId: String
       $date: ItemDate
       $labelIds: [String]
       $initialStageId: String
@@ -71,7 +70,6 @@ describe('dealQueries', () => {
         conformityMainTypeId: $mainTypeId
         conformityIsRelated: $isRelated
         conformityIsSaved: $isSaved
-        pipelineId: $pipelineId
         date: $date
         labelIds: $labelIds
         initialStageId: $initialStageId
@@ -289,7 +287,8 @@ describe('dealQueries', () => {
   });
 
   test('Deals', async () => {
-    const pipeline = await pipelineFactory();
+    const board = await boardFactory();
+    const pipeline = await pipelineFactory({ boardId: board._id });
     const stage = await stageFactory({ pipelineId: pipeline._id });
     const currentUser = await userFactory({});
 
@@ -326,7 +325,8 @@ describe('dealQueries', () => {
 
   test('Deal detail', async () => {
     const currentUser = await userFactory({});
-    const pipeline = await pipelineFactory();
+    const board = await boardFactory();
+    const pipeline = await pipelineFactory({ boardId: board._id });
     const stage = await stageFactory({ pipelineId: pipeline._id });
     const deal = await dealFactory({ stageId: stage._id, watchedUserIds: [currentUser._id] });
 
@@ -416,7 +416,6 @@ describe('dealQueries', () => {
 
     const response = await graphqlRequest(qry, 'dealsTotalAmounts', filter);
 
-    expect(response.dealCount).toBe(3);
     expect(response.dealCount).toBe(3);
     expect(response.totalForType[0].currencies[0].name).toBe('USD');
     expect(response.totalForType[0].currencies[0].amount).toBe(600);

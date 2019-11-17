@@ -1009,6 +1009,7 @@ interface IProductCategoryFactoryInput {
   description?: string;
   parentId?: string;
   code?: string;
+  order?: string;
 }
 
 export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}) => {
@@ -1017,6 +1018,7 @@ export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}
     description: params.description || faker.random.word(),
     parentId: params.parentId,
     code: params.code || faker.random.word(),
+    order: params.order || faker.random.word(),
     createdAt: new Date(),
   });
 
