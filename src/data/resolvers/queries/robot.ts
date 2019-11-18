@@ -168,6 +168,7 @@ const robotQueries = {
 
       return {
         _id: job._id,
+        isNotified: job.isNotified,
         content,
       };
     });

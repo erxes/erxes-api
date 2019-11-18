@@ -8,6 +8,8 @@ export const jobDetail = async (_id: string) => {
     throw new Error(`Job not found ${_id}`);
   }
 
+  await RobotJobs.markAsNotified(_id);
+
   const data: any = {};
 
   if (job.type === 'customerScoring') {

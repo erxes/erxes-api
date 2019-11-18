@@ -14,6 +14,7 @@ export const types = `
   type RobotJob {
     _id: String
     content: String
+    isNotified: Boolean
   }
 `;
 
@@ -24,7 +25,6 @@ export const queries = `
 `;
 
 export const mutations = `
-  robotMarkJobAsNotified(_id: String): [RobotJob]
   onboardingCheckStatus: String
   onboardingForceComplete: JSON
   onboardingCompleteShowStep(step: String): JSON
