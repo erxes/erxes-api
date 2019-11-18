@@ -1,5 +1,6 @@
 import * as moment from 'moment';
-import { Conformities, Stages } from '../../../db/models';
+import { Conformities, Pipelines, Stages } from '../../../db/models';
+import { IItemCommonFields } from '../../../db/models/definitions/boards';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 
 export const contains = (values: string[] = [], empty = false) => {
@@ -10,16 +11,13 @@ export const contains = (values: string[] = [], empty = false) => {
   return { $in: values };
 };
 
-export const generateCommonFilters = async (args: any) => {
+export const generateCommonFilters = async (currentUserId: string, args: any) => {
   const {
     $and,
+    pipelineId,
     stageId,
     search,
-    overdue,
-    nextMonth,
-    nextDay,
-    nextWeek,
-    noCloseDate,
+    closeDateType,
     assignedUserIds,
     customerIds,
     companyIds,
@@ -111,48 +109,50 @@ export const generateCommonFilters = async (args: any) => {
     filter.initialStageId = initialStageId;
   }
 
-  if (nextDay) {
-    const tommorrow = moment().add(1, 'days');
+  if (closeDateType) {
+    if (closeDateType === 'nextDay') {
+      const tommorrow = moment().add(1, 'days');
 
-    filter.closeDate = {
-      $gte: new Date(tommorrow.startOf('day').toISOString()),
-      $lte: new Date(tommorrow.endOf('day').toISOString()),
-    };
-  }
+      filter.closeDate = {
+        $gte: new Date(tommorrow.startOf('day').toISOString()),
+        $lte: new Date(tommorrow.endOf('day').toISOString()),
+      };
+    }
 
-  if (nextWeek) {
-    const monday = moment()
-      .day(1 + 7)
-      .format('YYYY-MM-DD');
-    const nextSunday = moment()
-      .day(7 + 7)
-      .format('YYYY-MM-DD');
+    if (closeDateType === 'nextWeek') {
+      const monday = moment()
+        .day(1 + 7)
+        .format('YYYY-MM-DD');
+      const nextSunday = moment()
+        .day(7 + 7)
+        .format('YYYY-MM-DD');
 
-    filter.closeDate = {
-      $gte: new Date(monday),
-      $lte: new Date(nextSunday),
-    };
-  }
+      filter.closeDate = {
+        $gte: new Date(monday),
+        $lte: new Date(nextSunday),
+      };
+    }
 
-  if (nextMonth) {
-    const now = new Date();
-    const { start, end } = getNextMonth(now);
+    if (closeDateType === 'nextMonth') {
+      const now = new Date();
+      const { start, end } = getNextMonth(now);
 
-    filter.closeDate = {
-      $gte: new Date(start),
-      $lte: new Date(end),
-    };
-  }
+      filter.closeDate = {
+        $gte: new Date(start),
+        $lte: new Date(end),
+      };
+    }
 
-  if (noCloseDate) {
-    filter.closeDate = { $exists: false };
-  }
+    if (closeDateType === 'noCloseDate') {
+      filter.closeDate = { $exists: false };
+    }
 
-  if (overdue) {
-    const now = new Date();
-    const today = getToday(now);
+    if (closeDateType === 'overdue') {
+      const now = new Date();
+      const today = getToday(now);
 
-    filter.closeDate = { $lt: today };
+      filter.closeDate = { $lt: today };
+    }
   }
 
   if (search) {
@@ -173,12 +173,19 @@ export const generateCommonFilters = async (args: any) => {
     filter.priority = contains(priority);
   }
 
+  if (pipelineId) {
+    const pipeline = await Pipelines.getPipeline(pipelineId);
+    if (pipeline.isCheckUser && !(pipeline.excludeCheckUserIds || []).includes(currentUserId)) {
+      Object.assign(filter, { $or: [{ assignedUserIds: { $in: [currentUserId] } }, { userId: currentUserId }] });
+    }
+  }
+
   return filter;
 };
 
-export const generateDealCommonFilters = async (args: any, extraParams?: any) => {
+export const generateDealCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'deal';
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
   const { productIds } = extraParams || args;
 
   if (productIds) {
@@ -198,9 +205,9 @@ export const generateDealCommonFilters = async (args: any, extraParams?: any) =>
   return filter;
 };
 
-export const generateTicketCommonFilters = async (args: any, extraParams?: any) => {
+export const generateTicketCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'ticket';
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
   const { source } = extraParams || args;
 
   if (source) {
@@ -210,18 +217,18 @@ export const generateTicketCommonFilters = async (args: any, extraParams?: any) 
   return filter;
 };
 
-export const generateTaskCommonFilters = async (args: any) => {
+export const generateTaskCommonFilters = async (currentUserId: string, args: any) => {
   args.type = 'task';
 
-  return generateCommonFilters(args);
+  return generateCommonFilters(currentUserId, args);
 };
 
-export const generateGrowthHackCommonFilters = async (args: any, extraParams?: any) => {
+export const generateGrowthHackCommonFilters = async (currentUserId: string, args: any, extraParams?: any) => {
   args.type = 'growthHack';
 
   const { hackStage, pipelineId, stageId } = extraParams || args;
 
-  const filter = await generateCommonFilters(args);
+  const filter = await generateCommonFilters(currentUserId, args);
 
   if (hackStage) {
     filter.hackStages = contains(hackStage);
@@ -252,4 +259,27 @@ export const dateSelector = (date: IDate) => {
     $gte: new Date(start),
     $lte: new Date(end),
   };
+};
+
+export const checkItemPermByUser = async (currentUserId: string, item: IItemCommonFields) => {
+  const stage = await Stages.getStage(item.stageId || '');
+
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+
+  if (pipeline.visibility === 'private' && !(pipeline.memberIds || []).includes(currentUserId)) {
+    throw new Error('You do not have permission to view.');
+  }
+
+  // pipeline is Show only the users assigned(created) cards checked
+  // and current user nothing dominant users
+  // current user hans't this carts assigned and created
+  if (
+    pipeline.isCheckUser &&
+    !(pipeline.excludeCheckUserIds || []).includes(currentUserId) &&
+    !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId)
+  ) {
+    throw new Error('You do not have permission to view.');
+  }
+
+  return item;
 };

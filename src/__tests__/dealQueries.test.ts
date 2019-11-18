@@ -5,11 +5,12 @@ import {
   conformityFactory,
   customerFactory,
   dealFactory,
+  pipelineFactory,
   productFactory,
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Deals } from '../db/models';
+import { Deals, Pipelines } from '../db/models';
 
 import './setup.ts';
 
@@ -38,15 +39,12 @@ describe('dealQueries', () => {
   const qryDealFilter = `
     query deals(
       $stageId: String
+      $pipelineId: String
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
       $productIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
+      $closeDateType: String
       $mainType: String
       $mainTypeId: String
       $isRelated: Boolean
@@ -54,15 +52,12 @@ describe('dealQueries', () => {
     ) {
       deals(
         stageId: $stageId
+        pipelineId: $pipelineId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
         productIds: $productIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
+        closeDateType: $closeDateType
         conformityMainType: $mainType
         conformityMainTypeId: $mainTypeId
         conformityIsRelated: $isRelated
@@ -86,7 +81,7 @@ describe('dealQueries', () => {
 
     await dealFactory({ closeDate: new Date(tomorrow) });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { nextDay: 'true' });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { closeDateType: 'nextDay' });
 
     expect(response.length).toBe(1);
   });
@@ -98,7 +93,7 @@ describe('dealQueries', () => {
 
     await dealFactory({ closeDate: new Date(nextWeek) });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { nextWeek: 'true' });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { closeDateType: 'nextWeek' });
 
     expect(response.length).toBe(1);
   });
@@ -110,7 +105,7 @@ describe('dealQueries', () => {
 
     await dealFactory({ closeDate: new Date(nextMonth) });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { nextMonth: 'true' });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { closeDateType: 'nextMonth' });
 
     expect(response.length).toBe(1);
   });
@@ -118,7 +113,7 @@ describe('dealQueries', () => {
   test('Deal filter by has no close date', async () => {
     await dealFactory({ noCloseDate: true });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { noCloseDate: 'true' });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { closeDateType: 'noCloseDate' });
 
     expect(response.length).toBe(1);
   });
@@ -131,7 +126,7 @@ describe('dealQueries', () => {
 
     await dealFactory({ closeDate: yesterday });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { overdue: 'true' });
+    const response = await graphqlRequest(qryDealFilter, 'deals', { closeDateType: 'overdue' });
 
     expect(response.length).toBe(1);
   });
@@ -203,29 +198,47 @@ describe('dealQueries', () => {
   });
 
   test('Deals', async () => {
-    const stage = await stageFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const currentUser = await userFactory({});
 
     const args = { stageId: stage._id };
 
-    await dealFactory(args);
+    const deal = await dealFactory(args);
     await dealFactory(args);
     await dealFactory(args);
 
+    Object.assign(args, { pipelineId: stage.pipelineId });
     const qry = `
-      query deals($stageId: String!) {
-        deals(stageId: $stageId) {
+      query deals($stageId: String!, $pipelineId: String) {
+        deals(stageId: $stageId, pipelineId: $pipelineId) {
           ${commonDealTypes}
         }
       }
     `;
 
-    const response = await graphqlRequest(qry, 'deals', args);
+    let response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
 
     expect(response.length).toBe(3);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { isCheckUser: true } });
+
+    response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
+
+    expect(response.length).toBe(0);
+
+    await Deals.updateOne({ _id: deal._id }, { $set: { assignedUserIds: [currentUser._id] } });
+
+    response = await graphqlRequest(qry, 'deals', args, { user: currentUser });
+
+    expect(response.length).toBe(1);
   });
 
   test('Deal detail', async () => {
-    const deal = await dealFactory();
+    const currentUser = await userFactory({});
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const deal = await dealFactory({ stageId: stage._id });
 
     const args = { _id: deal._id };
 
@@ -237,8 +250,34 @@ describe('dealQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'dealDetail', args);
+    let response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
 
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'private' } });
+    try {
+      response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    } catch (e) {
+      expect(e[0].message).toEqual('You do not have permission to view.');
+    }
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { memberIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { visibility: 'public', isCheckUser: true } });
+    try {
+      response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    } catch (e) {
+      expect(e[0].message).toEqual('You do not have permission to view.');
+    }
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { excludeCheckUserIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
+    expect(response._id).toBe(deal._id);
+
+    await Pipelines.updateOne({ _id: pipeline._id }, { $set: { excludeCheckUserIds: [], isCheckUser: true } });
+    await Deals.updateOne({ _id: deal._id }, { $set: { assignedUserIds: [currentUser._id] } });
+    response = await graphqlRequest(qry, 'dealDetail', args, { user: currentUser });
     expect(response._id).toBe(deal._id);
   });
 
