@@ -3,7 +3,6 @@ import { commonTypes, conformityQueryFields } from './common';
 export const types = `
   type Ticket {
     _id: String!
-    priority: String
     source: String
     companies: [Company]
     customers: [Customer]
@@ -22,11 +21,7 @@ export const queries = `
     skip: Int
     search: String
     assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
+    closeDateType: String
     priority: [String]
     source: [String]
     labelIds: [String]

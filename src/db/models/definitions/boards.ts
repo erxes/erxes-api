@@ -29,6 +29,7 @@ export interface IItemCommonFields {
   createdAt?: Date;
   order?: number;
   searchText?: string;
+  priority?: string;
 }
 
 export interface IBoard extends ICommonFields {
@@ -46,12 +47,14 @@ export interface IPipeline extends ICommonFields {
   memberIds?: string[];
   bgColor?: string;
   watchedUserIds?: string[];
-  // growth hack
+
   startDate?: Date;
   endDate?: Date;
   metric?: string;
   hackScoringType?: string;
   templateId?: string;
+  isCheckUser?: boolean;
+  excludeCheckUserIds?: string[];
 }
 
 export interface IPipelineDocument extends IPipeline, Document {
@@ -126,6 +129,7 @@ export const commonItemFieldsSchema = {
   }),
   modifiedBy: field({ type: String }),
   searchText: field({ type: String, optional: true, index: true }),
+  priority: field({ type: String, optional: true }),
 };
 
 export const boardSchema = schemaWrapper(
@@ -155,6 +159,8 @@ export const pipelineSchema = new Schema({
     enum: HACK_SCORING_TYPES.ALL,
   }),
   templateId: field({ type: String, optional: true }),
+  isCheckUser: field({ type: Boolean, optional: true }),
+  excludeCheckUserIds: field({ type: [String], optional: true }),
   ...commonFieldsSchema,
 });
 

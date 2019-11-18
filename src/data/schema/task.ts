@@ -3,7 +3,6 @@ import { commonTypes, conformityQueryFields } from './common';
 export const types = `
   type Task {
     _id: String!
-    priority: String
     companies: [Company]
     customers: [Customer]
     ${commonTypes}
@@ -21,11 +20,7 @@ export const queries = `
     skip: Int
     search: String
     assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
+    closeDateType: String
     priority: [String]
     labelIds: [String]
     ${conformityQueryFields}

@@ -3,6 +3,7 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
+  pipelineFactory,
   stageFactory,
   taskFactory,
   userFactory,
@@ -36,22 +37,14 @@ describe('taskQueries', () => {
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
+      $closeDateType: String
     ) {
       tasks(
         stageId: $stageId
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
+        closeDateType: $closeDateType
       ) {
         ${commonTaskTypes}
       }
@@ -130,7 +123,9 @@ describe('taskQueries', () => {
   });
 
   test('Task detail', async () => {
-    const task = await taskFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const task = await taskFactory({ stageId: stage._id });
 
     const args = { _id: task._id };
 
