@@ -11,6 +11,11 @@ export const types = `
     type: String
   }
 
+  type RobotJobType {
+    name: String
+    notificationsCount: Int
+  }
+
   type RobotJob {
     _id: String
     content: String
@@ -19,6 +24,7 @@ export const types = `
 `;
 
 export const queries = `
+  robotGetJobTypes: [RobotJobType]
   robotGetJobs(type: String, isNotified: Boolean, parentId: String, limit: Int): [RobotJob]
   onboardingStepsCompleteness(steps: [String]): JSON
   onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]

@@ -141,6 +141,17 @@ const checkShowModule = (
 };
 
 const robotQueries = {
+  async robotGetJobTypes(_root) {
+    const JOB_TYPES = ['mergeCustomers', 'companyMetaExtraction', 'customerScoring'];
+
+    return JOB_TYPES.map(async jobType => {
+      return {
+        name: jobType,
+        notificationsCount: await RobotJobs.countDocuments({ type: jobType, isNotified: false }),
+      };
+    });
+  },
+
   async robotGetJobs(
     _root,
     { isNotified, type, parentId, limit = 10 }: { isNotified: boolean; type: string; parentId: string; limit?: number },
