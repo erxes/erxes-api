@@ -20,7 +20,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
-  updateProfileScore(customerId: string, save: boolean): any;
+  updateProfileScore(customerId: string, save: boolean): never;
 }
 
 export const loadClass = () => {

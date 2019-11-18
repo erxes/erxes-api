@@ -4,6 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
 import { UsersGroups } from '.';
+import { arrayChecker } from '../../data/utils';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -95,21 +96,13 @@ export const loadClass = () => {
     /**
      * Checking if user has duplicated properties
      */
-    public static async checkDuplication({
-      email,
-      idsToExclude,
-      emails,
-    }: {
-      email?: string;
-      idsToExclude?: string | string[];
-      emails?: string[];
-    }) {
+    public static async checkDuplication({ email, idsToExclude }: { email?: string; idsToExclude?: string }) {
       const query: { [key: string]: any } = {};
       let previousEntry;
 
       // Adding exclude operator to the query
       if (idsToExclude) {
-        query._id = idsToExclude instanceof Array ? { $nin: idsToExclude } : { $ne: idsToExclude };
+        query._id = { $ne: idsToExclude };
       }
 
       // Checking if user has email
@@ -119,14 +112,6 @@ export const loadClass = () => {
         // Checking if duplicated
         if (previousEntry.length > 0) {
           throw new Error('Duplicated email');
-        }
-      }
-
-      if (emails) {
-        previousEntry = await Users.find({ email: { $in: [emails] } });
-
-        if (previousEntry.length > 0) {
-          throw new Error('Duplicated emails');
         }
       }
     }
@@ -424,11 +409,7 @@ export const loadClass = () => {
         throw new Error('Password can not be empty');
       }
 
-      const user = await Users.findOne({ _id });
-
-      if (!user) {
-        throw new Error('User not found');
-      }
+      const user = await Users.getUser(_id);
 
       // check current password ============
       const valid = await this.comparePassword(currentPassword, user.password);
@@ -502,33 +483,27 @@ export const loadClass = () => {
      * Renews tokens
      */
     public static async refreshTokens(refreshToken: string) {
-      let _id = null;
-
       try {
         // validate refresh token
         const { user } = jwt.verify(refreshToken, this.getSecret());
 
-        _id = user._id;
+        const _id = user._id;
+
+        const dbUser = await Users.getUser(_id);
+
+        // recreate tokens
+        const [newToken, newRefreshToken] = await this.createTokens(dbUser, this.getSecret());
+
+        return {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          user: dbUser,
+        };
 
         // if refresh token is expired then force to login
       } catch (e) {
         return {};
       }
-
-      const dbUser = await Users.findOne({ _id });
-
-      if (!dbUser) {
-        throw new Error('User not found');
-      }
-
-      // recreate tokens
-      const [newToken, newRefreshToken] = await this.createTokens(dbUser, this.getSecret());
-
-      return {
-        token: newToken,
-        refreshToken: newRefreshToken,
-        user: dbUser,
-      };
     }
 
     /*
@@ -564,7 +539,7 @@ export const loadClass = () => {
       const [token, refreshToken] = await this.createTokens(user, this.getSecret());
 
       if (deviceToken) {
-        const deviceTokens: string[] = user.deviceTokens || [];
+        const deviceTokens: string[] = arrayChecker(user.deviceTokens);
 
         if (!deviceTokens.includes(deviceToken)) {
           deviceTokens.push(deviceToken);

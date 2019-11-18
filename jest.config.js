@@ -11,6 +11,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
     'src/db/models/**',
+    '!src/db/models/ActivityLogs.ts',
     '!src/db/models/definitions/**',
     'src/data/resolvers/mutations/**',
     '!src/data/resolvers/mutations/robot.ts',

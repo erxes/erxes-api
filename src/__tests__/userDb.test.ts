@@ -162,15 +162,27 @@ describe('User db utils', () => {
     expect(user.registrationTokenExpires).toBeDefined();
   });
 
-  test('resendInvitation: invalid', async () => {
-    expect.assertions(1);
-
-    const user = await userFactory({});
-
+  test('invite: invalid group', async () => {
     try {
-      await Users.resendInvitation({ email: user.email || 'invalid' });
+      await Users.invite({ email: 'email', password: 'password', groupId: 'fakeId' });
+    } catch (e) {
+      expect(e.message).toBe('Invalid group');
+    }
+  });
+
+  test('resendInvitation: invalid request', async () => {
+    try {
+      await Users.resendInvitation({ email: _user.email || 'invalid' });
     } catch (e) {
       expect(e.message).toBe('Invalid request');
+    }
+  });
+
+  test('resendInvitation: user not found', async () => {
+    try {
+      await Users.resendInvitation({ email: 'invalid' });
+    } catch (e) {
+      expect(e.message).toBe('User not found');
     }
   });
 
@@ -326,6 +338,11 @@ describe('User db utils', () => {
     } catch (e) {
       expect(e.message).toBe('User not found');
     }
+
+    const inActiveUser = await userFactory({ isActive: false });
+    const activeUser = await Users.setUserActiveOrInactive(inActiveUser._id);
+
+    expect(activeUser.isActive).toBeTruthy();
 
     // Can not remove owner
     try {
@@ -498,7 +515,7 @@ describe('User db utils', () => {
   });
 
   test('Login', async () => {
-    expect.assertions(4);
+    expect.assertions(8);
 
     // invalid email ==============
     try {
@@ -515,13 +532,40 @@ describe('User db utils', () => {
     }
 
     // valid
-    const { token, refreshToken } = await Users.login({
+    let response = await Users.login({
       email: _user.email.toUpperCase(),
       password: 'pass',
     });
 
-    expect(token).toBeDefined();
-    expect(refreshToken).toBeDefined();
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
+
+    // device token
+    const tokenUser = await userFactory({ deviceTokens: ['mobile'] });
+
+    if (!tokenUser) {
+      throw new Error('User not found');
+    }
+
+    // when device token
+    response = await Users.login({
+      email: (tokenUser.email || '').toUpperCase(),
+      password: 'pass',
+      deviceToken: 'web',
+    });
+
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
+
+    // when adding same device token
+    response = await Users.login({
+      email: (tokenUser.email || '').toUpperCase(),
+      password: 'pass',
+      deviceToken: 'web',
+    });
+
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
   });
 
   test('Refresh tokens', async () => {

@@ -1,5 +1,6 @@
 import { graphqlRequest } from '../db/connection';
 import {
+  boardFactory,
   companyFactory,
   conformityFactory,
   customerFactory,
@@ -10,6 +11,7 @@ import {
 } from '../db/factories';
 import { Tickets } from '../db/models';
 
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('ticketQueries', () => {
@@ -37,11 +39,6 @@ describe('ticketQueries', () => {
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
       $priority: [String]
       $source: [String]
       $closeDateType: String
@@ -51,11 +48,6 @@ describe('ticketQueries', () => {
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
         priority: $priority
         source: $source
         closeDateType: $closeDateType
@@ -131,7 +123,9 @@ describe('ticketQueries', () => {
   });
 
   test('Tickets', async () => {
-    const stage = await stageFactory();
+    const board = await boardFactory({ type: BOARD_TYPES.TICKET });
+    const pipeline = await pipelineFactory({ boardId: board._id, type: BOARD_TYPES.TICKET });
+    const stage = await stageFactory({ pipelineId: pipeline._id, type: BOARD_TYPES.TICKET });
 
     const args = { stageId: stage._id };
 
@@ -153,9 +147,7 @@ describe('ticketQueries', () => {
   });
 
   test('Ticket detail', async () => {
-    const pipeline = await pipelineFactory();
-    const stage = await stageFactory({ pipelineId: pipeline._id });
-    const ticket = await ticketFactory({ stageId: stage._id });
+    const ticket = await ticketFactory();
 
     const args = { _id: ticket._id };
 

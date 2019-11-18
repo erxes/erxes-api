@@ -3,7 +3,6 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
-  pipelineFactory,
   stageFactory,
   taskFactory,
   userFactory,
@@ -43,11 +42,6 @@ describe('taskQueries', () => {
       $assignedUserIds: [String]
       $customerIds: [String]
       $companyIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
       $priority: [String]
       $closeDateType: String
     ) {
@@ -56,10 +50,6 @@ describe('taskQueries', () => {
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
         overdue: $overdue
         priority: $priority
         closeDateType: $closeDateType

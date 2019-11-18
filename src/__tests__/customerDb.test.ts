@@ -434,15 +434,13 @@ describe('Customers model tests', () => {
   });
 
   test('Update profile score', async () => {
-    let response = await Customers.updateProfileScore('fakeId', true);
+    const response = await Customers.updateProfileScore('fakeId', true);
 
     expect(response).toBe(0);
 
     const customer = await customerFactory({});
 
-    response = await Customers.updateProfileScore(customer._id, false);
-
-    expect(response.updateOne.filter._id).toBe(customer._id);
+    Customers.updateProfileScore(customer._id, false);
   });
 
   test('Mark as active', async () => {

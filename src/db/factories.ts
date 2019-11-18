@@ -110,6 +110,7 @@ interface IUserFactoryInput {
   isActive?: boolean;
   groupIds?: string[];
   brandIds?: string[];
+  deviceTokens?: string[];
   registrationToken?: string;
   registrationTokenExpires?: Date;
 }
@@ -138,6 +139,7 @@ export const userFactory = (params: IUserFactoryInput = {}) => {
     isActive: typeof params.isActive !== 'undefined' ? params.isActive : true,
     groupIds: params.groupIds || [],
     brandIds: params.brandIds,
+    deviceTokens: params.deviceTokens,
   });
 
   return user.save();
@@ -804,6 +806,7 @@ interface IPipelineFactoryInput {
   watchedUserIds?: string[];
   startDate?: Date;
   endDate?: Date;
+  templateId?: string;
 }
 
 export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
@@ -818,6 +821,7 @@ export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
     watchedUserIds: params.watchedUserIds,
     startDate: params.startDate,
     endDate: params.endDate,
+    templateId: params.templateId,
   });
 };
 
@@ -893,8 +897,9 @@ interface ITaskFactoryInput {
 }
 
 export const taskFactory = async (params: ITaskFactoryInput = {}) => {
-  const pipeline = await pipelineFactory();
-  const stage = await stageFactory({ pipelineId: pipeline._id });
+  const board = await boardFactory({ type: BOARD_TYPES.TASK });
+  const pipeline = await pipelineFactory({ boardId: board._id, type: BOARD_TYPES.TASK });
+  const stage = await stageFactory({ pipelineId: pipeline._id, type: BOARD_TYPES.TASK });
 
   const task = new Tasks({
     ...params,
@@ -921,8 +926,9 @@ interface ITicketFactoryInput {
 }
 
 export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
-  const pipeline = await pipelineFactory();
-  const stage = await stageFactory({ pipelineId: pipeline._id });
+  const board = await boardFactory({ type: BOARD_TYPES.TICKET });
+  const pipeline = await pipelineFactory({ boardId: board._id, type: BOARD_TYPES.TICKET });
+  const stage = await stageFactory({ pipelineId: pipeline._id, type: BOARD_TYPES.TICKET });
 
   const ticket = new Tickets({
     ...params,
