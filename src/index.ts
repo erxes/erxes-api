@@ -14,6 +14,7 @@ import apolloServer from './apolloClient';
 import { IntegrationsAPI } from './data/dataSources';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
+import { jobDetail } from './data/modules/robot/utils';
 import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
 import { checkFile, getEnv, readFileRequest, registerOnboardHistory, uploadFile } from './data/utils';
 import { connect } from './db/connection';
@@ -266,6 +267,12 @@ app.post(`/service/engage/tracker`, async (req, res, next) => {
         next(e);
       }),
   );
+});
+
+app.get('/robot-jobDetails', async (req, res) => {
+  const content = await jobDetail(req.query._id);
+
+  return res.send(content);
 });
 
 // Error handling middleware

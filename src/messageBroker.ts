@@ -2,7 +2,7 @@ import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
 import { registerOnboardHistory, sendMobileNotification } from './data/utils';
-import { ActivityLogs, Conversations, Customers, Integrations, RobotEntries, Users } from './db/models';
+import { ActivityLogs, Conversations, Customers, Integrations, RobotJobs, Users } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 import { get, set } from './redisClient';
@@ -162,7 +162,7 @@ const initConsumer = async () => {
 
         delete data.subdomain;
 
-        RobotEntries.createEntry(data)
+        RobotJobs.createJob(data)
           .then(() => debugBase('success'))
           .catch(e => debugBase(e.message));
 

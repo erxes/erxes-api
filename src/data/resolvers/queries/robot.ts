@@ -1,10 +1,11 @@
-import { RobotEntries } from '../../../db/models';
+import { RobotJobs } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { OnboardingHistories } from '../../../db/models/Robot';
 import { moduleObjects } from '../../permissions/actions/permission';
 import { getUserAllowedActions, IModuleMap } from '../../permissions/utils';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
+import { applyTemplate } from '../../utils';
 
 const features: { [key: string]: { settings: string[]; settingsPermissions: string[] } } = {
   growthHacks: {
@@ -140,14 +141,36 @@ const checkShowModule = (
 };
 
 const robotQueries = {
-  robotEntries(_root, { isNotified, action, parentId }: { isNotified: boolean; action: string; parentId: string }) {
-    const selector: any = { parentId, action };
+  async robotGetJobs(
+    _root,
+    { isNotified, type, parentId, limit = 10 }: { isNotified: boolean; type: string; parentId: string; limit?: number },
+  ) {
+    const selector: any = { parentId, type };
 
     if (typeof isNotified !== 'undefined') {
       selector.isNotified = isNotified;
     }
 
-    return RobotEntries.find(selector);
+    const jobs = await RobotJobs.find(selector)
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    return jobs.map(async job => {
+      let data = {};
+
+      if (type === 'customerScoring') {
+        data = {
+          count: job.data.scoreMap.length,
+        };
+      }
+
+      const content = await applyTemplate('robotJobs', `${type}_overall`, data);
+
+      return {
+        _id: job._id,
+        content,
+      };
+    });
   },
 
   onboardingStepsCompleteness(_root, { steps }: { steps: string[] }, { user }: IContext) {

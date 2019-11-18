@@ -1,10 +1,4 @@
 export const types = `
-  type RobotEntry {
-    _id: String
-    action: String
-    data: JSON
-  }
-
   type OnboardingGetAvailableFeaturesResponse {
     name: String
     settings: [String]
@@ -16,16 +10,21 @@ export const types = `
     userId: String
     type: String
   }
+
+  type RobotJob {
+    _id: String
+    content: String
+  }
 `;
 
 export const queries = `
-  robotEntries(isNotified: Boolean, action: String, parentId: String): [RobotEntry]
+  robotGetJobs(type: String, isNotified: Boolean, parentId: String, limit: Int): [RobotJob]
   onboardingStepsCompleteness(steps: [String]): JSON
   onboardingGetAvailableFeatures: [OnboardingGetAvailableFeaturesResponse]
 `;
 
 export const mutations = `
-  robotEntriesMarkAsNotified(_id: String): [RobotEntry]
+  robotMarkJobAsNotified(_id: String): [RobotJob]
   onboardingCheckStatus: String
   onboardingForceComplete: JSON
   onboardingCompleteShowStep(step: String): JSON

@@ -1,23 +1,25 @@
 import { Document, Schema } from 'mongoose';
 import { field } from './utils';
 
-// entry ====================
-export interface IRobotEntry {
+// job ====================
+export interface IRobotJob {
+  type: string;
+  createdAt: Date;
   parentId?: string;
   isNotified: boolean;
-  action: string;
-  data: object;
+  data: any;
 }
 
-export interface IRobotEntryDocument extends IRobotEntry, Document {
+export interface IRobotJobDocument extends IRobotJob, Document {
   _id: string;
 }
 
-export const robotEntrySchema = new Schema({
+export const robotJobSchema = new Schema({
+  type: field({ type: String }),
+  createdAt: field({ type: Date }),
   _id: field({ pkey: true }),
   parentId: field({ type: String, optional: true }),
   isNotified: field({ type: Boolean, default: false }),
-  action: field({ type: String }),
   data: field({ type: Object }),
 });
 

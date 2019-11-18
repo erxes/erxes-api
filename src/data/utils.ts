@@ -257,7 +257,7 @@ export const uploadFile = async (file, fromEditor = false): Promise<any> => {
  * Read contents of a file
  */
 export const readFile = (filename: string) => {
-  const filePath = `${__dirname}/../private/emailTemplates/${filename}.html`;
+  const filePath = `${__dirname}/../private/${filename}`;
 
   return fs.readFileSync(filePath, 'utf8');
 };
@@ -265,8 +265,8 @@ export const readFile = (filename: string) => {
 /**
  * Apply template
  */
-const applyTemplate = async (data: any, templateName: string) => {
-  let template: any = await readFile(templateName);
+export const applyTemplate = async (folderName: string, templateName: string, data: any) => {
+  let template: any = await readFile(`/${folderName}/${templateName}.html`);
 
   template = Handlebars.compile(template.toString());
 
@@ -346,10 +346,10 @@ export const sendEmail = async ({
   const { isCustom, data, name } = template;
 
   // generate email content by given template
-  let html = await applyTemplate(data, name || '');
+  let html = await applyTemplate('emailTemplates', name || '', data);
 
   if (!isCustom) {
-    html = await applyTemplate({ content: html }, 'base');
+    html = await applyTemplate('emailTemplates', 'base', { content: html });
   }
 
   return (toEmails || []).map(toEmail => {

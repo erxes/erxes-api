@@ -2,100 +2,110 @@ import { Model, model } from 'mongoose';
 import { Companies, Customers } from '.';
 import {
   IOnboardingHistoryDocument,
-  IRobotEntryDocument,
+  IRobotJobDocument,
   onboardingHistorySchema,
-  robotEntrySchema,
+  robotJobSchema,
 } from './definitions/robot';
 import { IUserDocument } from './definitions/users';
 
-// entries ==========================
-export interface IRobotEntryModel extends Model<IRobotEntryDocument> {
-  createEntry(data): Promise<IRobotEntryDocument | undefined>;
-  markAsNotified(_id: string): Promise<IRobotEntryDocument>;
-  updateOrCreate(action: string, data): Promise<IRobotEntryDocument>;
+// jobs ==========================
+export interface IRobotJobModel extends Model<IRobotJobDocument> {
+  createJob(data): Promise<IRobotJobDocument | undefined>;
+  markAsNotified(_id: string): Promise<IRobotJobDocument>;
+  updateOrCreate(type: string, data): Promise<IRobotJobDocument>;
 }
 
 export const loadClass = () => {
-  class RobotEntry {
-    public static async updateOrCreate(action: string, data): Promise<IRobotEntryDocument> {
-      return RobotEntries.findOneAndUpdate({ action, data }, { isNotified: false }, { new: true, upsert: true });
+  class RobotJob {
+    public static async updateOrCreate(type: string, data): Promise<IRobotJobDocument> {
+      return RobotJobs.findOneAndUpdate(
+        { type, data },
+        { isNotified: false, createdAt: new Date() },
+        { new: true, upsert: true },
+      );
     }
 
-    public static async markAsNotified(_id: string): Promise<IRobotEntryDocument> {
-      return RobotEntries.updateOne({ _id }, { $set: { isNotified: true } });
+    public static async markAsNotified(_id: string): Promise<IRobotJobDocument> {
+      return RobotJobs.updateOne({ _id }, { $set: { isNotified: true } });
     }
 
-    public static async createEntry(data): Promise<IRobotEntryDocument | undefined> {
-      if (data.action === 'mergeCustomers') {
+    public static async createJob(data): Promise<IRobotJobDocument | undefined> {
+      const create = (modifier: { type: string; data: any; parentId?: string }) => {
+        return RobotJobs.create({ ...modifier, createdAt: new Date() });
+      };
+
+      const type = data.jobType;
+
+      if (type === 'mergeCustomers') {
         const customerIds = data.customerIds;
         const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } }).lean();
 
         if (randomCustomer) {
           delete randomCustomer._id;
           await Customers.mergeCustomers(customerIds, randomCustomer);
-          return RobotEntries.create({ action: 'mergeCustomers', data: { customerIds } });
+          return create({ type, data: { customerIds } });
         }
       }
 
-      if (data.action === 'fillCompanyInfo') {
+      if (type === 'fillCompanyInfo') {
         const results = data.results;
 
-        const parent = await RobotEntries.create({ action: 'fillCompanyInfo', data: { count: results.length } });
+        const parent = await create({ type: 'fillCompanyInfo', data: { count: results.length } });
 
         for (const result of results) {
           const { _id, modifier } = result;
 
           await Companies.update({ _id }, { $set: modifier });
-          return RobotEntries.create({ action: 'fillCompanyInfo', parentId: parent._id, data: { _id, modifier } });
+          return create({ type, parentId: parent._id, data: { _id, modifier } });
         }
 
         return parent;
       }
 
-      if (data.action === 'customerScoring') {
+      if (type === 'customerScoring') {
         const { scoreMap } = data;
 
         if (!scoreMap || scoreMap.length === 0) {
           return undefined;
         }
 
-        const modifier = scoreMap.map(entry => ({
+        const modifier = scoreMap.map(job => ({
           updateOne: {
             filter: {
-              _id: entry._id,
+              _id: job._id,
             },
             update: {
-              $set: { profileScore: entry.score },
+              $set: { profileScore: job.score },
             },
           },
         }));
 
         await Customers.bulkWrite(modifier);
 
-        return RobotEntries.create({ action: 'customerScoring', data: { scoreMap } });
+        return create({ type, data: { scoreMap } });
       }
 
-      if (data.action === 'channelsWithoutIntegration') {
-        return RobotEntries.updateOrCreate('channelsWithoutIntegration', { channelIds: data.channelIds });
+      if (type === 'channelsWithoutIntegration') {
+        return RobotJobs.updateOrCreate('channelsWithoutIntegration', { channelIds: data.channelIds });
       }
 
-      if (data.action === 'channelsWithoutMembers') {
-        return RobotEntries.updateOrCreate('channelsWithoutMembers', { channelIds: data.channelIds });
+      if (type === 'channelsWithoutMembers') {
+        return RobotJobs.updateOrCreate('channelsWithoutMembers', { channelIds: data.channelIds });
       }
 
-      if (data.action === 'brandsWithoutIntegration') {
-        return RobotEntries.updateOrCreate('brandsWithoutIntegration', { brandIds: data.brandIds });
+      if (type === 'brandsWithoutIntegration') {
+        return RobotJobs.updateOrCreate('brandsWithoutIntegration', { brandIds: data.brandIds });
       }
 
-      if (data.action === 'featureSuggestion') {
-        return RobotEntries.updateOrCreate('featureSuggestion', { message: data.message });
+      if (type === 'featureSuggestion') {
+        return RobotJobs.updateOrCreate('featureSuggestion', { message: data.message });
       }
     }
   }
 
-  robotEntrySchema.loadClass(RobotEntry);
+  robotJobSchema.loadClass(RobotJob);
 
-  return robotEntrySchema;
+  return robotJobSchema;
 };
 
 // onboarding ==========================
@@ -106,7 +116,7 @@ interface IGetOrCreateDoc {
 
 interface IGetOrCreateResponse {
   status: string;
-  entry: IOnboardingHistoryDocument;
+  job: IOnboardingHistoryDocument;
 }
 
 interface IStepsCompletenessResponse {
@@ -124,27 +134,24 @@ export interface IOnboardingHistoryModel extends Model<IOnboardingHistoryDocumen
 export const loadOnboardingHistoryClass = () => {
   class OnboardingHistory {
     public static async getOrCreate({ type, user }: IGetOrCreateDoc): Promise<IGetOrCreateResponse> {
-      const prevEntry = await OnboardingHistories.findOne({ userId: user._id });
+      const prevJob = await OnboardingHistories.findOne({ userId: user._id });
 
-      if (!prevEntry) {
-        const entry = await OnboardingHistories.create({ userId: user._id, completedSteps: [type] });
-        return { status: 'created', entry };
+      if (!prevJob) {
+        const job = await OnboardingHistories.create({ userId: user._id, completedSteps: [type] });
+        return { status: 'created', job };
       }
 
-      if (prevEntry.isCompleted) {
-        return { status: 'completed', entry: prevEntry };
+      if (prevJob.isCompleted) {
+        return { status: 'completed', job: prevJob };
       }
 
-      if (prevEntry.completedSteps.includes(type)) {
-        return { status: 'prev', entry: prevEntry };
+      if (prevJob.completedSteps.includes(type)) {
+        return { status: 'prev', job: prevJob };
       }
 
-      const updatedEntry = await OnboardingHistories.updateOne(
-        { userId: user._id },
-        { $push: { completedSteps: type } },
-      );
+      const updatedJob = await OnboardingHistories.updateOne({ userId: user._id }, { $push: { completedSteps: type } });
 
-      return { status: 'created', entry: updatedEntry };
+      return { status: 'created', job: updatedJob };
     }
 
     public static async stepsCompletness(steps: string[], user: IUserDocument): Promise<IStepsCompletenessResponse> {
@@ -159,9 +166,9 @@ export const loadOnboardingHistoryClass = () => {
     }
 
     public static async forceComplete(userId: string): Promise<IOnboardingHistoryDocument> {
-      const entry = await OnboardingHistories.findOne({ userId });
+      const job = await OnboardingHistories.findOne({ userId });
 
-      if (!entry) {
+      if (!job) {
         return OnboardingHistories.create({ userId, isCompleted: true });
       }
 
@@ -173,13 +180,13 @@ export const loadOnboardingHistoryClass = () => {
     }
 
     public static async userStatus(userId: string): Promise<string> {
-      const entry = await OnboardingHistories.findOne({ userId });
+      const job = await OnboardingHistories.findOne({ userId });
 
-      if (entry && entry.isCompleted) {
+      if (job && job.isCompleted) {
         return 'completed';
       }
 
-      if (entry) {
+      if (job) {
         return 'inComplete';
       }
 
@@ -196,7 +203,7 @@ loadClass();
 loadOnboardingHistoryClass();
 
 // tslint:disable-next-line
-export const RobotEntries = model<IRobotEntryDocument, IRobotEntryModel>('robot_entries', robotEntrySchema);
+export const RobotJobs = model<IRobotJobDocument, IRobotJobModel>('robot_jobs', robotJobSchema);
 
 // tslint:disable-next-line
 export const OnboardingHistories = model<IOnboardingHistoryDocument, IOnboardingHistoryModel>(
