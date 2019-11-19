@@ -169,6 +169,7 @@ export const customerSchema = schemaWrapper(
     primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
     phones: field({ type: [String], optional: true }),
     profileScore: field({ type: Number, index: true, optional: true }),
+    scoreExplanation: field({ type: Object, optional: true }),
 
     ownerId: field({ type: String, optional: true }),
     position: field({ type: String, optional: true, label: 'Position' }),

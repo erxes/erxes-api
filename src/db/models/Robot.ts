@@ -65,17 +65,13 @@ export const loadClass = () => {
       if (type === 'customerScoring') {
         const { scoreMap } = data;
 
-        if (!scoreMap || scoreMap.length === 0) {
-          return undefined;
-        }
-
         const modifier = scoreMap.map(job => ({
           updateOne: {
             filter: {
               _id: job._id,
             },
             update: {
-              $set: { profileScore: job.score },
+              $set: { profileScore: job.score, scoreExplanation: job.explanation },
             },
           },
         }));

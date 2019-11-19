@@ -15,9 +15,9 @@ export interface IRobotJobDocument extends IRobotJob, Document {
 }
 
 export const robotJobSchema = new Schema({
+  _id: field({ pkey: true }),
   type: field({ type: String }),
   createdAt: field({ type: Date }),
-  _id: field({ pkey: true }),
   parentId: field({ type: String, optional: true }),
   isNotified: field({ type: Boolean, default: false }),
   data: field({ type: Object }),
