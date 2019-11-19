@@ -195,21 +195,26 @@ export const loadClass = () => {
       let score = 0;
       let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
 
-      if (customer.firstName && !nullValues.includes(customer.firstName || '')) {
+      if (!nullValues.includes(customer.firstName || '')) {
         score += 10;
-        searchText = searchText.concat(' ', customer.firstName);
+        searchText = searchText.concat(' ', customer.firstName || '');
       }
 
-      if (customer.lastName && !nullValues.includes(customer.lastName || '')) {
+      if (!nullValues.includes(customer.lastName || '')) {
         score += 5;
-        searchText = searchText.concat(' ', customer.lastName);
+        searchText = searchText.concat(' ', customer.lastName || '');
       }
 
-      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail || '')) {
+      if (!nullValues.includes(customer.code || '')) {
+        score += 10;
+        searchText = searchText.concat(' ', customer.code || '');
+      }
+
+      if (!nullValues.includes(customer.primaryEmail || '')) {
         score += 15;
       }
 
-      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone || '')) {
+      if (!nullValues.includes(customer.primaryPhone || '')) {
         score += 10;
       }
 
