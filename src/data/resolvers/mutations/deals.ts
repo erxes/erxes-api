@@ -5,7 +5,7 @@ import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
+import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -23,6 +23,13 @@ const dealMutations = {
       ...doc,
       modifiedBy: user._id,
       userId: user._id,
+    });
+
+    await createConformity({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      customerIds: doc.customerIds,
+      companyIds: doc.companyIds,
     });
 
     await sendNotifications({

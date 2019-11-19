@@ -27,7 +27,6 @@ import {
   Users,
 } from '../db/models';
 
-import { async } from 'q';
 import { STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
