@@ -31,15 +31,11 @@ export const loadClass = () => {
 
       // generate brandCode
       if (fields.messengerId) {
-        const messengerIntegration = await Integrations.findOne({ _id: fields.messengerId });
+        const messengerIntegration = await Integrations.getIntegration(fields.messengerId);
 
-        if (messengerIntegration) {
-          const brand = await Brands.findOne({ _id: messengerIntegration.brandId });
+        const brand = await Brands.getBrand(messengerIntegration.brandId || '');
 
-          if (brand) {
-            autoFields.messengerBrandCode = brand.code;
-          }
-        }
+        autoFields.messengerBrandCode = brand.code;
       }
 
       // Generate leadCode, brandCode combinations
@@ -48,24 +44,17 @@ export const loadClass = () => {
 
         const maps: LeadMaps = [];
 
-        if (integrations) {
-          for (const integration of integrations) {
-            const brand = await Brands.findOne({ _id: integration.brandId });
-            const form = await Forms.findOne({ _id: integration.formId });
-            if (!form) {
-              throw new Error('Form not found');
-            }
+        for (const integration of integrations) {
+          const brand = await Brands.getBrand(integration.brandId || '');
+          const form = await Forms.getForm(integration.formId || '');
 
-            if (brand && form) {
-              maps.push({
-                formCode: form.code,
-                brandCode: brand.code,
-              });
-            }
-          }
-
-          autoFields.leadMaps = maps;
+          maps.push({
+            formCode: form.code,
+            brandCode: brand.code,
+          });
         }
+
+        autoFields.leadMaps = maps;
       }
 
       return autoFields;

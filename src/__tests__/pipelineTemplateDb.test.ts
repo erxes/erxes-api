@@ -22,6 +22,18 @@ describe('Test pipeline template model', () => {
     await PipelineTemplates.deleteMany({});
   });
 
+  test('Get pipeline template', async () => {
+    try {
+      await PipelineTemplates.getPipelineTemplate('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Pipeline template not found');
+    }
+
+    const response = await PipelineTemplates.getPipelineTemplate(pipelineTemplate._id);
+
+    expect(response).toBeDefined();
+  });
+
   // Test deal pipeline template
   test('Create pipeline template', async () => {
     const created = await PipelineTemplates.createPipelineTemplate(
@@ -60,6 +72,14 @@ describe('Test pipeline template model', () => {
     expect(updated.description).toEqual(description);
     expect(updated.type).toEqual(type);
     expect(updated.stages.length).toEqual(pipelineTemplate.stages.length);
+  });
+
+  test('Duplicate pipeline template (Pipeline template not found)', async () => {
+    try {
+      await PipelineTemplates.duplicatePipelineTemplate('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Pipeline template not found');
+    }
   });
 
   test('Duplicate pipeline template', async () => {

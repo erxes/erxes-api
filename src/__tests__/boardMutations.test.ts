@@ -32,7 +32,7 @@ describe('Test boards mutations', () => {
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory();
-    pipeline = await pipelineFactory({ boardId: board._id });
+    pipeline = await pipelineFactory({ boardId: board._id, watchedUserIds: [] });
     stage = await stageFactory({ pipelineId: pipeline._id });
     context = { user: await userFactory({}) };
   });
@@ -77,10 +77,32 @@ describe('Test boards mutations', () => {
       }
     `;
 
-    const updatedBoard = await graphqlRequest(mutation, 'boardsEdit', args, context);
+    const user = await userFactory({ isOwner: false });
+
+    const updatedBoard = await graphqlRequest(mutation, 'boardsEdit', args, { user });
 
     expect(updatedBoard.name).toEqual(args.name);
     expect(updatedBoard.type).toEqual(args.type);
+  });
+
+  test('Update board (Error: Permission required)', async () => {
+    const args = { _id: board._id, name: 'deal board', type: 'deal' };
+
+    const mutation = `
+      mutation boardsEdit($_id: String!, $name: String!, $type: String!) {
+        boardsEdit(name: $name, _id: $_id, type: $type) {
+          _id
+          name
+          type
+        }
+      }
+    `;
+
+    try {
+      await graphqlRequest(mutation, 'boardsEdit', args, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Permission required');
+    }
   });
 
   test('Remove board', async () => {

@@ -29,7 +29,7 @@ export const loadPipelineLabelClass = () => {
       const pipelineLabel = await PipelineLabels.findOne({ _id });
 
       if (!pipelineLabel) {
-        throw new Error('Pipeline label not found');
+        throw new Error('Label not found');
       }
 
       return pipelineLabel;
@@ -59,7 +59,7 @@ export const loadPipelineLabelClass = () => {
       }).countDocuments();
 
       if (prevLabelsCount !== labelIds.length) {
-        throw new Error('Label not found.');
+        throw new Error('Label not found');
       }
 
       await collection.updateMany({ _id: targetId }, { $set: { labelIds } }, { multi: true });

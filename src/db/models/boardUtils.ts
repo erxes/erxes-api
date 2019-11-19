@@ -1,5 +1,5 @@
 import { Deals, GrowthHacks, Tasks, Tickets } from '.';
-import { validSearchText } from '../../data/utils';
+import { arrayChecker, validSearchText } from '../../data/utils';
 import { IItemCommonFields, IOrderInput } from './definitions/boards';
 import { BOARD_TYPES } from './definitions/constants';
 
@@ -33,9 +33,7 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
     });
   }
 
-  if (bulkOps) {
-    await collection.bulkWrite(bulkOps);
-  }
+  await collection.bulkWrite(bulkOps);
 
   return collection.find({ _id: { $in: ids } }).sort({ order: 1 });
 };
@@ -43,7 +41,7 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
 export const watchItem = async (collection: any, _id: string, isAdd: boolean, userId: string) => {
   const item = await collection.findOne({ _id });
 
-  const watchedUserIds = item.watchedUserIds || [];
+  const watchedUserIds = arrayChecker(item.watchedUserIds);
 
   if (isAdd) {
     watchedUserIds.push(userId);

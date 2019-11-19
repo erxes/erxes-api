@@ -27,8 +27,10 @@ describe('Test deals mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
+    const user = await userFactory();
+
     board = await boardFactory({ type: BOARD_TYPES.DEAL });
-    pipeline = await pipelineFactory({ boardId: board._id });
+    pipeline = await pipelineFactory({ boardId: board._id, watchedUserIds: [user._id] });
     stage = await stageFactory({ pipelineId: pipeline._id });
     deal = await dealFactory({ stageId: stage._id });
   });
@@ -96,7 +98,29 @@ describe('Test deals mutations', () => {
   test('Change deal', async () => {
     const args = {
       _id: deal._id,
-      destinationStageId: deal.stageId || '',
+      destinationStageId: deal.stageId,
+    };
+
+    const mutation = `
+      mutation dealsChange($_id: String!, $destinationStageId: String) {
+        dealsChange(_id: $_id, destinationStageId: $destinationStageId) {
+          _id,
+          stageId
+        }
+      }
+    `;
+
+    const updatedDeal = await graphqlRequest(mutation, 'dealsChange', args);
+
+    expect(updatedDeal._id).toEqual(args._id);
+  });
+
+  test('Change deal if move to another stage', async () => {
+    const anotherStage = await stageFactory({ pipelineId: pipeline._id });
+
+    const args = {
+      _id: deal._id,
+      destinationStageId: anotherStage._id,
     };
 
     const mutation = `

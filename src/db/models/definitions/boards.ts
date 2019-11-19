@@ -42,7 +42,7 @@ export interface IBoardDocument extends IBoard, Document {
 
 export interface IPipeline extends ICommonFields {
   name?: string;
-  boardId?: string;
+  boardId: string;
   visibility?: string;
   memberIds?: string[];
   bgColor?: string;

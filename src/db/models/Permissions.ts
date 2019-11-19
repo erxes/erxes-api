@@ -1,6 +1,7 @@
 import { Model, model } from 'mongoose';
 import { Users } from '.';
 import { actionsMap, IActionsMap } from '../../data/permissions/utils';
+import { arrayChecker } from '../../data/utils';
 import {
   IPermission,
   IPermissionDocument,
@@ -130,7 +131,7 @@ export const userGroupLoadClass = () => {
     public static async createGroup(doc: IUserGroup, memberIds?: string[]) {
       const group = await UsersGroups.create(doc);
 
-      await Users.updateMany({ _id: { $in: memberIds || [] } }, { $push: { groupIds: group._id } });
+      await Users.updateMany({ _id: { $in: arrayChecker(memberIds) } }, { $push: { groupIds: group._id } });
 
       return group;
     }
@@ -145,7 +146,7 @@ export const userGroupLoadClass = () => {
       await UsersGroups.update({ _id }, { $set: doc });
 
       // add groupId to new members
-      await Users.updateMany({ _id: { $in: memberIds || [] } }, { $push: { groupIds: _id } });
+      await Users.updateMany({ _id: { $in: arrayChecker(memberIds) } }, { $push: { groupIds: _id } });
 
       return UsersGroups.findOne({ _id });
     }

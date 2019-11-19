@@ -4,7 +4,7 @@ import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
-import utils from '../utils';
+import utils, { arrayChecker } from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
   let userIds: string[] = [];
@@ -18,10 +18,10 @@ export const notifiedUserIds = async (item: any) => {
   }
 
   const stage = await Stages.getStage(item.stageId);
-  const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
   if (pipeline.watchedUserIds && pipeline.watchedUserIds.length > 0) {
-    userIds = userIds.concat(pipeline.watchedUserIds);
+    userIds = userIds.concat(arrayChecker(pipeline.watchedUserIds));
   }
 
   return userIds;
@@ -53,7 +53,7 @@ export const sendNotifications = async ({
 }: IBoardNotificationParams) => {
   const stage = await Stages.getStage(item.stageId);
 
-  const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
+  const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
   const title = `${contentType} updated`;
 
@@ -111,7 +111,7 @@ export const sendNotifications = async ({
 };
 
 export const itemsChange = async (item: any, type: string, destinationStageId: string) => {
-  const oldStageId = item ? item.stageId : '';
+  const oldStageId = item.stageId;
 
   let action = `changed order of your ${type}:`;
   let content = `'${item.name}'`;
@@ -120,11 +120,11 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
     const stage = await Stages.getStage(destinationStageId);
     const oldStage = await Stages.getStage(oldStageId);
 
-    const pipeline = await Pipelines.getPipeline(stage.pipelineId || '');
-    const oldPipeline = await Pipelines.getPipeline(oldStage.pipelineId || '');
+    const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+    const oldPipeline = await Pipelines.getPipeline(oldStage.pipelineId);
 
-    const board = await Boards.getBoard(pipeline.boardId || '');
-    const oldBoard = await Boards.getBoard(oldPipeline.boardId || '');
+    const board = await Boards.getBoard(pipeline.boardId);
+    const oldBoard = await Boards.getBoard(oldPipeline.boardId);
 
     action = `moved '${item.name}' from ${oldBoard.name}-${oldPipeline.name}-${oldStage.name} to `;
 
@@ -137,7 +137,7 @@ export const itemsChange = async (item: any, type: string, destinationStageId: s
 export const boardId = async (item: any) => {
   const stage = await Stages.getStage(item.stageId);
   const pipeline = await Pipelines.getPipeline(stage.pipelineId);
-  const board = await Boards.getBoard(pipeline.boardId || '');
+  const board = await Boards.getBoard(pipeline.boardId);
 
   return board._id;
 };

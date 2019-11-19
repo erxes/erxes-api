@@ -124,7 +124,7 @@ describe('integrationQueries', () => {
 
     await integrationFactory({ kind: 'messenger', brandId: brand._id });
     await integrationFactory({ kind: 'lead', brandId: brand._id });
-    await integrationFactory({ kind: 'lead' });
+    await integrationFactory({ kind: 'lead', brandId: 'fakeId' });
 
     const responses = await graphqlRequest(qryIntegrations, 'integrations', {
       brandId: brand._id,
@@ -169,7 +169,7 @@ describe('integrationQueries', () => {
     `;
 
     const tag = await tagsFactory();
-    const integration = await integrationFactory({ tagIds: [tag._id] });
+    const integration = await integrationFactory({ tagIds: [tag._id], brandId: 'fakeId' });
 
     const response = await graphqlRequest(qry, 'integrationDetail', {
       _id: integration._id,

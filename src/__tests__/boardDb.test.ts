@@ -147,6 +147,7 @@ describe('Test board model', () => {
 
     const createdPipeline = await Pipelines.createPipeline(
       {
+        boardId: board._id,
         name: pipeline.name,
         type: pipeline.type,
         templateId: template._id,
@@ -162,6 +163,7 @@ describe('Test board model', () => {
 
   test('Create pipeline without stages', async () => {
     const createdPipeline = await Pipelines.createPipeline({
+      boardId: board._id,
       name: pipeline.name,
       type: pipeline.type,
     });
@@ -209,6 +211,7 @@ describe('Test board model', () => {
     });
 
     const args = {
+      boardId: board._id,
       templateId: template._id,
       type: 'deal',
     };
@@ -230,6 +233,7 @@ describe('Test board model', () => {
 
   test('Update pipeline without stages', async () => {
     const args = {
+      boardId: board._id,
       name: 'updated',
       type: 'deal',
     };

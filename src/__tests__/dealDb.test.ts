@@ -79,6 +79,12 @@ describe('Test deals model', () => {
     expect(updatedDealToOrder.order).toBe(9);
   });
 
+  test('Update deal orders when orders length is zero', async () => {
+    const response = await Deals.updateOrder(stage._id, []);
+
+    expect(response.length).toBe(0);
+  });
+
   test('Watch deal', async () => {
     await Deals.watchDeal(deal._id, true, user._id);
 

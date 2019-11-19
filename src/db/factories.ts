@@ -598,7 +598,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
   const doc = {
     name: params.name || faker.random.word(),
     kind,
-    brandId: params.brandId || faker.random.word(),
+    brandId: params.brandId,
     formId: params.formId,
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
@@ -902,6 +902,7 @@ interface ITaskFactoryInput {
   assignedUserIds?: string[];
   priority?: string;
   watchedUserIds?: string[];
+  labelIds?: string[];
 }
 
 export const taskFactory = async (params: ITaskFactoryInput = {}) => {
@@ -918,6 +919,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
     assignedUserIds: params.assignedUserIds,
     priority: params.priority,
     watchedUserIds: params.watchedUserIds,
+    labelIds: params.labelIds || [],
   });
 
   return task.save();
@@ -931,6 +933,7 @@ interface ITicketFactoryInput {
   priority?: string;
   source?: string;
   watchedUserIds?: string[];
+  labelIds?: string[];
 }
 
 export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
@@ -948,6 +951,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
     priority: params.priority,
     source: params.source,
     watchedUserIds: params.watchedUserIds,
+    labelIds: params.labelIds || [],
   });
 
   return ticket.save();
@@ -966,6 +970,7 @@ interface IGrowthHackFactoryInput {
   ease?: number;
   impact?: number;
   votedUserIds?: string[];
+  labelIds?: string[];
 }
 
 export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) => {
@@ -988,6 +993,7 @@ export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) =>
     ease: params.ease || 0,
     impact: params.impact || 0,
     priority: params.priority,
+    labelIds: params.labelIds || [],
   });
 
   return growthHack.save();
