@@ -143,6 +143,7 @@ const fieldQueries = {
         { name: 'lastName', label: 'Last name', order: 1 },
         { name: 'primaryEmail', label: 'Primary email', order: 2 },
         { name: 'primaryPhone', label: 'Primary phone', order: 3 },
+        { name: 'code', label: 'Code', order: 4 },
       ];
     }
 

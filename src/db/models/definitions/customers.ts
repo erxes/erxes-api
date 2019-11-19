@@ -231,6 +231,6 @@ export const customerSchema = schemaWrapper(
 
     deviceTokens: field({ type: [String], default: [] }),
     searchText: field({ type: String, optional: true, index: true }),
-    code: field({ type: String, label: 'Unique code that defines the customer', unique: true }),
+    code: field({ type: String, label: 'Code', unique: true }),
   }),
 );
