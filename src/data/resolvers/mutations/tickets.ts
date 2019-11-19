@@ -5,7 +5,7 @@ import { ITicket } from '../../../db/models/definitions/tickets';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog } from '../../utils';
-import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
+import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface ITicketsEdit extends ITicket {
@@ -25,25 +25,12 @@ const ticketMutations = {
       userId: user._id,
     });
 
-    const { customerIds = [], companyIds = [] } = doc;
-
-    for (const companyId of companyIds) {
-      await Conformities.addConformity({
-        mainType: 'ticket',
-        mainTypeId: ticket._id,
-        relType: 'company',
-        relTypeId: companyId,
-      });
-    }
-
-    for (const customerId of customerIds) {
-      await Conformities.addConformity({
-        mainType: 'ticket',
-        mainTypeId: ticket._id,
-        relType: 'customer',
-        relTypeId: customerId,
-      });
-    }
+    await createConformity({
+      mainType: 'ticket',
+      mainTypeId: ticket._id,
+      customerIds: doc.customerIds,
+      companyIds: doc.companyIds,
+    });
 
     await sendNotifications({
       item: ticket,

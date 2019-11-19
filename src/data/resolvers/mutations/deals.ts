@@ -5,7 +5,7 @@ import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
+import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
 import { checkUserIds } from './notifications';
 
 interface IDealsEdit extends IDeal {
@@ -26,25 +26,12 @@ const dealMutations = {
       userId: user._id,
     });
 
-    const { companyIds = [], customerIds = [] } = doc;
-
-    for (const companyId of companyIds) {
-      await Conformities.addConformity({
-        mainType: 'deal',
-        mainTypeId: deal._id,
-        relType: 'company',
-        relTypeId: companyId,
-      });
-    }
-
-    for (const customerId of customerIds) {
-      await Conformities.addConformity({
-        mainType: 'deal',
-        mainTypeId: deal._id,
-        relType: 'customer',
-        relTypeId: customerId,
-      });
-    }
+    await createConformity({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      customerIds: doc.customerIds,
+      companyIds: doc.companyIds,
+    });
 
     await sendNotifications({
       item: deal,
