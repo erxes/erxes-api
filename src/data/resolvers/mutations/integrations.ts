@@ -286,5 +286,6 @@ checkPermission(integrationMutations, 'integrationsCreateLeadIntegration', 'inte
 checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integrationsEditLeadIntegration');
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 checkPermission(integrationMutations, 'integrationsArchive', 'integrationsArchive');
+checkPermission(integrationMutations, 'integrationsEdit', 'integrationsEdit');
 
 export default integrationMutations;
