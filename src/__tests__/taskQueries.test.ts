@@ -1,14 +1,17 @@
 import { graphqlRequest } from '../db/connection';
 import {
+  boardFactory,
   companyFactory,
   conformityFactory,
   customerFactory,
+  pipelineFactory,
   stageFactory,
   taskFactory,
   userFactory,
 } from '../db/factories';
 import { Tasks } from '../db/models';
 
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('taskQueries', () => {
@@ -50,7 +53,6 @@ describe('taskQueries', () => {
         customerIds: $customerIds
         assignedUserIds: $assignedUserIds
         companyIds: $companyIds
-        overdue: $overdue
         priority: $priority
         closeDateType: $closeDateType
       ) {
@@ -117,7 +119,9 @@ describe('taskQueries', () => {
   });
 
   test('Tasks', async () => {
-    const stage = await stageFactory();
+    const board = await boardFactory({ type: BOARD_TYPES.TASK });
+    const pipeline = await pipelineFactory({ boardId: board._id, type: BOARD_TYPES.TASK });
+    const stage = await stageFactory({ pipelineId: pipeline._id, type: BOARD_TYPES.TASK });
 
     const args = { stageId: stage._id };
 

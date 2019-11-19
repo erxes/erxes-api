@@ -170,13 +170,17 @@ describe('Test products model', () => {
     expect(response.name).toBe(doc.name);
     expect(response.code).toBe(doc.code);
 
-    // updating child categories order
-    const childCategory = await productCategoryFactory({ code: 'create123456', order: productCategory.order });
+    // add child category
+    const childCategory = await ProductCategories.createProductCategory({
+      name: 'name',
+      code: 'create123456',
+      parentId: productCategory._id,
+      order: 'order',
+    });
 
-    delete doc.code;
-    response = await ProductCategories.updateProductCategory(childCategory._id, doc);
+    response = await ProductCategories.updateProductCategory(productCategory._id, doc);
 
-    expect(response.code).toBe(childCategory.code);
+    expect(childCategory.order).toBe(`${response.order}/${childCategory.name}${childCategory.code}`);
   });
 
   test('Remove product category', async () => {

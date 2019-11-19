@@ -161,7 +161,7 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
 /**
  * Send via messenger
  */
-export const sendViaMessenger = async (
+const sendViaMessenger = async (
   message: IEngageMessageDocument,
   customers: ICustomerDocument[],
   user: IUserDocument,

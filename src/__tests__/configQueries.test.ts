@@ -89,7 +89,7 @@ describe('configQueries', () => {
     try {
       await graphqlRequest(qry, 'engagesConfigDetail');
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Engages api is not running');
     }
   });
 });

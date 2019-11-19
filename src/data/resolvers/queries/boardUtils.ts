@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import { Conformities, Pipelines, Stages } from '../../../db/models';
 import { IItemCommonFields } from '../../../db/models/definitions/boards';
-import { getNextMonth, getToday, regexSearchText } from '../../utils';
+import { arrayChecker, getNextMonth, getToday, regexSearchText } from '../../utils';
 
 const contains = (values: string[]) => {
   return { $in: values };
@@ -145,9 +145,9 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
   }
 
   if (labelIds) {
-    const isEmpty = isListEmpty(labelIds);
+    const notLabelled = isListEmpty(labelIds);
 
-    filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
+    filter.labelIds = notLabelled ? [] : contains(labelIds);
   }
 
   if (priority) {
@@ -156,7 +156,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
 
   if (pipelineId) {
     const pipeline = await Pipelines.getPipeline(pipelineId);
-    if (pipeline.isCheckUser && !(pipeline.excludeCheckUserIds || []).includes(currentUserId)) {
+    if (pipeline.isCheckUser && !arrayChecker(pipeline.excludeCheckUserIds).includes(currentUserId)) {
       Object.assign(filter, { $or: [{ assignedUserIds: { $in: [currentUserId] } }, { userId: currentUserId }] });
     }
   }
@@ -243,11 +243,11 @@ const dateSelector = (date: IDate) => {
 };
 
 export const checkItemPermByUser = async (currentUserId: string, item: IItemCommonFields) => {
-  const stage = await Stages.getStage(item.stageId || '');
+  const stage = await Stages.getStage(item.stageId);
 
   const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
-  if (pipeline.visibility === 'private' && !(pipeline.memberIds || []).includes(currentUserId)) {
+  if (pipeline.visibility === 'private' && !arrayChecker(pipeline.memberIds).includes(currentUserId)) {
     throw new Error('You do not have permission to view.');
   }
 
@@ -256,8 +256,8 @@ export const checkItemPermByUser = async (currentUserId: string, item: IItemComm
   // current user hans't this carts assigned and created
   if (
     pipeline.isCheckUser &&
-    !(pipeline.excludeCheckUserIds || []).includes(currentUserId) &&
-    !((item.assignedUserIds || []).includes(currentUserId) || item.userId === currentUserId)
+    !arrayChecker(pipeline.excludeCheckUserIds).includes(currentUserId) &&
+    !(arrayChecker(item.assignedUserIds).includes(currentUserId) || item.userId === currentUserId)
   ) {
     throw new Error('You do not have permission to view.');
   }

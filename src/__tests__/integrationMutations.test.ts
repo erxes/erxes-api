@@ -193,10 +193,12 @@ describe('mutations', () => {
   });
 
   test('Create lead integration', async () => {
+    const leadIntegration = await integrationFactory({ formId: 'formId', kind: 'lead' });
+
     const args = {
-      name: _integration.name,
+      name: leadIntegration.name,
       brandId: _brand._id,
-      formId: _integration.formId,
+      formId: leadIntegration.formId,
       ...commonLeadProperties,
     };
 
@@ -220,20 +222,22 @@ describe('mutations', () => {
       }
     `;
 
-    const leadIntegration = await graphqlRequest(mutation, 'integrationsCreateLeadIntegration', args);
+    const response = await graphqlRequest(mutation, 'integrationsCreateLeadIntegration', args);
 
-    expect(leadIntegration.name).toBe(args.name);
-    expect(leadIntegration.brandId).toBe(args.brandId);
-    expect(leadIntegration.languageCode).toBe(args.languageCode);
-    expect(leadIntegration.formId).toBe(args.formId);
+    expect(response.name).toBe(args.name);
+    expect(response.brandId).toBe(args.brandId);
+    expect(response.languageCode).toBe(args.languageCode);
+    expect(response.formId).toBe(args.formId);
   });
 
   test('Edit lead integration', async () => {
+    const leadIntegration = await integrationFactory({ formId: 'formId', kind: 'lead' });
+
     const args = {
-      _id: _integration._id,
-      name: _integration.name,
+      _id: leadIntegration._id,
+      name: leadIntegration.name,
       brandId: _brand._id,
-      formId: _integration.formId,
+      formId: leadIntegration.formId,
       ...commonLeadProperties,
     };
 
@@ -260,13 +264,13 @@ describe('mutations', () => {
       }
     `;
 
-    const leadIntegration = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+    const response = await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
 
-    expect(leadIntegration._id).toBe(args._id);
-    expect(leadIntegration.name).toBe(args.name);
-    expect(leadIntegration.brandId).toBe(args.brandId);
-    expect(leadIntegration.languageCode).toBe(args.languageCode);
-    expect(leadIntegration.formId).toBe(args.formId);
+    expect(response._id).toBe(args._id);
+    expect(response.name).toBe(args.name);
+    expect(response.brandId).toBe(args.brandId);
+    expect(response.languageCode).toBe(args.languageCode);
+    expect(response.formId).toBe(args.formId);
   });
 
   test('integrationsCreateExternalIntegration', async () => {

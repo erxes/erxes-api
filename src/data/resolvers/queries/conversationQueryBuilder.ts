@@ -1,7 +1,7 @@
 import * as _ from 'underscore';
 import { Channels, Integrations } from '../../../db/models';
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
-import { fixDate } from '../../utils';
+import { arrayChecker, fixDate } from '../../utils';
 
 interface IIn {
   $in: string[];
@@ -114,7 +114,7 @@ export default class Builder {
     channels.forEach(channel => {
       availIntegrationIds = _.union(
         availIntegrationIds,
-        (channel.integrationIds || []).filter(id => this.activeIntegrationIds.includes(id)),
+        arrayChecker(channel.integrationIds).filter(id => this.activeIntegrationIds.includes(id)),
       );
     });
 
@@ -139,15 +139,11 @@ export default class Builder {
 
   // filter by channel
   public async channelFilter(channelId: string): Promise<{ integrationId: IIn }> {
-    const channel = await Channels.findOne({ _id: channelId });
+    const channel = await Channels.getChannel(channelId);
 
-    if (channel && channel.integrationIds) {
-      return {
-        integrationId: { $in: channel.integrationIds.filter(id => this.activeIntegrationIds.includes(id)) },
-      };
-    }
-
-    return { integrationId: { $in: [] } };
+    return {
+      integrationId: { $in: arrayChecker(channel.integrationIds).filter(id => this.activeIntegrationIds.includes(id)) },
+    };
   }
 
   // filter by brand
@@ -178,14 +174,10 @@ export default class Builder {
 
   // filter by starred
   public starredFilter(): { _id: IIn | { $in: string[] } } {
-    let ids: string[] = [];
-
-    if (this.user) {
-      ids = this.user.starredConversationIds || [];
-    }
-
     return {
-      _id: { $in: ids },
+      _id: {
+        $in: arrayChecker(this.user.starredConversationIds),
+      },
     };
   }
 

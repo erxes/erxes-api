@@ -263,7 +263,14 @@ describe('dealQueries', () => {
 
     await dealFactory({ labelIds: [_id] });
 
-    const response = await graphqlRequest(qryDealFilter, 'deals', { labelIds: [_id] });
+    let response = await graphqlRequest(qryDealFilter, 'deals', { labelIds: [_id] });
+
+    expect(response.length).toBe(1);
+
+    // filtering nolabelled deals
+    await dealFactory();
+
+    response = await graphqlRequest(qryDealFilter, 'deals', { labelIds: [''] });
 
     expect(response.length).toBe(1);
   });

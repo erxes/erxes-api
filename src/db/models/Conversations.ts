@@ -1,5 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ConversationMessages, Users } from '.';
+import { arrayChecker } from '../../data/utils';
 import { CONVERSATION_STATUSES } from './definitions/constants';
 import { IMessageDocument } from './definitions/conversationMessages';
 import { conversationSchema, IConversation, IConversationDocument } from './definitions/conversations';
@@ -195,7 +196,7 @@ export const loadClass = () => {
         throw new Error(`Conversation not found with id ${_id}`);
       }
 
-      const readUserIds = conversation.readUserIds || [];
+      const readUserIds = arrayChecker(conversation.readUserIds);
 
       // if current user is first one
       if (!readUserIds || readUserIds.length === 0) {
@@ -224,27 +225,23 @@ export const loadClass = () => {
      * Add participated users
      */
     public static addManyParticipatedUsers(conversationId: string, userIds: string[]) {
-      if (conversationId && userIds) {
-        return Conversations.updateOne(
-          { _id: conversationId },
-          {
-            $addToSet: { participatedUserIds: { $each: userIds } },
-          },
-        );
-      }
+      return Conversations.updateOne(
+        { _id: conversationId },
+        {
+          $addToSet: { participatedUserIds: { $each: userIds } },
+        },
+      );
     }
     /**
      * Add participated user
      */
     public static addParticipatedUsers(conversationId: string, userId: string) {
-      if (conversationId && userId) {
-        return Conversations.updateOne(
-          { _id: conversationId },
-          {
-            $addToSet: { participatedUserIds: userId },
-          },
-        );
-      }
+      return Conversations.updateOne(
+        { _id: conversationId },
+        {
+          $addToSet: { participatedUserIds: userId },
+        },
+      );
     }
 
     /**

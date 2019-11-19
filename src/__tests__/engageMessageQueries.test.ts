@@ -299,4 +299,20 @@ describe('engageQueries', () => {
 
     expect(response).toBe(3);
   });
+
+  test('Get verified emails', async () => {
+    process.env.ENGAGES_API_DOMAIN = 'http://localhost';
+
+    const qry = `
+      query engageVerifiedEmails {
+        engageVerifiedEmails
+      }
+    `;
+
+    try {
+      await graphqlRequest(qry, 'engageVerifiedEmails');
+    } catch (e) {
+      expect(e[0].message).toBe('Engages api is not running');
+    }
+  });
 });

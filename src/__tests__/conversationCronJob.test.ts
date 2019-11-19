@@ -151,7 +151,7 @@ describe('Cronjob conversation send email', () => {
 
   test('Conversations utils without answer messages', async () => {
     const spyGetAdminMessages = jest.spyOn(ConversationMessages, 'getAdminMessages');
-    spyGetAdminMessages.mockImplementation();
+    spyGetAdminMessages.mockImplementation(() => Promise.resolve([]));
 
     await sendMessageEmail();
   });

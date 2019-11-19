@@ -236,4 +236,22 @@ describe('integrationQueries', () => {
       expect(e[0].message).toBe('Connection failed');
     }
   });
+
+  test('Get used types', async () => {
+    const qry = `
+      query integrationsGetUsedTypes {
+        integrationsGetUsedTypes {
+          _id
+          name
+        }
+      }
+    `;
+
+    await integrationFactory({ kind: 'messenger' });
+
+    const usedTypes = await graphqlRequest(qry, 'integrationsGetUsedTypes');
+
+    expect(usedTypes[0]._id).toBe('messenger');
+    expect(usedTypes[0].name).toBe('Web messenger');
+  });
 });

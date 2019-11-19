@@ -209,7 +209,7 @@ const engageQueries = {
   /**
    * Get all verified emails
    */
-  async engageVerifiedEmails(_root, _args, { dataSources }: IContext) {
+  engageVerifiedEmails(_root, _args, { dataSources }: IContext) {
     return dataSources.EngagesAPI.engagesGetVerifiedEmails();
   },
 };

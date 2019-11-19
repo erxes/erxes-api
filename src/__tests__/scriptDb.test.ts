@@ -29,5 +29,9 @@ describe('Script model tests', () => {
       name: 'script',
       messengerId: messenger._id,
     };
+
+    const response = await Scripts.createScript(doc);
+
+    expect(response.name).toBe(doc.name);
   });
 });

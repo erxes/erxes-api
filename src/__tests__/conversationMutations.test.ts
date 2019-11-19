@@ -85,12 +85,26 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const leadMessage = await graphqlRequest(mutation, 'conversationMessageAdd', args);
+    let response = await graphqlRequest(mutation, 'conversationMessageAdd', args);
 
-    expect(leadMessage.content).toBe(args.content);
-    expect(leadMessage.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
-    expect(toJSON(leadMessage.mentionedUserIds)).toEqual(toJSON(args.mentionedUserIds));
-    expect(leadMessage.internal).toBe(args.internal);
+    expect(response.content).toBe(args.content);
+    expect(response.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
+    expect(toJSON(response.mentionedUserIds)).toEqual(toJSON(args.mentionedUserIds));
+    expect(response.internal).toBe(args.internal);
+
+    const messengerIntegration = await integrationFactory({ kind: 'messenger' });
+    const messengerConversation = await conversationFactory({
+      firstRespondedUserId: user._id,
+      firstRespondedDate: new Date(),
+      integrationId: messengerIntegration._id,
+    });
+
+    args.conversationId = messengerConversation._id;
+    delete args.mentionedUserIds;
+
+    response = await graphqlRequest(mutation, 'conversationMessageAdd', { ...args, fromBot: true });
+
+    expect(response.conversationId).toBe(messengerConversation._id);
   });
 
   test('Assign conversation', async () => {

@@ -1,4 +1,3 @@
-import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
 import {
   boardFactory,
@@ -43,23 +42,13 @@ describe('growthHackQueries', () => {
     query growthHacks(
       $stageId: String 
       $assignedUserIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
-      $priority: String
-      $hackStage: String
+      $priority: [String]
+      $hackStage: [String]
       $closeDateType: String
     ) {
       growthHacks(
         stageId: $stageId 
         assignedUserIds: $assignedUserIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
         priority: $priority
         hackStage: $hackStage
         closeDateType: $closeDateType
@@ -72,64 +61,6 @@ describe('growthHackQueries', () => {
   afterEach(async () => {
     // Clearing test data
     await GrowthHacks.deleteMany({});
-  });
-
-  test('Filter by next day', async () => {
-    const tomorrow = moment()
-      .add(1, 'day')
-      .endOf('day')
-      .format('YYYY-MM-DD');
-
-    await growthHackFactory({ closeDate: new Date(tomorrow) });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextDay: 'true' });
-
-    expect(response.length).toBe(1);
-  });
-
-  test('Filter by next week', async () => {
-    const nextWeek = moment()
-      .day(8)
-      .format('YYYY-MM-DD');
-
-    await growthHackFactory({ closeDate: new Date(nextWeek) });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextWeek: 'true' });
-
-    expect(response.length).toBe(1);
-  });
-
-  test('Filter by next month', async () => {
-    const nextMonth = moment()
-      .add(1, 'months')
-      .format('YYYY-MM-01');
-
-    await growthHackFactory({ closeDate: new Date(nextMonth) });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { nextMonth: 'true' });
-
-    expect(response.length).toBe(1);
-  });
-
-  test('Filter by has no close date', async () => {
-    await growthHackFactory({ noCloseDate: true });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { noCloseDate: 'true' });
-
-    expect(response.length).toBe(1);
-  });
-
-  test('Filter by overdue', async () => {
-    const yesterday = moment()
-      .utc()
-      .subtract(1, 'days')
-      .toDate();
-
-    await growthHackFactory({ closeDate: yesterday });
-
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { overdue: 'true' });
-
-    expect(response.length).toBe(1);
   });
 
   test('Filter by team members', async () => {
@@ -145,7 +76,7 @@ describe('growthHackQueries', () => {
   test('Filter by priority', async () => {
     await growthHackFactory({ priority: 'critical' });
 
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { priority: 'critical' });
+    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { priority: ['critical'] });
 
     expect(response.length).toBe(1);
   });
@@ -153,7 +84,7 @@ describe('growthHackQueries', () => {
   test('Filter by hack stage', async () => {
     await growthHackFactory({ hackStages: ['Awareness'] });
 
-    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { hackStage: 'Awareness' });
+    const response = await graphqlRequest(qryGrowthHackFilter, 'growthHacks', { hackStage: ['Awareness'] });
 
     expect(response.length).toBe(1);
   });
@@ -192,12 +123,12 @@ describe('growthHackQueries', () => {
     await growthHackFactory();
 
     const qry = `
-      query growthHacksTotalCount($hackStage: String) {
+      query growthHacksTotalCount($hackStage: [String]) {
         growthHacksTotalCount(hackStage: $hackStage)
       }
     `;
 
-    const filter = { hackStage: 'Awareness' };
+    const filter = { hackStage: ['Awareness'] };
 
     const totalCount = await graphqlRequest(qry, 'growthHacksTotalCount', filter);
 

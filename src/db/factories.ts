@@ -598,7 +598,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
   const doc = {
     name: params.name || faker.random.word(),
     kind,
-    brandId: params.brandId,
+    brandId: params.brandId || faker.random.word(),
     formId: params.formId,
     messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
@@ -809,11 +809,14 @@ interface IPipelineFactoryInput {
   templateId?: string;
 }
 
-export const pipelineFactory = (params: IPipelineFactoryInput = {}) => {
+export const pipelineFactory = async (params: IPipelineFactoryInput = {}) => {
+  const type = params.type || BOARD_TYPES.DEAL;
+  const board = await boardFactory({ type });
+
   return Pipelines.create({
     name: faker.random.word(),
-    boardId: params.boardId || faker.random.word(),
-    type: params.type || BOARD_TYPES.DEAL,
+    boardId: params.boardId || board._id,
+    type,
     visibility: params.visibility || 'public',
     bgColor: params.bgColor || 'fff',
     hackScoringType: params.hackScoringType,
@@ -833,10 +836,15 @@ interface IStageFactoryInput {
   order?: number;
 }
 
-export const stageFactory = (params: IStageFactoryInput = {}) => {
+export const stageFactory = async (params: IStageFactoryInput = {}) => {
+  const type = params.type || BOARD_TYPES.DEAL;
+
+  const board = await boardFactory({ type });
+  const pipeline = await pipelineFactory({ type, boardId: board._id });
+
   const stage = new Stages({
     name: faker.random.word(),
-    pipelineId: params.pipelineId || faker.random.word(),
+    pipelineId: params.pipelineId || pipeline._id,
     type: params.type || BOARD_TYPES.DEAL,
     probability: params.probability || PROBABILITY.TEN,
     formId: params.formId,

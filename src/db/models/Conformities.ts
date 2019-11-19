@@ -1,4 +1,5 @@
 import { Model, model } from 'mongoose';
+import { arrayChecker } from '../../data/utils';
 import {
   conformitySchema,
   IConformityAdd,
@@ -53,7 +54,7 @@ export const loadConformityClass = () => {
     }
 
     public static async editConformity(doc: IConformityEdit) {
-      const newRelTypeIds = doc.relTypeIds || [];
+      const newRelTypeIds = arrayChecker(doc.relTypeIds);
       const oldRelTypeIds = await Conformity.savedConformity({
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,

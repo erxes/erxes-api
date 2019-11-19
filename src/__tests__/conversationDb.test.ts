@@ -31,6 +31,18 @@ describe('Conversation db', () => {
     await Users.deleteMany({});
   });
 
+  test('Get conversation', async () => {
+    try {
+      await Conversations.getConversation('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Conversation not found');
+    }
+
+    const response = await Conversations.getConversation(_conversation._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create conversation', async () => {
     const _number = (await Conversations.find().countDocuments()) + 1;
     const conversation = await Conversations.createConversation({
@@ -231,7 +243,7 @@ describe('Conversation db', () => {
 
   test('Conversation mark as read', async () => {
     // first user read this conversation
-    _conversation.readUserIds = '';
+    _conversation.readUserIds = [];
     await _conversation.save();
 
     await Conversations.markAsReadConversation(_conversation._id, _user._id);
@@ -245,6 +257,12 @@ describe('Conversation db', () => {
     }
 
     expect(conversationObj.readUserIds).toContain(_user._id);
+
+    // if current user is in read users list
+    _conversation.readUserIds = [_user._id];
+    await _conversation.save();
+
+    await Conversations.markAsReadConversation(_conversation._id, _user._id);
 
     const secondUser = await userFactory({});
 
