@@ -1,5 +1,5 @@
 import { graphqlRequest } from '../db/connection';
-import { growthHackFactory, stageFactory, userFactory } from '../db/factories';
+import { growthHackFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
 import { GrowthHacks } from '../db/models';
 
 import './setup.ts';
@@ -21,20 +21,12 @@ describe('growthHackQueries', () => {
     query growthHacks(
       $stageId: String 
       $assignedUserIds: [String]
-      $nextDay: String
-      $nextWeek: String
-      $nextMonth: String
-      $noCloseDate: String
-      $overdue: String
+      $closeDateType: String
     ) {
       growthHacks(
         stageId: $stageId 
         assignedUserIds: $assignedUserIds
-        nextDay: $nextDay
-        nextWeek: $nextWeek
-        nextMonth: $nextMonth
-        noCloseDate: $noCloseDate
-        overdue: $overdue
+        closeDateType: $closeDateType
       ) {
         ${commonGrowthHackTypes}
       }
@@ -79,7 +71,9 @@ describe('growthHackQueries', () => {
   });
 
   test('GrowthHack detail', async () => {
-    const growthHack = await growthHackFactory();
+    const pipeline = await pipelineFactory();
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const growthHack = await growthHackFactory({ stageId: stage._id });
 
     const args = { _id: growthHack._id };
 

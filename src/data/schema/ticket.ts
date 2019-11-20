@@ -21,11 +21,7 @@ export const queries = `
     skip: Int
     search: String
     assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
+    closeDateType: String
     priority: [String]
     source: [String]
     labelIds: [String]
@@ -48,7 +44,7 @@ const commonParams = `
 `;
 
 export const mutations = `
-  ticketsAdd(name: String!, ${commonParams}): Ticket
+  ticketsAdd(name: String!, companyIds: [String], customerIds: [String], ${commonParams}): Ticket
   ticketsEdit(_id: String!, name: String, ${commonParams}): Ticket
   ticketsChange( _id: String!, destinationStageId: String): Ticket
   ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]

@@ -22,13 +22,15 @@ export const types = `
     bgColor: String
     isWatched: Boolean
     itemsTotalCount: Int
-    
+
     startDate: Date
     endDate: Date
     metric: String
     hackScoringType: String
     templateId: String
     state: String
+    isCheckUser: Boolean
+    excludeCheckUserIds: [String]
     ${commonTypes}
   }
 
@@ -59,7 +61,16 @@ export const queries = `
   boardDetail(_id: String!): Board
   pipelines(boardId: String!): [Pipeline]
   pipelineDetail(_id: String!): Pipeline
-  stages(isNotLost: Boolean, pipelineId: String!): [Stage]
+  stages(
+    isNotLost: Boolean,
+    pipelineId: String!,
+    search: String,
+    companyIds: [String]
+    customerIds: [String]
+    assignedUserIds: [String]
+    extraParams: JSON,
+    closeDateType: String,
+  ): [Stage]
   stageDetail(_id: String!): Stage
 `;
 
@@ -80,7 +91,9 @@ const pipelineParams = `
   endDate: Date,
   metric: String,
   hackScoringType: String,
-  templateId: String
+  templateId: String,
+  isCheckUser: Boolean
+  excludeCheckUserIds: [String],
 `;
 
 export const mutations = `
