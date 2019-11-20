@@ -205,8 +205,8 @@ export const checkPermission = async (type: string, user: IUserDocument, mutatio
 };
 
 export const createConformity = async ({
-  companyIds = [],
-  customerIds = [],
+  companyIds,
+  customerIds,
   mainType,
   mainTypeId,
 }: {
@@ -215,7 +215,7 @@ export const createConformity = async ({
   mainType: string;
   mainTypeId: string;
 }) => {
-  for (const companyId of companyIds) {
+  for (const companyId of arrayChecker(companyIds)) {
     await Conformities.addConformity({
       mainType,
       mainTypeId,
@@ -224,7 +224,7 @@ export const createConformity = async ({
     });
   }
 
-  for (const customerId of customerIds) {
+  for (const customerId of arrayChecker(customerIds)) {
     await Conformities.addConformity({
       mainType,
       mainTypeId,

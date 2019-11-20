@@ -14,8 +14,14 @@ import apolloServer from './apolloClient';
 import { IntegrationsAPI } from './data/dataSources';
 import { companiesExport, customersExport } from './data/modules/coc/exporter';
 import insightExports from './data/modules/insights/insightExports';
-import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { checkFile, getEnv, readFileRequest, registerOnboardHistory, uploadFile } from './data/utils';
+import {
+  checkFile,
+  getEnv,
+  handleEngageUnSubscribe,
+  readFileRequest,
+  registerOnboardHistory,
+  uploadFile,
+} from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageBroker';

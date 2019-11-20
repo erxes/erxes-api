@@ -50,6 +50,33 @@ describe('messenger integration model add method', () => {
     expect(response.length).toBe(1);
   });
 
+  test('update basic info', async () => {
+    const integration = await integrationFactory();
+
+    const doc = {
+      name: 'updated',
+      brandId: 'brandId',
+    };
+
+    const response = await Integrations.updateBasicInfo(integration._id, doc);
+
+    expect(response.name).toBe(doc.name);
+    expect(response.brandId).toBe(doc.brandId);
+  });
+
+  test('update basic info (Error: Integration not found)', async () => {
+    const doc = {
+      name: 'updated',
+      brandId: 'brandId',
+    };
+
+    try {
+      await Integrations.updateBasicInfo('fakeId', doc);
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+  });
+
   test('check if messenger integration create method is running successfully', async () => {
     const doc = {
       name: 'Integration test',

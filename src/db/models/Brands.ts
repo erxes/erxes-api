@@ -1,6 +1,5 @@
 import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
-import { debugBase } from '../../debuggers';
 import { Integrations } from './';
 import { brandSchema, IBrand, IBrandDocument, IBrandEmailConfig } from './definitions/brands';
 import { IIntegrationDocument } from './definitions/integrations';
@@ -40,10 +39,6 @@ export const loadClass = () => {
       // search until not existing one found
       while (prevBrand) {
         generatedCode = Random.id().substr(0, 6);
-
-        if (code) {
-          debugBase('User defined brand code already exists. New code is generated.');
-        }
 
         prevBrand = await Brands.findOne({ code: generatedCode });
       }

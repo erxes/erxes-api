@@ -77,12 +77,11 @@ describe('Test boards mutations', () => {
       }
     `;
 
-    const user = await userFactory({ isOwner: false });
+    const response = await graphqlRequest(mutation, 'boardsEdit', args);
 
-    const updatedBoard = await graphqlRequest(mutation, 'boardsEdit', args, { user });
-
-    expect(updatedBoard.name).toEqual(args.name);
-    expect(updatedBoard.type).toEqual(args.type);
+    expect(response._id).toBe(args._id);
+    expect(response.name).toBe(args.name);
+    expect(response.type).toBe(args.type);
   });
 
   test('Update board (Error: Permission required)', async () => {
@@ -98,8 +97,10 @@ describe('Test boards mutations', () => {
       }
     `;
 
+    const user = await userFactory({ isOwner: false });
+
     try {
-      await graphqlRequest(mutation, 'boardsEdit', args, context);
+      await graphqlRequest(mutation, 'boardsEdit', args, { user });
     } catch (e) {
       expect(e[0].message).toBe('Permission required');
     }

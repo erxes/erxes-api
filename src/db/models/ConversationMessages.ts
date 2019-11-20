@@ -1,9 +1,10 @@
 import { Model, model } from 'mongoose';
 import * as strip from 'strip';
-import { Conversations } from '.';
+import { ConversationMessages, Conversations } from '.';
 import { IMessage, IMessageDocument, messageSchema } from './definitions/conversationMessages';
 
 export interface IMessageModel extends Model<IMessageDocument> {
+  getMessage(_id: string): Promise<IMessageDocument>;
   createMessage(doc: IMessage): Promise<IMessageDocument>;
   addMessage(doc: IMessage, userId?: string): Promise<IMessageDocument>;
   getNonAsnweredMessage(conversationId: string): Promise<IMessageDocument>;
@@ -13,6 +14,18 @@ export interface IMessageModel extends Model<IMessageDocument> {
 
 export const loadClass = () => {
   class Message {
+    /**
+     * Retreives message
+     */
+    public static async getMessage(_id: string) {
+      const message = await ConversationMessages.findOne({ _id });
+
+      if (!message) {
+        throw new Error('Conversation message not found');
+      }
+
+      return message;
+    }
     /**
      * Create a message
      */
@@ -45,7 +58,7 @@ export const loadClass = () => {
       }
 
       // add mentioned users to participators
-      if (message.mentionedUserIds) {
+      if (message.mentionedUserIds && message.mentionedUserIds.length > 0) {
         await Conversations.addManyParticipatedUsers(message.conversationId, message.mentionedUserIds);
       }
 

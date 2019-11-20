@@ -25,7 +25,7 @@ export interface IMessenger {
   brandId?: string;
   kind?: string;
   sentAs?: string;
-  content?: string;
+  content: string;
   rules?: IRule[];
 }
 
@@ -73,7 +73,7 @@ const emailSchema = new Schema(
   {
     attachments: field({ type: Object, optional: true }),
     subject: field({ type: String }),
-    content: field({ type: String }),
+    content: field({ type: String, optional: true }),
     templateId: field({ type: String, optional: true }),
   },
   { _id: false },

@@ -1,9 +1,15 @@
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
-import { conversationFactory, customerFactory, integrationFactory, userFactory } from '../db/factories';
+import {
+  conversationFactory,
+  conversationMessageFactory,
+  customerFactory,
+  integrationFactory,
+  userFactory,
+} from '../db/factories';
 import { Conversations, Customers, Integrations, Users } from '../db/models';
 
-import { KIND_CHOICES } from '../db/models/definitions/constants';
+import { CONVERSATION_STATUSES, KIND_CHOICES } from '../db/models/definitions/constants';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IUserDocument } from '../db/models/definitions/users';
@@ -18,19 +24,80 @@ const spy = jest.spyOn(utils, 'sendNotification');
 
 describe('Conversation message mutations', () => {
   let leadConversation: IConversationDocument;
+  let facebookConversation: IConversationDocument;
+  let facebookMessengerConversation: IConversationDocument;
+  let messengerConversation: IConversationDocument;
+  let chatfuelConversation: IConversationDocument;
+  let twitterConversation: IConversationDocument;
+
   let user: IUserDocument;
   let customer: ICustomerDocument;
 
-  beforeEach(async () => {
-    user = await userFactory({});
+  const addMutation = `
+    mutation conversationMessageAdd(
+      $conversationId: String
+      $content: String
+      $mentionedUserIds: [String]
+      $internal: Boolean
+      $attachments: [AttachmentInput]
+    ) {
+      conversationMessageAdd(
+        conversationId: $conversationId
+        content: $content
+        mentionedUserIds: $mentionedUserIds
+        internal: $internal
+        attachments: $attachments
+      ) {
+        conversationId
+        content
+        mentionedUserIds
+        internal
+        attachments {
+          url
+          name
+          type
+          size
+        }
+      }
+    }
+  `;
 
-    const leadIntegration = await integrationFactory({ kind: KIND_CHOICES.LEAD });
+  beforeEach(async () => {
+    spy.mockImplementation();
+
+    user = await userFactory({});
     customer = await customerFactory({});
 
+    const leadIntegration = await integrationFactory({
+      kind: KIND_CHOICES.LEAD,
+      messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
+    });
     leadConversation = await conversationFactory({
       integrationId: leadIntegration._id,
       customerId: customer._id,
       assignedUserId: user._id,
+      content: 'lead content',
+    });
+
+    const facebookIntegration = await integrationFactory({ kind: KIND_CHOICES.FACEBOOK_POST });
+    facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
+
+    const facebookMessengerIntegration = await integrationFactory({ kind: KIND_CHOICES.FACEBOOK_MESSENGER });
+    facebookMessengerConversation = await conversationFactory({ integrationId: facebookMessengerIntegration._id });
+
+    const chatfuelIntegration = await integrationFactory({ kind: KIND_CHOICES.CHATFUEL });
+    chatfuelConversation = await conversationFactory({ integrationId: chatfuelIntegration._id });
+
+    const twitterIntegration = await integrationFactory({ kind: KIND_CHOICES.TWITTER_DM });
+    twitterConversation = await conversationFactory({ integrationId: twitterIntegration._id });
+
+    const messengerIntegration = await integrationFactory({ kind: 'messenger' });
+    messengerConversation = await conversationFactory({
+      customerId: customer._id,
+      firstRespondedUserId: user._id,
+      firstRespondedDate: new Date(),
+      integrationId: messengerIntegration._id,
+      status: CONVERSATION_STATUSES.CLOSED,
     });
   });
 
@@ -44,7 +111,21 @@ describe('Conversation message mutations', () => {
     spy.mockRestore();
   });
 
-  test('Add conversation message', async () => {
+  test('Add internal conversation message', async () => {
+    const args = {
+      conversationId: messengerConversation._id,
+      content: 'content',
+      internal: true,
+    };
+
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    expect(response.conversationId).toBe(args.conversationId);
+    expect(response.content).toBe(args.content);
+    expect(response.internal).toBeTruthy();
+  });
+
+  test('Add lead conversation message', async () => {
     process.env.DEFAULT_EMAIL_SERIVCE = ' ';
     process.env.COMPANY_EMAIL_FROM = ' ';
 
@@ -56,55 +137,106 @@ describe('Conversation message mutations', () => {
       attachments: [{ url: 'url', name: 'name', type: 'doc', size: 10 }],
     };
 
-    const mutation = `
-      mutation conversationMessageAdd(
-        $conversationId: String
-        $content: String
-        $mentionedUserIds: [String]
-        $internal: Boolean
-        $attachments: [AttachmentInput]
-      ) {
-        conversationMessageAdd(
-          conversationId: $conversationId
-          content: $content
-          mentionedUserIds: $mentionedUserIds
-          internal: $internal
-          attachments: $attachments
-        ) {
-          conversationId
-          content
-          mentionedUserIds
-          internal
-          attachments {
-            url
-            name
-            type
-            size
-          }
-        }
-      }
-    `;
-
-    let response = await graphqlRequest(mutation, 'conversationMessageAdd', args);
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
 
     expect(response.content).toBe(args.content);
     expect(response.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
     expect(toJSON(response.mentionedUserIds)).toEqual(toJSON(args.mentionedUserIds));
     expect(response.internal).toBe(args.internal);
+  });
 
-    const messengerIntegration = await integrationFactory({ kind: 'messenger' });
-    const messengerConversation = await conversationFactory({
-      firstRespondedUserId: user._id,
-      firstRespondedDate: new Date(),
-      integrationId: messengerIntegration._id,
-    });
+  test('Add messenger conversation message', async () => {
+    const args = {
+      conversationId: messengerConversation._id,
+      content: 'content',
+      fromBot: true,
+    };
 
-    args.conversationId = messengerConversation._id;
-    delete args.mentionedUserIds;
-
-    response = await graphqlRequest(mutation, 'conversationMessageAdd', { ...args, fromBot: true });
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
 
     expect(response.conversationId).toBe(messengerConversation._id);
+  });
+
+  test('Add conversation message using third party integration', async () => {
+    const args = { conversationId: facebookConversation._id, content: 'content' };
+
+    const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
+    spyConversationToIntegrations.mockImplementation(() => 'ok');
+
+    await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    spyConversationToIntegrations.mockRestore();
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+
+    args.conversationId = facebookMessengerConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+
+    args.conversationId = chatfuelConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+
+    args.conversationId = twitterConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
+  });
+
+  test('Reply facebook comment', async () => {
+    const commentMutation = `
+      mutation conversationsReplyFacebookComment(
+        $conversationId: String
+        $commentId: String
+        $content: String
+      ) {
+        conversationsReplyFacebookComment(
+          conversationId: $conversationId
+          commentId: $commentId
+          content: $content
+        ) {
+          conversationId
+          commentId
+        }
+      }
+    `;
+
+    const message = await conversationMessageFactory({ conversationId: facebookConversation._id });
+    const comment = await integrationFactory({ kind: 'facebook-post' });
+
+    const args = {
+      conversationId: facebookConversation._id,
+      content: message.content,
+      commentId: comment._id,
+    };
+
+    const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
+    spyConversationToIntegrations.mockImplementation(() => 'ok');
+
+    await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+
+    spyConversationToIntegrations.mockRestore();
+
+    try {
+      await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Connection failed');
+    }
   });
 
   test('Assign conversation', async () => {
@@ -165,7 +297,7 @@ describe('Conversation message mutations', () => {
     process.env.COMPANY_EMAIL_FROM = ' ';
 
     const args = {
-      _ids: [leadConversation._id],
+      _ids: [leadConversation._id, messengerConversation._id],
       status: 'closed',
     };
 
@@ -180,6 +312,13 @@ describe('Conversation message mutations', () => {
     const [conversation] = await graphqlRequest(mutation, 'conversationsChangeStatus', args);
 
     expect(conversation.status).toEqual(args.status);
+
+    // if status is not closed
+    args.status = CONVERSATION_STATUSES.OPEN;
+
+    const [openConversation] = await graphqlRequest(mutation, 'conversationsChangeStatus', args);
+
+    expect(openConversation.status).toEqual(args.status);
   });
 
   test('Mark conversation as read', async () => {

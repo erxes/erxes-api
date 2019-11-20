@@ -14,7 +14,7 @@ export interface IConversation {
   closedAt?: Date;
   closedUserId?: string;
 
-  status?: string;
+  status: string;
   messageCount?: number;
   tagIds?: string[];
 

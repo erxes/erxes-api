@@ -139,25 +139,19 @@ const integrationMutations = {
   },
 
   async integrationsEditCommonFields(_root, { _id, name, brandId }, { user }) {
-    if (!(_id && name && brandId)) {
-      throw new Error('Name and brand must be chosen.');
-    }
-
-    const integration = await Integrations.findOne({ _id });
+    const integration = await Integrations.getIntegration(_id);
 
     const updated = Integrations.updateBasicInfo(_id, { name, brandId });
 
-    if (integration) {
-      await putUpdateLog(
-        {
-          type: 'integration',
-          object: { name: integration.name, brandId: integration.brandId },
-          newData: JSON.stringify({ name, brandId }),
-          description: `${integration.name} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: { name: integration.name, brandId: integration.brandId },
+        newData: JSON.stringify({ name, brandId }),
+        description: `${integration.name} has been edited`,
+      },
+      user,
+    );
 
     return updated;
   },
@@ -244,20 +238,18 @@ const integrationMutations = {
   },
 
   async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {
-    const integration = await Integrations.findOne({ _id });
+    const integration = await Integrations.getIntegration(_id);
     await Integrations.updateOne({ _id }, { $set: { isActive: false } });
 
-    if (integration) {
-      await putUpdateLog(
-        {
-          type: 'integration',
-          object: integration,
-          newData: JSON.stringify({ isActive: false }),
-          description: `Integration "${integration.name}" has been archived.`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: integration,
+        newData: JSON.stringify({ isActive: false }),
+        description: `Integration "${integration.name}" has been archived.`,
+      },
+      user,
+    );
 
     return Integrations.findOne({ _id });
   },

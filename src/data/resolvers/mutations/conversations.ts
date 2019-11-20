@@ -17,7 +17,7 @@ import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils from '../../utils';
 
-interface IConversationMessageAdd {
+export interface IConversationMessageAdd {
   conversationId: string;
   content: string;
   mentionedUserIds?: string[];
@@ -30,26 +30,6 @@ interface IReplyFacebookComment {
   commentId: string;
   content: string;
 }
-/**
- *  Send conversation to integrations
- */
-
-const sendConversationToIntegrations = (
-  integrationId: string,
-  conversationId: string,
-  requestName: string,
-  doc: IConversationMessageAdd,
-  dataSources: any,
-) => {
-  if (dataSources && dataSources.IntegrationsAPI && requestName) {
-    return dataSources.IntegrationsAPI[requestName]({
-      conversationId,
-      integrationId,
-      content: strip(doc.content),
-      attachments: doc.attachments || [],
-    });
-  }
-};
 
 /**
  * conversation notrification receiver ids
@@ -67,7 +47,7 @@ export const conversationNotifReceivers = (
   }
 
   // participated users can get notifications
-  if (conversation.participatedUserIds) {
+  if (conversation.participatedUserIds && conversation.participatedUserIds.length > 0) {
     userIds = _.union(userIds, conversation.participatedUserIds);
   }
 
@@ -96,11 +76,7 @@ export const publishConversationsChanged = (_ids: string[], type: string): strin
 /**
  * Publish admin's message
  */
-export const publishMessage = (message?: IMessageDocument | null, customerId?: string) => {
-  if (!message) {
-    return;
-  }
-
+export const publishMessage = (message: IMessageDocument, customerId?: string) => {
   graphqlPubsub.publish('conversationMessageInserted', {
     conversationMessageInserted: message,
   });
@@ -115,13 +91,6 @@ export const publishMessage = (message?: IMessageDocument | null, customerId?: s
       conversationAdminMessageInserted: extendedMessage,
     });
   }
-};
-
-export const publishClientMessage = (message: IMessageDocument) => {
-  // notifying to total unread count
-  graphqlPubsub.publish('conversationClientMessageInserted', {
-    conversationClientMessageInserted: message,
-  });
 };
 
 const sendNotifications = async ({
@@ -163,7 +132,7 @@ const sendNotifications = async ({
         doc.action = 'has removed you from conversation';
         break;
       case NOTIFICATION_TYPES.CONVERSATION_STATE_CHANGE:
-        doc.action = `changed conversation status to ${(conversation.status || '').toUpperCase()}`;
+        doc.action = `changed conversation status to ${conversation.status.toUpperCase()}`;
         break;
     }
 
@@ -195,7 +164,7 @@ const conversationMutations = {
       conversations: [conversation],
       type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
       mobile: true,
-      messageContent: doc.content || '',
+      messageContent: doc.content,
     });
 
     // do not send internal message to third service integrations
@@ -234,7 +203,7 @@ const conversationMutations = {
       requestName = 'replyFacebookPost';
 
       try {
-        const response = await sendConversationToIntegrations(
+        const response = await utils.sendConversationToIntegrations(
           integrationId,
           conversationId,
           requestName,
@@ -266,7 +235,7 @@ const conversationMutations = {
     }
 
     try {
-      const response = await sendConversationToIntegrations(
+      const response = await utils.sendConversationToIntegrations(
         integrationId,
         conversationId,
         requestName,
@@ -281,9 +250,7 @@ const conversationMutations = {
       return e;
     }
 
-    const dbMessage = await ConversationMessages.findOne({
-      _id: message._id,
-    });
+    const dbMessage = await ConversationMessages.getMessage(message._id);
 
     // Publishing both admin & client
     publishMessage(dbMessage, conversation.customerId);
@@ -300,7 +267,7 @@ const conversationMutations = {
       conversations: [conversation],
       type: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
       mobile: true,
-      messageContent: doc.content || '',
+      messageContent: doc.content,
     });
 
     const requestName = 'replyFacebookPost';
@@ -308,7 +275,7 @@ const conversationMutations = {
     const conversationId = doc.commentId;
 
     try {
-      const response = await sendConversationToIntegrations(
+      const response = await utils.sendConversationToIntegrations(
         integrationId,
         conversationId,
         requestName,

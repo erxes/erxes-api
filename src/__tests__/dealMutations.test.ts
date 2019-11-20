@@ -47,11 +47,13 @@ describe('Test deals mutations', () => {
     const args = {
       name: deal.name,
       stageId: stage._id,
+      customerIds: ['fakeCustomerId'],
+      companyIds: ['fakeCompanyId'],
     };
 
     const mutation = `
-      mutation dealsAdd(${commonDealParamDefs}) {
-        dealsAdd(${commonDealParams}) {
+      mutation dealsAdd(${commonDealParamDefs} $customerIds: [String] $companyIds: [String]) {
+        dealsAdd(${commonDealParams} customerIds: $customerIds companyIds: $companyIds) {
           _id
           name
           stageId

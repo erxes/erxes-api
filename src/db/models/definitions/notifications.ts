@@ -33,7 +33,7 @@ export const notificationSchema = new Schema({
   }),
   title: field({ type: String }),
   link: field({ type: String }),
-  content: field({ type: String }),
+  content: field({ type: String, optional: true }),
   createdUser: field({ type: String }),
   receiver: field({ type: String }),
   contentType: field({ type: String }),

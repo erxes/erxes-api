@@ -6,12 +6,14 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
+import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
+import { IConversationMessageAdd } from './resolvers/mutations/conversations';
 
 /*
  * Check that given file is not harmful
@@ -816,6 +818,27 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   return { start, end };
 };
 
+/**
+ *  Send conversation to integrations
+ */
+
+const sendConversationToIntegrations = (
+  integrationId: string,
+  conversationId: string,
+  requestName: string,
+  doc: IConversationMessageAdd,
+  dataSources: any,
+) => {
+  if (dataSources && dataSources.IntegrationsAPI && requestName) {
+    return dataSources.IntegrationsAPI[requestName]({
+      conversationId,
+      integrationId,
+      content: strip(doc.content),
+      attachments: doc.attachments || [],
+    });
+  }
+};
+
 export default {
   sendEmail,
   validateEmail,
@@ -823,6 +846,7 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
+  sendConversationToIntegrations,
 };
 
 export const validSearchText = (values: string[]) => {
@@ -897,3 +921,9 @@ export const arrayChecker = (list?: any[]) => {
 
   return [];
 };
+
+/*
+ * Handle engage unsubscribe request
+ */
+export const handleEngageUnSubscribe = (query: { cid: string }) =>
+  Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });

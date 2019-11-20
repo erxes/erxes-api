@@ -197,7 +197,7 @@ describe('engageQueries', () => {
     expect(response._id).toBe(engageMessage._id);
 
     const brand = await brandFactory();
-    const messenger = { brandId: brand._id };
+    const messenger = { brandId: brand._id, content: 'Content' };
     const engageMessageWithBrand = await engageMessageFactory({ messenger });
 
     response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessageWithBrand._id });

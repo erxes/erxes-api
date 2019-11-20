@@ -50,27 +50,28 @@ const schema = makeExecutableSchema({
 export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context?: any) => {
   const user = await userFactory({});
 
-  const rootValue = {};
-
   const res = {
     cookie: () => {
       return 'cookie';
     },
   };
 
-  const finalContext = context || { user, res };
-
-  finalContext.docModifier = doc => {
-    return doc;
-  };
-
-  finalContext.commonQuerySelector = {};
-  finalContext.userBrandIdsSelector = {};
-  finalContext.brandIdSelector = {};
-  finalContext.dataSources = {
+  const dataSources = {
     EngagesAPI: new EngagesAPI(),
     IntegrationsAPI: new IntegrationsAPI(),
   };
+
+  const finalContext: any = {};
+
+  finalContext.dataSources = (context && context.dataSources) || dataSources;
+  finalContext.user = (context && context.user) || user;
+  finalContext.res = (context && context.res) || res;
+  finalContext.commonQuerySelector = {};
+  finalContext.userBrandIdsSelector = {};
+  finalContext.brandIdSelector = {};
+  finalContext.docModifier = doc => doc;
+
+  const rootValue = {};
 
   const response: any = await graphql(schema, source, rootValue, finalContext, args);
 

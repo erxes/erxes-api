@@ -3,6 +3,7 @@ import { graphqlRequest } from '../db/connection';
 import { brandFactory, integrationFactory, userFactory } from '../db/factories';
 import { Brands, Integrations, Users } from '../db/models';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('mutations', () => {
@@ -308,14 +309,14 @@ describe('mutations', () => {
     };
 
     try {
-      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
       expect(e[0].message).toBe('Error: Connection failed');
     }
 
     args.kind = 'facebook-post';
     try {
-      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
       expect(e[0].message).toBe('Error: Connection failed');
     }
@@ -324,10 +325,21 @@ describe('mutations', () => {
     args.data = { data: 'data' };
 
     try {
-      await graphqlRequest(mutation, 'integrationsEditLeadIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
       expect(e[0].message).toBe('Error: Connection failed');
     }
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'createIntegration');
+    spy.mockImplementation(() => Promise.resolve());
+
+    const response = await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, {
+      dataSources,
+    });
+
+    expect(response).toBeDefined();
   });
 
   test('integrationAddMailAccount', async () => {
@@ -411,6 +423,26 @@ describe('mutations', () => {
       }
     `;
 
+    const integration = await integrationFactory();
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'removeAccount');
+    spy.mockImplementation(() => Promise.resolve({ erxesApiIds: [integration._id] }));
+
+    const user = { user: await userFactory() };
+
+    const response = await graphqlRequest(
+      mutation,
+      'integrationsRemoveAccount',
+      { _id: 'accountId' },
+      { dataSources, user },
+    );
+
+    expect(response).toBe('success');
+
+    spy.mockRestore();
+
     try {
       await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
     } catch (e) {
@@ -484,5 +516,49 @@ describe('mutations', () => {
     } catch (e) {
       expect(e[0].message).toBe('Connection failed');
     }
+  });
+
+  test('Integrations archive', async () => {
+    const mutation = `
+      mutation integrationsArchive($_id: String!) {
+        integrationsArchive(_id: $_id) {
+          _id
+          isActive
+        }
+      }
+    `;
+
+    const integration = await integrationFactory();
+    const response = await graphqlRequest(mutation, 'integrationsArchive', {
+      _id: integration._id,
+    });
+
+    expect(response.isActive).toBeFalsy();
+  });
+
+  test('Integrations edit common fields', async () => {
+    const mutation = `
+      mutation integrationsEditCommonFields($_id: String!, $name: String!, $brandId: String!) {
+        integrationsEditCommonFields(_id: $_id name: $name brandId: $brandId) {
+          _id
+          name
+          brandId
+        }
+      }
+    `;
+
+    const integration = await integrationFactory();
+
+    const doc = {
+      _id: integration._id,
+      name: 'updated',
+      brandId: 'brandId',
+    };
+
+    const response = await graphqlRequest(mutation, 'integrationsEditCommonFields', doc);
+
+    expect(response._id).toBe(doc._id);
+    expect(response.name).toBe(doc.name);
+    expect(response.brandId).toBe(doc.brandId);
   });
 });

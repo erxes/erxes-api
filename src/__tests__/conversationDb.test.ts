@@ -15,6 +15,7 @@ describe('Conversation db', () => {
     _conversation = await conversationFactory({});
     _conversationMessage = await conversationMessageFactory({
       conversationId: _conversation._id,
+      content: 'content',
     });
 
     _user = await userFactory({});
@@ -29,6 +30,18 @@ describe('Conversation db', () => {
     await Conversations.deleteMany({});
     await ConversationMessages.deleteMany({});
     await Users.deleteMany({});
+  });
+
+  test('Get conversation message', async () => {
+    try {
+      await ConversationMessages.getMessage('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Conversation message not found');
+    }
+
+    const response = await ConversationMessages.getMessage(_conversationMessage._id);
+
+    expect(response).toBeDefined();
   });
 
   test('Get conversation', async () => {
@@ -51,6 +64,7 @@ describe('Conversation db', () => {
       assignedUserId: _user._id,
       participatedUserIds: [_user._id],
       readUserIds: [_user._id],
+      status: CONVERSATION_STATUSES.NEW,
     });
 
     expect(conversation).toBeDefined();

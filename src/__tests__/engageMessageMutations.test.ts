@@ -137,7 +137,6 @@ describe('engage message mutation tests', () => {
         ],
       },
     };
-
     spy = jest.spyOn(engageUtils, 'send');
   });
 
@@ -172,6 +171,12 @@ describe('engage message mutation tests', () => {
       },
     });
 
+    try {
+      await engageUtils.send(emessage);
+    } catch (e) {
+      expect(e.message).toEqual('Integration not found');
+    }
+
     const emessageWithoutUser = await engageMessageFactory({
       method: 'messenger',
       title: 'Send via messenger',
@@ -183,12 +188,6 @@ describe('engage message mutation tests', () => {
         content: 'content',
       },
     });
-
-    try {
-      await engageUtils.send(emessage);
-    } catch (e) {
-      expect(e.message).toEqual('Integration not found');
-    }
 
     try {
       await engageUtils.send(emessageWithoutUser);
@@ -250,6 +249,48 @@ describe('engage message mutation tests', () => {
     expect(newMessage.engageData.messageId).toBe(emessageWithBrand._id);
     expect(newMessage.engageData.fromUserId).toBe(_user._id);
     expect(newMessage.engageData.brandId).toBe(brand._id);
+
+    const emessageNoMessenger = await engageMessageFactory({
+      isLive: true,
+      userId: _user._id,
+      method: 'messenger',
+    });
+
+    await engageUtils.send(emessageNoMessenger);
+  });
+
+  test('Engage utils send via messenger without initial values', async () => {
+    _customer.firstName = undefined;
+    _customer.lastName = undefined;
+    _customer.primaryEmail = undefined;
+
+    _customer.save();
+
+    const user = await userFactory();
+
+    user.email = undefined;
+    user.details = undefined;
+    user.save();
+
+    const brand = await brandFactory();
+
+    await integrationFactory({
+      brandId: brand._id,
+      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
+    });
+
+    const emessage = await engageMessageFactory({
+      method: 'messenger',
+      customerIds: [_customer._id],
+      userId: user._id,
+      isLive: true,
+      messenger: {
+        brandId: brand._id,
+        content: 'content',
+      },
+    });
+
+    await engageUtils.send(emessage);
   });
 
   test('Engage utils send via email', async () => {
@@ -283,6 +324,7 @@ describe('engage message mutation tests', () => {
       title: 'Send via email',
       userId: _user._id,
       segmentIds: [_segment._id],
+      isLive: true,
       email: {
         subject: 'subject',
         content: 'content',
@@ -291,6 +333,34 @@ describe('engage message mutation tests', () => {
     });
 
     await engageUtils.send(emessageWithUser);
+
+    _customer.firstName = undefined;
+    _customer.lastName = undefined;
+
+    _customer.save();
+
+    const emessageNoInitial = await engageMessageFactory({
+      method: 'email',
+      title: 'Send via email',
+      userId: _user._id,
+      isLive: true,
+      customerIds: [_customer._id],
+      segmentIds: [_segment._id],
+      email: {
+        subject: 'subject',
+        content: 'content',
+        attachments: [],
+      },
+    });
+
+    await engageUtils.send(emessageNoInitial);
+
+    const emessageNotLive = await engageMessageFactory({
+      isLive: false,
+      userId: _user._id,
+    });
+
+    await engageUtils.send(emessageNotLive);
   });
 
   const engageMessageAddMutation = `

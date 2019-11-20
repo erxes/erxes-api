@@ -54,6 +54,7 @@ import {
   ACTIVITY_PERFORMER_TYPES,
   ACTIVITY_TYPES,
   BOARD_TYPES,
+  CONVERSATION_STATUSES,
   FORM_TYPES,
   NOTIFICATION_TYPES,
   PROBABILITY,
@@ -531,9 +532,10 @@ interface IConversationFactoryInput {
 
 export const conversationFactory = (params: IConversationFactoryInput = {}) => {
   const doc = {
-    content: params.content || faker.lorem.sentence(),
+    content: params.content,
     customerId: params.customerId || Random.id(),
     integrationId: params.integrationId || Random.id(),
+    status: params.status || CONVERSATION_STATUSES.NEW,
   };
 
   return Conversations.createConversation({
@@ -569,7 +571,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
   }
 
   return ConversationMessages.createMessage({
-    content: params.content || faker.random.word(),
+    content: params.content,
     attachments: {},
     mentionedUserIds: params.mentionedUserIds || [Random.id()],
     conversationId,
@@ -590,6 +592,7 @@ interface IIntegrationFactoryInput {
   leadData?: any | string;
   tagIds?: string[];
   isActive?: boolean;
+  messengerData?: object;
 }
 
 export const integrationFactory = async (params: IIntegrationFactoryInput = {}) => {
@@ -600,7 +603,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     kind,
     brandId: params.brandId,
     formId: params.formId,
-    messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
+    messengerData: params.messengerData,
     leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
     tagIds: params.tagIds,
     isActive: params.isActive === undefined || params.isActive === null ? true : params.isActive,
