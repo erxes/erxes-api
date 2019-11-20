@@ -20,11 +20,7 @@ export const queries = `
     skip: Int
     search: String
     assignedUserIds: [String]
-    nextDay: String
-    nextWeek: String
-    nextMonth: String
-    noCloseDate: String
-    overdue: String
+    closeDateType: String
     priority: [String]
     labelIds: [String]
     ${conformityQueryFields}
@@ -44,7 +40,7 @@ const commonParams = `
 `;
 
 export const mutations = `
-  tasksAdd(name: String!, ${commonParams}): Task
+  tasksAdd(name: String!, customerIds: [String], companyIds: [String], ${commonParams}): Task
   tasksEdit(_id: String!, name: String, ${commonParams}): Task
   tasksChange( _id: String!, destinationStageId: String): Task
   tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
