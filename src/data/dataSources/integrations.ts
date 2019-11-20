@@ -14,7 +14,11 @@ export default class IntegrationsAPI extends RESTDataSource {
   public didEncounterError(e) {
     const error = e.extensions || {};
     const { response } = error;
-    const { body } = response || { body: 'Connection failed' };
+    const { body } = response || { body: '' };
+
+    if (e.code === 'ECONNREFUSED') {
+      throw new Error('Integrations api is not running');
+    }
 
     throw new Error(body);
   }

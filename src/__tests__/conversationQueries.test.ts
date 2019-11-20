@@ -252,7 +252,7 @@ describe('conversationQueries', () => {
     expect(responses.length).toBe(1);
   });
 
-  test('Conversation messages (Connection failed)', async () => {
+  test('Conversation messages (Integrations api is not running)', async () => {
     const nyalsGmailIntegration = await integrationFactory({ kind: 'nylas-gmail' });
     const nyalsGmailConversation = await conversationFactory({ integrationId: nyalsGmailIntegration._id });
 
@@ -270,7 +270,7 @@ describe('conversationQueries', () => {
         conversationId: nyalsGmailConversation._id,
       });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
 
     try {
@@ -280,7 +280,7 @@ describe('conversationQueries', () => {
         conversationId: gmailConversation._id,
       });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -877,7 +877,7 @@ describe('conversationQueries', () => {
     try {
       await graphqlRequest(qryConversationDetail, 'conversationDetail', { _id: facebookConversation._id }, { user });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -925,7 +925,7 @@ describe('conversationQueries', () => {
     try {
       await graphqlRequest(qry, 'facebookComments', { postId: 'postId' });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 });

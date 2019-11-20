@@ -311,14 +311,14 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
-      expect(e[0].message).toBe('Error: Connection failed');
+      expect(e[0].message).toBe('Error: Integrations api is not running');
     }
 
     args.kind = 'facebook-post';
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
-      expect(e[0].message).toBe('Error: Connection failed');
+      expect(e[0].message).toBe('Error: Integrations api is not running');
     }
 
     args.kind = 'twitter-dm';
@@ -327,7 +327,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
     } catch (e) {
-      expect(e[0].message).toBe('Error: Connection failed');
+      expect(e[0].message).toBe('Error: Integrations api is not running');
     }
 
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
@@ -368,7 +368,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationAddMailAccount', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -410,7 +410,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationAddImapAccount', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -446,7 +446,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -482,14 +482,14 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationSendMail', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
 
     args.kind = 'facebook-post';
     try {
       await graphqlRequest(mutation, 'integrationSendMail', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -514,7 +514,7 @@ describe('mutations', () => {
         _id: facebookPostIntegration._id,
       });
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 

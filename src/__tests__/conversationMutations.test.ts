@@ -170,7 +170,7 @@ describe('Conversation message mutations', () => {
     try {
       await graphqlRequest(addMutation, 'conversationMessageAdd', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
 
     args.conversationId = facebookMessengerConversation._id;
@@ -178,7 +178,7 @@ describe('Conversation message mutations', () => {
     try {
       await graphqlRequest(addMutation, 'conversationMessageAdd', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
 
     args.conversationId = chatfuelConversation._id;
@@ -186,7 +186,7 @@ describe('Conversation message mutations', () => {
     try {
       await graphqlRequest(addMutation, 'conversationMessageAdd', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
 
     args.conversationId = twitterConversation._id;
@@ -194,7 +194,7 @@ describe('Conversation message mutations', () => {
     try {
       await graphqlRequest(addMutation, 'conversationMessageAdd', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
@@ -235,7 +235,7 @@ describe('Conversation message mutations', () => {
     try {
       await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
     } catch (e) {
-      expect(e[0].message).toBe('Connection failed');
+      expect(e[0].message).toBe('Integrations api is not running');
     }
   });
 
