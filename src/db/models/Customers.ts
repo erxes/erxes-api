@@ -8,6 +8,7 @@ import { IUserDocument } from './definitions/users';
 interface ICustomerFieldsInput {
   primaryEmail?: string;
   primaryPhone?: string;
+  code?: string;
 }
 
 export interface ICustomerModel extends Model<ICustomerDocument> {
@@ -78,6 +79,18 @@ export const loadClass = () => {
 
         if (previousEntry.length > 0) {
           throw new Error('Duplicated phone');
+        }
+      }
+
+      if (customerFields.code) {
+        // check duplication from code
+        previousEntry = await Customers.find({
+          ...query,
+          code: customerFields.code,
+        });
+
+        if (previousEntry.length > 0) {
+          throw new Error('Duplicated code');
         }
       }
     }
@@ -209,6 +222,11 @@ export const loadClass = () => {
       if (customer.lastName && !nullValues.includes(customer.lastName)) {
         score += 5;
         searchText = searchText.concat(' ', customer.lastName);
+      }
+
+      if (customer.code && !nullValues.includes(customer.code)) {
+        score += 10;
+        searchText = searchText.concat(' ', customer.code);
       }
 
       if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail)) {

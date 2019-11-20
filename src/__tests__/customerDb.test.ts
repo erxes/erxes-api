@@ -31,6 +31,7 @@ describe('Customers model tests', () => {
       emails: ['email@gmail.com', 'otheremail@gmail.com'],
       primaryPhone: '99922210',
       phones: ['99922210', '99922211'],
+      code: 'code',
     });
   });
 
@@ -53,7 +54,7 @@ describe('Customers model tests', () => {
   });
 
   test('Create customer', async () => {
-    expect.assertions(13);
+    expect.assertions(14);
 
     // check duplication ===============
     try {
@@ -80,6 +81,12 @@ describe('Customers model tests', () => {
       expect(e.message).toBe('Duplicated phone');
     }
 
+    try {
+      await Customers.createCustomer({ code: 'code' });
+    } catch (e) {
+      expect(e.message).toBe('Duplicated code');
+    }
+
     // Create without any error
     const doc = {
       primaryEmail: 'dombo@yahoo.com',
@@ -88,6 +95,7 @@ describe('Customers model tests', () => {
       lastName: 'lastName',
       primaryPhone: '12312132',
       phones: ['12312132'],
+      code: 'code1234',
     };
 
     let customerObj = await Customers.createCustomer(doc);
