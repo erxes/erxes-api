@@ -56,7 +56,7 @@ export const watchItem = async (collection: any, _id: string, isAdd: boolean, us
   return collection.findOne({ _id });
 };
 
-export const fillSearchTextItem = (doc: any, item?: IItemCommonFields) => {
+export const fillSearchTextItem = (doc: IItemCommonFields, item?: IItemCommonFields) => {
   const document = item || { name: '', description: '' };
   Object.assign(document, doc);
 
