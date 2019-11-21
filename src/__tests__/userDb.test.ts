@@ -262,7 +262,7 @@ describe('User db utils', () => {
       expect(e.message).toBe('Password does not match');
     }
 
-    await Users.update(
+    await Users.updateOne(
       { _id: userObj._id },
       {
         $set: {

@@ -102,7 +102,7 @@
     "@types/ioredis": "^3.2.15",
     "@types/jest": "^24.0.21",
     "@types/mongodb": "^3.1.2",
-    "@types/mongoose": "^5.2.1",
+    "@types/mongoose": "^5.5.32",
     "@types/q": "^1.5.0",
     "@types/redis": "^2.8.13",
     "@types/request": "^2.47.1",

@@ -34,7 +34,12 @@ mongoose.connection
 export function connect(URL?: string, poolSize?: number) {
   return mongoose.connect(
     URL || MONGO_URL,
-    { useNewUrlParser: true, useCreateIndex: true, poolSize: poolSize || 100, autoReconnect: true },
+    {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      poolSize: poolSize || 100,
+      autoReconnect: true,
+    },
   );
 }
 
