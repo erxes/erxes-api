@@ -143,7 +143,7 @@ export const userGroupLoadClass = () => {
       // remove groupId from old members
       await Users.updateMany({ groupIds: { $in: [_id] } }, { $pull: { groupIds: { $in: [_id] } } });
 
-      await UsersGroups.update({ _id }, { $set: doc });
+      await UsersGroups.updateOne({ _id }, { $set: doc });
 
       // add groupId to new members
       await Users.updateMany({ _id: { $in: arrayChecker(memberIds) } }, { $push: { groupIds: _id } });
