@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import * as strip from 'strip';
-import { ConversationMessages, Conversations } from '.';
+import { Conversations } from '.';
 import { IMessage, IMessageDocument, messageSchema } from './definitions/conversationMessages';
 
 export interface IMessageModel extends Model<IMessageDocument> {
@@ -18,7 +18,7 @@ export const loadClass = () => {
      * Retreives message
      */
     public static async getMessage(_id: string) {
-      const message = await ConversationMessages.findOne({ _id });
+      const message = await Messages.findOne({ _id });
 
       if (!message) {
         throw new Error('Conversation message not found');

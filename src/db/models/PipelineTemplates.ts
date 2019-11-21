@@ -51,7 +51,7 @@ export interface IPipelineTemplateModel extends Model<IPipelineTemplateDocument>
 export const loadPipelineTemplateClass = () => {
   class PipelineTemplate {
     /*
-     * Get a Pipeline template
+     * Get a pipeline template
      */
     public static async getPipelineTemplate(_id: string) {
       const pipelineTemplate = await PipelineTemplates.findOne({ _id });

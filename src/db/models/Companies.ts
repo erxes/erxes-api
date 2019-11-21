@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { validSearchText } from '../../data/utils';
+import { arrayChecker, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
@@ -170,15 +170,14 @@ export const loadClass = () => {
       for (const companyId of companyIds) {
         const companyObj = await Companies.getCompany(companyId);
 
-        const companyTags = companyObj.tagIds && companyObj.tagIds.length > 0 ? companyObj.tagIds : [];
-        const companyNames = companyObj.names && companyObj.names.length > 0 ? companyObj.names : [];
-        const companyEmails = companyObj.emails && companyObj.emails.length > 0 ? companyObj.emails : [];
-        const companyPhones = companyObj.phones && companyObj.phones.length > 0 ? companyObj.phones : [];
-        const companyScopeBrandIds =
-          companyObj.scopeBrandIds && companyObj.scopeBrandIds.length > 0 ? companyObj.scopeBrandIds : [];
+        const companyTags = arrayChecker(companyObj.tagIds);
+        const companyNames = arrayChecker(companyObj.names);
+        const companyEmails = arrayChecker(companyObj.emails);
+        const companyPhones = arrayChecker(companyObj.phones);
+        const companyScopeBrandIds = arrayChecker(companyObj.scopeBrandIds);
 
         // Merging scopeBrandIds
-        scopeBrandIds = [...scopeBrandIds, ...companyScopeBrandIds];
+        scopeBrandIds = scopeBrandIds.concat(companyScopeBrandIds);
 
         // merge custom fields data
         customFieldsData = { ...customFieldsData, ...(companyObj.customFieldsData || {}) };

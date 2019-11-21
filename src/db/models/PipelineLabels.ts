@@ -14,7 +14,7 @@ interface ILabelObjectParams {
 }
 
 export interface IPipelineLabelModel extends Model<IPipelineLabelDocument> {
-  getPipelineLabel(_id: string): Promise<IPipelineLabel>;
+  getPipelineLabel(_id: string): Promise<IPipelineLabelDocument>;
   createPipelineLabel(doc: IPipelineLabel): Promise<IPipelineLabelDocument>;
   updatePipelineLabel(_id: string, doc: IPipelineLabel): Promise<IPipelineLabelDocument>;
   removePipelineLabel(_id: string): void;

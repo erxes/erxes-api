@@ -19,7 +19,7 @@ export interface IBrandModel extends Model<IBrandDocument> {
 export const loadClass = () => {
   class Brand {
     /*
-     * Get a Board
+     * Get a Brand
      */
     public static async getBrand(_id: string) {
       const brand = await Brands.findOne({ _id });

@@ -5,7 +5,7 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
-interface IEditLeadIntegration extends IIntegration {
+interface IEditIntegration extends IIntegration {
   _id: string;
 }
 
@@ -32,7 +32,7 @@ const integrationMutations = {
   /**
    * Update messenger integration
    */
-  async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditLeadIntegration, { user }: IContext) {
+  async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditIntegration, { user }: IContext) {
     const integration = await Integrations.getIntegration(_id);
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
@@ -85,7 +85,7 @@ const integrationMutations = {
   /**
    * Edit a lead integration
    */
-  integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditLeadIntegration) {
+  integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditIntegration) {
     return Integrations.updateLeadIntegration(_id, doc);
   },
 
