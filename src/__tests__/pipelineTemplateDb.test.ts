@@ -74,7 +74,7 @@ describe('Test pipeline template model', () => {
     expect(updated.stages.length).toEqual(pipelineTemplate.stages.length);
   });
 
-  test('Duplicate pipeline template (Pipeline template not found)', async () => {
+  test(`Duplicate pipeline template Error('pipeline template not found')`, async () => {
     try {
       await PipelineTemplates.duplicatePipelineTemplate('fakeId');
     } catch (e) {
@@ -106,7 +106,7 @@ describe('Test pipeline template model', () => {
     expect(isDeleted).toBeTruthy();
   });
 
-  test('Remove pipeline template not found', async () => {
+  test(`Remove pipeline Error('pipeline template not found')`, async () => {
     expect.assertions(1);
 
     const fakeId = 'fakeId';

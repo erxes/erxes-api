@@ -24,7 +24,7 @@ describe('test knowledge base models', () => {
     await Users.deleteMany({});
   });
 
-  describe('KnowledgeBaseTopics', () => {
+  describe('Knowledge base topics', () => {
     afterEach(async () => {
       await KnowledgeBaseTopics.deleteMany({});
       await Brands.deleteMany({});
@@ -67,7 +67,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('create', async () => {
+    test('Create topic', async () => {
       const categoryA = await knowledgeBaseCategoryFactory({});
       const categoryB = await knowledgeBaseCategoryFactory({});
       const brand = await brandFactory({});
@@ -87,7 +87,7 @@ describe('test knowledge base models', () => {
       expect(topic.brandId).toBe(doc.brandId);
     });
 
-    test('update', async () => {
+    test('Update topic', async () => {
       const categoryA = await knowledgeBaseCategoryFactory({});
       const categoryB = await knowledgeBaseCategoryFactory({});
 
@@ -117,7 +117,7 @@ describe('test knowledge base models', () => {
       expect(newTopic.brandId).toBe(brandB._id);
     });
 
-    test('remove', async () => {
+    test('Remove topic', async () => {
       const categoryA = await knowledgeBaseCategoryFactory({});
       const categoryB = await knowledgeBaseCategoryFactory({});
 
@@ -147,7 +147,7 @@ describe('test knowledge base models', () => {
     });
   });
 
-  describe('KnowledgeBaseCategories', () => {
+  describe('Knowledge base categories', () => {
     afterEach(async () => {
       await KnowledgeBaseCategories.deleteMany({});
       await KnowledgeBaseArticles.deleteMany({});
@@ -167,7 +167,7 @@ describe('test knowledge base models', () => {
       expect(response).toBeDefined();
     });
 
-    test(`expect Error('userId must be supplied') in create`, async () => {
+    test(`check if Error('userId must be supplied') in create`, async () => {
       expect.assertions(1);
 
       try {
@@ -177,7 +177,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('create', async () => {
+    test('Create category', async () => {
       const article = await knowledgeBaseArticleFactory({});
 
       const topicCategory = await knowledgeBaseCategoryFactory({ articleIds: [article._id] });
@@ -219,7 +219,7 @@ describe('test knowledge base models', () => {
       expect(topicBObj.categoryIds[0]).toBe(category._id.toString());
     });
 
-    test(`expect Error('userId must be supplied') in update`, async () => {
+    test(`check if Error('userId must be supplied') in update`, async () => {
       expect.assertions(1);
 
       try {
@@ -229,7 +229,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('update', async () => {
+    test('Update category', async () => {
       const article = await knowledgeBaseArticleFactory({});
       const articleB = await knowledgeBaseArticleFactory({});
 
@@ -296,7 +296,7 @@ describe('test knowledge base models', () => {
       expect(topics).toHaveLength(0);
     });
 
-    test('remove', async () => {
+    test('Remove category', async () => {
       const doc = {
         title: 'Test category title',
         description: 'Test category description',
@@ -318,7 +318,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('remove with article', async () => {
+    test('Remove with article', async () => {
       const article = await knowledgeBaseArticleFactory();
 
       const doc = {
@@ -340,7 +340,7 @@ describe('test knowledge base models', () => {
     });
   });
 
-  describe('KnowledgeBaseArticles', () => {
+  describe('Knowledge base articles', () => {
     afterEach(async () => {
       await KnowledgeBaseArticles.deleteMany({});
     });
@@ -359,7 +359,7 @@ describe('test knowledge base models', () => {
       expect(response).toBeDefined();
     });
 
-    test(`expect Error('userId must be supplied') when creating`, async () => {
+    test(`check if Error('userId must be supplied') when creating`, async () => {
       expect.assertions(1);
 
       try {
@@ -369,7 +369,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('create', async () => {
+    test('Create article', async () => {
       const categoryA = await knowledgeBaseCategoryFactory({});
       const categoryB = await knowledgeBaseCategoryFactory({});
 
@@ -405,7 +405,7 @@ describe('test knowledge base models', () => {
       expect(categoryBObj.articleIds[0]).toBe(article._id.toString());
     });
 
-    test(`expect Error('userId must be supplied') when updating`, async () => {
+    test(`check if Error('userId must be supplied') when updating`, async () => {
       expect.assertions(1);
 
       try {
@@ -415,7 +415,7 @@ describe('test knowledge base models', () => {
       }
     });
 
-    test('update', async () => {
+    test('Update article', async () => {
       const doc = {
         title: 'Test article title',
         summary: 'Test article description',
@@ -472,7 +472,7 @@ describe('test knowledge base models', () => {
       expect(cats).toHaveLength(0);
     });
 
-    test('remove', async () => {
+    test('Remove article', async () => {
       const doc = {
         title: 'Test article title',
         summary: 'Test article description',

@@ -39,7 +39,7 @@ describe('InternalNotes model test', () => {
     await Users.deleteMany({});
   });
 
-  test('Get growth hack', async () => {
+  test('Get internal note', async () => {
     try {
       await InternalNotes.getInternalNote('fakeId');
     } catch (e) {

@@ -57,6 +57,14 @@ describe('ticketQueries', () => {
     }
   `;
 
+  const qryDetail = `
+    query ticketDetail($_id: String!) {
+      ticketDetail(_id: $_id) {
+        ${commonTicketTypes}
+      }
+    }
+  `;
+
   afterEach(async () => {
     // Clearing test data
     await Tickets.deleteMany({});
@@ -133,7 +141,7 @@ describe('ticketQueries', () => {
     await ticketFactory(args);
     await ticketFactory(args);
 
-    const qry = `
+    const qryList = `
       query tickets($stageId: String!) {
         tickets(stageId: $stageId) {
           ${commonTicketTypes}
@@ -141,7 +149,7 @@ describe('ticketQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'tickets', args);
+    const response = await graphqlRequest(qryList, 'tickets', args);
 
     expect(response.length).toBe(3);
   });
@@ -151,22 +159,17 @@ describe('ticketQueries', () => {
 
     const args = { _id: ticket._id };
 
-    const qry = `
-      query ticketDetail($_id: String!) {
-        ticketDetail(_id: $_id) {
-          ${commonTicketTypes}
-        }
-      }
-    `;
-
-    let response = await graphqlRequest(qry, 'ticketDetail', args);
+    const response = await graphqlRequest(qryDetail, 'ticketDetail', args);
 
     expect(response._id).toBe(ticket._id);
+  });
 
+  test('Ticket detail with watchedUserIds', async () => {
     const user = await userFactory();
     const watchedTask = await ticketFactory({ watchedUserIds: [user._id] });
-    response = await graphqlRequest(
-      qry,
+
+    const response = await graphqlRequest(
+      qryDetail,
       'ticketDetail',
       {
         _id: watchedTask._id,

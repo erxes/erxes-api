@@ -61,6 +61,14 @@ describe('taskQueries', () => {
     }
   `;
 
+  const qryDetail = `
+    query taskDetail($_id: String!) {
+      taskDetail(_id: $_id) {
+        ${commonTaskTypes}
+      }
+    }
+  `;
+
   afterEach(async () => {
     // Clearing test data
     await Tasks.deleteMany({});
@@ -129,7 +137,7 @@ describe('taskQueries', () => {
     await taskFactory(args);
     await taskFactory(args);
 
-    const qry = `
+    const qryList = `
       query tasks($stageId: String!) {
         tasks(stageId: $stageId) {
           ${commonTaskTypes}
@@ -137,29 +145,24 @@ describe('taskQueries', () => {
       }
     `;
 
-    const response = await graphqlRequest(qry, 'tasks', args);
+    const response = await graphqlRequest(qryList, 'tasks', args);
 
     expect(response.length).toBe(3);
   });
 
   test('Task detail', async () => {
-    const qry = `
-      query taskDetail($_id: String!) {
-        taskDetail(_id: $_id) {
-          ${commonTaskTypes}
-        }
-      }
-    `;
-
     const task = await taskFactory();
-    let response = await graphqlRequest(qry, 'taskDetail', { _id: task._id });
+    const response = await graphqlRequest(qryDetail, 'taskDetail', { _id: task._id });
 
     expect(response._id).toBe(task._id);
+  });
 
+  test('Task detail with watchedUserIds', async () => {
     const user = await userFactory();
     const watchedTask = await taskFactory({ watchedUserIds: [user._id] });
-    response = await graphqlRequest(
-      qry,
+
+    const response = await graphqlRequest(
+      qryDetail,
       'taskDetail',
       {
         _id: watchedTask._id,

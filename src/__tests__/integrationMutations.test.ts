@@ -274,7 +274,7 @@ describe('mutations', () => {
     expect(response.formId).toBe(args.formId);
   });
 
-  test('integrationsCreateExternalIntegration', async () => {
+  test('Create external integration', async () => {
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     const mutation = `
@@ -342,7 +342,7 @@ describe('mutations', () => {
     expect(response).toBeDefined();
   });
 
-  test('integrationAddMailAccount', async () => {
+  test('Add mail account', async () => {
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     const mutation = `
@@ -372,7 +372,7 @@ describe('mutations', () => {
     }
   });
 
-  test('integrationAddImapAccount', async () => {
+  test('Add imap account', async () => {
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     const mutation = `
@@ -414,7 +414,7 @@ describe('mutations', () => {
     }
   });
 
-  test('integrationsRemoveAccount', async () => {
+  test('Remove account', async () => {
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     const mutation = `
@@ -450,7 +450,7 @@ describe('mutations', () => {
     }
   });
 
-  test('integrationSendMail', async () => {
+  test('Send mail', async () => {
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     const mutation = `
