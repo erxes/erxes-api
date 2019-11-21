@@ -21,7 +21,7 @@ const activityLogQueries = {
         items.map(item => {
           const result = item.toJSON();
 
-          if (type === 'note') {
+          if (type === 'note' || type === 'conversation') {
             result.contentType = type;
           }
 
@@ -49,7 +49,7 @@ const activityLogQueries = {
 
     switch (activityType) {
       case 'conversation':
-        collectActivities(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }));
+        collectActivities(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }), 'conversation');
         break;
 
       case 'internal_note':
@@ -68,7 +68,7 @@ const activityLogQueries = {
         collectActivities(await ActivityLogs.find({ contentId }));
         collectActivities(await ActivityLogs.find({ contentId: { $in: relatedItemIds }, action: 'moved' }));
         collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
-        collectActivities(await Conversations.find({ customerId: contentId }));
+        collectActivities(await Conversations.find({ customerId: contentId }), 'conversation');
 
         break;
     }
