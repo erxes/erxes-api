@@ -35,6 +35,7 @@ export function connect(URL?: string, poolSize?: number) {
   return mongoose.connect(
     URL || MONGO_URL,
     {
+      useUnifiedTopology: true,
       useNewUrlParser: true,
       useCreateIndex: true,
       poolSize: poolSize || 100,

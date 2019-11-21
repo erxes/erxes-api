@@ -12,7 +12,7 @@ import {
 } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
-import { arrayChecker, objectChecker } from '../utils';
+import { arrayChecker } from '../utils';
 import { boardId } from './boardUtils';
 
 export default {
