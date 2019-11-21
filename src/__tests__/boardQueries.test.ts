@@ -39,6 +39,14 @@ describe('boardQueries', () => {
     compareNextStage
   `;
 
+  const detailQuery = `
+    query boardDetail($_id: String!) {
+      boardDetail(_id: $_id) {
+        ${commonBoardTypes}
+      }
+    }
+  `;
+
   afterEach(async () => {
     // Clearing test data
     await Boards.deleteMany({});
@@ -65,30 +73,25 @@ describe('boardQueries', () => {
   });
 
   test('Board detail', async () => {
-    const qry = `
-      query boardDetail($_id: String!) {
-        boardDetail(_id: $_id) {
-          ${commonBoardTypes}
-        }
-      }
-    `;
-
     const board = await boardFactory();
-    await pipelineFactory({ boardId: board._id });
-    await pipelineFactory({ boardId: board._id, visibility: 'private' });
 
-    let response = await graphqlRequest(qry, 'boardDetail', { _id: board._id });
+    const response = await graphqlRequest(detailQuery, 'boardDetail', { _id: board._id });
 
     expect(response._id).toBe(board._id);
     expect(response.name).toBe(board.name);
     expect(response.type).toBe(board.type);
-    expect(response.pipelines.length).toBe(2);
+    expect(response.pipelines.length).toBe(0);
+  });
+
+  test('Board detail (private pipeline)', async () => {
+    const board = await boardFactory();
+
+    await pipelineFactory({ boardId: board._id });
+    await pipelineFactory({ boardId: board._id, visibility: 'private' });
 
     const user = await userFactory({ isOwner: false });
-    response = await graphqlRequest(qry, 'boardDetail', { _id: board._id }, { user });
+    const response = await graphqlRequest(detailQuery, 'boardDetail', { _id: board._id }, { user });
 
-    expect(response._id).toBe(board._id);
-    // cannot get private pipeline
     expect(response.pipelines.length).toBe(1);
   });
 

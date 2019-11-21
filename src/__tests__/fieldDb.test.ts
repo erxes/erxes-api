@@ -258,7 +258,7 @@ describe('Fields', () => {
   });
 
   test('Validate fields', async () => {
-    // expect.assertions(4);
+    expect.assertions(4);
 
     // required =====
     _field.isRequired = true;
