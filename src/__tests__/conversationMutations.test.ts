@@ -1,3 +1,4 @@
+import * as faker from 'faker';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -231,6 +232,8 @@ describe('Conversation message mutations', () => {
     await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
 
     spyConversationToIntegrations.mockRestore();
+
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
     try {
       await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
