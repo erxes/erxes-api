@@ -19,7 +19,6 @@ module.exports = {
     '!src/data/resolvers/mutations/robot.ts',
     '!src/data/resolvers/queries/insights.ts',
     '!src/data/resolvers/queries/robot.ts',
-    '!src/data/resolvers/queries/logs.ts',
     '!src/data/resolvers/subscriptions/**',
   ],
   globals: {
