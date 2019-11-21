@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
 import { activityLogFactory, userFactory } from '../db/factories';
-import { ActivityLogs } from '../db/models';
+import { ActivityLogs, Users } from '../db/models';
 import {
   ACTIVITY_ACTIONS,
   ACTIVITY_CONTENT_TYPES,
@@ -12,6 +12,7 @@ import {
 import './setup.ts';
 
 describe('activityLogQueries', () => {
+  let user;
   const commonParamDefs = `
     $contentType: String!,
     $contentId: String!,
@@ -47,87 +48,113 @@ describe('activityLogQueries', () => {
     }
   `;
 
+  const contentType = ACTIVITY_CONTENT_TYPES.CUSTOMER;
+  const activityType = ACTIVITY_TYPES.CUSTOMER;
+
+  const contentId = faker.random.uuid();
+  const activityId = faker.random.uuid();
+
+  const args: any = {
+    activity: { id: activityId, type: activityType, action: ACTIVITY_ACTIONS.CREATE, content: 'content' },
+    contentType: { type: contentType, id: contentId },
+    performer: {},
+  };
+
+  const filter: any = { contentType, activityType, contentId };
+
+  beforeEach(async () => {
+    user = await userFactory();
+  });
+
   afterEach(async () => {
     // Clearing test data
     await ActivityLogs.deleteMany({});
+    await Users.deleteMany({});
   });
 
   test('Activity log list', async () => {
-    const contentType = ACTIVITY_CONTENT_TYPES.CUSTOMER;
-    const activityType = ACTIVITY_TYPES.CUSTOMER;
-    const contentId = faker.random.uuid();
-    const activityId = faker.random.uuid();
-
-    const args: any = {
-      activity: { id: activityId, type: activityType, action: ACTIVITY_ACTIONS.CREATE, content: 'content' },
-      contentType: { type: contentType, id: contentId },
-      performer: {},
-    };
-
-    // first
     const activityLog = await activityLogFactory(args);
 
-    const user = await userFactory();
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
 
+    const activity = activityLog.activity;
+
+    expect(responses[0].id).toBe(activity.id);
+    expect(responses[0].action).toBe(`${activity.type}-${activity.action}`);
+    expect(responses[0].content).toBe(activity.content);
+  });
+
+  test('Activity log list (performer`s type is USER)', async () => {
     args.performer = {
       type: ACTIVITY_PERFORMER_TYPES.USER,
       id: user._id,
     };
 
-    // second
-    const secondActivityLog = await activityLogFactory(args);
+    await activityLogFactory(args);
 
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
+
+    expect(responses[0].by._id).toBe(user._id);
+    expect(responses[0].by.type).toBe(ACTIVITY_PERFORMER_TYPES.USER);
+  });
+
+  test('Activity log list (performer`s type is USER and id is FAKE)', async () => {
     args.performer = {
       type: ACTIVITY_PERFORMER_TYPES.USER,
-      id: 'fakeUserId',
+      id: 'fakeId',
     };
 
-    // third
-    const thirdActivityLog = await activityLogFactory(args);
+    await activityLogFactory(args);
 
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
+
+    expect(responses[0].by).toBeNull();
+  });
+
+  test('Activity log list (performer`s type is USER and id is FAKE)', async () => {
+    args.performer = {
+      type: ACTIVITY_PERFORMER_TYPES.USER,
+      id: 'fakeId',
+    };
+
+    await activityLogFactory(args);
+
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
+
+    expect(responses[0].by).toBeNull();
+  });
+
+  test('Activity log list (performer`s type is CUSTOMER and id is undefined)', async () => {
     args.performer = {
       type: ACTIVITY_PERFORMER_TYPES.CUSTOMER,
     };
 
-    // fourth
-    const fourthActivityLog = await activityLogFactory(args);
+    await activityLogFactory(args);
 
-    const filter: any = { contentType, activityType, contentId };
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
 
-    let responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
+    expect(responses[0].by.type).toBe(ACTIVITY_PERFORMER_TYPES.CUSTOMER);
+  });
 
-    expect(responses.length).toBe(4);
+  test('Activity log list (limit filter)', async () => {
+    await activityLogFactory(args);
+    await activityLogFactory(args);
+    await activityLogFactory(args);
 
-    const activity = activityLog.activity;
+    filter.limit = 2;
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
 
-    const first = responses.find(r => r._id === activityLog._id);
-    expect(first.id).toBe(activity.id);
-    expect(first.action).toBe(`${activity.type}-${activity.action}`);
-    expect(first.content).toBe(activity.content);
+    expect(responses.length).toBe(2);
+  });
 
-    const second = responses.find(r => r._id === secondActivityLog._id);
-    expect(second.by._id).toBe(user._id);
-    expect(second.by.type).toBe(ACTIVITY_PERFORMER_TYPES.USER);
-
-    const third = responses.find(r => r._id === thirdActivityLog._id);
-    expect(third.by).toBe(null);
-
-    const fourth = responses.find(r => r._id === fourthActivityLog._id);
-    expect(fourth.by.type).toBe(ACTIVITY_PERFORMER_TYPES.CUSTOMER);
-
+  test('Activity log list (no activity type)', async () => {
     await activityLogFactory({ contentType: { type: contentType, id: contentId } });
 
     // filtering when no activity type
     filter.activityType = '';
 
-    responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
+    const responses = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
 
-    expect(responses.length).toBe(5);
-
-    // filtering when no activity type
-    filter.limit = 2;
-    const responsesWithLimit = await graphqlRequest(qryActivityLogs, 'activityLogs', filter);
-
-    expect(responsesWithLimit.length).toBe(2);
+    expect(responses.length).toBe(1);
   });
 });
