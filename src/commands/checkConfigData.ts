@@ -38,9 +38,8 @@ const checkPermissionAll = async () => {
       continue;
     }
 
+    console.log('different permission');
     await permissionsColl.updateOne({ _id: perm._id }, { $set: { requiredActions: source } });
-    console.log(excess);
-    console.log(saved);
   }
 
   process.exit();
