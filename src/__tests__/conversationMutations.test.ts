@@ -163,7 +163,9 @@ describe('Conversation message mutations', () => {
     const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
     spyConversationToIntegrations.mockImplementation(() => 'ok');
 
-    await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    expect(response).toBeDefined();
 
     spyConversationToIntegrations.mockRestore();
 
@@ -228,7 +230,9 @@ describe('Conversation message mutations', () => {
     const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
     spyConversationToIntegrations.mockImplementation(() => 'ok');
 
-    await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+    const response = await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+
+    expect(response).toBeDefined();
 
     spyConversationToIntegrations.mockRestore();
 

@@ -94,11 +94,7 @@ const userQueries = {
    * Current user
    */
   currentUser(_root, _args, { user }: IContext) {
-    if (user && user._id) {
-      return Users.findOne({ _id: user._id, isActive: { $ne: false } });
-    }
-
-    return null;
+    return user ? Users.findOne({ _id: user._id, isActive: { $ne: false } }) : null;
   },
 
   /**

@@ -1,10 +1,7 @@
-import * as toBeType from 'jest-tobetype';
 import { messengerAppFactory } from '../db/factories';
 import { MessengerApps, Users } from '../db/models';
 
 import './setup.ts';
-
-expect.extend(toBeType);
 
 describe('Messenger apps', () => {
   afterEach(async () => {

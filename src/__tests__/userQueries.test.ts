@@ -142,7 +142,7 @@ describe('userQueries', () => {
 
     expect(response._id).toBe(user._id);
 
-    response = await graphqlRequest(qry, 'currentUser', {}, { user: {} });
+    response = await graphqlRequest(qry, 'currentUser', {}, { user: { isActive: false } });
 
     expect(response).toBe(null);
   });

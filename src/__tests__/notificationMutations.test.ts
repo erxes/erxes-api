@@ -7,13 +7,11 @@ import './setup.ts';
 describe('testing mutations', () => {
   let _user;
   let _notification;
-  let context;
 
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({});
     _notification = await notificationFactory({ createdUser: _user });
-    context = { user: _user };
   });
 
   afterEach(async () => {
@@ -37,7 +35,7 @@ describe('testing mutations', () => {
       }
     `;
 
-    const notification = await graphqlRequest(mutation, 'notificationsSaveConfig', args, context);
+    const notification = await graphqlRequest(mutation, 'notificationsSaveConfig', args);
 
     expect(notification.notifType).toBe(args.notifType);
     expect(notification.isAllowed).toBe(args.isAllowed);
@@ -50,7 +48,7 @@ describe('testing mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'notificationsMarkAsRead', { _ids: [_notification._id] }, context);
+    await graphqlRequest(mutation, 'notificationsMarkAsRead', { _ids: [_notification._id] });
 
     const [notification] = await Notifications.find({ _id: _notification._id });
 
@@ -64,7 +62,7 @@ describe('testing mutations', () => {
     });
 
     // filter by contentTypeId
-    await graphqlRequest(mutation, 'notificationsMarkAsRead', { contentTypeId: deal._id }, context);
+    await graphqlRequest(mutation, 'notificationsMarkAsRead', { contentTypeId: deal._id });
 
     const [dealNotification] = await Notifications.find({ _id: _dealNotification._id });
 
