@@ -30,7 +30,7 @@ export default {
 
   participatedUsers(conv: IConversationDocument) {
     return Users.find({
-      _id: { $in: conv.participatedUserIds },
+      _id: { $in: conv.participatedUserIds || [] },
     });
   },
 
@@ -58,6 +58,6 @@ export default {
   },
 
   tags(conv: IConversationDocument) {
-    return Tags.find({ _id: { $in: conv.tagIds } });
+    return Tags.find({ _id: { $in: conv.tagIds || [] } });
   },
 };

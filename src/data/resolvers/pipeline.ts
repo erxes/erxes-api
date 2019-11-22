@@ -19,7 +19,9 @@ export default {
   },
 
   isWatched(pipeline: IPipelineDocument, _args, { user }: IContext) {
-    if (pipeline.watchedUserIds && pipeline.watchedUserIds.includes(user._id)) {
+    const watchedUserIds = pipeline.watchedUserIds || [];
+
+    if (watchedUserIds.includes(user._id)) {
       return true;
     }
 

@@ -20,7 +20,7 @@ export default {
   },
 
   getTags(engageMessage: IEngageMessageDocument) {
-    return Tags.find({ _id: { $in: engageMessage.tagIds } });
+    return Tags.find({ _id: { $in: engageMessage.tagIds || [] } });
   },
 
   brand(engageMessage: IEngageMessageDocument) {

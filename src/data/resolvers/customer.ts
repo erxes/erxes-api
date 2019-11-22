@@ -34,7 +34,7 @@ export default {
   },
 
   getTags(customer: ICustomerDocument) {
-    return Tags.find({ _id: { $in: customer.tagIds } });
+    return Tags.find({ _id: { $in: customer.tagIds || [] } });
   },
 
   conversations(customer: ICustomerDocument) {
@@ -48,7 +48,7 @@ export default {
       relType: 'company',
     });
 
-    return Companies.find({ _id: { $in: companyIds } });
+    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
   owner(customer: ICustomerDocument) {

@@ -72,8 +72,8 @@ const ticketMutations = {
       contentType: 'ticket',
     };
 
-    if (doc.assignedUserIds && doc.assignedUserIds.length > 0 && oldTicket.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds, doc.assignedUserIds);
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds || [], doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;

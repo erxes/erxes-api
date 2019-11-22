@@ -55,9 +55,9 @@ const replaceKeys = ({
  */
 const findCustomers = async ({
   customerIds,
-  segmentIds,
-  tagIds,
-  brandIds,
+  segmentIds = [],
+  tagIds = [],
+  brandIds = [],
 }: {
   customerIds?: string[];
   segmentIds?: string[];
@@ -76,11 +76,11 @@ const findCustomers = async ({
   await customerQb.buildAllQueries();
   const customerFilter = customerQb.mainQuery();
 
-  if (tagIds && tagIds.length > 0) {
+  if (tagIds.length > 0) {
     customerQuery = { $and: [customerFilter, { $or: doNotDisturbQuery, tagIds: { $in: tagIds } }] };
   }
 
-  if (brandIds && brandIds.length > 0) {
+  if (brandIds.length > 0) {
     const brandQueries: any[] = [];
 
     customerQuery = { $and: [customerFilter] };
@@ -94,7 +94,7 @@ const findCustomers = async ({
     customerQuery = { $and: [customerFilter, { $or: brandQueries }] };
   }
 
-  if (segmentIds && segmentIds.length > 0) {
+  if (segmentIds.length > 0) {
     const segmentQueries: any = [];
 
     const segments = await Segments.find({ _id: { $in: segmentIds } });

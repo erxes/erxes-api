@@ -9,11 +9,11 @@ export default {
       relType: 'customer',
     });
 
-    return Customers.find({ _id: { $in: customerIds } });
+    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   getTags(company: ICompanyDocument) {
-    return Tags.find({ _id: { $in: company.tagIds } });
+    return Tags.find({ _id: { $in: company.tagIds || [] } });
   },
 
   owner(company: ICompanyDocument) {

@@ -75,8 +75,8 @@ const dealMutations = {
       contentType: 'deal',
     };
 
-    if (oldDeal.assignedUserIds && doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;

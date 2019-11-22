@@ -69,7 +69,10 @@ const growthHackMutations = {
     };
 
     if (doc.assignedUserIds && doc.assignedUserIds.length > 0 && oldGrowthHack.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldGrowthHack.assignedUserIds, doc.assignedUserIds);
+      const { addedUserIds, removedUserIds } = checkUserIds(
+        oldGrowthHack.assignedUserIds || [],
+        doc.assignedUserIds || [],
+      );
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;

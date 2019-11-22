@@ -61,7 +61,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
   }
 
   if (customerIds || companyIds) {
-    filter._id = contains(filterIds);
+    filter._id = contains(filterIds || []);
   }
 
   if (conformityMainType && conformityMainTypeId) {
@@ -72,7 +72,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
         relType: type,
       });
 
-      filter._id = contains(relIds);
+      filter._id = contains(relIds || []);
     }
 
     if (conformityIsRelated) {

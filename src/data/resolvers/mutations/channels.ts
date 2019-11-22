@@ -87,7 +87,7 @@ const channelMutations = {
       user,
     );
 
-    if (channel.integrationIds.toString() !== updated.integrationIds.toString()) {
+    if ((channel.integrationIds || []).toString() !== (updated.integrationIds || []).toString()) {
       registerOnboardHistory({ type: 'connectIntegrationsToChannel', user });
     }
 

@@ -71,8 +71,8 @@ const taskMutations = {
       contentType: 'task',
     };
 
-    if (doc.assignedUserIds && doc.assignedUserIds.length > 0 && oldTask.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds, doc.assignedUserIds);
+    if (doc.assignedUserIds) {
+      const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds || [], doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;

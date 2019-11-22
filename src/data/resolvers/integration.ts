@@ -15,6 +15,6 @@ export default {
   },
 
   tags(integration: IIntegrationDocument) {
-    return Tags.find({ _id: { $in: integration.tagIds } });
+    return Tags.find({ _id: { $in: integration.tagIds || [] } });
   },
 };
