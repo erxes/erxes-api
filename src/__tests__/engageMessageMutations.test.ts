@@ -96,6 +96,7 @@ describe('engage message mutation tests', () => {
       hasValidEmail: true,
       status: STATUSES.ACTIVE,
       profileScore: 1,
+      primaryEmail: faker.internet.email(),
     });
     _integration = await integrationFactory({ brandId: 'brandId' });
 
