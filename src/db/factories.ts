@@ -458,15 +458,16 @@ interface ICustomerFactoryInput {
   hasValidEmail?: boolean;
   profileScore?: number;
   code?: string;
+  visitorContactInfo?: any;
 }
 
 export const customerFactory = async (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
   const doc = {
     integrationId: params.integrationId,
-    firstName: params.firstName || faker.random.word(),
-    lastName: params.lastName || faker.random.word(),
-    primaryEmail: params.primaryEmail || faker.internet.email(),
-    primaryPhone: params.primaryPhone || faker.phone.phoneNumber(),
+    firstName: params.firstName,
+    lastName: params.lastName,
+    primaryEmail: params.primaryEmail,
+    primaryPhone: params.primaryPhone,
     emails: params.emails || [],
     phones: params.phones || [],
     leadStatus: params.leadStatus || 'open',
@@ -479,6 +480,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     hasValidEmail: params.hasValidEmail || false,
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
+    visitorContactInfo: params.visitorContactInfo,
   };
 
   if (useModelMethod) {

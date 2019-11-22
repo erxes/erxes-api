@@ -133,15 +133,9 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
 
   if (engageMessage.method === METHODS.EMAIL) {
     const customerInfos = customers.map(customer => {
-      let customerName = customer.firstName || customer.lastName || 'Customer';
-
-      if (customer.firstName && customer.lastName) {
-        customerName = `${customer.firstName} ${customer.lastName}`;
-      }
-
       return {
         _id: customer._id,
-        name: customerName,
+        name: Customers.getCustomerName(customer),
         email: customer.primaryEmail,
       };
     });

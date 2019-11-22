@@ -6,6 +6,8 @@ import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
 
 export interface ICompanyModel extends Model<ICompanyDocument> {
+  getCompanyName(company: ICompany): string;
+
   checkDuplication(
     companyFields: {
       primaryName?: string;
@@ -79,6 +81,10 @@ export const loadClass = () => {
         doc.plan || '',
         doc.description || '',
       ]);
+    }
+
+    public static getCompanyName(company: ICompany) {
+      return company.primaryName || company.primaryEmail || company.primaryPhone || 'Unknown';
     }
 
     /**

@@ -53,6 +53,40 @@ describe('Customers model tests', () => {
     expect(response).toBeDefined();
   });
 
+  test('Get customer name', async () => {
+    let customer = await customerFactory({});
+    let response = await Customers.getCustomerName(customer);
+    expect(response).toBe('Unknown');
+
+    customer = await customerFactory({ firstName: 'firstName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('firstName ');
+
+    customer = await customerFactory({ lastName: 'lastName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe(' lastName');
+
+    customer = await customerFactory({ firstName: 'firstName', lastName: 'lastName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('firstName lastName');
+
+    customer = await customerFactory({ primaryEmail: 'primaryEmail' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('primaryEmail');
+
+    customer = await customerFactory({ primaryPhone: 'primaryPhone' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('primaryPhone');
+
+    customer = await customerFactory({ visitorContactInfo: { phone: 8880, email: 'email@yahoo.com' } });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('8880');
+
+    customer = await customerFactory({ visitorContactInfo: { email: 'email@yahoo.com' } });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('email@yahoo.com');
+  });
+
   test('Create customer', async () => {
     expect.assertions(14);
 

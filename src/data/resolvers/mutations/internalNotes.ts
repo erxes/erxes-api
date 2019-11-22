@@ -6,14 +6,7 @@ import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, {
-  companyName,
-  customerName,
-  ISendNotification,
-  putCreateLog,
-  putDeleteLog,
-  putUpdateLog,
-} from '../../utils';
+import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { notifiedUserIds } from '../boardUtils';
 
 interface IInternalNotesEdit extends IInternalNote {
@@ -77,7 +70,7 @@ const internalNoteMutations = {
         const customer = await Customers.getCustomer(contentTypeId);
 
         notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
-        notifDoc.content = customerName(customer);
+        notifDoc.content = Customers.getCustomerName(customer);
         notifDoc.link = `/contacts/customers/details/${customer._id}`;
         notifDoc.contentTypeId = customer._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.CUSTOMER;
@@ -88,7 +81,7 @@ const internalNoteMutations = {
         const company = await Companies.getCompany(contentTypeId);
 
         notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
-        notifDoc.content = companyName(company);
+        notifDoc.content = Companies.getCompanyName(company);
         notifDoc.link = `/contacts/companies/details/${company._id}`;
         notifDoc.contentTypeId = company._id;
         notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.COMPANY;
