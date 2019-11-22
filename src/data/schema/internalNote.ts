@@ -17,6 +17,5 @@ export const queries = `
 
 export const mutations = `
   internalNotesAdd(contentType: String!, contentTypeId: String, content: String, mentionedUserIds: [String]): InternalNote
-  internalNotesEdit(_id: String!, content: String): InternalNote
   internalNotesRemove(_id: String!): InternalNote
 `;

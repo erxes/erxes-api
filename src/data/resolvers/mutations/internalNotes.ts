@@ -6,12 +6,8 @@ import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import utils, { ISendNotification, putCreateLog, putDeleteLog } from '../../utils';
 import { notifiedUserIds } from '../boardUtils';
-
-interface IInternalNotesEdit extends IInternalNote {
-  _id: string;
-}
 
 const sendNotificationOfItems = async (
   item: IDealDocument | ITicketDocument | ITaskDocument,
@@ -40,11 +36,11 @@ const internalNoteMutations = {
       createdUser: user,
       action: `mentioned you in ${args.contentType}`,
       receivers: args.mentionedUserIds || [],
-      content: ``,
-      link: ``,
-      notifType: ``,
-      contentType: ``,
-      contentTypeId: ``,
+      content: '',
+      link: '',
+      notifType: '',
+      contentType: '',
+      contentTypeId: '',
     };
 
     switch (args.contentType) {
@@ -132,35 +128,13 @@ const internalNoteMutations = {
           type: 'internalNote',
           newData: JSON.stringify(args),
           object: internalNote,
-          description: `${internalNote.contentType} has been created`,
+          description: `A note for ${internalNote.contentType} "${notifDoc.content}" has been created`,
         },
         user,
       );
     }
 
     return internalNote;
-  },
-
-  /**
-   * Updates internalNote object
-   */
-  async internalNotesEdit(_root, { _id, ...doc }: IInternalNotesEdit, { user }: IContext) {
-    const internalNote = await InternalNotes.findOne({ _id });
-    const updated = await InternalNotes.updateInternalNote(_id, doc);
-
-    if (internalNote) {
-      await putUpdateLog(
-        {
-          type: 'internalNote',
-          object: internalNote,
-          newData: JSON.stringify(doc),
-          description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
-        },
-        user,
-      );
-    }
-
-    return updated;
   },
 
   /**
