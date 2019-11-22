@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { arrayChecker } from '../../data/utils';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { growthHackSchema, IGrowthHack, IGrowthHackDocument } from './definitions/growthHacks';
@@ -78,7 +77,7 @@ export const loadGrowthHackClass = () => {
     public static async voteGrowthHack(_id: string, isVote: boolean, userId: string) {
       const growthHack = await GrowthHack.getGrowthHack(_id);
 
-      let votedUserIds = arrayChecker(growthHack.votedUserIds);
+      let votedUserIds = growthHack.votedUserIds || [];
       let voteCount = growthHack.voteCount || 0;
 
       if (isVote) {

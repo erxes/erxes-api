@@ -66,6 +66,20 @@ import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
 import PipelineTemplates from './models/PipelineTemplates';
 
+const getUniqueValue = async (collection: any, fieldName: string = 'code', defaultValue?: string) => {
+  let uniqueValue = defaultValue || faker.random.word();
+
+  let duplicated = await collection.findOne({ [fieldName]: uniqueValue });
+
+  while (duplicated) {
+    uniqueValue = faker.random.word();
+
+    duplicated = await collection.findOne({ [fieldName]: uniqueValue });
+  }
+
+  return uniqueValue;
+};
+
 interface IActivityLogFactoryInput {
   performer?: IActionPerformer;
   performedBy?: IActionPerformer;
@@ -201,10 +215,10 @@ interface IBrandFactoryInput {
   description?: string;
 }
 
-export const brandFactory = (params: IBrandFactoryInput = {}) => {
+export const brandFactory = async (params: IBrandFactoryInput = {}) => {
   const brand = new Brands({
     name: params.name || faker.random.word(),
-    code: params.code || faker.random.word(),
+    code: await getUniqueValue(Brands, 'code', params.code),
     userId: Random.id(),
     description: params.description || faker.random.word(),
     createdAt: new Date(),
@@ -446,7 +460,7 @@ interface ICustomerFactoryInput {
   code?: string;
 }
 
-export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
+export const customerFactory = async (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
   const doc = {
     integrationId: params.integrationId,
     firstName: params.firstName || faker.random.word(),
@@ -464,7 +478,7 @@ export const customerFactory = (params: ICustomerFactoryInput = {}, useModelMeth
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || false,
     profileScore: params.profileScore || 0,
-    code: params.code || faker.random.word(),
+    code: await getUniqueValue(Customers, 'code', params.code),
   };
 
   if (useModelMethod) {
@@ -630,7 +644,7 @@ export const formFactory = async (params: IFormFactoryInput = {}) => {
   return Forms.create({
     title: title || faker.random.word(),
     description: description || faker.random.word(),
-    code: code || Random.id(),
+    code: await getUniqueValue(Forms, 'code', code),
     type: type || FORM_TYPES.GROWTH_HACK,
     createdUserId: createdUserId || (await userFactory({})),
   });
@@ -1013,7 +1027,7 @@ interface IProductFactoryInput {
   customFieldsData?: object;
 }
 
-export const productFactory = (params: IProductFactoryInput = {}) => {
+export const productFactory = async (params: IProductFactoryInput = {}) => {
   const product = new Products({
     name: params.name || faker.random.word(),
     categoryId: params.categoryId || faker.random.word(),
@@ -1021,7 +1035,7 @@ export const productFactory = (params: IProductFactoryInput = {}) => {
     customFieldsData: params.customFieldsData,
     description: params.description || faker.random.word(),
     sku: faker.random.word(),
-    code: faker.random.word(),
+    code: await getUniqueValue(Products, 'code'),
     createdAt: new Date(),
     tagIds: params.tagIds || [],
   });
@@ -1037,12 +1051,12 @@ interface IProductCategoryFactoryInput {
   order?: string;
 }
 
-export const productCategoryFactory = (params: IProductCategoryFactoryInput = {}) => {
+export const productCategoryFactory = async (params: IProductCategoryFactoryInput = {}) => {
   const productCategory = new ProductCategories({
     name: params.name || faker.random.word(),
     description: params.description || faker.random.word(),
     parentId: params.parentId,
-    code: params.code || faker.random.word(),
+    code: await getUniqueValue(ProductCategories, 'code', params.code),
     order: params.order || faker.random.word(),
     createdAt: new Date(),
   });
@@ -1055,10 +1069,10 @@ interface IConfigFactoryInput {
   value?: string[];
 }
 
-export const configFactory = (params: IConfigFactoryInput = {}) => {
+export const configFactory = async (params: IConfigFactoryInput = {}) => {
   const config = new Configs({
     ...params,
-    code: faker.random.word(),
+    code: await getUniqueValue(Configs, 'code', params.code),
     value: [faker.random.word()],
   });
 

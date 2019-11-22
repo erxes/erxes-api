@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { arrayChecker, validSearchText } from '../../data/utils';
+import { validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
@@ -170,11 +170,11 @@ export const loadClass = () => {
       for (const companyId of companyIds) {
         const companyObj = await Companies.getCompany(companyId);
 
-        const companyTags = arrayChecker(companyObj.tagIds);
-        const companyNames = arrayChecker(companyObj.names);
-        const companyEmails = arrayChecker(companyObj.emails);
-        const companyPhones = arrayChecker(companyObj.phones);
-        const companyScopeBrandIds = arrayChecker(companyObj.scopeBrandIds);
+        const companyTags = companyObj.tagIds || [];
+        const companyNames = companyObj.names || [];
+        const companyEmails = companyObj.emails || [];
+        const companyPhones = companyObj.phones || [];
+        const companyScopeBrandIds = companyObj.scopeBrandIds || [];
 
         // Merging scopeBrandIds
         scopeBrandIds = scopeBrandIds.concat(companyScopeBrandIds);

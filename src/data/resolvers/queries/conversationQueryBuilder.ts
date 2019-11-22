@@ -1,7 +1,7 @@
 import * as _ from 'underscore';
 import { Channels, Integrations } from '../../../db/models';
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
-import { arrayChecker, fixDate } from '../../utils';
+import { fixDate } from '../../utils';
 
 interface IIn {
   $in: string[];
@@ -114,7 +114,7 @@ export default class Builder {
     channels.forEach(channel => {
       availIntegrationIds = _.union(
         availIntegrationIds,
-        arrayChecker(channel.integrationIds).filter(id => this.activeIntegrationIds.includes(id)),
+        (channel.integrationIds || []).filter(id => this.activeIntegrationIds.includes(id)),
       );
     });
 
@@ -142,7 +142,7 @@ export default class Builder {
     const channel = await Channels.getChannel(channelId);
 
     return {
-      integrationId: { $in: arrayChecker(channel.integrationIds).filter(id => this.activeIntegrationIds.includes(id)) },
+      integrationId: { $in: (channel.integrationIds || []).filter(id => this.activeIntegrationIds.includes(id)) },
     };
   }
 
@@ -176,7 +176,7 @@ export default class Builder {
   public starredFilter(): { _id: IIn | { $in: string[] } } {
     return {
       _id: {
-        $in: arrayChecker(this.user.starredConversationIds),
+        $in: this.user.starredConversationIds || [],
       },
     };
   }

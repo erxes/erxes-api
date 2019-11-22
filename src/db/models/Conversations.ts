@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
 import { ConversationMessages, Users } from '.';
-import { arrayChecker } from '../../data/utils';
 import { CONVERSATION_STATUSES } from './definitions/constants';
 import { IMessageDocument } from './definitions/conversationMessages';
 import { conversationSchema, IConversation, IConversationDocument } from './definitions/conversations';
@@ -196,7 +195,7 @@ export const loadClass = () => {
         throw new Error(`Conversation not found with id ${_id}`);
       }
 
-      const readUserIds = arrayChecker(conversation.readUserIds);
+      const readUserIds = conversation.readUserIds || [];
 
       // if current user is first one
       if (!readUserIds || readUserIds.length === 0) {

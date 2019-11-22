@@ -4,14 +4,7 @@ import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/mode
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, {
-  arrayChecker,
-  checkUserIds,
-  putCreateLog,
-  putDeleteLog,
-  putUpdateLog,
-  registerOnboardHistory,
-} from '../../utils';
+import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -43,7 +36,7 @@ export const sendChannelNotifications = async (
     link: `/inbox/index?channelId=${channel._id}`,
 
     // exclude current user
-    receivers: receivers || arrayChecker(channel.memberIds).filter(id => id !== channel.userId),
+    receivers: receivers || (channel.memberIds || []).filter(id => id !== channel.userId),
   });
 };
 
@@ -77,7 +70,7 @@ const channelMutations = {
 
     const { memberIds } = doc;
 
-    const { addedUserIds, removedUserIds } = checkUserIds(arrayChecker(channel.memberIds), arrayChecker(memberIds));
+    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
 
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);

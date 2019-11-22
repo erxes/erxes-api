@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { arrayChecker } from '../../data/utils';
 import {
   articleSchema,
   categorySchema,
@@ -211,7 +210,7 @@ export const loadCategoryClass = () => {
         const topics = await KnowledgeBaseTopics.find({ _id: { $in: topicIds } });
 
         for (const topic of topics) {
-          const categoryIds = arrayChecker(topic.categoryIds);
+          const categoryIds = topic.categoryIds || [];
 
           // add categoryId to topics's categoryIds list
           if (!categoryIds.includes(category._id.toString())) {

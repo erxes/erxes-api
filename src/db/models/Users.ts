@@ -4,7 +4,6 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
 import { UsersGroups } from '.';
-import { arrayChecker } from '../../data/utils';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -542,7 +541,7 @@ export const loadClass = () => {
       const [token, refreshToken] = await this.createTokens(user, this.getSecret());
 
       if (deviceToken) {
-        const deviceTokens: string[] = arrayChecker(user.deviceTokens);
+        const deviceTokens: string[] = user.deviceTokens || [];
 
         if (!deviceTokens.includes(deviceToken)) {
           deviceTokens.push(deviceToken);

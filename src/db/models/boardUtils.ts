@@ -1,5 +1,5 @@
 import { Deals, GrowthHacks, Tasks, Tickets } from '.';
-import { arrayChecker, validSearchText } from '../../data/utils';
+import { validSearchText } from '../../data/utils';
 import { IItemCommonFields, IOrderInput } from './definitions/boards';
 import { BOARD_TYPES } from './definitions/constants';
 
@@ -41,7 +41,7 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
 export const watchItem = async (collection: any, _id: string, isAdd: boolean, userId: string) => {
   const item = await collection.findOne({ _id });
 
-  const watchedUserIds = arrayChecker(item.watchedUserIds);
+  const watchedUserIds = item.watchedUserIds || [];
 
   if (isAdd) {
     watchedUserIds.push(userId);

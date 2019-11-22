@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { arrayChecker, validateEmail, validSearchText } from '../../data/utils';
+import { validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
@@ -309,16 +309,16 @@ export const loadClass = () => {
           customFieldsData = { ...customFieldsData, ...(customerObj.customFieldsData || {}) };
 
           // Merging scopeBrandIds
-          scopeBrandIds = [...scopeBrandIds, ...arrayChecker(customerObj.scopeBrandIds)];
+          scopeBrandIds = [...scopeBrandIds, ...(customerObj.scopeBrandIds || [])];
 
-          const customerTags: string[] = arrayChecker(customerObj.tagIds);
+          const customerTags: string[] = customerObj.tagIds || [];
 
           // Merging customer's tag and companies into 1 array
           tagIds = tagIds.concat(customerTags);
 
           // Merging emails, phones
-          emails = [...emails, ...arrayChecker(customerObj.emails)];
-          phones = [...phones, ...arrayChecker(customerObj.phones)];
+          emails = [...emails, ...(customerObj.emails || [])];
+          phones = [...phones, ...(customerObj.phones || [])];
 
           await Customers.findByIdAndUpdate(customerId, { $set: { status: STATUSES.DELETED } });
         }

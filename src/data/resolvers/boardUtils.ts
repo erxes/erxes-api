@@ -4,25 +4,19 @@ import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
-import utils, { arrayChecker } from '../utils';
+import utils from '../utils';
 
 export const notifiedUserIds = async (item: any) => {
   let userIds: string[] = [];
 
-  if (item.assignedUserIds && item.assignedUserIds.length > 0) {
-    userIds = userIds.concat(item.assignedUserIds);
-  }
+  userIds = userIds.concat(item.assignedUserIds || []);
 
-  if (item.watchedUserIds && item.watchedUserIds.length > 0) {
-    userIds = userIds.concat(item.watchedUserIds);
-  }
+  userIds = userIds.concat(item.watchedUserIds || []);
 
   const stage = await Stages.getStage(item.stageId);
   const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
-  if (pipeline.watchedUserIds && pipeline.watchedUserIds.length > 0) {
-    userIds = userIds.concat(arrayChecker(pipeline.watchedUserIds));
-  }
+  userIds = userIds.concat(pipeline.watchedUserIds || []);
 
   return userIds;
 };
@@ -215,7 +209,7 @@ export const createConformity = async ({
   mainType: string;
   mainTypeId: string;
 }) => {
-  for (const companyId of arrayChecker(companyIds)) {
+  for (const companyId of companyIds || []) {
     await Conformities.addConformity({
       mainType,
       mainTypeId,
@@ -224,7 +218,7 @@ export const createConformity = async ({
     });
   }
 
-  for (const customerId of arrayChecker(customerIds)) {
+  for (const customerId of customerIds || []) {
     await Conformities.addConformity({
       mainType,
       mainTypeId,

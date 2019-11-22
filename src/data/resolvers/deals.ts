@@ -12,7 +12,6 @@ import {
 } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
-import { arrayChecker } from '../utils';
 import { boardId } from './boardUtils';
 
 export default {
@@ -39,7 +38,7 @@ export default {
   async products(deal: IDealDocument) {
     const products: any = [];
 
-    for (const data of arrayChecker(deal.productsData)) {
+    for (const data of deal.productsData || []) {
       const product = await Products.getProduct({ _id: data.productId });
 
       const { customFieldsData } = product;
@@ -78,7 +77,7 @@ export default {
     const data = deal.productsData;
     const amountsMap = {};
 
-    arrayChecker(data).forEach(product => {
+    (data || []).forEach(product => {
       const type = product.currency;
 
       if (type) {
