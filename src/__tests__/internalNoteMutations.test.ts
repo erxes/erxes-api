@@ -126,31 +126,6 @@ describe('InternalNotes mutations', () => {
     expect(internalNote.content).toBe(args.content);
   });
 
-  test('Edit internal note', async () => {
-    const { _id, content } = _internalNote;
-    const args = { _id, content };
-
-    const mutation = `
-      mutation internalNotesEdit(
-        $_id: String!
-        $content: String
-      ) {
-        internalNotesEdit(
-          _id: $_id
-          content: $content
-        ) {
-          _id
-          content
-        }
-      }
-    `;
-
-    const internalNote = await graphqlRequest(mutation, 'internalNotesEdit', args, context);
-
-    expect(internalNote._id).toBe(args._id);
-    expect(internalNote.content).toBe(args.content);
-  });
-
   test('Remove internal note', async () => {
     const mutation = `
       mutation internalNotesRemove($_id: String!) {
