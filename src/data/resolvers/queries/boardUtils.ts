@@ -145,9 +145,9 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
   }
 
   if (labelIds) {
-    const notLabelled = isListEmpty(labelIds);
+    const isEmpty = isListEmpty(labelIds);
 
-    filter.labelIds = notLabelled ? [] : contains(labelIds);
+    filter.labelIds = isEmpty ? { $in: [null, []] } : { $in: labelIds };
   }
 
   if (priority) {

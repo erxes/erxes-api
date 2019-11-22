@@ -58,9 +58,7 @@ export const loadClass = () => {
       }
 
       // add mentioned users to participators
-      if (message.mentionedUserIds && message.mentionedUserIds.length > 0) {
-        await Conversations.addManyParticipatedUsers(message.conversationId, message.mentionedUserIds);
-      }
+      await Conversations.addManyParticipatedUsers(message.conversationId, message.mentionedUserIds || []);
 
       return message;
     }

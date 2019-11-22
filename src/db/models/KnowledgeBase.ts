@@ -58,7 +58,7 @@ export const loadArticleClass = () => {
         });
 
         for (const category of categories) {
-          const articleIds = category.toJSON().articleIds;
+          const articleIds = category.toJSON().articleIds || [];
 
           articleIds.push(article._id.toString());
 
@@ -99,7 +99,7 @@ export const loadArticleClass = () => {
         });
 
         for (const category of categories) {
-          const articleIds = category.toJSON().articleIds;
+          const articleIds = category.toJSON().articleIds || [];
 
           // check previous entry
           if (!articleIds.includes(article._id)) {
@@ -172,7 +172,7 @@ export const loadCategoryClass = () => {
 
         // add new category to topics's categoryIds field
         for (const topic of topics) {
-          const categoryIds = topic.toJSON().categoryIds;
+          const categoryIds = topic.toJSON().categoryIds || [];
 
           categoryIds.push(category._id.toString());
 
@@ -236,9 +236,7 @@ export const loadCategoryClass = () => {
         throw new Error('Category not found');
       }
 
-      if (category.articleIds && category.articleIds.length > 0) {
-        await KnowledgeBaseArticles.deleteMany({ _id: { $in: category.articleIds } });
-      }
+      await KnowledgeBaseArticles.deleteMany({ _id: { $in: category.articleIds || [] } });
 
       return KnowledgeBaseCategories.deleteOne({ _id });
     }

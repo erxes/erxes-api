@@ -223,36 +223,28 @@ export const loadClass = () => {
 
       const nullValues = ['', null];
       let score = 0;
-      let searchText = '';
+      let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
 
-      if (customer.emails && customer.emails.length > 0) {
-        searchText = searchText.concat(' ', customer.emails.join(' '));
-      }
-
-      if (customer.phones && customer.phones.length > 0) {
-        searchText = searchText.concat(' ', customer.phones.join(' '));
-      }
-
-      if (customer.firstName && !nullValues.includes(customer.firstName)) {
+      if (!nullValues.includes(customer.firstName || '')) {
         score += 10;
-        searchText = searchText.concat(' ', customer.firstName);
+        searchText = searchText.concat(' ', customer.firstName || '');
       }
 
-      if (customer.lastName && !nullValues.includes(customer.lastName)) {
+      if (!nullValues.includes(customer.lastName || '')) {
         score += 5;
-        searchText = searchText.concat(' ', customer.lastName);
+        searchText = searchText.concat(' ', customer.lastName || '');
       }
 
-      if (customer.code && !nullValues.includes(customer.code)) {
+      if (!nullValues.includes(customer.code || '')) {
         score += 10;
-        searchText = searchText.concat(' ', customer.code);
+        searchText = searchText.concat(' ', customer.code || '');
       }
 
-      if (customer.primaryEmail && !nullValues.includes(customer.primaryEmail)) {
+      if (!nullValues.includes(customer.primaryEmail || '')) {
         score += 15;
       }
 
-      if (customer.primaryPhone && !nullValues.includes(customer.primaryPhone)) {
+      if (!nullValues.includes(customer.primaryPhone || '')) {
         score += 10;
       }
 

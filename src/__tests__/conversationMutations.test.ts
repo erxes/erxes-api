@@ -1,3 +1,4 @@
+import * as faker from 'faker';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -66,7 +67,7 @@ describe('Conversation message mutations', () => {
     spy.mockImplementation();
 
     user = await userFactory({});
-    customer = await customerFactory({});
+    customer = await customerFactory({ primaryEmail: faker.internet.email() });
 
     const leadIntegration = await integrationFactory({
       kind: KIND_CHOICES.LEAD,

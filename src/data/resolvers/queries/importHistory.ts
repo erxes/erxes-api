@@ -16,7 +16,7 @@ const importHistoryQueries = {
   async importHistoryDetail(_root, { _id }: { _id: string }) {
     const importHistory = await ImportHistory.getImportHistory(_id);
 
-    importHistory.errorMsgs = importHistory.errorMsgs.slice(0, 100);
+    importHistory.errorMsgs = (importHistory.errorMsgs || []).slice(0, 100);
 
     return importHistory;
   },

@@ -85,7 +85,7 @@ export const loadClass = () => {
       await InternalNotes.updateMany(
         {
           contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-          contentTypeId: { $in: customerIds },
+          contentTypeId: { $in: customerIds || [] },
         },
         { contentTypeId: newCustomerId },
       );
@@ -127,7 +127,7 @@ export const loadClass = () => {
       await InternalNotes.updateMany(
         {
           contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
-          contentTypeId: { $in: oldCompanyIds },
+          contentTypeId: { $in: oldCompanyIds || [] },
         },
         { contentTypeId: newCompanyId },
       );

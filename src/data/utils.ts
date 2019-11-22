@@ -891,9 +891,3 @@ export const checkUserIds = (oldUserIds: string[], newUserIds: string[]) => {
 
   return { addedUserIds, removedUserIds };
 };
-
-/*
- * Handle engage unsubscribe request
- */
-export const handleEngageUnSubscribe = (query: { cid: string }) =>
-  Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });

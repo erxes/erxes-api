@@ -20,7 +20,7 @@ export default {
       relType: 'company',
     });
 
-    return Companies.find({ _id: { $in: companyIds } });
+    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
   async customers(ticket: ITicketDocument) {
@@ -30,11 +30,11 @@ export default {
       relType: 'customer',
     });
 
-    return Customers.find({ _id: { $in: customerIds } });
+    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   assignedUsers(ticket: ITicketDocument) {
-    return Users.find({ _id: { $in: ticket.assignedUserIds } });
+    return Users.find({ _id: { $in: ticket.assignedUserIds || [] } });
   },
 
   async pipeline(ticket: ITicketDocument) {
@@ -52,9 +52,9 @@ export default {
   },
 
   isWatched(ticket: ITicketDocument, _args, { user }: IContext) {
-    const watchedUserIds = ticket.watchedUserIds;
+    const watchedUserIds = ticket.watchedUserIds || [];
 
-    if (watchedUserIds && watchedUserIds.includes(user._id)) {
+    if (watchedUserIds.includes(user._id)) {
       return true;
     }
 
@@ -66,6 +66,6 @@ export default {
   },
 
   labels(ticket: ITicketDocument) {
-    return PipelineLabels.find({ _id: { $in: ticket.labelIds } });
+    return PipelineLabels.find({ _id: { $in: ticket.labelIds || [] } });
   },
 };

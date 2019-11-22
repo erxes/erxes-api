@@ -95,7 +95,7 @@ export const loadPipelineTemplateClass = () => {
 
       const duplicated: IDoc = {
         name: `${pipelineTemplate.name} duplicated`,
-        description: pipelineTemplate.description,
+        description: pipelineTemplate.description || '',
         type: pipelineTemplate.type,
       };
 

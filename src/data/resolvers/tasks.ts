@@ -20,7 +20,7 @@ export default {
       relType: 'company',
     });
 
-    return Companies.find({ _id: { $in: companyIds } });
+    return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
   async customers(task: ITaskDocument) {
@@ -30,11 +30,11 @@ export default {
       relType: 'customer',
     });
 
-    return Customers.find({ _id: { $in: customerIds } });
+    return Customers.find({ _id: { $in: customerIds || [] } });
   },
 
   assignedUsers(task: ITaskDocument) {
-    return Users.find({ _id: { $in: task.assignedUserIds } });
+    return Users.find({ _id: { $in: task.assignedUserIds || [] } });
   },
 
   async pipeline(task: ITaskDocument) {
@@ -52,9 +52,9 @@ export default {
   },
 
   isWatched(task: ITaskDocument, _args, { user }: IContext) {
-    const watchedUserIds = task.watchedUserIds;
+    const watchedUserIds = task.watchedUserIds || [];
 
-    if (watchedUserIds && watchedUserIds.includes(user._id)) {
+    if (watchedUserIds.includes(user._id)) {
       return true;
     }
 
@@ -66,6 +66,6 @@ export default {
   },
 
   labels(task: ITaskDocument) {
-    return PipelineLabels.find({ _id: { $in: task.labelIds } });
+    return PipelineLabels.find({ _id: { $in: task.labelIds || [] } });
   },
 };

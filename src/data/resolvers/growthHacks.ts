@@ -40,11 +40,11 @@ export default {
   },
 
   assignedUsers(growthHack: IGrowthHackDocument) {
-    return Users.find({ _id: { $in: growthHack.assignedUserIds } });
+    return Users.find({ _id: { $in: growthHack.assignedUserIds || [] } });
   },
 
   votedUsers(growthHack: IGrowthHackDocument) {
-    return Users.find({ _id: { $in: growthHack.votedUserIds } });
+    return Users.find({ _id: { $in: growthHack.votedUserIds || [] } });
   },
 
   isVoted(growthHack: IGrowthHackDocument, _args, { user }: { user: IUserDocument }) {
@@ -81,9 +81,9 @@ export default {
   },
 
   isWatched(growthHack: IGrowthHackDocument, _args, { user }: { user: IUserDocument }) {
-    const watchedUserIds = growthHack.watchedUserIds;
+    const watchedUserIds = growthHack.watchedUserIds || [];
 
-    if (watchedUserIds && watchedUserIds.includes(user._id)) {
+    if (watchedUserIds.includes(user._id)) {
       return true;
     }
 
@@ -91,6 +91,6 @@ export default {
   },
 
   labels(growthHack: IGrowthHackDocument) {
-    return PipelineLabels.find({ _id: { $in: growthHack.labelIds } });
+    return PipelineLabels.find({ _id: { $in: growthHack.labelIds || [] } });
   },
 };

@@ -97,6 +97,8 @@ describe('engage message mutation tests', () => {
       status: STATUSES.ACTIVE,
       profileScore: 1,
       primaryEmail: faker.internet.email(),
+      firstName: faker.random.word(),
+      lastName: faker.random.word(),
     });
     _integration = await integrationFactory({ brandId: 'brandId' });
 
@@ -602,5 +604,15 @@ describe('engage message mutation tests', () => {
     expect(conversationMessage.userId).toBe(conversationMessageObj.userId);
     expect(conversationMessage.customerId).toBe(conversationMessageObj.customerId);
     expect(conversationMessage.content).toBe(conversationMessageObj.content);
+  });
+
+  test('Handle engage unsubscribe', async () => {
+    const customer = await customerFactory({ doNotDisturb: 'No' });
+
+    await engageUtils.handleEngageUnSubscribe({ cid: customer._id });
+
+    const updated = await Customers.getCustomer(customer._id);
+
+    expect(updated.doNotDisturb).toBe('Yes');
   });
 });
