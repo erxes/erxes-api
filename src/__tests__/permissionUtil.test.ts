@@ -102,7 +102,7 @@ describe('Test permission utils', () => {
     expect(checkPermission).toEqual(true);
   });
 
-  test('Check permission', async () => {
+  test('Check permission with group', async () => {
     const checkPermission = await can('action3', _user3);
 
     expect(checkPermission).toEqual(true);
