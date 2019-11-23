@@ -1,3 +1,7 @@
 <ul>
-    <img src="{{data.avatar}}" height="50px" width="50px"> {{data.name}}  
+    {{#each subs}}
+    <li>
+        <img src="{{avatar}}" height="50px" width="50px"> {{name}}  
+    </li>
+    {{/each}}
 </ul>
