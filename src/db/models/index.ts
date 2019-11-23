@@ -27,7 +27,6 @@ import PipelineLabels from './PipelineLabels';
 import PipelineTemplates from './PipelineTemplates';
 import { ProductCategories, Products } from './Products';
 import ResponseTemplates from './ResponseTemplates';
-import { RobotJobs } from './Robot';
 import Scripts from './Scripts';
 import Segments from './Segments';
 import Tags from './Tags';
@@ -76,7 +75,6 @@ export {
   UsersGroups,
   Tickets,
   Tasks,
-  RobotJobs,
   GrowthHacks,
   PipelineTemplates,
   PipelineLabels,

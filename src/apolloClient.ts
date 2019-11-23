@@ -1,6 +1,6 @@
 import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as dotenv from 'dotenv';
-import { EngagesAPI, IntegrationsAPI } from './data/dataSources';
+import { AIAPI, EngagesAPI, IntegrationsAPI } from './data/dataSources';
 import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
 import { Conversations, Customers } from './db/models';
@@ -35,6 +35,7 @@ const apolloServer = new ApolloServer({
     return {
       EngagesAPI: new EngagesAPI(),
       IntegrationsAPI: new IntegrationsAPI(),
+      AIAPI: new AIAPI(),
     };
   },
   playground,

@@ -11,5 +11,6 @@ export interface IContext {
   dataSources: {
     EngagesAPI: any;
     IntegrationsAPI: any;
+    AIAPI: any;
   };
 }

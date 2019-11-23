@@ -1,4 +1,3 @@
-import { RobotJobs } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { OnboardingHistories } from '../../../db/models/Robot';
 import { moduleObjects } from '../../permissions/actions/permission';
@@ -141,47 +140,21 @@ const checkShowModule = (
 };
 
 const robotQueries = {
-  async robotGetJobTypes(_root) {
-    const JOB_TYPES = ['mergeCustomers', 'companyMetaExtraction', 'customerScoring'];
-
-    return JOB_TYPES.map(async jobType => {
-      return {
-        name: jobType,
-        notificationsCount: await RobotJobs.countDocuments({ type: jobType, isNotified: false }),
-      };
-    });
+  robotGetJobTypes(_root, _args, { dataSources }: IContext) {
+    return dataSources.AIAPI.getJobTypes();
   },
 
   async robotGetJobs(
     _root,
-    { isNotified, type, parentId, limit = 10 }: { isNotified: boolean; type: string; parentId: string; limit?: number },
+    args: { isNotified: boolean; type: string; parentId: string; limit?: number },
+    { dataSources }: IContext,
   ) {
-    const selector: any = { parentId, type };
-
-    if (typeof isNotified !== 'undefined') {
-      selector.isNotified = isNotified;
-    }
-
-    const jobs = await RobotJobs.find(selector)
-      .sort({ createdAt: -1 })
-      .limit(limit);
+    const jobs = await dataSources.AIAPI.getJobs(args);
 
     return jobs.map(async job => {
-      let data = {};
+      const content = await applyTemplate('robotJobs', `${args.type}_overall`, job.data);
 
-      if (type === 'customerScoring') {
-        data = {
-          count: job.data.scoreMap.length,
-        };
-      }
-
-      const content = await applyTemplate('robotJobs', `${type}_overall`, data);
-
-      return {
-        _id: job._id,
-        isNotified: job.isNotified,
-        content,
-      };
+      return { _id: job._id, isNotified: job.isNotified, content };
     });
   },
 

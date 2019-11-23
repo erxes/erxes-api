@@ -1,35 +1,52 @@
-import { Customers, RobotJobs } from '../../../db/models';
+import { Companies, Customers } from '../../../db/models';
+import { AIAPI } from '../../dataSources';
 import { applyTemplate } from '../../utils';
 
-export const jobDetail = async (_id: string) => {
-  const job = await RobotJobs.findOne({ _id });
+export const consumeJobResult = async data => {
+  const type = data.jobType;
 
-  if (!job) {
-    throw new Error(`Job not found ${_id}`);
-  }
+  if (type === 'mergeCustomers') {
+    const customerIds = data.customerIds;
+    const randomCustomer = await Customers.findOne({ _id: { $in: customerIds } }).lean();
 
-  await RobotJobs.markAsNotified(_id);
-
-  const data: any = {};
-
-  if (job.type === 'customerScoring') {
-    const scoreMap: Array<{ name: string; score: number }> = [];
-
-    for (const map of job.data.scoreMap) {
-      const customer = await Customers.findOne({ _id: map._id });
-
-      if (!customer) {
-        continue;
-      }
-
-      scoreMap.push({
-        name: `${customer.firstName} ${customer.lastName}`,
-        score: map.score,
-      });
+    if (randomCustomer) {
+      delete randomCustomer._id;
+      await Customers.mergeCustomers(customerIds, randomCustomer);
     }
-
-    data.scoreMap = scoreMap;
   }
 
-  return applyTemplate('robotJobs', `${job.type}_detailed`, data);
+  if (type === 'fillCompanyInfo') {
+    const results = data.results;
+
+    for (const result of results) {
+      const { _id, modifier } = result;
+
+      await Companies.update({ _id }, { $set: modifier });
+    }
+  }
+
+  if (type === 'customerScoring') {
+    const { scoreMap } = data;
+
+    const modifier = scoreMap.map(job => ({
+      updateOne: {
+        filter: {
+          _id: job._id,
+        },
+        update: {
+          $set: { profileScore: job.score, scoreExplanation: job.explanation },
+        },
+      },
+    }));
+
+    await Customers.bulkWrite(modifier);
+  }
+};
+
+export const jobDetail = async (_id: string) => {
+  const api = new AIAPI();
+
+  const job = await api.getJobDetail(_id);
+
+  return applyTemplate('robotJobs', `${job.type}_detailed`, job);
 };
