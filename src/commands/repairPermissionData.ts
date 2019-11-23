@@ -10,7 +10,7 @@ const options = {
   useCreateIndex: true,
 };
 
-const checkPermissionAll = async () => {
+const repairPermissions = async () => {
   console.log('-------start check or repair permission has a all-------');
   const mongoClient = await mongoose.createConnection(process.env.MONGO_URL || '', options);
 
@@ -45,28 +45,4 @@ const checkPermissionAll = async () => {
   process.exit();
 };
 
-// const checkMigrationComplete = async () => {
-//   const mongoClient = await mongoose.createConnection(process.env.MONGO_URL || '', options);
-
-//   const migrations = mongoClient.db.collection('migrations');
-
-//   await migrations.deleteMany({});
-
-//   process.exit();
-// };
-
-// const checkInitialComplete = async () => {
-//   const mongoClient = await mongoose.createConnection(process.env.MONGO_URL || '', options);
-
-//   const migrations = mongoClient.db.collection('migrations');
-
-//   await migrations.deleteMany({});
-
-//   process.exit();
-// };
-
-checkPermissionAll();
-
-// checkMigrationComplete();
-
-// checkInitialComplete();
+repairPermissions();

@@ -31,7 +31,7 @@
     "initProject": "ts-node ./src/commands/initProject.ts",
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
-    "checkConfigData": "ts-node ./src/commands/checkConfigData.ts",
+    "repairPermissionData": "ts-node ./src/commands/repairPermissionData.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
     "release": "release-it",
     "snyk-protect": "snyk protect",
