@@ -23,6 +23,10 @@ export default {
     return Companies.find({ _id: { $in: companyIds || [] } });
   },
 
+  async createdUser(task: ITaskDocument) {
+    return Users.findOne({ _id: task.userId });
+  },
+
   async customers(task: ITaskDocument) {
     const customerIds = await Conformities.savedConformity({
       mainType: 'task',
