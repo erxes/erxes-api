@@ -372,7 +372,7 @@ export const sendEmail = async ({
 /**
  * Returns user's name or email
  */
-export const getUserDetail = (user: IUser) => {
+const getUserDetail = (user: IUser) => {
   return (user.details && user.details.fullName) || user.email;
 };
 
