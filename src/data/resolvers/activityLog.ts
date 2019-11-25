@@ -21,6 +21,29 @@ export default {
     return;
   },
 
+  async contentTypeDetail(activityLog: IActivityLog) {
+    const { contentType, contentId } = activityLog;
+
+    let item = {};
+
+    switch (contentType) {
+      case 'deal':
+        item = await Deals.getDeal(contentId);
+        break;
+      case 'task':
+        item = await Tasks.getTask(contentId);
+        break;
+      case 'growthHack':
+        item = await GrowthHacks.getGrowthHack(contentId);
+        break;
+      case 'ticket':
+        item = await Tickets.getTicket(contentId);
+        break;
+    }
+
+    return item;
+  },
+
   async contentDetail(activityLog: IActivityLog) {
     const { action, content, contentType, contentId } = activityLog;
 

@@ -10,6 +10,7 @@ export const types = `
 
     createdByDetail: JSON
     contentDetail: JSON
+    contentTypeDetail: JSON
   }
 `;
 
