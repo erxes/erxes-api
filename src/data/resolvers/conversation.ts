@@ -51,10 +51,15 @@ export default {
       return null;
     }
 
-    return dataSources.IntegrationsAPI.fetchApi('/facebook/get-post', {
-      erxesApiId: conv._id,
-      integrationId: integration._id,
-    });
+    try {
+      const response = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-post', {
+        erxesApiId: conv._id,
+        integrationId: integration._id,
+      });
+      return response;
+    } catch (e) {
+      return null;
+    }
   },
 
   tags(conv: IConversationDocument) {
