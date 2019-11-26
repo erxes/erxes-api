@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
+import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
@@ -38,18 +39,15 @@ export const checkFile = async file => {
     return 'Invalid file';
   }
 
+  const UPLOAD_FILE_TYPES = getEnv({
+    name: 'UPLOAD_FILE_TYPES',
+    defaultValue:
+      'image/png,image/jpeg,image/jpg,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,',
+  });
+
   const { mime } = ft;
 
-  if (
-    ![
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/pdf',
-    ].includes(mime)
-  ) {
+  if (!UPLOAD_FILE_TYPES.split(',').includes(mime)) {
     return 'Invalid file';
   }
 
@@ -818,6 +816,8 @@ export default {
   readFile,
   createTransporter,
 };
+
+export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
 
 export const validSearchText = (values: string[]) => {
   const value = values.join(' ');
