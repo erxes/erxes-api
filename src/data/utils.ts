@@ -391,7 +391,7 @@ export interface ISendNotification {
 /**
  * Send a notification
  */
-export const sendNotification = async (doc: ISendNotification) => {
+const sendNotification = async (doc: ISendNotification) => {
   const { createdUser, receivers, title, content, notifType, action, contentType, contentTypeId } = doc;
   let link = doc.link;
 
@@ -790,15 +790,6 @@ export const fixDate = (value, defaultValue = new Date()): Date => {
   }
 
   return defaultValue;
-};
-
-export const getDate = (date: Date, day: number): Date => {
-  const currentDate = new Date();
-
-  date.setDate(currentDate.getDate() + day + 1);
-  date.setHours(0, 0, 0, 0);
-
-  return date;
 };
 
 export const getToday = (date: Date): Date => {
