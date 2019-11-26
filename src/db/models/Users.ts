@@ -57,6 +57,7 @@ export interface IUserModel extends Model<IUserDocument> {
   }): Promise<IUserDocument>;
   comparePassword(password: string, userPassword: string): boolean;
   resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<IUserDocument>;
+  resetMemberPassword({ _id, newPassword }: { _id: string; newPassword: string }): Promise<IUserDocument>;
   changePassword({
     _id,
     currentPassword,
@@ -393,6 +394,25 @@ export const loadClass = () => {
           resetPasswordExpires: undefined,
         },
       );
+
+      return Users.findOne({ _id: user._id });
+    }
+
+    /**
+     * Reset member's password by given _id & newPassword
+     */
+    public static async resetMemberPassword({ _id, newPassword }: { _id: string; newPassword: string }) {
+      const user = await Users.findOne({ _id });
+
+      if (!user) {
+        throw new Error('User not found.');
+      }
+
+      if (!newPassword) {
+        throw new Error('Password is required.');
+      }
+
+      await Users.updateOne({ _id }, { $set: { password: await this.generatePassword(newPassword) } });
 
       return Users.findOne({ _id: user._id });
     }

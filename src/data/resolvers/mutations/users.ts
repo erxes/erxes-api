@@ -80,6 +80,13 @@ const userMutations = {
   },
 
   /*
+   * Reset member's password
+   */
+  resetMemberPassword(_root, args: { _id: string; newPassword: string }) {
+    return Users.resetMemberPassword(args);
+  },
+
+  /*
    * Change user password
    */
   usersChangePassword(_root, args: { currentPassword: string; newPassword: string }, { user }: IContext) {
@@ -212,6 +219,7 @@ requireLogin(userMutations, 'usersChangePassword');
 requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
+requireLogin(userMutations, 'resetMemberPassword');
 
 checkPermission(userMutations, 'usersEdit', 'usersEdit');
 checkPermission(userMutations, 'usersInvite', 'usersInvite');
