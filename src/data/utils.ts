@@ -825,6 +825,8 @@ const sendConversationToIntegrations = (
       attachments: doc.attachments || [],
     });
   }
+
+  return null;
 };
 
 export default {
