@@ -1,7 +1,8 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
-import { registerOnboardHistory, sendMobileNotification } from './data/utils';
+import { sendMobileNotification } from './data/thirdPartyUtils';
+import { registerOnboardHistory } from './data/utils';
 import { ActivityLogs, Conversations, Customers, Integrations, RobotEntries, Users } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';

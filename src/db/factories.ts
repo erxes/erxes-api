@@ -459,6 +459,7 @@ interface ICustomerFactoryInput {
   profileScore?: number;
   code?: string;
   visitorContactInfo?: any;
+  deviceTokens?: string[];
 }
 
 export const customerFactory = async (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
@@ -481,6 +482,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,
+    deviceTokens: params.deviceTokens,
   };
 
   if (useModelMethod) {

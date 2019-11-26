@@ -1,5 +1,11 @@
+// import admin from '__mocks__/firebase-admin';
 import * as faker from 'faker';
+import { sendMobileNotification } from '../data/thirdPartyUtils';
+// import { sendMobileNotification } from '../data/thirdPartyUtils';
 import utils, { checkFile, validSearchText } from '../data/utils';
+import { customerFactory, userFactory } from '../db/factories';
+
+import './setup.ts';
 
 describe('test utils', () => {
   test('test readFile', async () => {
@@ -67,7 +73,7 @@ describe('Check file', () => {
     }
   });
 
-  test('Valid search text', async () => {
+  test('Valid search text', () => {
     const shortArray = [faker.random.word()];
 
     let response = validSearchText(shortArray);
@@ -79,5 +85,34 @@ describe('Check file', () => {
     response = validSearchText(longArray);
 
     expect(response).toBe(longArray.join(' ').substring(0, 511));
+  });
+
+  test('Send mobile notification', async () => {
+    await sendMobileNotification({
+      receivers: [],
+      conversationId: 'fakeId',
+      body: 'Body',
+      title: 'Title',
+    });
+
+    require('firebase-admin').__setApps(['apps']);
+
+    const user = await userFactory();
+    const customer = await customerFactory({ deviceTokens: ['111'] });
+
+    await sendMobileNotification({
+      receivers: [user._id],
+      conversationId: 'fakeId',
+      customerId: customer._id,
+      body: 'Body',
+      title: 'Title',
+    });
+
+    await sendMobileNotification({
+      receivers: [],
+      conversationId: 'fakeId',
+      body: 'Body',
+      title: 'Title',
+    });
   });
 });

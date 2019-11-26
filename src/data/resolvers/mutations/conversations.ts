@@ -14,6 +14,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { sendMobileNotification } from '../../thirdPartyUtils';
 import { IContext } from '../../types';
 import utils from '../../utils';
 
@@ -140,7 +141,7 @@ const sendNotifications = async ({
 
     if (mobile) {
       // send mobile notification ======
-      await utils.sendMobileNotification({
+      await sendMobileNotification({
         title: doc.title,
         body: strip(doc.content),
         receivers: conversationNotifReceivers(conversation, user._id, false),

@@ -1,14 +1,13 @@
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
-import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Customers, Notifications, Users } from '../db/models';
+import { Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
@@ -722,49 +721,6 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
   return value || '';
 };
 
-/**
- * Send notification to mobile device from inbox conversations
- * @param {string} - title
- * @param {string} - body
- * @param {string} - customerId
- * @param {array} - receivers
- */
-export const sendMobileNotification = async ({
-  receivers,
-  title,
-  body,
-  customerId,
-  conversationId,
-}: {
-  receivers: string[];
-  customerId?: string;
-  title: string;
-  body: string;
-  conversationId: string;
-}): Promise<void> => {
-  if (!admin.apps.length) {
-    return;
-  }
-
-  const transporter = admin.messaging();
-  const tokens: string[] = [];
-
-  if (receivers) {
-    tokens.push(...(await Users.find({ _id: { $in: receivers } }).distinct('deviceTokens')));
-  }
-
-  if (customerId) {
-    tokens.push(...(await Customers.findOne({ _id: customerId }).distinct('deviceTokens')));
-  }
-
-  if (tokens.length > 0) {
-    // send notification
-    for (const token of tokens) {
-      await transporter.send({ token, notification: { title, body }, data: { conversationId } });
-    }
-  }
-};
-
 export const paginate = (collection, params: { ids?: string[]; page?: number; perPage?: number }) => {
   const { page = 0, perPage = 0, ids } = params || { ids: null };
 
@@ -833,7 +789,6 @@ export default {
   sendEmail,
   validateEmail,
   sendNotification,
-  sendMobileNotification,
   readFile,
   createTransporter,
   sendConversationToIntegrations,
