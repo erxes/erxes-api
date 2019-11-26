@@ -9,17 +9,12 @@ interface IAttachmentParams {
 }
 
 export interface IEmailDeliveries {
-  cocType: string;
-  cocId?: string;
+  title?: string;
   subject: string;
-  body: string;
-  toEmails: string;
-  cc?: string;
-  bcc?: string;
+  content: string;
   attachments?: IAttachmentParams[];
-  fromEmail?: string;
-  type?: string;
-  userId: string;
+  customerId: string;
+  fromUserId: string;
 }
 
 export interface IEmailDeliveriesDocument extends IEmailDeliveries, Document {
@@ -40,18 +35,12 @@ const attachmentSchema = new Schema(
 
 export const emailDeliverySchema = new Schema({
   _id: field({ pkey: true }),
-  cocType: field({ type: String }),
-  cocId: field({ type: String }),
+  title: field({ type: String }),
   subject: field({ type: String, optional: true }),
-  body: field({ type: String }),
-  toEmails: field({ type: String }),
-  cc: field({ type: String, optional: true }),
-  bcc: field({ type: String, optional: true }),
+  content: field({ type: String }),
+  customerId: field({ type: String }),
+  fromUserId: field({ type: String, optional: true }),
   attachments: field({ type: [attachmentSchema] }),
-  fromEmail: field({ type: String }),
-  userId: field({ type: String }),
-
-  type: { type: String },
 
   createdAt: field({ type: Date, default: Date.now }),
 });

@@ -1,4 +1,4 @@
-import { ActivityLogs, Conformities, Conversations, InternalNotes, Tasks } from '../../../db/models';
+import { ActivityLogs, Conformities, Conversations, EmailDeliveries, InternalNotes, Tasks } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 
 interface IListArgs {
@@ -21,7 +21,7 @@ const activityLogQueries = {
         items.map(item => {
           const result = item.toJSON();
 
-          if (type === 'note' || type === 'conversation') {
+          if (type && type !== 'taskDetail') {
             result.contentType = type;
           }
 
@@ -60,15 +60,20 @@ const activityLogQueries = {
         collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
         break;
 
+      case 'email':
+        collectActivities(await EmailDeliveries.find({ customerId: contentId }).sort({ closeDate: 1 }), 'taskDetail');
+        break;
+
       default:
         if (contentType !== 'task') {
-          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
+          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'email');
         }
 
         collectActivities(await ActivityLogs.find({ contentId }));
         collectActivities(await ActivityLogs.find({ contentId: { $in: relatedItemIds } }));
         collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
         collectActivities(await Conversations.find({ customerId: contentId }), 'conversation');
+        collectActivities(await EmailDeliveries.find({ customerId: contentId }), 'email');
 
         break;
     }
