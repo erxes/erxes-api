@@ -2,7 +2,6 @@ import {
   ConversationMessages,
   Conversations,
   Customers,
-  EmailDeliveries,
   EngageMessages,
   Integrations,
   Segments,
@@ -134,15 +133,6 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
       if (customer.firstName && customer.lastName) {
         customerName = `${customer.firstName} ${customer.lastName}`;
       }
-
-      await EmailDeliveries.createEmailDelivery({
-        title: engageMessage.title,
-        subject: engageMessage.email ? engageMessage.email.subject || '' : '',
-        fromUserId: engageMessage.fromUserId || '',
-        customerId: customer._id,
-        attachments: engageMessage.email ? engageMessage.email.attachments || '' : '',
-        content: engageMessage.email ? engageMessage.email.content || '' : '',
-      });
 
       return {
         _id: customer._id,
