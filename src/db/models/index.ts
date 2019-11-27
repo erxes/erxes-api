@@ -10,7 +10,6 @@ import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
 import Customers from './Customers';
 import Deals from './Deals';
-import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
 import EngageMessages from './Engages';
 import { Fields, FieldsGroups } from './Fields';
@@ -52,7 +51,6 @@ export {
   InternalNotes,
   Customers,
   Companies,
-  EmailDeliveries,
   Conformities,
   Conversations,
   ConversationMessages,
