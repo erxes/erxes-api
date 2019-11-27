@@ -1,4 +1,4 @@
-import { ActivityLogs, Conformities, Conversations, EmailDeliveries, InternalNotes, Tasks } from '../../../db/models';
+import { ActivityLogs, Conformities, Conversations, EngageMessages, InternalNotes, Tasks } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 
 interface IListArgs {
@@ -61,7 +61,7 @@ const activityLogQueries = {
         break;
 
       case 'email':
-        collectActivities(await EmailDeliveries.find({ customerId: contentId }).sort({ closeDate: 1 }), 'taskDetail');
+        collectActivities(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
         break;
 
       default:
@@ -73,7 +73,7 @@ const activityLogQueries = {
         collectActivities(await ActivityLogs.find({ contentId: { $in: relatedItemIds } }));
         collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
         collectActivities(await Conversations.find({ customerId: contentId }), 'conversation');
-        collectActivities(await EmailDeliveries.find({ customerId: contentId }), 'email');
+        collectActivities(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
 
         break;
     }
