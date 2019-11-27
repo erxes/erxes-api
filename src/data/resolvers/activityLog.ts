@@ -73,7 +73,7 @@ export default {
       if (destinationStage && oldStage) {
         return {
           destinationStage: destinationStage.name,
-          oldStage: destinationStage.name,
+          oldStage: oldStage.name,
           item,
         };
       }
