@@ -815,27 +815,6 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   return { start, end };
 };
 
-/**
- *  Send conversation to integrations
- */
-
-const sendConversationToIntegrations = (
-  integrationId: string,
-  conversationId: string,
-  requestName: string,
-  doc: IConversationMessageAdd,
-  dataSources: any,
-) => {
-  if (dataSources && dataSources.IntegrationsAPI && requestName) {
-    return dataSources.IntegrationsAPI[requestName]({
-      conversationId,
-      integrationId,
-      content: strip(doc.content),
-      attachments: doc.attachments || [],
-    });
-  }
-};
-
 export default {
   sendEmail,
   validateEmail,
@@ -843,7 +822,6 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
-  sendConversationToIntegrations,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);

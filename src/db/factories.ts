@@ -67,12 +67,14 @@ import { IUserDocument } from './models/definitions/users';
 import PipelineTemplates from './models/PipelineTemplates';
 
 const getUniqueValue = async (collection: any, fieldName: string = 'code', defaultValue?: string) => {
-  let uniqueValue = defaultValue || faker.random.word();
+  const getRandomValue = (type: string) => (type === 'email' ? faker.internet.email() : faker.random.word());
+
+  let uniqueValue = defaultValue || getRandomValue(fieldName);
 
   let duplicated = await collection.findOne({ [fieldName]: uniqueValue });
 
   while (duplicated) {
-    uniqueValue = faker.random.word();
+    uniqueValue = getRandomValue(fieldName);
 
     duplicated = await collection.findOne({ [fieldName]: uniqueValue });
   }

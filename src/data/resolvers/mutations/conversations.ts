@@ -32,6 +32,27 @@ interface IReplyFacebookComment {
 }
 
 /**
+ *  Send conversation to integrations
+ */
+
+const sendConversationToIntegrations = (
+  integrationId: string,
+  conversationId: string,
+  requestName: string,
+  doc: IConversationMessageAdd,
+  dataSources: any,
+) => {
+  if (dataSources && dataSources.IntegrationsAPI && requestName) {
+    return dataSources.IntegrationsAPI[requestName]({
+      conversationId,
+      integrationId,
+      content: strip(doc.content),
+      attachments: doc.attachments || [],
+    });
+  }
+};
+
+/**
  * conversation notrification receiver ids
  */
 export const conversationNotifReceivers = (
@@ -203,7 +224,7 @@ const conversationMutations = {
       requestName = 'replyFacebookPost';
 
       try {
-        const response = await utils.sendConversationToIntegrations(
+        const response = await sendConversationToIntegrations(
           integrationId,
           conversationId,
           requestName,
@@ -235,7 +256,7 @@ const conversationMutations = {
     }
 
     try {
-      const response = await utils.sendConversationToIntegrations(
+      const response = await sendConversationToIntegrations(
         integrationId,
         conversationId,
         requestName,
@@ -275,7 +296,7 @@ const conversationMutations = {
     const conversationId = doc.commentId;
 
     try {
-      const response = await utils.sendConversationToIntegrations(
+      const response = await sendConversationToIntegrations(
         integrationId,
         conversationId,
         requestName,

@@ -161,14 +161,9 @@ describe('Conversation message mutations', () => {
   test('Add conversation message using third party integration', async () => {
     const args = { conversationId: facebookConversation._id, content: 'content' };
 
-    const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
-    spyConversationToIntegrations.mockImplementation(() => 'ok');
-
-    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources: {} });
 
     expect(response).toBeDefined();
-
-    spyConversationToIntegrations.mockRestore();
 
     try {
       await graphqlRequest(addMutation, 'conversationMessageAdd', args);
@@ -228,14 +223,11 @@ describe('Conversation message mutations', () => {
       commentId: comment._id,
     };
 
-    const spyConversationToIntegrations = jest.spyOn(utils, 'sendConversationToIntegrations');
-    spyConversationToIntegrations.mockImplementation(() => 'ok');
-
-    const response = await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+    const response = await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args, {
+      dataSources: {},
+    });
 
     expect(response).toBeDefined();
-
-    spyConversationToIntegrations.mockRestore();
 
     process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
