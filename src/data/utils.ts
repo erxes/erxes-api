@@ -494,6 +494,7 @@ interface ILogParams {
   newData?: string;
   description?: string;
   object: any;
+  extraDesc?: string;
 }
 
 /**

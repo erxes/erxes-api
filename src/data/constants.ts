@@ -280,3 +280,7 @@ export const NOTIFICATION_MODULES = [
     ],
   },
 ];
+
+export const LOG_TYPES = {
+  BRAND: 'brand',
+};

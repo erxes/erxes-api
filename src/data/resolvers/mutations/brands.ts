@@ -18,9 +18,10 @@ const brandMutations = {
     await putCreateLog(
       {
         type: 'brand',
-        newData: JSON.stringify(doc),
+        newData: JSON.stringify({ ...doc, userId: user._id }),
         object: brand,
-        description: `${doc.name} has been created`,
+        description: `"${doc.name}" has been created`,
+        extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
       },
       user,
     );
@@ -41,7 +42,7 @@ const brandMutations = {
           type: 'brand',
           object: brand,
           newData: JSON.stringify(fields),
-          description: `${fields.name} has been edited`,
+          description: `"${fields.name}" has been edited`,
         },
         user,
       );
@@ -62,7 +63,8 @@ const brandMutations = {
         {
           type: 'brand',
           object: brand,
-          description: `${brand.name} has been removed`,
+          description: `"${brand.name}" has been removed`,
+          extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
         },
         user,
       );
