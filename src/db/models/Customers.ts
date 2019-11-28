@@ -19,7 +19,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
   removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
-  mergeCustomers(customerIds: string[], customerFields: ICustomer, user: IUserDocument): Promise<ICustomerDocument>;
+  mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
 }
@@ -272,7 +272,7 @@ export const loadClass = () => {
     /**
      * Merge customers
      */
-    public static async mergeCustomers(customerIds: string[], customerFields: ICustomer, user: IUserDocument) {
+    public static async mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument) {
       // Checking duplicated fields of customer
       await Customers.checkDuplication(customerFields, customerIds);
 
