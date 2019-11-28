@@ -130,7 +130,7 @@ interface IUserFactoryInput {
   registrationTokenExpires?: Date;
 }
 
-export const userFactory = (params: IUserFactoryInput = {}) => {
+export const userFactory = async (params: IUserFactoryInput = {}) => {
   const user = new Users({
     username: params.username || faker.internet.userName(),
     details: {
@@ -148,7 +148,7 @@ export const userFactory = (params: IUserFactoryInput = {}) => {
       github: params.github || faker.random.word(),
       website: params.website || faker.random.word(),
     },
-    email: params.email || faker.internet.email(),
+    email: await getUniqueValue(Users, 'email', params.email),
     password: params.password || '$2a$10$qfBFBmWmUjeRcR.nBBfgDO/BEbxgoai5qQhyjsrDUMiZC6dG7sg1q',
     isOwner: typeof params.isOwner !== 'undefined' ? params.isOwner : true,
     isActive: typeof params.isActive !== 'undefined' ? params.isActive : true,
@@ -1187,9 +1187,9 @@ interface IUserGroupParams {
   isVisible?: boolean;
 }
 
-export const usersGroupFactory = (params: IUserGroupParams = {}) => {
+export const usersGroupFactory = async (params: IUserGroupParams = {}) => {
   const usersGroup = new UsersGroups({
-    name: faker.random.word(),
+    name: await getUniqueValue(UsersGroups, 'name'),
     description: faker.random.word(),
     isVisible: params.isVisible === undefined || params.isVisible === null ? true : params.isVisible,
   });
