@@ -794,6 +794,8 @@ export default {
   sendConversationToIntegrations,
 };
 
+export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
+
 export const validSearchText = (values: string[]) => {
   const value = values.join(' ');
 
