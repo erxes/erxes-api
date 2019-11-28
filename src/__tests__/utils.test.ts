@@ -1,10 +1,9 @@
 // import admin from '__mocks__/firebase-admin';
 import * as faker from 'faker';
-import { sendMobileNotification } from '../data/thirdPartyUtils';
-// import { sendMobileNotification } from '../data/thirdPartyUtils';
-import utils, { checkFile, validSearchText } from '../data/utils';
+import utils, { checkFile, sendMobileNotification, validSearchText } from '../data/utils';
 import { customerFactory, userFactory } from '../db/factories';
 
+import { Customers, Users } from '../db/models';
 import './setup.ts';
 
 describe('test utils', () => {
@@ -88,17 +87,19 @@ describe('Check file', () => {
   });
 
   test('Send mobile notification', async () => {
-    await sendMobileNotification({
+    const response = await sendMobileNotification({
       receivers: [],
       conversationId: 'fakeId',
       body: 'Body',
       title: 'Title',
     });
 
+    expect(response).toBeUndefined();
+
     require('firebase-admin').__setApps(['apps']);
 
-    const user = await userFactory();
-    const customer = await customerFactory({ deviceTokens: ['111'] });
+    const user = await userFactory({ deviceTokens: ['userToken'] });
+    const customer = await customerFactory({ deviceTokens: ['customerToken'] });
 
     await sendMobileNotification({
       receivers: [user._id],
@@ -107,6 +108,14 @@ describe('Check file', () => {
       body: 'Body',
       title: 'Title',
     });
+
+    const userDeviceTokens = await Users.find({ _id: { $in: [user._id] } }).distinct('deviceTokens');
+
+    expect(userDeviceTokens).toContain('userToken');
+
+    const customerDeviceTokens = await Customers.find({ _id: { $in: [customer._id] } }).distinct('deviceTokens');
+
+    expect(customerDeviceTokens).toContain('customerToken');
 
     await sendMobileNotification({
       receivers: [],

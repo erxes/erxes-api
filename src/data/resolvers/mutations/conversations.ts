@@ -14,9 +14,8 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import { sendMobileNotification } from '../../thirdPartyUtils';
 import { IContext } from '../../types';
-import utils from '../../utils';
+import utils, { sendMobileNotification } from '../../utils';
 
 export interface IConversationMessageAdd {
   conversationId: string;

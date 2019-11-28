@@ -6,7 +6,7 @@ module.exports = {
   testRegex: '/__tests__/.*\\.(ts|js)$',
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
-  modulePathIgnorePatterns: ['utils.ts', 'setup.ts', 'coverage/'],
+  modulePathIgnorePatterns: ['utils.ts', 'setup.ts', 'coverage/', '__mocks__/'],
   coverageDirectory: 'src/__tests__/coverage/',
   collectCoverage: true,
   collectCoverageFrom: [
