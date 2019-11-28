@@ -82,8 +82,8 @@ describe('fieldQueries', () => {
     await fieldFactory({ contentType: 'customer', groupId: invisibleGroup._id });
 
     const qry = `
-      query fieldsCombinedByContentType($contentType: String!) {
-        fieldsCombinedByContentType(contentType: $contentType)
+      query fieldsCombinedByContentType($contentType: String!, $source: String) {
+        fieldsCombinedByContentType(contentType: $contentType, source: $source)
       }
     `;
 
@@ -117,17 +117,26 @@ describe('fieldQueries', () => {
     });
     await customerFactory({
       integrationId: integration3._id,
-      messengerData: { customData: { data1: 'data1', data2: 'data2' } },
+      messengerData: { customData: { data1: 'Data 1', data2: 'Data 2' } },
     });
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
       contentType: 'customer',
+      source: 'fromSegments',
     });
 
+    const data1 = responses.find(response => response.name === 'messengerData.customData.data1');
+    const data2 = responses.find(response => response.name === 'messengerData.customData.data2');
+
+    expect(data1).toBeDefined();
+    expect(data2).toBeDefined();
+
+    responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', { contentType: 'customer' });
+
     // getting fields of customers schema
-    const customerFields: any = [];
     responseFields = responses.map(response => response.name);
 
+    const customerFields: any = [];
     Customers.schema.eachPath(path => {
       customerFields.push(path);
     });
