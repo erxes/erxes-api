@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import { graphql } from 'graphql';
 import { makeExecutableSchema } from 'graphql-tools';
 import mongoose = require('mongoose');
-import { EngagesAPI, IntegrationsAPI } from '../data/dataSources';
 import resolvers from '../data/resolvers';
 import typeDefs from '../data/schema';
 import { getEnv } from '../data/utils';
@@ -53,7 +52,7 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context?: any) => {
+export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context: any = {}) => {
   const user = await userFactory({});
 
   const res = {
@@ -62,16 +61,11 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
     },
   };
 
-  const dataSources = {
-    EngagesAPI: new EngagesAPI(),
-    IntegrationsAPI: new IntegrationsAPI(),
-  };
-
   const finalContext: any = {};
 
-  finalContext.dataSources = (context && context.dataSources) || dataSources;
-  finalContext.user = (context && context.user) || user;
-  finalContext.res = (context && context.res) || res;
+  finalContext.dataSources = context.dataSources;
+  finalContext.user = context.user || user;
+  finalContext.res = context.res || res;
   finalContext.commonQuerySelector = {};
   finalContext.userBrandIdsSelector = {};
   finalContext.brandIdSelector = {};

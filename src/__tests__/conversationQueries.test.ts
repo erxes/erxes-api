@@ -11,6 +11,7 @@ import {
 } from '../db/factories';
 import { Brands, Channels, Conversations, Integrations, Tags, Users } from '../db/models';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('conversationQueries', () => {
@@ -263,12 +264,19 @@ describe('conversationQueries', () => {
 
     await conversationMessageFactory({ conversationId: gmailConversation._id, internal: false });
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
       process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
-      await graphqlRequest(qryConversationMessage, 'conversationMessages', {
-        conversationId: nyalsGmailConversation._id,
-      });
+      await graphqlRequest(
+        qryConversationMessage,
+        'conversationMessages',
+        {
+          conversationId: nyalsGmailConversation._id,
+        },
+        { dataSources },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -874,8 +882,15 @@ describe('conversationQueries', () => {
     const facebookIntegration = await integrationFactory({ kind: 'facebook-post' });
     const facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(qryConversationDetail, 'conversationDetail', { _id: facebookConversation._id }, { user });
+      await graphqlRequest(
+        qryConversationDetail,
+        'conversationDetail',
+        { _id: facebookConversation._id },
+        { user, dataSources },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -922,8 +937,10 @@ describe('conversationQueries', () => {
       }
     `;
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(qry, 'facebookComments', { postId: 'postId' });
+      await graphqlRequest(qry, 'facebookComments', { postId: 'postId' }, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }

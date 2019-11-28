@@ -4,6 +4,7 @@ import { brandFactory, channelFactory, integrationFactory, tagsFactory } from '.
 import { Brands, Channels, Integrations } from '../db/models';
 import { TAG_TYPES } from '../db/models/definitions/constants';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('integrationQueries', () => {
@@ -228,10 +229,12 @@ describe('integrationQueries', () => {
       query integrationsFetchApi($path: String!, $params: JSON!) {
         integrationsFetchApi(path: $path, params: $params)
       }
-  `;
+    `;
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
 
     try {
-      await graphqlRequest(qry, 'integrationsFetchApi', { path: '/', params: { type: 'facebook' } });
+      await graphqlRequest(qry, 'integrationsFetchApi', { path: '/', params: { type: 'facebook' } }, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }

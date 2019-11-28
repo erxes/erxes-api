@@ -24,7 +24,6 @@ describe('Cronjob conversation send email', () => {
 
   beforeEach(async () => {
     // Creating test data
-
     _customer = await customerFactory({ primaryEmail: faker.internet.email() });
     _brand = await brandFactory({});
     _user = await userFactory({});

@@ -302,6 +302,8 @@ describe('mutations', () => {
 
     const brand = await brandFactory();
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     const args: any = {
       kind: 'nylas-gmail',
       name: 'Nyals gmail integration',
@@ -309,14 +311,14 @@ describe('mutations', () => {
     };
 
     try {
-      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Error: Integrations api is not running');
     }
 
     args.kind = 'facebook-post';
     try {
-      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Error: Integrations api is not running');
     }
@@ -325,19 +327,15 @@ describe('mutations', () => {
     args.data = { data: 'data' };
 
     try {
-      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args);
+      await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Error: Integrations api is not running');
     }
 
-    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
-
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'createIntegration');
     spy.mockImplementation(() => Promise.resolve());
 
-    const response = await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, {
-      dataSources,
-    });
+    const response = await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
 
     expect(response).toBeDefined();
   });
@@ -365,8 +363,10 @@ describe('mutations', () => {
       kind: 'facebook-post',
     };
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(mutation, 'integrationAddMailAccount', args);
+      await graphqlRequest(mutation, 'integrationAddMailAccount', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -407,8 +407,10 @@ describe('mutations', () => {
       kind: 'facebook-post',
     };
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(mutation, 'integrationAddImapAccount', args);
+      await graphqlRequest(mutation, 'integrationAddImapAccount', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -444,7 +446,7 @@ describe('mutations', () => {
     spy.mockRestore();
 
     try {
-      await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
+      await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' }, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -479,15 +481,17 @@ describe('mutations', () => {
       kind: 'nylas-gmail',
     };
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(mutation, 'integrationSendMail', args);
+      await graphqlRequest(mutation, 'integrationSendMail', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
 
     args.kind = 'facebook-post';
     try {
-      await graphqlRequest(mutation, 'integrationSendMail', args);
+      await graphqlRequest(mutation, 'integrationSendMail', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -509,10 +513,19 @@ describe('mutations', () => {
 
     const facebookPostIntegration = await integrationFactory({ kind: 'facebook-post' });
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(mutation, 'integrationsRemove', {
-        _id: facebookPostIntegration._id,
-      });
+      await graphqlRequest(
+        mutation,
+        'integrationsRemove',
+        {
+          _id: facebookPostIntegration._id,
+        },
+        {
+          dataSources,
+        },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }

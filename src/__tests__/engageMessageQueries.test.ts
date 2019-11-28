@@ -2,6 +2,7 @@ import { graphqlRequest } from '../db/connection';
 import { brandFactory, engageMessageFactory, segmentFactory, tagsFactory, userFactory } from '../db/factories';
 import { Brands, EngageMessages, Segments, Tags, Users } from '../db/models';
 
+import { EngagesAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('engageQueries', () => {
@@ -192,7 +193,9 @@ describe('engageQueries', () => {
       }
     `;
 
-    let response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessage._id });
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
+    let response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessage._id }, { dataSources });
 
     expect(response._id).toBe(engageMessage._id);
 
@@ -200,7 +203,7 @@ describe('engageQueries', () => {
     const messenger = { brandId: brand._id, content: 'Content' };
     const engageMessageWithBrand = await engageMessageFactory({ messenger });
 
-    response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessageWithBrand._id });
+    response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessageWithBrand._id }, { dataSources });
 
     expect(response._id).toBe(engageMessageWithBrand._id);
     expect(response.brand._id).toBe(brand._id);
@@ -309,8 +312,10 @@ describe('engageQueries', () => {
       }
     `;
 
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
     try {
-      await graphqlRequest(qry, 'engageVerifiedEmails');
+      await graphqlRequest(qry, 'engageVerifiedEmails', {}, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Engages api is not running');
     }
