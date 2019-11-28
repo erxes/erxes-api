@@ -82,5 +82,9 @@ export default {
         text: content.text,
       };
     }
+
+    if (action === ACTIVITY_ACTIONS.MERGE) {
+      return Users.find({ _id: { $in: activityLog.content } });
+    }
   },
 };
