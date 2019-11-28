@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import * as schedule from 'node-schedule';
 import * as _ from 'underscore';
-import utils from '../data/utils';
+import utils from '../data/thirdPartyUtils';
 import { Brands, ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
 import { IMessageDocument } from '../db/models/definitions/conversationMessages';
 

@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
 import { sendMessageEmail } from '../cronJobs/conversations';
-import utils from '../data/utils';
+import utils from '../data/thirdPartyUtils';
 import {
   brandFactory,
   conversationFactory,

@@ -2,8 +2,9 @@ import { Channels, Users } from '../../../db/models';
 import { IDetail, IEmailSignature, ILink, IUser } from '../../../db/models/definitions/users';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { sendEmail } from '../../thirdPartyUtils';
 import { IContext } from '../../types';
-import utils, { authCookieOptions, getEnv } from '../../utils';
+import { authCookieOptions, getEnv } from '../../utils';
 
 interface IUsersEdit extends IUser {
   channelIds?: string[];
@@ -14,7 +15,7 @@ const sendInvitationEmail = ({ email, token }: { email: string; token: string })
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
   const confirmationUrl = `${MAIN_APP_DOMAIN}/confirmation?token=${token}`;
 
-  utils.sendEmail({
+  sendEmail({
     toEmails: [email],
     title: 'Team member invitation',
     template: {
@@ -58,7 +59,7 @@ const userMutations = {
 
     const link = `${MAIN_APP_DOMAIN}/reset-password?token=${token}`;
 
-    utils.sendEmail({
+    sendEmail({
       toEmails: [email],
       title: 'Reset password',
       template: {

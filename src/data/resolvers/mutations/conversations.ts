@@ -14,6 +14,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { sendEmail } from '../../thirdPartyUtils';
 import { IContext } from '../../types';
 import utils, { sendMobileNotification } from '../../utils';
 
@@ -188,7 +189,7 @@ const conversationMutations = {
     const email = customer ? customer.primaryEmail : '';
 
     if (kind === KIND_CHOICES.LEAD && email) {
-      utils.sendEmail({
+      sendEmail({
         toEmails: [email],
         title: 'Reply',
         template: {
@@ -350,7 +351,7 @@ const conversationMutations = {
 
         if (notifyCustomer && customer.primaryEmail) {
           // send email to customer
-          utils.sendEmail({
+          sendEmail({
             toEmails: [customer.primaryEmail],
             title: 'Conversation detail',
             template: {

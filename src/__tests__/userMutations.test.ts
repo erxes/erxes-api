@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcryptjs';
 import * as faker from 'faker';
 import * as moment from 'moment';
-import utils from '../data/utils';
+import utils from '../data/thirdPartyUtils';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Brands, Channels, Users } from '../db/models';

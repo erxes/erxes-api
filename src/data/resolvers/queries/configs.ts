@@ -1,7 +1,8 @@
 import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
+import { sendRequest } from '../../thirdPartyUtils';
 import { IContext } from '../../types';
-import { getEnv, sendRequest } from '../../utils';
+import { getEnv } from '../../utils';
 
 const configQueries = {
   /**
