@@ -20,24 +20,18 @@ export const loadClass = () => {
       const message = await Messages.create({
         internal: false,
         ...doc,
-        createdAt: new Date(),
+        createdAt: doc.createdAt || new Date(),
       });
 
       const messageCount = await Messages.find({
         conversationId: message.conversationId,
       }).countDocuments();
 
-      await Conversations.updateOne(
-        { _id: message.conversationId },
-        {
-          $set: {
-            messageCount,
-
-            // updating updatedAt
-            updatedAt: new Date(),
-          },
-        },
-      );
+      await Conversations.updateConversation(message.conversationId, {
+        messageCount,
+        // updating updatedAt
+        updatedAt: new Date(),
+      });
 
       if (message.userId) {
         // add created user to participators
@@ -92,7 +86,7 @@ export const loadClass = () => {
         modifier.firstRespondedDate = new Date();
       }
 
-      await Conversations.updateOne({ _id: doc.conversationId }, { $set: modifier });
+      await Conversations.updateConversation(doc.conversationId, modifier);
 
       return this.createMessage({ ...doc, userId });
     }
