@@ -1,4 +1,15 @@
-import { Brands, Customers, Deals, GrowthHacks, Integrations, Stages, Tasks, Tickets, Users } from '../../db/models';
+import {
+  Brands,
+  Companies,
+  Customers,
+  Deals,
+  GrowthHacks,
+  Integrations,
+  Stages,
+  Tasks,
+  Tickets,
+  Users,
+} from '../../db/models';
 import { IActivityLog } from '../../db/models/definitions/activityLogs';
 import { ACTIVITY_ACTIONS } from '../../db/models/definitions/constants';
 
@@ -84,7 +95,18 @@ export default {
     }
 
     if (action === ACTIVITY_ACTIONS.MERGE) {
-      return Customers.find({ _id: { $in: activityLog.content } });
+      let result = {};
+
+      switch (contentType) {
+        case 'company':
+          result = await Companies.find({ _id: { $in: activityLog.content } });
+          break;
+        case 'customer':
+          result = await Customers.find({ _id: { $in: activityLog.content } });
+          break;
+      }
+
+      return result;
     }
   },
 };
