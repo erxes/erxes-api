@@ -1,6 +1,7 @@
 import { ConversationMessages, Customers, Integrations, Tags, Users } from '../../db/models';
 import { IConversationDocument } from '../../db/models/definitions/conversations';
 import { IContext } from '../types';
+import { debugExternalApi } from '../../debuggers';
 
 export default {
   /**
@@ -58,7 +59,7 @@ export default {
       });
       return response;
     } catch (e) {
-      return null;
+      debugExternalApi(e);
     }
   },
 
