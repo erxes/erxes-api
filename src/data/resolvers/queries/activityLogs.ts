@@ -66,7 +66,7 @@ const activityLogQueries = {
 
       default:
         if (contentType !== 'task') {
-          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'email');
+          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
         }
 
         collectActivities(await ActivityLogs.find({ contentId }));
