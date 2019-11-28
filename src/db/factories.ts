@@ -550,7 +550,7 @@ interface IConversationFactoryInput {
 
 export const conversationFactory = (params: IConversationFactoryInput = {}) => {
   const doc = {
-    content: params.content,
+    content: params.content || faker.random.word(),
     customerId: params.customerId || Random.id(),
     integrationId: params.integrationId || Random.id(),
     status: params.status || CONVERSATION_STATUSES.NEW,
