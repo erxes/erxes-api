@@ -185,9 +185,10 @@ export const queries = `
     limit: Int
   ): [ConversationMessage]
 
-  facebookComments(
+  converstationFacebookComments(
     postId: String!
     commentId: String
+    senderId: String
     skip: Int
     limit: Int
   ): [FacebookComment]
