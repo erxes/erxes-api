@@ -2,6 +2,7 @@ import { graphqlRequest } from '../db/connection';
 import { configFactory } from '../db/factories';
 
 import './setup.ts';
+import { EngagesAPI } from '../data/dataSources';
 
 describe('configQueries', () => {
   test('config detail', async () => {
@@ -86,8 +87,10 @@ describe('configQueries', () => {
       }
     `;
 
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
     try {
-      await graphqlRequest(qry, 'engagesConfigDetail');
+      await graphqlRequest(qry, 'engagesConfigDetail', {}, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Engages api is not running');
     }

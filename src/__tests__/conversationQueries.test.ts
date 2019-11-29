@@ -284,9 +284,14 @@ describe('conversationQueries', () => {
     try {
       process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
 
-      await graphqlRequest(qryConversationMessage, 'conversationMessages', {
-        conversationId: gmailConversation._id,
-      });
+      await graphqlRequest(
+        qryConversationMessage,
+        'conversationMessages',
+        {
+          conversationId: gmailConversation._id,
+        },
+        { dataSources },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }

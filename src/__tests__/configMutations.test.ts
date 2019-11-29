@@ -1,5 +1,6 @@
 import { graphqlRequest } from '../db/connection';
 
+import { EngagesAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('Test configs mutations', () => {
@@ -45,8 +46,10 @@ describe('Test configs mutations', () => {
       }
     `;
 
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
     try {
-      await graphqlRequest(mutation, 'engagesConfigSave');
+      await graphqlRequest(mutation, 'engagesConfigSave', {}, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Engages api is not running');
     }

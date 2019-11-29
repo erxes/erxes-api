@@ -18,10 +18,6 @@ beforeAll(async done => {
   done();
 });
 
-afterAll(async done => {
-  await db.connection.dropDatabase();
-
-  await db.connection.close();
-
-  done();
+afterAll(() => {
+  return db.connection.dropDatabase();
 });
