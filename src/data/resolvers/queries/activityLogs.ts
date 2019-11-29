@@ -25,6 +25,7 @@ const activityLogQueries = {
 
           if (type && type !== 'taskDetail') {
             result.contentType = type;
+            result.contentId = contentId;
           }
 
           if (type === 'taskDetail') {
@@ -96,6 +97,8 @@ const activityLogQueries = {
     activities.sort((a, b) => {
       return b.createdAt - a.createdAt;
     });
+
+    console.log(activities);
 
     return activities;
   },

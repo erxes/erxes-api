@@ -127,7 +127,7 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
   EngageMessages.setCustomerIds(engageMessage._id, customers);
 
   if (engageMessage.method === METHODS.EMAIL) {
-    const customerInfos = customers.map(async customer => {
+    const customerInfos = customers.map(customer => {
       let customerName = customer.firstName || customer.lastName || 'Customer';
 
       if (customer.firstName && customer.lastName) {
