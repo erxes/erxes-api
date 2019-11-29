@@ -326,6 +326,7 @@ export const sendEmail = async ({
   const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
   const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: '' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -342,6 +343,9 @@ export const sendEmail = async ({
   }
 
   const { isCustom, data, name } = template;
+
+  // for unsubscribe url
+  data.domain = DOMAIN;
 
   // generate email content by given template
   let html = await applyTemplate(data, name || '');
