@@ -39,13 +39,23 @@ export const checkFile = async file => {
     return 'Invalid file';
   }
 
+  const defaultMimeTypes = `
+    image/png,
+    image/jpeg,
+    image/jpg,
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,
+    image/gif,
+  `;
+
   const UPLOAD_FILE_TYPES = getEnv({
     name: 'UPLOAD_FILE_TYPES',
-    defaultValue:
-      'image/png,image/jpeg,image/jpg,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,',
+    defaultValue: defaultMimeTypes,
   });
 
   const { mime } = ft;
+
+  console.log(mime, 'mimi');
 
   if (!UPLOAD_FILE_TYPES.split(',').includes(mime)) {
     return 'Invalid file';
