@@ -55,8 +55,6 @@ export const checkFile = async file => {
 
   const { mime } = ft;
 
-  console.log(mime, 'mimi');
-
   if (!UPLOAD_FILE_TYPES.split(',').includes(mime)) {
     return 'Invalid file';
   }
