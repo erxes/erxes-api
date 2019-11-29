@@ -2,9 +2,11 @@ import { Channels } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { LOG_TYPES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
+import { gatherUsernames, LogDesc } from './logUtils';
 import { checkUserIds } from './notifications';
 
 interface IChannelsEdit extends IChannel {
@@ -50,12 +52,22 @@ const channelMutations = {
 
     await sendChannelNotifications(channel, 'invited', user);
 
+    // for showing usernames instead of user id
+    let extraDesc: LogDesc[] = [];
+
+    if (doc.memberIds) {
+      extraDesc = await gatherUsernames(doc.memberIds, 'memberIds');
+    }
+
+    extraDesc.push({ userId: user._id, name: user.username });
+
     await putCreateLog(
       {
-        type: 'channel',
-        newData: JSON.stringify(doc),
+        type: LOG_TYPES.CHANNEL,
+        newData: JSON.stringify({ ...doc, userId: user._id }),
         object: channel,
-        description: `${doc.name} has been created`,
+        description: `"${doc.name}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -82,12 +94,17 @@ const channelMutations = {
 
     const updated = await Channels.updateChannel(_id, doc);
 
+    const extraDesc = await gatherUsernames(memberIds, 'memberIds');
+
+    extraDesc.push({ userId: user._id, name: user.username });
+
     await putUpdateLog(
       {
-        type: 'channel',
+        type: LOG_TYPES.CHANNEL,
         object: channel,
         newData: JSON.stringify(doc),
         description: `${channel.name} has been updated`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -113,11 +130,16 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
+    const extraDesc = await gatherUsernames(channel.memberIds, 'memberIds');
+
+    extraDesc.push({ userId: user._id, name: user.username });
+
     await putDeleteLog(
       {
-        type: 'channel',
+        type: LOG_TYPES.CHANNEL,
         object: channel,
         description: `${channel.name} has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
