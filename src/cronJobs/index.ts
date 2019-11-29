@@ -4,7 +4,6 @@ import * as express from 'express';
 import { connect } from '../db/connection';
 import { debugCrons, debugRequest, debugResponse } from '../debuggers';
 
-import './activityLogs';
 import './conversations';
 import './deals';
 import { createSchedule, updateOrRemoveSchedule } from './engages';

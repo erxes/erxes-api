@@ -25,11 +25,12 @@ const activityLogQueries = {
 
           if (type && type !== 'taskDetail') {
             result.contentType = type;
+            result.contentId = contentId;
           }
 
           if (type === 'taskDetail') {
             result.contentType = type;
-            result.createdAt = item.closeDate;
+            result.createdAt = item.closeDate || item.createdAt;
           }
 
           activities.push(result);

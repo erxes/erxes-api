@@ -86,41 +86,6 @@ export const loadClass = () => {
         createdBy: coc.ownerId || coc.integrationId,
       });
     }
-
-    /**
-     * Create a customer or company segment log
-     */
-    // public static async createSegmentLog(segment: ISegmentDocument, customer?: ICustomerDocument) {
-    //   if (!customer) {
-    //     throw new Error('customer must be supplied');
-    //   }
-
-    //   const foundSegment = await ActivityLogs.findOne({
-    //     'activity.type': ACTIVITY_TYPES.SEGMENT,
-    //     'activity.action': ACTIVITY_ACTIONS.CREATE,
-    //     'activity.id': segment._id,
-    //     'contentType.type': segment.contentType,
-    //     'contentType.id': customer._id,
-    //   });
-
-    //   if (foundSegment) {
-    //     // since this type of activity log already exists, new one won't be created
-    //     return foundSegment;
-    //   }
-
-    //   return this.createDoc({
-    //     activity: {
-    //       type: ACTIVITY_TYPES.SEGMENT,
-    //       action: ACTIVITY_ACTIONS.CREATE,
-    //       content: segment.name,
-    //       id: segment._id,
-    //     },
-    //     contentType: {
-    //       type: segment.contentType,
-    //       id: customer._id,
-    //     },
-    //   });
-    // }
   }
 
   activityLogSchema.loadClass(ActivityLog);
