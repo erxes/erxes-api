@@ -173,6 +173,8 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.findOne({ _id });
     const removed = await InternalNotes.removeInternalNote(_id);
 
+    graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
+
     if (internalNote) {
       await putDeleteLog(
         {

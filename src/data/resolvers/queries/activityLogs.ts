@@ -30,7 +30,7 @@ const activityLogQueries = {
 
           if (type === 'taskDetail') {
             result.contentType = type;
-            result.createdAt = item.closeDate;
+            result.createdAt = item.closeDate || item.createdAt;
           }
 
           activities.push(result);
@@ -97,8 +97,6 @@ const activityLogQueries = {
     activities.sort((a, b) => {
       return b.createdAt - a.createdAt;
     });
-
-    console.log(activities);
 
     return activities;
   },
