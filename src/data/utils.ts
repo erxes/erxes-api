@@ -402,7 +402,7 @@ export const sendNotification = async (doc: ISendNotification) => {
   const receiverIds = [...new Set(receivers)];
 
   // collecting emails
-  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true });
+  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true, doNotDisturb: 'No' });
 
   // collect recipient emails
   const toEmails: string[] = [];
