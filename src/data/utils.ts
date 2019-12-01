@@ -807,9 +807,8 @@ export const getToday = (date: Date): Date => {
 export const getNextMonth = (date: Date): { start: number; end: number } => {
   const today = getToday(date);
 
-  const month = (new Date().getMonth() + 1) % 12;
-  const start = today.setMonth(month, 1);
-  const end = today.setMonth(month + 1, 0);
+  const start = today.setMonth(today.getMonth() + 1, 1);
+  const end = today.setMonth(today.getMonth() + 1, 0);
 
   return { start, end };
 };
