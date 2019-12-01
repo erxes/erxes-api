@@ -229,7 +229,7 @@ describe('Conversation message mutations', () => {
 
     expect(response).toBeDefined();
 
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     try {
       await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);

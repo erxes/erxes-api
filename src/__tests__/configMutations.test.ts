@@ -34,7 +34,7 @@ describe('Test configs mutations', () => {
   });
 
   test('Insert config', async () => {
-    process.env.ENGAGES_API_DOMAIN = 'http://localhost';
+    process.env.ENGAGES_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation engagesConfigSave($accessKeyId: String, $secretAccessKey: String, $region: String) {

@@ -16,7 +16,7 @@ export default class IntegrationsAPI extends RESTDataSource {
     const { response } = error;
     const { body } = response || { body: e.message };
 
-    if (e.code === 'ECONNREFUSED') {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
       throw new Error('Integrations api is not running');
     }
 

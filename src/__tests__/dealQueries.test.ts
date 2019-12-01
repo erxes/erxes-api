@@ -405,7 +405,7 @@ describe('dealQueries', () => {
     const filter = { pipelineId: pipeline._id };
 
     const qry = `
-      query dealsTotalAmounts($pipelineId: String!) {
+      query dealsTotalAmounts($pipelineId: String) {
         dealsTotalAmounts(pipelineId: $pipelineId) {
           _id
           dealCount

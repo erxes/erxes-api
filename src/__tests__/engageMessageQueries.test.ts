@@ -304,7 +304,7 @@ describe('engageQueries', () => {
   });
 
   test('Get verified emails', async () => {
-    process.env.ENGAGES_API_DOMAIN = 'http://localhost';
+    process.env.ENGAGES_API_DOMAIN = 'http://fake';
 
     const qry = `
       query engageVerifiedEmails {

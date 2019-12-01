@@ -223,7 +223,7 @@ describe('integrationQueries', () => {
   });
 
   test('Fetch integration api', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const qry = `
       query integrationsFetchApi($path: String!, $params: JSON!) {

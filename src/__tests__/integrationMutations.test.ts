@@ -275,7 +275,7 @@ describe('mutations', () => {
   });
 
   test('Create external integration', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation integrationsCreateExternalIntegration(
@@ -341,7 +341,7 @@ describe('mutations', () => {
   });
 
   test('Add mail account', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation integrationAddMailAccount(
@@ -373,7 +373,7 @@ describe('mutations', () => {
   });
 
   test('Add imap account', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation integrationAddImapAccount(
@@ -417,7 +417,7 @@ describe('mutations', () => {
   });
 
   test('Remove account', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation integrationsRemoveAccount($_id: String!) {
@@ -453,7 +453,7 @@ describe('mutations', () => {
   });
 
   test('Send mail', async () => {
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://localhost';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
     const mutation = `
       mutation integrationSendMail(
