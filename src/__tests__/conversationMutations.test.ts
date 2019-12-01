@@ -10,6 +10,7 @@ import {
 } from '../db/factories';
 import { Conversations, Customers, Integrations, Users } from '../db/models';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import { CONVERSATION_STATUSES, KIND_CHOICES } from '../db/models/definitions/constants';
 import { IConversationDocument } from '../db/models/definitions/conversations';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -165,8 +166,10 @@ describe('Conversation message mutations', () => {
 
     expect(response).toBeDefined();
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
     try {
-      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -174,7 +177,7 @@ describe('Conversation message mutations', () => {
     args.conversationId = facebookMessengerConversation._id;
 
     try {
-      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -182,7 +185,7 @@ describe('Conversation message mutations', () => {
     args.conversationId = chatfuelConversation._id;
 
     try {
-      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -190,7 +193,7 @@ describe('Conversation message mutations', () => {
     args.conversationId = twitterConversation._id;
 
     try {
-      await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
@@ -231,8 +234,9 @@ describe('Conversation message mutations', () => {
 
     process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
 
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
     try {
-      await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args);
+      await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
