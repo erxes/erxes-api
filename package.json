@@ -24,7 +24,7 @@
     "lint": "tslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "precommit": "lint-staged",
-    "test": "jest -w=10 --forceExit --logHeapUsage && ts-node ./src/commands/aftertest.ts",
+    "test": "jest --maxWorkers=4 --forceExit --logHeapUsage && ts-node ./src/commands/aftertest.ts",
     "generateVersion": "ts-node ./src/commands/generateVersion.ts",
     "loadFakeData": "mongorestore --db erxes ./fakeData",
     "loadPermission": "mongorestore --db erxes ./permissionData",

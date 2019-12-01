@@ -12,7 +12,7 @@ beforeAll(async done => {
         .toString()
         .replace(/\./g, '')}`,
     ),
-    3,
+    10,
   );
 
   done();
