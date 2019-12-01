@@ -213,7 +213,7 @@ export const sendViaMessenger = async (
 /*
  * Handle engage unsubscribe request
  */
-export const handleEngageUnSubscribe = async (query: { cid: string; uid: string }) => {
+export const handleUnsubscription = async (query: { cid: string; uid: string }) => {
   await Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });
 
   await Users.updateOne({ _id: query.uid }, { $set: { doNotDisturb: 'Yes' } });
