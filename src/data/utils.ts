@@ -312,7 +312,7 @@ export const createTransporter = ({ ses }) => {
  * Send email
  */
 export const sendEmail = async ({
-  toEmails,
+  toEmails = [],
   fromEmail,
   title,
   template = {},
@@ -347,14 +347,22 @@ export const sendEmail = async ({
   // for unsubscribe url
   data.domain = DOMAIN;
 
-  // generate email content by given template
-  let html = await applyTemplate(data, name || '');
+  for (const toEmail of toEmails) {
+    if (data.emailMaps) {
+      const mappedItem = data.emailMaps.find(item => item.email === toEmail);
 
-  if (!isCustom) {
-    html = await applyTemplate({ content: html }, 'base');
-  }
+      if (mappedItem && mappedItem.uid) {
+        data.uid = mappedItem.uid;
+      }
+    }
 
-  return (toEmails || []).map(toEmail => {
+    // generate email content by given template
+    let html = await applyTemplate(data, name || '');
+
+    if (!isCustom) {
+      html = await applyTemplate({ content: html }, 'base');
+    }
+
     const mailOptions = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
@@ -369,7 +377,7 @@ export const sendEmail = async ({
       debugEmail(error);
       debugEmail(info);
     });
-  });
+  }
 };
 
 /**
@@ -406,10 +414,13 @@ export const sendNotification = async (doc: ISendNotification) => {
 
   // collect recipient emails
   const toEmails: string[] = [];
+  const emailMaps: Array<{ email: string; uid: string }> = [];
 
   for (const recipient of recipients) {
     if (recipient.getNotificationByEmail && recipient.email) {
       toEmails.push(recipient.email);
+
+      emailMaps.push({ email: recipient.email, uid: recipient._id });
     }
   }
 
@@ -435,7 +446,7 @@ export const sendNotification = async (doc: ISendNotification) => {
         throw e;
       }
     }
-  }
+  } // end receiverIds loop
 
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
@@ -450,6 +461,7 @@ export const sendNotification = async (doc: ISendNotification) => {
         notification: { ...doc, link },
         action,
         userName: getUserDetail(createdUser),
+        emailMaps,
       },
     },
   });

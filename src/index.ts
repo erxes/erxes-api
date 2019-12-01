@@ -242,11 +242,7 @@ app.post('/import-file', async (req: any, res, next) => {
 
 // engage unsubscribe
 app.get('/unsubscribe', async (req: any, res) => {
-  const { query, user } = req;
-
-  const userId = user && user._id ? user._id : '';
-
-  const unsubscribed = await handleUnsubscription({ ...query, uid: userId });
+  const unsubscribed = await handleUnsubscription(req.query);
 
   if (unsubscribed) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
