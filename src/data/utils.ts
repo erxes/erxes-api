@@ -457,12 +457,10 @@ export const sendNotification = async (doc: ISendNotification) => {
 
   // for controlling email template data filling
   const modifier = (data: any, email: string) => {
-    if (data && email) {
-      const user = recipients.find(item => item.email === email);
+    const user = recipients.find(item => item.email === email);
 
-      if (user) {
-        data.uid = user._id;
-      }
+    if (user) {
+      data.uid = user._id;
     }
   };
 
