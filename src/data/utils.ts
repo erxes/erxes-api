@@ -13,7 +13,6 @@ import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
-import { IConversationMessageAdd } from './resolvers/mutations/conversations';
 
 /*
  * Check that given file is not harmful
