@@ -330,7 +330,7 @@ export const sendEmail = async ({
   fromEmail?: string;
   title?: string;
   template?: { name?: string; data?: any; isCustom?: boolean };
-  modifier?: (data?: any, email?: string) => void;
+  modifier?: (data: any, email: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
@@ -420,13 +420,10 @@ export const sendNotification = async (doc: ISendNotification) => {
 
   // collect recipient emails
   const toEmails: string[] = [];
-  const emailMaps: Array<{ email: string; uid: string }> = [];
 
   for (const recipient of recipients) {
     if (recipient.getNotificationByEmail && recipient.email) {
       toEmails.push(recipient.email);
-
-      emailMaps.push({ email: recipient.email, uid: recipient._id });
     }
   }
 
@@ -459,12 +456,12 @@ export const sendNotification = async (doc: ISendNotification) => {
   link = `${MAIN_APP_DOMAIN}${link}`;
 
   // for controlling email template data filling
-  const modifier = (data?: any, email?: string) => {
+  const modifier = (data: any, email: string) => {
     if (data && email) {
-      const mappedItem = emailMaps.find(item => item.email === email);
+      const user = recipients.find(item => item.email === email);
 
-      if (mappedItem) {
-        data.uid = mappedItem.uid;
+      if (user) {
+        data.uid = user._id;
       }
     }
   };
