@@ -826,8 +826,13 @@ export const getToday = (date: Date): Date => {
 
 export const getNextMonth = (date: Date): { start: number; end: number } => {
   const today = getToday(date);
+  const currentMonth = new Date().getMonth();
 
-  const month = (new Date().getMonth() + 1) % 12;
+  if (currentMonth === 11) {
+    today.setFullYear(today.getFullYear() + 1);
+  }
+
+  const month = (currentMonth + 1) % 12;
   const start = today.setMonth(month, 1);
   const end = today.setMonth(month + 1, 0);
 
