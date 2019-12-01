@@ -18,15 +18,14 @@ export default {
     const user = await Users.findOne({ _id: activityLog.createdBy });
 
     if (user) {
-      return user;
+      return { type: 'user', content: user };
     }
 
     const integration = await Integrations.findOne({ _id: activityLog.createdBy });
 
     if (integration) {
       const brand = await Brands.findOne({ _id: integration.brandId });
-
-      return brand;
+      return { type: 'brand', content: brand };
     }
 
     return;

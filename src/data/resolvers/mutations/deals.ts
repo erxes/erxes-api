@@ -1,4 +1,4 @@
-import { Checklists, Conformities, Deals } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
@@ -162,6 +162,7 @@ const dealMutations = {
 
     await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
     await Checklists.removeChecklists('deal', deal._id);
+    await ActivityLogs.removeActivityLog(deal._id);
 
     return deal.remove();
   },

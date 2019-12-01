@@ -6,7 +6,8 @@ import { IItemCommonFieldsDocument } from './definitions/boards';
 import { ACTIVITY_ACTIONS } from './definitions/constants';
 
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
-  addActivityLog(doc: IActivityLogInput): Promise<IActivityLogDocument>;
+  addActivityLog(doc: IActivityLogInput): void;
+  removeActivityLog(contentId: string): Promise<IActivityLogDocument>;
   createLogFromWidget(type: string, payload): Promise<IActivityLogDocument>;
   createCocLog({ coc, contentType }: { coc: any; contentType: string }): Promise<IActivityLogDocument>;
   createBoardItemLog({
@@ -32,6 +33,10 @@ export const loadClass = () => {
       graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
       return activity;
+    }
+
+    public static async removeActivityLog(contentId: string) {
+      return ActivityLogs.deleteMany({ contentId });
     }
 
     public static createBoardItemLog({ item, contentType }: { item: IItemCommonFieldsDocument; contentType: string }) {

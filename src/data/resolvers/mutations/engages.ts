@@ -1,6 +1,7 @@
 import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { debugExternalApi } from '../../../debuggers';
+import { graphqlPubsub } from '../../../pubsub';
 import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -19,6 +20,8 @@ const engageMutations = {
     const engageMessage = await EngageMessages.createEngageMessage(docModifier(doc));
 
     await send(engageMessage);
+
+    graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
     if (engageMessage) {
       await putCreateLog(

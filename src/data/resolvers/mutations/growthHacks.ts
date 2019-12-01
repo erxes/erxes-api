@@ -1,4 +1,4 @@
-import { GrowthHacks } from '../../../db/models';
+import { ActivityLogs, GrowthHacks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -165,6 +165,8 @@ const growthHackMutations = {
       },
       user,
     );
+
+    await ActivityLogs.removeActivityLog(growthHack._id);
 
     return removed;
   },
