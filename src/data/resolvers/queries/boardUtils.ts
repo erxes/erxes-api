@@ -231,14 +231,13 @@ interface IDate {
 
 const dateSelector = (date: IDate) => {
   const { year, month } = date;
-  const currentDate = new Date();
 
-  const start = currentDate.setFullYear(year, month, 1);
-  const end = currentDate.setFullYear(year, month + 1, 0);
+  const start = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month + 1, 0, 0, 0, 0));
 
   return {
-    $gte: new Date(start),
-    $lte: new Date(end),
+    $gte: start,
+    $lte: end,
   };
 };
 
