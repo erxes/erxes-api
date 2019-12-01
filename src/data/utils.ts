@@ -324,11 +324,13 @@ export const sendEmail = async ({
   fromEmail,
   title,
   template = {},
+  modifier,
 }: {
   toEmails?: string[];
   fromEmail?: string;
   title?: string;
   template?: { name?: string; data?: any; isCustom?: boolean };
+  modifier?: (data?: any, email?: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
@@ -356,12 +358,8 @@ export const sendEmail = async ({
   data.domain = DOMAIN;
 
   for (const toEmail of toEmails) {
-    if (data.emailMaps) {
-      const mappedItem = data.emailMaps.find(item => item.email === toEmail);
-
-      if (mappedItem && mappedItem.uid) {
-        data.uid = mappedItem.uid;
-      }
+    if (modifier) {
+      modifier(data, toEmail);
     }
 
     // generate email content by given template
@@ -418,7 +416,7 @@ export const sendNotification = async (doc: ISendNotification) => {
   const receiverIds = [...new Set(receivers)];
 
   // collecting emails
-  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true, doNotDisturb: 'No' });
+  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true, doNotDisturb: { $ne: 'Yes' } });
 
   // collect recipient emails
   const toEmails: string[] = [];
@@ -460,6 +458,17 @@ export const sendNotification = async (doc: ISendNotification) => {
 
   link = `${MAIN_APP_DOMAIN}${link}`;
 
+  // for controlling email template data filling
+  const modifier = (data?: any, email?: string) => {
+    if (data && email) {
+      const mappedItem = emailMaps.find(item => item.email === email);
+
+      if (mappedItem) {
+        data.uid = mappedItem.uid;
+      }
+    }
+  };
+
   await sendEmail({
     toEmails,
     title: 'Notification',
@@ -469,9 +478,9 @@ export const sendNotification = async (doc: ISendNotification) => {
         notification: { ...doc, link },
         action,
         userName: getUserDetail(createdUser),
-        emailMaps,
       },
     },
+    modifier,
   });
 
   return true;
@@ -871,4 +880,21 @@ export const regexSearchText = (searchValue: string) => {
   }
 
   return { $and: result };
+};
+
+/*
+ * Handle engage unsubscribe request
+ */
+export const handleUnsubscription = async (query: { cid: string; uid: string }) => {
+  const { cid, uid } = query;
+
+  if (cid) {
+    await Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  if (uid) {
+    await Users.updateOne({ _id: query.uid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  return true;
 };
