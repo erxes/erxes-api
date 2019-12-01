@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, integrationFactory, tagsFactory } from '../db/factories';
-import { Brands, Channels, Integrations } from '../db/models';
+import { Brands, Channels, Integrations, Tags } from '../db/models';
 import { TAG_TYPES } from '../db/models/definitions/constants';
 
 import { IntegrationsAPI } from '../data/dataSources';
@@ -51,6 +51,7 @@ describe('integrationQueries', () => {
     await Integrations.deleteMany({});
     await Channels.deleteMany({});
     await Brands.deleteMany({});
+    await Tags.deleteMany({});
   });
 
   test('Integrations', async () => {
@@ -220,6 +221,19 @@ describe('integrationQueries', () => {
     const response = await graphqlRequest(qryCount, 'integrationsTotalCount', {});
 
     expect(response.byBrand[brand._id]).toBe(2);
+  });
+
+  test('Get total count of integrations by tag', async () => {
+    await integrationFactory({});
+    await integrationFactory({});
+    await integrationFactory({});
+
+    const tagObj = await tagsFactory({ type: TAG_TYPES.INTEGRATION });
+    await integrationFactory({ tagIds: [tagObj._id] });
+
+    const responses = await graphqlRequest(qryCount, 'integrationsTotalCount');
+
+    expect(responses.byTag[tagObj._id]).toBe(1);
   });
 
   test('Fetch integration api', async () => {
