@@ -3,6 +3,7 @@ import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import { FIELDS_GROUPS_CONTENT_TYPES } from '../data/constants';
 import {
+  ActivityLogs,
   Boards,
   Brands,
   Channels,
@@ -77,33 +78,25 @@ const getUniqueValue = async (collection: any, fieldName: string = 'code', defau
   return uniqueValue;
 };
 
-// interface IActivityLogFactoryInput {
-//   performer?: IActionPerformer;
-//   performedBy?: IActionPerformer;
-//   activity?: IActivity;
-//   contentType?: IContentType;
-// }
+interface IActivityLogFactoryInput {
+  contentType?: string;
+  contentId?: string;
+  action?: string;
+  content?: any;
+  createdBy?: string;
+}
 
-// export const activityLogFactory = (params: IActivityLogFactoryInput) => {
-//   const doc = {
-//     activity: {
-//       type: ACTIVITY_TYPES.INTERNAL_NOTE,
-//       action: ACTIVITY_ACTIONS.CREATE,
-//       id: faker.random.uuid(),
-//       content: faker.random.word(),
-//     },
-//     performer: {
-//       type: ACTIVITY_PERFORMER_TYPES.USER,
-//       id: faker.random.uuid(),
-//     },
-//     contentType: {
-//       type: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-//       id: faker.random.uuid(),
-//     },
-//   };
+export const activityLogFactory = async (params: IActivityLogFactoryInput = {}) => {
+  const activity = new ActivityLogs({
+    contentType: params.contentType || 'customer',
+    action: params.contentType || 'create',
+    contentId: params.contentId || faker.random.uuid(),
+    content: params.content || 'content',
+    createdBy: params.createdBy || faker.random.uuid(),
+  });
 
-//   return ActivityLogs.createDoc({ ...doc, ...params });
-// };
+  return activity.save();
+};
 
 interface IUserFactoryInput {
   username?: string;

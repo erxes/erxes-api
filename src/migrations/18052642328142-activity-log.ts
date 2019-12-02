@@ -27,6 +27,7 @@ module.exports.up = async () => {
           content: content.split(','),
           action,
           createdBy: performedBy.id,
+          createdAt: activity.createdAt,
         });
 
         await ActivityLogs.deleteOne({ _id: activity._id });
@@ -38,6 +39,7 @@ module.exports.up = async () => {
           contentType: type,
           action,
           createdBy: performedBy.id,
+          createdAt: activity.createdAt,
         });
 
         await ActivityLogs.deleteOne({ _id: activity._id });
