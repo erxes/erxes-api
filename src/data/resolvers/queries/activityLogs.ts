@@ -86,9 +86,7 @@ const activityLogQueries = {
               customerId: contentId,
             });
 
-            if (conversationIds) {
-              collectActivities(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
-            }
+            collectActivities(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
           } catch (e) {
             debugExternalApi(e);
           }
