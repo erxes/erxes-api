@@ -136,15 +136,6 @@ const conversationQueries = {
       return getFirst ? messages : messages.reverse();
     }
 
-    if (getFirst) {
-      messages = await ConversationMessages.find(query)
-        .sort({ createdAt: 1 })
-        .skip(skip || 0)
-        .limit(limit);
-
-      return messages.reverse();
-    }
-
     messages = await ConversationMessages.find(query)
       .sort({ createdAt: -1 })
       .limit(50);
