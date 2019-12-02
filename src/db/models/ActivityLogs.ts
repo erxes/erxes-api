@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { graphqlPubsub } from '../../pubsub';
 import { activityLogSchema, IActivityLogDocument, IActivityLogInput } from './definitions/activityLogs';
 
 import { IItemCommonFieldsDocument } from './definitions/boards';
@@ -30,15 +29,11 @@ export const loadClass = () => {
     public static async addActivityLog(doc: IActivityLogInput) {
       const activity = await ActivityLogs.create(doc);
 
-      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
-
       return activity;
     }
 
     public static async removeActivityLog(contentId: IActivityLogInput) {
       await ActivityLogs.deleteMany({ contentId });
-
-      return graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
     }
 
     public static createBoardItemLog({ item, contentType }: { item: IItemCommonFieldsDocument; contentType: string }) {
@@ -56,8 +51,6 @@ export const loadClass = () => {
       userId: string,
       content: object,
     ) {
-      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
-
       return ActivityLogs.addActivityLog({
         contentType,
         contentId: item._id,
