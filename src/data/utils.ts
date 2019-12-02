@@ -49,14 +49,11 @@ export const checkFile = async file => {
     'image/gif',
   ];
 
-  const UPLOAD_FILE_TYPES = getEnv({
-    name: 'UPLOAD_FILE_TYPES',
-    defaultValue: defaultMimeTypes.toString(),
-  });
+  const UPLOAD_FILE_TYPES = getEnv({ name: 'UPLOAD_FILE_TYPES' });
 
   const { mime } = ft;
 
-  if (!(UPLOAD_FILE_TYPES.split(',').includes(mime) || defaultMimeTypes.includes(mime))) {
+  if (!((UPLOAD_FILE_TYPES && UPLOAD_FILE_TYPES.split(',')) || defaultMimeTypes).includes(mime)) {
     return 'Invalid configured file type';
   }
 
