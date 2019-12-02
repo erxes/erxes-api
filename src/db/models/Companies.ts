@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validSearchText } from '../../data/utils';
-import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Fields, InternalNotes, Tags } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
 import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
@@ -145,6 +145,13 @@ export const loadClass = () => {
      */
     public static async removeCompanies(companyIds: string[]) {
       // Removing modules associated with company
+      let tagIds: string[] = [];
+      await Tags.tagObject({
+        tagIds: tagIds,
+        objectIds: companyIds,
+        collection: Companies,
+        tagType: 'company',
+      });
       await InternalNotes.removeCompaniesInternalNotes(companyIds);
 
       for (const companyId of companyIds) {

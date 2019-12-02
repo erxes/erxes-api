@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail, validSearchText } from '../../data/utils';
-import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
+import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes, Tags } from './';
 import { STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
@@ -259,6 +259,13 @@ export const loadClass = () => {
      */
     public static async removeCustomers(customerIds: string[]) {
       // Removing every modules that associated with customer
+      let tagIds: string[] = [];
+      await Tags.tagObject({
+        tagIds: tagIds,
+        objectIds: customerIds,
+        collection: Customers,
+        tagType: 'customer',
+      });
       await Conversations.removeCustomersConversations(customerIds);
       await EngageMessages.removeCustomersEngages(customerIds);
       await InternalNotes.removeCustomersInternalNotes(customerIds);
