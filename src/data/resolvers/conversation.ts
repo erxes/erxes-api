@@ -48,7 +48,7 @@ export default {
   async facebookPost(conv: IConversationDocument, _args, { dataSources }: IContext) {
     const integration = await Integrations.findOne({ _id: conv.integrationId }).lean();
 
-    if (integration.kind !== 'facebook-post') {
+    if (integration && integration.kind !== 'facebook-post') {
       return null;
     }
 
@@ -57,6 +57,7 @@ export default {
         erxesApiId: conv._id,
         integrationId: integration._id,
       });
+
       return response;
     } catch (e) {
       debugExternalApi(e);

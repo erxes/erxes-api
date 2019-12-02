@@ -85,7 +85,10 @@ const activityLogQueries = {
             conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
               customerId: contentId,
             });
-            collectActivities(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
+
+            if (conversationIds) {
+              collectActivities(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
+            }
           } catch (e) {
             debugExternalApi(e);
           }
