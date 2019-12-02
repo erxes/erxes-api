@@ -210,9 +210,3 @@ const sendViaMessenger = async (
     });
   }
 };
-
-/*
- * Handle engage unsubscribe request
- */
-export const handleEngageUnSubscribe = (query: { cid: string }) =>
-  Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });
