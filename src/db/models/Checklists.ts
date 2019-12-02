@@ -45,7 +45,8 @@ export const loadClass = () => {
 
     public static async removeChecklists(contentType: string, contentTypeId: string) {
       const checklists = await Checklists.find({ contentType, contentTypeId });
-      if (!checklists) {
+
+      if (checklists && checklists.length === 0) {
         return;
       }
 
@@ -109,7 +110,7 @@ export const loadItemClass = () => {
       const checklistItem = await ChecklistItems.findOne({ _id });
 
       if (!checklistItem) {
-        throw new Error('ChecklistItem not found');
+        throw new Error('Checklist item not found');
       }
 
       return checklistItem;
