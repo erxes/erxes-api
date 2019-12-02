@@ -113,10 +113,12 @@ const conversationQueries = {
       conversationId,
       skip,
       limit,
+      getFirst,
     }: {
       conversationId: string;
       skip: number;
       limit: number;
+      getFirst: boolean;
     },
   ) {
     const query = { conversationId };
@@ -124,8 +126,19 @@ const conversationQueries = {
     let messages: IMessageDocument[] = [];
 
     if (limit) {
+      const sort = getFirst ? { createdAt: 1 } : { createdAt: -1 };
+
       messages = await ConversationMessages.find(query)
-        .sort({ createdAt: -1 })
+        .sort(sort)
+        .skip(skip || 0)
+        .limit(limit);
+
+      return getFirst ? messages : messages.reverse();
+    }
+
+    if (getFirst) {
+      messages = await ConversationMessages.find(query)
+        .sort({ createdAt: 1 })
         .skip(skip || 0)
         .limit(limit);
 
