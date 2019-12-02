@@ -4,7 +4,7 @@ import { field } from './utils';
 export interface IChannel {
   name?: string;
   description?: string;
-  integrationIds: string[];
+  integrationIds?: string[];
   memberIds?: string[];
   userId?: string;
   conversationCount?: number;

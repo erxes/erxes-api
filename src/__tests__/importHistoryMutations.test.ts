@@ -41,7 +41,7 @@ describe('Import history mutations', () => {
     `;
     const importHistory = await importHistoryFactory({});
 
-    process.env.WORKERS_API_DOMAIN = 'http://fake';
+    process.env.WORKERS_API_DOMAIN = 'http://fake.erxes.io';
 
     const response = await graphqlRequest(mutation, 'importHistoriesCancel', { _id: importHistory._id });
 

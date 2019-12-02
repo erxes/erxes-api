@@ -27,7 +27,7 @@ import {
   Users,
 } from '../db/models';
 
-import { handleUnsubscription } from '../data/utils';
+import utils, { handleUnsubscription } from '../data/utils';
 import { STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
@@ -105,7 +105,7 @@ describe('engage message mutation tests', () => {
 
     _doc = {
       title: 'Message test',
-      kind: 'manual',
+      kind: 'chat',
       method: 'email',
       fromUserId: _user._id,
       isDraft: true,
@@ -473,8 +473,12 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
 
     const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
+
+    fetchSpy.mockRestore();
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
@@ -501,6 +505,16 @@ describe('engage message mutation tests', () => {
     expect(tags).toEqual(_doc.tagIds);
     expect(engageMessage.email.toJSON()).toEqual(_doc.email);
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Remove engage message', async () => {
@@ -512,9 +526,26 @@ describe('engage message mutation tests', () => {
       }
     `;
 
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+
     await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
 
     expect(await EngageMessages.findOne({ _id: _message._id })).toBe(null);
+
+    fetchSpy.mockRestore();
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    _message = await engageMessageFactory({ kind: 'post' });
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Set live engage message', async () => {
@@ -526,15 +557,30 @@ describe('engage message mutation tests', () => {
       }
     `;
 
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+
     let response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
 
     expect(response.isLive).toBe(true);
+
+    fetchSpy.mockRestore();
 
     const manualMessage = await engageMessageFactory({ kind: MESSAGE_KINDS.MANUAL });
 
     response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: manualMessage._id });
 
     expect(response.isLive).toBe(true);
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Set pause engage message', async () => {

@@ -42,10 +42,10 @@ describe('configQueries', () => {
   });
 
   test('config get env', async () => {
-    process.env.MAIN_APP_DOMAIN = 'http://fake';
-    process.env.DOMAIN = 'http://fake';
-    process.env.WIDGETS_API_DOMAIN = 'http://fake';
-    process.env.WIDGETS_DOMAIN = 'http://fake';
+    process.env.MAIN_APP_DOMAIN = 'http://fake.erxes.io';
+    process.env.DOMAIN = 'http://fake.erxes.io';
+    process.env.WIDGETS_API_DOMAIN = 'http://fake.erxes.io';
+    process.env.WIDGETS_DOMAIN = 'http://fake.erxes.io';
 
     process.env.NODE_ENV = 'dev';
 
@@ -77,7 +77,7 @@ describe('configQueries', () => {
   });
 
   test('config get env', async () => {
-    process.env.ENGAGES_API_DOMAIN = 'http://fake';
+    process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
 
     const qry = `
       query engagesConfigDetail {

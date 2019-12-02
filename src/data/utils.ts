@@ -531,12 +531,7 @@ export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
   errorMessage?: string,
 ) => {
-  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  if (NODE_ENV === 'test') {
-    return;
-  }
 
   debugExternalApi(`
     Sending request to
@@ -564,7 +559,7 @@ export const sendRequest = async (
 
     return responseBody;
   } catch (e) {
-    if (e.code === 'ECONNREFUSED') {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
       throw new Error(errorMessage);
     } else {
       const message = e.body || e.message;
@@ -579,14 +574,10 @@ export const sendRequest = async (
 export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
   const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
 
-  try {
-    return sendRequest(
-      { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
-      'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
-    );
-  } catch (e) {
-    debugExternalApi(`Error occurred : ${e.body || e.message}`);
-  }
+  return sendRequest(
+    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+  );
 };
 
 /**
@@ -595,14 +586,10 @@ export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) =>
 export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
   const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
 
-  try {
-    return sendRequest(
-      { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
-      'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
-    );
-  } catch (e) {
-    debugExternalApi(`Error occurred : ${e.body || e.message}`);
-  }
+  return sendRequest(
+    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
 };
 
 /**
@@ -854,6 +841,7 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
+  fetchCronsApi,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);

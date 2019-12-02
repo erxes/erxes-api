@@ -232,7 +232,7 @@ describe('Conversation message mutations', () => {
 
     expect(response).toBeDefined();
 
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
 
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
     try {

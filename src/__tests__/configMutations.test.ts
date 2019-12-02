@@ -34,7 +34,7 @@ describe('Test configs mutations', () => {
   });
 
   test('Insert config', async () => {
-    process.env.ENGAGES_API_DOMAIN = 'http://fake';
+    process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
 
     const mutation = `
       mutation engagesConfigSave($accessKeyId: String, $secretAccessKey: String, $region: String) {

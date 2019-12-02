@@ -264,7 +264,7 @@ describe('conversationQueries', () => {
 
     await conversationMessageFactory({ conversationId: gmailConversation._id, internal: false });
 
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
 
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
 
@@ -880,7 +880,7 @@ describe('conversationQueries', () => {
     expect(response._id).toBe(conversation._id);
     expect(response.facebookPost).toBe(null);
 
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake';
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
 
     const facebookIntegration = await integrationFactory({ kind: 'facebook-post' });
     const facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
@@ -930,7 +930,7 @@ describe('conversationQueries', () => {
   });
 
   test('Facebook comments', async () => {
-    process.env.INTEGRATION_API_DOMAIN = 'http://fake';
+    process.env.INTEGRATION_API_DOMAIN = 'http://fake.erxes.io';
 
     const qry = `
       query facebookComments($postId: String!) {

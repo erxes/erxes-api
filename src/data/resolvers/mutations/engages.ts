@@ -3,7 +3,7 @@ import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { MESSAGE_KINDS } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { fetchCronsApi, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -39,7 +39,11 @@ const engageMutations = {
     const engageMessage = await EngageMessages.getEngageMessage(_id);
     const updated = await EngageMessages.updateEngageMessage(_id, doc);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
+    try {
+      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
+    } catch (e) {
+      throw new Error(e);
+    }
 
     await putUpdateLog(
       {
@@ -60,7 +64,11 @@ const engageMutations = {
   async engageMessageRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const engageMessage = await EngageMessages.getEngageMessage(_id);
 
-    await fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
+    try {
+      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
+    } catch (e) {
+      throw new Error(e);
+    }
 
     const removed = await EngageMessages.removeEngageMessage(_id);
 
@@ -85,11 +93,15 @@ const engageMutations = {
     const { kind } = engageMessage;
 
     if (kind !== MESSAGE_KINDS.MANUAL) {
-      await fetchCronsApi({
-        path: '/create-schedule',
-        method: 'POST',
-        body: { message: JSON.stringify(engageMessage) },
-      });
+      try {
+        await utils.fetchCronsApi({
+          path: '/create-schedule',
+          method: 'POST',
+          body: { message: JSON.stringify(engageMessage) },
+        });
+      } catch (e) {
+        throw new Error(e);
+      }
     }
 
     return engageMessage;
