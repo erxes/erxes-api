@@ -27,6 +27,7 @@ import {
   Users,
 } from '../db/models';
 
+import { handleUnsubscription } from '../data/utils';
 import { STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
@@ -608,11 +609,16 @@ describe('engage message mutation tests', () => {
 
   test('Handle engage unsubscribe', async () => {
     const customer = await customerFactory({ doNotDisturb: 'No' });
+    const user = await userFactory({ doNotDisturb: 'No' });
 
-    await engageUtils.handleEngageUnSubscribe({ cid: customer._id });
+    await handleUnsubscription({ cid: customer._id, uid: user._id });
 
-    const updated = await Customers.getCustomer(customer._id);
+    const updatedCustomer = await Customers.getCustomer(customer._id);
 
-    expect(updated.doNotDisturb).toBe('Yes');
+    expect(updatedCustomer.doNotDisturb).toBe('Yes');
+
+    const updatedUser = await Users.getUser(user._id);
+
+    expect(updatedUser.doNotDisturb).toBe('Yes');
   });
 });

@@ -130,6 +130,7 @@ interface IUserFactoryInput {
   deviceTokens?: string[];
   registrationToken?: string;
   registrationTokenExpires?: Date;
+  doNotDisturb?: string;
 }
 
 export const userFactory = async (params: IUserFactoryInput = {}) => {
@@ -157,6 +158,7 @@ export const userFactory = async (params: IUserFactoryInput = {}) => {
     groupIds: params.groupIds || [],
     brandIds: params.brandIds,
     deviceTokens: params.deviceTokens,
+    doNotDisturb: params.doNotDisturb,
   });
 
   return user.save();

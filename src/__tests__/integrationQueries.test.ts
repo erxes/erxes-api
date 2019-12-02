@@ -104,6 +104,18 @@ describe('integrationQueries', () => {
     expect(responses.length).toBe(1);
   });
 
+  test('Integrations filtered by mail', async () => {
+    await integrationFactory({ kind: 'gmail' });
+    await integrationFactory({ kind: 'nylas-gmail' });
+
+    // mail ========================
+    const responses = await graphqlRequest(qryIntegrations, 'integrations', {
+      kind: 'mail',
+    });
+
+    expect(responses.length).toBe(2);
+  });
+
   test('Integrations filtered by channel', async () => {
     const integration1 = await integrationFactory({ kind: 'facebook-messenger' });
     const integration2 = await integrationFactory({ kind: 'facebook-messenger' });
