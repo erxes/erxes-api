@@ -842,6 +842,7 @@ export default {
   readFile,
   createTransporter,
   fetchCronsApi,
+  fetchWorkersApi,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
