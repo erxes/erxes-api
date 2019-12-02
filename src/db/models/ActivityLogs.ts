@@ -56,6 +56,8 @@ export const loadClass = () => {
       userId: string,
       content: object,
     ) {
+      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
+
       return ActivityLogs.addActivityLog({
         contentType,
         contentId: item._id,
