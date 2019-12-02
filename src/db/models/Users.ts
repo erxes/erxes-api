@@ -482,27 +482,28 @@ export const loadClass = () => {
      * Renews tokens
      */
     public static async refreshTokens(refreshToken: string) {
+      let _id = '';
+
       try {
         // validate refresh token
         const { user } = jwt.verify(refreshToken, this.getSecret());
 
-        const _id = user._id;
-
-        const dbUser = await Users.getUser(_id);
-
-        // recreate tokens
-        const [newToken, newRefreshToken] = await this.createTokens(dbUser, this.getSecret());
-
-        return {
-          token: newToken,
-          refreshToken: newRefreshToken,
-          user: dbUser,
-        };
-
+        _id = user._id;
         // if refresh token is expired then force to login
       } catch (e) {
         return {};
       }
+
+      const dbUser = await Users.getUser(_id);
+
+      // recreate tokens
+      const [newToken, newRefreshToken] = await this.createTokens(dbUser, this.getSecret());
+
+      return {
+        token: newToken,
+        refreshToken: newRefreshToken,
+        user: dbUser,
+      };
     }
 
     /*
