@@ -36,27 +36,28 @@ export const checkFile = async file => {
   const ft = fileType(buffer);
 
   if (!ft) {
-    return 'Invalid file';
+    return 'Invalid file type';
   }
 
-  const defaultMimeTypes = `
-    image/png,
-    image/jpeg,
-    image/jpg,
-    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
-    application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,
-    image/gif,
-  `;
+  const defaultMimeTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+    'image/gif',
+  ];
 
   const UPLOAD_FILE_TYPES = getEnv({
     name: 'UPLOAD_FILE_TYPES',
-    defaultValue: defaultMimeTypes,
+    defaultValue: defaultMimeTypes.toString(),
   });
 
   const { mime } = ft;
 
-  if (!UPLOAD_FILE_TYPES.split(',').includes(mime)) {
-    return 'Invalid file';
+  if (!(UPLOAD_FILE_TYPES.split(',').includes(mime) || defaultMimeTypes.includes(mime))) {
+    return 'Invalid configured file type';
   }
 
   return 'ok';
