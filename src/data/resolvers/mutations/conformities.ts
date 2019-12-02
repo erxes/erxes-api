@@ -16,6 +16,8 @@ const conformityMutations = {
    * Edit conformity
    */
   async conformityEdit(_root, doc: IConformityEdit) {
+    graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
+
     return Conformities.editConformity({ ...doc });
   },
 };
