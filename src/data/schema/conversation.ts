@@ -183,6 +183,7 @@ export const queries = `
     conversationId: String!
     skip: Int
     limit: Int
+    getFirst: Boolean
   ): [ConversationMessage]
 
   converstationFacebookComments(

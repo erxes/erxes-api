@@ -1,4 +1,4 @@
-import { Checklists, Conformities, Tickets } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Tickets } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
@@ -139,6 +139,7 @@ const ticketMutations = {
 
     await Conformities.removeConformity({ mainType: 'ticket', mainTypeId: ticket._id });
     await Checklists.removeChecklists('ticket', ticket._id);
+    await ActivityLogs.removeActivityLog(ticket._id);
 
     return ticket.remove();
   },

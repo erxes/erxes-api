@@ -1,4 +1,4 @@
-import { Customers } from '../../../db/models';
+import { ActivityLogs, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -71,6 +71,8 @@ const customerMutations = {
 
     for (const customer of customers) {
       if (customer) {
+        await ActivityLogs.removeActivityLog(customer._id);
+
         await putDeleteLog(
           {
             type: 'customer',

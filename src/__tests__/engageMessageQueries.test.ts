@@ -36,7 +36,7 @@ describe('engageQueries', () => {
         isDraft
         isLive
         stopDate
-        createdDate
+        createdAt
         messengerReceivedCustomerIds
 
         email
