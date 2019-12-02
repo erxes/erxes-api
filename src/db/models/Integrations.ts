@@ -1,6 +1,6 @@
 import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
-import { ConversationMessages, Conversations, Customers, Forms } from '.';
+import { ConversationMessages, Conversations, Customers, Forms, Tags } from '.';
 import { KIND_CHOICES } from './definitions/constants';
 import {
   IIntegration,
@@ -152,6 +152,15 @@ export const loadClass = () => {
       if (!integration) {
         throw new Error('Integration not found');
       }
+
+      // update tag object counts
+      let tagIds: string[] = [];
+      await Tags.tagObject({
+        tagIds: tagIds,
+        objectIds: [_id],
+        collection: Integrations,
+        tagType: 'integration',
+      });
 
       // remove conversations =================
       const conversations = await Conversations.find({ integrationId: _id }, { _id: true });

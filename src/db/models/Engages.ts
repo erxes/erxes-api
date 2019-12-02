@@ -1,7 +1,7 @@
 import { Model, model } from 'mongoose';
 import { ICustomerDocument } from './definitions/customers';
 import { engageMessageSchema, IEngageMessage, IEngageMessageDocument } from './definitions/engages';
-
+import { Tags } from './';
 export interface IEngageMessageModel extends Model<IEngageMessageDocument> {
   createEngageMessage(doc: IEngageMessage): Promise<IEngageMessageDocument>;
 
@@ -74,6 +74,14 @@ export const loadClass = () => {
         throw new Error('Can not remove manual message');
       }
 
+      // update tags object count
+      let tagIds: string[] = [];
+      await Tags.tagObject({
+        tagIds: tagIds,
+        objectIds: [_id],
+        collection: EngageMessages,
+        tagType: 'engageMessage',
+      });
       return message.remove();
     }
 

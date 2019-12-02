@@ -1,5 +1,5 @@
 import { Model, model } from 'mongoose';
-import { Deals, Fields } from '.';
+import { Deals, Fields, Tags } from '.';
 import {
   IProduct,
   IProductCategory,
@@ -77,6 +77,15 @@ export const loadProductClass = () => {
 
         throw new Error(`Can not remove products. Following deals are used ${names.join(',')}`);
       }
+
+      // update tags object count
+      let tagIds: string[] = [];
+      await Tags.tagObject({
+        tagIds: tagIds,
+        objectIds: _ids,
+        collection: Products,
+        tagType: 'product',
+      });
 
       return Products.deleteMany({ _id: { $in: _ids } });
     }
