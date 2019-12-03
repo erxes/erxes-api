@@ -2,7 +2,6 @@ import { ActivityLogs, Boards, Conformities, Pipelines, Stages } from '../../db/
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
-import { graphqlPubsub } from '../../pubsub';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
 import utils from '../utils';
@@ -130,8 +129,6 @@ export const itemsChange = async (userId: string, item: any, type: string, desti
       destinationStageId,
       text: `${oldStage.name} to ${stage.name}`,
     };
-
-    graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
 
     ActivityLogs.createBoardItemMovementLog(item, type, userId, activityLogContent);
   }
