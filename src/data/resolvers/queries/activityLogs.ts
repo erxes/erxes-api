@@ -1,4 +1,5 @@
 import { ActivityLogs, Conformities, Conversations, EngageMessages, InternalNotes, Tasks } from '../../../db/models';
+import { IActivityLogDocument } from '../../../db/models/definitions/activityLogs';
 import { debugExternalApi } from '../../../debuggers';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -33,7 +34,8 @@ const activityLogQueries = {
     const collectItems = (items: any, type?: string) => {
       if (items) {
         items.map(item => {
-          let result;
+          let result: IActivityLogDocument = {} as any;
+
           item = item.toJSON();
 
           if (!type) {
@@ -44,6 +46,7 @@ const activityLogQueries = {
             result._id = item._id;
             result.contentType = type;
             result.contentId = contentId;
+            result.createdAt = item.createdAt;
           }
 
           if (type === 'taskDetail') {
@@ -59,7 +62,6 @@ const activityLogQueries = {
 
     const collectConversations = async () => {
       collectItems(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }), 'conversation');
-
       if (contentType === 'customer') {
         let conversationIds;
 
@@ -67,7 +69,6 @@ const activityLogQueries = {
           conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
             customerId: contentId,
           });
-
           collectItems(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
         } catch (e) {
           debugExternalApi(e);
