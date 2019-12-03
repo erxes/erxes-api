@@ -48,6 +48,7 @@ export interface IUser {
   brandIds?: string[];
   groupIds?: string[];
   deviceTokens?: string[];
+  doNotDisturb?: string;
 }
 
 export interface IUserDocument extends IUser, Document {
@@ -115,4 +116,5 @@ export const userSchema = new Schema({
   brandIds: field({ type: [String] }),
   groupIds: field({ type: [String] }),
   deviceTokens: field({ type: [String], default: [] }),
+  doNotDisturb: field({ type: String, optional: true, default: 'No', label: 'Do not disturb' }),
 });

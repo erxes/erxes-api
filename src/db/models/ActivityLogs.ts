@@ -1,13 +1,12 @@
 import { Model, model } from 'mongoose';
-import { graphqlPubsub } from '../../pubsub';
 import { activityLogSchema, IActivityLogDocument, IActivityLogInput } from './definitions/activityLogs';
 
 import { IItemCommonFieldsDocument } from './definitions/boards';
 import { ACTIVITY_ACTIONS } from './definitions/constants';
 
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
-  addActivityLog(doc: IActivityLogInput): void;
-  removeActivityLog(contentId: string): Promise<IActivityLogDocument>;
+  addActivityLog(doc: IActivityLogInput): Promise<IActivityLogDocument>;
+  removeActivityLog(contentId: string): void;
   createLogFromWidget(type: string, payload): Promise<IActivityLogDocument>;
   createCocLog({ coc, contentType }: { coc: any; contentType: string }): Promise<IActivityLogDocument>;
   createBoardItemLog({
@@ -30,13 +29,11 @@ export const loadClass = () => {
     public static async addActivityLog(doc: IActivityLogInput) {
       const activity = await ActivityLogs.create(doc);
 
-      graphqlPubsub.publish('activityLogsChanged', { activityLogsChanged: true });
-
       return activity;
     }
 
-    public static async removeActivityLog(contentId: string) {
-      return ActivityLogs.deleteMany({ contentId });
+    public static async removeActivityLog(contentId: IActivityLogInput) {
+      await ActivityLogs.deleteMany({ contentId });
     }
 
     public static createBoardItemLog({ item, contentType }: { item: IItemCommonFieldsDocument; contentType: string }) {

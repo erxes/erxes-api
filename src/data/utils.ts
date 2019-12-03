@@ -36,19 +36,25 @@ export const checkFile = async file => {
   const ft = fileType(buffer);
 
   if (!ft) {
-    return 'Invalid file';
+    return 'Invalid file type';
   }
 
-  const UPLOAD_FILE_TYPES = getEnv({
-    name: 'UPLOAD_FILE_TYPES',
-    defaultValue:
-      'image/png,image/jpeg,image/jpg,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,',
-  });
+  const defaultMimeTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+    'image/gif',
+  ];
+
+  const UPLOAD_FILE_TYPES = getEnv({ name: 'UPLOAD_FILE_TYPES' });
 
   const { mime } = ft;
 
-  if (!UPLOAD_FILE_TYPES.split(',').includes(mime)) {
-    return 'Invalid file';
+  if (!((UPLOAD_FILE_TYPES && UPLOAD_FILE_TYPES.split(',')) || defaultMimeTypes).includes(mime)) {
+    return 'Invalid configured file type';
   }
 
   return 'ok';
@@ -312,20 +318,23 @@ export const createTransporter = ({ ses }) => {
  * Send email
  */
 export const sendEmail = async ({
-  toEmails,
+  toEmails = [],
   fromEmail,
   title,
   template = {},
+  modifier,
 }: {
   toEmails?: string[];
   fromEmail?: string;
   title?: string;
   template?: { name?: string; data?: any; isCustom?: boolean };
+  modifier?: (data: any, email: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
   const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: '' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -343,14 +352,21 @@ export const sendEmail = async ({
 
   const { isCustom, data, name } = template;
 
-  // generate email content by given template
-  let html = await applyTemplate(data, name || '');
+  // for unsubscribe url
+  data.domain = DOMAIN;
 
-  if (!isCustom) {
-    html = await applyTemplate({ content: html }, 'base');
-  }
+  for (const toEmail of toEmails) {
+    if (modifier) {
+      modifier(data, toEmail);
+    }
 
-  return (toEmails || []).map(toEmail => {
+    // generate email content by given template
+    let html = await applyTemplate(data, name || '');
+
+    if (!isCustom) {
+      html = await applyTemplate({ content: html }, 'base');
+    }
+
     const mailOptions = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
@@ -365,7 +381,7 @@ export const sendEmail = async ({
       debugEmail(error);
       debugEmail(info);
     });
-  });
+  }
 };
 
 /**
@@ -398,7 +414,7 @@ export const sendNotification = async (doc: ISendNotification) => {
   const receiverIds = [...new Set(receivers)];
 
   // collecting emails
-  const recipients = await Users.find({ _id: { $in: receiverIds } });
+  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true, doNotDisturb: { $ne: 'Yes' } });
 
   // collect recipient emails
   const toEmails: string[] = [];
@@ -431,11 +447,20 @@ export const sendNotification = async (doc: ISendNotification) => {
         throw e;
       }
     }
-  }
+  } // end receiverIds loop
 
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
   link = `${MAIN_APP_DOMAIN}${link}`;
+
+  // for controlling email template data filling
+  const modifier = (data: any, email: string) => {
+    const user = recipients.find(item => item.email === email);
+
+    if (user) {
+      data.uid = user._id;
+    }
+  };
 
   await sendEmail({
     toEmails,
@@ -448,6 +473,7 @@ export const sendNotification = async (doc: ISendNotification) => {
         userName: getUserDetail(createdUser),
       },
     },
+    modifier,
   });
 
   return true;
@@ -503,12 +529,7 @@ export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
   errorMessage?: string,
 ) => {
-  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  if (NODE_ENV === 'test') {
-    return;
-  }
 
   debugExternalApi(`
     Sending request to
@@ -536,7 +557,7 @@ export const sendRequest = async (
 
     return responseBody;
   } catch (e) {
-    if (e.code === 'ECONNREFUSED') {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
       throw new Error(errorMessage);
     } else {
       const message = e.body || e.message;
@@ -798,8 +819,13 @@ export const getToday = (date: Date): Date => {
 
 export const getNextMonth = (date: Date): { start: number; end: number } => {
   const today = getToday(date);
+  const currentMonth = new Date().getMonth();
 
-  const month = (new Date().getMonth() + 1) % 12;
+  if (currentMonth === 11) {
+    today.setFullYear(today.getFullYear() + 1);
+  }
+
+  const month = (currentMonth + 1) % 12;
   const start = today.setMonth(month, 1);
   const end = today.setMonth(month + 1, 0);
 
@@ -813,6 +839,8 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
+  fetchCronsApi,
+  fetchWorkersApi,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
@@ -847,4 +875,32 @@ export const regexSearchText = (searchValue: string) => {
   }
 
   return { $and: result };
+};
+
+/**
+ * Check user ids whether its added or removed from array of ids
+ */
+export const checkUserIds = (oldUserIds: string[], newUserIds: string[]) => {
+  const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
+
+  const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
+
+  return { addedUserIds, removedUserIds };
+};
+
+/*
+ * Handle engage unsubscribe request
+ */
+export const handleUnsubscription = async (query: { cid: string; uid: string }) => {
+  const { cid, uid } = query;
+
+  if (cid) {
+    await Customers.updateOne({ _id: cid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  if (uid) {
+    await Users.updateOne({ _id: uid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  return true;
 };

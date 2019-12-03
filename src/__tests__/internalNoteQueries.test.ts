@@ -26,7 +26,7 @@ describe('internalNoteQueries', () => {
           contentTypeId
           content
           createdUserId
-          createdDate
+          createdAt
 
           createdUser { _id }
         }
