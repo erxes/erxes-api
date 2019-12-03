@@ -68,18 +68,16 @@ const customerMutations = {
     await Customers.removeCustomers(customerIds);
 
     for (const customer of customers) {
-      if (customer) {
-        await ActivityLogs.removeActivityLog(customer._id);
+      await ActivityLogs.removeActivityLog(customer._id);
 
-        await putDeleteLog(
-          {
-            type: 'customer',
-            object: customer,
-            description: `${customer.firstName} has been deleted`,
-          },
-          user,
-        );
-      }
+      await putDeleteLog(
+        {
+          type: 'customer',
+          object: customer,
+          description: `${customer.firstName} has been deleted`,
+        },
+        user,
+      );
     }
 
     return customerIds;

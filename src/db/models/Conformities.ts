@@ -6,6 +6,7 @@ import {
   IConformityDocument,
   IConformityEdit,
   IConformityFilter,
+  IConformityRelated,
   IConformityRemove,
   IConformitySaved,
 } from './definitions/conformities';
@@ -39,7 +40,7 @@ export interface IConformityModel extends Model<IConformityDocument> {
   changeConformity(doc: IConformityChange): void;
   removeConformity(doc: IConformityRemove): void;
   savedConformity(doc: IConformitySaved): Promise<string[]>;
-  relatedConformity(doc: IConformitySaved): Promise<string[]>;
+  relatedConformity(doc: IConformityRelated): Promise<string[]>;
   filterConformity(doc: IConformityFilter): Promise<string[]>;
 }
 
@@ -57,7 +58,7 @@ export const loadConformityClass = () => {
       const oldRelTypeIds = await Conformity.savedConformity({
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,
-        relType: doc.relType,
+        relTypes: [doc.relType],
       });
 
       const removedTypeIds = oldRelTypeIds.filter(e => !newRelTypeIds.includes(e));
@@ -98,7 +99,7 @@ export const loadConformityClass = () => {
     }
 
     public static async savedConformity(doc: IConformitySaved) {
-      const relTypes = [...doc.relTypes || [], doc.relType] || [];
+      const relTypes = doc.relTypes || [];
 
       const relTypeIds = await Conformities.aggregate([
         {
@@ -159,7 +160,7 @@ export const loadConformityClass = () => {
       return relTypeIds.map(item => String(item.relTypeId));
     }
 
-    public static async relatedConformity(doc: IConformitySaved) {
+    public static async relatedConformity(doc: IConformityRelated) {
       const match = getSavedAnyConformityMatch({
         mainType: doc.mainType,
         mainTypeId: doc.mainTypeId,

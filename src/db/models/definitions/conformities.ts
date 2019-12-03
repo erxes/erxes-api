@@ -25,8 +25,13 @@ export interface IConformityEdit {
 export interface IConformitySaved {
   mainType: string;
   mainTypeId: string;
-  relType?: string;
-  relTypes?: string[];
+  relTypes: string[];
+}
+
+export interface IConformityRelated {
+  mainType: string;
+  mainTypeId: string;
+  relType: string;
 }
 
 export interface IConformityChange {

@@ -16,27 +16,7 @@ const activityLogQueries = {
   async activityLogs(_root, doc: IListArgs, { dataSources }: IContext) {
     const { contentType, contentId, activityType } = doc;
 
-    const activities = [] as any;
-
-    const collectActivities = (items: any, type?: string) => {
-      if (items) {
-        items.map(item => {
-          const result = item.toJSON();
-
-          if (type && type !== 'taskDetail') {
-            result.contentType = type;
-            result.contentId = contentId;
-          }
-
-          if (type === 'taskDetail') {
-            result.contentType = type;
-            result.createdAt = item.closeDate || item.createdAt;
-          }
-
-          activities.push(result);
-        });
-      }
-    };
+    const activities: any[] = [];
 
     const relatedItemIds = await Conformities.savedConformity({
       mainType: contentType,
@@ -47,57 +27,101 @@ const activityLogQueries = {
     const relatedTaskIds = await Conformities.savedConformity({
       mainType: contentType,
       mainTypeId: contentId,
-      relType: 'task',
+      relTypes: ['task'],
     });
+
+    const collectItems = (items: any, type?: string) => {
+      if (items) {
+        items.map(item => {
+          let result;
+          item = item.toJSON();
+
+          if (!type) {
+            result = item;
+          }
+
+          if (type && type !== 'taskDetail') {
+            result._id = item._id;
+            result.contentType = type;
+            result.contentId = contentId;
+          }
+
+          if (type === 'taskDetail') {
+            result._id = item._id;
+            result.contentType = type;
+            result.createdAt = item.closeDate || item.createdAt;
+          }
+
+          activities.push(result);
+        });
+      }
+    };
+
+    const collectConversations = async () => {
+      collectItems(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }), 'conversation');
+
+      if (contentType === 'customer') {
+        let conversationIds;
+
+        try {
+          conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
+            customerId: contentId,
+          });
+
+          collectItems(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
+        } catch (e) {
+          debugExternalApi(e);
+        }
+      }
+    };
+
+    const collectActivityLogs = async () => {
+      collectItems(await ActivityLogs.find({ contentId: { $in: [...relatedItemIds, contentId] } }));
+    };
+
+    const collectInternalNotes = async () => {
+      collectItems(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
+    };
+
+    const collectEngageMessages = async () => {
+      collectItems(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
+    };
+
+    const collectTasks = async () => {
+      if (contentType !== 'task') {
+        collectItems(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
+      }
+    };
 
     switch (activityType) {
       case 'conversation':
-        collectActivities(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }), 'conversation');
+        collectConversations();
         break;
 
       case 'internal_note':
-        collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
+        await collectInternalNotes();
         break;
 
       case 'task':
-        collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
+        await collectTasks();
         break;
 
       case 'email':
-        collectActivities(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
+        await collectEngageMessages();
         break;
 
       default:
-        if (contentType !== 'task') {
-          collectActivities(await Tasks.find({ _id: { $in: relatedTaskIds } }).sort({ closeDate: 1 }), 'taskDetail');
-        }
+        await collectConversations();
+        await collectActivityLogs();
+        await collectInternalNotes();
+        await collectEngageMessages();
 
-        collectActivities(await ActivityLogs.find({ contentId }));
-        collectActivities(await ActivityLogs.find({ contentId: { $in: relatedItemIds } }));
-        collectActivities(await InternalNotes.find({ contentTypeId: contentId }).sort({ createdAt: -1 }), 'note');
-        collectActivities(await Conversations.find({ customerId: contentId }), 'conversation');
-        collectActivities(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
-
-        if (contentType === 'customer') {
-          let conversationIds;
-
-          try {
-            conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
-              customerId: contentId,
-            });
-
-            collectActivities(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
-          } catch (e) {
-            debugExternalApi(e);
-          }
-        }
+        activities.sort((a, b) => {
+          return b.createdAt - a.createdAt;
+        });
 
         break;
     }
-
-    activities.sort((a, b) => {
-      return b.createdAt - a.createdAt;
-    });
 
     return activities;
   },
