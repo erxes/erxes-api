@@ -3,10 +3,13 @@ import { activityLogSchema, IActivityLogDocument, IActivityLogInput } from './de
 
 import { IItemCommonFieldsDocument } from './definitions/boards';
 import { ACTIVITY_ACTIONS } from './definitions/constants';
+import { ICustomerDocument } from './definitions/customers';
+import { ISegmentDocument } from './definitions/segments';
 
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
   addActivityLog(doc: IActivityLogInput): Promise<IActivityLogDocument>;
   removeActivityLog(contentId: string): void;
+  createSegmentLog(segment: ISegmentDocument, customer: ICustomerDocument, type: string);
   createLogFromWidget(type: string, payload): Promise<IActivityLogDocument>;
   createCocLog({ coc, contentType }: { coc: any; contentType: string }): Promise<IActivityLogDocument>;
   createBoardItemLog({
@@ -87,6 +90,39 @@ export const loadClass = () => {
         action,
         createdBy: coc.ownerId || coc.integrationId,
       });
+    }
+
+    /**
+     * Create a customer or company segment log
+     */
+    public static async createSegmentLog(segment: ISegmentDocument, customer: ICustomerDocument, type: string) {
+      if (!customer) {
+        throw new Error('customer must be supplied');
+      }
+
+      const foundSegment = await ActivityLogs.findOne({
+        contentType: type,
+        action: 'segment',
+        contentId: customer._id,
+        'content.id': segment._id,
+      });
+
+      if (foundSegment) {
+        // since this type of activity log already exists, new one won't be created
+        return foundSegment;
+      }
+
+      const doc = {
+        contentType: type,
+        contentId: customer._id,
+        action: 'segment',
+        content: {
+          id: segment._id,
+          content: segment,
+        },
+      };
+
+      return ActivityLogs.create(doc);
     }
   }
 
