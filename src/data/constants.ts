@@ -280,3 +280,22 @@ export const NOTIFICATION_MODULES = [
     ],
   },
 ];
+
+export const BOARD_BASIC_INFOS = [
+  'userId',
+  'createdAt',
+  'order',
+  'name',
+  'closeDate',
+  'reminderMinute',
+  'isComplete',
+  'description',
+  'assignedUsers',
+  'watchedUserIds',
+  'labelIds',
+  'stageId',
+  'initialStageId',
+  'modifiedAt',
+  'modifiedBy',
+  'priority',
+];

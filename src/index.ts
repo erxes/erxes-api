@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
-import { companiesExport, customersExport } from './data/modules/coc/exporter';
+import { companiesExport, customersExport, dealsExport, tasksExport, ticketsExport } from './data/modules/fileExporter';
 import insightExports from './data/modules/insights/insightExports';
 import {
   checkFile,
@@ -94,14 +94,10 @@ app.get('/status', async (_req, res) => {
   res.end('ok');
 });
 
-// export coc
-app.get('/coc-export', async (req: any, res) => {
-  const { query, user } = req;
-  const { type } = query;
-
+// export insights
+app.get('/insights-export', async (req: any, res) => {
   try {
-    const { name, response } =
-      type === 'customers' ? await customersExport(query, user) : await companiesExport(query, user);
+    const { name, response } = await insightExports(req.query, req.user);
 
     res.attachment(`${name}.xlsx`);
 
@@ -111,14 +107,41 @@ app.get('/coc-export', async (req: any, res) => {
   }
 });
 
-// export insights
-app.get('/insights-export', async (req: any, res) => {
+// export board
+app.get('/file-export', async (req: any, res) => {
+  const { query, user } = req;
+  const { type } = query;
+
+  let result: { name: string; response: string };
+
   try {
-    const { name, response } = await insightExports(req.query, req.user);
+    switch (type) {
+      case 'company':
+        result = await companiesExport(query, user);
+        break;
+      case 'customers':
+        result = await customersExport(query, user);
+        break;
+      case 'deal':
+        result = await dealsExport(user);
+        break;
+      case 'task':
+        result = await tasksExport(user);
+        break;
+      case 'ticket':
+        result = await ticketsExport(user);
+        break;
+      default:
+        result = {
+          name: 'invalid-type',
+          response: 'Invalid export type',
+        };
+        break;
+    }
 
-    res.attachment(`${name}.xlsx`);
+    res.attachment(`${result.name}.xlsx`);
 
-    return res.send(response);
+    return res.send(result.response);
   } catch (e) {
     return res.end(filterXSS(e.message));
   }
