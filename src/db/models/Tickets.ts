@@ -1,5 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
+import BoardItemClass from './BoardItemClass';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
@@ -13,7 +14,7 @@ export interface ITicketModel extends Model<ITicketDocument> {
 }
 
 export const loadTicketClass = () => {
-  class Ticket {
+  class Ticket extends BoardItemClass {
     /**
      * Retreives Ticket
      */
