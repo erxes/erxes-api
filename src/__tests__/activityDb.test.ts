@@ -1,5 +1,5 @@
 import * as faker from 'faker';
-import { ActivityLogs, Deals } from '../db/models';
+import { ActivityLogs, Customers, Deals, Segments } from '../db/models';
 
 import { activityLogFactory, customerFactory, dealFactory, segmentFactory } from '../db/factories';
 import './setup.ts';
@@ -9,6 +9,8 @@ describe('Test activity model', () => {
     // Clearing test data
     await ActivityLogs.deleteMany({});
     await Deals.deleteMany({});
+    await Segments.deleteMany({});
+    await Customers.deleteMany({});
   });
 
   test('Activity add activity', async () => {
