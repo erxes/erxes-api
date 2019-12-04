@@ -145,6 +145,7 @@ export const moduleObjects = {
           'dealsRemove',
           'dealsUpdateOrder',
           'dealsWatch',
+          'exportDeals',
         ],
       },
       {
@@ -215,6 +216,10 @@ export const moduleObjects = {
         name: 'dealsWatch',
         description: 'Watch deal',
       },
+      {
+        name: 'exportDeals',
+        description: 'Export deals',
+      },
     ],
   },
   tickets: {
@@ -243,6 +248,7 @@ export const moduleObjects = {
           'ticketsRemove',
           'ticketsUpdateOrder',
           'ticketsWatch',
+          'exportTickets',
         ],
       },
       {
@@ -312,6 +318,10 @@ export const moduleObjects = {
       {
         name: 'ticketsWatch',
         description: 'Watch ticket',
+      },
+      {
+        name: 'exportTickets',
+        description: 'Export tickets',
       },
     ],
   },
@@ -464,6 +474,7 @@ export const moduleObjects = {
           'tasksRemove',
           'tasksUpdateOrder',
           'tasksWatch',
+          'exportTasks',
         ],
       },
       {
@@ -533,6 +544,10 @@ export const moduleObjects = {
       {
         name: 'tasksWatch',
         description: 'Watch task',
+      },
+      {
+        name: 'exportTasks',
+        description: 'Export tasks',
       },
     ],
   },
