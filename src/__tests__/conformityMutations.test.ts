@@ -172,7 +172,8 @@ describe('mutations', () => {
       mainTypeId: _company._id,
       relTypes: ['customer'],
     });
-    expect(relTypeIds.length).toEqual(0);
+
+    expect(relTypeIds.length).toEqual(2);
   });
 
   test('Add conformity mutations', async () => {
