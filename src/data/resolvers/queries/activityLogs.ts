@@ -54,7 +54,6 @@ const activityLogQueries = {
             result.contentType = type;
             result.createdAt = item.closeDate || item.createdAt;
           }
-
           activities.push(result);
         });
       }
@@ -96,7 +95,7 @@ const activityLogQueries = {
 
     switch (activityType) {
       case 'conversation':
-        collectConversations();
+        await collectConversations();
         break;
 
       case 'internal_note':
@@ -116,6 +115,7 @@ const activityLogQueries = {
         await collectActivityLogs();
         await collectInternalNotes();
         await collectEngageMessages();
+        await collectTasks();
 
         activities.sort((a, b) => {
           return b.createdAt - a.createdAt;

@@ -63,14 +63,12 @@ export const loadClass = () => {
       });
     }
 
-    public static createLogFromWidget(type: string, payload) {
+    public static async createLogFromWidget(type: string, payload) {
       switch (type) {
         case 'create-customer':
-          ActivityLogs.createCocLog({ coc: payload, contentType: 'customer' });
-          break;
+          return ActivityLogs.createCocLog({ coc: payload, contentType: 'customer' });
         case 'create-company':
-          ActivityLogs.createCocLog({ coc: payload, contentType: 'company' });
-          break;
+          return ActivityLogs.createCocLog({ coc: payload, contentType: 'company' });
       }
     }
 
@@ -96,10 +94,6 @@ export const loadClass = () => {
      * Create a customer or company segment log
      */
     public static async createSegmentLog(segment: ISegmentDocument, customer: ICustomerDocument, type: string) {
-      if (!customer) {
-        throw new Error('customer must be supplied');
-      }
-
       const foundSegment = await ActivityLogs.findOne({
         contentType: type,
         action: 'segment',
@@ -108,7 +102,6 @@ export const loadClass = () => {
       });
 
       if (foundSegment) {
-        // since this type of activity log already exists, new one won't be created
         return foundSegment;
       }
 

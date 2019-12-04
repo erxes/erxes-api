@@ -77,8 +77,8 @@ export default {
 
       const { oldStageId, destinationStageId } = content;
 
-      const destinationStage = await Stages.getStage(destinationStageId);
-      const oldStage = await Stages.getStage(oldStageId);
+      const destinationStage = await Stages.findOne({ _id: destinationStageId });
+      const oldStage = await Stages.findOne({ _id: oldStageId });
 
       if (destinationStage && oldStage) {
         return {

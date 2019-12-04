@@ -89,7 +89,7 @@ interface IActivityLogFactoryInput {
 export const activityLogFactory = async (params: IActivityLogFactoryInput = {}) => {
   const activity = new ActivityLogs({
     contentType: params.contentType || 'customer',
-    action: params.contentType || 'create',
+    action: params.action || 'create',
     contentId: params.contentId || faker.random.uuid(),
     content: params.content || 'content',
     createdBy: params.createdBy || faker.random.uuid(),
@@ -186,6 +186,7 @@ interface IEngageMessageFactoryInput {
 export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) => {
   const engageMessage = new EngageMessages({
     kind: params.kind || 'manual',
+    customerIds: params.customerIds || [],
     method: params.method || 'messenger',
     title: params.title || faker.random.word(),
     fromUserId: params.userId || faker.random.uuid(),
@@ -451,6 +452,7 @@ interface ICustomerFactoryInput {
   profileScore?: number;
   code?: string;
   visitorContactInfo?: any;
+  mergedIds?: string[];
 }
 
 export const customerFactory = async (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
@@ -473,6 +475,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,
+    mergedIds: params.mergedIds,
   };
 
   if (useModelMethod) {
@@ -879,6 +882,7 @@ interface IDealFactoryInput {
   order?: number;
   probability?: string;
   searchText?: string;
+  userId?: string;
 }
 
 export const dealFactory = async (params: IDealFactoryInput = {}) => {
@@ -898,6 +902,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
     description: faker.random.word(),
     productsDate: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
+    userId: params.userId || faker.random.word(),
     watchedUserIds: params.watchedUserIds,
     labelIds: params.labelIds || [],
     order: params.order,

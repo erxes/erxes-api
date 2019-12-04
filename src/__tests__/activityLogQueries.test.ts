@@ -3,19 +3,36 @@ import { graphqlRequest } from '../db/connection';
 import {
   activityLogFactory,
   brandFactory,
+  companyFactory,
+  conformityFactory,
+  conversationFactory,
+  customerFactory,
   dealFactory,
+  engageMessageFactory,
   growthHackFactory,
   integrationFactory,
+  internalNoteFactory,
+  stageFactory,
   taskFactory,
   ticketFactory,
   userFactory,
 } from '../db/factories';
-import { ActivityLogs, Users } from '../db/models';
+import {
+  ActivityLogs,
+  Brands,
+  Companies,
+  Conformities,
+  Customers,
+  GrowthHacks,
+  Tasks,
+  Tickets,
+  Users,
+} from '../db/models';
 
+import { IntegrationsAPI } from '../data/dataSources';
 import './setup.ts';
 
 describe('activityLogQueries', () => {
-  let user;
   let brand;
   let integration;
   let deal;
@@ -56,7 +73,6 @@ describe('activityLogQueries', () => {
   `;
 
   beforeEach(async () => {
-    user = await userFactory();
     brand = await brandFactory();
     integration = await integrationFactory({
       brandId: brand._id,
@@ -71,6 +87,13 @@ describe('activityLogQueries', () => {
     // Clearing test data
     await ActivityLogs.deleteMany({});
     await Users.deleteMany({});
+    await GrowthHacks.deleteMany({});
+    await Tasks.deleteMany({});
+    await Companies.deleteMany({});
+    await Customers.deleteMany({});
+    await Tickets.deleteMany({});
+    await Brands.deleteMany({});
+    await Conformities.deleteMany({});
   });
 
   test('Activity log', async () => {
@@ -88,27 +111,42 @@ describe('activityLogQueries', () => {
     expect(response.length).toBe(3);
   });
 
-  test('Activity log with created by user', async () => {
-    const contentId = faker.random.uuid();
-    const contentType = 'customer';
-    const createdBy = user._id;
+  test('Activity log with all activity types', async () => {
+    const customer = await customerFactory({});
+    await conformityFactory({
+      mainType: 'customer',
+      mainTypeId: customer._id,
+      relType: 'task',
+      relTypeId: task._id,
+    });
 
-    const doc = {
-      contentId,
-      contentType,
-      createdBy,
-    };
+    await conversationFactory({ customerId: customer._id });
+    await internalNoteFactory({ contentTypeId: customer._id });
+    await engageMessageFactory({ customerIds: [customer._id], method: 'email' });
 
-    await activityLogFactory(doc);
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
 
-    const args = { contentId, contentType };
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
 
-    const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+    spy.mockImplementation(() => Promise.resolve());
 
-    expect(response.length).toBe(1);
+    const activityTypes = [
+      { type: 'conversation', content: 'company' },
+      { type: 'email', content: 'email' },
+      { type: 'internal_note', content: 'internal_note' },
+      { type: 'task', content: 'task' },
+    ];
+
+    for (const activityType of activityTypes) {
+      const args = { contentId: customer._id, contentType: 'customer', activityType: activityType.type };
+      const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args, { dataSources });
+      expect(response.length).toBe(1);
+    }
   });
 
   test('Activity log with created by user', async () => {
+    const user = await userFactory();
     const contentId = faker.random.uuid();
     const contentType = 'customer';
     const createdBy = user._id;
@@ -148,20 +186,18 @@ describe('activityLogQueries', () => {
     expect(response.length).toBe(1);
   });
 
-  test('Activity log contentType', async () => {
-    const contentType = 'deal';
+  test('Activity log content type detail', async () => {
     const createdBy = integration._id;
 
     const types = [
       { type: 'deal', content: deal },
       { type: 'ticket', content: ticket },
       { type: 'task', content: task },
-      { type: 'growtHack', content: growtHack },
+      { type: 'growthHack', content: growtHack },
     ];
 
     for (const type of types) {
       const doc = {
-        action: 'merge',
         contentId: type.content._id,
         contentType: type.type,
         createdBy,
@@ -169,11 +205,78 @@ describe('activityLogQueries', () => {
 
       await activityLogFactory(doc);
 
-      const args = { contentId: type.content._id, contentType };
+      const args = { contentId: type.content._id, contentType: type.type };
 
       const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
 
       expect(response.length).toBe(1);
+    }
+  });
+
+  test('Activity log action merge', async () => {
+    const customer = await customerFactory();
+    const company = await companyFactory();
+
+    const types = [{ type: 'company', content: company }, { type: 'customer', content: customer }];
+
+    for (const type of types) {
+      const doc = {
+        contentId: type.content._id,
+        contentType: type.type,
+        action: 'merge',
+        content: [],
+      };
+
+      await activityLogFactory(doc);
+
+      const args = { contentId: type.content._id, contentType: type.type };
+
+      const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+
+      expect(response.length).toBe(1);
+    }
+  });
+
+  test('Activity log action moved', async () => {
+    const stage1 = await stageFactory();
+    const stage2 = await stageFactory();
+
+    const types = [
+      { type: 'deal', content: deal },
+      { type: 'ticket', content: ticket },
+      { type: 'task', content: task },
+      { type: 'growthHack', content: growtHack },
+    ];
+
+    for (const type of types) {
+      const doc1 = {
+        contentId: type.content._id,
+        contentType: type.type,
+        action: 'moved',
+        content: {
+          oldStageId: stage1._id,
+          destinationStageId: stage2._id,
+        },
+      };
+
+      const doc2 = {
+        contentId: type.content._id,
+        contentType: type.type,
+        action: 'moved',
+        content: {
+          oldStageId: '',
+          destinationStageId: '',
+        },
+      };
+
+      await activityLogFactory(doc1);
+      await activityLogFactory(doc2);
+
+      const args = { contentId: type.content._id, contentType: type.type };
+
+      const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+
+      expect(response.length).toBe(2);
     }
   });
 });
