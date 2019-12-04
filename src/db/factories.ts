@@ -475,7 +475,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,
-    mergedIds: params.mergedIds,
+    mergedIds: params.mergedIds || [],
   };
 
   if (useModelMethod) {
