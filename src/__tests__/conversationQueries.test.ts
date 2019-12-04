@@ -933,8 +933,8 @@ describe('conversationQueries', () => {
     process.env.INTEGRATION_API_DOMAIN = 'http://fake.erxes.io';
 
     const qry = `
-      query facebookComments($postId: String!) {
-        facebookComments(postId: $postId) {
+      query converstationFacebookComments($postId: String!) {
+        converstationFacebookComments(postId: $postId) {
           postId
         }
       }
@@ -943,7 +943,7 @@ describe('conversationQueries', () => {
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
 
     try {
-      await graphqlRequest(qry, 'facebookComments', { postId: 'postId' }, { dataSources });
+      await graphqlRequest(qry, 'converstationFacebookComments', { postId: 'postId' }, { dataSources });
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
