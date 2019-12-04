@@ -17,7 +17,7 @@ const activityLogQueries = {
   async activityLogs(_root, doc: IListArgs, { dataSources }: IContext) {
     const { contentType, contentId, activityType } = doc;
 
-    const activities: any[] = [];
+    const activities: IActivityLogDocument[] = [];
 
     const relatedItemIds = await Conformities.savedConformity({
       mainType: contentType,
@@ -118,7 +118,7 @@ const activityLogQueries = {
         await collectTasks();
 
         activities.sort((a, b) => {
-          return b.createdAt - a.createdAt;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
 
         break;
