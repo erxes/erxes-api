@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
-import { companiesExport, customersExport, dealsExport, tasksExport, ticketsExport } from './data/modules/fileExporter';
+import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import {
   checkFile,
@@ -110,34 +110,11 @@ app.get('/insights-export', async (req: any, res) => {
 // export board
 app.get('/file-export', async (req: any, res) => {
   const { query, user } = req;
-  const { type } = query;
 
   let result: { name: string; response: string };
 
   try {
-    switch (type) {
-      case 'company':
-        result = await companiesExport(query, user);
-        break;
-      case 'customers':
-        result = await customersExport(query, user);
-        break;
-      case 'deal':
-        result = await dealsExport(user);
-        break;
-      case 'task':
-        result = await tasksExport(user);
-        break;
-      case 'ticket':
-        result = await ticketsExport(user);
-        break;
-      default:
-        result = {
-          name: 'invalid-type',
-          response: 'Invalid export type',
-        };
-        break;
-    }
+    result = await buildFile(query, user);
 
     res.attachment(`${result.name}.xlsx`);
 

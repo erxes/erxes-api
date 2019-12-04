@@ -299,3 +299,41 @@ export const BOARD_BASIC_INFOS = [
   'modifiedBy',
   'priority',
 ];
+
+export const USER_BASIC_INFOS = [
+  'username',
+  'isOwner',
+  'email',
+  'getNotificationByEmail',
+  'isActive',
+  'brandIds',
+  'groupIds',
+  'doNotDisturb',
+];
+
+export const BRAND_BASIC_INFOS = ['code', 'name', 'description', 'userId', 'createdAt'];
+
+export const CHANNEL_BASIC_INFOS = [
+  'createdAt',
+  'name',
+  'description',
+  'conversationCount',
+  'openConversationCount',
+  'userId',
+  'integrationIds',
+  'memberIds',
+];
+
+export const PERMISSION_BASIC_INFOS = ['module', 'action', 'userId', 'groupId', 'requiredActions', 'allowed'];
+
+export const MODULE_NAMES = {
+  BRAND: 'brand',
+  CHANNEL: 'channel',
+  COMPANY: 'company',
+  CUSTOMER: 'customer',
+  DEAL: 'deal',
+  TASK: 'task',
+  TICKET: 'ticket',
+  PERMISSION: 'permission',
+  USER: 'user',
+};
