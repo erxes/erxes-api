@@ -21,4 +21,12 @@ module.exports.up = async () => {
   await updatePermissions('tasksAll', 'tasks', 'exportTasks');
 
   await updatePermissions('ticketsAll', 'tickets', 'exportTickets');
+
+  await updatePermissions('brandsAll', 'brands', 'exportBrands');
+
+  await updatePermissions('channelsAll', 'channels', 'exportChannels');
+
+  await updatePermissions('permissionsAll', 'permissions', 'exportPermissions');
+
+  await updatePermissions('usersAll', 'users', 'exportUsers');
 };

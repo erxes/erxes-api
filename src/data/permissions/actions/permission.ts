@@ -16,6 +16,10 @@ export const moduleObjects = {
         name: 'showBrands',
         description: 'Show brands',
       },
+      {
+        name: 'exportBrands',
+        description: 'Export brands',
+      },
     ],
   },
   channels: {
@@ -34,6 +38,10 @@ export const moduleObjects = {
       {
         name: 'showChannels',
         description: 'Show channel',
+      },
+      {
+        name: 'exportChannels',
+        description: 'Export channels',
       },
     ],
   },
@@ -661,6 +669,10 @@ export const moduleObjects = {
         name: 'showPermissionsActions',
         description: 'Show permissions actions',
       },
+      {
+        name: 'exportPermissions',
+        description: 'Export permissions',
+      },
     ],
   },
   usersGroups: {
@@ -745,6 +757,10 @@ export const moduleObjects = {
       {
         name: 'usersInvite',
         description: 'Invite team member',
+      },
+      {
+        name: 'exportUsers',
+        description: 'Export team members',
       },
     ],
   },
