@@ -447,6 +447,8 @@ interface ICustomerFactoryInput {
   integrationId?: string;
   firstName?: string;
   lastName?: string;
+  sex?: number;
+  birthDate?: Date;
   primaryEmail?: string;
   primaryPhone?: string;
   emails?: string[];
@@ -470,6 +472,8 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     integrationId: params.integrationId,
     firstName: params.firstName,
     lastName: params.lastName,
+    sex: params.sex,
+    birthDate: params.birthDate,
     primaryEmail: params.primaryEmail,
     primaryPhone: params.primaryPhone,
     emails: params.emails || [],

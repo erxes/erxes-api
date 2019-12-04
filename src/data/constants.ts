@@ -280,3 +280,10 @@ export const NOTIFICATION_MODULES = [
     ],
   },
 ];
+
+export const SEX_TYPES = {
+  0: 'not known',
+  1: 'male',
+  2: 'female',
+  9: 'not applicable',
+};
