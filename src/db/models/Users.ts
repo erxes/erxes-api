@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { UsersGroups } from '.';
+import { Brands, UsersGroups } from '.';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -555,6 +555,17 @@ export const loadClass = () => {
         token,
         refreshToken,
       };
+    }
+
+    private brandIds: string[] = [];
+    private groupIds: string[] = [];
+
+    public getBrands() {
+      return Brands.find({ _id: { $in: this.brandIds } }) || [];
+    }
+
+    public getUserGroups() {
+      return UsersGroups.find({ _id: { $in: this.groupIds } }) || [];
     }
   }
 

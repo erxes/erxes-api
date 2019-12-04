@@ -1,6 +1,7 @@
 import { Model, model } from 'mongoose';
-import { Users } from '.';
+import { Users, UsersGroups as UserGroups } from '.';
 import { actionsMap, IActionsMap } from '../../data/permissions/utils';
+import BaseModelClass from './BaseModelClass';
 import {
   IPermission,
   IPermissionDocument,
@@ -24,7 +25,7 @@ export interface IUserGroupModel extends Model<IUserGroupDocument> {
 }
 
 export const permissionLoadClass = () => {
-  class Permission {
+  class Permission extends BaseModelClass {
     /**
      * Create a permission
      * @param  {Object} doc object
@@ -104,6 +105,12 @@ export const permissionLoadClass = () => {
       }
 
       return Permissions.deleteMany({ _id: { $in: ids } });
+    }
+
+    private groupId: string = '';
+
+    public getUsersGroup() {
+      return UserGroups.findOne({ _id: this.groupId });
     }
   }
 

@@ -1,17 +1,14 @@
 import { PipelineLabels, Stages, Users } from '.';
 
-export default class BoardItemClass {
-  protected userId: string = '';
+import BaseModelClass from './BaseModelClass';
+
+export default class BoardItemClass extends BaseModelClass {
   protected assignedUserIds: string[] = [];
   protected watchedUserIds: string[] = [];
   protected labelIds: string[] = [];
   protected stageId: string = '';
   protected initialStageId: string = '';
   protected modifiedBy: string = '';
-
-  public getCreatedUser() {
-    return Users.findOne({ _id: this.userId });
-  }
 
   public getAssignedUsers() {
     return Users.find({ _id: { $in: this.assignedUserIds } }) || [];
