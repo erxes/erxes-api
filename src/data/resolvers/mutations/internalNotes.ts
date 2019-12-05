@@ -167,16 +167,14 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.getInternalNote(_id);
     const removed = await InternalNotes.removeInternalNote(_id);
 
-    if (internalNote) {
-      await putDeleteLog(
-        {
-          type: 'internalNote',
-          object: internalNote,
-          description: `${internalNote.contentType} written at ${internalNote.createdAt} has been removed`,
-        },
-        user,
-      );
-    }
+    await putDeleteLog(
+      {
+        type: 'internalNote',
+        object: internalNote,
+        description: `${internalNote.contentType} written at ${internalNote.createdAt} has been removed`,
+      },
+      user,
+    );
 
     return removed;
   },
