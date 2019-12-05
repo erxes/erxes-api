@@ -31,6 +31,14 @@ export const loadTaskClass = () => {
      * Create a Task
      */
     public static async createTask(doc: ITask) {
+      if (doc.sourceKindId) {
+        const convertedTask = await Tasks.findOne({ sourceKindId: doc.sourceKindId });
+
+        if (convertedTask) {
+          throw new Error('Already converted a task');
+        }
+      }
+
       const tasksCount = await Tasks.find({
         stageId: doc.stageId,
       }).countDocuments();

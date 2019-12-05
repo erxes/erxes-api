@@ -23,6 +23,8 @@ export const queries = `
     closeDateType: String
     priority: [String]
     labelIds: [String]
+    sourceKind: String
+    sourceKindId: String
     ${conformityQueryFields}
   ): [Task]
 `;
@@ -36,7 +38,9 @@ const commonParams = `
   order: Int,
   priority: String,
   reminderMinute: Int,
-  isComplete: Boolean
+  isComplete: Boolean,
+  sourceKind: String,
+  sourceKindId: String
 `;
 
 export const mutations = `

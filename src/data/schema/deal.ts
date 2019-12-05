@@ -40,6 +40,8 @@ const commonMutationParams = `
   reminderMinute: Int,
   isComplete: Boolean,
   priority: String
+  sourceKind: String,
+  sourceKindId: String,
 `;
 
 const commonQueryParams = `

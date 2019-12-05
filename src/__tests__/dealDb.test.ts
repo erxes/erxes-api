@@ -1,4 +1,11 @@
-import { boardFactory, dealFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
+import {
+  boardFactory,
+  dealFactory,
+  integrationFactory,
+  pipelineFactory,
+  stageFactory,
+  userFactory,
+} from '../db/factories';
 import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IDealDocument } from '../db/models/definitions/deals';
@@ -42,17 +49,40 @@ describe('Test deals model', () => {
     expect(response).toBeDefined();
   });
 
-  // Test deal
   test('Create deal', async () => {
-    const createdDeal = await Deals.createDeal({
+    const args = {
       stageId: deal.stageId,
       userId: user._id,
-    });
+    };
+
+    const createdDeal = await Deals.createDeal(args);
 
     expect(createdDeal).toBeDefined();
     expect(createdDeal.stageId).toEqual(stage._id);
     expect(createdDeal.createdAt).toEqual(deal.createdAt);
     expect(createdDeal.userId).toEqual(user._id);
+  });
+
+  test('Create deal Error(`Already converted a deal`)', async () => {
+    const leadIntegration = await integrationFactory({ kind: 'lead' });
+
+    const args = {
+      stageId: deal.stageId,
+      userId: user._id,
+      sourceKind: 'lead',
+      sourceKindId: leadIntegration._id,
+    };
+
+    const createdDeal = await Deals.createDeal(args);
+
+    expect(createdDeal).toBeDefined();
+
+    // Already converted a deal
+    try {
+      await Deals.createDeal(args);
+    } catch (e) {
+      expect(e.message).toBe('Already converted a deal');
+    }
   });
 
   test('Update deal', async () => {

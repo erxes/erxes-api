@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
+import { BOARD_TYPES, HACK_SCORING_TYPES, KIND_CHOICES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
@@ -30,6 +30,8 @@ export interface IItemCommonFields {
   order?: number;
   searchText?: string;
   priority?: string;
+  sourceKind?: string;
+  sourceKindId?: string;
 }
 
 export interface IBoard extends ICommonFields {
@@ -131,6 +133,8 @@ export const commonItemFieldsSchema = {
   modifiedBy: field({ type: String }),
   searchText: field({ type: String, optional: true, index: true }),
   priority: field({ type: String, optional: true }),
+  sourceKind: field({ type: String, enum: KIND_CHOICES.ALL, optional: true }),
+  sourceKindId: field({ type: String, optional: true }),
 };
 
 export const boardSchema = schemaWrapper(
