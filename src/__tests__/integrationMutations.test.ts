@@ -495,6 +495,16 @@ describe('mutations', () => {
     } catch (e) {
       expect(e[0].message).toBe('Integrations api is not running');
     }
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'sendEmail');
+
+    spy.mockImplementation(() => Promise.resolve());
+
+    try {
+      await graphqlRequest(mutation, 'integrationSendMail', args, { dataSources });
+    } catch (e) {
+      expect(e[0].message).toBeDefined();
+    }
   });
 
   test('Integrations remove', async () => {
