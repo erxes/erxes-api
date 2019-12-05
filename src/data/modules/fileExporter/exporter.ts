@@ -25,7 +25,7 @@ import {
   IListArgs as ICustomerListArgs,
   sortBuilder as customersSortBuilder,
 } from '../coc/customers';
-import { fillCellValue, fillColumns } from './spreadsheet';
+import { fillCellValue, fillHeaders, IColumnLabel } from './spreadsheet';
 
 // Prepares data depending on module type
 const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
@@ -130,26 +130,26 @@ export const buildFile = async (query: any, user: IUserDocument): Promise<{ name
   const { type } = query;
 
   const data = await prepareData(query, user);
-  const columnNames: string[] = fillColumns(type);
+  const headers: IColumnLabel[] = fillHeaders(type);
 
   // Reads default template
   const { workbook, sheet } = await createXlsFile();
 
-  const cols: string[] = [];
+  const columnNames: string[] = [];
   let rowIndex: number = 1;
 
-  const addCell = (col: string, value: string): void => {
+  const addCell = (col: IColumnLabel, value: string): void => {
     // Checking if existing column
-    if (cols.includes(col)) {
+    if (columnNames.includes(col.name)) {
       // If column already exists adding cell
-      sheet.cell(rowIndex, cols.indexOf(col) + 1).value(value);
+      sheet.cell(rowIndex, columnNames.indexOf(col.name) + 1).value(value);
     } else {
       // Creating column
-      sheet.cell(1, cols.length + 1).value(col);
+      sheet.cell(1, columnNames.length + 1).value(col.label || col.name);
       // Creating cell
-      sheet.cell(rowIndex, cols.length + 1).value(value);
+      sheet.cell(rowIndex, columnNames.length + 1).value(value);
 
-      cols.push(col);
+      columnNames.push(col.name);
     }
   };
 
@@ -157,11 +157,11 @@ export const buildFile = async (query: any, user: IUserDocument): Promise<{ name
     rowIndex++;
 
     // Iterating through basic info columns
-    for (const colName of columnNames) {
-      if (item[colName] && item[colName] !== '') {
-        const cellValue = await fillCellValue(colName, item);
+    for (const column of headers) {
+      if (item[column.name] && item[column.name] !== '') {
+        const cellValue = await fillCellValue(column.name, item);
 
-        addCell(colName, cellValue);
+        addCell(column, cellValue);
       }
     }
 
@@ -174,7 +174,7 @@ export const buildFile = async (query: any, user: IUserDocument): Promise<{ name
           const propertyObj = await Fields.findOne({ _id: fieldId });
 
           if (propertyObj && propertyObj.text) {
-            addCell(propertyObj.text, item.customFieldsData[fieldId]);
+            addCell({ name: propertyObj.text, label: propertyObj.text }, item.customFieldsData[fieldId]);
           }
         }
       }

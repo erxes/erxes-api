@@ -1,10 +1,14 @@
 import * as moment from 'moment';
-import { IStageDocument } from '../../../db/models/definitions/boards';
-import { IBrandDocument } from '../../../db/models/definitions/brands';
+import { commonItemFieldsSchema, IStageDocument } from '../../../db/models/definitions/boards';
+import { brandSchema, IBrandDocument } from '../../../db/models/definitions/brands';
+import { channelSchema } from '../../../db/models/definitions/channels';
+import { companySchema } from '../../../db/models/definitions/companies';
+import { customerSchema } from '../../../db/models/definitions/customers';
 import { IIntegrationDocument } from '../../../db/models/definitions/integrations';
-import { IUserGroupDocument } from '../../../db/models/definitions/permissions';
+import { IUserGroupDocument, permissionSchema } from '../../../db/models/definitions/permissions';
 import { IPipelineLabelDocument } from '../../../db/models/definitions/pipelineLabels';
-import { IUserDocument } from '../../../db/models/definitions/users';
+import { ticketSchema } from '../../../db/models/definitions/tickets';
+import { IUserDocument, userSchema } from '../../../db/models/definitions/users';
 
 import {
   BOARD_BASIC_INFOS,
@@ -17,34 +21,55 @@ import {
   USER_BASIC_INFOS,
 } from '../../constants';
 
-export const fillColumns = (itemType: string): string[] => {
-  let columnNames: string[] = [];
+export interface IColumnLabel {
+  name: string;
+  label: string;
+}
+
+const findSchemaLabels = (schema: any, basicFields: string[]): IColumnLabel[] => {
+  const fields: IColumnLabel[] = [];
+
+  for (const name of basicFields) {
+    const field = schema.obj ? schema.obj[name] : schema[name];
+
+    if (field && field.label) {
+      fields.push({ name, label: field.label });
+    } else {
+      fields.push({ name, label: name });
+    }
+  }
+
+  return fields;
+};
+
+export const fillHeaders = (itemType: string): IColumnLabel[] => {
+  let columnNames: IColumnLabel[] = [];
 
   switch (itemType) {
     case MODULE_NAMES.COMPANY:
-      columnNames = COMPANY_BASIC_INFOS;
+      columnNames = findSchemaLabels(companySchema, COMPANY_BASIC_INFOS);
       break;
     case MODULE_NAMES.CUSTOMER:
-      columnNames = CUSTOMER_BASIC_INFOS;
+      columnNames = findSchemaLabels(customerSchema, CUSTOMER_BASIC_INFOS);
       break;
     case MODULE_NAMES.DEAL:
     case MODULE_NAMES.TASK:
-      columnNames = BOARD_BASIC_INFOS;
+      columnNames = findSchemaLabels(commonItemFieldsSchema, BOARD_BASIC_INFOS);
       break;
     case MODULE_NAMES.TICKET:
-      columnNames = [...BOARD_BASIC_INFOS, 'source'];
+      columnNames = findSchemaLabels(ticketSchema, [...BOARD_BASIC_INFOS, 'source']);
       break;
     case MODULE_NAMES.USER:
-      columnNames = USER_BASIC_INFOS;
+      columnNames = findSchemaLabels(userSchema, USER_BASIC_INFOS);
       break;
     case MODULE_NAMES.BRAND:
-      columnNames = BRAND_BASIC_INFOS;
+      columnNames = findSchemaLabels(brandSchema, BRAND_BASIC_INFOS);
       break;
     case MODULE_NAMES.CHANNEL:
-      columnNames = CHANNEL_BASIC_INFOS;
+      columnNames = findSchemaLabels(channelSchema, CHANNEL_BASIC_INFOS);
       break;
     case MODULE_NAMES.PERMISSION:
-      columnNames = PERMISSION_BASIC_INFOS;
+      columnNames = findSchemaLabels(permissionSchema, PERMISSION_BASIC_INFOS);
       break;
     default:
       break;
