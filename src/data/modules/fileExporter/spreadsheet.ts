@@ -10,16 +10,16 @@ import { IPipelineLabelDocument } from '../../../db/models/definitions/pipelineL
 import { ticketSchema } from '../../../db/models/definitions/tickets';
 import { IUserDocument, userSchema } from '../../../db/models/definitions/users';
 
+import { MODULE_NAMES } from '../../constants';
 import {
   BOARD_BASIC_INFOS,
   BRAND_BASIC_INFOS,
   CHANNEL_BASIC_INFOS,
   COMPANY_BASIC_INFOS,
   CUSTOMER_BASIC_INFOS,
-  MODULE_NAMES,
   PERMISSION_BASIC_INFOS,
   USER_BASIC_INFOS,
-} from '../../constants';
+} from './constants';
 
 export interface IColumnLabel {
   name: string;
