@@ -1,7 +1,15 @@
-import { boardFactory, dealFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
+import {
+  boardFactory,
+  dealFactory,
+  pipelineFactory,
+  pipelineLabelFactory,
+  stageFactory,
+  userFactory,
+} from '../db/factories';
 import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IDealDocument } from '../db/models/definitions/deals';
+import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
 import { IUserDocument } from '../db/models/definitions/users';
 
 import './setup.ts';
@@ -12,14 +20,26 @@ describe('Test deals model', () => {
   let stage: IStageDocument;
   let deal: IDealDocument;
   let user: IUserDocument;
+  let label: IPipelineLabelDocument;
+  let secondUser: IUserDocument;
 
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory();
     pipeline = await pipelineFactory({ boardId: board._id });
     stage = await stageFactory({ pipelineId: pipeline._id });
-    deal = await dealFactory({ stageId: stage._id });
     user = await userFactory({});
+    secondUser = await userFactory({});
+    label = await pipelineLabelFactory({});
+    deal = await dealFactory({
+      initialStageId: stage._id,
+      stageId: stage._id,
+      userId: user._id,
+      modifiedBy: user._id,
+      labelIds: [label._id],
+      assignedUserIds: [user._id],
+      watchedUserIds: [secondUser._id],
+    });
   });
 
   afterEach(async () => {
@@ -98,5 +118,102 @@ describe('Test deals model', () => {
     const unwatchedDeal = await Deals.getDeal(deal._id);
 
     expect(unwatchedDeal.watchedUserIds).not.toContain(user._id);
+  });
+
+  test('Test userId field', async () => {
+    expect(deal.userId).toBeDefined();
+  });
+
+  test('Test modifiedBy field', async () => {
+    expect(deal.modifiedBy).toBeDefined();
+  });
+
+  test('Test stageId field', async () => {
+    expect(deal.stageId).toBeDefined();
+  });
+
+  test('Test initialStageId field', async () => {
+    expect(deal.initialStageId).toBeDefined();
+  });
+
+  test('Test labelIds field', async () => {
+    expect(deal.labelIds).toBeDefined();
+  });
+
+  test('Test assignedUserIds field', async () => {
+    expect(deal.assignedUserIds).toBeDefined();
+  });
+
+  test('Test watchedUserIds field', async () => {
+    expect(deal.watchedUserIds).toBeDefined();
+  });
+
+  test('getCreatedUser()', async () => {
+    if (deal.getCreatedUser) {
+      const createdBy = await deal.getCreatedUser();
+
+      expect(createdBy._id).toBe(deal.userId);
+    }
+  });
+
+  test('getAssignedUsers()', async () => {
+    const user1 = await userFactory({});
+    const deal1 = await dealFactory({ assignedUserIds: [user1._id, user._id] });
+
+    if (deal1.getAssignedUsers) {
+      const users = await deal1.getAssignedUsers();
+
+      expect(users.length).toBe(2);
+    }
+  });
+
+  test('getWatchedUsers()', async () => {
+    const user1 = await userFactory({});
+    const user2 = await userFactory({});
+
+    const deal1 = await dealFactory({ watchedUserIds: [user1._id, user._id, user2._id] });
+
+    if (deal1.getWatchedUsers) {
+      const users = await deal1.getWatchedUsers();
+
+      expect(users.length).toBe(3);
+    }
+  });
+
+  test('getLabels()', async () => {
+    const label1 = await pipelineLabelFactory({});
+    const label2 = await pipelineLabelFactory({});
+
+    const deal1 = await dealFactory({ labelIds: [label1._id, label2._id] });
+
+    if (deal1.getLabels) {
+      const labels = await deal1.getLabels();
+
+      expect(labels.length).toBe(2);
+    }
+  });
+
+  test('getStage()', async () => {
+    if (deal.getStage) {
+      const stage1 = await deal.getStage();
+
+      expect(stage1._id).toBe(stage._id);
+    }
+  });
+
+  test('getInitialStage()', async () => {
+    if (deal.getInitialStage) {
+      const stage1 = await deal.getInitialStage();
+
+      expect(stage1._id).toBe(stage._id);
+    }
+  });
+
+  test('getModifiedUser()', async () => {
+    if (deal.getModifiedUser) {
+      const modifiedBy = await deal.getModifiedUser();
+
+      expect(modifiedBy._id).toBe(deal.userId);
+    }
   });
 });

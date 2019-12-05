@@ -1,4 +1,5 @@
 import { Document, Schema } from 'mongoose';
+import { IBoardItemDocument } from './common';
 import { BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 import { field, schemaWrapper } from './utils';
 
@@ -9,7 +10,7 @@ interface ICommonFields {
   type: string;
 }
 
-export interface IItemCommonFields {
+export interface IItemCommonFields extends IBoardItemDocument {
   name?: string;
   // TODO migrate after remove 2row
   companyIds?: string[];

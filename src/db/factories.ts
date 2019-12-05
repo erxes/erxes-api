@@ -891,6 +891,8 @@ interface IDealFactoryInput {
   order?: number;
   probability?: string;
   searchText?: string;
+  userId?: string;
+  initialStageId?: string;
 }
 
 export const dealFactory = async (params: IDealFactoryInput = {}) => {
@@ -915,6 +917,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
     order: params.order,
     probability: params.probability,
     searchText: params.searchText,
+    userId: params.userId || faker.random.uuid(),
   });
 
   return deal.save();

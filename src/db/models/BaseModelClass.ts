@@ -1,6 +1,6 @@
 import { Users } from '.';
 
-export default class BoardItemClass {
+export default class BaseModelClass {
   protected userId: string = '';
 
   public getCreatedUser() {
