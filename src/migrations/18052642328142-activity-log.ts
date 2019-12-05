@@ -1,6 +1,6 @@
 import { createConnection } from 'mongoose';
 import { connect } from '../db/connection';
-import { ActivityLogs, Conversations, EngageMessages, Integrations, InternalNotes } from '../db/models';
+import { ActivityLogs, Conversations, Integrations } from '../db/models';
 
 /**
  * Rename createdDate field to createdAt
