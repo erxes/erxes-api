@@ -60,7 +60,12 @@ const activityLogQueries = {
     };
 
     const collectConversations = async () => {
-      collectItems(await Conversations.find({ customerId: contentId }).sort({ createdAt: 1 }), 'conversation');
+      collectItems(
+        await Conversations.find({ $or: [{ customerId: contentId }, { participatedUserIds: contentId }] }).sort({
+          createdAt: 1,
+        }),
+        'conversation',
+      );
       if (contentType === 'customer') {
         let conversationIds;
 
