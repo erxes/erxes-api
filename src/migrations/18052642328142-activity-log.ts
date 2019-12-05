@@ -17,8 +17,11 @@ module.exports.up = async () => {
 
   const mongoClient = await createConnection(process.env.MONGO_URL || '', options);
 
-  await InternalNotes.updateMany({}, { $rename: { createdDate: 'createdAt' } });
-  await EngageMessages.updateMany({}, { $rename: { createdDate: 'createdAt' } });
+  const internalNotes = mongoClient.db.collection('activity_logs');
+  const engageMessages = mongoClient.db.collection('engage_messages');
+
+  await internalNotes.updateMany({}, { $rename: { createdDate: 'createdAt' } });
+  await engageMessages.updateMany({}, { $rename: { createdDate: 'createdAt' } });
 
   const activityLogs = mongoClient.db.collection('activity_logs');
 
