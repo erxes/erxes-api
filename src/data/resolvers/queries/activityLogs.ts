@@ -1,4 +1,12 @@
-import { ActivityLogs, Conformities, Conversations, EngageMessages, InternalNotes, Tasks } from '../../../db/models';
+import {
+  ActivityLogs,
+  Conformities,
+  Conversations,
+  EmailDeliveries,
+  EngageMessages,
+  InternalNotes,
+  Tasks,
+} from '../../../db/models';
 import { IActivityLogDocument } from '../../../db/models/definitions/activityLogs';
 import { debugExternalApi } from '../../../debuggers';
 import { moduleRequireLogin } from '../../permissions/wrappers';
@@ -61,11 +69,7 @@ const activityLogQueries = {
 
     const collectConversations = async () => {
       collectItems(
-        await Conversations.find({ $or: [{ customerId: contentId }, { participatedUserIds: contentId }] })
-          .sort({
-            createdAt: 1,
-          })
-          .limit(25),
+        await Conversations.find({ $or: [{ customerId: contentId }, { participatedUserIds: contentId }] }).limit(25),
         'conversation',
       );
       if (contentType === 'customer') {
@@ -91,7 +95,8 @@ const activityLogQueries = {
     };
 
     const collectEngageMessages = async () => {
-      collectItems(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'email');
+      collectItems(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'engage-email');
+      collectItems(await EmailDeliveries.find({ customerId: contentId }), 'nylas-email');
     };
 
     const collectTasks = async () => {
@@ -124,12 +129,12 @@ const activityLogQueries = {
         await collectEngageMessages();
         await collectTasks();
 
-        activities.sort((a, b) => {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-
         break;
     }
+
+    activities.sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
     return activities;
   },
