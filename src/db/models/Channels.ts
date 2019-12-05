@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import { Integrations, Users } from '.';
 import { channelSchema, IChannel, IChannelDocument } from './definitions/channels';
 
 export interface IChannelModel extends Model<IChannelDocument> {
@@ -55,17 +54,6 @@ export const loadClass = () => {
 
     public static removeChannel(_id: string) {
       return Channels.deleteOne({ _id });
-    }
-
-    private integrationIds: string[] = [];
-    private memberIds: string[] = [];
-
-    public getIntegrations() {
-      return Integrations.find({ _id: { $in: this.integrationIds } }) || [];
-    }
-
-    public getMembers() {
-      return Users.find({ _id: { $in: this.memberIds } }) || [];
     }
   }
 
