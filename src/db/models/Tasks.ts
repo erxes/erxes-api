@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import BoardItemClass from './BoardItemClass';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from './definitions/boards';
 import { ITaskDocument, taskSchema } from './definitions/tasks';
@@ -14,7 +13,7 @@ export interface ITaskModel extends Model<ITaskDocument> {
 }
 
 export const loadTaskClass = () => {
-  class Task extends BoardItemClass {
+  class Task {
     /**
      * Retreives Task
      */

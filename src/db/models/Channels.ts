@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
 import { Integrations, Users } from '.';
-import BaseModelClass from './BaseModelClass';
 import { channelSchema, IChannel, IChannelDocument } from './definitions/channels';
 
 export interface IChannelModel extends Model<IChannelDocument> {
@@ -12,7 +11,7 @@ export interface IChannelModel extends Model<IChannelDocument> {
 }
 
 export const loadClass = () => {
-  class Channel extends BaseModelClass {
+  class Channel {
     /*
      * Get a Channel
      */

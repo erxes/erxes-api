@@ -1,7 +1,6 @@
 import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
 import { Integrations } from './';
-import BaseModelClass from './BaseModelClass';
 import { brandSchema, IBrand, IBrandDocument, IBrandEmailConfig } from './definitions/brands';
 import { IIntegrationDocument } from './definitions/integrations';
 
@@ -18,7 +17,7 @@ export interface IBrandModel extends Model<IBrandDocument> {
 }
 
 export const loadClass = () => {
-  class Brand extends BaseModelClass {
+  class Brand {
     /*
      * Get a Brand
      */

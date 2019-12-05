@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
 import { Users, UsersGroups as UserGroups } from '.';
 import { actionsMap, IActionsMap } from '../../data/permissions/utils';
-import BaseModelClass from './BaseModelClass';
 import {
   IPermission,
   IPermissionDocument,
@@ -25,7 +24,7 @@ export interface IUserGroupModel extends Model<IUserGroupDocument> {
 }
 
 export const permissionLoadClass = () => {
-  class Permission extends BaseModelClass {
+  class Permission {
     /**
      * Create a permission
      * @param  {Object} doc object

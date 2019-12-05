@@ -1,6 +1,5 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import BoardItemClass from './BoardItemClass';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
@@ -14,7 +13,7 @@ export interface IDealModel extends Model<IDealDocument> {
 }
 
 export const loadDealClass = () => {
-  class Deal extends BoardItemClass {
+  class Deal {
     public static async getDeal(_id: string) {
       const deal = await Deals.findOne({ _id });
 

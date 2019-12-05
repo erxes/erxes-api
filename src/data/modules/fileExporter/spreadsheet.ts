@@ -9,6 +9,7 @@ import { IUserGroupDocument, permissionSchema } from '../../../db/models/definit
 import { IPipelineLabelDocument } from '../../../db/models/definitions/pipelineLabels';
 import { ticketSchema } from '../../../db/models/definitions/tickets';
 import { IUserDocument, userSchema } from '../../../db/models/definitions/users';
+import { Brands, Integrations, PipelineLabels, Stages, Users, UsersGroups } from '../../../db/models/index';
 
 import { MODULE_NAMES } from '../../constants';
 import {
@@ -93,44 +94,44 @@ export const fillCellValue = async (colName: string, item: any): Promise<string>
 
       break;
     case 'userId':
-      const createdUser: IUserDocument = await item.getCreatedUser();
+      const createdUser: IUserDocument | null = await Users.findOne({ _id: item.userId });
 
       cellValue = createdUser ? createdUser.username : 'user not found';
 
       break;
     // deal, task, ticket fields
     case 'assignedUserIds':
-      const assignedUsers: IUserDocument[] = await item.getAssignedUsers();
+      const assignedUsers: IUserDocument[] = await Users.find({ _id: { $in: item.assignedUserIds } });
 
       cellValue = assignedUsers.map(user => user.username).join(', ');
 
       break;
     case 'watchedUserIds':
-      const watchedUsers: IUserDocument[] = await item.getWatchedUsers();
+      const watchedUsers: IUserDocument[] = await Users.find({ _id: { $in: item.watchedUserIds } });
 
       cellValue = watchedUsers.map(user => user.username).join(', ');
 
       break;
     case 'labelIds':
-      const labels: IPipelineLabelDocument[] = await item.getLabels();
+      const labels: IPipelineLabelDocument[] = await PipelineLabels.find({ _id: { $in: item.labelIds } });
 
       cellValue = labels.map(label => label.name).join(', ');
 
       break;
     case 'stageId':
-      const stage: IStageDocument = await item.getStage();
+      const stage: IStageDocument | null = await Stages.findOne({ _id: item.stageId });
 
       cellValue = stage ? stage.name : 'stage not found';
 
       break;
     case 'initialStageId':
-      const initialStage: IStageDocument = await item.getInitialStage();
+      const initialStage: IStageDocument | null = await Stages.findOne({ _id: item.initialStageId });
 
       cellValue = initialStage ? initialStage.name : 'stage not found';
 
       break;
     case 'modifiedBy':
-      const modifiedBy: IUserDocument = await item.getModifiedUser();
+      const modifiedBy: IUserDocument | null = await Users.findOne({ _id: item.modifiedBy });
 
       cellValue = modifiedBy ? modifiedBy.username : 'modified user not found';
 
@@ -138,13 +139,13 @@ export const fillCellValue = async (colName: string, item: any): Promise<string>
 
     // user fields
     case 'brandIds':
-      const brands: IBrandDocument[] = await item.getBrands();
+      const brands: IBrandDocument[] = await Brands.find({ _id: item.brandIds });
 
       cellValue = brands.map(brand => brand.name).join(', ');
 
       break;
     case 'groupIds':
-      const groups: IUserGroupDocument[] = await item.getUserGroups();
+      const groups: IUserGroupDocument[] = await UsersGroups.find({ _id: { $in: item.groupIds } });
 
       cellValue = groups.map(g => g.name).join(', ');
 
@@ -152,13 +153,13 @@ export const fillCellValue = async (colName: string, item: any): Promise<string>
 
     // channel fields
     case 'integrationIds':
-      const integrations: IIntegrationDocument[] = await item.getIntegrations();
+      const integrations: IIntegrationDocument[] = await Integrations.find({ _id: { $in: item.integrationIds } });
 
       cellValue = integrations.map(i => i.name).join(', ');
 
       break;
     case 'memberIds':
-      const members: IUserDocument[] = await item.getMembers();
+      const members: IUserDocument[] = await Users.find({ _id: { $in: item.memberIds } });
 
       cellValue = members.map(m => m.username).join(', ');
 
@@ -166,7 +167,7 @@ export const fillCellValue = async (colName: string, item: any): Promise<string>
 
     // permission fields
     case 'groupId':
-      const group: IUserGroupDocument = await item.getUsersGroup();
+      const group: IUserGroupDocument | null = await UsersGroups.findOne({ _id: item.groupId });
 
       cellValue = group ? group.name : 'no user group chosen';
 
