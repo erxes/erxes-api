@@ -96,7 +96,7 @@ const activityLogQueries = {
 
     const collectEngageMessages = async () => {
       collectItems(await EngageMessages.find({ customerIds: contentId, method: 'email' }), 'engage-email');
-      collectItems(await EmailDeliveries.find({ customerId: contentId }), 'nylas-email');
+      collectItems(await EmailDeliveries.find({ customerId: contentId }), 'email');
     };
 
     const collectTasks = async () => {

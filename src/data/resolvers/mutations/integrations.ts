@@ -237,16 +237,17 @@ const integrationMutations = {
         erxesApiId,
         data: JSON.stringify(doc),
       });
-
-      const customer = await Customers.findOne({ primaryEmail: doc.to });
-
-      doc.userId = user._id;
-      doc.customerId = customer ? customer._id : '';
-
-      return EmailDeliveries.createEmailDelivery(doc);
     } catch (e) {
       debugExternalApi(e);
+      throw new Error(e);
     }
+
+    const customer = await Customers.findOne({ primaryEmail: doc.to });
+
+    doc.userId = user._id;
+    doc.customerId = customer ? customer._id : '';
+
+    return EmailDeliveries.createEmailDelivery(doc);
   },
 
   async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {
