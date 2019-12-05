@@ -145,17 +145,15 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.getInternalNote(_id);
     const updated = await InternalNotes.updateInternalNote(_id, doc);
 
-    if (internalNote) {
-      await putUpdateLog(
-        {
-          type: 'internalNote',
-          object: internalNote,
-          newData: JSON.stringify(doc),
-          description: `${internalNote.contentType} written at ${internalNote.createdAt} has been edited`,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: 'internalNote',
+        object: internalNote,
+        newData: JSON.stringify(doc),
+        description: `${internalNote.contentType} written at ${internalNote.createdAt} has been edited`,
+      },
+      user,
+    );
 
     return updated;
   },

@@ -16,6 +16,7 @@ import {
   Conversations,
   Customers,
   Deals,
+  EmailDeliveries,
   EmailTemplates,
   EngageMessages,
   Fields,
@@ -1203,4 +1204,34 @@ interface IConformityFactoryInput {
 
 export const conformityFactory = (params: IConformityFactoryInput) => {
   return Conformities.addConformity(params);
+};
+
+interface IEmailDeliveryFactoryInput {
+  attachments?: string[];
+  subject?: string;
+  body?: string;
+  to?: string;
+  cc?: string;
+  bcc?: string;
+  from?: string;
+  kind?: string;
+  userId?: string;
+  customerId?: string;
+}
+
+export const emailDeliveryFactory = async (params: IEmailDeliveryFactoryInput = {}) => {
+  const emailDelviry = new EmailDeliveries({
+    attachments: params.attachments || [],
+    subject: params.subject || 'subject',
+    body: params.body || 'body',
+    to: params.to || 'to',
+    cc: params.cc || 'cc',
+    bcc: params.bcc || 'bcc',
+    from: params.from || 'from',
+    kind: params.kind || 'kind',
+    userId: params.userId || faker.random.uuid(),
+    customerId: params.customerId || faker.random.uuid(),
+  });
+
+  return emailDelviry.save();
 };
