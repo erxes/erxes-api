@@ -1,6 +1,6 @@
 import { createConnection } from 'mongoose';
 import { connect } from '../db/connection';
-import { ActivityLogs, EngageMessages, InternalNotes } from '../db/models';
+import { ActivityLogs, Conversations, EngageMessages, Integrations, InternalNotes } from '../db/models';
 
 /**
  * Rename createdDate field to createdAt
@@ -74,5 +74,7 @@ module.exports.up = async () => {
     }
   }
 
-  return ActivityLogs.deleteMany({ performedBy: { $exists: true } });
+  const integrationIds = await Integrations.find({}).distinct('_id');
+
+  return Conversations.remove({ integrationId: { $nin: integrationIds } });
 };
