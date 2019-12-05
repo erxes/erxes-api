@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-// import { ActivityLogs } from '.';
 import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { IInternalNote, IInternalNoteDocument, internalNoteSchema } from './definitions/internalNotes';
 import { IUserDocument } from './definitions/users';
