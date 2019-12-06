@@ -14,10 +14,14 @@ const generateFilterQuery = async ({ kind, channelId, brandId, searchValue, tag 
     query.kind = kind;
   }
 
+  if (kind === 'mail') {
+    query.kind = { $in: ['gmail', 'nylas-gmail', 'nylas-imap', 'nylas-office365', 'nylas-outlook', 'nylas-yahoo'] };
+  }
+
   // filter integrations by channel
   if (channelId) {
-    const channel = await Channels.findOne({ _id: channelId });
-    query._id = { $in: channel ? channel.integrationIds : [] };
+    const channel = await Channels.getChannel(channelId);
+    query._id = { $in: channel.integrationIds || [] };
   }
 
   // filter integrations by brand
