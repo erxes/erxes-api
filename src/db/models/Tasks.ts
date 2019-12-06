@@ -51,7 +51,7 @@ export const loadTaskClass = () => {
       });
 
       // create log
-      await ActivityLogs.createTaskLog(task);
+      await ActivityLogs.createBoardItemLog({ item: task, contentType: 'task' });
 
       return task;
     }

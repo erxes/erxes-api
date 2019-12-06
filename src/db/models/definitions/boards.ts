@@ -34,6 +34,10 @@ export interface IItemCommonFields {
   sourceKindId?: string;
 }
 
+export interface IItemCommonFieldsDocument extends IItemCommonFields, Document {
+  _id: string;
+}
+
 export interface IBoard extends ICommonFields {
   name?: string;
 }
