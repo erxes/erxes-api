@@ -221,5 +221,6 @@ checkPermission(userMutations, 'usersEdit', 'usersEdit');
 checkPermission(userMutations, 'usersInvite', 'usersInvite');
 checkPermission(userMutations, 'usersResendInvitation', 'usersInvite');
 checkPermission(userMutations, 'usersSetActiveStatus', 'usersSetActiveStatus');
+checkPermission(userMutations, 'resetMemberPassword', 'usersEdit');
 
 export default userMutations;

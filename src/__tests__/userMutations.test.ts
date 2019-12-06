@@ -516,4 +516,37 @@ describe('User mutations', () => {
 
     expect(response).toBe('loggedout');
   });
+
+  test('Reset member password', async () => {
+    const previousPassword = _user.password;
+
+    const mutation = `
+      mutation resetMemberPassword(
+        $_id: String!
+        $newPassword: String!
+      ) {
+        resetMemberPassword(
+          _id: $_id
+          newPassword: $newPassword
+        ) {
+          _id
+        }
+      }
+    `;
+
+    const user = await graphqlRequest(
+      mutation,
+      'resetMemberPassword',
+      { _id: _user.id, newPassword: 'newpassword' },
+      context,
+    );
+    // if not newPassword
+    try {
+      await graphqlRequest(mutation, 'resetMemberPassword', { _id: _user.id, newPassword: '' }, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Password is required.');
+    }
+
+    expect(user.password).not.toBe(previousPassword);
+  });
 });

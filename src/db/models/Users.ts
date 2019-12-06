@@ -396,11 +396,7 @@ export const loadClass = () => {
      * Reset member's password by given _id & newPassword
      */
     public static async resetMemberPassword({ _id, newPassword }: { _id: string; newPassword: string }) {
-      const user = await Users.findOne({ _id });
-
-      if (!user) {
-        throw new Error('User not found.');
-      }
+      const user = await Users.getUser(_id);
 
       if (!newPassword) {
         throw new Error('Password is required.');
