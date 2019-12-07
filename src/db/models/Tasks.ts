@@ -31,8 +31,8 @@ export const loadTaskClass = () => {
      * Create a Task
      */
     public static async createTask(doc: ITask) {
-      if (doc.sourceKindId) {
-        const convertedTask = await Tasks.findOne({ sourceKindId: doc.sourceKindId });
+      if (doc.sourceConversationId) {
+        const convertedTask = await Tasks.findOne({ sourceConversationId: doc.sourceConversationId });
 
         if (convertedTask) {
           throw new Error('Already converted a task');

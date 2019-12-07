@@ -31,8 +31,8 @@ export const loadTicketClass = () => {
      * Create a Ticket
      */
     public static async createTicket(doc: ITicket) {
-      if (doc.sourceKindId) {
-        const convertedTicket = await Tickets.findOne({ sourceKindId: doc.sourceKindId });
+      if (doc.sourceConversationId) {
+        const convertedTicket = await Tickets.findOne({ sourceConversationId: doc.sourceConversationId });
 
         if (convertedTicket) {
           throw new Error('Already converted a ticket');

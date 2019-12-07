@@ -28,8 +28,8 @@ export const loadDealClass = () => {
      * Create a deal
      */
     public static async createDeal(doc: IDeal) {
-      if (doc.sourceKindId) {
-        const convertedDeal = await Deals.findOne({ sourceKindId: doc.sourceKindId });
+      if (doc.sourceConversationId) {
+        const convertedDeal = await Deals.findOne({ sourceConversationId: doc.sourceConversationId });
 
         if (convertedDeal) {
           throw new Error('Already converted a deal');

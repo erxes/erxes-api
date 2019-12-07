@@ -69,8 +69,8 @@ describe('Test deals model', () => {
     const args = {
       stageId: deal.stageId,
       userId: user._id,
-      sourceKind: 'lead',
-      sourceKindId: leadIntegration._id,
+      sourceIntegration: 'lead',
+      sourceIntegrationId: leadIntegration._id,
     };
 
     const createdDeal = await Deals.createDeal(args);

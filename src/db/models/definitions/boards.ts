@@ -30,8 +30,9 @@ export interface IItemCommonFields {
   order?: number;
   searchText?: string;
   priority?: string;
-  sourceKind?: string;
-  sourceKindId?: string;
+  sourceIntegration?: string;
+  sourceIntegrationId?: string;
+  sourceConversationId?: string;
 }
 
 export interface IItemCommonFieldsDocument extends IItemCommonFields, Document {
@@ -137,8 +138,9 @@ export const commonItemFieldsSchema = {
   modifiedBy: field({ type: String }),
   searchText: field({ type: String, optional: true, index: true }),
   priority: field({ type: String, optional: true }),
-  sourceKind: field({ type: String, enum: KIND_CHOICES.ALL, optional: true }),
-  sourceKindId: field({ type: String, optional: true }),
+  sourceIntegration: field({ type: String, enum: KIND_CHOICES.ALL, optional: true }),
+  sourceIntegrationId: field({ type: String, optional: true }),
+  sourceConversationId: field({ type: String, optional: true }),
 };
 
 export const boardSchema = schemaWrapper(

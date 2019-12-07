@@ -67,8 +67,8 @@ describe('Test tasks model', () => {
 
     const args = {
       stageId: task.stageId,
-      sourceKind: 'lead',
-      sourceKindId: leadIntegration._id,
+      sourceIntegration: 'lead',
+      sourceIntegrationId: leadIntegration._id,
     };
 
     const createdTicket = await Tasks.createTask(args);

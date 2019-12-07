@@ -41,8 +41,9 @@ const commonParams = `
   source: String,
   reminderMinute: Int,
   isComplete: Boolean,
-  sourceKind: String,
-  sourceKindId: String
+  sourceIntegration: String,
+  sourceIntegrationId: String,
+  sourceConversationId: String,
 `;
 
 export const mutations = `

@@ -66,8 +66,8 @@ describe('Test Tickets model', () => {
 
     const args = {
       stageId: ticket.stageId,
-      sourceKind: 'lead',
-      sourceKindId: leadIntegration._id,
+      sourceIntegration: 'lead',
+      sourceIntegrationId: leadIntegration._id,
     };
 
     const createdTicket = await Tickets.createTicket(args);
