@@ -1,6 +1,6 @@
 import {
   boardFactory,
-  integrationFactory,
+  conversationFactory,
   pipelineFactory,
   stageFactory,
   taskFactory,
@@ -63,12 +63,12 @@ describe('Test tasks model', () => {
   });
 
   test('Create task Error(`Already converted a task`)', async () => {
-    const leadIntegration = await integrationFactory({ kind: 'lead' });
+    const conversation = await conversationFactory();
 
     const args = {
       stageId: task.stageId,
-      sourceIntegration: 'lead',
-      sourceIntegrationId: leadIntegration._id,
+      userId: user._id,
+      sourceConversationId: conversation._id,
     };
 
     const createdTicket = await Tasks.createTask(args);

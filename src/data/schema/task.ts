@@ -24,8 +24,6 @@ export const queries = `
     closeDateType: String
     priority: [String]
     labelIds: [String]
-    sourceIntegration: String
-    sourceIntegrationId: String
     ${conformityQueryFields}
   ): [Task]
 `;
@@ -40,8 +38,6 @@ const commonParams = `
   priority: String,
   reminderMinute: Int,
   isComplete: Boolean,
-  sourceIntegration: String,
-  sourceIntegrationId: String,
   sourceConversationId: String,
 `;
 

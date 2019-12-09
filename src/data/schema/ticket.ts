@@ -41,8 +41,6 @@ const commonParams = `
   source: String,
   reminderMinute: Int,
   isComplete: Boolean,
-  sourceIntegration: String,
-  sourceIntegrationId: String,
   sourceConversationId: String,
 `;
 

@@ -1,6 +1,6 @@
 import {
   boardFactory,
-  integrationFactory,
+  conversationFactory,
   pipelineFactory,
   stageFactory,
   ticketFactory,
@@ -62,12 +62,12 @@ describe('Test Tickets model', () => {
   });
 
   test('Create ticket Error(`Already converted a ticket`)', async () => {
-    const leadIntegration = await integrationFactory({ kind: 'lead' });
+    const conversation = await conversationFactory();
 
     const args = {
       stageId: ticket.stageId,
-      sourceIntegration: 'lead',
-      sourceIntegrationId: leadIntegration._id,
+      sourceConversationId: conversation._id,
+      userId: user._id,
     };
 
     const createdTicket = await Tickets.createTicket(args);

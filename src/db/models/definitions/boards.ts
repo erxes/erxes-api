@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { BOARD_TYPES, HACK_SCORING_TYPES, KIND_CHOICES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
+import { BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
