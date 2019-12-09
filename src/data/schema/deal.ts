@@ -38,7 +38,8 @@ const commonMutationParams = `
   order: Int,
   productsData: JSON,
   reminderMinute: Int,
-  isComplete: Boolean
+  isComplete: Boolean,
+  priority: String
 `;
 
 const commonQueryParams = `
@@ -48,13 +49,10 @@ const commonQueryParams = `
   companyIds: [String]
   assignedUserIds: [String]
   productIds: [String]
-  nextDay: String
-  nextWeek: String
-  nextMonth: String
-  noCloseDate: String
-  overdue: String
+  closeDateType: String
   labelIds: [String]
   search: String
+  priority: [String]
 `;
 
 export const queries = `
@@ -73,7 +71,7 @@ export const queries = `
 `;
 
 export const mutations = `
-  dealsAdd(name: String!, ${commonMutationParams}): Deal
+  dealsAdd(name: String!, companyIds: [String], customerIds: [String], ${commonMutationParams}): Deal
   dealsEdit(_id: String!, name: String, ${commonMutationParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
