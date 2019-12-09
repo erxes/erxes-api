@@ -1,14 +1,16 @@
 import {
   boardFactory,
+  conversationFactory,
   dealFactory,
-  integrationFactory,
   pipelineFactory,
+  pipelineLabelFactory,
   stageFactory,
   userFactory,
 } from '../db/factories';
 import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IDealDocument } from '../db/models/definitions/deals';
+import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
 import { IUserDocument } from '../db/models/definitions/users';
 
 import './setup.ts';
@@ -19,14 +21,26 @@ describe('Test deals model', () => {
   let stage: IStageDocument;
   let deal: IDealDocument;
   let user: IUserDocument;
+  let label: IPipelineLabelDocument;
+  let secondUser: IUserDocument;
 
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory();
     pipeline = await pipelineFactory({ boardId: board._id });
     stage = await stageFactory({ pipelineId: pipeline._id });
-    deal = await dealFactory({ stageId: stage._id });
     user = await userFactory({});
+    secondUser = await userFactory({});
+    label = await pipelineLabelFactory({});
+    deal = await dealFactory({
+      initialStageId: stage._id,
+      stageId: stage._id,
+      userId: user._id,
+      modifiedBy: user._id,
+      labelIds: [label._id],
+      assignedUserIds: [user._id],
+      watchedUserIds: [secondUser._id],
+    });
   });
 
   afterEach(async () => {
@@ -64,13 +78,12 @@ describe('Test deals model', () => {
   });
 
   test('Create deal Error(`Already converted a deal`)', async () => {
-    const leadIntegration = await integrationFactory({ kind: 'lead' });
+    const conversation = await conversationFactory();
 
     const args = {
       stageId: deal.stageId,
       userId: user._id,
-      sourceIntegration: 'lead',
-      sourceIntegrationId: leadIntegration._id,
+      sourceConversationId: conversation._id,
     };
 
     const createdDeal = await Deals.createDeal(args);
