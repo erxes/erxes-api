@@ -102,7 +102,7 @@ export const mutations = `
   logout: String
   forgotPassword(email: String!): String!
   resetPassword(token: String!, newPassword: String!): JSON
-  resetMemberPassword(_id: String!, newPassword: String!): User
+  usersResetMemberPassword(_id: String!, newPassword: String!): User
   usersEditProfile(
     username: String!,
     email: String!,

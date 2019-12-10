@@ -82,7 +82,7 @@ const userMutations = {
   /*
    * Reset member's password
    */
-  resetMemberPassword(_root, args: { _id: string; newPassword: string }) {
+  usersResetMemberPassword(_root, args: { _id: string; newPassword: string }) {
     return Users.resetMemberPassword(args);
   },
 
@@ -215,12 +215,12 @@ requireLogin(userMutations, 'usersChangePassword');
 requireLogin(userMutations, 'usersEditProfile');
 requireLogin(userMutations, 'usersConfigGetNotificationByEmail');
 requireLogin(userMutations, 'usersConfigEmailSignatures');
-requireLogin(userMutations, 'resetMemberPassword');
+requireLogin(userMutations, 'usersResetMemberPassword');
 
 checkPermission(userMutations, 'usersEdit', 'usersEdit');
 checkPermission(userMutations, 'usersInvite', 'usersInvite');
 checkPermission(userMutations, 'usersResendInvitation', 'usersInvite');
 checkPermission(userMutations, 'usersSetActiveStatus', 'usersSetActiveStatus');
-checkPermission(userMutations, 'resetMemberPassword', 'usersEdit');
+checkPermission(userMutations, 'usersResetMemberPassword', 'usersEdit');
 
 export default userMutations;
