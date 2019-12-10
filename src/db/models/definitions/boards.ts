@@ -30,6 +30,8 @@ export interface IItemCommonFields {
   order?: number;
   searchText?: string;
   priority?: string;
+  reminderMinute?: number;
+  isComplete?: boolean;
 }
 
 export interface IProductData extends Document {

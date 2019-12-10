@@ -4,9 +4,13 @@ export const types = `
   type Ticket {
     _id: String!
     source: String
+    ${commonTypes}
+    productsData: JSON
+
+    products: JSON
+    amount: JSON
     companies: [Company]
     customers: [Customer]
-    ${commonTypes}
   }
 `;
 
@@ -40,7 +44,8 @@ const commonParams = `
   priority: String,
   source: String,
   reminderMinute: Int,
-  isComplete: Boolean
+  isComplete: Boolean,
+  productsData: JSON
 `;
 
 export const mutations = `
