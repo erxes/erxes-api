@@ -78,38 +78,6 @@ export const FIELDS_GROUPS_CONTENT_TYPES = {
   ALL: ['customer', 'company', 'product'],
 };
 
-export const CUSTOMER_BASIC_INFOS = [
-  'firstName',
-  'lastName',
-  'primaryEmail',
-  'primaryPhone',
-  'ownerId',
-  'position',
-  'department',
-  'leadStatus',
-  'lifecycleState',
-  'hasAuthority',
-  'description',
-  'doNotDisturb',
-];
-
-export const COMPANY_BASIC_INFOS = [
-  'primaryName',
-  'size',
-  'industry',
-  'website',
-  'plan',
-  'primaryEmail',
-  'primaryPhone',
-  'leadStatus',
-  'lifecycleState',
-  'businessType',
-  'description',
-  'doNotDisturb',
-];
-
-export const PRODUCT_BASIC_INFOS = ['name', 'categoryCode', 'type', 'description', 'sku', 'code', 'unitPrice'];
-
 export const INSIGHT_BASIC_INFOS = {
   count: 'Customer count',
   messageCount: 'Conversation message count',
@@ -284,4 +252,16 @@ export const NOTIFICATION_MODULES = [
 export const LOG_TYPES = {
   BRAND: 'brand',
   CHANNEL: 'channel',
+};
+
+export const MODULE_NAMES = {
+  BRAND: 'brand',
+  CHANNEL: 'channel',
+  COMPANY: 'company',
+  CUSTOMER: 'customer',
+  DEAL: 'deal',
+  TASK: 'task',
+  TICKET: 'ticket',
+  PERMISSION: 'permission',
+  USER: 'user',
 };

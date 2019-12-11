@@ -11,10 +11,16 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
-import { companiesExport, customersExport } from './data/modules/coc/exporter';
+import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
-import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import { checkFile, getEnv, readFileRequest, registerOnboardHistory, uploadFile } from './data/utils';
+import {
+  checkFile,
+  getEnv,
+  handleUnsubscription,
+  readFileRequest,
+  registerOnboardHistory,
+  uploadFile,
+} from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageBroker';
@@ -88,14 +94,10 @@ app.get('/status', async (_req, res) => {
   res.end('ok');
 });
 
-// export coc
-app.get('/coc-export', async (req: any, res) => {
-  const { query, user } = req;
-  const { type } = query;
-
+// export insights
+app.get('/insights-export', async (req: any, res) => {
   try {
-    const { name, response } =
-      type === 'customers' ? await customersExport(query, user) : await companiesExport(query, user);
+    const { name, response } = await insightExports(req.query, req.user);
 
     res.attachment(`${name}.xlsx`);
 
@@ -105,14 +107,18 @@ app.get('/coc-export', async (req: any, res) => {
   }
 });
 
-// export insights
-app.get('/insights-export', async (req: any, res) => {
+// export board
+app.get('/file-export', async (req: any, res) => {
+  const { query, user } = req;
+
+  let result: { name: string; response: string };
+
   try {
-    const { name, response } = await insightExports(req.query, req.user);
+    result = await buildFile(query, user);
 
-    res.attachment(`${name}.xlsx`);
+    res.attachment(`${result.name}.xlsx`);
 
-    return res.send(response);
+    return res.send(result.response);
   } catch (e) {
     return res.end(filterXSS(e.message));
   }
@@ -241,8 +247,8 @@ app.post('/import-file', async (req: any, res, next) => {
 });
 
 // engage unsubscribe
-app.get('/unsubscribe', async (req, res) => {
-  const unsubscribed = await handleEngageUnSubscribe(req.query);
+app.get('/unsubscribe', async (req: any, res) => {
+  const unsubscribed = await handleUnsubscription(req.query);
 
   if (unsubscribed) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
