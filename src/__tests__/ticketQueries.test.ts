@@ -4,6 +4,7 @@ import {
   companyFactory,
   conformityFactory,
   customerFactory,
+  fieldFactory,
   pipelineFactory,
   pipelineLabelFactory,
   productFactory,
@@ -175,7 +176,8 @@ describe('ticketQueries', () => {
   });
 
   test('Ticket detail', async () => {
-    const customFieldsData = { field1: 'field1' };
+    const field = await fieldFactory({ contentType: 'product', text: 'text' });
+    const customFieldsData = { [field._id]: 'field1' };
     const product1 = await productFactory({ customFieldsData });
     const product2 = await productFactory({ customFieldsData });
     const user1 = await userFactory();
