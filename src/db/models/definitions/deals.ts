@@ -48,8 +48,16 @@ interface IProductData extends Document {
   amount?: number;
 }
 
+interface IPaymentsData {
+  [key: string]: {
+    currency?: string;
+    amount?: number;
+  };
+}
+
 export interface IDeal extends IItemCommonFields {
   productsData?: IProductData[];
+  paymentsData?: IPaymentsData[];
 }
 
 export interface IDealDocument extends IDeal, Document {
@@ -119,4 +127,5 @@ export const dealSchema = new Schema({
   ...commonItemFieldsSchema,
 
   productsData: field({ type: [productDataSchema] }),
+  paymentsData: field({ type: Object, optional: true }),
 });
