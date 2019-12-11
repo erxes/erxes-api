@@ -43,6 +43,7 @@ const brandMutations = {
           object: brand,
           newData: JSON.stringify(fields),
           description: `"${fields.name}" has been edited`,
+          extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
         },
         user,
       );
@@ -89,6 +90,7 @@ const brandMutations = {
         type: 'brand',
         object: brand,
         description: `${brand.name} email config has been changed`,
+        extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
       },
       user,
     );
