@@ -1,12 +1,13 @@
-import { Channels } from '../../../db/models';
+import * as _ from 'underscore';
+import { Channels, Integrations } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { LOG_TYPES } from '../../constants';
+import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
-import { gatherUsernames, LogDesc } from './logUtils';
+import { gatherNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -52,17 +53,19 @@ const channelMutations = {
     await sendChannelNotifications(channel, 'invited', user);
 
     // for showing usernames instead of user id
-    let extraDesc: LogDesc[] = [];
+    let extraDesc: LogDesc[] = [{ userId: user._id, name: user.username || user.email }];
 
     if (doc.memberIds) {
-      extraDesc = await gatherUsernames(doc.memberIds, 'memberIds');
+      extraDesc = await gatherUsernames({
+        idFields: doc.memberIds,
+        foreignKey: 'memberIds',
+        prevList: extraDesc,
+      });
     }
-
-    extraDesc.push({ userId: user._id, name: user.username });
 
     await putCreateLog(
       {
-        type: LOG_TYPES.CHANNEL,
+        type: MODULE_NAMES.CHANNEL,
         newData: JSON.stringify({ ...doc, userId: user._id }),
         object: channel,
         description: `"${doc.name}" has been created`,
@@ -80,7 +83,7 @@ const channelMutations = {
   async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: IContext) {
     const channel = await Channels.getChannel(_id);
 
-    const { memberIds } = doc;
+    const { integrationIds, memberIds } = doc;
 
     const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
 
@@ -89,16 +92,56 @@ const channelMutations = {
 
     const updated = await Channels.updateChannel(_id, doc);
 
-    const extraDesc = await gatherUsernames(memberIds, 'memberIds');
+    let extraDesc: LogDesc[] = [];
 
-    extraDesc.push({ userId: user._id, name: user.username });
+    if (channel.userId) {
+      extraDesc = await gatherUsernames({
+        idFields: [channel.userId],
+        foreignKey: 'userId',
+      });
+    }
+
+    // prevent saving of duplicated ids in log
+    let combinedMemberIds = memberIds || [];
+    let combinedIntegrationIds = integrationIds || [];
+
+    // previous member ids should be saved
+    if (channel.memberIds && channel.memberIds.length > 0) {
+      combinedMemberIds = combinedMemberIds.concat(channel.memberIds);
+
+      combinedMemberIds = _.uniq(combinedMemberIds);
+    }
+
+    if (combinedMemberIds.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: combinedMemberIds,
+        foreignKey: 'memberIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (channel.integrationIds && channel.integrationIds.length > 0) {
+      combinedIntegrationIds = combinedIntegrationIds.concat(channel.integrationIds);
+
+      combinedIntegrationIds = _.uniq(combinedIntegrationIds);
+    }
+
+    if (combinedIntegrationIds.length > 0) {
+      extraDesc = await gatherNames({
+        collection: Integrations,
+        idFields: combinedIntegrationIds,
+        foreignKey: 'integrationIds',
+        nameFields: ['name'],
+        prevList: extraDesc,
+      });
+    }
 
     await putUpdateLog(
       {
-        type: LOG_TYPES.CHANNEL,
+        type: MODULE_NAMES.CHANNEL,
         object: channel,
         newData: JSON.stringify(doc),
-        description: `${channel.name} has been updated`,
+        description: `"${channel.name}" has been edited`,
         extraDesc: JSON.stringify(extraDesc),
       },
       user,
@@ -121,15 +164,24 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
-    const extraDesc = await gatherUsernames(channel.memberIds, 'memberIds');
+    let extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [user._id],
+      foreignKey: 'userId',
+    });
 
-    extraDesc.push({ userId: user._id, name: user.username });
+    if (channel.memberIds && channel.memberIds.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: channel.memberIds,
+        foreignKey: 'memberIds',
+        prevList: extraDesc,
+      });
+    }
 
     await putDeleteLog(
       {
-        type: LOG_TYPES.CHANNEL,
+        type: MODULE_NAMES.CHANNEL,
         object: channel,
-        description: `${channel.name} has been removed`,
+        description: `"${channel.name}" has been removed`,
         extraDesc: JSON.stringify(extraDesc),
       },
       user,

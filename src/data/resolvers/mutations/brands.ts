@@ -3,6 +3,7 @@ import { IBrand, IBrandEmailConfig } from '../../../db/models/definitions/brands
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { gatherUsernames, LogDesc } from './logUtils';
 
 interface IBrandsEdit extends IBrand {
   _id: string;
@@ -21,7 +22,7 @@ const brandMutations = {
         newData: JSON.stringify({ ...doc, userId: user._id }),
         object: brand,
         description: `"${doc.name}" has been created`,
-        extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
+        extraDesc: JSON.stringify([{ userId: user._id, name: user.username || user.email }]),
       },
       user,
     );
@@ -37,13 +38,18 @@ const brandMutations = {
     const updated = await Brands.updateBrand(_id, fields);
 
     if (brand) {
+      const extraDesc: LogDesc[] = await gatherUsernames({
+        idFields: [brand.userId || ''],
+        foreignKey: 'userId',
+      });
+
       await putUpdateLog(
         {
           type: 'brand',
           object: brand,
           newData: JSON.stringify(fields),
           description: `"${fields.name}" has been edited`,
-          extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );
@@ -60,12 +66,17 @@ const brandMutations = {
     const removed = await Brands.removeBrand(_id);
 
     if (brand && removed) {
+      const extraDesc: LogDesc[] = await gatherUsernames({
+        idFields: [brand.userId || ''],
+        foreignKey: 'userId',
+      });
+
       await putDeleteLog(
         {
           type: 'brand',
           object: brand,
           description: `"${brand.name}" has been removed`,
-          extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );
@@ -85,12 +96,17 @@ const brandMutations = {
     const brand = await Brands.getBrand(_id);
     const updated = await Brands.updateEmailConfig(_id, emailConfig);
 
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [brand.userId || ''],
+      foreignKey: 'userId',
+    });
+
     await putUpdateLog(
       {
         type: 'brand',
         object: brand,
         description: `${brand.name} email config has been changed`,
-        extraDesc: JSON.stringify([{ userId: user._id, name: user.username }]),
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
