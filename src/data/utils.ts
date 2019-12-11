@@ -12,6 +12,7 @@ import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -643,27 +644,10 @@ export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
  * @param {Object} user User information from mutation context
  */
 const putLog = (body: ILogParams, user: IUserDocument) => {
-  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
-
-  if (!LOGS_DOMAIN) {
-    return;
-  }
-
-  const doc = {
+  return sendMessage('putLog', {
     ...body,
     createdBy: user._id,
     unicode: user.username || user.email || user._id,
-  };
-
-  return new Promise(resolve => {
-    sendRequest(
-      { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body: { params: JSON.stringify(doc) } },
-      'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
-    )
-      .then(response => console.log(response))
-      .catch(error => console.log(error.message));
-
-    return resolve('received log');
   });
 };
 

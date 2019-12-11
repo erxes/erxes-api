@@ -1,6 +1,6 @@
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
-import { LOG_TYPES } from '../../constants';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
 
@@ -16,11 +16,11 @@ interface ISchemaMap {
 
 const LOG_MAPPINGS: ISchemaMap[] = [
   {
-    name: LOG_TYPES.BRAND,
+    name: MODULE_NAMES.BRAND,
     schemas: [brandEmailConfigSchema, brandSchema],
   },
   {
-    name: LOG_TYPES.CHANNEL,
+    name: MODULE_NAMES.CHANNEL,
     schemas: [channelSchema],
   },
 ];

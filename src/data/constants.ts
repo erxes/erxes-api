@@ -249,11 +249,6 @@ export const NOTIFICATION_MODULES = [
   },
 ];
 
-export const LOG_TYPES = {
-  BRAND: 'brand',
-  CHANNEL: 'channel',
-};
-
 export const MODULE_NAMES = {
   BRAND: 'brand',
   CHANNEL: 'channel',
