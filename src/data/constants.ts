@@ -257,6 +257,8 @@ export const MODULE_NAMES = {
   PIPELINE_DEAL: 'dealPipelines',
   PIPELINE_TASK: 'taskPipelines',
   PIPELINE_TICKET: 'ticketPipelines',
+  CHECKLIST: 'checklist',
+  CHECKLIST_ITEM: 'checkListItem',
   BRAND: 'brand',
   CHANNEL: 'channel',
   COMPANY: 'company',

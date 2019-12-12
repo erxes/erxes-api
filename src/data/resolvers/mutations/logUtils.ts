@@ -1,4 +1,5 @@
-import { Users } from '../../../db/models/index';
+import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
+import { Deals, Tasks, Tickets, Users } from '../../../db/models/index';
 
 export type LogDesc = {
   [key: string]: any;
@@ -13,6 +14,11 @@ interface ILogNameParams {
 interface ILogParams extends ILogNameParams {
   collection: any;
   nameFields: string[];
+}
+
+interface IContentTypeParams {
+  contentType: string;
+  contentTypeId: string;
 }
 
 export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
@@ -63,4 +69,31 @@ export const gatherNames = async (params: ILogParams): Promise<LogDesc[]> => {
   }
 
   return options;
+};
+
+export const findItemName = async ({ contentType, contentTypeId }: IContentTypeParams): Promise<string> => {
+  let item: any;
+  let name: string = '';
+
+  switch (contentType) {
+    case ACTIVITY_CONTENT_TYPES.DEAL:
+      item = await Deals.findOne({ _id: contentTypeId });
+
+      break;
+    case ACTIVITY_CONTENT_TYPES.TASK:
+      item = await Tasks.findOne({ _id: contentTypeId });
+
+      break;
+    case ACTIVITY_CONTENT_TYPES.TICKET:
+      item = await Tickets.findOne({ _id: contentTypeId });
+      break;
+    default:
+      break;
+  }
+
+  if (item && item.name) {
+    name = item.name;
+  }
+
+  return name;
 };
