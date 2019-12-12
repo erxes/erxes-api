@@ -1,5 +1,5 @@
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
-import { Deals, Tasks, Tickets, Users } from '../../../db/models/index';
+import { Companies, Deals, Tags, Tasks, Tickets, Users } from '../../../db/models/index';
 
 export type LogDesc = {
   [key: string]: any;
@@ -34,6 +34,38 @@ export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]
     foreignKey,
     prevList,
     nameFields: ['email', 'username'],
+  });
+};
+
+export const gatherCompanyNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: Companies,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['primaryName'],
+  });
+};
+
+export const gatherTagNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: Tags,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['name'],
   });
 };
 

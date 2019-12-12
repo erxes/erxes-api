@@ -62,7 +62,7 @@ export interface ICompanyDocument extends ICompany, Document {
   searchText: string;
 }
 
-const linkSchema = new Schema(
+export const linkSchema = new Schema(
   {
     linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
     twitter: field({ type: String, optional: true, label: 'Twitter' }),
