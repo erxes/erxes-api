@@ -1,3 +1,4 @@
+import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/models/definitions/boards';
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { MODULE_NAMES } from '../../constants';
@@ -15,6 +16,30 @@ interface ISchemaMap {
 }
 
 const LOG_MAPPINGS: ISchemaMap[] = [
+  {
+    name: MODULE_NAMES.BOARD_DEAL,
+    schemas: [attachmentSchema, boardSchema],
+  },
+  {
+    name: MODULE_NAMES.BOARD_TASK,
+    schemas: [attachmentSchema, boardSchema],
+  },
+  {
+    name: MODULE_NAMES.BOARD_TICKET,
+    schemas: [attachmentSchema, boardSchema],
+  },
+  {
+    name: MODULE_NAMES.PIPELINE_DEAL,
+    schemas: [pipelineSchema],
+  },
+  {
+    name: MODULE_NAMES.PIPELINE_TASK,
+    schemas: [pipelineSchema],
+  },
+  {
+    name: MODULE_NAMES.PIPELINE_TICKET,
+    schemas: [pipelineSchema],
+  },
   {
     name: MODULE_NAMES.BRAND,
     schemas: [brandEmailConfigSchema, brandSchema],
@@ -64,7 +89,7 @@ const logQueries = {
     const found: ISchemaMap | undefined = LOG_MAPPINGS.find(m => m.name === params.type);
 
     if (found) {
-      const schemas = found.schemas || [];
+      const schemas: any = found.schemas || [];
 
       for (const schema of schemas) {
         const names: string[] = Object.getOwnPropertyNames(schema.obj);

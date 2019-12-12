@@ -3,6 +3,7 @@ import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/mode
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
+import { gatherNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -23,14 +24,17 @@ const boardMutations = {
   async boardsAdd(_root, doc: IBoard, { user, docModifier }: IContext) {
     await checkPermission(doc.type, user, 'boardsAdd');
 
-    const board = await Boards.createBoard(docModifier({ userId: user._id, ...doc }));
+    const extendedDoc = docModifier({ userId: user._id, ...doc });
+
+    const board = await Boards.createBoard(extendedDoc);
 
     await putCreateLog(
       {
         type: `${doc.type}Boards`,
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        newData: JSON.stringify(extendedDoc),
+        description: `"${extendedDoc.name}" has been created`,
         object: board,
+        extraDesc: JSON.stringify([{ userId: user._id, name: user.username || user.email }]),
       },
       user,
     );
@@ -47,12 +51,18 @@ const boardMutations = {
     const board = await Boards.getBoard(_id);
     const updated = await Boards.updateBoard(_id, doc);
 
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [board.userId || ''],
+      foreignKey: 'userId',
+    });
+
     await putUpdateLog(
       {
         type: `${doc.type}Boards`,
         newData: JSON.stringify(doc),
-        description: `${doc.name} has been edited`,
+        description: `"${doc.name}" has been edited`,
         object: board,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -68,15 +78,19 @@ const boardMutations = {
 
     await checkPermission(board.type, user, 'boardsRemove');
 
-    const type = `${board.type}Boards`;
-
     const removed = await Boards.removeBoard(_id);
+
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [board.userId || ''],
+      foreignKey: 'userId',
+    });
 
     await putDeleteLog(
       {
-        type,
+        type: `${board.type}Boards`,
         object: board,
-        description: `${board.name} has been removed`,
+        description: `"${board.name}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -92,12 +106,39 @@ const boardMutations = {
 
     const pipeline = await Pipelines.createPipeline({ userId: user._id, ...doc }, stages);
 
+    let extraDesc: LogDesc[] = [{ userId: user._id, name: user.username || user.email }];
+
+    extraDesc = await gatherNames({
+      collection: Boards,
+      idFields: [doc.boardId],
+      foreignKey: 'boardId',
+      nameFields: ['name'],
+      prevList: extraDesc,
+    });
+
+    if (doc.excludeCheckUserIds && doc.excludeCheckUserIds.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: doc.excludeCheckUserIds,
+        foreignKey: 'excludeCheckUserIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (doc.memberIds && doc.memberIds.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: doc.memberIds,
+        foreignKey: 'memberIds',
+        prevList: extraDesc,
+      });
+    }
+
     await putCreateLog(
       {
         type: `${doc.type}Pipelines`,
         newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        description: `"${doc.name}" has been created`,
         object: pipeline,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );

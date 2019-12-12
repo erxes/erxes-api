@@ -250,6 +250,13 @@ export const NOTIFICATION_MODULES = [
 ];
 
 export const MODULE_NAMES = {
+  BOARD: 'board',
+  BOARD_DEAL: 'dealBoards',
+  BOARD_TASK: 'taskBoards',
+  BOARD_TICKET: 'ticketBoards',
+  PIPELINE_DEAL: 'dealPipelines',
+  PIPELINE_TASK: 'taskPipelines',
+  PIPELINE_TICKET: 'ticketPipelines',
   BRAND: 'brand',
   CHANNEL: 'channel',
   COMPANY: 'company',
