@@ -1,6 +1,7 @@
 import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/models/definitions/boards';
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
+import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -47,6 +48,14 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.CHANNEL,
     schemas: [channelSchema],
+  },
+  {
+    name: MODULE_NAMES.CHECKLIST,
+    schemas: [checklistSchema],
+  },
+  {
+    name: MODULE_NAMES.CHECKLIST_ITEM,
+    schemas: [checklistItemSchema],
   },
 ];
 

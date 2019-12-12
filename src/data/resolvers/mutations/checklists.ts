@@ -1,8 +1,10 @@
 import { ChecklistItems, Checklists } from '../../../db/models';
 import { IChecklist, IChecklistItem } from '../../../db/models/definitions/checklists';
+import { MODULE_NAMES } from '../../constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { findItemName, gatherUsernames, LogDesc } from './logUtils';
 
 interface IChecklistsEdit extends IChecklist {
   _id: string;
@@ -19,12 +21,22 @@ const checklistMutations = {
   async checklistsAdd(_root, args: IChecklist, { user }: IContext) {
     const checklist = await Checklists.createChecklist(args, user);
 
+    const { contentType, contentTypeId, title } = args;
+
+    const itemName = await findItemName({ contentType, contentTypeId });
+
+    const extraDesc: LogDesc[] = [
+      { createdUserId: user._id, name: user.username || user.email },
+      { contentTypeId, name: itemName },
+    ];
+
     await putCreateLog(
       {
-        type: 'checklist',
+        type: MODULE_NAMES.CHECKLIST,
         newData: JSON.stringify(args),
         object: checklist,
-        description: `${checklist.contentType} has been created`,
+        description: `"${title}" has been created in ${contentType.toUpperCase()} "${itemName}"`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -39,12 +51,27 @@ const checklistMutations = {
     const checklist = await Checklists.getChecklist(_id);
     const updated = await Checklists.updateChecklist(_id, doc);
 
+    const { contentType, contentTypeId, title } = checklist;
+
+    const itemName = await findItemName({ contentType, contentTypeId });
+
+    let extraDesc: LogDesc[] = [{ contentTypeId, name: itemName }];
+
+    if (checklist.createdUserId) {
+      extraDesc = await gatherUsernames({
+        idFields: [checklist.createdUserId],
+        foreignKey: 'createdUserId',
+        prevList: extraDesc,
+      });
+    }
+
     await putUpdateLog(
       {
-        type: 'checklist',
+        type: MODULE_NAMES.CHECKLIST,
         object: checklist,
         newData: JSON.stringify(doc),
-        description: `${checklist.contentType} written at ${checklist.createdDate} has been edited`,
+        description: `"${title}" saved in ${contentType.toUpperCase()} "${itemName}" has been edited`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -53,17 +80,28 @@ const checklistMutations = {
   },
 
   /**
-   * Remove a checklist
+   * Removes a checklist
    */
   async checklistsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const checklist = await Checklists.getChecklist(_id);
     const removed = await Checklists.removeChecklist(_id);
 
+    const { contentType, contentTypeId, createdUserId, title } = checklist;
+    const itemName = await findItemName({ contentType, contentTypeId });
+
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [createdUserId],
+      foreignKey: 'createdUserId',
+    });
+
+    extraDesc.push({ contentTypeId, name: itemName });
+
     await putDeleteLog(
       {
-        type: 'checklist',
+        type: MODULE_NAMES.CHECKLIST,
         object: checklist,
-        description: `${checklist.contentType} written at ${checklist.createdDate} has been removed`,
+        description: `"${title}" from ${contentType.toUpperCase()} "${itemName}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -79,12 +117,18 @@ const checklistMutations = {
 
     const checklistItem = await ChecklistItems.createChecklistItem(args, user);
 
+    const extraDesc: LogDesc[] = [
+      { createdUserId: user._id, name: user.username || user.email },
+      { checklistId: checklist._id, name: checklist.title },
+    ];
+
     await putCreateLog(
       {
-        type: 'checklistItem',
+        type: MODULE_NAMES.CHECKLIST_ITEM,
         newData: JSON.stringify(args),
         object: checklistItem,
-        description: `${checklist.contentType} has been created`,
+        description: `"${checklistItem.content}" has been added to "${checklist.title}"`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -93,19 +137,27 @@ const checklistMutations = {
   },
 
   /**
-   * Updates checklistItem object
+   * Updates a checklist item
    */
   async checklistItemsEdit(_root, { _id, ...doc }: IChecklistItemsEdit, { user }: IContext) {
     const checklistItem = await ChecklistItems.getChecklistItem(_id);
     const checklist = await Checklists.getChecklist(checklistItem.checklistId);
     const updated = await ChecklistItems.updateChecklistItem(_id, doc);
 
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [checklistItem.createdUserId],
+      foreignKey: 'createdUserId',
+    });
+
+    extraDesc.push({ checklistId: checklist._id, name: checklist.title });
+
     await putUpdateLog(
       {
-        type: 'checklistItem',
+        type: MODULE_NAMES.CHECKLIST_ITEM,
         object: checklistItem,
         newData: JSON.stringify(doc),
-        description: `${checklist.contentType} written at ${checklistItem.createdDate} has been edited /checked/`,
+        description: `"${checklistItem.content}" has been edited /checked/`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -114,18 +166,26 @@ const checklistMutations = {
   },
 
   /**
-   * Remove a channel
+   * Removes a checklist item
    */
   async checklistItemsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const checklistItem = await ChecklistItems.getChecklistItem(_id);
     const checklist = await Checklists.getChecklist(checklistItem.checklistId);
     const removed = await ChecklistItems.removeChecklistItem(_id);
 
+    const extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [checklistItem.createdUserId],
+      foreignKey: 'createdUserId',
+    });
+
+    extraDesc.push({ checklistId: checklist._id, name: checklist.title });
+
     await putDeleteLog(
       {
-        type: 'checklist',
+        type: MODULE_NAMES.CHECKLIST,
         object: checklistItem,
-        description: `${checklist.contentType} written at ${checklistItem.createdDate} has been removed`,
+        description: `"${checklistItem.content}" has been removed from "${checklist.title}"`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
