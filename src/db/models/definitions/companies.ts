@@ -1,5 +1,6 @@
 import { Document, Schema } from 'mongoose';
 
+import { ILink } from './common';
 import {
   COMPANY_BUSINESS_TYPES,
   COMPANY_INDUSTRY_TYPES,
@@ -9,15 +10,6 @@ import {
 } from './constants';
 
 import { field, schemaWrapper } from './utils';
-
-export interface ILink {
-  linkedIn?: string;
-  twitter?: string;
-  facebook?: string;
-  github?: string;
-  youtube?: string;
-  website?: string;
-}
 
 interface ILinkDocument extends ILink, Document {}
 

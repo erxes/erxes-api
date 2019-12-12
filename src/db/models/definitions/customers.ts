@@ -1,5 +1,6 @@
 import { Document, Schema } from 'mongoose';
 
+import { ILink } from './common';
 import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
 
 import { field, schemaWrapper } from './utils';
@@ -31,15 +32,6 @@ export interface IMessengerData {
 }
 
 export interface IMessengerDataDocument extends IMessengerData, Document {}
-
-export interface ILink {
-  linkedIn?: string;
-  twitter?: string;
-  facebook?: string;
-  github?: string;
-  youtube?: string;
-  website?: string;
-}
 
 interface ILinkDocument extends ILink, Document {}
 
@@ -94,7 +86,7 @@ export interface ICustomerDocument extends ICustomer, Document {
 }
 
 /* location schema */
-const locationSchema = new Schema(
+export const locationSchema = new Schema(
   {
     remoteAddress: field({ type: String, label: 'Remote address' }),
     country: field({ type: String, label: 'Country' }),
@@ -159,7 +151,7 @@ export const customerSchema = schemaWrapper(
 
     createdAt: field({ type: Date, label: 'Created at' }),
     modifiedAt: field({ type: Date, label: 'Modified at' }),
-    avatar: field({ type: String, optional: true }),
+    avatar: field({ type: String, optional: true, label: 'Avatar' }),
 
     firstName: field({ type: String, label: 'First name', optional: true }),
     lastName: field({ type: String, label: 'Last name', optional: true }),

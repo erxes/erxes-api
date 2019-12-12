@@ -3,6 +3,7 @@ import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definiti
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
 import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
+import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -61,6 +62,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.COMPANY,
     schemas: [companySchema, linkSchema],
+  },
+  {
+    name: MODULE_NAMES.CUSTOMER,
+    schemas: [customerSchema, locationSchema],
   },
 ];
 

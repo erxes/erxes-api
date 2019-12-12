@@ -1,8 +1,10 @@
 import { ActivityLogs, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { gatherCustomerNames, gatherIntegrationNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -15,12 +17,24 @@ const customerMutations = {
   async customersAdd(_root, doc: ICustomer, { user, docModifier }: IContext) {
     const customer = await Customers.createCustomer(docModifier(doc), user);
 
+    let extraDesc: LogDesc[] = [];
+
+    if (doc.ownerId) {
+      extraDesc = await gatherUsernames({
+        idFields: [doc.ownerId],
+        foreignKey: 'ownerId',
+      });
+    } else {
+      extraDesc.push({ ownerId: user._id, name: user.username || user.email });
+    }
+
     await putCreateLog(
       {
-        type: 'customer',
+        type: MODULE_NAMES.CUSTOMER,
         newData: JSON.stringify(doc),
         object: customer,
-        description: `${customer.firstName} has been created`,
+        description: `"${customer.firstName}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -29,18 +43,61 @@ const customerMutations = {
   },
 
   /**
-   * Update customer
+   * Updates a customer
    */
   async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: IContext) {
     const customer = await Customers.getCustomer(_id);
     const updated = await Customers.updateCustomer(_id, doc);
 
+    const ownerIds: string[] = [];
+    let extraDesc: LogDesc[] = [];
+
+    if (customer.ownerId) {
+      ownerIds.push(customer.ownerId);
+    }
+
+    if (doc.ownerId && doc.ownerId !== customer.ownerId) {
+      ownerIds.push(doc.ownerId);
+    }
+
+    if (ownerIds.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: ownerIds,
+        foreignKey: 'ownerId',
+      });
+    }
+
+    if (customer.tagIds && customer.tagIds.length > 0) {
+      extraDesc = await gatherTagNames({
+        idFields: customer.tagIds,
+        foreignKey: 'tagIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (customer.integrationId) {
+      extraDesc = await gatherIntegrationNames({
+        idFields: [customer.integrationId],
+        foreignKey: 'integrationId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (customer.mergedIds) {
+      extraDesc = await gatherCustomerNames({
+        idFields: customer.mergedIds,
+        foreignKey: 'mergedIds',
+        prevList: extraDesc,
+      });
+    }
+
     await putUpdateLog(
       {
-        type: 'customer',
+        type: MODULE_NAMES.CUSTOMER,
         object: customer,
         newData: JSON.stringify(doc),
-        description: `${customer.firstName} has been updated`,
+        description: `"${customer.firstName || doc.firstName}" has been edited`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -63,18 +120,33 @@ const customerMutations = {
    * Remove customers
    */
   async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: IContext) {
-    const customers = await Customers.find({ _id: { $in: customerIds } }, { firstName: 1 }).lean();
+    const customers = await Customers.find({ _id: { $in: customerIds } }).lean();
 
     await Customers.removeCustomers(customerIds);
 
     for (const customer of customers) {
       await ActivityLogs.removeActivityLog(customer._id);
 
+      let extraDesc: LogDesc[] = [];
+
+      if (customer.ownerId) {
+        extraDesc = await gatherUsernames({ idFields: [customer.ownerId], foreignKey: 'ownerId ' });
+      }
+
+      if (customer.integrationId) {
+        extraDesc = await gatherIntegrationNames({
+          idFields: [customer.integrationId],
+          foreignKey: 'integrationId',
+          prevList: extraDesc,
+        });
+      }
+
       await putDeleteLog(
         {
-          type: 'customer',
+          type: MODULE_NAMES.CUSTOMER,
           object: customer,
-          description: `${customer.firstName} has been deleted`,
+          description: `"${customer.firstName}" has been deleted`,
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );

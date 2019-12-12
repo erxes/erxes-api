@@ -1,11 +1,21 @@
 import { Document, Schema } from 'mongoose';
 import { field } from './utils';
+
 export interface IRule extends Document {
   _id: string;
   kind: string;
   text: string;
   condition: string;
   value: string;
+}
+
+export interface ILink {
+  linkedIn?: string;
+  twitter?: string;
+  facebook?: string;
+  github?: string;
+  youtube?: string;
+  website?: string;
 }
 
 // schema for form's rules
