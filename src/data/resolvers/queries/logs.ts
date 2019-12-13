@@ -1,9 +1,15 @@
-import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/models/definitions/boards';
+import {
+  attachmentSchema,
+  boardSchema,
+  commonItemFieldsSchema,
+  pipelineSchema,
+} from '../../../db/models/definitions/boards';
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
 import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
 import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
+import { dealSchema, productDataSchema } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -67,6 +73,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
     name: MODULE_NAMES.CUSTOMER,
     schemas: [customerSchema, locationSchema],
   },
+  {
+    name: MODULE_NAMES.DEAL,
+    schemas: [commonItemFieldsSchema, dealSchema, productDataSchema],
+  },
 ];
 
 /**
@@ -111,10 +121,11 @@ const logQueries = {
       const schemas: any = found.schemas || [];
 
       for (const schema of schemas) {
-        const names: string[] = Object.getOwnPropertyNames(schema.obj);
+        // schema comes as either mongoose schema or plain object
+        const names: string[] = Object.getOwnPropertyNames(schema.obj || schema);
 
         for (const name of names) {
-          const field: any = schema.obj[name];
+          const field: any = schema.obj ? schema.obj[name] : schema[name];
 
           if (field && field.label) {
             fieldNames.push({ name, label: field.label });
