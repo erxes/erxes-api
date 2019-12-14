@@ -266,6 +266,8 @@ export const MODULE_NAMES = {
   CUSTOMER: 'customer',
   DEAL: 'deal',
   EMAIL_TEMPLATE: 'emailTemplate',
+  IMPORT_HISTORY: 'importHistory',
+  PRODUCT: 'product',
   RESPONSE_TEMPLATE: 'responseTemplate',
   TAG: 'tag',
   TASK: 'task',

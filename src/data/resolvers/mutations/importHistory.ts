@@ -1,7 +1,9 @@
 import { ImportHistory } from '../../../db/models';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { putDeleteLog } from '../../utils';
+import { gatherCompanyNames, gatherCustomerNames, gatherProductNames, gatherUsernames, LogDesc } from './logUtils';
 
 const importHistoryMutations = {
   /**
@@ -27,11 +29,37 @@ const importHistoryMutations = {
       throw new Error(e);
     }
 
+    let extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [importHistory.userId],
+      foreignKey: 'userId',
+    });
+
+    const params = {
+      idFields: importHistory.ids,
+      foreignKey: 'ids',
+      prevList: extraDesc,
+    };
+
+    switch (importHistory.contentType) {
+      case MODULE_NAMES.COMPANY:
+        extraDesc = await gatherCompanyNames(params);
+        break;
+      case MODULE_NAMES.CUSTOMER:
+        extraDesc = await gatherCustomerNames(params);
+        break;
+      case MODULE_NAMES.PRODUCT:
+        extraDesc = await gatherProductNames(params);
+        break;
+      default:
+        break;
+    }
+
     await putDeleteLog(
       {
-        type: 'importHistory',
+        type: MODULE_NAMES.IMPORT_HISTORY,
         object: importHistory,
         description: `${importHistory._id}-${importHistory.date} has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
