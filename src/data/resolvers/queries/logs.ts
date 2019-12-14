@@ -10,6 +10,7 @@ import { checklistItemSchema, checklistSchema } from '../../../db/models/definit
 import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
 import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
 import { dealSchema, productDataSchema } from '../../../db/models/definitions/deals';
+import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -76,6 +77,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.DEAL,
     schemas: [commonItemFieldsSchema, dealSchema, productDataSchema],
+  },
+  {
+    name: MODULE_NAMES.EMAIL_TEMPLATE,
+    schemas: [emailTemplateSchema],
   },
 ];
 

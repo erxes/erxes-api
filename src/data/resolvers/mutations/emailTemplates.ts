@@ -1,5 +1,6 @@
 import { EmailTemplates } from '../../../db/models';
 import { IEmailTemplate } from '../../../db/models/definitions/emailTemplates';
+import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -10,17 +11,17 @@ interface IEmailTemplatesEdit extends IEmailTemplate {
 
 const emailTemplateMutations = {
   /**
-   * Create new email template
+   * Creates a new email template
    */
   async emailTemplatesAdd(_root, doc: IEmailTemplate, { user, docModifier }: IContext) {
     const template = await EmailTemplates.create(docModifier(doc));
 
     await putCreateLog(
       {
-        type: 'emailTemplate',
+        type: MODULE_NAMES.EMAIL_TEMPLATE,
         newData: JSON.stringify(doc),
         object: template,
-        description: `${template.name} has been created`,
+        description: `"${template.name}" has been created`,
       },
       user,
     );
@@ -37,10 +38,10 @@ const emailTemplateMutations = {
 
     await putUpdateLog(
       {
-        type: 'emailTemplate',
+        type: MODULE_NAMES.EMAIL_TEMPLATE,
         object: template,
         newData: JSON.stringify(fields),
-        description: `${template.name} has been edited`,
+        description: `"${template.name}" has been edited`,
       },
       user,
     );
@@ -57,9 +58,9 @@ const emailTemplateMutations = {
 
     await putDeleteLog(
       {
-        type: 'emailTemplate',
+        type: MODULE_NAMES.EMAIL_TEMPLATE,
         object: template,
-        description: `${template.name} has been removed`,
+        description: `"${template.name}" has been removed`,
       },
       user,
     );
