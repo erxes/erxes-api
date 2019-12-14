@@ -1,5 +1,6 @@
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
 import {
+  Brands,
   Companies,
   Customers,
   Deals,
@@ -113,7 +114,7 @@ export const gatherTagNames = async (params: ILogNameParams): Promise<LogDesc[]>
   });
 };
 
-export const gatherStages = async (params: ILogNameParams): Promise<LogDesc[]> => {
+export const gatherStageNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   if (!(idFields && foreignKey)) {
@@ -129,7 +130,7 @@ export const gatherStages = async (params: ILogNameParams): Promise<LogDesc[]> =
   });
 };
 
-export const gatherLabels = async (params: ILogNameParams): Promise<LogDesc[]> => {
+export const gatherLabelNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   if (!(idFields && foreignKey)) {
@@ -145,7 +146,7 @@ export const gatherLabels = async (params: ILogNameParams): Promise<LogDesc[]> =
   });
 };
 
-export const gatherProducts = async (params: ILogNameParams): Promise<LogDesc[]> => {
+export const gatherProductNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   if (!(idFields && foreignKey)) {
@@ -154,6 +155,22 @@ export const gatherProducts = async (params: ILogNameParams): Promise<LogDesc[]>
 
   return gatherNames({
     collection: Products,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['name'],
+  });
+};
+
+export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: Brands,
     idFields,
     foreignKey,
     prevList,

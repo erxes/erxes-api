@@ -8,7 +8,7 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
-import { gatherLabels, gatherProducts, gatherStages, gatherUsernames, LogDesc } from './logUtils';
+import { gatherLabelNames, gatherProductNames, gatherStageNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -58,13 +58,13 @@ const dealMutations = {
       prevList: extraDesc,
     });
 
-    extraDesc = await gatherStages({
+    extraDesc = await gatherStageNames({
       idFields: [doc.stageId],
       foreignKey: 'initialStageId',
       prevList: extraDesc,
     });
 
-    extraDesc = await gatherStages({
+    extraDesc = await gatherStageNames({
       idFields: [doc.stageId],
       foreignKey: 'stageId',
       prevList: extraDesc,
@@ -147,21 +147,21 @@ const dealMutations = {
     }
 
     if (oldDeal.labelIds && oldDeal.labelIds.length > 0) {
-      extraDesc = await gatherLabels({
+      extraDesc = await gatherLabelNames({
         idFields: oldDeal.labelIds,
         foreignKey: 'labelIds',
         prevList: extraDesc,
       });
     }
 
-    extraDesc = await gatherStages({
+    extraDesc = await gatherStageNames({
       idFields: [oldDeal.stageId],
       foreignKey: 'stageId',
       prevList: extraDesc,
     });
 
     if (oldDeal.initialStageId) {
-      extraDesc = await gatherStages({
+      extraDesc = await gatherStageNames({
         idFields: [oldDeal.initialStageId],
         foreignKey: 'initialStageId',
         prevList: extraDesc,
@@ -179,7 +179,7 @@ const dealMutations = {
     }
 
     if (productIds.length > 0) {
-      extraDesc = await gatherProducts({
+      extraDesc = await gatherProductNames({
         idFields: productIds,
         foreignKey: 'productId',
         prevList: extraDesc,
