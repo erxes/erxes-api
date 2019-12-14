@@ -11,6 +11,7 @@ import { companySchema, linkSchema } from '../../../db/models/definitions/compan
 import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
 import { dealSchema, productDataSchema } from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
+import { tagSchema } from '../../../db/models/definitions/tags';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -81,6 +82,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.EMAIL_TEMPLATE,
     schemas: [emailTemplateSchema],
+  },
+  {
+    name: MODULE_NAMES.TAG,
+    schemas: [tagSchema],
   },
 ];
 
