@@ -874,6 +874,7 @@ export const stageFactory = async (params: IStageFactoryInput = {}) => {
 };
 
 interface IDealFactoryInput {
+  name?: string;
   stageId?: string;
   productsData?: any;
   closeDate?: Date;
@@ -899,7 +900,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
   const deal = new Deals({
     ...params,
     initialStageId: stageId,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId,
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
@@ -912,6 +913,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
     order: params.order,
     probability: params.probability,
     searchText: params.searchText,
+    createdAt: new Date(),
   });
 
   return deal.save();
