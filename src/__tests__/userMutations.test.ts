@@ -521,11 +521,11 @@ describe('User mutations', () => {
     const previousPassword = _user.password;
 
     const mutation = `
-      mutation resetMemberPassword(
+      mutation usersResetMemberPassword(
         $_id: String!
         $newPassword: String!
       ) {
-        resetMemberPassword(
+        usersResetMemberPassword(
           _id: $_id
           newPassword: $newPassword
         ) {
@@ -536,13 +536,13 @@ describe('User mutations', () => {
 
     const user = await graphqlRequest(
       mutation,
-      'resetMemberPassword',
+      'usersResetMemberPassword',
       { _id: _user.id, newPassword: 'newpassword' },
       context,
     );
     // if not newPassword
     try {
-      await graphqlRequest(mutation, 'resetMemberPassword', { _id: _user.id, newPassword: '' }, context);
+      await graphqlRequest(mutation, 'usersResetMemberPassword', { _id: _user.id, newPassword: '' }, context);
     } catch (e) {
       expect(e[0].message).toBe('Password is required.');
     }
