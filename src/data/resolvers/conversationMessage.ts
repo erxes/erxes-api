@@ -33,6 +33,11 @@ export default {
 
     const path = kind.includes('nylas') ? `/nylas/get-message` : `/${kind}/get-message`;
 
+    // It's possible to be undefined in pubsub
+    if (!dataSources) {
+      return {};
+    }
+
     return dataSources.IntegrationsAPI.fetchApi(path, {
       erxesApiMessageId: message._id,
       integrationId: integration._id,
