@@ -281,6 +281,12 @@ describe('conversationQueries', () => {
       expect(e[0].message).toBe('Integrations api is not running');
     }
 
+    const messages = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: nyalsGmailConversation._id,
+    });
+
+    expect(messages[0].mailData.messageId).toBeNull();
+
     try {
       await graphqlRequest(
         qryConversationMessage,
