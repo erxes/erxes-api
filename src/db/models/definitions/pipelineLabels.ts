@@ -6,7 +6,6 @@ export interface IPipelineLabel {
   colorCode: string;
   pipelineId: string;
   createdBy?: string;
-  createdDate?: Date;
   createdAt?: Date;
 }
 

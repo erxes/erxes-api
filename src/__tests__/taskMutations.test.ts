@@ -107,6 +107,8 @@ describe('Test tasks mutations', () => {
   });
 
   test('Move task between pipelines', async () => {
+    expect.assertions(3);
+
     const pipeline2 = await pipelineFactory();
     const stage2 = await stageFactory({ pipelineId: pipeline2._id });
 
@@ -133,14 +135,23 @@ describe('Test tasks mutations', () => {
       }
     `;
 
-    const updatedTask = await graphqlRequest(mutation, 'tasksEdit', args);
+    let updatedTask = await graphqlRequest(mutation, 'tasksEdit', args);
 
     expect(updatedTask.stageId).toBe(stage2._id);
 
     if (task.labelIds) {
       const copiedLabels = await PipelineLabels.find({ pipelineId: pipeline2._id });
 
-      expect(copiedLabels.length).toBe(updatedTask.labelIds.length);
+      expect(copiedLabels.length + 1).toBe(updatedTask.labelIds.length);
+    }
+
+    try {
+      // to improve boardUtils coverage
+      args.stageId = 'demo-stage';
+
+      updatedTask = await graphqlRequest(mutation, 'tasksEdit', args);
+    } catch (e) {
+      expect(e[0].message).toBe('Stage not found');
     }
   });
 

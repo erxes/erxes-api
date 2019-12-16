@@ -1,6 +1,8 @@
 import { ActivityLogs, Boards, Conformities, PipelineLabels, Pipelines, Stages } from '../../db/models';
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
+import { ITaskDocument } from '../../db/models/definitions/tasks';
+import { ITicketDocument } from '../../db/models/definitions/tickets';
 import { IUserDocument } from '../../db/models/definitions/users';
 import { can } from '../permissions/utils';
 import { checkLogin } from '../permissions/wrappers';
@@ -237,40 +239,42 @@ export const createConformity = async ({
 };
 
 interface ILabelParams {
-  itemId: string;
-  labelIds?: string[];
-  oldStageId: string;
-  newStageId: string;
-  userId: string;
+  item: IDealDocument | ITaskDocument | ITicketDocument;
+  doc: any;
+  user: IUserDocument;
 }
 
 /**
  * Copies pipeline labels alongside deal/task/tickets when they are moved between different pipelines.
  */
 export const copyPipelineLabels = async (params: ILabelParams) => {
-  const { itemId, labelIds = [], oldStageId, newStageId, userId } = params;
+  const { item, doc, user } = params;
 
-  const oldStage = await Stages.findOne({ _id: oldStageId });
-  const newStage = await Stages.findOne({ _id: newStageId });
+  const oldStage = await Stages.findOne({ _id: item.stageId });
+  const newStage = await Stages.findOne({ _id: doc.stageId });
 
-  if (oldStage && newStage && oldStage.pipelineId !== newStage.pipelineId) {
-    const oldLabels = await PipelineLabels.find({ _id: { $in: labelIds } });
+  if (!(oldStage && newStage)) {
+    throw new Error('Stage not found');
+  }
+
+  if (oldStage.pipelineId !== newStage.pipelineId) {
+    const oldLabels = await PipelineLabels.find({ _id: { $in: item.labelIds } });
     const updatedLabelIds: string[] = [];
 
     for (const label of oldLabels) {
-      const doc = {
+      const filter = {
         name: label.name,
         colorCode: label.colorCode,
         pipelineId: newStage.pipelineId,
       };
 
-      const exists = await PipelineLabels.findOne(doc);
+      const exists = await PipelineLabels.findOne(filter);
 
       if (!exists) {
         const newLabel = await PipelineLabels.createPipelineLabel({
           ...doc,
           createdAt: new Date(),
-          createdBy: userId,
+          createdBy: user._id,
         });
 
         updatedLabelIds.push(newLabel._id);
@@ -280,7 +284,7 @@ export const copyPipelineLabels = async (params: ILabelParams) => {
     } // end label loop
 
     if (updatedLabelIds.length > 0) {
-      await PipelineLabels.labelsLabel(newStage.pipelineId, itemId, updatedLabelIds);
+      await PipelineLabels.labelsLabel(newStage.pipelineId, item._id, updatedLabelIds);
     }
   } // end stage & pipeline checking
 };

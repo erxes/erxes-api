@@ -72,13 +72,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    await copyPipelineLabels({
-      itemId: oldDeal._id,
-      labelIds: oldDeal.labelIds,
-      oldStageId: oldDeal.stageId,
-      newStageId: doc.stageId,
-      userId: user._id,
-    });
+    await copyPipelineLabels({ item: oldDeal, doc, user });
 
     const notificationDoc: IBoardNotificationParams = {
       item: updatedDeal,

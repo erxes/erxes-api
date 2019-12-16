@@ -71,13 +71,7 @@ const ticketMutations = {
       modifiedBy: user._id,
     });
 
-    await copyPipelineLabels({
-      itemId: oldTicket._id,
-      labelIds: oldTicket.labelIds,
-      oldStageId: oldTicket.stageId,
-      newStageId: doc.stageId,
-      userId: user._id,
-    });
+    await copyPipelineLabels({ item: oldTicket, doc, user });
 
     const notificationDoc: IBoardNotificationParams = {
       item: updatedTicket,

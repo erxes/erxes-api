@@ -71,13 +71,7 @@ const taskMutations = {
     });
 
     // labels should be copied to newly moved pipeline
-    await copyPipelineLabels({
-      itemId: oldTask._id,
-      labelIds: oldTask.labelIds,
-      oldStageId: oldTask.stageId,
-      newStageId: doc.stageId,
-      userId: user._id,
-    });
+    await copyPipelineLabels({ item: oldTask, doc, user });
 
     const notificationDoc: IBoardNotificationParams = {
       item: updatedTask,
