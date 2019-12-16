@@ -142,7 +142,7 @@ describe('Test tasks mutations', () => {
     if (task.labelIds) {
       const copiedLabels = await PipelineLabels.find({ pipelineId: pipeline2._id });
 
-      expect(copiedLabels.length + 1).toBe(updatedTask.labelIds.length);
+      expect(copiedLabels.length).toBe(2);
     }
 
     try {

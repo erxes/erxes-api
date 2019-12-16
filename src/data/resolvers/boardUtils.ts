@@ -257,34 +257,34 @@ export const copyPipelineLabels = async (params: ILabelParams) => {
     throw new Error('Stage not found');
   }
 
-  if (oldStage.pipelineId !== newStage.pipelineId) {
-    const oldLabels = await PipelineLabels.find({ _id: { $in: item.labelIds } });
-    const updatedLabelIds: string[] = [];
+  if (oldStage.pipelineId === newStage.pipelineId) {
+    return;
+  }
 
-    for (const label of oldLabels) {
-      const filter = {
-        name: label.name,
-        colorCode: label.colorCode,
-        pipelineId: newStage.pipelineId,
-      };
+  const oldLabels = await PipelineLabels.find({ _id: { $in: item.labelIds } });
+  const updatedLabelIds: string[] = [];
 
-      const exists = await PipelineLabels.findOne(filter);
+  for (const label of oldLabels) {
+    const filter = {
+      name: label.name,
+      colorCode: label.colorCode,
+      pipelineId: newStage.pipelineId,
+    };
 
-      if (!exists) {
-        const newLabel = await PipelineLabels.createPipelineLabel({
-          ...filter,
-          createdAt: new Date(),
-          createdBy: user._id,
-        });
+    const exists = await PipelineLabels.findOne(filter);
 
-        updatedLabelIds.push(newLabel._id);
-      } else {
-        updatedLabelIds.push(exists._id);
-      }
-    } // end label loop
+    if (!exists) {
+      const newLabel = await PipelineLabels.createPipelineLabel({
+        ...filter,
+        createdAt: new Date(),
+        createdBy: user._id,
+      });
 
-    if (updatedLabelIds.length > 0) {
-      await PipelineLabels.labelsLabel(newStage.pipelineId, item._id, updatedLabelIds);
+      updatedLabelIds.push(newLabel._id);
+    } else {
+      updatedLabelIds.push(exists._id);
     }
-  } // end stage & pipeline checking
+  } // end label loop
+
+  await PipelineLabels.labelsLabel(newStage.pipelineId, item._id, updatedLabelIds);
 };
