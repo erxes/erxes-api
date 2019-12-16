@@ -1,4 +1,4 @@
-import { ActivityLogs, Boards, Conformities, Pipelines, Stages } from '../../db/models';
+import { ActivityLogs, Boards, Conformities, PipelineLabels, Pipelines, Stages } from '../../db/models';
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IUserDocument } from '../../db/models/definitions/users';
@@ -234,4 +234,53 @@ export const createConformity = async ({
       relTypeId: customerId,
     });
   }
+};
+
+interface ILabelParams {
+  itemId: string;
+  labelIds?: string[];
+  oldStageId: string;
+  newStageId: string;
+  userId: string;
+}
+
+/**
+ * Copies pipeline labels alongside deal/task/tickets when they are moved between different pipelines.
+ */
+export const copyPipelineLabels = async (params: ILabelParams) => {
+  const { itemId, labelIds = [], oldStageId, newStageId, userId } = params;
+
+  const oldStage = await Stages.findOne({ _id: oldStageId });
+  const newStage = await Stages.findOne({ _id: newStageId });
+
+  if (oldStage && newStage && oldStage.pipelineId !== newStage.pipelineId) {
+    const oldLabels = await PipelineLabels.find({ _id: { $in: labelIds } });
+    const updatedLabelIds: string[] = [];
+
+    for (const label of oldLabels) {
+      const doc = {
+        name: label.name,
+        colorCode: label.colorCode,
+        pipelineId: newStage.pipelineId,
+      };
+
+      const exists = await PipelineLabels.findOne(doc);
+
+      if (!exists) {
+        const newLabel = await PipelineLabels.createPipelineLabel({
+          ...doc,
+          createdAt: new Date(),
+          createdBy: userId,
+        });
+
+        updatedLabelIds.push(newLabel._id);
+      } else {
+        updatedLabelIds.push(exists._id);
+      }
+    } // end label loop
+
+    if (updatedLabelIds.length > 0) {
+      await PipelineLabels.labelsLabel(newStage.pipelineId, itemId, updatedLabelIds);
+    }
+  } // end stage & pipeline checking
 };

@@ -7,6 +7,7 @@ export interface IPipelineLabel {
   pipelineId: string;
   createdBy?: string;
   createdDate?: Date;
+  createdAt?: Date;
 }
 
 export interface IPipelineLabelDocument extends IPipelineLabel, Document {
