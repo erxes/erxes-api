@@ -272,7 +272,7 @@ export const copyPipelineLabels = async (params: ILabelParams) => {
 
       if (!exists) {
         const newLabel = await PipelineLabels.createPipelineLabel({
-          ...doc,
+          ...filter,
           createdAt: new Date(),
           createdBy: user._id,
         });
