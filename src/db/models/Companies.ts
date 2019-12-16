@@ -145,9 +145,9 @@ export const loadClass = () => {
      */
     public static async removeCompanies(companyIds: string[]) {
       // Removing modules associated with company
-      let tagIds: string[] = [];
+
       await Tags.tagObject({
-        tagIds: tagIds,
+        tagIds: [],
         objectIds: companyIds,
         collection: Companies,
         tagType: 'company',

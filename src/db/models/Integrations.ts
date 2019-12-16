@@ -154,9 +154,9 @@ export const loadClass = () => {
       }
 
       // update tag object counts
-      let tagIds: string[] = [];
+
       await Tags.tagObject({
-        tagIds: tagIds,
+        tagIds: [],
         objectIds: [_id],
         collection: Integrations,
         tagType: 'integration',

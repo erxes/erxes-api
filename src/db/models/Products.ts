@@ -79,9 +79,9 @@ export const loadProductClass = () => {
       }
 
       // update tags object count
-      let tagIds: string[] = [];
+
       await Tags.tagObject({
-        tagIds: tagIds,
+        tagIds: [],
         objectIds: _ids,
         collection: Products,
         tagType: 'product',

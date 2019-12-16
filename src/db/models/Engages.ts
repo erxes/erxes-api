@@ -75,9 +75,9 @@ export const loadClass = () => {
       }
 
       // update tags object count
-      let tagIds: string[] = [];
+
       await Tags.tagObject({
-        tagIds: tagIds,
+        tagIds: [],
         objectIds: [_id],
         collection: EngageMessages,
         tagType: 'engageMessage',
