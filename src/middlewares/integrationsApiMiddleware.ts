@@ -1,5 +1,6 @@
 import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
+import { debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -49,6 +50,9 @@ const integrationsApiMiddleware = async (req, res) => {
 
   if (action === 'create-or-update-conversation') {
     const { conversationId, content, owner } = doc;
+
+    debugExternalApi(doc);
+
     const user = await Users.findOne({ 'details.operatorPhone': owner });
     const assignedUserId = user ? user._id : '';
 
