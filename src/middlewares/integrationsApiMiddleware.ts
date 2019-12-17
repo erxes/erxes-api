@@ -49,7 +49,7 @@ const integrationsApiMiddleware = async (req, res) => {
 
   if (action === 'create-or-update-conversation') {
     const { conversationId, content, owner } = doc;
-    const user = await Users.findOne({ 'details.operatorNumber': owner });
+    const user = await Users.findOne({ 'details.operatorPhone': owner });
     const assignedUserId = user ? user._id : '';
 
     if (conversationId) {
