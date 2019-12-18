@@ -24,14 +24,14 @@ export const conformityQueryFields = `
 `;
 
 export const commonTypes = `
+  userId: String
   name: String!
   order: Int
   createdAt: Date
   hasNotified: Boolean
   assignedUserIds: [String]
-  assignedUsers: [User]
+  watchedUserIds: [String]
   labelIds: [String]
-  labels: [PipelineLabel]
   closeDate: Date
   description: String
   modifiedAt: Date
@@ -40,9 +40,13 @@ export const commonTypes = `
   isComplete: Boolean,
   isWatched: Boolean,
   stageId: String
+  priority: String
+  initialStageId: String
+  
+  labels: [PipelineLabel]
+  assignedUsers: [User]
   stage: Stage
   pipeline: Pipeline
   boardId: String
-  priority: String
   attachments: [Attachment]
 `;

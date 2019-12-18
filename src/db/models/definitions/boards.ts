@@ -30,6 +30,21 @@ export interface IItemCommonFields {
   order?: number;
   searchText?: string;
   priority?: string;
+  reminderMinute?: number;
+  isComplete?: boolean;
+}
+
+export interface IProductData extends Document {
+  productId: string;
+  uom: string;
+  currency: string;
+  quantity: number;
+  unitPrice: number;
+  taxPercent?: number;
+  tax?: number;
+  discountPercent?: number;
+  discount?: number;
+  amount?: number;
 }
 
 export interface IItemCommonFieldsDocument extends IItemCommonFields, Document {
@@ -83,6 +98,23 @@ export interface IOrderInput {
   _id: string;
   order: number;
 }
+
+export const productDataSchema = new Schema(
+  {
+    _id: field({ type: String }),
+    productId: field({ type: String, label: 'Product' }),
+    uom: field({ type: String, label: 'Unit of measurement' }),
+    currency: field({ type: String, label: 'Currency' }),
+    quantity: field({ type: Number, label: 'Quantity' }),
+    unitPrice: field({ type: Number, label: 'Unit price' }),
+    taxPercent: field({ type: Number, label: 'Tax percent' }),
+    tax: field({ type: Number, label: 'Tax' }),
+    discountPercent: field({ type: Number, label: 'Discount percent' }),
+    discount: field({ type: Number, label: 'Discount' }),
+    amount: field({ type: Number, label: 'Amount' }),
+  },
+  { _id: false },
+);
 
 const attachmentSchema = new Schema(
   {

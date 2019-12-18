@@ -905,7 +905,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
-    productsDate: params.productsData,
+    productsData: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     userId: params.userId || faker.random.word(),
     watchedUserIds: params.watchedUserIds,
@@ -958,6 +958,13 @@ interface ITicketFactoryInput {
   source?: string;
   watchedUserIds?: string[];
   labelIds?: string[];
+  productsData?: any;
+  initialStageId?: string;
+  userId?: string;
+  order?: number;
+  reminderMinute?: number;
+  isComplete?: boolean;
+  modifiedBy?: string;
 }
 
 export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
@@ -972,10 +979,17 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds,
-    priority: params.priority,
-    source: params.source,
+    priority: params.priority || faker.random.word(),
+    source: params.source || faker.random.word(),
     watchedUserIds: params.watchedUserIds,
     labelIds: params.labelIds || [],
+    productsData: params.productsData || [],
+    initialStageId: params.initialStageId || stage._id,
+    userId: params.userId || faker.random.uuid(),
+    order: params.order || faker.random.number(),
+    reminderMinute: params.reminderMinute || faker.random.number(),
+    isComplete: params.isComplete || faker.random.boolean(),
+    modifiedBy: params.modifiedBy || faker.random.uuid(),
   });
 
   return ticket.save();

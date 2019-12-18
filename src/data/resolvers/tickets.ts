@@ -2,9 +2,11 @@ import {
   Companies,
   Conformities,
   Customers,
+  Fields,
   Notifications,
   PipelineLabels,
   Pipelines,
+  Products,
   Stages,
   Users,
 } from '../../db/models';
@@ -67,5 +69,62 @@ export default {
 
   labels(ticket: ITicketDocument) {
     return PipelineLabels.find({ _id: { $in: ticket.labelIds || [] } });
+  },
+
+  async products(ticket: ITicketDocument) {
+    const products: any = [];
+
+    for (const data of ticket.productsData || []) {
+      const product = await Products.getProduct({ _id: data.productId });
+
+      const { customFieldsData } = product;
+
+      if (customFieldsData) {
+        const customFields = {};
+        const fieldIds: string[] = [];
+
+        Object.keys(customFieldsData).forEach(_id => {
+          fieldIds.push(_id);
+        });
+
+        const fields = await Fields.find({ _id: { $in: fieldIds }, contentType: 'product' });
+
+        for (const field of fields) {
+          customFields[field._id] = {
+            text: field.text,
+            data: customFieldsData[field._id],
+          };
+        }
+
+        product.customFieldsData = customFields;
+      }
+
+      // Add product object to resulting list
+      products.push({
+        ...data.toJSON(),
+        product: product.toJSON(),
+      });
+    }
+
+    return products;
+  },
+
+  amount(ticket: ITicketDocument) {
+    const data = ticket.productsData;
+    const amountsMap = {};
+
+    (data || []).forEach(product => {
+      const type = product.currency;
+
+      if (type) {
+        if (!amountsMap[type]) {
+          amountsMap[type] = 0;
+        }
+
+        amountsMap[type] += product.amount || 0;
+      }
+    });
+
+    return amountsMap;
   },
 };
