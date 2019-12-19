@@ -1,6 +1,7 @@
-import { Integrations } from '../../../db/models';
+import { Customers, EmailDeliveries, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IExternalIntegrationParams } from '../../../db/models/Integrations';
+import { debugExternalApi } from '../../../debuggers';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -222,7 +223,7 @@ const integrationMutations = {
   /**
    * Send mail
    */
-  async integrationSendMail(_root, args: any, { dataSources }: IContext) {
+  async integrationSendMail(_root, args: any, { dataSources, user }: IContext) {
     const { erxesApiId, ...doc } = args;
 
     let kind = doc.kind;
@@ -231,10 +232,25 @@ const integrationMutations = {
       kind = 'nylas';
     }
 
-    return dataSources.IntegrationsAPI.sendEmail(kind, {
-      erxesApiId,
-      data: JSON.stringify(doc),
-    });
+    try {
+      await dataSources.IntegrationsAPI.sendEmail(kind, {
+        erxesApiId,
+        data: JSON.stringify(doc),
+      });
+    } catch (e) {
+      debugExternalApi(e);
+      throw new Error(e);
+    }
+
+    const customerIds = await Customers.find({ primaryEmail: { $in: doc.to } }).distinct('_id');
+
+    doc.userId = user._id;
+
+    for (const customerId of customerIds) {
+      await EmailDeliveries.createEmailDelivery({ ...doc, customerId });
+    }
+
+    return;
   },
 
   async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {

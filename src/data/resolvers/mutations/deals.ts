@@ -1,11 +1,17 @@
-import { Checklists, Conformities, Deals } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { createConformity, IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
+import {
+  copyPipelineLabels,
+  createConformity,
+  IBoardNotificationParams,
+  itemsChange,
+  sendNotifications,
+} from '../boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -66,6 +72,8 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
+    await copyPipelineLabels({ item: oldDeal, doc, user });
+
     const notificationDoc: IBoardNotificationParams = {
       item: updatedDeal,
       user,
@@ -76,7 +84,7 @@ const dealMutations = {
     };
 
     if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds || [], doc.assignedUserIds);
+      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -113,7 +121,7 @@ const dealMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(deal, 'deal', destinationStageId);
+    const { content, action } = await itemsChange(user._id, deal, 'deal', destinationStageId);
 
     await sendNotifications({
       item: deal,
@@ -160,6 +168,7 @@ const dealMutations = {
 
     await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
     await Checklists.removeChecklists('deal', deal._id);
+    await ActivityLogs.removeActivityLog(deal._id);
 
     return deal.remove();
   },

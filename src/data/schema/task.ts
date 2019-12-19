@@ -5,6 +5,7 @@ export const types = `
     _id: String!
     companies: [Company]
     customers: [Customer]
+    createdUser: User
     ${commonTypes}
   }
 `;
@@ -23,6 +24,8 @@ export const queries = `
     closeDateType: String
     priority: [String]
     labelIds: [String]
+    sortField: String
+    sortDirection: Int
     ${conformityQueryFields}
   ): [Task]
 `;

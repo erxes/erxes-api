@@ -1,4 +1,4 @@
-import { ActivityLogs, ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 import { graphqlPubsub } from '../pubsub';
 
@@ -48,17 +48,20 @@ const integrationsApiMiddleware = async (req, res) => {
   }
 
   if (action === 'create-or-update-conversation') {
-    if (doc.conversationId) {
-      const { conversationId, content } = doc;
+    const { conversationId, content, owner } = doc;
+    const user = await Users.findOne({ 'details.operatorPhone': owner || '' });
 
-      await Conversations.updateConversation(conversationId, { content });
+    const assignedUserId = user ? user._id : null;
+
+    if (conversationId) {
+      await Conversations.updateConversation(conversationId, { content, assignedUserId });
 
       return res.json({ _id: conversationId });
     }
 
-    const conversation = await Conversations.createConversation(doc);
+    doc.assignedUserId = assignedUserId;
 
-    await ActivityLogs.createConversationLog(conversation);
+    const conversation = await Conversations.createConversation(doc);
 
     return res.json({ _id: conversation._id });
   }

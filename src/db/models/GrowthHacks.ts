@@ -36,12 +36,13 @@ export const loadGrowthHackClass = () => {
       const growthHack = await GrowthHacks.create({
         ...doc,
         order: growthHacksCount,
+        createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });
 
       // create log
-      await ActivityLogs.createGrowthHackLog(growthHack);
+      await ActivityLogs.createBoardItemLog({ item: growthHack, contentType: 'growtHack' });
 
       return growthHack;
     }

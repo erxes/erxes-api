@@ -35,12 +35,13 @@ export const loadDealClass = () => {
       const deal = await Deals.create({
         ...doc,
         order: dealsCount,
+        createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });
 
       // create log
-      await ActivityLogs.createDealLog(deal);
+      await ActivityLogs.createBoardItemLog({ item: deal, contentType: 'deal' });
 
       return deal;
     }

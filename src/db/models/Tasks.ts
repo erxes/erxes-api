@@ -38,12 +38,13 @@ export const loadTaskClass = () => {
       const task = await Tasks.create({
         ...doc,
         order: tasksCount,
+        createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });
 
       // create log
-      await ActivityLogs.createTaskLog(task);
+      await ActivityLogs.createBoardItemLog({ item: task, contentType: 'task' });
 
       return task;
     }

@@ -119,19 +119,23 @@ const internalNoteMutations = {
       }
     }
 
-    await utils.sendNotification(notifDoc);
+    if (notifDoc.contentType) {
+      await utils.sendNotification(notifDoc);
+    }
 
     const internalNote = await InternalNotes.createInternalNote(args, user);
 
-    await putCreateLog(
-      {
-        type: 'internalNote',
-        newData: JSON.stringify(args),
-        object: internalNote,
-        description: `${internalNote.contentType} has been created`,
-      },
-      user,
-    );
+    if (internalNote) {
+      await putCreateLog(
+        {
+          type: 'internalNote',
+          newData: JSON.stringify(args),
+          object: internalNote,
+          description: `${internalNote.contentType} has been created`,
+        },
+        user,
+      );
+    }
 
     return internalNote;
   },
@@ -148,7 +152,7 @@ const internalNoteMutations = {
         type: 'internalNote',
         object: internalNote,
         newData: JSON.stringify(doc),
-        description: `${internalNote.contentType} written at ${internalNote.createdDate} has been edited`,
+        description: `${internalNote.contentType} written at ${internalNote.createdAt} has been edited`,
       },
       user,
     );
@@ -167,7 +171,7 @@ const internalNoteMutations = {
       {
         type: 'internalNote',
         object: internalNote,
-        description: `${internalNote.contentType} written at ${internalNote.createdDate} has been removed`,
+        description: `${internalNote.contentType} written at ${internalNote.createdAt} has been removed`,
       },
       user,
     );
