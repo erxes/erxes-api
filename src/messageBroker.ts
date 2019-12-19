@@ -1,5 +1,6 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
+import { receiveIntegrationsNotification, receiveRpcMessage } from './data/modules/integrations/receiveMessage';
 import { conversationNotifReceivers } from './data/resolvers/mutations/conversations';
 import { registerOnboardHistory, sendMobileNotification } from './data/utils';
 import { ActivityLogs, Conversations, Customers, Integrations, RobotEntries, Users } from './db/models';
@@ -103,10 +104,8 @@ const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
 };
 
 export const sendMessage = async (queueName: string, data?: any) => {
-  if (channel) {
-    await channel.assertQueue(queueName);
-    await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data || {})));
-  }
+  await channel.assertQueue(queueName);
+  await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data || {})));
 };
 
 const initConsumer = async () => {
@@ -114,6 +113,23 @@ const initConsumer = async () => {
   try {
     connection = await amqplib.connect(RABBITMQ_HOST);
     channel = await connection.createChannel();
+
+    // listen for rpc queue =========
+    await channel.assertQueue('rpc_queue');
+
+    channel.consume('rpc_queue', async msg => {
+      if (msg !== null) {
+        debugBase(`Received rpc queue message ${msg.content.toString()}`);
+
+        const response = await receiveRpcMessage(JSON.parse(msg.content.toString()));
+
+        channel.sendToQueue(msg.properties.replyTo, Buffer.from(JSON.stringify(response)), {
+          correlationId: msg.properties.correlationId,
+        });
+
+        channel.ack(msg);
+      }
+    });
 
     // graphql subscriptions call =========
     await channel.assertQueue('callPublish');
@@ -134,6 +150,16 @@ const initConsumer = async () => {
     channel.consume('widgetNotification', async msg => {
       if (msg !== null) {
         await receiveWidgetNotification(JSON.parse(msg.content.toString()));
+        channel.ack(msg);
+      }
+    });
+
+    // listen for integrations api =========
+    await channel.assertQueue('integrationsNotification');
+
+    channel.consume('integrationsNotification', async msg => {
+      if (msg !== null) {
+        await receiveIntegrationsNotification(JSON.parse(msg.content.toString()));
         channel.ack(msg);
       }
     });
