@@ -46,6 +46,7 @@ export const loadTicketClass = () => {
       const ticket = await Tickets.create({
         ...doc,
         order: ticketsCount,
+        createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });

@@ -46,6 +46,7 @@ export const loadTaskClass = () => {
       const task = await Tasks.create({
         ...doc,
         order: tasksCount,
+        createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
       });

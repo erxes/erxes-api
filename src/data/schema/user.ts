@@ -6,6 +6,7 @@ export const types = `
     position: String
     location: String
     description: String
+    operatorPhone: String
   }
 
   input UserLinks {
@@ -35,6 +36,7 @@ export const types = `
     position: String
     location: String
     description: String
+    operatorPhone: String
   }
 
   type UserLinksType {
@@ -102,6 +104,7 @@ export const mutations = `
   logout: String
   forgotPassword(email: String!): String!
   resetPassword(token: String!, newPassword: String!): JSON
+  usersResetMemberPassword(_id: String!, newPassword: String!): User
   usersEditProfile(
     username: String!,
     email: String!,

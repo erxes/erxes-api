@@ -54,6 +54,8 @@ const commonQueryParams = `
   labelIds: [String]
   search: String
   priority: [String]
+  sortField: String
+  sortDirection: Int
 `;
 
 export const queries = `

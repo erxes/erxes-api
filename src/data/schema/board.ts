@@ -61,6 +61,15 @@ export const types = `
   }
 `;
 
+const stageParams = `
+  search: String,
+  companyIds: [String]
+  customerIds: [String]
+  assignedUserIds: [String]
+  extraParams: JSON,
+  closeDateType: String
+`;
+
 export const queries = `
   boards(type: String!): [Board]
   boardGetLast(type: String!): Board
@@ -70,14 +79,9 @@ export const queries = `
   stages(
     isNotLost: Boolean,
     pipelineId: String!,
-    search: String,
-    companyIds: [String]
-    customerIds: [String]
-    assignedUserIds: [String]
-    extraParams: JSON,
-    closeDateType: String,
+    ${stageParams}
   ): [Stage]
-  stageDetail(_id: String!): Stage
+  stageDetail(_id: String!, ${stageParams}): Stage
   convertToInfo(conversationId: String!): ConvertTo
 `;
 

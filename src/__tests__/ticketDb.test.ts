@@ -57,7 +57,6 @@ describe('Test Tickets model', () => {
 
     expect(createdTicket).toBeDefined();
     expect(createdTicket.stageId).toEqual(stage._id);
-    expect(createdTicket.createdAt).toEqual(ticket.createdAt);
     expect(createdTicket.userId).toEqual(user._id);
   });
 
