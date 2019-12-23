@@ -26,7 +26,7 @@ interface ISubmission {
 
 const widgetMutations = {
   // Find integrationId by brandCode
-  async leadConnect(_root, args: { brandCode: string; formCode: string }) {
+  async widgetsLeadConnect(_root, args: { brandCode: string; formCode: string }) {
     const brand = await Brands.findOne({ code: args.brandCode });
     const form = await Forms.findOne({ code: args.formCode });
 
@@ -59,7 +59,7 @@ const widgetMutations = {
   },
 
   // create new conversation using form data
-  async saveLead(
+  async widgetsSaveLead(
     _root,
     args: {
       integrationId: string;
@@ -156,11 +156,14 @@ const widgetMutations = {
     return { status: 'ok', messageId: message._id };
   },
 
-  leadIncreaseViewCount(_root, { formId }: { formId: string }) {
+  widgetsLeadIncreaseViewCount(_root, { formId }: { formId: string }) {
     return Integrations.increaseViewCount(formId);
   },
 
-  knowledgebaseIncReactionCount(_root, { articleId, reactionChoice }: { articleId: string; reactionChoice: string }) {
+  widgetsKnowledgebaseIncReactionCount(
+    _root,
+    { articleId, reactionChoice }: { articleId: string; reactionChoice: string },
+  ) {
     return KnowledgeBaseArticles.incReactionCount(articleId, reactionChoice);
   },
 
@@ -168,7 +171,7 @@ const widgetMutations = {
    * Create a new customer or update existing customer info
    * when connection established
    */
-  async messengerConnect(
+  async widgetsMessengerConnect(
     _root,
     args: {
       brandCode: string;
@@ -270,7 +273,7 @@ const widgetMutations = {
   /*
    * Create a new message
    */
-  async insertMessage(
+  async widgetsInsertMessage(
     _root,
     args: {
       integrationId: string;
@@ -336,23 +339,10 @@ const widgetMutations = {
     // mark customer as active
     await Customers.markCustomerAsActive(conversation.customerId);
 
-    // notify main api
-    sendMessage('callPublish', {
-      trigger: 'conversationClientMessageInserted',
-      payload: msg,
-    });
-
-    sendMessage('callPublish', {
-      trigger: 'conversationMessageInserted',
-      payload: msg,
-    });
-
-    sendMessage('callPublish', {
-      trigger: 'conversationClientTypingStatusChanged',
-      payload: {
-        conversationId,
-        text: '',
-      },
+    graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
+    graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
+    graphqlPubsub.publish('conversationClientTypingStatusChanged', {
+      conversationClientTypingStatusChanged: { conversationId, text: '' },
     });
 
     return msg;
@@ -361,8 +351,8 @@ const widgetMutations = {
   /*
    * Mark given conversation's messages as read
    */
-  async readConversationMessages(_root, args: { conversationId: string }) {
-    const response = await Messages.updateMany(
+  async widgetsReadConversationMessages(_root, args: { conversationId: string }) {
+    await Messages.updateMany(
       {
         conversationId: args.conversationId,
         userId: { $exists: true },
@@ -372,17 +362,17 @@ const widgetMutations = {
       { multi: true },
     );
 
-    return response;
+    return args.conversationId;
   },
 
-  saveCustomerGetNotified(_root, args: IVisitorContactInfoParams) {
+  widgetsSaveCustomerGetNotified(_root, args: IVisitorContactInfoParams) {
     return Customers.saveVisitorContactInfo(args);
   },
 
   /*
    * Update customer location field
    */
-  async saveBrowserInfo(_root, { customerId, browserInfo }: { customerId: string; browserInfo: IBrowserInfo }) {
+  async widgetsSaveBrowserInfo(_root, { customerId, browserInfo }: { customerId: string; browserInfo: IBrowserInfo }) {
     // update location
     await Customers.updateLocation(customerId, browserInfo);
 
@@ -408,7 +398,7 @@ const widgetMutations = {
 
     // try to create engage chat auto messages
     if (!customer.primaryEmail) {
-      await EngageMessages.createEngageVisitorMessages({
+      await EngageMessages.createVisitorMessages({
         brand,
         integration,
         customer,
@@ -425,7 +415,7 @@ const widgetMutations = {
     return Messages.findOne(Conversations.unreadMessagesQuery(convs));
   },
 
-  sendTypingInfo(_root, args: { conversationId: string; text?: string }) {
+  widgetsSendTypingInfo(_root, args: { conversationId: string; text?: string }) {
     sendMessage('callPublish', {
       trigger: 'conversationClientTypingStatusChanged',
       payload: args,

@@ -69,6 +69,10 @@ export const types = `
     backgroundImage: String
     languageCode: String
   }
+
+  type KnowledgeBaseLoader {
+    loadType: String
+  }
 `;
 
 export const queries = `
@@ -84,6 +88,7 @@ export const queries = `
   knowledgeBaseArticles(page: Int, perPage: Int, categoryIds: [String]): [KnowledgeBaseArticle]
   knowledgeBaseArticleDetail(_id: String!): KnowledgeBaseArticle
   knowledgeBaseArticlesTotalCount(categoryIds: [String]): Int
+  knowledgeBaseLoader(topicId: String!) : KnowledgeBaseLoader
 `;
 
 export const mutations = `

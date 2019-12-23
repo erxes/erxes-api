@@ -291,7 +291,7 @@ export const loadClass = () => {
       });
     }
 
-    public unreadMessagesQuery(conversations: IConversationDocument[]) {
+    public static unreadMessagesQuery(conversations: IConversationDocument[]) {
       const unreadMessagesSelector = { userId: { $exists: true }, internal: false, isCustomerRead: { $ne: true } };
 
       const conversationIds = conversations.map(c => c._id);

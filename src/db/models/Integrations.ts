@@ -331,7 +331,7 @@ export const loadClass = () => {
       return Integrations.findOne({ formId });
     }
 
-    public isOnline(integration: IIntegrationDocument, now = new Date()) {
+    public static isOnline(integration: IIntegrationDocument, now = new Date()) {
       const daysAsString = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
       const isWeekday = (d: string): boolean => {

@@ -51,7 +51,7 @@ export default {
    * in a topic found by topicId
    * @return {Promise} searched articles
    */
-  async knowledgeBaseArticles(_root: any, args: { topicId: string; searchString: string }) {
+  async widgetsKnowledgeBaseArticles(_root: any, args: { topicId: string; searchString: string }) {
     const { topicId, searchString = '' } = args;
 
     let articleIds: string[] = [];
@@ -77,19 +77,11 @@ export default {
     });
   },
 
-  /**
-   * return a KnowledgeBaseLoader object with only `loadType` field in it
-   * @return {Promise} KnowledgeBaseLoader
-   */
-  knowledgeBaseLoader(_root: any, { topicId }: { topicId: string }) {
-    return KnowledgeBaseTopicsModel.findOne({ _id: topicId }, { loadType: 1 });
-  },
-
-  getMessengerIntegration(_root, args: { brandCode: string }) {
+  widgetsGetMessengerIntegration(_root, args: { brandCode: string }) {
     return Integrations.getWidgetIntegration(args.brandCode, 'messenger');
   },
 
-  conversations(_root, args: { integrationId: string; customerId: string }) {
+  widgetsConversations(_root, args: { integrationId: string; customerId: string }) {
     const { integrationId, customerId } = args;
 
     return Conversations.find({
@@ -98,7 +90,7 @@ export default {
     }).sort({ createdAt: -1 });
   },
 
-  async conversationDetail(_root, args: { _id: string; integrationId: string }) {
+  async widgetsConversationDetail(_root, args: { _id: string; integrationId: string }) {
     const { _id, integrationId } = args;
     const conversation = await Conversations.findOne({ _id });
 
@@ -117,13 +109,13 @@ export default {
     };
   },
 
-  messages(_root, args: { conversationId: string }) {
+  widgetsMessages(_root, args: { conversationId: string }) {
     const { conversationId } = args;
 
     return Conversations.getWidgetMessages(conversationId);
   },
 
-  unreadCount(_root, args: { conversationId: string }) {
+  widgetsUnreadCount(_root, args: { conversationId: string }) {
     const { conversationId } = args;
 
     return Messages.countDocuments({
@@ -134,7 +126,7 @@ export default {
     });
   },
 
-  async totalUnreadCount(_root, args: { integrationId: string; customerId: string }) {
+  async widgetsTotalUnreadCount(_root, args: { integrationId: string; customerId: string }) {
     const { integrationId, customerId } = args;
 
     // find conversations
@@ -144,7 +136,7 @@ export default {
     return Messages.countDocuments(Conversations.unreadMessagesQuery(convs));
   },
 
-  async messengerSupporters(_root, { integrationId }: { integrationId: string }) {
+  async widgetsMessengerSupporters(_root, { integrationId }: { integrationId: string }) {
     const integration = await Integrations.findOne({ _id: integrationId });
 
     if (!integration) {
