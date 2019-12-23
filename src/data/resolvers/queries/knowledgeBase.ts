@@ -149,10 +149,8 @@ const knowledgeBaseQueries = {
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticlesTotalCount');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicsTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicDetail');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesGetLast');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoryDetail');
 
 checkPermission(knowledgeBaseQueries, 'knowledgeBaseArticles', 'showKnowledgeBase', []);
 checkPermission(knowledgeBaseQueries, 'knowledgeBaseTopics', 'showKnowledgeBase', []);

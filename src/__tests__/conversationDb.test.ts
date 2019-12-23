@@ -1,4 +1,10 @@
-import { conversationFactory, conversationMessageFactory, customerFactory, userFactory } from '../db/factories';
+import {
+  conversationFactory,
+  conversationMessageFactory,
+  customerFactory,
+  engageDataFactory,
+  userFactory,
+} from '../db/factories';
 import { ConversationMessages, Conversations, Users } from '../db/models';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 
@@ -386,5 +392,44 @@ describe('Conversation db', () => {
 
     expect(await Conversations.find({ customerId: customer._id })).toHaveLength(0);
     expect(await ConversationMessages.find({ conversationId: conversation._id })).toHaveLength(0);
+  });
+
+  test('forceReadCustomerPreviousEngageMessages', async () => {
+    const customerId = '_id';
+
+    // isCustomRead is defined ===============
+    await conversationMessageFactory({
+      customerId,
+      engageData: engageDataFactory({ messageId: '_id' }),
+      isCustomerRead: false,
+    });
+
+    await ConversationMessages.forceReadCustomerPreviousEngageMessages(customerId);
+
+    let messages = await ConversationMessages.find({
+      customerId,
+      engageData: { $exists: true },
+      isCustomerRead: true,
+    });
+
+    expect(messages.length).toBe(1);
+
+    // isCustomRead is undefined ===============
+    await ConversationMessages.deleteMany({});
+
+    await conversationMessageFactory({
+      customerId,
+      engageData: engageDataFactory({ messageId: '_id' }),
+    });
+
+    await ConversationMessages.forceReadCustomerPreviousEngageMessages(customerId);
+
+    messages = await ConversationMessages.find({
+      customerId,
+      engageData: { $exists: true },
+      isCustomerRead: true,
+    });
+
+    expect(messages.length).toBe(1);
   });
 });

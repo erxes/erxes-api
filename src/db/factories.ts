@@ -454,11 +454,16 @@ interface ICustomerFactoryInput {
   hasValidEmail?: boolean;
   profileScore?: number;
   code?: string;
+  isActive?: boolean;
   visitorContactInfo?: any;
+  urlVisits?: object;
+  deviceToken?: string;
   mergedIds?: string[];
 }
 
 export const customerFactory = async (params: ICustomerFactoryInput = {}, useModelMethod = false) => {
+  const createdAt = faker.date.past();
+
   const doc = {
     integrationId: params.integrationId,
     firstName: params.firstName,
@@ -470,7 +475,12 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
-    messengerData: params.messengerData,
+    messengerData: {
+      lastSeenAt: faker.date.between(createdAt, new Date()),
+      isActive: params.isActive || false,
+      sessionCount: faker.random.number(),
+    },
+    urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
@@ -1246,3 +1256,23 @@ export const emailDeliveryFactory = async (params: IEmailDeliveryFactoryInput = 
 
   return emailDelviry.save();
 };
+
+interface IMessageEngageDataParams {
+  messageId?: string;
+  brandId?: string;
+  content?: string;
+  fromUserId?: string;
+  kind?: string;
+  sentAs?: string;
+}
+
+export function engageDataFactory(params: IMessageEngageDataParams) {
+  return {
+    messageId: params.messageId || Random.id(),
+    brandId: params.brandId || Random.id(),
+    content: params.content || faker.lorem.sentence(),
+    fromUserId: params.fromUserId || Random.id(),
+    kind: params.kind || 'popup',
+    sentAs: params.sentAs || 'post',
+  };
+}
