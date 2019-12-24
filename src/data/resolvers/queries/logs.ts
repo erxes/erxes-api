@@ -9,7 +9,12 @@ import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
 import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
 import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
-import { dealSchema, productDataSchema } from '../../../db/models/definitions/deals';
+import {
+  dealSchema,
+  productCategorySchema,
+  productDataSchema,
+  productSchema,
+} from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
@@ -96,6 +101,14 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.RESPONSE_TEMPLATE,
     schemas: [responseTemplateSchema],
+  },
+  {
+    name: MODULE_NAMES.PRODUCT,
+    schemas: [productSchema, tagSchema],
+  },
+  {
+    name: MODULE_NAMES.PRODUCT_CATEGORY,
+    schemas: [productCategorySchema],
   },
 ];
 

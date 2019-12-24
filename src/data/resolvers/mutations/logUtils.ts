@@ -6,6 +6,7 @@ import {
   Deals,
   Integrations,
   PipelineLabels,
+  ProductCategories,
   Products,
   Stages,
   Tags,
@@ -155,6 +156,22 @@ export const gatherProductNames = async (params: ILogNameParams): Promise<LogDes
 
   return gatherNames({
     collection: Products,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['name'],
+  });
+};
+
+export const gatherProductCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: ProductCategories,
     idFields,
     foreignKey,
     prevList,
