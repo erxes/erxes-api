@@ -305,7 +305,7 @@ const widgetMutations = {
       );
       // create conversation
     } else {
-      conversation = Conversations.createConversation({
+      conversation = await Conversations.createConversation({
         customerId,
         integrationId,
         content: conversationContent,
