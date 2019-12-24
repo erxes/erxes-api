@@ -107,6 +107,8 @@ const pipelineParams = `
   excludeCheckUserIds: [String],
 `;
 
+const copyMoveParams = `_id: String!, pipelineId: String!, includeCards: Boolean`;
+
 export const mutations = `
   boardsAdd(${commonParams}): Board
   boardsEdit(_id: String!, ${commonParams}): Board
@@ -120,4 +122,7 @@ export const mutations = `
 
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON
+
+  stagesCopy(${copyMoveParams}): Stage
+  stagesMove(${copyMoveParams}): Stage
 `;

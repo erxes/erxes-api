@@ -85,6 +85,13 @@ export interface IOrderInput {
   order: number;
 }
 
+export interface ICopyMoveParams {
+  stageId: string;
+  pipelineId: string;
+  move: boolean;
+  includeCards: boolean;
+}
+
 const attachmentSchema = new Schema(
   {
     name: field({ type: String, label: 'Name' }),

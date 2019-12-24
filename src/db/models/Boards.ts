@@ -4,6 +4,7 @@ import {
   boardSchema,
   IBoard,
   IBoardDocument,
+  ICopyMoveParams,
   IPipeline,
   IPipelineDocument,
   IStage,
@@ -11,6 +12,7 @@ import {
   pipelineSchema,
   stageSchema,
 } from './definitions/boards';
+import { Deals, Tasks, Tickets } from './index';
 import { getDuplicatedStages } from './PipelineTemplates';
 
 export interface IOrderInput {
@@ -256,6 +258,7 @@ export interface IStageModel extends Model<IStageDocument> {
   createStage(doc: IStage): Promise<IStageDocument>;
   updateStage(_id: string, doc: IStage): Promise<IStageDocument>;
   updateOrder(orders: IOrderInput[]): Promise<IStageDocument[]>;
+  copyOrMove(params: ICopyMoveParams): Promise<IStageDocument>;
 }
 
 export const loadStageClass = () => {
@@ -294,6 +297,62 @@ export const loadStageClass = () => {
      */
     public static async updateOrder(orders: IOrderInput[]) {
       return updateOrder(Stages, orders);
+    }
+
+    public static async copyOrMove(params: ICopyMoveParams) {
+      const { stageId, pipelineId, move, includeCards } = params;
+
+      const itemTypes = ['deal', 'task', 'ticket'];
+      let collection;
+
+      const stage = await Stages.findOne({ _id: stageId });
+
+      if (!stage) {
+        throw new Error('Stage not found');
+      }
+
+      if (!itemTypes.includes(stage.type)) {
+        throw new Error('Wrong board item type');
+      }
+
+      const pipeline = await Pipelines.findOne({ _id: pipelineId });
+
+      if (!pipeline) {
+        throw new Error('Pipeline not found');
+      }
+
+      switch (stage.type) {
+        case 'deal':
+          collection = Deals;
+          break;
+        case 'task':
+          collection = Tasks;
+          break;
+        case 'ticket':
+          collection = Tickets;
+          break;
+        default:
+          break;
+      }
+
+      if (move === true) {
+        await Stages.updateOne({ _id: stageId }, { $set: { pipelineId } });
+      }
+
+      const stageDoc = {
+        ...stage,
+        pipelineId,
+        createdAt: new Date(),
+        name: `${stage.name}-copied`,
+      };
+
+      const copiedStage = await Stages.createStage(stageDoc);
+
+      if (includeCards === true) {
+        await collection.updateMany({ stageId }, { $set: { stageId: copiedStage._id } });
+      }
+
+      return copiedStage;
     }
   }
 

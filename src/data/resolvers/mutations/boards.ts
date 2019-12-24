@@ -16,6 +16,12 @@ interface IPipelinesEdit extends IPipelinesAdd {
   _id: string;
 }
 
+interface IStagesEdit {
+  _id: string;
+  pipelineId: string;
+  includeCards: boolean;
+}
+
 const boardMutations = {
   /**
    * Create new board
@@ -146,6 +152,40 @@ const boardMutations = {
    */
   stagesUpdateOrder(_root, { orders }: { orders: IOrderInput[] }) {
     return Stages.updateOrder(orders);
+  },
+
+  async stagesMove(_root, { _id, includeCards, pipelineId }: IStagesEdit, { user }: IContext) {
+    const stage: IStageDocument | null = await Stages.findOne({ _id });
+
+    const movedStage = await Stages.copyOrMove({
+      includeCards,
+      stageId: _id,
+      pipelineId,
+      move: true,
+    });
+
+    if (stage && movedStage) {
+      await putUpdateLog(
+        {
+          type: `${stage.type}Stage`,
+          newData: JSON.stringify({ pipelineId }),
+          description: `${movedStage.name} has been moved`,
+          object: stage,
+        },
+        user,
+      );
+    }
+
+    return stage;
+  },
+
+  stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesEdit) {
+    return Stages.copyOrMove({
+      stageId: _id,
+      pipelineId,
+      move: false,
+      includeCards,
+    });
   },
 };
 
