@@ -62,6 +62,7 @@ const knowledgeBaseQueries = {
    */
   async knowledgeBaseArticles(_root, args: { page: number; perPage: number; categoryIds: string[] }) {
     const query = await articlesQuery(args);
+
     const articles = KnowledgeBaseArticles.find(query).sort({
       createdData: -1,
     });

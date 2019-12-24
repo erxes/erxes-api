@@ -35,6 +35,8 @@ export const types = `
     modifiedDate: Date
 
     firstTopic: KnowledgeBaseTopic
+    authors: [User]
+    numOfArticles: Float
   }
 
   input KnowledgeBaseCategoryDoc {
