@@ -1,11 +1,13 @@
 export const fieldsTypes = `
   type Field {
     _id: String!
+    formId: String!
     contentType: String!
     contentTypeId: String
     type: String
     validation: String
     text: String
+    name: String
     description: String
     options: [String]
     isRequired: Boolean
