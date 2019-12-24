@@ -12,7 +12,10 @@ import {
   pipelineSchema,
   stageSchema,
 } from './definitions/boards';
-import { Deals, Tasks, Tickets } from './index';
+import { IDealDocument } from './definitions/deals';
+import { IGrowthHackDocument } from './definitions/growthHacks';
+import { ITaskDocument } from './definitions/tasks';
+import { ITicketDocument } from './definitions/tickets';
 import { getDuplicatedStages } from './PipelineTemplates';
 
 export interface IOrderInput {
@@ -253,12 +256,17 @@ export const loadPipelineClass = () => {
   return pipelineSchema;
 };
 
+type Cards = IDealDocument[] | ITaskDocument[] | ITicketDocument[] | IGrowthHackDocument[];
+
 export interface IStageModel extends Model<IStageDocument> {
   getStage(_id: string): Promise<IStageDocument>;
   createStage(doc: IStage): Promise<IStageDocument>;
   updateStage(_id: string, doc: IStage): Promise<IStageDocument>;
   updateOrder(orders: IOrderInput[]): Promise<IStageDocument[]>;
-  copyOrMove(params: ICopyMoveParams): Promise<IStageDocument>;
+  getCards(_id: string): Promise<Cards>;
+  cloneCards(_id: string, destStageId: string, userId: string): Promise<Cards>;
+  copyStage(params: ICopyMoveParams): Promise<IStageDocument>;
+  moveStage(params: ICopyMoveParams): Promise<IStageDocument>;
 }
 
 export const loadStageClass = () => {
@@ -299,60 +307,74 @@ export const loadStageClass = () => {
       return updateOrder(Stages, orders);
     }
 
-    public static async copyOrMove(params: ICopyMoveParams) {
-      const { stageId, pipelineId, move, includeCards } = params;
+    public static async getCards(_id: string) {
+      const stage: IStageDocument = await Stages.getStage(_id);
 
-      const itemTypes = ['deal', 'task', 'ticket'];
-      let collection;
+      const collection = getCollection(stage.type);
 
-      const stage = await Stages.findOne({ _id: stageId });
+      return collection.find({ stageId: stage._id }).lean();
+    }
 
-      if (!stage) {
-        throw new Error('Stage not found');
+    public static async cloneCards(_id: string, destStageId: string, userId: string) {
+      const stage = await Stages.getStage(_id);
+      const cards = await Stages.getCards(stage._id);
+      const collection = getCollection(stage.type);
+
+      for (const card of cards) {
+        const itemDoc = {
+          name: `${card.name}-copied`,
+          stageId: destStageId,
+          initialStageId: destStageId,
+          createdAt: new Date(),
+          companyIds: card.companyIds,
+          customerIds: card.customerIds,
+          assignedUserIds: card.assignedUserIds,
+          watchedUserIds: card.watchedUserIds,
+          labelIds: card.labelIds,
+          priority: card.priority,
+          userId,
+        };
+
+        await collection.create(itemDoc);
       }
 
-      if (!itemTypes.includes(stage.type)) {
-        throw new Error('Wrong board item type');
-      }
+      return collection.find({ stageId: destStageId });
+    }
 
-      const pipeline = await Pipelines.findOne({ _id: pipelineId });
+    public static async copyStage(params: ICopyMoveParams) {
+      const { stageId, pipelineId, includeCards, userId } = params;
 
-      if (!pipeline) {
-        throw new Error('Pipeline not found');
-      }
+      const destinationPipeline = await Pipelines.getPipeline(pipelineId);
+      const stage = await Stages.getStage(stageId);
 
-      switch (stage.type) {
-        case 'deal':
-          collection = Deals;
-          break;
-        case 'task':
-          collection = Tasks;
-          break;
-        case 'ticket':
-          collection = Tickets;
-          break;
-        default:
-          break;
-      }
-
-      if (move === true) {
-        await Stages.updateOne({ _id: stageId }, { $set: { pipelineId } });
-      }
-
-      const stageDoc = {
-        ...stage,
-        pipelineId,
+      const copiedStage = await Stages.createStage({
+        pipelineId: destinationPipeline._id,
         createdAt: new Date(),
         name: `${stage.name}-copied`,
-      };
-
-      const copiedStage = await Stages.createStage(stageDoc);
+        userId,
+        type: stage.type,
+        formId: stage.formId,
+        probability: stage.probability,
+      });
 
       if (includeCards === true) {
-        await collection.updateMany({ stageId }, { $set: { stageId: copiedStage._id } });
+        await Stages.cloneCards(stage._id, copiedStage._id, userId);
       }
 
       return copiedStage;
+    }
+
+    /**
+     * Moves a stage to given pipeline
+     */
+    public static async moveStage(params: ICopyMoveParams) {
+      const { stageId, pipelineId } = params;
+
+      const pipeline = await Pipelines.getPipeline(pipelineId);
+
+      await Stages.updateOne({ _id: stageId }, { $set: { pipelineId: pipeline._id } });
+
+      return Stages.findOne({ _id: stageId });
     }
   }
 

@@ -7,7 +7,7 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Boards, Pipelines, Stages } from '../db/models';
+import { Boards, Deals, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IUserDocument } from '../db/models/definitions/users';
 
@@ -34,6 +34,7 @@ describe('Test board model', () => {
     await Pipelines.deleteMany({});
     await Stages.deleteMany({});
     await Pipelines.deleteMany({});
+    await Deals.deleteMany({});
   });
 
   test('Get board', async () => {
@@ -355,5 +356,59 @@ describe('Test board model', () => {
 
     expect(updatedStage.order).toBe(5);
     expect(updatedStageToOrder.order).toBe(9);
+  });
+
+  test('Test copyStage()', async () => {
+    const secondPipeline = await pipelineFactory();
+
+    const params = {
+      stageId: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+      userId: user._id,
+    };
+
+    const copiedStage = await Stages.copyStage(params);
+
+    const { name, pipelineId } = copiedStage;
+
+    expect(name).toBe(`${stage.name}-copied`);
+    expect(pipelineId).toBe(secondPipeline._id);
+  });
+
+  test('Test copyStage() with cards', async () => {
+    const secondPipeline = await pipelineFactory();
+
+    await dealFactory({ stageId: stage._id });
+
+    const params = {
+      stageId: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: true,
+      userId: user._id,
+    };
+
+    const copiedStage = await Stages.copyStage(params);
+    const items = await Stages.getCards(copiedStage._id);
+
+    // above 1 & copied 1
+    expect(items.length).toBe(2);
+  });
+
+  test('Test moveStage()', async () => {
+    const secondPipeline = await pipelineFactory();
+
+    const params = {
+      stageId: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+      userId: user._id,
+    };
+
+    const movedStage = await Stages.moveStage(params);
+
+    const { pipelineId } = movedStage;
+
+    expect(pipelineId).toBe(secondPipeline._id);
   });
 });

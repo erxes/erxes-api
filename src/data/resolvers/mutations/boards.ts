@@ -157,11 +157,11 @@ const boardMutations = {
   async stagesMove(_root, { _id, includeCards, pipelineId }: IStagesEdit, { user }: IContext) {
     const stage: IStageDocument | null = await Stages.findOne({ _id });
 
-    const movedStage = await Stages.copyOrMove({
+    const movedStage = await Stages.moveStage({
       includeCards,
       stageId: _id,
       pipelineId,
-      move: true,
+      userId: user._id,
     });
 
     if (stage && movedStage) {
@@ -176,15 +176,15 @@ const boardMutations = {
       );
     }
 
-    return stage;
+    return movedStage;
   },
 
-  stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesEdit) {
-    return Stages.copyOrMove({
+  stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesEdit, { user }: IContext) {
+    return Stages.copyStage({
       stageId: _id,
       pipelineId,
-      move: false,
       includeCards,
+      userId: user._id,
     });
   },
 };

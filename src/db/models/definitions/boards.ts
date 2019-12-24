@@ -88,8 +88,8 @@ export interface IOrderInput {
 export interface ICopyMoveParams {
   stageId: string;
   pipelineId: string;
-  move: boolean;
   includeCards: boolean;
+  userId: string;
 }
 
 const attachmentSchema = new Schema(
