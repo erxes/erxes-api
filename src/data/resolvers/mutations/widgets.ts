@@ -14,7 +14,6 @@ import {
 import Messages from '../../../db/models/ConversationMessages';
 import { IBrowserInfo, IVisitorContactInfoParams } from '../../../db/models/Customers';
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
-import { sendMessage } from '../../../messageBroker';
 import { graphqlPubsub } from '../../../pubsub';
 
 interface ISubmission {
@@ -424,9 +423,8 @@ const widgetMutations = {
   },
 
   widgetsSendTypingInfo(_root, args: { conversationId: string; text?: string }) {
-    sendMessage('callPublish', {
-      trigger: 'conversationClientTypingStatusChanged',
-      payload: args,
+    graphqlPubsub.publish('conversationClientTypingStatusChanged', {
+      conversationClientTypingStatusChanged: args,
     });
 
     return 'ok';
