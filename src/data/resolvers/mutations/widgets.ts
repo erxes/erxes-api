@@ -153,6 +153,14 @@ const widgetMutations = {
     // increasing form submitted count
     await Integrations.increaseContactsGathered(formId);
 
+    graphqlPubsub.publish('conversationClientMessageInserted', {
+      conversationClientMessageInserted: message,
+    });
+
+    graphqlPubsub.publish('conversationMessageInserted', {
+      conversationMessageInserted: message,
+    });
+
     return { status: 'ok', messageId: message._id };
   },
 

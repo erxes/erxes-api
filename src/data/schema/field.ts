@@ -1,7 +1,6 @@
 export const fieldsTypes = `
   type Field {
     _id: String!
-    formId: String!
     contentType: String!
     contentTypeId: String
     type: String
