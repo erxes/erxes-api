@@ -49,6 +49,18 @@ export const types = `
     ${commonTypes}
   }
 
+  type ConvertTo {
+    ticketUrl: String,
+    dealUrl: String,
+    taskUrl: String,
+  }
+
+  type BoardCount {
+    _id: String
+    name: String
+    count: Int
+  }
+
   input ItemDate {
     month: Int
     year: Int
@@ -66,6 +78,7 @@ const stageParams = `
 
 export const queries = `
   boards(type: String!): [Board]
+  boardCounts(type: String!): [BoardCount]
   boardGetLast(type: String!): Board
   boardDetail(_id: String!): Board
   pipelines(boardId: String!): [Pipeline]
@@ -76,6 +89,7 @@ export const queries = `
     ${stageParams}
   ): [Stage]
   stageDetail(_id: String!, ${stageParams}): Stage
+  convertToInfo(conversationId: String!): ConvertTo
 `;
 
 const commonParams = `
