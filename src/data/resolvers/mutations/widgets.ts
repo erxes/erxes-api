@@ -465,7 +465,7 @@ const widgetMutations = {
       customerId: customer._id,
     });
 
-    return Messages.findOne(Conversations.unreadMessagesQuery(convs));
+    return Messages.findOne(Conversations.widgetsUnreadMessagesQuery(convs));
   },
 
   widgetsSendTypingInfo(_root, args: { conversationId: string; text?: string }) {

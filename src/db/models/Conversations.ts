@@ -30,8 +30,7 @@ export interface IConversationModel extends Model<IConversationDocument> {
   changeCustomer(newCustomerId: string, customerIds: string[]): Promise<IConversationDocument[]>;
 
   removeCustomersConversations(customerId: string[]): Promise<{ n: number; ok: number }>;
-  unreadMessagesQuery(conversations: IConversationDocument[]): any;
-  getWidgetMessages(conversationId: string): Promise<IMessageDocument[]>;
+  widgetsUnreadMessagesQuery(conversations: IConversationDocument[]): any;
 }
 
 export const loadClass = () => {
@@ -278,20 +277,7 @@ export const loadClass = () => {
       await Conversations.deleteMany({ _id: { $in: conversationIds } });
     }
 
-    /**
-     * Get messages for widget
-     */
-    public static getWidgetMessages(conversationId: string) {
-      return ConversationMessages.find({
-        conversationId,
-        internal: false,
-        fromBot: { $exists: false },
-      }).sort({
-        createdAt: 1,
-      });
-    }
-
-    public static unreadMessagesQuery(conversations: IConversationDocument[]) {
+    public static widgetsUnreadMessagesQuery(conversations: IConversationDocument[]) {
       const unreadMessagesSelector = { userId: { $exists: true }, internal: false, isCustomerRead: { $ne: true } };
 
       const conversationIds = conversations.map(c => c._id);

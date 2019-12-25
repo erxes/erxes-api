@@ -1,4 +1,5 @@
 import {
+  ConversationMessages,
   Conversations,
   Integrations,
   KnowledgeBaseArticles as KnowledgeBaseArticlesModel,
@@ -43,6 +44,16 @@ const messengerSupporters = async (integrationId: string) => {
   const messengerData = integration.messengerData || { supporterIds: [] };
 
   return Users.find({ _id: { $in: messengerData.supporterIds } });
+};
+
+const getWidgetMessages = (conversationId: string) => {
+  return ConversationMessages.find({
+    conversationId,
+    internal: false,
+    fromBot: { $exists: false },
+  }).sort({
+    createdAt: 1,
+  });
 };
 
 export default {
@@ -100,7 +111,7 @@ export default {
 
     return {
       _id,
-      messages: await Conversations.getWidgetMessages(conversation._id),
+      messages: await getWidgetMessages(conversation._id),
       isOnline: await isMessengerOnline(integrationId),
       participatedUsers: await Users.find({
         _id: { $in: conversation.participatedUserIds },
@@ -112,7 +123,7 @@ export default {
   widgetsMessages(_root, args: { conversationId: string }) {
     const { conversationId } = args;
 
-    return Conversations.getWidgetMessages(conversationId);
+    return getWidgetMessages(conversationId);
   },
 
   widgetsUnreadCount(_root, args: { conversationId: string }) {
@@ -133,7 +144,7 @@ export default {
     const convs = await Conversations.find({ integrationId, customerId });
 
     // find read messages count
-    return Messages.countDocuments(Conversations.unreadMessagesQuery(convs));
+    return Messages.countDocuments(Conversations.widgetsUnreadMessagesQuery(convs));
   },
 
   async widgetsMessengerSupporters(_root, { integrationId }: { integrationId: string }) {

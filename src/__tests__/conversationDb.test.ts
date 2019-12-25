@@ -21,6 +21,7 @@ describe('Conversation db', () => {
     _conversation = await conversationFactory({});
     _conversationMessage = await conversationMessageFactory({
       conversationId: _conversation._id,
+      internal: false,
       content: 'content',
     });
 
@@ -431,5 +432,30 @@ describe('Conversation db', () => {
     });
 
     expect(messages.length).toBe(1);
+  });
+
+  test('widgetsUnreadMessagesQuery', async () => {
+    const conversation = await conversationFactory({});
+
+    const response = await Conversations.widgetsUnreadMessagesQuery([conversation]);
+
+    expect(JSON.stringify(response)).toBe(
+      JSON.stringify({
+        conversationId: { $in: [conversation._id] },
+        userId: { $exists: true },
+        internal: false,
+        isCustomerRead: { $ne: true },
+      }),
+    );
+  });
+
+  test('updateConversation', async () => {
+    const conversation = await conversationFactory({});
+
+    await Conversations.updateConversation(conversation._id, { content: 'updated' });
+
+    const updated = await Conversations.findOne({ _id: conversation._id });
+
+    expect(updated && updated.content).toBe('updated');
   });
 });
