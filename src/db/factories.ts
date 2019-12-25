@@ -798,6 +798,7 @@ export const knowledgeBaseCategoryFactory = async (params: IKnowledgeBaseCategor
 interface IKnowledgeBaseArticleCategoryInput {
   categoryIds?: string[];
   userId?: string;
+  reactionChoices?: string[];
 }
 
 export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleCategoryInput = {}) => {
@@ -806,6 +807,7 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
     summary: faker.lorem.sentence,
     content: faker.lorem.sentence,
     icon: faker.random.word(),
+    reactionChoices: params.reactionChoices || ['wow'],
   };
 
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
