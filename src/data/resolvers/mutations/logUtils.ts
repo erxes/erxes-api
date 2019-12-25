@@ -5,6 +5,8 @@ import {
   Customers,
   Deals,
   Integrations,
+  KnowledgeBaseArticles,
+  KnowledgeBaseCategories,
   PipelineLabels,
   ProductCategories,
   Products,
@@ -192,6 +194,38 @@ export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[
     foreignKey,
     prevList,
     nameFields: ['name'],
+  });
+};
+
+export const gatherKbArticleNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: KnowledgeBaseArticles,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['title'],
+  });
+};
+
+export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: KnowledgeBaseCategories,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['title'],
   });
 };
 

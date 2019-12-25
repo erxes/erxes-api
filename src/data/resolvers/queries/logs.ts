@@ -17,6 +17,7 @@ import {
 } from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
+import { articleSchema, categorySchema, topicSchema } from '../../../db/models/definitions/knowledgebase';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
 import { tagSchema } from '../../../db/models/definitions/tags';
 import { MODULE_NAMES } from '../../constants';
@@ -109,6 +110,18 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.PRODUCT_CATEGORY,
     schemas: [productCategorySchema],
+  },
+  {
+    name: MODULE_NAMES.KB_TOPIC,
+    schemas: [topicSchema],
+  },
+  {
+    name: MODULE_NAMES.KB_CATEGORY,
+    schemas: [categorySchema],
+  },
+  {
+    name: MODULE_NAMES.KB_ARTICLE,
+    schemas: [articleSchema],
   },
 ];
 

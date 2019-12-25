@@ -264,4 +264,7 @@ export const MODULE_NAMES = {
   TICKET: 'ticket',
   PERMISSION: 'permission',
   USER: 'user',
+  KB_TOPIC: 'knowledgeBaseTopic',
+  KB_CATEGORY: 'knowledgeBaseCategory',
+  KB_ARTICLE: 'knowledgeBaseArticle',
 };
