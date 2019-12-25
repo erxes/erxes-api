@@ -349,7 +349,7 @@ describe('createConversation', () => {
   });
 });
 
-describe('createEngageVisitorMessages', () => {
+describe('createVisitorMessages', () => {
   let _user: IUserDocument;
   let _brand: IBrandDocument;
   let _customer: ICustomerDocument;
@@ -389,6 +389,17 @@ describe('createEngageVisitorMessages', () => {
       },
     });
 
+    // invalid from user id
+    await engageMessageFactory({
+      kind: 'visitorAuto',
+      userId: 'invalid',
+      isLive: true,
+      messenger: {
+        brandId: _brand._id,
+        content: 'hi',
+      },
+    });
+
     return message.save();
   });
 
@@ -397,6 +408,7 @@ describe('createEngageVisitorMessages', () => {
     await Customers.deleteMany({});
     await Integrations.deleteMany({});
     await Conversations.deleteMany({});
+    await EngageMessages.deleteMany({});
     await Messages.deleteMany({});
     await Brands.deleteMany({});
   });
@@ -420,7 +432,7 @@ describe('createEngageVisitorMessages', () => {
     });
 
     // main call
-    await EngageMessages.createEngageVisitorMessages({
+    const msgs = await EngageMessages.createVisitorMessages({
       brand: _brand,
       customer: _customer,
       integration: _integration,
@@ -429,7 +441,7 @@ describe('createEngageVisitorMessages', () => {
       },
     });
 
-    const conversation = await Conversations.findOne({});
+    const conversation = await Conversations.findOne({ _id: { $in: msgs.map(m => m.conversationId) } });
 
     if (!conversation) {
       throw new Error('conversation not found');
@@ -723,6 +735,31 @@ describe('createEngageVisitorMessages', () => {
       const response = EngageMessages.checkRule({
         rule: containsRule,
         browserInfo: { url: '/page' },
+      });
+
+      expect(response).toBe(true);
+    });
+
+    // does not contain ======
+    const doesNotContainsRule = {
+      kind: 'currentPageUrl',
+      condition: 'doesNotContain',
+      value: 'page',
+    };
+
+    test('does not contains: not matching', () => {
+      const response = EngageMessages.checkRule({
+        rule: doesNotContainsRule,
+        browserInfo: { url: '/page' },
+      });
+
+      expect(response).toBe(false);
+    });
+
+    test('does not contains: matching', () => {
+      const response = EngageMessages.checkRule({
+        rule: doesNotContainsRule,
+        browserInfo: { url: '/test' },
       });
 
       expect(response).toBe(true);

@@ -248,6 +248,8 @@ export const loadClass = () => {
           }
         }
       }
+
+      return conversationMessages;
     }
 
     /*
