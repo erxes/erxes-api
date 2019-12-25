@@ -799,6 +799,7 @@ interface IKnowledgeBaseArticleCategoryInput {
   categoryIds?: string[];
   userId?: string;
   reactionChoices?: string[];
+  status?: string;
 }
 
 export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleCategoryInput = {}) => {
@@ -808,6 +809,7 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
     content: faker.lorem.sentence,
     icon: faker.random.word(),
     reactionChoices: params.reactionChoices || ['wow'],
+    status: params.status || 'draft',
   };
 
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
