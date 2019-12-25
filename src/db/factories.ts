@@ -604,7 +604,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     internal: params.internal === undefined || params.internal === null ? true : params.internal,
     customerId: params.customerId || Random.id(),
     userId,
-    isCustomerRead: params.isCustomerRead || true,
+    isCustomerRead: params.isCustomerRead,
     engageData: params.engageData || {},
     formWidgetData: params.formWidgetData || {},
   });

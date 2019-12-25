@@ -8,14 +8,9 @@ import {
   Users,
 } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
+import { IIntegrationDocument } from '../../../db/models/definitions/integrations';
 
-const isMessengerOnline = async (integrationId: string) => {
-  const integration = await Integrations.findOne({ _id: integrationId });
-
-  if (!integration) {
-    return false;
-  }
-
+export const isMessengerOnline = async (integration: IIntegrationDocument) => {
   if (!integration.messengerData) {
     return false;
   }
@@ -34,13 +29,7 @@ const isMessengerOnline = async (integrationId: string) => {
   return Integrations.isOnline(modifiedIntegration);
 };
 
-const messengerSupporters = async (integrationId: string) => {
-  const integration = await Integrations.findOne({ _id: integrationId });
-
-  if (!integration) {
-    return [];
-  }
-
+const messengerSupporters = async (integration: IIntegrationDocument) => {
   const messengerData = integration.messengerData || { supporterIds: [] };
 
   return Users.find({ _id: { $in: messengerData.supporterIds } });
@@ -109,14 +98,20 @@ export default {
       return null;
     }
 
+    const integration = await Integrations.findOne({ _id: integrationId });
+
+    if (!integration) {
+      return null;
+    }
+
     return {
       _id,
       messages: await getWidgetMessages(conversation._id),
-      isOnline: await isMessengerOnline(integrationId),
+      isOnline: await isMessengerOnline(integration),
       participatedUsers: await Users.find({
         _id: { $in: conversation.participatedUserIds },
       }),
-      supporters: await messengerSupporters(integrationId),
+      supporters: await messengerSupporters(integration),
     };
   },
 
