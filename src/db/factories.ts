@@ -475,7 +475,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
-    messengerData: {
+    messengerData: params.messengerData || {
       lastSeenAt: faker.date.between(createdAt, new Date()),
       isActive: params.isActive || false,
       sessionCount: faker.random.number(),

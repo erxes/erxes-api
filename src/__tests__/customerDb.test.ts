@@ -500,14 +500,14 @@ describe('Customers model tests', () => {
     const firstName = 'test first name';
     const lastName = 'test last name';
     const bio = 'test BIO 1231321312';
-    const email = 'email@gmail.com';
+    const email = 'uniqueEmail@gmail.com';
     const phone = '422999';
 
     const customData = {
       first_name: firstName,
       last_name: lastName,
       bio,
-      created_at: '1321313',
+      created_at: new Date(),
     };
 
     const customer = await Customers.createMessengerCustomer(
@@ -547,54 +547,144 @@ describe('Customers model tests', () => {
     expect(messengerData.customData.first_name).toBeUndefined();
     expect(messengerData.customData.last_name).toBeUndefined();
     expect(messengerData.customData.bio).toBeUndefined();
-    expect(messengerData.customData.created_at).toBe(customData.created_at);
+    expect(messengerData.customData.created_at).toBeDefined();
   });
 
-  test('getWidgetCustomer(): emails, primaryEmail', async () => {
-    let customer: ICustomerDocument | null = await Customers.getWidgetCustomer({
-      email: 'anotheremail@gmail.com',
+  test('updateMessengerCustomer()', async () => {
+    try {
+      await Customers.updateMessengerCustomer({ _id: '_id', doc: {}, customData: {} });
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
+
+    const firstName = 'test first name';
+    const lastName = 'test last name';
+    const bio = 'test BIO 1231321312';
+    const email = 'uniqueEmail@gmail.com';
+    const phone = '422999';
+    const deviceToken = 'token';
+
+    const customData = {
+      first_name: firstName,
+      last_name: lastName,
+      bio,
+      created_at: '1321313',
+    };
+
+    _customer.isUser = true;
+    await _customer.save();
+
+    const customer = await Customers.updateMessengerCustomer({
+      _id: _customer._id,
+      doc: {
+        email,
+        phone,
+        isUser: true,
+        deviceToken,
+      },
+      customData,
     });
 
-    expect(customer && customer._id).toBeDefined();
+    expect(customer.primaryEmail).toBe(email);
+    expect(customer.emails).toContain(email);
+    expect(customer.deviceTokens).toContain(deviceToken);
 
-    // check primaryEmail
-    customer = await customerFactory({
+    expect(customer.primaryPhone).toBe(phone);
+    expect(customer.phones).toContain(phone);
+
+    expect(customer.isUser).toBe(true);
+    expect(customer.lastName).toBe(lastName);
+    expect(customer.description).toBe(bio);
+
+    const messengerData = customer.messengerData;
+
+    if (!messengerData) {
+      throw new Error('messengerData is null');
+    }
+
+    expect(messengerData.customData.first_name).toBeUndefined();
+    expect(messengerData.customData.last_name).toBeUndefined();
+    expect(messengerData.customData.bio).toBeUndefined();
+
+    // Do not replace previous non empty value with empty value
+    const customerWithCustomData = await customerFactory({
+      messengerData: { customData: { organization: 'test' } },
+    });
+
+    const updated = await Customers.updateMessengerCustomer({
+      _id: customerWithCustomData._id,
+      doc: {},
+      customData: {},
+    });
+
+    if (!updated.messengerData) {
+      throw new Error('messengerData is null');
+    }
+
+    expect(updated.messengerData.customData.organization).toBe('test');
+  });
+
+  test('getWidgetCustomer()', async () => {
+    // emails, primaryEmail ==============
+    let customer: ICustomerDocument | null = await customerFactory({
       primaryEmail: 'customer@gmail.com',
       emails: ['main@gmail.com'],
     });
 
-    customer = await Customers.getWidgetCustomer({
+    let foundCustomer = await Customers.getWidgetCustomer({
       email: 'customer@gmail.com',
     });
 
-    expect(customer && customer._id).toBeDefined();
-  });
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
 
-  test('getWidgetCustomer(): phones, primaryPhone', async () => {
-    // check phones
-    let customer: ICustomerDocument | null = await customerFactory({
+    // phones
+    customer = await customerFactory({
       phones: ['911111'],
     });
 
-    customer = await Customers.getWidgetCustomer({
+    foundCustomer = await Customers.getWidgetCustomer({
       phone: '911111',
     });
 
-    expect(customer && customer._id).toBeDefined();
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
 
-    // check primaryPhone
+    // primaryPhone
     customer = await customerFactory({
       primaryPhone: '24244242',
     });
 
-    customer = await Customers.getWidgetCustomer({
+    foundCustomer = await Customers.getWidgetCustomer({
       phone: '24244242',
     });
 
-    expect(customer && customer._id).toBeDefined();
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // code
+    customer = await customerFactory({
+      code: '24244242',
+    });
+
+    foundCustomer = await Customers.getWidgetCustomer({
+      code: '24244242',
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // cached customer id
+    foundCustomer = await Customers.getWidgetCustomer({
+      cachedCustomerId: customer._id,
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
   });
 
   test('updateMessengerSession()', async () => {
+    try {
+      await Customers.updateMessengerSession('_id', '/career/open');
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
+
     const now = new Date();
 
     const customer = await Customers.updateMessengerSession(_customer._id, '/career/open');
@@ -634,5 +724,13 @@ describe('Customers model tests', () => {
 
     // check company in companyIds
     expect(visitorContactInfo.phone).toBe('985435353');
+  });
+
+  test('updateLocation()', async () => {
+    const updated = await Customers.updateLocation(_customer._id, {
+      language: 'en',
+    });
+
+    expect(updated.location && updated.location.language).toBe('en');
   });
 });

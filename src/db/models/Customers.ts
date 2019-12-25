@@ -18,7 +18,7 @@ interface ICustomerFieldsInput {
   code?: string;
 }
 
-interface ICreateCustomerParams {
+interface ICreateMessengerCustomerParams {
   integrationId?: string;
   email?: string;
   hasValidEmail?: boolean;
@@ -72,7 +72,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
-  createMessengerCustomer(doc: ICreateCustomerParams, customData: any): Promise<ICustomerDocument>;
+  createMessengerCustomer(doc: ICreateMessengerCustomerParams, customData: any): Promise<ICustomerDocument>;
   updateMessengerCustomer(param: IUpdateMessengerCustomerParams): Promise<ICustomerDocument>;
   updateMessengerSession(_id: string, url: string): Promise<ICustomerDocument>;
   updateLocation(_id: string, browserInfo: IBrowserInfo): Promise<ICustomerDocument>;
@@ -431,7 +431,7 @@ export const loadClass = () => {
         const parsedDate = Date.parse(updatedCustomData[key]);
 
         // Checking if it is date
-        if (isNaN(updatedCustomData[key]) && !isNaN(parsedDate)) {
+        if (!isNaN(updatedCustomData[key]) && !isNaN(parsedDate)) {
           updatedCustomData[key] = new Date(parsedDate);
         }
 
@@ -488,16 +488,61 @@ export const loadClass = () => {
       return customer;
     }
 
+    public static fixMessengerListFields(doc: any, customer?: ICustomerDocument) {
+      let emails: string[] = [];
+      let phones: string[] = [];
+      let deviceTokens: string[] = [];
+
+      if (customer) {
+        emails = customer.emails || [];
+        phones = customer.phones || [];
+        deviceTokens = customer.deviceTokens || [];
+      }
+
+      if (doc.email) {
+        if (!emails.includes(doc.email)) {
+          emails.push(doc.email);
+        }
+
+        doc.primaryEmail = doc.email;
+
+        delete doc.email;
+      }
+
+      if (doc.phone) {
+        if (!phones.includes(doc.phone)) {
+          phones.push(doc.phone);
+        }
+
+        doc.primaryPhone = doc.phone;
+
+        delete doc.phone;
+      }
+
+      if (doc.deviceToken) {
+        if (!deviceTokens.includes(doc.deviceToken)) {
+          deviceTokens.push(doc.deviceToken);
+        }
+
+        delete doc.deviceToken;
+      }
+
+      doc.emails = emails;
+      doc.phones = phones;
+      doc.deviceTokens = deviceTokens;
+
+      return doc;
+    }
+
     /*
      * Create a new messenger customer
      */
-    public static async createMessengerCustomer(doc: ICreateCustomerParams, customData: any) {
+    public static async createMessengerCustomer(doc: ICreateMessengerCustomerParams, customData: any) {
       const { extractedInfo, updatedCustomData } = this.fixCustomData(customData || {});
 
       return this.createCustomer({
-        ...doc,
         ...extractedInfo,
-        deviceTokens: doc.deviceToken ? [doc.deviceToken] : [],
+        ...this.fixMessengerListFields(doc),
         messengerData: {
           lastSeenAt: new Date(),
           isActive: true,
@@ -521,45 +566,21 @@ export const loadClass = () => {
 
       const { extractedInfo, updatedCustomData } = this.fixCustomData(customData || {});
 
-      let fixedCustomData = updatedCustomData;
-
-      const emails = customer.emails || [];
-
-      if (doc.email && !emails.includes(doc.email)) {
-        emails.push(doc.email);
-      }
-
-      const phones = customer.phones || [];
-
-      if (doc.phone && !phones.includes(doc.phone)) {
-        phones.push(doc.phone);
-      }
-
-      const deviceTokens: string[] = customer.deviceTokens || [];
-
-      if (doc.deviceToken) {
-        if (!deviceTokens.includes(doc.deviceToken)) {
-          deviceTokens.push(doc.deviceToken);
-        }
-
-        delete doc.deviceToken;
-      }
-
       if (customer.isUser) {
         doc.isUser = true;
       }
 
+      let fixedCustomData = updatedCustomData;
+
+      // Do not replace previous non empty value with empty value
       if (customer.messengerData && customer.messengerData.customData && Object.keys(updatedCustomData).length === 0) {
         fixedCustomData = customer.messengerData.customData;
       }
 
       const modifier = {
-        ...doc,
         ...extractedInfo,
-        phones,
-        emails,
+        ...this.fixMessengerListFields(doc, customer),
         modifiedAt: new Date(),
-        deviceTokens,
         'messengerData.customData': fixedCustomData,
       };
 
