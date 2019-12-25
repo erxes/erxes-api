@@ -10,10 +10,13 @@ import {
   FormSubmissions,
   Integrations,
   KnowledgeBaseArticles,
+  MessengerApps,
 } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
 import { IBrowserInfo, IVisitorContactInfoParams } from '../../../db/models/Customers';
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
+import { IIntegrationDocument, IMessengerDataMessagesItem } from '../../../db/models/definitions/integrations';
+import { IKnowledgebaseCredentials, ILeadCredentials } from '../../../db/models/definitions/messengerApps';
 import { graphqlPubsub } from '../../../pubsub';
 
 interface ISubmission {
@@ -22,6 +25,51 @@ interface ISubmission {
   type?: string;
   validation?: string;
 }
+
+export const getMessengerData = async (integration: IIntegrationDocument) => {
+  let messagesByLanguage: IMessengerDataMessagesItem | null = null;
+  let messengerData = integration.messengerData;
+
+  if (messengerData) {
+    messengerData = messengerData.toJSON();
+
+    const languageCode = integration.languageCode || 'en';
+    const messages = (messengerData || {}).messages;
+
+    if (messages) {
+      messagesByLanguage = messages[languageCode];
+    }
+  }
+
+  // knowledgebase app =======
+  const kbApp = await MessengerApps.findOne({
+    kind: 'knowledgebase',
+    'credentials.integrationId': integration._id,
+  });
+
+  const topicId = kbApp && kbApp.credentials ? (kbApp.credentials as IKnowledgebaseCredentials).topicId : null;
+
+  // lead app ==========
+  const leadApp = await MessengerApps.findOne({ kind: 'lead', 'credentials.integrationId': integration._id });
+
+  const formCode = leadApp && leadApp.credentials ? (leadApp.credentials as ILeadCredentials).formCode : null;
+
+  // website app ============
+  const websiteApp = await MessengerApps.findOne({
+    kind: 'website',
+    'credentials.integrationId': integration._id,
+  });
+
+  const websiteAppData = websiteApp && websiteApp.credentials;
+
+  return {
+    ...(messengerData || {}),
+    messages: messagesByLanguage,
+    knowledgeBaseTopicId: topicId,
+    websiteAppData,
+    formCode,
+  };
+};
 
 const widgetMutations = {
   // Find integrationId by brandCode
@@ -265,13 +313,11 @@ const widgetMutations = {
       });
     }
 
-    const messengerData = await Integrations.getMessengerData(integration);
-
     return {
       integrationId: integration._id,
       uiOptions: integration.uiOptions,
       languageCode: integration.languageCode,
-      messengerData,
+      messengerData: await getMessengerData(integration),
       customerId: customer._id,
       brand,
     };

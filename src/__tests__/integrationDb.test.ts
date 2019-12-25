@@ -509,6 +509,14 @@ describe('save integration messenger configurations test', () => {
   });
 
   test('Increase view count of lead', async () => {
+    expect.assertions(3);
+
+    try {
+      await Integrations.increaseViewCount('_id');
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+
     let updated = await Integrations.increaseViewCount(_integration.formId);
 
     expect(updated.leadData && updated.leadData.viewCount).toBe(1);
@@ -518,6 +526,14 @@ describe('save integration messenger configurations test', () => {
   });
 
   test('Increase contacts gathered', async () => {
+    expect.assertions(3);
+
+    try {
+      await Integrations.increaseContactsGathered('_id');
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+
     let updated = await Integrations.increaseContactsGathered(_integration.formId);
 
     expect(updated.leadData && updated.leadData.contactsGathered).toBe(1);
@@ -527,6 +543,11 @@ describe('save integration messenger configurations test', () => {
   });
 
   describe('Manual mode', () => {
+    test('empty', async () => {
+      const integration = await integrationFactory({});
+      expect(Integrations.isOnline(integration)).toBeFalsy();
+    });
+
     test('isOnline() must return status as it is', async () => {
       const integration = await integrationFactory({
         messengerData: {
@@ -682,5 +703,29 @@ describe('save integration messenger configurations test', () => {
       expect(Integrations.isOnline(integration, new Date('2017/05/13 07:00 AM'))).toBeFalsy();
       expect(Integrations.isOnline(integration, new Date('2017/05/14 11:00 PM'))).toBeFalsy();
     });
+  });
+
+  test('getWidgetIntegration', async () => {
+    expect.assertions(4);
+
+    try {
+      await Integrations.getWidgetIntegration('_id', 'messenger');
+    } catch (e) {
+      expect(e.message).toBe('Brand not found');
+    }
+
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id, kind: 'messenger' });
+
+    // brandObject false
+    let response = await Integrations.getWidgetIntegration(brand.code || '', 'messenger');
+
+    expect(response._id).toBe(integration._id);
+
+    // brandObject true
+    response = await Integrations.getWidgetIntegration(brand.code || '', 'messenger', true);
+
+    expect(response.integration._id).toBe(integration._id);
+    expect(response.brand._id).toBe(brand._id);
   });
 });

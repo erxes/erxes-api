@@ -1,17 +1,15 @@
 import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
-import { Brands, ConversationMessages, Conversations, Customers, Forms, MessengerApps } from '.';
+import { Brands, ConversationMessages, Conversations, Customers, Forms } from '.';
 import { KIND_CHOICES } from './definitions/constants';
 import {
   IIntegration,
   IIntegrationDocument,
   ILeadData,
   IMessengerData,
-  IMessengerDataMessagesItem,
   integrationSchema,
   IUiOptions,
 } from './definitions/integrations';
-import { IKnowledgebaseCredentials, ILeadCredentials } from './definitions/messengerApps';
 
 export interface IMessengerIntegration {
   kind: string;
@@ -56,8 +54,7 @@ export interface IIntegrationModel extends Model<IIntegrationDocument> {
   removeIntegration(_id: string): void;
   updateBasicInfo(_id: string, doc: IIntegrationBasicInfo): Promise<IIntegrationDocument>;
 
-  getWidgetIntegration(brandCode: string, kind: string, brandObject?: boolean): IIntegrationDocument;
-  getMessengerData(integration: IIntegrationDocument);
+  getWidgetIntegration(brandCode: string, kind: string, brandObject?: boolean): any;
   increaseViewCount(formId: string): Promise<IIntegrationDocument>;
   increaseContactsGathered(formId: string): Promise<IIntegrationDocument>;
   isOnline(integration: IIntegrationDocument, now?: Date): boolean;
@@ -231,51 +228,6 @@ export const loadClass = () => {
       return integration;
     }
 
-    public static async getMessengerData(integration: IIntegrationDocument) {
-      let messagesByLanguage: IMessengerDataMessagesItem | null = null;
-      let messengerData = integration.messengerData;
-
-      if (messengerData) {
-        messengerData = messengerData.toJSON();
-
-        const languageCode = integration.languageCode || 'en';
-        const messages = (messengerData || {}).messages;
-
-        if (messages) {
-          messagesByLanguage = messages[languageCode];
-        }
-      }
-
-      // knowledgebase app =======
-      const kbApp = await MessengerApps.findOne({
-        kind: 'knowledgebase',
-        'credentials.integrationId': integration._id,
-      });
-
-      const topicId = kbApp && kbApp.credentials ? (kbApp.credentials as IKnowledgebaseCredentials).topicId : null;
-
-      // lead app ==========
-      const leadApp = await MessengerApps.findOne({ kind: 'lead', 'credentials.integrationId': integration._id });
-
-      const formCode = leadApp && leadApp.credentials ? (leadApp.credentials as ILeadCredentials).formCode : null;
-
-      // website app ============
-      const websiteApp = await MessengerApps.findOne({
-        kind: 'website',
-        'credentials.integrationId': integration._id,
-      });
-
-      const websiteAppData = websiteApp && websiteApp.credentials;
-
-      return {
-        ...(messengerData || {}),
-        messages: messagesByLanguage,
-        knowledgeBaseTopicId: topicId,
-        websiteAppData,
-        formCode,
-      };
-    }
-
     public static async increaseViewCount(formId: string) {
       const integration = await Integrations.findOne({ formId });
 
@@ -283,19 +235,13 @@ export const loadClass = () => {
         throw new Error('Integration not found');
       }
 
-      const leadData = integration.leadData;
+      const leadData = integration.leadData || { viewCount: 0 };
 
-      let viewCount = 0;
-
-      if (leadData && leadData.viewCount) {
-        viewCount = leadData.viewCount;
-      }
+      let viewCount = leadData.viewCount || 0;
 
       viewCount++;
 
-      if (leadData) {
-        leadData.viewCount = viewCount;
-      }
+      leadData.viewCount = viewCount;
 
       await Integrations.updateOne({ formId }, { leadData });
 
@@ -312,19 +258,13 @@ export const loadClass = () => {
         throw new Error('Integration not found');
       }
 
-      const leadData = integration.leadData;
+      const leadData = integration.leadData || { contactsGathered: 0 };
 
-      let contactsGathered = 0;
-
-      if (leadData && leadData.contactsGathered) {
-        contactsGathered = leadData.contactsGathered;
-      }
+      let contactsGathered = leadData.contactsGathered || 0;
 
       contactsGathered++;
 
-      if (leadData) {
-        leadData.contactsGathered = contactsGathered;
-      }
+      leadData.contactsGathered = contactsGathered;
 
       await Integrations.updateOne({ formId }, { leadData });
 
@@ -347,7 +287,7 @@ export const loadClass = () => {
       }
 
       const { messengerData } = integration;
-      const { availabilityMethod, onlineHours } = messengerData;
+      const { availabilityMethod, onlineHours = [] } = messengerData;
 
       /*
        * Manual: We can determine state from isOnline field value when method is manual
@@ -360,10 +300,6 @@ export const loadClass = () => {
        * Auto
        */
       const day = daysAsString[now.getDay()];
-
-      if (!onlineHours) {
-        return false;
-      }
 
       // check by everyday config
       const everydayConf = onlineHours.find(c => c.day === 'everyday');
