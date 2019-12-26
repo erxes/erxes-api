@@ -158,7 +158,10 @@ describe('InternalNotes mutations', () => {
   });
 
   test('Edit internal note', async () => {
-    const { _id, content } = _internalNote;
+    const customer = await customerFactory();
+    const note = await internalNoteFactory({ contentType: 'customer', contentTypeId: customer._id });
+
+    const { _id, content } = note;
     const args = { _id, content };
 
     const mutation = `
@@ -183,6 +186,9 @@ describe('InternalNotes mutations', () => {
   });
 
   test('Remove internal note', async () => {
+    const customer = await customerFactory();
+    const note = await internalNoteFactory({ contentType: 'customer', contentTypeId: customer._id });
+
     const mutation = `
       mutation internalNotesRemove($_id: String!) {
         internalNotesRemove(_id: $_id) {
@@ -191,8 +197,8 @@ describe('InternalNotes mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'internalNotesRemove', { _id: _internalNote._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note._id }, context);
 
-    expect(await InternalNotes.findOne({ _id: _internalNote._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note._id })).toBe(null);
   });
 });
