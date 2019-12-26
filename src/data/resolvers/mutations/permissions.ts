@@ -1,9 +1,11 @@
 import { Permissions, Users, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
+import { MODULE_NAMES } from '../../constants';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { LogDesc } from './logUtils';
 
 const permissionMutations = {
   /**
@@ -20,24 +22,31 @@ const permissionMutations = {
     for (const perm of result) {
       let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
 
+      const extraDesc: LogDesc[] = [];
+
       if (perm.groupId) {
         const group = await UsersGroups.getGroup(perm.groupId);
 
         description = `${description} user group "${group.name}" `;
+
+        extraDesc.push({ groupId: perm.groupId, name: group.name });
       }
 
       if (perm.userId) {
         const permUser = await Users.getUser(perm.userId);
 
         description = `${description} user "${permUser.email}" has been created`;
+
+        extraDesc.push({ userId: perm.userId, name: permUser.username || permUser.email });
       }
 
       await putCreateLog(
         {
-          type: 'permission',
+          type: MODULE_NAMES.PERMISSION,
           object: perm,
           newData: JSON.stringify(perm),
           description,
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );
@@ -60,11 +69,15 @@ const permissionMutations = {
     for (const perm of permissions) {
       let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
 
+      const extraDesc: LogDesc[] = [];
+
       // prepare user group related description
       if (perm.groupId) {
         const group = await UsersGroups.getGroup(perm.groupId);
 
         description = `${description} user group "${group.name}" has been removed`;
+
+        extraDesc.push({ groupId: perm.groupId, name: group.name });
       }
 
       // prepare user related description
@@ -72,13 +85,16 @@ const permissionMutations = {
         const permUser = await Users.getUser(perm.userId);
 
         description = `${description} user "${permUser.email}" has been removed`;
+
+        extraDesc.push({ userId: perm.userId, name: permUser.username || permUser.email });
       }
 
       await putDeleteLog(
         {
-          type: 'permission',
+          type: MODULE_NAMES.PERMISSION,
           object: perm,
           description,
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );
@@ -102,10 +118,10 @@ const usersGroupMutations = {
 
     await putCreateLog(
       {
-        type: 'userGroup',
+        type: MODULE_NAMES.USER_GROUP,
         object: result,
         newData: JSON.stringify(doc),
-        description: `${result.name} has been created`,
+        description: `"${result.name}" has been created`,
       },
       user,
     );
@@ -131,10 +147,10 @@ const usersGroupMutations = {
 
     await putUpdateLog(
       {
-        type: 'userGroup',
+        type: MODULE_NAMES.USER_GROUP,
         object: group,
         newData: JSON.stringify(doc),
-        description: `${group.name} has been edited`,
+        description: `"${group.name}" has been edited`,
       },
       user,
     );
@@ -155,9 +171,9 @@ const usersGroupMutations = {
 
     await putDeleteLog(
       {
-        type: 'userGroup',
+        type: MODULE_NAMES.USER_GROUP,
         object: group,
-        description: `${group.name} has been removed`,
+        description: `"${group.name}" has been removed`,
       },
       user,
     );
