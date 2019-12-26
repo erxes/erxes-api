@@ -268,4 +268,5 @@ export const MODULE_NAMES = {
   KB_CATEGORY: 'knowledgeBaseCategory',
   KB_ARTICLE: 'knowledgeBaseArticle',
   USER_GROUP: 'userGroup',
+  INTERNAL_NOTE: 'internalNote',
 };

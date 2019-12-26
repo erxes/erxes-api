@@ -17,6 +17,7 @@ import {
 } from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
+import { internalNoteSchema } from '../../../db/models/definitions/internalNotes';
 import { articleSchema, categorySchema, topicSchema } from '../../../db/models/definitions/knowledgebase';
 import { permissionSchema, userGroupSchema } from '../../../db/models/definitions/permissions';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
@@ -131,6 +132,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.USER_GROUP,
     schemas: [userGroupSchema],
+  },
+  {
+    name: MODULE_NAMES.INTERNAL_NOTE,
+    schemas: [internalNoteSchema],
   },
 ];
 
