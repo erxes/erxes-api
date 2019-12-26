@@ -20,6 +20,7 @@ import { importHistorySchema } from '../../../db/models/definitions/importHistor
 import { internalNoteSchema } from '../../../db/models/definitions/internalNotes';
 import { articleSchema, categorySchema, topicSchema } from '../../../db/models/definitions/knowledgebase';
 import { permissionSchema, userGroupSchema } from '../../../db/models/definitions/permissions';
+import { pipelineLabelSchema } from '../../../db/models/definitions/pipelineLabels';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
 import { tagSchema } from '../../../db/models/definitions/tags';
 import { MODULE_NAMES } from '../../constants';
@@ -136,6 +137,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.INTERNAL_NOTE,
     schemas: [internalNoteSchema],
+  },
+  {
+    name: MODULE_NAMES.PIPELINE_LABEL,
+    schemas: [pipelineLabelSchema],
   },
 ];
 

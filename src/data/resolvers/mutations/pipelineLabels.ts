@@ -1,7 +1,9 @@
-import { PipelineLabels } from '../../../db/models';
+import { PipelineLabels, Pipelines } from '../../../db/models';
 import { IPipelineLabel } from '../../../db/models/definitions/pipelineLabels';
+import { MODULE_NAMES } from '../../constants';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { gatherUsernames, LogDesc } from './logUtils';
 
 interface IPipelineLabelsEdit extends IPipelineLabel {
   _id: string;
@@ -9,17 +11,25 @@ interface IPipelineLabelsEdit extends IPipelineLabel {
 
 const pipelineLabelMutations = {
   /**
-   * Create new pipeline label
+   * Creates a new pipeline label
    */
   async pipelineLabelsAdd(_root, { ...doc }: IPipelineLabel, { user }: IContext) {
     const pipelineLabel = await PipelineLabels.createPipelineLabel({ createdBy: user._id, ...doc });
+    const pipeline = await Pipelines.findOne({ _id: doc.pipelineId });
+
+    const extraDesc: LogDesc[] = [{ createdBy: user._id, name: user.username || user.email }];
+
+    if (pipeline) {
+      extraDesc.push({ pipelineId: pipeline._id, name: pipeline.name });
+    }
 
     await putCreateLog(
       {
-        type: 'pipelineLabel',
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        type: MODULE_NAMES.PIPELINE_LABEL,
+        newData: JSON.stringify({ ...doc, createdBy: user._id, createdAt: pipelineLabel.createdAt }),
+        description: `"${doc.name}" has been created`,
         object: pipelineLabel,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -32,15 +42,30 @@ const pipelineLabelMutations = {
    */
   async pipelineLabelsEdit(_root, { _id, ...doc }: IPipelineLabelsEdit, { user }: IContext) {
     const pipelineLabel = await PipelineLabels.getPipelineLabel(_id);
+    const pipeline = await Pipelines.findOne({ _id: pipelineLabel.pipelineId });
 
     const updated = await PipelineLabels.updatePipelineLabel(_id, doc);
 
+    let extraDesc: LogDesc[] = [];
+
+    if (pipelineLabel && pipelineLabel.createdBy) {
+      extraDesc = await gatherUsernames({
+        idFields: [pipelineLabel.createdBy],
+        foreignKey: 'createdBy',
+      });
+    }
+
+    if (pipeline) {
+      extraDesc.push({ pipelineId: pipeline._id, name: pipeline.name });
+    }
+
     await putUpdateLog(
       {
-        type: 'pipelineLabel',
+        type: MODULE_NAMES.PIPELINE_LABEL,
         newData: JSON.stringify(doc),
-        description: `${doc.name} has been edited`,
+        description: `"${doc.name}" has been edited`,
         object: pipelineLabel,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -53,14 +78,28 @@ const pipelineLabelMutations = {
    */
   async pipelineLabelsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const pipelineLabel = await PipelineLabels.getPipelineLabel(_id);
-
+    const pipeline = await Pipelines.findOne({ _id: pipelineLabel.pipelineId });
     const removed = await PipelineLabels.removePipelineLabel(_id);
+
+    let extraDesc: LogDesc[] = [];
+
+    if (pipelineLabel && pipelineLabel.createdBy) {
+      extraDesc = await gatherUsernames({
+        idFields: [pipelineLabel.createdBy],
+        foreignKey: 'createdBy',
+      });
+    }
+
+    if (pipeline) {
+      extraDesc.push({ pipelineId: pipeline._id, name: pipeline.name });
+    }
 
     await putDeleteLog(
       {
-        type: 'pipelineLabel',
+        type: MODULE_NAMES.PIPELINE_LABEL,
         object: pipelineLabel,
-        description: `${pipelineLabel.name} has been removed`,
+        description: `"${pipelineLabel.name}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );

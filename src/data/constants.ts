@@ -269,4 +269,5 @@ export const MODULE_NAMES = {
   KB_ARTICLE: 'knowledgeBaseArticle',
   USER_GROUP: 'userGroup',
   INTERNAL_NOTE: 'internalNote',
+  PIPELINE_LABEL: 'pipelineLabel',
 };
