@@ -46,7 +46,7 @@ const sendConversationToIntegrations = (
   action?: string,
 ) => {
   if (type === 'facebook') {
-    return sendMessage('erxes-api:send-rpc-integrations', {
+    return sendMessage('erxes-api:integrations-notification', {
       action,
       type,
       payload: JSON.stringify({
