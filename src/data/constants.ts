@@ -270,4 +270,5 @@ export const MODULE_NAMES = {
   USER_GROUP: 'userGroup',
   INTERNAL_NOTE: 'internalNote',
   PIPELINE_LABEL: 'pipelineLabel',
+  PIPELINE_TEMPLATE: 'pipelineTemplate',
 };

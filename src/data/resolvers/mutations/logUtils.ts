@@ -4,6 +4,7 @@ import {
   Companies,
   Customers,
   Deals,
+  Forms,
   Integrations,
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
@@ -222,6 +223,22 @@ export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<Log
 
   return gatherNames({
     collection: KnowledgeBaseCategories,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['title'],
+  });
+};
+
+export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: Forms,
     idFields,
     foreignKey,
     prevList,
