@@ -12,6 +12,7 @@ import {
   pipelineSchema,
   stageSchema,
 } from './definitions/boards';
+import { PROBABILITY } from './definitions/constants';
 import { IDealDocument } from './definitions/deals';
 import { IGrowthHackDocument } from './definitions/growthHacks';
 import { ITaskDocument } from './definitions/tasks';
@@ -354,7 +355,7 @@ export const loadStageClass = () => {
         userId,
         type: stage.type,
         formId: stage.formId,
-        probability: stage.probability,
+        probability: stage.probability || PROBABILITY.TEN,
       });
 
       if (includeCards === true) {
