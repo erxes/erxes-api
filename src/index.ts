@@ -25,6 +25,7 @@ import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
 import './messageBroker';
 import integrationsApiMiddleware from './middlewares/integrationsApiMiddleware';
+import scriptManagerMiddleware from './middlewares/scriptManagerMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import { initRedis } from './redisClient';
 
@@ -75,6 +76,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.get('/script-manager', scriptManagerMiddleware);
 
 app.use(userMiddleware);
 
