@@ -440,13 +440,13 @@ const widgetMutations = {
     });
 
     if (!integration) {
-      return null;
+      throw new Error('Integration not found');
     }
 
     const brand = await Brands.findOne({ _id: integration.brandId });
 
     if (!brand) {
-      return null;
+      throw new Error('Brand not found');
     }
 
     // try to create engage chat auto messages

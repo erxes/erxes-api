@@ -1,8 +1,17 @@
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import widgetMutations from '../data/resolvers/mutations/widgets';
-import { brandFactory, customerFactory, integrationFactory, messengerAppFactory } from '../db/factories';
-import { Brands, Conversations, Customers, Integrations, MessengerApps } from '../db/models';
+import {
+  brandFactory,
+  conversationFactory,
+  conversationMessageFactory,
+  customerFactory,
+  engageMessageFactory,
+  integrationFactory,
+  messengerAppFactory,
+  userFactory,
+} from '../db/factories';
+import { Brands, ConversationMessages, Conversations, Customers, Integrations, MessengerApps } from '../db/models';
 import { IBrandDocument } from '../db/models/definitions/brands';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -199,5 +208,124 @@ describe('insertMessage()', () => {
     }
 
     expect(customer.messengerData.isActive).toBeTruthy();
+  });
+});
+
+describe('saveBrowserInfo()', () => {
+  afterEach(async () => {
+    // Clearing test data
+    await Integrations.deleteMany({});
+    await Customers.deleteMany({});
+    await Brands.deleteMany({});
+  });
+
+  test('not found', async () => {
+    let customer = await customerFactory({});
+
+    // integration not found
+    try {
+      await widgetMutations.widgetsSaveBrowserInfo(
+        {},
+        {
+          customerId: customer._id,
+          browserInfo: {},
+        },
+      );
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+
+    const integration = await integrationFactory({});
+    customer = await customerFactory({ integrationId: integration._id });
+
+    try {
+      await widgetMutations.widgetsSaveBrowserInfo(
+        {},
+        {
+          customerId: customer._id,
+          browserInfo: {},
+        },
+      );
+    } catch (e) {
+      expect(e.message).toBe('Brand not found');
+    }
+  });
+
+  test('success', async () => {
+    const user = await userFactory({});
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id });
+
+    const customer = await customerFactory({ integrationId: integration._id });
+
+    await engageMessageFactory({
+      userId: user._id,
+      messenger: {
+        brandId: brand._id,
+        content: 'engageMessage',
+        rules: [
+          {
+            text: 'text',
+            kind: 'currentPageUrl',
+            condition: 'is',
+            value: '/page',
+          },
+        ],
+      },
+      kind: 'visitorAuto',
+      method: 'messenger',
+      isLive: true,
+    });
+
+    const response = await widgetMutations.widgetsSaveBrowserInfo(
+      {},
+      {
+        customerId: customer._id,
+        browserInfo: { url: '/page' },
+      },
+    );
+
+    expect(response && response.content).toBe('engageMessage');
+  });
+});
+
+describe('rest', () => {
+  test('widgetsSaveCustomerGetNotified', async () => {
+    let customer = await customerFactory({});
+
+    customer = await widgetMutations.widgetsSaveCustomerGetNotified(
+      {},
+      {
+        customerId: customer._id,
+        type: 'email',
+        value: 'email',
+      },
+    );
+
+    expect(customer.visitorContactInfo && customer.visitorContactInfo.email).toBe('email');
+  });
+
+  test('widgetsReadConversationMessages', async () => {
+    const user = await userFactory({});
+    const conversation = await conversationFactory({});
+
+    const message = await conversationMessageFactory({
+      conversationId: conversation._id,
+      userId: user._id,
+      isCustomerRead: false,
+    });
+
+    expect(message.isCustomerRead).toBe(false);
+
+    await widgetMutations.widgetsReadConversationMessages(
+      {},
+      {
+        conversationId: conversation._id,
+      },
+    );
+
+    const updatedMessage = await ConversationMessages.findOne({ _id: message._id });
+
+    expect(updatedMessage && updatedMessage.isCustomerRead).toBe(true);
   });
 });
