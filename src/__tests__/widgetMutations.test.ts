@@ -19,7 +19,6 @@ import {
   ConversationMessages,
   Conversations,
   Customers,
-  Forms,
   FormSubmissions,
   Integrations,
   KnowledgeBaseArticles,

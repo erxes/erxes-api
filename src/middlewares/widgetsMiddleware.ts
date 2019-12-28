@@ -1,6 +1,6 @@
 import { connectionInstance } from '../db/connection';
 
-const scriptManagerMiddleware = async (req, res) => {
+const widgetsMiddleware = async (req, res) => {
   const { WIDGETS_DOMAIN } = process.env;
 
   const script = await connectionInstance.connection.db.collection('scripts').findOne({ _id: req.query.id });
@@ -51,4 +51,4 @@ const scriptManagerMiddleware = async (req, res) => {
   res.end(`window.erxesSettings=${erxesSettings};${includeScripts}`);
 };
 
-export default scriptManagerMiddleware;
+export default widgetsMiddleware;
