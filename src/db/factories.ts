@@ -621,6 +621,7 @@ interface IIntegrationFactoryInput {
   tagIds?: string[];
   isActive?: boolean;
   messengerData?: object;
+  languageCode?: string;
 }
 
 export const integrationFactory = async (params: IIntegrationFactoryInput = {}) => {
@@ -629,6 +630,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
   const doc = {
     name: params.name || faker.random.word(),
     kind,
+    languageCode: params.languageCode,
     brandId: params.brandId,
     formId: params.formId,
     messengerData: params.messengerData,

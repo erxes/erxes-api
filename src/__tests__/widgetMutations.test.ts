@@ -1,6 +1,6 @@
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
-import widgetMutations from '../data/resolvers/mutations/widgets';
+import widgetMutations, { getMessengerData } from '../data/resolvers/mutations/widgets';
 import {
   brandFactory,
   conversationFactory,
@@ -374,6 +374,23 @@ describe('rest', () => {
     const updatedMessage = await ConversationMessages.findOne({ _id: message._id });
 
     expect(updatedMessage && updatedMessage.isCustomerRead).toBe(true);
+  });
+
+  test('getMessengerData', async () => {
+    const integration = await integrationFactory({
+      languageCode: 'en',
+      messengerData: {
+        messages: {
+          en: {
+            welcome: 'welcome',
+          },
+        },
+      },
+    });
+
+    const response = await getMessengerData(integration);
+
+    expect(response.messages && response.messages.welcome).toBe('welcome');
   });
 });
 
