@@ -7,11 +7,22 @@ import {
   conversationMessageFactory,
   customerFactory,
   engageMessageFactory,
+  formFactory,
   integrationFactory,
+  knowledgeBaseArticleFactory,
   messengerAppFactory,
   userFactory,
 } from '../db/factories';
-import { Brands, ConversationMessages, Conversations, Customers, Integrations, MessengerApps } from '../db/models';
+import {
+  Brands,
+  ConversationMessages,
+  Conversations,
+  Customers,
+  Forms,
+  Integrations,
+  KnowledgeBaseArticles,
+  MessengerApps,
+} from '../db/models';
 import { IBrandDocument } from '../db/models/definitions/brands';
 import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
@@ -45,6 +56,24 @@ describe('messenger connect', () => {
     await Integrations.deleteMany({});
     await Customers.deleteMany({});
     await MessengerApps.deleteMany({});
+  });
+
+  test('brand not found', async () => {
+    try {
+      await widgetMutations.widgetsMessengerConnect({}, { brandCode: 'invalidCode' });
+    } catch (e) {
+      expect(e.message).toBe('Brand not found');
+    }
+  });
+
+  test('brand not found', async () => {
+    const brand = await brandFactory({});
+
+    try {
+      await widgetMutations.widgetsMessengerConnect({}, { brandCode: brand.code || '' });
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
   });
 
   test('returns proper integrationId', async () => {
@@ -171,7 +200,7 @@ describe('insertMessage()', () => {
     await Customers.deleteMany({});
   });
 
-  test('successfull', async () => {
+  test('without conversationId', async () => {
     const now = new Date();
 
     const message = await widgetMutations.widgetsInsertMessage(
@@ -208,6 +237,22 @@ describe('insertMessage()', () => {
     }
 
     expect(customer.messengerData.isActive).toBeTruthy();
+  });
+
+  test('with conversationId', async () => {
+    const conversation = await conversationFactory({});
+
+    const message = await widgetMutations.widgetsInsertMessage(
+      {},
+      {
+        integrationId: _integration._id,
+        customerId: _customer._id,
+        message: 'withConversationId',
+        conversationId: conversation._id,
+      },
+    );
+
+    expect(message.content).toBe('withConversationId');
   });
 });
 
@@ -327,5 +372,43 @@ describe('rest', () => {
     const updatedMessage = await ConversationMessages.findOne({ _id: message._id });
 
     expect(updatedMessage && updatedMessage.isCustomerRead).toBe(true);
+  });
+});
+
+describe('knowledgebase', () => {
+  test('widgetsKnowledgebaseIncReactionCount', async () => {
+    const article = await knowledgeBaseArticleFactory({
+      reactionChoices: ['wow'],
+    });
+
+    await widgetMutations.widgetsKnowledgebaseIncReactionCount(
+      {},
+      {
+        articleId: article._id,
+        reactionChoice: 'wow',
+      },
+    );
+
+    const updatedArticle = await KnowledgeBaseArticles.findOne({ _id: article._id });
+
+    expect(updatedArticle && updatedArticle.reactionCounts && updatedArticle.reactionCounts.wow).toBe(1);
+  });
+});
+
+describe('lead', () => {
+  test('widgetsLeadIncreaseViewCount', async () => {
+    const form = await formFactory({});
+    const integration = await integrationFactory({ formId: form._id });
+
+    await widgetMutations.widgetsLeadIncreaseViewCount(
+      {},
+      {
+        formId: form._id,
+      },
+    );
+
+    const updatedInteg = await Integrations.findOne({ _id: integration._id });
+
+    expect(updatedInteg && updatedInteg.leadData && updatedInteg.leadData.viewCount).toBe(1);
   });
 });
