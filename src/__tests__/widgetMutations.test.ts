@@ -7,6 +7,7 @@ import {
   conversationMessageFactory,
   customerFactory,
   engageMessageFactory,
+  fieldFactory,
   formFactory,
   integrationFactory,
   knowledgeBaseArticleFactory,
@@ -19,6 +20,7 @@ import {
   Conversations,
   Customers,
   Forms,
+  FormSubmissions,
   Integrations,
   KnowledgeBaseArticles,
   MessengerApps,
@@ -396,6 +398,15 @@ describe('knowledgebase', () => {
 });
 
 describe('lead', () => {
+  afterEach(async () => {
+    // Clearing test data
+    await Integrations.deleteMany({});
+    await Customers.deleteMany({});
+    await Conversations.deleteMany({});
+    await ConversationMessages.deleteMany({});
+    await FormSubmissions.deleteMany({});
+  });
+
   test('widgetsLeadIncreaseViewCount', async () => {
     const form = await formFactory({});
     const integration = await integrationFactory({ formId: form._id });
@@ -410,5 +421,157 @@ describe('lead', () => {
     const updatedInteg = await Integrations.findOne({ _id: integration._id });
 
     expect(updatedInteg && updatedInteg.leadData && updatedInteg.leadData.viewCount).toBe(1);
+  });
+
+  test('leadConnect: not found', async () => {
+    // invalid configuration
+    try {
+      await widgetMutations.widgetsLeadConnect(
+        {},
+        {
+          brandCode: 'code',
+          formCode: 'code',
+        },
+      );
+    } catch (e) {
+      expect(e.message).toBe('Invalid configuration');
+    }
+
+    const brand = await brandFactory({});
+    const form = await formFactory({});
+
+    try {
+      await widgetMutations.widgetsLeadConnect(
+        {},
+        {
+          brandCode: brand.code || '',
+          formCode: form.code || '',
+        },
+      );
+    } catch (e) {
+      expect(e.message).toBe('Integration not found');
+    }
+  });
+
+  test('leadConnect: success', async () => {
+    const brand = await brandFactory({});
+    const form = await formFactory({});
+
+    const integration = await integrationFactory({
+      brandId: brand._id,
+      formId: form._id,
+      leadData: {
+        loadType: 'embedded',
+      },
+    });
+
+    const response = await widgetMutations.widgetsLeadConnect(
+      {},
+      {
+        brandCode: brand.code || '',
+        formCode: form.code || '',
+      },
+    );
+
+    expect(response.integration._id).toBe(integration._id);
+    expect(response.form._id).toBe(form._id);
+  });
+
+  test('saveLead: form not found', async () => {
+    try {
+      await widgetMutations.widgetsSaveLead(
+        {},
+        {
+          integrationId: '_id',
+          formId: '_id',
+          submissions: [{ _id: 'id', value: null }],
+          browserInfo: {},
+        },
+      );
+    } catch (e) {
+      expect(e.message).toBe('Form not found');
+    }
+  });
+
+  test('saveLead: invalid', async () => {
+    const form = await formFactory({});
+
+    const requiredField = await fieldFactory({
+      contentTypeId: form._id,
+      isRequired: true,
+    });
+
+    const integration = await integrationFactory({ formId: form._id });
+
+    const response = await widgetMutations.widgetsSaveLead(
+      {},
+      {
+        integrationId: integration._id,
+        formId: form._id,
+        submissions: [{ _id: requiredField._id, value: null }],
+        browserInfo: {
+          currentPageUrl: '/page',
+        },
+      },
+    );
+
+    expect(response && response.status).toBe('error');
+  });
+
+  test('saveLead: success', async () => {
+    const form = await formFactory({});
+
+    const emailField = await fieldFactory({
+      type: 'email',
+      contentTypeId: form._id,
+      validation: 'text',
+      isRequired: true,
+    });
+
+    const firstNameField = await fieldFactory({
+      type: 'firstName',
+      contentTypeId: form._id,
+      validation: 'text',
+      isRequired: true,
+    });
+
+    const lastNameField = await fieldFactory({
+      type: 'lastName',
+      contentTypeId: form._id,
+      validation: 'text',
+      isRequired: true,
+    });
+
+    const phoneField = await fieldFactory({
+      type: 'phone',
+      contentTypeId: form._id,
+      isRequired: true,
+    });
+
+    const integration = await integrationFactory({ formId: form._id });
+
+    const response = await widgetMutations.widgetsSaveLead(
+      {},
+      {
+        integrationId: integration._id,
+        formId: form._id,
+        submissions: [
+          { _id: emailField._id, type: 'email', value: 'email@yahoo.com' },
+          { _id: firstNameField._id, type: 'firstName', value: 'firstName' },
+          { _id: lastNameField._id, type: 'lastName', value: 'lastName' },
+          { _id: phoneField._id, type: 'phone', value: '88998833' },
+        ],
+        browserInfo: {
+          currentPageUrl: '/page',
+        },
+      },
+    );
+
+    expect(response && response.status).toBe('ok');
+
+    expect(await Conversations.find().count()).toBe(1);
+    expect(await ConversationMessages.find().count()).toBe(1);
+    expect(await Customers.find().count()).toBe(1);
+    expect(await FormSubmissions.find().count()).toBe(1);
   });
 });

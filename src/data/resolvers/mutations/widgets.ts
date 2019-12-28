@@ -117,16 +117,16 @@ const widgetMutations = {
   ) {
     const { integrationId, formId, submissions, browserInfo } = args;
 
+    const form = await Forms.findOne({ _id: formId });
+
+    if (!form) {
+      throw new Error('Form not found');
+    }
+
     const errors = await Forms.validate(formId, submissions);
 
     if (errors.length > 0) {
       return { status: 'error', errors };
-    }
-
-    const form = await Forms.findOne({ _id: formId });
-
-    if (!form) {
-      return null;
     }
 
     const content = form.title;
@@ -192,10 +192,6 @@ const widgetMutations = {
       content,
       formWidgetData: submissions,
     });
-
-    if (!message) {
-      return { status: 'error', errors: ['Invalid form'] };
-    }
 
     // increasing form submitted count
     await Integrations.increaseContactsGathered(formId);

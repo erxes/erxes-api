@@ -617,7 +617,7 @@ interface IIntegrationFactoryInput {
   kind?: string;
   brandId?: string;
   formId?: string;
-  leadData?: any | string;
+  leadData?: any;
   tagIds?: string[];
   isActive?: boolean;
   messengerData?: object;
@@ -632,7 +632,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     brandId: params.brandId,
     formId: params.formId,
     messengerData: params.messengerData,
-    leadData: params.leadData === 'lead' ? params.leadData : kind === 'lead' ? { thankContent: 'thankContent' } : null,
+    leadData: params.leadData ? params.leadData : { thankContent: 'thankContent' },
     tagIds: params.tagIds,
     isActive: params.isActive === undefined || params.isActive === null ? true : params.isActive,
   };
