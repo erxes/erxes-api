@@ -352,6 +352,19 @@ describe('rest', () => {
     expect(customer.visitorContactInfo && customer.visitorContactInfo.email).toBe('email');
   });
 
+  test('widgetsSendTypingInfo', async () => {
+    const conversation = await conversationFactory({});
+
+    const response = await widgetMutations.widgetsSendTypingInfo(
+      {},
+      {
+        conversationId: conversation._id,
+      },
+    );
+
+    expect(response).toBe('ok');
+  });
+
   test('widgetsReadConversationMessages', async () => {
     const user = await userFactory({});
     const conversation = await conversationFactory({});
