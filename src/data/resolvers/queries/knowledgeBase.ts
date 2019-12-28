@@ -145,14 +145,6 @@ const knowledgeBaseQueries = {
   knowledgeBaseTopicsTotalCount(_root, _args, { commonQuerySelector }: IContext) {
     return KnowledgeBaseTopics.find(commonQuerySelector).countDocuments();
   },
-
-  /**
-   * return a KnowledgeBaseLoader object with only `loadType` field in it
-   * @return {Promise} KnowledgeBaseLoader
-   */
-  knowledgeBaseLoader(_root, { topicId }: { topicId: string }) {
-    return KnowledgeBaseTopics.findOne({ _id: topicId }, { loadType: 1 });
-  },
 };
 
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
