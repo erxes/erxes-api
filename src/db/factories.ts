@@ -457,7 +457,7 @@ interface ICustomerFactoryInput {
   isActive?: boolean;
   visitorContactInfo?: any;
   urlVisits?: object;
-  deviceToken?: string;
+  deviceTokens?: string[];
   mergedIds?: string[];
 }
 
@@ -465,6 +465,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
   const createdAt = faker.date.past();
 
   const doc = {
+    createdAt,
     integrationId: params.integrationId,
     firstName: params.firstName,
     lastName: params.lastName,
@@ -488,6 +489,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,
+    deviceTokens: params.deviceTokens || [],
     mergedIds: params.mergedIds || [],
   };
 
