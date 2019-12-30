@@ -16,7 +16,6 @@ import './setup.ts';
 
 describe('InternalNotes mutations', () => {
   let _user;
-  let _internalNote;
   let context;
 
   const addMutation = `
@@ -42,7 +41,6 @@ describe('InternalNotes mutations', () => {
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({});
-    _internalNote = await internalNoteFactory({});
 
     context = { user: _user };
   });
