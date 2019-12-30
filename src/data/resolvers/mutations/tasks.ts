@@ -1,9 +1,11 @@
-import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
+import * as _ from 'underscore';
+import { ActivityLogs, Checklists, Conformities, Tasks, Users } from '../../../db/models';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog } from '../../utils';
+import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import {
   copyPipelineLabels,
   createConformity,
@@ -11,6 +13,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
+import { gatherLabelNames, gatherStageNames, gatherUsernames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
 
 interface ITasksEdit extends ITask {
   _id: string;
@@ -18,19 +21,36 @@ interface ITasksEdit extends ITask {
 
 const taskMutations = {
   /**
-   * Create new task
+   * Creates a new task
    */
   async tasksAdd(_root, doc: ITask, { user }: IContext) {
     doc.watchedUserIds = [user._id];
 
-    const task = await Tasks.createTask({
+    const extendedDoc = {
       ...doc,
       modifiedBy: user._id,
       userId: user._id,
+    };
+
+    const task = await Tasks.createTask(extendedDoc);
+
+    const usernameOrEmail = user.username || user.email;
+
+    // only these mapped id fields are created initially
+    let extraDesc: LogDesc[] = [
+      { userId: user._id, name: usernameOrEmail },
+      { watchedUserIds: user._id, name: usernameOrEmail },
+      { modifiedBy: user._id, name: usernameOrEmail },
+    ];
+
+    extraDesc = await gatherStageNames({
+      idFields: [doc.stageId],
+      foreignKey: 'stageId',
+      prevList: extraDesc,
     });
 
     await createConformity({
-      mainType: 'task',
+      mainType: MODULE_NAMES.TASK,
       mainTypeId: task._id,
       companyIds: doc.companyIds,
       customerIds: doc.customerIds,
@@ -42,15 +62,16 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_ADD,
       action: `invited you to the`,
       content: `'${task.name}'.`,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
     await putCreateLog(
       {
-        type: 'task',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.TASK,
+        newData: JSON.stringify(extendedDoc),
         object: task,
-        description: `${task.name} has been created`,
+        description: `"${task.name}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -64,11 +85,13 @@ const taskMutations = {
   async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
     const oldTask = await Tasks.getTask(_id);
 
-    const updatedTask = await Tasks.updateTask(_id, {
+    const extendedDoc = {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
-    });
+    };
+
+    const updatedTask = await Tasks.updateTask(_id, extendedDoc);
 
     // labels should be copied to newly moved pipeline
     await copyPipelineLabels({ item: oldTask, doc, user });
@@ -77,7 +100,7 @@ const taskMutations = {
       item: updatedTask,
       user,
       type: NOTIFICATION_TYPES.TASK_EDIT,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     };
 
     if (doc.assignedUserIds) {
@@ -88,6 +111,89 @@ const taskMutations = {
     }
 
     await sendNotifications(notificationDoc);
+
+    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
+
+    extraDesc = await gatherUsernamesOfBoardItem(oldTask);
+
+    if (oldTask.userId) {
+      const createdBy = await Users.findOne({ _id: oldTask.userId });
+
+      if (createdBy) {
+        extraDesc.push({ userId: oldTask.userId, name: createdBy.username || createdBy.email });
+      }
+    }
+
+    // find unique assigned users
+    let assignedUsers: string[] = oldTask.assignedUserIds || [];
+
+    if (doc.assignedUserIds) {
+      assignedUsers = assignedUsers.concat(doc.assignedUserIds);
+    }
+
+    assignedUsers = _.uniq(assignedUsers);
+
+    if (assignedUsers.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: assignedUsers,
+        foreignKey: 'assignedUserIds',
+        prevList: extraDesc,
+      });
+    }
+
+    // find unique watched users
+    let watchedUsers: string[] = oldTask.watchedUserIds || [];
+
+    if (doc.watchedUserIds) {
+      watchedUsers = watchedUsers.concat(doc.watchedUserIds);
+    }
+
+    watchedUsers = _.uniq(watchedUsers);
+
+    if (watchedUsers.length > 0) {
+      extraDesc = await gatherUsernames({
+        idFields: watchedUsers,
+        foreignKey: 'watchedUserIds',
+        prevList: extraDesc,
+      });
+    }
+
+    // new labels are set by different mutation,
+    // so only the saved label names are necessary
+    if (oldTask.labelIds && oldTask.labelIds.length > 0) {
+      extraDesc = await gatherLabelNames({
+        idFields: oldTask.labelIds,
+        foreignKey: 'labelIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (oldTask.initialStageId) {
+      extraDesc = await gatherStageNames({
+        idFields: [oldTask.initialStageId],
+        foreignKey: 'initialStageId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (doc.stageId) {
+      extraDesc = await gatherStageNames({
+        idFields: [doc.stageId],
+        foreignKey: 'stageId',
+        prevList: extraDesc,
+      });
+    }
+
+    await putUpdateLog(
+      {
+        type: MODULE_NAMES.TASK,
+        object: oldTask,
+        newData: JSON.stringify(extendedDoc),
+        description: `${updatedTask.name} has been edited`,
+        extraDesc: JSON.stringify(extraDesc),
+      },
+      user,
+    );
 
     return updatedTask;
   },
@@ -108,7 +214,7 @@ const taskMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(user._id, task, 'task', destinationStageId);
+    const { content, action } = await itemsChange(user._id, task, MODULE_NAMES.TASK, destinationStageId);
 
     await sendNotifications({
       item: task,
@@ -116,7 +222,7 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_CHANGE,
       action,
       content,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
     return task;
@@ -141,14 +247,50 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_DELETE,
       action: `deleted task:`,
       content: `'${task.name}'`,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
-    await Conformities.removeConformity({ mainType: 'task', mainTypeId: task._id });
-    await Checklists.removeChecklists('task', task._id);
+    await Conformities.removeConformity({ mainType: MODULE_NAMES.TASK, mainTypeId: task._id });
+    await Checklists.removeChecklists(MODULE_NAMES.TASK, task._id);
     await ActivityLogs.removeActivityLog(task._id);
 
-    return task.remove();
+    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(task);
+
+    const removed = await task.remove();
+
+    if (task.labelIds && task.labelIds.length > 0) {
+      extraDesc = await gatherLabelNames({
+        idFields: task.labelIds,
+        foreignKey: 'labelIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (task.initialStageId) {
+      extraDesc = await gatherStageNames({
+        idFields: [task.initialStageId],
+        foreignKey: 'initialStageId',
+        prevList: extraDesc,
+      });
+    }
+
+    extraDesc = await gatherStageNames({
+      idFields: [task.stageId],
+      foreignKey: 'stageId',
+      prevList: extraDesc,
+    });
+
+    await putDeleteLog(
+      {
+        type: MODULE_NAMES.TASK,
+        object: task,
+        description: `"${task.name}" has been deleted`,
+        extraDesc: JSON.stringify(extraDesc),
+      },
+      user,
+    );
+
+    return removed;
   },
 
   /**

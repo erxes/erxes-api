@@ -24,6 +24,7 @@ import { pipelineLabelSchema } from '../../../db/models/definitions/pipelineLabe
 import { pipelineTemplateSchema, stageSchema } from '../../../db/models/definitions/pipelineTemplates';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
 import { tagSchema } from '../../../db/models/definitions/tags';
+import { taskSchema } from '../../../db/models/definitions/tasks';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -146,6 +147,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.PIPELINE_TEMPLATE,
     schemas: [pipelineTemplateSchema, stageSchema],
+  },
+  {
+    name: MODULE_NAMES.TASK,
+    schemas: [taskSchema],
   },
 ];
 

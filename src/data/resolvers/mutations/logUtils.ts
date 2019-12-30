@@ -1,4 +1,8 @@
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
+import { IDealDocument } from '../../../db/models/definitions/deals';
+import { IGrowthHackDocument } from '../../../db/models/definitions/growthHacks';
+import { ITaskDocument } from '../../../db/models/definitions/tasks';
+import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import {
   Brands,
   Companies,
@@ -244,6 +248,47 @@ export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]
     prevList,
     nameFields: ['title'],
   });
+};
+
+export const gatherUsernamesOfBoardItem = async (
+  item: IDealDocument | ITaskDocument | ITicketDocument | IGrowthHackDocument,
+): Promise<LogDesc[]> => {
+  const { assignedUserIds, modifiedBy, watchedUserIds, userId } = item;
+
+  let list: LogDesc[] = [];
+
+  if (assignedUserIds && assignedUserIds.length > 0) {
+    list = await gatherUsernames({
+      idFields: assignedUserIds,
+      foreignKey: 'assignedUserIds',
+    });
+  }
+
+  if (modifiedBy) {
+    const user = await Users.findOne({ _id: modifiedBy });
+
+    if (user) {
+      list.push({ modifiedBy: user._id, name: user.username || user.email });
+    }
+  }
+
+  if (watchedUserIds && watchedUserIds.length > 0) {
+    list = await gatherUsernames({
+      idFields: watchedUserIds,
+      foreignKey: 'watchedUserIds',
+      prevList: list,
+    });
+  }
+
+  if (userId) {
+    const user = await Users.findOne({ _id: userId });
+
+    if (user) {
+      list.push({ userId, name: user.username || user.email });
+    }
+  }
+
+  return list;
 };
 
 /**
