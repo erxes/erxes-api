@@ -14,7 +14,14 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
-import { gatherLabelNames, gatherProductNames, gatherStageNames, gatherUsernames, LogDesc } from './logUtils';
+import {
+  gatherLabelNames,
+  gatherProductNames,
+  gatherStageNames,
+  gatherUsernames,
+  gatherUsernamesOfBoardItem,
+  LogDesc,
+} from './logUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -102,8 +109,7 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    let assignedUsers = oldDeal.assignedUserIds || [];
-    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
+    let extraDesc: LogDesc[] = [];
     let productIds: string[] = [];
 
     await copyPipelineLabels({ item: oldDeal, doc, user });
@@ -122,37 +128,9 @@ const dealMutations = {
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
-
-      // no duplicate entries in log desc
-      assignedUsers = assignedUsers.concat(doc.assignedUserIds);
-      assignedUsers = _.uniq(assignedUsers);
     }
 
-    // watchedUserIds are added one by one from by dealsWatch mutation below
-    // therefore doc doesn't contain them
-    if (oldDeal.watchedUserIds && oldDeal.watchedUserIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: oldDeal.watchedUserIds,
-        foreignKey: 'watchedUserIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (assignedUsers.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: assignedUsers,
-        foreignKey: 'assignedUserIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (oldDeal.userId) {
-      extraDesc = await gatherUsernames({
-        idFields: [oldDeal.userId],
-        foreignKey: 'userId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherUsernamesOfBoardItem(oldDeal, updatedDeal);
 
     if (oldDeal.labelIds && oldDeal.labelIds.length > 0) {
       extraDesc = await gatherLabelNames({
@@ -199,7 +177,7 @@ const dealMutations = {
     await putUpdateLog(
       {
         type: MODULE_NAMES.DEAL,
-        object: updatedDeal,
+        object: oldDeal,
         newData: JSON.stringify(doc),
         description: `"${updatedDeal.name}" has been edited`,
         extraDesc: JSON.stringify(extraDesc),
@@ -262,20 +240,47 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     });
 
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.DEAL,
-        object: deal,
-        description: `${deal.name} has been removed`,
-      },
-      user,
-    );
-
     await Conformities.removeConformity({ mainType: MODULE_NAMES.DEAL, mainTypeId: deal._id });
     await Checklists.removeChecklists(MODULE_NAMES.DEAL, deal._id);
     await ActivityLogs.removeActivityLog(deal._id);
 
-    return deal.remove();
+    const removed = await deal.remove();
+
+    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(deal);
+
+    extraDesc = await gatherStageNames({
+      idFields: [deal.stageId],
+      foreignKey: 'stageId',
+      prevList: extraDesc,
+    });
+
+    if (deal.initialStageId) {
+      extraDesc = await gatherStageNames({
+        idFields: [deal.initialStageId],
+        foreignKey: 'initialStageId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (deal.labelIds && deal.labelIds.length > 0) {
+      extraDesc = await gatherLabelNames({
+        idFields: deal.labelIds,
+        foreignKey: 'labelIds',
+        prevList: extraDesc,
+      });
+    }
+
+    await putDeleteLog(
+      {
+        type: MODULE_NAMES.DEAL,
+        object: deal,
+        description: `"${deal.name}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
+      },
+      user,
+    );
+
+    return removed;
   },
 
   /**

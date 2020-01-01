@@ -1,9 +1,4 @@
-import {
-  attachmentSchema,
-  boardSchema,
-  commonItemFieldsSchema,
-  pipelineSchema,
-} from '../../../db/models/definitions/boards';
+import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/models/definitions/boards';
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
@@ -91,7 +86,7 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   },
   {
     name: MODULE_NAMES.DEAL,
-    schemas: [commonItemFieldsSchema, dealSchema, productDataSchema],
+    schemas: [dealSchema, productDataSchema],
   },
   {
     name: MODULE_NAMES.EMAIL_TEMPLATE,

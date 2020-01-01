@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Tasks, Users } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { MODULE_NAMES } from '../../constants';
@@ -13,7 +13,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
-import { gatherLabelNames, gatherStageNames, gatherUsernames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
+import { gatherLabelNames, gatherStageNames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
 
 interface ITasksEdit extends ITask {
   _id: string;
@@ -114,49 +114,7 @@ const taskMutations = {
 
     let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
 
-    extraDesc = await gatherUsernamesOfBoardItem(oldTask);
-
-    if (oldTask.userId) {
-      const createdBy = await Users.findOne({ _id: oldTask.userId });
-
-      if (createdBy) {
-        extraDesc.push({ userId: oldTask.userId, name: createdBy.username || createdBy.email });
-      }
-    }
-
-    // find unique assigned users
-    let assignedUsers: string[] = oldTask.assignedUserIds || [];
-
-    if (doc.assignedUserIds) {
-      assignedUsers = assignedUsers.concat(doc.assignedUserIds);
-    }
-
-    assignedUsers = _.uniq(assignedUsers);
-
-    if (assignedUsers.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: assignedUsers,
-        foreignKey: 'assignedUserIds',
-        prevList: extraDesc,
-      });
-    }
-
-    // find unique watched users
-    let watchedUsers: string[] = oldTask.watchedUserIds || [];
-
-    if (doc.watchedUserIds) {
-      watchedUsers = watchedUsers.concat(doc.watchedUserIds);
-    }
-
-    watchedUsers = _.uniq(watchedUsers);
-
-    if (watchedUsers.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: watchedUsers,
-        foreignKey: 'watchedUserIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherUsernamesOfBoardItem(oldTask, updatedTask);
 
     // new labels are set by different mutation,
     // so only the saved label names are necessary
@@ -189,7 +147,7 @@ const taskMutations = {
         type: MODULE_NAMES.TASK,
         object: oldTask,
         newData: JSON.stringify(extendedDoc),
-        description: `${updatedTask.name} has been edited`,
+        description: `"${updatedTask.name}" has been edited`,
         extraDesc: JSON.stringify(extraDesc),
       },
       user,
