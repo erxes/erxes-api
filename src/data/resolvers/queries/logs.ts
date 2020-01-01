@@ -16,6 +16,7 @@ import {
   productSchema,
 } from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
+import { growthHackSchema } from '../../../db/models/definitions/growthHacks';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
 import { internalNoteSchema } from '../../../db/models/definitions/internalNotes';
 import { articleSchema, categorySchema, topicSchema } from '../../../db/models/definitions/knowledgebase';
@@ -150,7 +151,11 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   },
   {
     name: MODULE_NAMES.TASK,
-    schemas: [taskSchema],
+    schemas: [taskSchema, attachmentSchema],
+  },
+  {
+    name: MODULE_NAMES.GROWTH_HACK,
+    schemas: [growthHackSchema, attachmentSchema],
   },
 ];
 

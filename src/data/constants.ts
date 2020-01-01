@@ -271,4 +271,5 @@ export const MODULE_NAMES = {
   INTERNAL_NOTE: 'internalNote',
   PIPELINE_LABEL: 'pipelineLabel',
   PIPELINE_TEMPLATE: 'pipelineTemplate',
+  GROWTH_HACK: 'growthHack',
 };

@@ -1,3 +1,4 @@
+import * as _ from 'underscore';
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
 import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IGrowthHackDocument } from '../../../db/models/definitions/growthHacks';
@@ -41,6 +42,8 @@ interface IContentTypeParams {
   contentType: string;
   contentTypeId: string;
 }
+
+type BoardItemDocument = IDealDocument | ITaskDocument | ITicketDocument | IGrowthHackDocument;
 
 export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
@@ -250,20 +253,33 @@ export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]
   });
 };
 
+// all user mapped field names of board items are fetched here
 export const gatherUsernamesOfBoardItem = async (
-  item: IDealDocument | ITaskDocument | ITicketDocument | IGrowthHackDocument,
+  oldItem: BoardItemDocument,
+  newItem?: BoardItemDocument,
 ): Promise<LogDesc[]> => {
-  const { assignedUserIds, modifiedBy, watchedUserIds, userId } = item;
+  const { assignedUserIds, modifiedBy, watchedUserIds, userId } = oldItem;
 
   let list: LogDesc[] = [];
 
-  if (assignedUserIds && assignedUserIds.length > 0) {
+  // unique assigned users
+  let assignedUsers: string[] = assignedUserIds || [];
+
+  if (newItem && newItem.assignedUserIds) {
+    assignedUsers = assignedUsers.concat(newItem.assignedUserIds);
+  }
+
+  if (assignedUsers.length > 0) {
+    assignedUsers = _.uniq(assignedUsers);
+    assignedUsers = _.compact(assignedUsers);
+
     list = await gatherUsernames({
-      idFields: assignedUserIds,
+      idFields: assignedUsers,
       foreignKey: 'assignedUserIds',
     });
   }
 
+  // modified user checking
   if (modifiedBy) {
     const user = await Users.findOne({ _id: modifiedBy });
 
@@ -272,14 +288,33 @@ export const gatherUsernamesOfBoardItem = async (
     }
   }
 
-  if (watchedUserIds && watchedUserIds.length > 0) {
+  if (newItem && newItem.modifiedBy !== modifiedBy) {
+    const modifier = await Users.findOne({ _id: newItem.modifiedBy });
+
+    if (modifier) {
+      list.push({ modifiedBy: modifier._id, name: modifier.username || modifier.email });
+    }
+  }
+
+  // unique watched users
+  let watchedUsers: string[] = watchedUserIds || [];
+
+  if (newItem && newItem.watchedUserIds) {
+    watchedUsers = watchedUsers.concat(newItem.watchedUserIds);
+  }
+
+  if (watchedUsers.length > 0) {
+    watchedUsers = _.uniq(watchedUsers);
+    watchedUsers = _.compact(watchedUsers);
+
     list = await gatherUsernames({
-      idFields: watchedUserIds,
+      idFields: watchedUsers,
       foreignKey: 'watchedUserIds',
       prevList: list,
     });
   }
 
+  // userId is set once at creation & remain unchanged
   if (userId) {
     const user = await Users.findOne({ _id: userId });
 
