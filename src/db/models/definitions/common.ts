@@ -1,8 +1,6 @@
 import { Document, Schema } from 'mongoose';
 import { field } from './utils';
-
-export interface IRule extends Document {
-  _id: string;
+export interface IRule {
   kind: string;
   text: string;
   condition: string;
@@ -16,6 +14,10 @@ export interface ILink {
   github?: string;
   youtube?: string;
   website?: string;
+}
+
+export interface IRuleDocument extends IRule, Document {
+  _id: string;
 }
 
 // schema for form's rules
