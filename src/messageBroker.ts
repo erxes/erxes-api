@@ -104,7 +104,7 @@ const receiveWidgetNotification = async ({ action, data }: IWidgetMessage) => {
   }
 };
 
-export const sendRPCMessage = async (queueName, message): Promise<any> => {
+export const sendRPCMessage = async (message): Promise<any> => {
   const response = await new Promise((resolve, reject) => {
     const correlationId = uuid();
 
@@ -131,7 +131,7 @@ export const sendRPCMessage = async (queueName, message): Promise<any> => {
         { noAck: true },
       );
 
-      channel.sendToQueue(queueName, Buffer.from(JSON.stringify(message)), {
+      channel.sendToQueue('rpc_queue', Buffer.from(JSON.stringify(message)), {
         correlationId,
         replyTo: q.queue,
       });
