@@ -2,6 +2,7 @@ import { ActivityLogs, Checklists, Conformities, Tickets } from '../../../db/mod
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog } from '../../utils';
@@ -12,6 +13,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
+import { gatherStageNames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
@@ -24,14 +26,16 @@ const ticketMutations = {
   async ticketsAdd(_root, doc: ITicket, { user }: IContext) {
     doc.watchedUserIds = [user._id];
 
-    const ticket = await Tickets.createTicket({
+    const extendedDoc = {
       ...doc,
       modifiedBy: user._id,
       userId: user._id,
-    });
+    };
+
+    const ticket = await Tickets.createTicket(extendedDoc);
 
     await createConformity({
-      mainType: 'ticket',
+      mainType: MODULE_NAMES.TICKET,
       mainTypeId: ticket._id,
       customerIds: doc.customerIds,
       companyIds: doc.companyIds,
@@ -43,15 +47,29 @@ const ticketMutations = {
       type: NOTIFICATION_TYPES.TICKET_ADD,
       action: `invited you to the`,
       content: `'${ticket.name}'.`,
-      contentType: 'ticket',
+      contentType: MODULE_NAMES.TICKET,
+    });
+
+    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(ticket);
+
+    extraDesc = await gatherStageNames({
+      idFields: [doc.stageId],
+      foreignKey: 'stageId',
+      prevList: extraDesc,
     });
 
     await putCreateLog(
       {
-        type: 'ticket',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.TICKET,
+        newData: JSON.stringify({
+          ...extendedDoc,
+          order: ticket.order,
+          createdAt: ticket.createdAt,
+          modifiedAt: ticket.modifiedAt,
+        }),
         object: ticket,
-        description: `${ticket.name} has been created`,
+        description: `"${ticket.name}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -77,7 +95,7 @@ const ticketMutations = {
       item: updatedTicket,
       user,
       type: NOTIFICATION_TYPES.TICKET_EDIT,
-      contentType: 'ticket',
+      contentType: MODULE_NAMES.TICKET,
     };
 
     if (doc.assignedUserIds) {
@@ -108,7 +126,7 @@ const ticketMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(user._id, ticket, 'ticket', destinationStageId);
+    const { content, action } = await itemsChange(user._id, ticket, MODULE_NAMES.TICKET, destinationStageId);
 
     await sendNotifications({
       item: ticket,
@@ -116,7 +134,7 @@ const ticketMutations = {
       type: NOTIFICATION_TYPES.TICKET_CHANGE,
       action,
       content,
-      contentType: 'ticket',
+      contentType: MODULE_NAMES.TICKET,
     });
 
     return ticket;
@@ -141,11 +159,11 @@ const ticketMutations = {
       type: NOTIFICATION_TYPES.TICKET_DELETE,
       action: `deleted ticket:`,
       content: `'${ticket.name}'`,
-      contentType: 'ticket',
+      contentType: MODULE_NAMES.TICKET,
     });
 
-    await Conformities.removeConformity({ mainType: 'ticket', mainTypeId: ticket._id });
-    await Checklists.removeChecklists('ticket', ticket._id);
+    await Conformities.removeConformity({ mainType: MODULE_NAMES.TICKET, mainTypeId: ticket._id });
+    await Checklists.removeChecklists(MODULE_NAMES.TICKET, ticket._id);
     await ActivityLogs.removeActivityLog(ticket._id);
 
     return ticket.remove();

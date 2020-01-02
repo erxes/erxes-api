@@ -23,6 +23,7 @@ import { pipelineTemplateSchema, stageSchema } from '../../../db/models/definiti
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
 import { tagSchema } from '../../../db/models/definitions/tags';
 import { taskSchema } from '../../../db/models/definitions/tasks';
+import { ticketSchema } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { fetchLogs, ILogQueryParams } from '../../utils';
@@ -157,6 +158,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.INTEGRATION,
     schemas: [calloutSchema, integrationSchema, leadDataSchema, ruleSchema],
+  },
+  {
+    name: MODULE_NAMES.TICKET,
+    schemas: [ticketSchema, attachmentSchema],
   },
 ];
 
