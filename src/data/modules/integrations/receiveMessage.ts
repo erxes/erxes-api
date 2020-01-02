@@ -59,7 +59,12 @@ export const receiveRpcMessage = async msg => {
 
   if (action === 'create-or-update-conversation') {
     const { conversationId, content, owner } = doc;
-    const user = await Users.findOne({ 'details.operatorPhone': owner || '' });
+
+    let user;
+
+    if (owner) {
+      user = await Users.findOne({ 'details.operatorPhone': owner });
+    }
 
     const assignedUserId = user ? user._id : null;
 
