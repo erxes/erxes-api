@@ -16,6 +16,7 @@ import {
   PipelineLabels,
   ProductCategories,
   Products,
+  Segments,
   Stages,
   Tags,
   Tasks,
@@ -324,6 +325,22 @@ export const gatherUsernamesOfBoardItem = async (
   }
 
   return list;
+};
+
+export const gatherSegmentNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: Segments,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['name'],
+  });
 };
 
 /**

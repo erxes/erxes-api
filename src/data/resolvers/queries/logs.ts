@@ -21,6 +21,7 @@ import { permissionSchema, userGroupSchema } from '../../../db/models/definition
 import { pipelineLabelSchema } from '../../../db/models/definitions/pipelineLabels';
 import { pipelineTemplateSchema, stageSchema } from '../../../db/models/definitions/pipelineTemplates';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
+import { conditionSchema, segmentSchema } from '../../../db/models/definitions/segments';
 import { tagSchema } from '../../../db/models/definitions/tags';
 import { taskSchema } from '../../../db/models/definitions/tasks';
 import { ticketSchema } from '../../../db/models/definitions/tickets';
@@ -162,6 +163,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.TICKET,
     schemas: [ticketSchema, attachmentSchema],
+  },
+  {
+    name: MODULE_NAMES.SEGMENT,
+    schemas: [conditionSchema, segmentSchema],
   },
 ];
 

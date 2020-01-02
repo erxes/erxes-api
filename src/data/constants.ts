@@ -273,4 +273,5 @@ export const MODULE_NAMES = {
   PIPELINE_TEMPLATE: 'pipelineTemplate',
   GROWTH_HACK: 'growthHack',
   INTEGRATION: 'integration',
+  SEGMENT: 'segment',
 };
