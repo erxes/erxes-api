@@ -24,15 +24,15 @@ const ruleSchema = new Schema(
     _id: field({ type: String }),
 
     // browserLanguage, currentUrl, etc ...
-    kind: field({ type: String }),
+    kind: field({ type: String, label: 'Kind' }),
 
     // Browser language, Current url etc ...
-    text: field({ type: String }),
+    text: field({ type: String, label: 'Text' }),
 
     // is, isNot, startsWith
-    condition: field({ type: String }),
+    condition: field({ type: String, label: 'Condition' }),
 
-    value: field({ type: String }),
+    value: field({ type: String, label: 'Value' }),
   },
   { _id: false },
 );

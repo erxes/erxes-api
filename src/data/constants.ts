@@ -272,4 +272,5 @@ export const MODULE_NAMES = {
   PIPELINE_LABEL: 'pipelineLabel',
   PIPELINE_TEMPLATE: 'pipelineTemplate',
   GROWTH_HACK: 'growthHack',
+  INTEGRATION: 'integration',
 };

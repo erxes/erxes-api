@@ -2,9 +2,11 @@ import { Customers, EmailDeliveries, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IExternalIntegrationParams } from '../../../db/models/Integrations';
 import { debugExternalApi } from '../../../debuggers';
+import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { gatherBrandNames, gatherFormNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IEditIntegration extends IIntegration {
   _id: string;
@@ -12,17 +14,44 @@ interface IEditIntegration extends IIntegration {
 
 const integrationMutations = {
   /**
-   * Create a new messenger integration
+   * Creates a new messenger integration
    */
   async integrationsCreateMessengerIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
+    let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
+
+    if (doc.brandId) {
+      extraDesc = await gatherBrandNames({
+        idFields: [doc.brandId],
+        foreignKey: 'brandId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (doc.tagIds && doc.tagIds.length > 0) {
+      extraDesc = await gatherTagNames({
+        idFields: doc.tagIds,
+        foreignKey: 'tagIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (doc.formId) {
+      extraDesc = await gatherFormNames({
+        idFields: [doc.formId],
+        foreignKey: 'formId',
+        prevList: extraDesc,
+      });
+    }
+
     await putCreateLog(
       {
-        type: 'messengerIntegration',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.INTEGRATION,
+        newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
         object: integration,
-        description: `${integration.name} has been created`,
+        description: `"${integration.name}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -31,18 +60,56 @@ const integrationMutations = {
   },
 
   /**
-   * Update messenger integration
+   * Updates a messenger integration
    */
   async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditIntegration, { user }: IContext) {
     const integration = await Integrations.getIntegration(_id);
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
+    const brandIds: string[] = [];
+
+    if (integration.brandId) {
+      brandIds.push(integration.brandId);
+    }
+
+    if (fields.brandId && fields.brandId !== integration.brandId) {
+      brandIds.push(fields.brandId);
+    }
+
+    let extraDesc: LogDesc[] = await gatherBrandNames({
+      idFields: brandIds,
+      foreignKey: 'brandId',
+    });
+
+    extraDesc = await gatherUsernames({
+      idFields: [integration.createdUserId],
+      foreignKey: 'createdUserId',
+      prevList: extraDesc,
+    });
+
+    if (integration.tagIds && integration.tagIds.length > 0) {
+      extraDesc = await gatherTagNames({
+        idFields: integration.tagIds,
+        foreignKey: 'tagIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (integration.formId) {
+      extraDesc = await gatherFormNames({
+        idFields: [integration.formId],
+        foreignKey: 'formId',
+        prevList: extraDesc,
+      });
+    }
+
     await putUpdateLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: integration,
         newData: JSON.stringify(fields),
-        description: `${integration.name} has been edited`,
+        description: `"${integration.name}" has been edited`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -70,12 +137,31 @@ const integrationMutations = {
   async integrationsCreateLeadIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createLeadIntegration(doc, user._id);
 
+    let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
+
+    if (doc.brandId) {
+      extraDesc = await gatherBrandNames({
+        idFields: [doc.brandId],
+        foreignKey: 'brandId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (doc.formId) {
+      extraDesc = await gatherFormNames({
+        idFields: [doc.formId],
+        foreignKey: 'formId',
+        prevList: extraDesc,
+      });
+    }
+
     await putCreateLog(
       {
-        type: 'leadIntegration',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.INTEGRATION,
+        newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
         object: integration,
-        description: `${integration.name} has been created`,
+        description: `"${integration.name}" has been created`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -122,12 +208,21 @@ const integrationMutations = {
         data: data ? JSON.stringify(data) : '',
       });
 
+      let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
+
+      extraDesc = await gatherBrandNames({
+        idFields: [doc.brandId],
+        foreignKey: 'brandId',
+        prevList: extraDesc,
+      });
+
       await putCreateLog(
         {
-          type: `${kind}Integration`,
-          newData: JSON.stringify(doc),
+          type: MODULE_NAMES.INTEGRATION,
+          newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
           object: integration,
-          description: `${integration.name} has been created`,
+          description: `"${integration.name}" has been created`,
+          extraDesc: JSON.stringify(extraDesc),
         },
         user,
       );
@@ -144,12 +239,28 @@ const integrationMutations = {
 
     const updated = Integrations.updateBasicInfo(_id, { name, brandId });
 
+    const brandIds: string[] = [];
+
+    if (integration.brandId) {
+      brandIds.push(integration.brandId);
+    }
+
+    if (brandId !== integration.brandId) {
+      brandIds.push(brandId);
+    }
+
+    const extraDesc: LogDesc[] = await gatherBrandNames({
+      idFields: brandIds,
+      foreignKey: 'brandId',
+    });
+
     await putUpdateLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: { name: integration.name, brandId: integration.brandId },
         newData: JSON.stringify({ name, brandId }),
-        description: `${integration.name} has been edited`,
+        description: `"${integration.name}" has been edited`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -172,7 +283,7 @@ const integrationMutations = {
   },
 
   /**
-   * Delete an integration
+   * Deletes an integration
    */
   async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
     const integration = await Integrations.getIntegration(_id);
@@ -195,11 +306,41 @@ const integrationMutations = {
       await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }
 
+    let extraDesc: LogDesc[] = await gatherUsernames({
+      idFields: [integration.createdUserId],
+      foreignKey: 'createdUserId',
+    });
+
+    if (integration.brandId) {
+      extraDesc = await gatherBrandNames({
+        idFields: [integration.brandId],
+        foreignKey: 'brandId',
+        prevList: extraDesc,
+      });
+    }
+
+    if (integration.tagIds && integration.tagIds.length > 0) {
+      extraDesc = await gatherTagNames({
+        idFields: integration.tagIds,
+        foreignKey: 'tagIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (integration.formId) {
+      extraDesc = await gatherFormNames({
+        idFields: [integration.formId],
+        foreignKey: 'formId',
+        prevList: extraDesc,
+      });
+    }
+
     await putDeleteLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: integration,
-        description: `${integration.name} has been removed`,
+        description: `"${integration.name}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );
@@ -255,12 +396,13 @@ const integrationMutations = {
 
   async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {
     const integration = await Integrations.getIntegration(_id);
+
     await Integrations.updateOne({ _id }, { $set: { isActive: false } });
 
     await putUpdateLog(
       {
         type: 'integration',
-        object: integration,
+        object: { isActive: integration.isActive },
         newData: JSON.stringify({ isActive: false }),
         description: `Integration "${integration.name}" has been archived.`,
       },

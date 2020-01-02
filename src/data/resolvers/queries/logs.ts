@@ -2,6 +2,7 @@ import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/model
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
+import { ruleSchema } from '../../../db/models/definitions/common';
 import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
 import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
 import {
@@ -13,6 +14,7 @@ import {
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
 import { growthHackSchema } from '../../../db/models/definitions/growthHacks';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
+import { calloutSchema, integrationSchema, leadDataSchema } from '../../../db/models/definitions/integrations';
 import { internalNoteSchema } from '../../../db/models/definitions/internalNotes';
 import { articleSchema, categorySchema, topicSchema } from '../../../db/models/definitions/knowledgebase';
 import { permissionSchema, userGroupSchema } from '../../../db/models/definitions/permissions';
@@ -151,6 +153,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.GROWTH_HACK,
     schemas: [growthHackSchema, attachmentSchema],
+  },
+  {
+    name: MODULE_NAMES.INTEGRATION,
+    schemas: [calloutSchema, integrationSchema, leadDataSchema, ruleSchema],
   },
 ];
 
