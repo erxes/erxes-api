@@ -274,4 +274,5 @@ export const MODULE_NAMES = {
   GROWTH_HACK: 'growthHack',
   INTEGRATION: 'integration',
   SEGMENT: 'segment',
+  ENGAGE: 'engage',
 };

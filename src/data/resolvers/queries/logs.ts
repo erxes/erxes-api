@@ -12,6 +12,12 @@ import {
   productSchema,
 } from '../../../db/models/definitions/deals';
 import { emailTemplateSchema } from '../../../db/models/definitions/emailTemplates';
+import {
+  emailSchema,
+  engageMessageSchema,
+  messengerSchema,
+  scheduleDateSchema,
+} from '../../../db/models/definitions/engages';
 import { growthHackSchema } from '../../../db/models/definitions/growthHacks';
 import { importHistorySchema } from '../../../db/models/definitions/importHistory';
 import { calloutSchema, integrationSchema, leadDataSchema } from '../../../db/models/definitions/integrations';
@@ -167,6 +173,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.SEGMENT,
     schemas: [conditionSchema, segmentSchema],
+  },
+  {
+    name: MODULE_NAMES.ENGAGE,
+    schemas: [engageMessageSchema, emailSchema, messengerSchema, scheduleDateSchema],
   },
 ];
 
