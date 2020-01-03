@@ -13,6 +13,7 @@ import {
   Integrations,
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
+  KnowledgeBaseTopics,
   PipelineLabels,
   ProductCategories,
   Products,
@@ -231,6 +232,22 @@ export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<Log
 
   return gatherNames({
     collection: KnowledgeBaseCategories,
+    idFields,
+    foreignKey,
+    prevList,
+    nameFields: ['title'],
+  });
+};
+
+export const gatherKbTopicNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+  const { idFields, foreignKey, prevList } = params;
+
+  if (!(idFields && foreignKey)) {
+    return [];
+  }
+
+  return gatherNames({
+    collection: KnowledgeBaseTopics,
     idFields,
     foreignKey,
     prevList,

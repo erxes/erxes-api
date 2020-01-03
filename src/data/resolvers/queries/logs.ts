@@ -27,6 +27,7 @@ import { permissionSchema, userGroupSchema } from '../../../db/models/definition
 import { pipelineLabelSchema } from '../../../db/models/definitions/pipelineLabels';
 import { pipelineTemplateSchema, stageSchema } from '../../../db/models/definitions/pipelineTemplates';
 import { responseTemplateSchema } from '../../../db/models/definitions/responseTemplates';
+import { scriptSchema } from '../../../db/models/definitions/scripts';
 import { conditionSchema, segmentSchema } from '../../../db/models/definitions/segments';
 import { tagSchema } from '../../../db/models/definitions/tags';
 import { taskSchema } from '../../../db/models/definitions/tasks';
@@ -177,6 +178,10 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   {
     name: MODULE_NAMES.ENGAGE,
     schemas: [engageMessageSchema, emailSchema, messengerSchema, scheduleDateSchema],
+  },
+  {
+    name: MODULE_NAMES.SCRIPT,
+    schemas: [scriptSchema],
   },
 ];
 

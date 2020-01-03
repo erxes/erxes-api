@@ -275,4 +275,5 @@ export const MODULE_NAMES = {
   INTEGRATION: 'integration',
   SEGMENT: 'segment',
   ENGAGE: 'engage',
+  SCRIPT: 'script',
 };
