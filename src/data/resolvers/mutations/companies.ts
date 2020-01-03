@@ -34,8 +34,6 @@ const companyMutations = {
         foreignKey: 'ownerId',
         prevList: extraDesc,
       });
-    } else {
-      extraDesc.push({ ownerId: user._id, name: user.username || user.email });
     }
 
     await putCreateLog(

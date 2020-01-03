@@ -20,7 +20,7 @@ describe('Checklists mutations', () => {
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({});
-    _checklist = await checklistFactory({});
+    _checklist = await checklistFactory({ createdUserId: _user._d });
     _checklistItem = await checklistItemFactory({ checklistId: _checklist._id });
 
     context = { user: _user };

@@ -80,10 +80,14 @@ const boardMutations = {
 
     const removed = await Boards.removeBoard(_id);
 
-    const extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [board.userId || ''],
-      foreignKey: 'userId',
-    });
+    let extraDesc: LogDesc[] = [];
+
+    if (board.userId) {
+      extraDesc = await gatherUsernames({
+        idFields: [board.userId],
+        foreignKey: 'userId',
+      });
+    }
 
     await putDeleteLog(
       {

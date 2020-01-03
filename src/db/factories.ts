@@ -355,6 +355,7 @@ interface IChecklistFactoryInput {
   contentType?: string;
   contentTypeId?: string;
   title?: string;
+  createdUserId?: string;
 }
 
 export const checklistFactory = (params: IChecklistFactoryInput) => {
@@ -362,6 +363,7 @@ export const checklistFactory = (params: IChecklistFactoryInput) => {
     contentType: params.contentType || ACTIVITY_CONTENT_TYPES.DEAL,
     contentTypeId: params.contentTypeId || faker.random.uuid().toString(),
     title: params.title || faker.random.uuid().toString(),
+    createdUserId: params.createdUserId || faker.random.uuid().toString(),
   });
 
   return checklist.save();
@@ -401,6 +403,9 @@ interface ICompanyFactoryInput {
   emails?: string[];
   primaryPhone?: string;
   primaryEmail?: string;
+  parentCompanyId?: string;
+  ownerId?: string;
+  mergedIds?: string[];
 }
 
 export const companyFactory = (params: ICompanyFactoryInput = {}) => {
@@ -420,6 +425,9 @@ export const companyFactory = (params: ICompanyFactoryInput = {}) => {
     scopeBrandIds: params.scopeBrandIds || [],
     primaryPhone: params.primaryPhone || '',
     primaryEmail: params.primaryEmail || '',
+    parentCompanyId: params.parentCompanyId || faker.random.uuid().toString(),
+    ownerId: params.ownerId || faker.random.uuid().toString(),
+    mergedIds: params.mergedIds || [],
   };
 
   const searchText = Companies.fillSearchText({ ...companyDoc });

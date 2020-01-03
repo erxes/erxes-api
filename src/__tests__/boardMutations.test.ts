@@ -1,6 +1,6 @@
 import { graphqlRequest } from '../db/connection';
 import { boardFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
-import { Boards, Deals, Pipelines, Stages } from '../db/models';
+import { Boards, Deals, Pipelines, Stages, Users } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 
 import './setup.ts';
@@ -17,7 +17,9 @@ describe('Test boards mutations', () => {
     $stages: JSON,
     $type: String!
     $visibility: String!
-    $bgColor: String
+    $bgColor: String,
+    $excludeCheckUserIds: [String],
+    $memberIds: [String]
   `;
 
   const commonPipelineParams = `
@@ -26,7 +28,9 @@ describe('Test boards mutations', () => {
     stages: $stages
     type: $type
     visibility: $visibility
-    bgColor: $bgColor
+    bgColor: $bgColor,
+    excludeCheckUserIds: $excludeCheckUserIds,
+    memberIds: $memberIds
   `;
 
   beforeEach(async () => {
@@ -43,6 +47,7 @@ describe('Test boards mutations', () => {
     await Pipelines.deleteMany({});
     await Stages.deleteMany({});
     await Deals.deleteMany({});
+    await Users.deleteMany({});
   });
 
   test('Create board', async () => {
@@ -122,6 +127,9 @@ describe('Test boards mutations', () => {
   });
 
   test('Create pipeline', async () => {
+    const user1 = await userFactory();
+    const user2 = await userFactory();
+
     const args = {
       name: 'deal pipeline',
       type: 'deal',
@@ -129,6 +137,8 @@ describe('Test boards mutations', () => {
       stages: [stage.toJSON()],
       visibility: 'public',
       bgColor: 'aaa',
+      excludeCheckUserIds: [user1._id],
+      memberIds: [user2._id],
     };
 
     const mutation = `
@@ -140,6 +150,8 @@ describe('Test boards mutations', () => {
           boardId
           bgColor
           visibility
+          excludeCheckUserIds
+          memberIds
         }
       }
     `;
@@ -159,6 +171,8 @@ describe('Test boards mutations', () => {
     expect(createdPipeline.visibility).toEqual(args.visibility);
     expect(createdPipeline.boardId).toEqual(board._id);
     expect(createdPipeline.bgColor).toEqual(args.bgColor);
+    expect(createdPipeline.excludeCheckUserIds.length).toBe(1);
+    expect(createdPipeline.memberIds.length).toBe(1);
   });
 
   test('Update pipeline', async () => {
