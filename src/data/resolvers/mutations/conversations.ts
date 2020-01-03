@@ -241,7 +241,7 @@ const conversationMutations = {
       type = 'facebook';
       action = 'reply-post';
 
-      await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
+      return sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
@@ -249,7 +249,7 @@ const conversationMutations = {
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
       type = 'facebook';
-      action = 'reply-post';
+      action = 'reply-messenger';
     }
 
     // send reply to chatfuel
@@ -290,16 +290,7 @@ const conversationMutations = {
     const action = 'reply-post';
 
     try {
-      const response = await sendConversationToIntegrations(
-        type,
-        integrationId,
-        conversationId,
-        requestName,
-        doc,
-        dataSources,
-        action,
-      );
-      return debugExternalApi(response);
+      await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
     } catch (e) {
       debugExternalApi(e.message);
       throw new Error(e.message);
