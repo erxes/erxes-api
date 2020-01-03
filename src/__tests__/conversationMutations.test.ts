@@ -226,7 +226,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+    let mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
       return Promise.resolve('success');
     });
     const message = await conversationMessageFactory({ conversationId: facebookConversation._id });
@@ -245,6 +245,18 @@ describe('Conversation message mutations', () => {
     expect(response).toBeDefined();
 
     mock.restore();
+
+    mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      throw new Error();
+    });
+
+    try {
+      await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args, {
+        dataSources: {},
+      });
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
   });
 
   test('Assign conversation', async () => {
