@@ -4,7 +4,14 @@ import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherCustomerNames, gatherIntegrationNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
+import {
+  gatherBrandNames,
+  gatherCustomerNames,
+  gatherIntegrationNames,
+  gatherTagNames,
+  gatherUsernames,
+  LogDesc,
+} from './logUtils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -15,7 +22,8 @@ const customerMutations = {
    * Create new customer also adds Customer registration log
    */
   async customersAdd(_root, doc: ICustomer, { user, docModifier }: IContext) {
-    const customer = await Customers.createCustomer(docModifier(doc), user);
+    const modifiedDoc = docModifier(doc);
+    const customer = await Customers.createCustomer(modifiedDoc, user);
 
     let extraDesc: LogDesc[] = [];
 
@@ -24,14 +32,20 @@ const customerMutations = {
         idFields: [doc.ownerId],
         foreignKey: 'ownerId',
       });
-    } else {
-      extraDesc.push({ ownerId: user._id, name: user.username || user.email });
+    }
+
+    if (modifiedDoc.scopeBrandIds) {
+      extraDesc = await gatherBrandNames({
+        idFields: modifiedDoc.scopeBrandIds,
+        foreignKey: 'scopeBrandIds',
+        prevList: extraDesc,
+      });
     }
 
     await putCreateLog(
       {
         type: MODULE_NAMES.CUSTOMER,
-        newData: JSON.stringify(doc),
+        newData: JSON.stringify(modifiedDoc),
         object: customer,
         description: `"${customer.firstName}" has been created`,
         extraDesc: JSON.stringify(extraDesc),

@@ -1,4 +1,3 @@
-import * as _ from 'underscore';
 import { ActivityLogs, GrowthHacks, Stages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
@@ -39,7 +38,7 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
 
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(growthHack);
+    const extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(growthHack);
 
     // stage names
     const stage = await Stages.findOne({ _id: doc.stageId });
@@ -47,14 +46,6 @@ const growthHackMutations = {
     if (stage) {
       extraDesc.push({ stageId: stage._id, name: stage.name });
       extraDesc.push({ initialStageId: stage._id, name: stage.name });
-    }
-
-    if (doc.votedUserIds && doc.votedUserIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: doc.votedUserIds,
-        foreignKey: 'votedUserIds',
-        prevList: extraDesc,
-      });
     }
 
     await putCreateLog(
@@ -142,13 +133,6 @@ const growthHackMutations = {
     if (oldGrowthHack.votedUserIds) {
       votedUserIds = oldGrowthHack.votedUserIds;
     }
-
-    if (doc.votedUserIds) {
-      votedUserIds = votedUserIds.concat(doc.votedUserIds);
-    }
-
-    votedUserIds = _.uniq(votedUserIds);
-    votedUserIds = _.compact(votedUserIds);
 
     if (votedUserIds.length > 0) {
       extraDesc = await gatherUsernames({

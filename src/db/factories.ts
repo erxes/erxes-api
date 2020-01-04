@@ -939,7 +939,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
     amount: faker.random.objectElement(),
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
-    productsDate: params.productsData,
+    productsData: params.productsData,
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     userId: params.userId || faker.random.word(),
     watchedUserIds: params.watchedUserIds,
@@ -1034,6 +1034,7 @@ interface IGrowthHackFactoryInput {
   impact?: number;
   votedUserIds?: string[];
   labelIds?: string[];
+  initialStageId?: string;
 }
 
 export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) => {
@@ -1051,7 +1052,7 @@ export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) =>
     description: faker.random.word(),
     assignedUserIds: params.assignedUserIds || [faker.random.word()],
     hackStages: params.hackStages || [faker.random.word()],
-    votedUserIds: params.votedUserIds,
+    votedUserIds: params.votedUserIds || [faker.random.uuid().toString()],
     watchedUserIds: params.watchedUserIds,
     ease: params.ease || 0,
     impact: params.impact || 0,

@@ -1,9 +1,17 @@
 import { graphqlRequest } from '../db/connection';
-import { boardFactory, growthHackFactory, pipelineFactory, stageFactory, userFactory } from '../db/factories';
-import { Boards, GrowthHacks, Pipelines, Stages } from '../db/models';
+import {
+  boardFactory,
+  growthHackFactory,
+  pipelineFactory,
+  pipelineLabelFactory,
+  stageFactory,
+  userFactory,
+} from '../db/factories';
+import { Boards, GrowthHacks, PipelineLabels, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import { IGrowthHackDocument } from '../db/models/definitions/growthHacks';
+import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
 
 import './setup.ts';
 
@@ -12,6 +20,7 @@ describe('Test growthHacks mutations', () => {
   let pipeline: IPipelineDocument;
   let stage: IStageDocument;
   let growthHack: IGrowthHackDocument;
+  let label: IPipelineLabelDocument;
   let context;
 
   const commonGrowthHackParamDefs = `
@@ -33,7 +42,12 @@ describe('Test growthHacks mutations', () => {
     board = await boardFactory({ type: BOARD_TYPES.GROWTH_HACK });
     pipeline = await pipelineFactory({ boardId: board._id });
     stage = await stageFactory({ pipelineId: pipeline._id });
-    growthHack = await growthHackFactory({ stageId: stage._id });
+    label = await pipelineLabelFactory();
+    growthHack = await growthHackFactory({
+      initialStageId: stage._id,
+      stageId: stage._id,
+      labelIds: [label._id],
+    });
     context = { user: await userFactory({}) };
   });
 
@@ -43,6 +57,7 @@ describe('Test growthHacks mutations', () => {
     await Pipelines.deleteMany({});
     await Stages.deleteMany({});
     await GrowthHacks.deleteMany({});
+    await PipelineLabels.deleteMany({});
   });
 
   test('Create growthHack', async () => {
@@ -71,10 +86,12 @@ describe('Test growthHacks mutations', () => {
   });
 
   test('Update growthHack', async () => {
+    const stage2 = await stageFactory();
+
     const args: any = {
       _id: growthHack._id,
-      name: growthHack.name,
-      stageId: stage._id,
+      name: 'changed-name',
+      stageId: stage2._id,
     };
 
     const mutation = `
@@ -83,18 +100,20 @@ describe('Test growthHacks mutations', () => {
           _id
           name
           stageId
+          assignedUserIds
         }
       }
     `;
 
     let updatedGrowthHack = await graphqlRequest(mutation, 'growthHacksEdit', args, context);
 
-    expect(updatedGrowthHack.stageId).toEqual(stage._id);
+    expect(updatedGrowthHack.name).toEqual(args.name);
+    expect(updatedGrowthHack.stageId).toEqual(args.stageId);
 
     args.assignedUserIds = [(await userFactory())._id];
     updatedGrowthHack = await graphqlRequest(mutation, 'growthHacksEdit', args, context);
 
-    expect(updatedGrowthHack.stageId).toEqual(stage._id);
+    expect(updatedGrowthHack.assignedUserIds.length).toBe(args.assignedUserIds.length);
   });
 
   test('Change growthHack', async () => {
