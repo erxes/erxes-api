@@ -1,5 +1,6 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
+import * as sinon from 'sinon';
 import { MESSAGE_KINDS } from '../data/constants';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
@@ -26,6 +27,7 @@ import {
   Tags,
   Users,
 } from '../db/models';
+import * as messageBroker from '../messageBroker';
 
 import { EngagesAPI } from '../data/dataSources';
 import utils, { handleUnsubscription } from '../data/utils';
@@ -305,6 +307,10 @@ describe('engage message mutation tests', () => {
   });
 
   test('Engage utils send via email', async () => {
+    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     process.env.AWS_SES_ACCESS_KEY_ID = '123';
     process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
@@ -372,6 +378,8 @@ describe('engage message mutation tests', () => {
     });
 
     await engageUtils.send(emessageNotLive);
+
+    mock.restore();
   });
 
   const engageMessageAddMutation = `
@@ -412,6 +420,10 @@ describe('engage message mutation tests', () => {
   `;
 
   test('Add engage message', async () => {
+    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     process.env.AWS_SES_ACCESS_KEY_ID = '123';
     process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
@@ -447,6 +459,8 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.scheduleDate.month).toEqual('2');
     expect(engageMessage.scheduleDate.day).toEqual('14');
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
+
+    mock.restore();
   });
 
   test('Edit engage message', async () => {
