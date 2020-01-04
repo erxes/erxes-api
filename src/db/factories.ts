@@ -248,6 +248,7 @@ interface ILabelInput {
   colorCode?: string;
   pipelineId?: string;
   type?: string;
+  createdBy?: string;
 }
 
 export const pipelineLabelFactory = (params: ILabelInput = {}) => {
@@ -256,6 +257,7 @@ export const pipelineLabelFactory = (params: ILabelInput = {}) => {
     colorCode: params.colorCode || faker.random.word(),
     pipelineId: params.pipelineId || faker.random.word(),
     type: params.type || BOARD_TYPES.DEAL,
+    createdBy: params.createdBy || faker.random.uuid().toString(),
   });
 
   return pipelineLabel.save();
@@ -812,6 +814,7 @@ interface IKnowledgeBaseArticleCategoryInput {
   userId?: string;
   reactionChoices?: string[];
   status?: string;
+  modifiedBy?: string;
 }
 
 export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleCategoryInput = {}) => {
@@ -822,6 +825,7 @@ export const knowledgeBaseArticleFactory = async (params: IKnowledgeBaseArticleC
     icon: faker.random.word(),
     reactionChoices: params.reactionChoices || ['wow'],
     status: params.status || 'draft',
+    modifiedBy: params.modifiedBy,
   };
 
   return KnowledgeBaseArticles.createDoc({ ...doc, ...params }, params.userId || faker.random.word());
