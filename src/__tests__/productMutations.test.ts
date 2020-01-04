@@ -7,6 +7,7 @@ import './setup.ts';
 describe('Test products mutations', () => {
   let product;
   let productCategory;
+  let parentCategory;
 
   const commonParamDefs = `
     $name: String!,
@@ -42,8 +43,9 @@ describe('Test products mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
-    product = await productFactory({ type: 'product' });
-    productCategory = await productCategoryFactory();
+    parentCategory = await productCategoryFactory();
+    productCategory = await productCategoryFactory({ parentId: parentCategory._id });
+    product = await productFactory({ type: 'product', categoryId: productCategory._id });
   });
 
   afterEach(async () => {
@@ -85,6 +87,8 @@ describe('Test products mutations', () => {
   });
 
   test('Update product', async () => {
+    const category2 = await productCategoryFactory();
+
     const args = {
       _id: product._id,
       name: product.name,
@@ -92,6 +96,7 @@ describe('Test products mutations', () => {
       sku: product.sku,
       description: product.description,
       code: product.code,
+      categoryId: category2._id,
     };
 
     const mutation = `
@@ -156,10 +161,13 @@ describe('Test products mutations', () => {
   });
 
   test('Update product category', async () => {
+    const secondParent = await productCategoryFactory();
+
     const args = {
       _id: productCategory._id,
       name: 'updated',
       code: 'updatedCode',
+      parentId: secondParent._id,
     };
 
     const mutation = `
@@ -187,6 +195,9 @@ describe('Test products mutations', () => {
         productCategoriesRemove(_id: $_id)
       }
     `;
+
+    // remove product before the category
+    await Products.remove({ categoryId: productCategory._id });
 
     await graphqlRequest(mutation, 'productCategoriesRemove', { _id: productCategory._id });
 
