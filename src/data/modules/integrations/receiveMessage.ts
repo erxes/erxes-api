@@ -16,7 +16,7 @@ const sendSuccess = data => ({
  * Handle requests from integrations api
  */
 export const receiveRpcMessage = async msg => {
-  const { action, metaInfo, payload } = msg;
+  const { action, payload } = msg;
   const doc = JSON.parse(payload || '{}');
 
   if (action === 'get-create-update-customer') {
@@ -80,6 +80,20 @@ export const receiveRpcMessage = async msg => {
 
     return sendSuccess({ _id: conversation._id });
   }
+};
+
+/*
+ * Integrations api notification
+ */
+export const receiveIntegrationsNotification = async msg => {
+  const { action, metaInfo, payload } = msg;
+  const doc = JSON.parse(payload || '{}');
+
+  if (action === 'external-integration-entry-added') {
+    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted');
+
+    return sendSuccess({ status: 'ok' });
+  }
 
   if (action === 'create-conversation-message') {
     const message = await ConversationMessages.createMessage(doc);
@@ -111,18 +125,5 @@ export const receiveRpcMessage = async msg => {
     });
 
     return sendSuccess({ _id: message._id });
-  }
-};
-
-/*
- * Integrations api notification
- */
-export const receiveIntegrationsNotification = async msg => {
-  const { action } = msg;
-
-  if (action === 'external-integration-entry-added') {
-    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted');
-
-    return sendSuccess({ status: 'ok' });
   }
 };
