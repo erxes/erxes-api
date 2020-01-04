@@ -20,7 +20,7 @@ const importHistoryMutations = {
         path: '/import-remove',
         method: 'POST',
         body: {
-          targetIds: JSON.stringify(importHistory.ids || []),
+          targetIds: JSON.stringify(importHistory.ids),
           contentType: importHistory.contentType,
           importHistoryId: importHistory._id,
         },

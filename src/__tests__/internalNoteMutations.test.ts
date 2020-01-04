@@ -1,8 +1,10 @@
+import { MODULE_NAMES } from '../data/constants';
 import { graphqlRequest } from '../db/connection';
 import {
   companyFactory,
   customerFactory,
   dealFactory,
+  growthHackFactory,
   internalNoteFactory,
   notificationConfigurationFactory,
   taskFactory,
@@ -10,7 +12,6 @@ import {
   userFactory,
 } from '../db/factories';
 import { InternalNotes, Notifications, Users } from '../db/models';
-
 import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
@@ -184,8 +185,19 @@ describe('InternalNotes mutations', () => {
   });
 
   test('Remove internal note', async () => {
-    const customer = await customerFactory();
-    const note = await internalNoteFactory({ contentType: 'customer', contentTypeId: customer._id });
+    // test different type of notes
+    const company = await companyFactory();
+    const deal = await dealFactory();
+    const task = await taskFactory();
+    const ticket = await ticketFactory();
+    const hack = await growthHackFactory();
+
+    const note1 = await internalNoteFactory({ contentType: MODULE_NAMES.DEAL, contentTypeId: deal._id });
+    const note2 = await internalNoteFactory({ contentType: MODULE_NAMES.COMPANY, contentTypeId: company._id });
+    const note3 = await internalNoteFactory({ contentType: MODULE_NAMES.TASK, contentTypeId: task._id });
+    const note4 = await internalNoteFactory({ contentType: MODULE_NAMES.TICKET, contentTypeId: ticket._id });
+    const note5 = await internalNoteFactory({ contentType: MODULE_NAMES.GROWTH_HACK, contentTypeId: hack._id });
+    const note6 = await internalNoteFactory({ contentType: MODULE_NAMES.USER, contentTypeId: _user._id });
 
     const mutation = `
       mutation internalNotesRemove($_id: String!) {
@@ -195,8 +207,18 @@ describe('InternalNotes mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note1._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note2._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note3._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note4._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note5._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note6._id }, context);
 
-    expect(await InternalNotes.findOne({ _id: note._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note1._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note2._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note3._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note4._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note5._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note6._id })).toBe(null);
   });
 });

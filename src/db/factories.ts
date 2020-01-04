@@ -639,7 +639,7 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     name: params.name || faker.random.word(),
     kind,
     languageCode: params.languageCode,
-    brandId: params.brandId,
+    brandId: params.brandId || faker.random.uuid().toString(),
     formId: params.formId,
     messengerData: params.messengerData,
     leadData: params.leadData ? params.leadData : { thankContent: 'thankContent' },

@@ -30,22 +30,6 @@ const integrationMutations = {
       });
     }
 
-    if (doc.tagIds && doc.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: doc.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.formId) {
-      extraDesc = await gatherFormNames({
-        idFields: [doc.formId],
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
-
     await putCreateLog(
       {
         type: MODULE_NAMES.INTEGRATION,

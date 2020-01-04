@@ -1,4 +1,15 @@
-import { Companies, Customers, Deals, InternalNotes, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
+import {
+  Companies,
+  Customers,
+  Deals,
+  GrowthHacks,
+  InternalNotes,
+  Pipelines,
+  Stages,
+  Tasks,
+  Tickets,
+  Users,
+} from '../../../db/models';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
@@ -35,49 +46,60 @@ const sendNotificationOfItems = async (
 const findContentItemName = async (contentType: string, contentTypeId: string) => {
   let name: string = '';
 
-  switch (contentType) {
-    case MODULE_NAMES.DEAL:
-      const deal = await Deals.getDeal(contentTypeId);
+  if (contentType === MODULE_NAMES.DEAL) {
+    const deal = await Deals.getDeal(contentTypeId);
 
-      if (deal && deal.name) {
-        name = deal.name;
-      }
+    if (deal && deal.name) {
+      name = deal.name;
+    }
+  }
 
-      break;
-    case MODULE_NAMES.CUSTOMER:
-      const customer = await Customers.getCustomer(contentTypeId);
+  if (contentType === MODULE_NAMES.CUSTOMER) {
+    const customer = await Customers.getCustomer(contentTypeId);
 
-      if (customer) {
-        name = Customers.getCustomerName(customer);
-      }
+    if (customer) {
+      name = Customers.getCustomerName(customer);
+    }
+  }
 
-      break;
-    case MODULE_NAMES.COMPANY:
-      const company = await Companies.getCompany(contentTypeId);
+  if (contentType === MODULE_NAMES.COMPANY) {
+    const company = await Companies.getCompany(contentTypeId);
 
-      if (company) {
-        name = Companies.getCompanyName(company);
-      }
+    if (company) {
+      name = Companies.getCompanyName(company);
+    }
+  }
 
-      break;
-    case MODULE_NAMES.TASK:
-      const task = await Tasks.getTask(contentTypeId);
+  if (contentType === MODULE_NAMES.TASK) {
+    const task = await Tasks.getTask(contentTypeId);
 
-      if (task && task.name) {
-        name = task.name;
-      }
+    if (task && task.name) {
+      name = task.name;
+    }
+  }
 
-      break;
-    case MODULE_NAMES.TICKET:
-      const ticket = await Tickets.getTicket(contentTypeId);
+  if (contentType === MODULE_NAMES.TICKET) {
+    const ticket = await Tickets.getTicket(contentTypeId);
 
-      if (ticket && ticket.name) {
-        name = ticket.name;
-      }
+    if (ticket && ticket.name) {
+      name = ticket.name;
+    }
+  }
 
-      break;
-    default:
-      break;
+  if (contentType === MODULE_NAMES.GROWTH_HACK) {
+    const gh = await GrowthHacks.getGrowthHack(contentTypeId);
+
+    if (gh && gh.name) {
+      name = gh.name;
+    }
+  }
+
+  if (contentType === MODULE_NAMES.USER) {
+    const user = await Users.getUser(contentTypeId);
+
+    if (user) {
+      name = user.username || user.email || '';
+    }
   }
 
   return name;
