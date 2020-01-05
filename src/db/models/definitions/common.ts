@@ -39,4 +39,16 @@ const ruleSchema = new Schema(
   { _id: false },
 );
 
-export { ruleSchema };
+const linkSchema = new Schema(
+  {
+    linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
+    twitter: field({ type: String, optional: true, label: 'Twitter' }),
+    facebook: field({ type: String, optional: true, label: 'Facebook' }),
+    github: field({ type: String, optional: true, label: 'Github' }),
+    youtube: field({ type: String, optional: true, label: 'Youtube' }),
+    website: field({ type: String, optional: true, label: 'Website' }),
+  },
+  { _id: false },
+);
+
+export { linkSchema, ruleSchema };

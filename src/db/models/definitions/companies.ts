@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
 
-import { ILink } from './common';
+import { ILink, linkSchema } from './common';
 import {
   COMPANY_BUSINESS_TYPES,
   COMPANY_INDUSTRY_TYPES,
@@ -53,18 +53,6 @@ export interface ICompanyDocument extends ICompany, Document {
   modifiedAt: Date;
   searchText: string;
 }
-
-export const linkSchema = new Schema(
-  {
-    linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
-    twitter: field({ type: String, optional: true, label: 'Twitter' }),
-    facebook: field({ type: String, optional: true, label: 'Facebook' }),
-    github: field({ type: String, optional: true, label: 'Github' }),
-    youtube: field({ type: String, optional: true, label: 'Youtube' }),
-    website: field({ type: String, optional: true, label: 'Website' }),
-  },
-  { _id: false },
-);
 
 export const companySchema = schemaWrapper(
   new Schema({

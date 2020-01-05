@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
 
-import { ILink } from './common';
+import { ILink, linkSchema } from './common';
 import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
 
 import { field, schemaWrapper } from './utils';
@@ -99,7 +99,7 @@ export const locationSchema = new Schema(
   { _id: false },
 );
 
-const visitorContactSchema = new Schema(
+export const visitorContactSchema = new Schema(
   {
     email: field({ type: String, label: 'Email' }),
     phone: field({ type: String, label: 'Phone' }),
@@ -110,7 +110,7 @@ const visitorContactSchema = new Schema(
 /*
  * messenger schema
  */
-const messengerSchema = new Schema(
+export const messengerSchema = new Schema(
   {
     lastSeenAt: field({
       type: Date,
@@ -129,18 +129,6 @@ const messengerSchema = new Schema(
       optional: true,
       label: 'Custom data',
     }),
-  },
-  { _id: false },
-);
-
-const linkSchema = new Schema(
-  {
-    linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
-    twitter: field({ type: String, optional: true, label: 'Twitter' }),
-    facebook: field({ type: String, optional: true, label: 'Facebook' }),
-    github: field({ type: String, optional: true, label: 'Github' }),
-    youtube: field({ type: String, optional: true, label: 'Youtube' }),
-    website: field({ type: String, optional: true, label: 'Website' }),
   },
   { _id: false },
 );
