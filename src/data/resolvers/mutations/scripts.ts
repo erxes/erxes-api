@@ -4,7 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, gatherIntegrationNames, gatherKbTopicNames, LogDesc } from './logUtils';
+import { gatherIntegrationNames, gatherKbTopicNames, LogDesc } from './logUtils';
 
 interface IScriptsEdit extends IScript {
   _id: string;
@@ -43,14 +43,6 @@ const scriptMutations = {
       });
     }
 
-    if (modifiedDoc.scopeBrandIds && modifiedDoc.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: modifiedDoc.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-        prevList: extraDesc,
-      });
-    }
-
     await putCreateLog(
       {
         type: MODULE_NAMES.SCRIPT,
@@ -75,13 +67,6 @@ const scriptMutations = {
     const { messengerId, kbTopicId, leadIds } = fields;
 
     let extraDesc: LogDesc[] = [];
-
-    if (script.scopeBrandIds && script.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: script.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-      });
-    }
 
     // gather unique messenger ids
     const msngrIds: string[] = [];
@@ -178,14 +163,6 @@ const scriptMutations = {
       extraDesc = await gatherIntegrationNames({
         idFields: script.leadIds,
         foreignKey: 'leadIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (script.scopeBrandIds && script.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: script.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
         prevList: extraDesc,
       });
     }

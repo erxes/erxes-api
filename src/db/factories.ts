@@ -775,13 +775,14 @@ interface IKnowledgeBaseTopicFactoryInput {
   userId?: string;
   color?: string;
   categoryIds?: string[];
+  brandId?: string;
 }
 
 export const knowledgeBaseTopicFactory = async (params: IKnowledgeBaseTopicFactoryInput = {}) => {
   const doc = {
     title: faker.random.word(),
     description: faker.lorem.sentence,
-    brandId: faker.random.word(),
+    brandId: params.brandId || faker.random.word(),
     color: params.color,
   };
 
