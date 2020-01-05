@@ -51,10 +51,6 @@
       "description": "REDIS_PASSWORD",
       "value": ""
     },
-    "RABBITMQ_HOST": {
-      "description": "RABBITMQ_HOST",
-      "value": ""
-    },
     "COMPANY_EMAIL_FROM": "noreply@erxes.io",
     "DEFAULT_EMAIL_SERVICE": "noreply@erxes.io",
     "MAIL_SERVICE": "",
@@ -75,17 +71,13 @@
   },
   "addons": [
     {
-      "plan": "mongolab:sandbox",
-      "as": "MONGO"
-    },
-    {
-      "plan": "heroku-redis:hobby-dev",
-      "as": "REDIS"
+      "plan": "rabbitmq",
+      "as": "RABBITMQ"
     }
   ],
   "buildpacks": [
     {
-      "url": "https://github.com/batnasan/create-react-app-buildpack"
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs"
     }
   ]
 }
