@@ -140,6 +140,22 @@ const customerMutations = {
         });
       }
 
+      if (customer.tagIds && customer.tagIds.length > 0) {
+        extraDesc = await gatherTagNames({
+          idFields: customer.tagIds,
+          foreignKey: 'tagIds',
+          prevList: extraDesc,
+        });
+      }
+
+      if (customer.mergedIds) {
+        extraDesc = await gatherCustomerNames({
+          idFields: customer.mergedIds,
+          foreignKey: 'mergedIds',
+          prevList: extraDesc,
+        });
+      }
+
       await putDeleteLog(
         {
           type: MODULE_NAMES.CUSTOMER,

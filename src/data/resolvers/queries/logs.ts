@@ -2,9 +2,14 @@ import { attachmentSchema, boardSchema, pipelineSchema } from '../../../db/model
 import { brandEmailConfigSchema, brandSchema } from '../../../db/models/definitions/brands';
 import { channelSchema } from '../../../db/models/definitions/channels';
 import { checklistItemSchema, checklistSchema } from '../../../db/models/definitions/checklists';
-import { ruleSchema } from '../../../db/models/definitions/common';
-import { companySchema, linkSchema } from '../../../db/models/definitions/companies';
-import { customerSchema, locationSchema } from '../../../db/models/definitions/customers';
+import { linkSchema, ruleSchema } from '../../../db/models/definitions/common';
+import { companySchema } from '../../../db/models/definitions/companies';
+import {
+  customerSchema,
+  locationSchema,
+  messengerSchema as customerMessengerSchema,
+  visitorContactSchema,
+} from '../../../db/models/definitions/customers';
 import {
   dealSchema,
   productCategorySchema,
@@ -93,7 +98,7 @@ const LOG_MAPPINGS: ISchemaMap[] = [
   },
   {
     name: MODULE_NAMES.CUSTOMER,
-    schemas: [customerSchema, locationSchema],
+    schemas: [customerMessengerSchema, customerSchema, linkSchema, locationSchema, visitorContactSchema],
   },
   {
     name: MODULE_NAMES.DEAL,
