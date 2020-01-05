@@ -1,0 +1,91 @@
+{
+  "name": "Erxes API on Heroku",
+  "description": "Open source growth marketing platform",
+  "keywords": ["Marketing", "sales", "customer engagement", "customer support", "CRM"],
+  "website": "https://erxes.io",
+  "repository": "https://github.com/batnasan/erxes-api",
+  "logo": "https://erxes.io/static/images/logo/logo_2x.png",
+  "success_url": "/",
+  "env": {
+    "PORT": {
+      "description": "A port number that erxes api will be running on",
+      "value": "3300"
+    },
+    "HTTPS": true,
+    "PUBSUB_TYPE": "REDIS",
+    "UPLOAD_SERVICE_TYPE": "AWS",
+    "FILE_SYSTEM_PUBLIC": false,
+    "DOMAIN": {
+      "description": "Erxes API URL",
+      "value": "https://ERXESAPIAPPNAME.herokuapp.com"
+    },
+    "MAIN_APP_DOMAIN": {
+      "description": "Erxes URL",
+      "value": "https://ERXESAPPNAME.herokuapp.com"
+    },
+    "WIDGETS_DOMAIN": {
+      "description": "Erxes Widget URL",
+      "value": "https://ERXESWIDGETAPPNAME.herokuapp.com"
+    },
+    "INTEGRATIONS_API_DOMAIN": {
+      "description": "Erxes Integrations API URL",
+      "value": "https://ERXESINTEGRATIONSAPINAME.herokuapp.com"
+    },
+    "WIDGETS_API_DOMAIN": {
+      "description": "Erxes Widgets API URL",
+      "value": "https://ERXESWIDGETAPIAPPNAME.herokuapp.com"
+    },
+    "MONGO_URL": {
+      "description": "MONGO_URL",
+      "value": ""
+    },
+    "REDIS_HOST": {
+      "description": "REDIS HOST",
+      "value": ""
+    },
+    "REDIS_PORT": {
+      "description": "REDIS PORT",
+      "value": "28229"
+    },
+    "REDIS_PASSWORD": {
+      "description": "REDIS_PASSWORD",
+      "value": ""
+    },
+    "RABBITMQ_HOST": {
+      "description": "RABBITMQ_HOST",
+      "value": ""
+    },
+    "COMPANY_EMAIL_FROM": "noreply@erxes.io",
+    "DEFAULT_EMAIL_SERVICE": "noreply@erxes.io",
+    "MAIL_SERVICE": "",
+    "MAIL_PORT": "",
+    "MAIL_USER": "",
+    "MAIL_PASS": "",
+    "MAIL_HOST": "",
+    "AWS_ACCESS_KEY_ID": "",
+    "AWS_SECRET_ACCESS_KEY": "",
+    "AWS_BUCKET": "",
+    "AWS_PREFIX": "",
+    "AWS_SES_ACCESS_KEY_ID": "",
+    "AWS_SES_SECRET_ACCESS_KEY": "",
+    "AWS_REGION": "",
+    "AWS_SES_CONFIG_SET": "",
+    "USE_BRAND_RESTRICTIONS": false,
+    "UPLOAD_FILE_TYPES": "image/png,image/jpeg,image/jpg,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,"
+  },
+  "addons": [
+    {
+      "plan": "mongolab:sandbox",
+      "as": "MONGO"
+    },
+    {
+      "plan": "heroku-redis:hobby-dev",
+      "as": "REDIS"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/batnasan/create-react-app-buildpack"
+    }
+  ]
+}
