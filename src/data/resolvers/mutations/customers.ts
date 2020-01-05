@@ -4,14 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import {
-  gatherBrandNames,
-  gatherCustomerNames,
-  gatherIntegrationNames,
-  gatherTagNames,
-  gatherUsernames,
-  LogDesc,
-} from './logUtils';
+import { gatherCustomerNames, gatherIntegrationNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -31,14 +24,6 @@ const customerMutations = {
       extraDesc = await gatherUsernames({
         idFields: [doc.ownerId],
         foreignKey: 'ownerId',
-      });
-    }
-
-    if (modifiedDoc.scopeBrandIds) {
-      extraDesc = await gatherBrandNames({
-        idFields: modifiedDoc.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-        prevList: extraDesc,
       });
     }
 

@@ -50,10 +50,6 @@ type BoardItemDocument = IDealDocument | ITaskDocument | ITicketDocument | IGrow
 export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: Users,
     idFields,
@@ -65,10 +61,6 @@ export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]
 
 export const gatherCompanyNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Companies,
@@ -82,10 +74,6 @@ export const gatherCompanyNames = async (params: ILogNameParams): Promise<LogDes
 export const gatherCustomerNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: Customers,
     idFields,
@@ -97,10 +85,6 @@ export const gatherCustomerNames = async (params: ILogNameParams): Promise<LogDe
 
 export const gatherIntegrationNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Integrations,
@@ -114,10 +98,6 @@ export const gatherIntegrationNames = async (params: ILogNameParams): Promise<Lo
 export const gatherTagNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: Tags,
     idFields,
@@ -129,10 +109,6 @@ export const gatherTagNames = async (params: ILogNameParams): Promise<LogDesc[]>
 
 export const gatherStageNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Stages,
@@ -146,10 +122,6 @@ export const gatherStageNames = async (params: ILogNameParams): Promise<LogDesc[
 export const gatherLabelNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: PipelineLabels,
     idFields,
@@ -161,10 +133,6 @@ export const gatherLabelNames = async (params: ILogNameParams): Promise<LogDesc[
 
 export const gatherProductNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Products,
@@ -178,10 +146,6 @@ export const gatherProductNames = async (params: ILogNameParams): Promise<LogDes
 export const gatherProductCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: ProductCategories,
     idFields,
@@ -193,10 +157,6 @@ export const gatherProductCategoryNames = async (params: ILogNameParams): Promis
 
 export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Brands,
@@ -210,10 +170,6 @@ export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[
 export const gatherKbArticleNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: KnowledgeBaseArticles,
     idFields,
@@ -225,10 +181,6 @@ export const gatherKbArticleNames = async (params: ILogNameParams): Promise<LogD
 
 export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: KnowledgeBaseCategories,
@@ -242,10 +194,6 @@ export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<Log
 export const gatherKbTopicNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: KnowledgeBaseTopics,
     idFields,
@@ -257,10 +205,6 @@ export const gatherKbTopicNames = async (params: ILogNameParams): Promise<LogDes
 
 export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
-
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
 
   return gatherNames({
     collection: Forms,
@@ -347,10 +291,6 @@ export const gatherUsernamesOfBoardItem = async (
 export const gatherSegmentNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
-  if (!(idFields && foreignKey)) {
-    return [];
-  }
-
   return gatherNames({
     collection: Segments,
     idFields,
@@ -398,20 +338,16 @@ export const findItemName = async ({ contentType, contentTypeId }: IContentTypeP
   let item: any;
   let name: string = '';
 
-  switch (contentType) {
-    case ACTIVITY_CONTENT_TYPES.DEAL:
-      item = await Deals.findOne({ _id: contentTypeId });
+  if (contentType === ACTIVITY_CONTENT_TYPES.DEAL) {
+    item = await Deals.findOne({ _id: contentTypeId });
+  }
 
-      break;
-    case ACTIVITY_CONTENT_TYPES.TASK:
-      item = await Tasks.findOne({ _id: contentTypeId });
+  if (contentType === ACTIVITY_CONTENT_TYPES.TASK) {
+    item = await Tasks.findOne({ _id: contentTypeId });
+  }
 
-      break;
-    case ACTIVITY_CONTENT_TYPES.TICKET:
-      item = await Tickets.findOne({ _id: contentTypeId });
-      break;
-    default:
-      break;
+  if (contentType === ACTIVITY_CONTENT_TYPES.TICKET) {
+    item = await Tickets.findOne({ _id: contentTypeId });
   }
 
   if (item && item.name) {

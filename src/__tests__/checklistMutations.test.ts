@@ -79,7 +79,7 @@ describe('Checklists mutations', () => {
     const pipeline = await pipelineFactory({});
     const stage = await stageFactory({ pipelineId: pipeline._id });
     const deal = await dealFactory({ stageId: stage._id });
-    const checklist = await checklistFactory({ contentType: 'deal', contentTypeId: deal._id });
+    const checklist = await checklistFactory({ contentType: 'task', contentTypeId: deal._id });
 
     if (!user || !user.details) {
       throw new Error('User not found');
@@ -170,7 +170,11 @@ describe('Checklists mutations', () => {
   });
 
   test('Remove checklist', async () => {
+    const taskChecklist = await checklistFactory({ contentType: 'task' });
+    const ticketChecklist = await checklistFactory({ contentType: 'ticket' });
+
     await checklistItemFactory({ checklistId: _checklist._id });
+
     const mutation = `
       mutation checklistsRemove($_id: String!) {
         checklistsRemove(_id: $_id) {
@@ -180,8 +184,12 @@ describe('Checklists mutations', () => {
     `;
 
     await graphqlRequest(mutation, 'checklistsRemove', { _id: _checklist._id }, context);
+    await graphqlRequest(mutation, 'checklistsRemove', { _id: taskChecklist._id }, context);
+    await graphqlRequest(mutation, 'checklistsRemove', { _id: ticketChecklist._id }, context);
 
     expect(await Checklists.findOne({ _id: _checklist._id })).toBe(null);
+    expect(await Checklists.findOne({ _id: taskChecklist._id })).toBe(null);
+    expect(await Checklists.findOne({ _id: ticketChecklist._id })).toBe(null);
     expect(await ChecklistItems.find({ checklistId: _checklist._id })).toEqual([]);
   });
 

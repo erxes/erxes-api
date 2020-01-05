@@ -968,6 +968,7 @@ interface ITaskFactoryInput {
   watchedUserIds?: string[];
   labelIds?: string[];
   sourceConversationId?: string;
+  initialStageId?: string;
 }
 
 export const taskFactory = async (params: ITaskFactoryInput = {}) => {

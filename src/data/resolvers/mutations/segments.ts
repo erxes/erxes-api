@@ -4,7 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, gatherSegmentNames, LogDesc } from './logUtils';
+import { gatherSegmentNames, LogDesc } from './logUtils';
 
 interface ISegmentsEdit extends ISegment {
   _id: string;
@@ -24,14 +24,6 @@ const segmentMutations = {
       extraDesc = await gatherSegmentNames({
         idFields: [doc.subOf],
         foreignKey: 'subOf',
-      });
-    }
-
-    if (extendedDoc.scopeBrandIds && extendedDoc.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: extendedDoc.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-        prevList: extraDesc,
       });
     }
 
@@ -75,14 +67,6 @@ const segmentMutations = {
       });
     }
 
-    if (segment.scopeBrandIds && segment.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: segment.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-        prevList: extraDesc,
-      });
-    }
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.SEGMENT,
@@ -110,14 +94,6 @@ const segmentMutations = {
       extraDesc = await gatherSegmentNames({
         idFields: [segment.subOf],
         foreignKey: 'subOf',
-      });
-    }
-
-    if (segment.scopeBrandIds && segment.scopeBrandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: segment.scopeBrandIds,
-        foreignKey: 'scopeBrandIds',
-        prevList: extraDesc,
       });
     }
 
