@@ -71,7 +71,7 @@
   },
   "addons": [
     {
-      "plan": "rabbitmq",
+      "plan": "cloudamqp:lemur",
       "as": "RABBITMQ"
     }
   ],
