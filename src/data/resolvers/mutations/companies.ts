@@ -126,10 +126,7 @@ const companyMutations = {
    * Removes companies
    */
   async companiesRemove(_root, { companyIds }: { companyIds: string[] }, { user }: IContext) {
-    const companies = await Companies.find(
-      { _id: { $in: companyIds } },
-      { primaryName: 1, ownerId: 1, parentCompanyId: 1, mergedIds: 1, tagIds: 1 },
-    ).lean();
+    const companies = await Companies.find({ _id: { $in: companyIds } }).lean();
 
     await Companies.removeCompanies(companyIds);
 

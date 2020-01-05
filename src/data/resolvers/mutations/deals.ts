@@ -270,6 +270,14 @@ const dealMutations = {
       });
     }
 
+    if (deal.productsData && deal.productsData.length > 0) {
+      extraDesc = await gatherProductNames({
+        idFields: deal.productsData.map(p => p.productId),
+        foreignKey: 'productId',
+        prevList: extraDesc,
+      });
+    }
+
     await putDeleteLog(
       {
         type: MODULE_NAMES.DEAL,

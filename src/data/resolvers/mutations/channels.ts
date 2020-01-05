@@ -7,7 +7,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
-import { gatherNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherIntegrationNames, gatherNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -164,15 +164,27 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [user._id],
-      foreignKey: 'userId',
-    });
+    let extraDesc: LogDesc[] = [];
+
+    if (channel.userId) {
+      extraDesc = await gatherUsernames({
+        idFields: [channel.userId],
+        foreignKey: 'userId',
+      });
+    }
 
     if (channel.memberIds && channel.memberIds.length > 0) {
       extraDesc = await gatherUsernames({
         idFields: channel.memberIds,
         foreignKey: 'memberIds',
+        prevList: extraDesc,
+      });
+    }
+
+    if (channel.integrationIds && channel.integrationIds.length > 0) {
+      extraDesc = await gatherIntegrationNames({
+        idFields: channel.integrationIds,
+        foreignKey: 'integrationIds',
         prevList: extraDesc,
       });
     }
