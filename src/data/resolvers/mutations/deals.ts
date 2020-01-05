@@ -172,6 +172,14 @@ const dealMutations = {
       });
     }
 
+    if (doc.stageId) {
+      extraDesc = await gatherStageNames({
+        idFields: [doc.stageId],
+        foreignKey: 'stageId',
+        prevList: extraDesc,
+      });
+    }
+
     await sendNotifications(notificationDoc);
 
     await putUpdateLog(
