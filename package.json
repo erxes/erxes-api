@@ -87,7 +87,8 @@
     "underscore": "^1.8.3",
     "validator": "^9.0.0",
     "xlsx-populate": "^1.20.1",
-    "xss": "^1.0.6"
+    "xss": "^1.0.6",
+    "faker": "^4.1.0"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"
@@ -108,7 +109,6 @@
     "@types/redis": "^2.8.13",
     "@types/request": "^2.47.1",
     "@types/underscore": "^1.8.9",
-    "faker": "^4.1.0",
     "husky": "^0.13.4",
     "jest": "^24.9",
     "jest-tobetype": "^1.1.0",
