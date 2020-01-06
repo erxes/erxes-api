@@ -88,7 +88,8 @@
     "validator": "^9.0.0",
     "xlsx-populate": "^1.20.1",
     "xss": "^1.0.6",
-    "faker": "^4.1.0"
+    "faker": "^4.1.0",
+    "ts-node": "8.0.3"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"
@@ -120,7 +121,6 @@
     "release-it": "^12.4.3",
     "sinon": "^7.2.2",
     "ts-jest": "^22.0.0",
-    "ts-node": "8.0.3",
     "ts-node-dev": "^1.0.0-pre.32",
     "tslint": "^5.8.0",
     "tslint-config-prettier": "^1.1.0",
