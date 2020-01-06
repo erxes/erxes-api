@@ -49,6 +49,10 @@
       "description": "MONGO_URL",
       "value": ""
     },
+    "RABBITMQ_HOST": {
+      "description": "RABBITMQ_HOST",
+      "value": "amqp://localhost"
+    },
     "REDIS_HOST": {
       "description": "REDIS HOST",
       "value": ""
@@ -62,8 +66,8 @@
       "value": ""
     },
     "COMPANY_EMAIL_FROM": "noreply@erxes.io",
-    "DEFAULT_EMAIL_SERVICE": "noreply@erxes.io",
-    "MAIL_SERVICE": "",
+    "DEFAULT_EMAIL_SERVICE": "sendgrid",
+    "MAIL_SERVICE": "sendgrid",
     "MAIL_PORT": "",
     "MAIL_USER": "",
     "MAIL_PASS": "",
