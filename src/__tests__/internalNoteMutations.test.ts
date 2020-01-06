@@ -15,6 +15,11 @@ import { InternalNotes, Notifications, Users } from '../db/models';
 import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
+const checkContentType = (target, src) => {
+  expect(src.contentType).toBe(target.contentType);
+  expect(src.contentTypeId).toBe(target.contentTypeId);
+};
+
 describe('InternalNotes mutations', () => {
   let _user;
   let context;
@@ -97,9 +102,8 @@ describe('InternalNotes mutations', () => {
     notification = await Notifications.findOne({ receiver: assignedUser._id });
     expect(notification).toBeDefined();
 
-    expect(internalNote.contentType).toBe(args.contentType);
-    expect(internalNote.contentTypeId).toBe(args.contentTypeId);
     expect(internalNote.content).toBe(args.content);
+    checkContentType(internalNote, args);
 
     // task
     const task = await taskFactory();
@@ -109,8 +113,7 @@ describe('InternalNotes mutations', () => {
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
 
-    expect(internalNote.contentType).toBe('task');
-    expect(internalNote.contentTypeId).toBe(task._id);
+    checkContentType(internalNote, args);
 
     // ticket
     const ticket = await ticketFactory();
@@ -120,8 +123,7 @@ describe('InternalNotes mutations', () => {
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
 
-    expect(internalNote.contentType).toBe('ticket');
-    expect(internalNote.contentTypeId).toBe(ticket._id);
+    checkContentType(internalNote, args);
 
     // company
     const company = await companyFactory();
@@ -132,8 +134,27 @@ describe('InternalNotes mutations', () => {
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
 
-    expect(internalNote.contentType).toBe('company');
-    expect(internalNote.contentTypeId).toBe(company._id);
+    checkContentType(internalNote, args);
+
+    // growthHack
+    const hack = await growthHackFactory();
+
+    args.contentType = 'growthHack';
+    args.contentTypeId = hack._id;
+
+    internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
+
+    checkContentType(internalNote, args);
+
+    // user
+    const user = await userFactory();
+
+    args.contentType = 'user';
+    args.contentTypeId = user._id;
+
+    internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
+
+    checkContentType(internalNote, args);
   });
 
   test('Add customer internal note', async () => {
@@ -147,9 +168,8 @@ describe('InternalNotes mutations', () => {
 
     const internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
 
-    expect(internalNote.contentType).toBe(args.contentType);
-    expect(internalNote.contentTypeId).toBe(args.contentTypeId);
     expect(internalNote.content).toBe(args.content);
+    checkContentType(internalNote, args);
 
     const notification = await Notifications.findOne(args);
 

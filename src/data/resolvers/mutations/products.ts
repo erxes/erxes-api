@@ -226,11 +226,21 @@ const productMutations = {
     const productCategory = await ProductCategories.getProductCatogery({ _id });
     const removed = await ProductCategories.removeProductCategory(_id);
 
+    let extraDesc: LogDesc[] = [];
+
+    if (productCategory.parentId) {
+      extraDesc = await gatherProductCategoryNames({
+        idFields: [productCategory.parentId],
+        foreignKey: 'parentId',
+      });
+    }
+
     await putDeleteLog(
       {
         type: MODULE_NAMES.PRODUCT_CATEGORY,
         object: productCategory,
         description: `"${productCategory.name}" has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
       },
       user,
     );

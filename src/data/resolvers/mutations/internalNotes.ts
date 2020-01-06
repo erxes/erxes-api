@@ -127,85 +127,92 @@ const internalNoteMutations = {
 
     const extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
 
-    switch (contentType) {
-      case MODULE_NAMES.DEAL: {
-        const deal = await Deals.getDeal(contentTypeId);
-        const stage = await Stages.getStage(deal.stageId);
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+    if (contentType === MODULE_NAMES.DEAL) {
+      const deal = await Deals.getDeal(contentTypeId);
+      const stage = await Stages.getStage(deal.stageId);
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
-        notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
-        notifDoc.content = `"${deal.name}"`;
-        notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
-        notifDoc.contentTypeId = deal._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
+      notifDoc.notifType = NOTIFICATION_TYPES.DEAL_EDIT;
+      notifDoc.content = `"${deal.name}"`;
+      notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
+      notifDoc.contentTypeId = deal._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
 
-        extraDesc.push({ contentTypeId, name: deal.name });
+      extraDesc.push({ contentTypeId, name: deal.name });
 
-        await sendNotificationOfItems(deal, notifDoc, contentType, [...mentionedUserIds, user._id]);
-        break;
-      }
+      await sendNotificationOfItems(deal, notifDoc, contentType, [...mentionedUserIds, user._id]);
+    }
 
-      case MODULE_NAMES.CUSTOMER: {
-        const customer = await Customers.getCustomer(contentTypeId);
+    if (contentType === MODULE_NAMES.CUSTOMER) {
+      const customer = await Customers.getCustomer(contentTypeId);
 
-        notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
-        notifDoc.content = Customers.getCustomerName(customer);
-        notifDoc.link = `/contacts/customers/details/${customer._id}`;
-        notifDoc.contentTypeId = customer._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.CUSTOMER;
+      notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
+      notifDoc.content = Customers.getCustomerName(customer);
+      notifDoc.link = `/contacts/customers/details/${customer._id}`;
+      notifDoc.contentTypeId = customer._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.CUSTOMER;
 
-        extraDesc.push({ contentTypeId, name: Customers.getCustomerName(customer) });
+      extraDesc.push({ contentTypeId, name: Customers.getCustomerName(customer) });
+    }
 
-        break;
-      }
+    if (contentType === MODULE_NAMES.COMPANY) {
+      const company = await Companies.getCompany(contentTypeId);
 
-      case MODULE_NAMES.COMPANY: {
-        const company = await Companies.getCompany(contentTypeId);
+      notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
+      notifDoc.content = Companies.getCompanyName(company);
+      notifDoc.link = `/contacts/companies/details/${company._id}`;
+      notifDoc.contentTypeId = company._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.COMPANY;
 
-        notifDoc.notifType = NOTIFICATION_TYPES.CUSTOMER_MENTION;
-        notifDoc.content = Companies.getCompanyName(company);
-        notifDoc.link = `/contacts/companies/details/${company._id}`;
-        notifDoc.contentTypeId = company._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.COMPANY;
+      extraDesc.push({ contentTypeId, name: Companies.getCompanyName(company) });
+    }
 
-        extraDesc.push({ contentTypeId, name: Companies.getCompanyName(company) });
+    if (contentType === MODULE_NAMES.TICKET) {
+      const ticket = await Tickets.getTicket(contentTypeId);
+      const stage = await Stages.getStage(ticket.stageId);
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
-        break;
-      }
+      notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
+      notifDoc.content = `"${ticket.name}"`;
+      notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
+      notifDoc.contentTypeId = ticket._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
 
-      case MODULE_NAMES.TICKET: {
-        const ticket = await Tickets.getTicket(contentTypeId);
-        const stage = await Stages.getStage(ticket.stageId);
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+      extraDesc.push({ contentTypeId, name: ticket.name });
 
-        notifDoc.notifType = NOTIFICATION_TYPES.TICKET_EDIT;
-        notifDoc.content = `"${ticket.name}"`;
-        notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
-        notifDoc.contentTypeId = ticket._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
+      await sendNotificationOfItems(ticket, notifDoc, contentType, [...mentionedUserIds, user._id]);
+    }
 
-        extraDesc.push({ contentTypeId, name: ticket.name });
+    if (contentType === MODULE_NAMES.TASK) {
+      const task = await Tasks.getTask(contentTypeId);
+      const stage = await Stages.getStage(task.stageId);
+      const pipeline = await Pipelines.getPipeline(stage.pipelineId);
 
-        await sendNotificationOfItems(ticket, notifDoc, contentType, [...mentionedUserIds, user._id]);
-        break;
-      }
+      notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
+      notifDoc.content = `"${task.name}"`;
+      notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
+      notifDoc.contentTypeId = task._id;
+      notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
 
-      case MODULE_NAMES.TASK: {
-        const task = await Tasks.getTask(contentTypeId);
-        const stage = await Stages.getStage(task.stageId);
-        const pipeline = await Pipelines.getPipeline(stage.pipelineId);
+      extraDesc.push({ contentTypeId, name: task.name });
 
-        notifDoc.notifType = NOTIFICATION_TYPES.TASK_EDIT;
-        notifDoc.content = `"${task.name}"`;
-        notifDoc.link = `/task/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${task._id}`;
-        notifDoc.contentTypeId = task._id;
-        notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
+      await sendNotificationOfItems(task, notifDoc, contentType, [...mentionedUserIds, user._id]);
+    }
 
-        extraDesc.push({ contentTypeId, name: task.name });
+    if (contentType === MODULE_NAMES.GROWTH_HACK) {
+      const hack = await GrowthHacks.getGrowthHack(contentTypeId);
 
-        await sendNotificationOfItems(task, notifDoc, contentType, [...mentionedUserIds, user._id]);
-        break;
-      }
+      notifDoc.content = `${hack.name}`;
+
+      extraDesc.push({ contentTypeId, name: hack.name });
+    }
+
+    if (contentType === MODULE_NAMES.USER) {
+      const usr = await Users.getUser(contentTypeId);
+
+      notifDoc.content = `${usr.username || usr.email}`;
+
+      extraDesc.push({ contentTypeId, name: notifDoc.content });
     }
 
     if (notifDoc.contentType) {
