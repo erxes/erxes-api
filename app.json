@@ -41,10 +41,6 @@
       "description": "Erxes Integrations API URL",
       "value": "https://ERXESINTEGRATIONSAPINAME.herokuapp.com"
     },
-    "WIDGETS_API_DOMAIN": {
-      "description": "Erxes Widgets API URL",
-      "value": "https://ERXESWIDGETAPIAPPNAME.herokuapp.com"
-    },
     "MONGO_URL": {
       "description": "MONGO_URL",
       "value": ""
