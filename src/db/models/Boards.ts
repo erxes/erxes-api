@@ -341,13 +341,12 @@ export const loadStageClass = () => {
           stageId: destStageId,
           initialStageId: destStageId,
           createdAt: new Date(),
-          companyIds: card.companyIds,
-          customerIds: card.customerIds,
           assignedUserIds: card.assignedUserIds,
           watchedUserIds: card.watchedUserIds,
           labelIds: card.labelIds,
           priority: card.priority,
           userId,
+          description: card.description,
         };
 
         await collection.create(itemDoc);
