@@ -1,2 +1,2 @@
-worker: node dist/cronJobs
-worker: node dist/workers
+worker1: node dist/cronJobs
+worker2: node dist/workers
