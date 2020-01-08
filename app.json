@@ -21,10 +21,6 @@
       "description": "A port number that erxes api will be running on",
       "value": "3300"
     },
-    "HTTPS": true,
-    "PUBSUB_TYPE": "REDIS",
-    "UPLOAD_SERVICE_TYPE": "AWS",
-    "FILE_SYSTEM_PUBLIC": false,
     "DOMAIN": {
       "description": "Erxes API URL",
       "value": "https://ERXESAPIAPPNAME.herokuapp.com"
@@ -50,17 +46,21 @@
       "value": "amqp://localhost"
     },
     "REDIS_HOST": {
-      "description": "REDIS HOST",
+      "description": "REDIS_HOST",
       "value": ""
     },
     "REDIS_PORT": {
-      "description": "REDIS PORT",
+      "description": "REDIS_PORT",
       "value": "28229"
     },
     "REDIS_PASSWORD": {
       "description": "REDIS_PASSWORD",
       "value": ""
     },
+    "HTTPS": true,
+    "PUBSUB_TYPE": "REDIS",
+    "UPLOAD_SERVICE_TYPE": "AWS",
+    "FILE_SYSTEM_PUBLIC": false,
     "COMPANY_EMAIL_FROM": "noreply@erxes.io",
     "DEFAULT_EMAIL_SERVICE": "sendgrid",
     "MAIL_SERVICE": "sendgrid",
