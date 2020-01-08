@@ -23,19 +23,19 @@
     },
     "DOMAIN": {
       "description": "Erxes API URL",
-      "value": "https://ERXESAPIAPPNAME.herokuapp.com"
+      "value": "https://erxes-api.herokuapp.com"
     },
     "MAIN_APP_DOMAIN": {
       "description": "Erxes URL",
-      "value": "https://ERXESAPPNAME.herokuapp.com"
+      "value": "https://erxes.herokuapp.com"
     },
     "WIDGETS_DOMAIN": {
       "description": "Erxes Widget URL",
-      "value": "https://ERXESWIDGETAPPNAME.herokuapp.com"
+      "value": "https://erxes-widget.herokuapp.com"
     },
     "INTEGRATIONS_API_DOMAIN": {
       "description": "Erxes Integrations API URL",
-      "value": "https://ERXESINTEGRATIONSAPINAME.herokuapp.com"
+      "value": "https://erxes-integration.herokuapp.com"
     },
     "MONGO_URL": {
       "description": "MONGO_URL",
