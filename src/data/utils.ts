@@ -284,7 +284,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
  */
 export const uploadFile = async (file, fromEditor = false): Promise<any> => {
   const IS_PUBLIC = await getConfig('fileSystemPublic');
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const DOMAIN = await getConfig('domain');
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
   const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
@@ -389,7 +389,7 @@ export const sendEmail = async ({
   const DEFAULT_EMAIL_SERVICE = await getConfig('defaultEmailService', 'SES');
   const COMPANY_EMAIL_FROM = await getConfig('companEmailFrom', '');
   const AWS_SES_CONFIG_SET = await getConfig('awsSesConfigSet', '');
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const DOMAIN = await getConfig('domain');
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -585,7 +585,7 @@ export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
   errorMessage?: string,
 ) => {
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const DOMAIN = await getConfig('domain');
 
   debugExternalApi(`
     Sending request to

@@ -1,6 +1,6 @@
 import { Configs } from '../../../db/models';
 import { moduleRequireLogin } from '../../permissions/wrappers';
-import { getEnv, sendRequest } from '../../utils';
+import { getConfig, getEnv, sendRequest } from '../../utils';
 
 const configQueries = {
   /**
@@ -12,7 +12,7 @@ const configQueries = {
 
   async configsVersions(_root) {
     const erxesDomain = getEnv({ name: 'MAIN_APP_DOMAIN' });
-    const domain = getEnv({ name: 'DOMAIN' });
+    const domain = await getConfig('domain');
     const widgetsDomain = getEnv({ name: 'WIDGETS_DOMAIN' });
 
     let erxesVersion;
