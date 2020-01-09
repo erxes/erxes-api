@@ -8,7 +8,7 @@ import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Customers, Notifications, Users } from '../db/models';
+import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
@@ -49,7 +49,7 @@ export const checkFile = async (file, source?: string) => {
     'image/gif',
   ];
 
-  const UPLOAD_FILE_TYPES = getEnv({ name: source === 'widgets' ? 'WIDGETS_UPLOAD_FILE_TYPES' : 'UPLOAD_FILE_TYPES' });
+  const UPLOAD_FILE_TYPES = await getConfig(source === 'widgets' ? 'widgetsUploadFileTypes' : 'uploadFileTypes');
 
   const { mime } = ft;
 
@@ -63,12 +63,12 @@ export const checkFile = async (file, source?: string) => {
 /**
  * Create AWS instance
  */
-const createAWS = () => {
-  const AWS_ACCESS_KEY_ID = getEnv({ name: 'AWS_ACCESS_KEY_ID' });
-  const AWS_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SECRET_ACCESS_KEY' });
-  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
-  const AWS_COMPATIBLE_SERVICE_ENDPOINT = getEnv({ name: 'AWS_COMPATIBLE_SERVICE_ENDPOINT' });
-  const AWS_FORCE_PATH_STYLE = getEnv({ name: 'AWS_FORCE_PATH_STYLE' });
+const createAWS = async () => {
+  const AWS_ACCESS_KEY_ID = await getConfig('awsAccessKeyId');
+  const AWS_SECRET_ACCESS_KEY = await getConfig('awsSecretAccessKey');
+  const AWS_BUCKET = await getConfig('awsBucket');
+  const AWS_COMPATIBLE_SERVICE_ENDPOINT = await getConfig('awsCompatibleServiceEndPoint');
+  const AWS_FORCE_PATH_STYLE = await getConfig('awsForcePathStyle');
 
   if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_BUCKET) {
     throw new Error('AWS credentials are not configured');
@@ -116,12 +116,12 @@ const createGCS = () => {
  * Save binary data to amazon s3
  */
 export const uploadFileAWS = async (file: { name: string; path: string; type: string }): Promise<string> => {
-  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
-  const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX', defaultValue: '' });
-  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const IS_PUBLIC = await getConfig('fileSytemPublic', 'true');
+  const AWS_PREFIX = await getConfig('awsPrefix');
+  const AWS_BUCKET = await getConfig('awsBucket');
 
   // initialize s3
-  const s3 = createAWS();
+  const s3 = await createAWS();
 
   // generate unique name
   const fileName = `${AWS_PREFIX}${Math.random()}${file.name}`;
@@ -155,13 +155,13 @@ export const uploadFileAWS = async (file: { name: string; path: string; type: st
 /*
  * Delete file from amazon s3
  */
-const deleteFileAWS = (fileName: string) => {
+const deleteFileAWS = async (fileName: string) => {
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
 
   const params = { Bucket: AWS_BUCKET, Key: fileName };
 
   // initialize s3
-  const s3 = createAWS();
+  const s3 = await createAWS();
 
   return new Promise((resolve, reject) => {
     s3.deleteObject(params, err => {
@@ -179,7 +179,7 @@ const deleteFileAWS = (fileName: string) => {
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
   const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
-  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const IS_PUBLIC = await getConfig('fileSystemPublic');
 
   // initialize GCS
   const storage = createGCS();
@@ -260,7 +260,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
   }
 
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
-  const s3 = createAWS();
+  const s3 = await createAWS();
 
   return new Promise((resolve, reject) => {
     s3.getObject(
@@ -283,7 +283,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
  * Save binary data to amazon s3
  */
 export const uploadFile = async (file, fromEditor = false): Promise<any> => {
-  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const IS_PUBLIC = await getConfig('fileSystemPublic');
   const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
@@ -965,4 +965,14 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   }
 
   return true;
+};
+
+export const getConfig = async (code, defaultValue?) => {
+  const config = await Configs.findOne({ code });
+
+  if (!config) {
+    return defaultValue;
+  }
+
+  return config.value || defaultValue;
 };
