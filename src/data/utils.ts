@@ -352,11 +352,11 @@ export const createTransporter = async ({ ses }) => {
     });
   }
 
-  const MAIL_SERVICE = getEnv({ name: 'MAIL_SERVICE' });
-  const MAIL_PORT = getEnv({ name: 'MAIL_PORT' });
-  const MAIL_USER = getEnv({ name: 'MAIL_USER' });
-  const MAIL_PASS = getEnv({ name: 'MAIL_PASS' });
-  const MAIL_HOST = getEnv({ name: 'MAIL_HOST' });
+  const MAIL_SERVICE = await getConfig('mailService');
+  const MAIL_PORT = await getConfig('mailPort');
+  const MAIL_USER = await getConfig('mailUser');
+  const MAIL_PASS = await getConfig('mailPass');
+  const MAIL_HOST = await getConfig('mailHost');
 
   return nodemailer.createTransport({
     service: MAIL_SERVICE,
@@ -386,8 +386,8 @@ export const sendEmail = async ({
   modifier?: (data: any, email: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
-  const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
+  const DEFAULT_EMAIL_SERVICE = await getConfig('defaultEmailService', 'SES');
+  const COMPANY_EMAIL_FROM = await getConfig('companEmailFrom', '');
   const AWS_SES_CONFIG_SET = await getConfig('awsSesConfigSet', '');
   const DOMAIN = getEnv({ name: 'DOMAIN' });
 
