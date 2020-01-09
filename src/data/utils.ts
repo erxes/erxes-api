@@ -335,11 +335,11 @@ const applyTemplate = async (data: any, templateName: string) => {
 /**
  * Create default or ses transporter
  */
-export const createTransporter = ({ ses }) => {
+export const createTransporter = async ({ ses }) => {
   if (ses) {
-    const AWS_SES_ACCESS_KEY_ID = getEnv({ name: 'AWS_SES_ACCESS_KEY_ID' });
-    const AWS_SES_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SES_SECRET_ACCESS_KEY' });
-    const AWS_REGION = getEnv({ name: 'AWS_REGION' });
+    const AWS_SES_ACCESS_KEY_ID = await getConfig('awsSesAccessKeyId');
+    const AWS_SES_SECRET_ACCESS_KEY = await getConfig('awsSesSecretAccessKey');
+    const AWS_REGION = await getConfig('awsRegion');
 
     AWS.config.update({
       region: AWS_REGION,
@@ -388,7 +388,7 @@ export const sendEmail = async ({
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
-  const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: '' });
+  const AWS_SES_CONFIG_SET = await getConfig('awsSesConfigSet', '');
   const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   // do not send email it is running in test mode
