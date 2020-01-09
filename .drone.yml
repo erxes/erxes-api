@@ -14,9 +14,9 @@ pipeline:
       - npm -v
       - yarn --version
       - yarn install
-      - yarn lint
+#      - yarn lint
       - mkdir src/private/xlsTemplateOutputs
-      - yarn test
+#      - yarn test
 
   build:
     image: erxes/runner:latest
