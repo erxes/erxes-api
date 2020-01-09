@@ -123,9 +123,11 @@ const productDataSchema = new Schema(
   { _id: false },
 );
 
-export const dealSchema = new Schema({
-  ...commonItemFieldsSchema,
+export const dealSchema = schemaWrapper(
+  new Schema({
+    ...commonItemFieldsSchema,
 
-  productsData: field({ type: [productDataSchema] }),
-  paymentsData: field({ type: Object, optional: true }),
-});
+    productsData: field({ type: [productDataSchema] }),
+    paymentsData: field({ type: Object, optional: true }),
+  }),
+);
