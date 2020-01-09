@@ -6,5 +6,5 @@
 .snyk
 Dockerfile*
 google_cred.json.sample
-scripts
+#scripts
 *.tar.gz
