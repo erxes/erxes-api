@@ -961,6 +961,10 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   return true;
 };
 
+export const getConfigs = async () => {
+  return Configs.find({});
+};
+
 export const getConfig = async (code, defaultValue?) => {
   const config = await Configs.findOne({ code });
 
