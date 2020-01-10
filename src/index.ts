@@ -16,7 +16,6 @@ import insightExports from './data/modules/insights/insightExports';
 import {
   checkFile,
   deleteFile,
-  getConfig,
   getEnv,
   handleUnsubscription,
   readFileRequest,
@@ -85,7 +84,7 @@ app.use(userMiddleware);
 app.use('/static', express.static(path.join(__dirname, 'private')));
 
 app.get('/download-template', async (req: any, res) => {
-  const DOMAIN = await getConfig('domain');
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const name = req.query.name;
 
   registerOnboardHistory({ type: `${name}Download`, user: req.user });

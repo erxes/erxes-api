@@ -49,7 +49,7 @@ export const checkFile = async (file, source?: string) => {
     'image/gif',
   ];
 
-  const UPLOAD_FILE_TYPES = await getConfig(source === 'widgets' ? 'widgetsUploadFileTypes' : 'uploadFileTypes');
+  const UPLOAD_FILE_TYPES = await getConfig(source === 'widgets' ? 'WIDGETS_UPLOAD_FILE_TYPES' : 'UPLOAD_FILE_TYPES');
 
   const { mime } = ft;
 
@@ -64,11 +64,11 @@ export const checkFile = async (file, source?: string) => {
  * Create AWS instance
  */
 const createAWS = async () => {
-  const AWS_ACCESS_KEY_ID = await getConfig('awsAccessKeyId');
-  const AWS_SECRET_ACCESS_KEY = await getConfig('awsSecretAccessKey');
-  const AWS_BUCKET = await getConfig('awsBucket');
-  const AWS_COMPATIBLE_SERVICE_ENDPOINT = await getConfig('awsCompatibleServiceEndPoint');
-  const AWS_FORCE_PATH_STYLE = await getConfig('awsForcePathStyle');
+  const AWS_ACCESS_KEY_ID = await getConfig('AWS_ACCESS_KEY_ID');
+  const AWS_SECRET_ACCESS_KEY = await getConfig('AWS_SECRET_ACCESS_KEY');
+  const AWS_BUCKET = await getConfig('AWS_BUCKET');
+  const AWS_COMPATIBLE_SERVICE_ENDPOINT = await getConfig('AWS_COMPATIBLE_SERVICE_ENDPOINT');
+  const AWS_FORCE_PATH_STYLE = await getConfig('AWS_FORCE_PATH_STYLE');
 
   if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_BUCKET) {
     throw new Error('AWS credentials are not configured');
@@ -116,9 +116,9 @@ const createGCS = () => {
  * Save binary data to amazon s3
  */
 export const uploadFileAWS = async (file: { name: string; path: string; type: string }): Promise<string> => {
-  const IS_PUBLIC = await getConfig('fileSytemPublic', 'true');
-  const AWS_PREFIX = await getConfig('awsPrefix');
-  const AWS_BUCKET = await getConfig('awsBucket');
+  const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC', 'true');
+  const AWS_PREFIX = await getConfig('AWS_PREFIX');
+  const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
   // initialize s3
   const s3 = await createAWS();
@@ -179,7 +179,7 @@ const deleteFileAWS = async (fileName: string) => {
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
   const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
-  const IS_PUBLIC = await getConfig('fileSystemPublic');
+  const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
 
   // initialize GCS
   const storage = createGCS();
@@ -283,8 +283,8 @@ export const readFileRequest = async (key: string): Promise<any> => {
  * Save binary data to amazon s3
  */
 export const uploadFile = async (file, fromEditor = false): Promise<any> => {
-  const IS_PUBLIC = await getConfig('fileSystemPublic');
-  const DOMAIN = await getConfig('domain');
+  const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
   const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
@@ -337,9 +337,9 @@ const applyTemplate = async (data: any, templateName: string) => {
  */
 export const createTransporter = async ({ ses }) => {
   if (ses) {
-    const AWS_SES_ACCESS_KEY_ID = await getConfig('awsSesAccessKeyId');
-    const AWS_SES_SECRET_ACCESS_KEY = await getConfig('awsSesSecretAccessKey');
-    const AWS_REGION = await getConfig('awsRegion');
+    const AWS_SES_ACCESS_KEY_ID = await getConfig('AWS_SES_ACCESS_KEY_ID');
+    const AWS_SES_SECRET_ACCESS_KEY = await getConfig('AWS_SES_SECRET_ACCESS_KEY');
+    const AWS_REGION = await getConfig('AWS_REGION');
 
     AWS.config.update({
       region: AWS_REGION,
@@ -352,11 +352,11 @@ export const createTransporter = async ({ ses }) => {
     });
   }
 
-  const MAIL_SERVICE = await getConfig('mailService');
-  const MAIL_PORT = await getConfig('mailPort');
-  const MAIL_USER = await getConfig('mailUser');
-  const MAIL_PASS = await getConfig('mailPass');
-  const MAIL_HOST = await getConfig('mailHost');
+  const MAIL_SERVICE = await getConfig('MAIL_SERVICE');
+  const MAIL_PORT = await getConfig('MAIL_PORT');
+  const MAIL_USER = await getConfig('MAIL_USER');
+  const MAIL_PASS = await getConfig('MAIL_PASS');
+  const MAIL_HOST = await getConfig('MAIL_HOST');
 
   return nodemailer.createTransport({
     service: MAIL_SERVICE,
@@ -386,10 +386,10 @@ export const sendEmail = async ({
   modifier?: (data: any, email: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-  const DEFAULT_EMAIL_SERVICE = await getConfig('defaultEmailService', 'SES');
-  const COMPANY_EMAIL_FROM = await getConfig('companEmailFrom', '');
-  const AWS_SES_CONFIG_SET = await getConfig('awsSesConfigSet', '');
-  const DOMAIN = await getConfig('domain');
+  const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
+  const COMPANY_EMAIL_FROM = await getConfig('COMPANY_EMAIL_FROM', '');
+  const AWS_SES_CONFIG_SET = await getConfig('AWS_SES_CONFIG_SET', '');
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -585,7 +585,7 @@ export const sendRequest = async (
   { url, method, headers, form, body, params }: IRequestParams,
   errorMessage?: string,
 ) => {
-  const DOMAIN = await getConfig('domain');
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   debugExternalApi(`
     Sending request to
