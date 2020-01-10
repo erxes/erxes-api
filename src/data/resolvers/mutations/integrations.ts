@@ -270,6 +270,10 @@ const integrationMutations = {
 
     return Integrations.findOne({ _id });
   },
+
+  async integrationsUpdateConfigs(_root, { configsMap }, { dataSources }: IContext) {
+    return dataSources.IntegrationsAPI.updateConfigs(configsMap);
+  },
 };
 
 checkPermission(
@@ -288,5 +292,6 @@ checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integr
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 checkPermission(integrationMutations, 'integrationsArchive', 'integrationsArchive');
 checkPermission(integrationMutations, 'integrationsEditCommonFields', 'integrationsEdit');
+checkPermission(integrationMutations, 'integrationsUpdateConfigs', 'integrationsEdit');
 
 export default integrationMutations;
