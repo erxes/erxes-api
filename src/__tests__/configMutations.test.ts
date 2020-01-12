@@ -11,7 +11,7 @@ describe('Test configs mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'configsUpdate', { configsMap: { dealUOM: ['MNT'] } });
+    await graphqlRequest(mutation, 'configsUpdate', { configsMap: { dealUOM: ['MNT'], '': '' } });
 
     const uomConfig = await Configs.getConfig('dealUOM');
 

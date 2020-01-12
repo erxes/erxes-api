@@ -1,8 +1,25 @@
 import { graphqlRequest } from '../db/connection';
 
+import { configFactory } from '../db/factories';
 import './setup.ts';
 
 describe('configQueries', () => {
+  test('configs', async () => {
+    await configFactory({});
+
+    const qry = `
+      query configs {
+        configs {
+          _id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'configs');
+
+    expect(response.length).toBe(1);
+  });
+
   test('config get env', async () => {
     process.env.USE_BRAND_RESTRICTIONS = 'true';
 
