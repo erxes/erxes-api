@@ -28,21 +28,29 @@ if (NODE_ENV !== 'production') {
   };
 }
 
+const generateDataSources = () => {
+  return {
+    EngagesAPI: new EngagesAPI(),
+    IntegrationsAPI: new IntegrationsAPI(),
+  };
+};
+
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
-  dataSources: () => {
-    return {
-      EngagesAPI: new EngagesAPI(),
-      IntegrationsAPI: new IntegrationsAPI(),
-    };
-  },
+  dataSources: generateDataSources,
   playground,
   uploads: false,
   context: ({ req, res }) => {
     if (!req || NODE_ENV === 'test') {
-      return {};
+      return {
+        dataSources: generateDataSources(),
+      };
     }
+
+    const requestInfo = {
+      secure: req.secure,
+    };
 
     const user = req.user;
 
@@ -54,6 +62,7 @@ const apolloServer = new ApolloServer({
         commonQuerySelector: {},
         user,
         res,
+        requestInfo,
       };
     }
 
@@ -84,6 +93,7 @@ const apolloServer = new ApolloServer({
       userBrandIdsSelector,
       user,
       res,
+      requestInfo,
     };
   },
   subscriptions: {

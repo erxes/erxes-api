@@ -35,15 +35,12 @@ mongoose.connection
     debugDb(`Database connection error: ${MONGO_URL}`, error);
   });
 
-export function connect(URL?: string, options?) {
-  return mongoose.connect(
-    URL || MONGO_URL,
-    {
-      ...connectionOptions,
-      ...(options || { poolSize: 100 }),
-    },
-  );
-}
+export const connect = async (URL?: string, options?) => {
+  return mongoose.connect(URL || MONGO_URL, {
+    ...connectionOptions,
+    ...(options || { poolSize: 100 }),
+  });
+};
 
 export function disconnect() {
   return mongoose.connection.close();
@@ -65,6 +62,7 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
 
   const finalContext: any = {};
 
+  finalContext.requestInfo = { secure: false };
   finalContext.dataSources = context.dataSources;
   finalContext.user = context.user || user;
   finalContext.res = context.res || res;
