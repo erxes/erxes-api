@@ -1,6 +1,8 @@
-import { NOTIFICATION_TYPES } from '../data/constants';
-import { notificationConfigurationFactory, userFactory } from '../db/factories';
+import { customerFactory, notificationConfigurationFactory, notificationFactory, userFactory } from '../db/factories';
 import { NotificationConfigurations, Notifications, Users } from '../db/models';
+
+import { NOTIFICATION_TYPES } from '../db/models/definitions/constants';
+import './setup.ts';
 
 describe('Notification model tests', () => {
   let _user;
@@ -15,16 +17,6 @@ describe('Notification model tests', () => {
     Notifications.deleteMany({});
     NotificationConfigurations.deleteMany({});
     Users.deleteMany({});
-  });
-
-  test(`check whether Error('createdUser must be supplied') is being thrown as intended`, async () => {
-    expect.assertions(1);
-
-    try {
-      await Notifications.createNotification({});
-    } catch (e) {
-      expect(e.message).toBe('createdUser must be supplied');
-    }
   });
 
   test('check for error in model creation', async () => {
@@ -54,6 +46,12 @@ describe('Notification model tests', () => {
 
   test('model create, update, remove', async () => {
     // Create notification ================
+
+    await notificationConfigurationFactory({
+      isAllowed: true,
+      notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
+      user: _user2._id,
+    });
 
     let doc = {
       notifType: NOTIFICATION_TYPES.CHANNEL_MEMBERS_CHANGE,
@@ -91,10 +89,23 @@ describe('Notification model tests', () => {
     expect(notification.link).toEqual(doc.link);
     expect(notification.receiver).toBe(user3._id);
 
+    // check method markAsRead by user =============
+    await Notifications.markAsRead([], user3._id);
+
+    let notificationObj = await Notifications.findOne({
+      _id: notification._id,
+    });
+
+    if (!notificationObj) {
+      throw new Error('Notification not found');
+    }
+
+    expect(notificationObj.isRead).toEqual(true);
+
     // check method markAsRead =============
     await Notifications.markAsRead([notification._id]);
 
-    const notificationObj = await Notifications.findOne({
+    notificationObj = await Notifications.findOne({
       _id: notification._id,
     });
 
@@ -110,27 +121,27 @@ describe('Notification model tests', () => {
     expect(await Notifications.find({}).countDocuments()).toEqual(0);
   });
 
-  test('sending notifications', () => {
-    return;
+  test('check if read', async () => {
+    const receiver = await userFactory();
+    const customer = await customerFactory();
+
+    await notificationFactory({
+      receiver,
+      contentType: 'customer',
+      contentTypeId: customer._id,
+    });
+
+    let response = await Notifications.checkIfRead(receiver._id, customer._id);
+
+    expect(response).toBeFalsy();
+
+    response = await Notifications.checkIfRead('fakeUserId', 'fakeId');
+
+    expect(response).toBeTruthy();
   });
 });
 
-describe('NotificationConfiguration model tests', async () => {
-  test(`check whether Error('user must be supplied') is being thrown as intended`, async () => {
-    expect.assertions(1);
-
-    const doc = {
-      notifType: NOTIFICATION_TYPES.CONVERSATION_ADD_MESSAGE,
-      isAllowed: true,
-    };
-
-    try {
-      await NotificationConfigurations.createOrUpdateConfiguration(doc);
-    } catch (e) {
-      expect(e.message).toBe('user must be supplied');
-    }
-  });
-
+describe('NotificationConfiguration model tests', () => {
   test('test if model methods are working correctly', async () => {
     // creating new notification configuration ==========
     const user = await userFactory({});

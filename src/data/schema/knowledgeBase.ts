@@ -5,6 +5,8 @@ export const types = `
     summary: String
     content: String
     status: String
+    reactionChoices: [String]
+    reactionCounts: JSON
     createdBy: String
     createdUser: User
     createdDate: Date
@@ -17,6 +19,7 @@ export const types = `
     summary: String
     content: String!
     status: String!
+    reactionChoices: [String]
     categoryIds: [String]
   }
 
@@ -32,6 +35,8 @@ export const types = `
     modifiedDate: Date
 
     firstTopic: KnowledgeBaseTopic
+    authors: [User]
+    numOfArticles: Float
   }
 
   input KnowledgeBaseCategoryDoc {
@@ -49,6 +54,7 @@ export const types = `
     categories: [KnowledgeBaseCategory]
     brand: Brand
     color: String
+    backgroundImage: String
     languageCode: String
     createdBy: String
     createdDate: Date
@@ -62,7 +68,12 @@ export const types = `
     categoryIds: [String]
     brandId: String!
     color: String
+    backgroundImage: String
     languageCode: String
+  }
+
+  type KnowledgeBaseLoader {
+    loadType: String
   }
 `;
 

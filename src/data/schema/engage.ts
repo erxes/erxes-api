@@ -2,7 +2,9 @@ export const types = `
   type EngageMessage {
     _id: String!
     kind: String
-    segmentId: String
+    tagIds: [String]
+    segmentIds: [String]
+    brandIds: [String]
     customerIds: [String]
     title: String
     fromUserId: String
@@ -10,21 +12,23 @@ export const types = `
     isDraft: Boolean
     isLive: Boolean
     stopDate: Date
-    createdDate: Date
+    createdAt: Date
     type: String
     messengerReceivedCustomerIds: [String]
-    tagIds: [String]
-    stats: JSON
     brand: Brand
 
     email: JSON
     messenger: JSON
-    deliveryReports: JSON
 
     scheduleDate: EngageScheduleDate
-    segment: Segment
+    segments: [Segment]
+    tags: [Tag]
+    brands: [Brand]
     fromUser: User
     getTags: [Tag]
+
+    stats: JSON
+    logs: JSON
   }
 
   type EngageScheduleDate {
@@ -32,6 +36,12 @@ export const types = `
     month: String,
     day: String,
     time: Date,
+  }
+
+  type EngagesConfig {
+    accessKeyId: String
+    secretAccessKey: String
+    region: String
   }
 
   input EngageScheduleDateInput {
@@ -42,10 +52,10 @@ export const types = `
   }
 
   input EngageMessageEmail {
-    templateId: String,
+    content: String,
     subject: String!,
-    content: String!,
     attachments: [JSON]
+    templateId: String
   }
 
   input EngageMessageMessenger {
@@ -60,6 +70,9 @@ export const types = `
 const listParams = `
   kind: String
   status: String
+  segmentIds: [String]
+  brandIds: [String]
+  tagIds: [String]
   tag: String
   ids: [String]
   page: Int
@@ -71,6 +84,8 @@ export const queries = `
   engageMessagesTotalCount(${listParams}): Int
   engageMessageDetail(_id: String): EngageMessage
   engageMessageCounts(name: String!, kind: String, status: String): JSON
+  engagesConfigDetail: EngagesConfig
+  engageVerifiedEmails: [String]
 `;
 
 const commonParams = `
@@ -83,9 +98,10 @@ const commonParams = `
   stopDate: Date,
   scheduleDate: Date,
   type: String
-  segmentId: String,
-  customerIds: [String],
+  segmentIds: [String],
   tagIds: [String],
+  brandIds: [String],
+  customerIds: [String],
   email: EngageMessageEmail,
   scheduleDate: EngageScheduleDateInput,
   messenger: EngageMessageMessenger,
@@ -98,4 +114,8 @@ export const mutations = `
   engageMessageSetLive(_id: String!): EngageMessage
   engageMessageSetPause(_id: String!): EngageMessage
   engageMessageSetLiveManual(_id: String!): EngageMessage
+  engagesConfigSave(accessKeyId: String, secretAccessKey: String, region: String): EngagesConfig
+  engageMessageVerifyEmail(email: String!): String
+  engageMessageRemoveVerifiedEmail(email: String!): String
+  engageMessageSendTestEmail(from: String!, to: String!, content: String!): String
 `;

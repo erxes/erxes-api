@@ -1,41 +1,18 @@
 import { Document, Schema } from 'mongoose';
-import { field } from '../utils';
-import {
-  FORM_LOAD_TYPES,
-  FORM_SUCCESS_ACTIONS,
-  KIND_CHOICES,
-  LANGUAGE_CHOICES,
-  MESSENGER_DATA_AVAILABILITY,
-} from './constants';
+import { IRule, ruleSchema } from './common';
+import { KIND_CHOICES, LEAD_LOAD_TYPES, LEAD_SUCCESS_ACTIONS, MESSENGER_DATA_AVAILABILITY } from './constants';
+import { field } from './utils';
+
+export interface ISubmission extends Document {
+  customerId: string;
+  submittedAt: Date;
+}
 
 export interface ILink {
   twitter?: string;
   facebook?: string;
   youtube?: string;
 }
-
-export interface ITwitterData {
-  accountId: string;
-  profileId: string;
-}
-
-export interface ITwitterDataDocument extends ITwitterData, Document {}
-
-export interface IFacebookData {
-  accountId?: string;
-  pageIds: string[];
-}
-
-export interface IFacebookDataDocument extends IFacebookData, Document {}
-
-export interface IGmailData {
-  accountId: string;
-  email: string;
-  historyId?: string;
-  expiration?: string;
-}
-
-export interface IGmailDataDocument extends IGmailData, Document {}
 
 export interface IMessengerOnlineHours {
   day?: string;
@@ -65,12 +42,23 @@ export interface IMessengerData {
   timezone?: string;
   messages?: IMessageDataMessages;
   links?: ILink;
+  showChat?: boolean;
+  showLauncher?: boolean;
   requireAuth?: boolean;
+  forceLogoutWhenResolve?: boolean;
 }
 
 export interface IMessengerDataDocument extends IMessengerData, Document {}
 
-export interface IFormData {
+export interface ICallout extends Document {
+  title?: string;
+  body?: string;
+  buttonText?: string;
+  featuredImage?: string;
+  skip?: boolean;
+}
+
+export interface ILeadData {
   loadType?: string;
   successAction?: string;
   fromEmail?: string;
@@ -81,9 +69,15 @@ export interface IFormData {
   adminEmailContent?: string;
   thankContent?: string;
   redirectUrl?: string;
+  themeColor?: string;
+  callout?: ICallout;
+  rules?: IRule;
 }
 
-export interface IFormDataDocument extends IFormData, Document {}
+export interface ILeadDataDocument extends ILeadData, Document {
+  viewCount?: number;
+  contactsGathered?: number;
+}
 
 export interface IUiOptions {
   color?: string;
@@ -95,59 +89,27 @@ export interface IUiOptions {
 export interface IUiOptionsDocument extends IUiOptions, Document {}
 
 export interface IIntegration {
-  kind?: string;
+  kind: string;
   name?: string;
   brandId?: string;
   languageCode?: string;
   tagIds?: string[];
   formId?: string;
-  formData?: IFormData;
+  leadData?: ILeadData;
   messengerData?: IMessengerData;
-  twitterData?: ITwitterData;
-  facebookData?: IFacebookData;
-  gmailData?: IGmailData;
   uiOptions?: IUiOptions;
+  isActive?: boolean;
 }
 
 export interface IIntegrationDocument extends IIntegration, Document {
   _id: string;
-  formData?: IFormDataDocument;
+  createdUserId: string;
+  // TODO remove
+  formData?: ILeadData;
+  leadData?: ILeadDataDocument;
   messengerData?: IMessengerDataDocument;
-  twitterData?: ITwitterDataDocument;
-  facebookData?: IFacebookDataDocument;
-  gmailData?: IGmailDataDocument;
   uiOptions?: IUiOptionsDocument;
 }
-
-export interface IMessengerApp {
-  email: string;
-  credentials?: any;
-}
-
-// Mongoose schemas ======================
-const twitterSchema = new Schema(
-  {
-    profileId: {
-      type: Object,
-    },
-    accountId: {
-      type: String,
-    },
-  },
-  { _id: false },
-);
-
-const facebookSchema = new Schema(
-  {
-    accountId: {
-      type: String,
-    },
-    pageIds: {
-      type: [String],
-    },
-  },
-  { _id: false },
-);
 
 // subdocument schema for MessengerOnlineHours
 const messengerOnlineHoursSchema = new Schema(
@@ -183,20 +145,45 @@ const messengerDataSchema = new Schema(
       youtube: String,
     },
     requireAuth: field({ type: Boolean, default: true }),
+    showChat: field({ type: Boolean, default: true }),
+    showLauncher: field({ type: Boolean, default: true }),
+    forceLogoutWhenResolve: field({ type: Boolean, default: false }),
   },
   { _id: false },
 );
 
-// subdocument schema for FormData
-const formDataSchema = new Schema(
+// schema for lead's callout component
+export const calloutSchema = new Schema(
+  {
+    title: field({ type: String, optional: true }),
+    body: field({ type: String, optional: true }),
+    buttonText: field({ type: String, optional: true }),
+    featuredImage: field({ type: String, optional: true }),
+    skip: field({ type: Boolean, optional: true }),
+  },
+  { _id: false },
+);
+
+// TODO: remove
+// schema for lead submission details
+export const submissionSchema = new Schema(
+  {
+    customerId: field({ type: String }),
+    submittedAt: field({ type: Date }),
+  },
+  { _id: false },
+);
+
+// subdocument schema for LeadData
+const leadDataSchema = new Schema(
   {
     loadType: field({
       type: String,
-      enum: FORM_LOAD_TYPES.ALL,
+      enum: LEAD_LOAD_TYPES.ALL,
     }),
     successAction: field({
       type: String,
-      enum: FORM_SUCCESS_ACTIONS.ALL,
+      enum: LEAD_SUCCESS_ACTIONS.ALL,
       optional: true,
     }),
     fromEmail: field({
@@ -231,6 +218,26 @@ const formDataSchema = new Schema(
       type: String,
       optional: true,
     }),
+    themeColor: field({
+      type: String,
+      optional: true,
+    }),
+    callout: field({
+      type: calloutSchema,
+      optional: true,
+    }),
+    viewCount: field({
+      type: Number,
+      optional: true,
+    }),
+    contactsGathered: field({
+      type: Number,
+      optional: true,
+    }),
+    rules: field({
+      type: [ruleSchema],
+      optional: true,
+    }),
   },
   { _id: false },
 );
@@ -245,26 +252,10 @@ const uiOptionsSchema = new Schema(
   { _id: false },
 );
 
-const gmailSchema = new Schema(
-  {
-    accountId: field({ type: String }),
-    email: field({ type: String }),
-    historyId: field({
-      type: String,
-      optional: true,
-    }),
-    expiration: field({
-      type: String,
-      optional: true,
-    }),
-    credentials: field({ type: Object }),
-  },
-  { _id: false },
-);
-
 // schema for integration document
 export const integrationSchema = new Schema({
   _id: field({ pkey: true }),
+  createdUserId: field({ type: String }),
 
   kind: field({
     type: String,
@@ -276,15 +267,14 @@ export const integrationSchema = new Schema({
 
   languageCode: field({
     type: String,
-    enum: LANGUAGE_CHOICES,
     optional: true,
   }),
-  tagIds: field({ type: [String], optional: true }),
+  tagIds: field({ type: [String] }),
   formId: field({ type: String }),
-  formData: field({ type: formDataSchema }),
+  leadData: field({ type: leadDataSchema }),
+  // TODO: remove
+  formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
-  twitterData: field({ type: twitterSchema }),
-  facebookData: field({ type: facebookSchema }),
-  gmailData: field({ type: gmailSchema }),
   uiOptions: field({ type: uiOptionsSchema }),
+  isActive: field({ type: Boolean, optional: true, default: true }),
 });

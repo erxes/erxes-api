@@ -1,23 +1,22 @@
 import * as dotenv from 'dotenv';
 import mongoose = require('mongoose');
-import { getEnv } from '../data/utils';
 
 mongoose.Promise = global.Promise;
 
 // load environment variables
 dotenv.config();
 
-const TEST_MONGO_URL = getEnv({ name: 'TEST_MONGO_URL', defaultValue: `mongodb://localhost/test` });
+const TEST_MONGO_URL = process.env.TEST_MONGO_URL || 'mongodb://localhost/test';
 
 // prevent deprecated warning related findAndModify
 // https://github.com/Automattic/mongoose/issues/6880
 mongoose.set('useFindAndModify', false);
 
 const removeDbs = async () => {
-  await mongoose.connect(
-    TEST_MONGO_URL.replace('test', `erxes-test-${Math.random()}`).replace('.', ''),
-    { useNewUrlParser: true, useCreateIndex: true },
-  );
+  await mongoose.connect(TEST_MONGO_URL.replace('test', `erxes-test-${Math.random()}`).replace(/\./g, ''), {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+  });
 
   const result = await mongoose.connection.db.admin().command({
     listDatabases: 1,
@@ -28,10 +27,10 @@ const removeDbs = async () => {
   const promises: any[] = [];
 
   for (const { name } of result.databases) {
-    const db = await mongoose.connect(
-      TEST_MONGO_URL.replace('test', name),
-      { useNewUrlParser: true, useCreateIndex: true },
-    );
+    const db = await mongoose.connect(TEST_MONGO_URL.replace('test', name), {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+    });
 
     promises.push(db.connection.dropDatabase());
   }

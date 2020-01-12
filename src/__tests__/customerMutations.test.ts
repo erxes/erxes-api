@@ -3,6 +3,8 @@ import { graphqlRequest } from '../db/connection';
 import { customerFactory, userFactory } from '../db/factories';
 import { Customers, Users } from '../db/models';
 
+import './setup.ts';
+
 /*
  * Generate test data
  */
@@ -137,7 +139,7 @@ describe('Customers mutations', () => {
     expect(customer.description).toBe(args.description);
     expect(customer.doNotDisturb).toBe(args.doNotDisturb);
     expect(customer.links).toEqual(args.links);
-    expect(customer.customFieldsData).toEqual(args.customFieldsData);
+    expect(customer.customFieldsData).toEqual(null);
   });
 
   test('Edit customer', async () => {
@@ -191,31 +193,6 @@ describe('Customers mutations', () => {
     expect(customer.doNotDisturb).toBe(args.doNotDisturb);
     expect(customer.links).toEqual(args.links);
     expect(customer.customFieldsData).toEqual({});
-  });
-
-  test('Edit company of customer', async () => {
-    const params = {
-      _id: _customer._id,
-      companyIds: [faker.random.uuid()],
-    };
-
-    const mutation = `
-      mutation customersEditCompanies($_id: String! $companyIds: [String]) {
-        customersEditCompanies(_id: $_id companyIds: $companyIds) {
-          _id
-        }
-      }
-    `;
-
-    await graphqlRequest(mutation, 'customersEditCompanies', params, context);
-
-    const customer = await Customers.findOne({ _id: params._id });
-
-    if (!customer) {
-      throw new Error('Customer not found');
-    }
-
-    expect(customer.companyIds).toContain(params.companyIds);
   });
 
   test('Remove customer', async () => {

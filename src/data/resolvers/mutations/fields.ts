@@ -1,8 +1,9 @@
 import { Fields, FieldsGroups } from '../../../db/models';
 import { IField, IFieldGroup } from '../../../db/models/definitions/fields';
-import { IUserDocument } from '../../../db/models/definitions/users';
 import { IOrderInput } from '../../../db/models/Fields';
-import { moduleCheckPermission } from '../../permissions';
+import { moduleCheckPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { putCreateLog } from '../../utils';
 
 interface IFieldsEdit extends IField {
   _id: string;
@@ -16,14 +17,26 @@ const fieldMutations = {
   /**
    * Adds field object
    */
-  fieldsAdd(_root, args: IField, { user }: { user: IUserDocument }) {
-    return Fields.createField({ ...args, lastUpdatedUserId: user._id });
+  async fieldsAdd(_root, args: IField, { user }: IContext) {
+    const field = await Fields.createField({ ...args, lastUpdatedUserId: user._id });
+
+    await putCreateLog(
+      {
+        type: `${args.contentType}Field`,
+        newData: JSON.stringify(args),
+        object: field,
+        description: `${field.text} has been created`,
+      },
+      user,
+    );
+
+    return field;
   },
 
   /**
    * Updates field object
    */
-  fieldsEdit(_root, { _id, ...doc }: IFieldsEdit, { user }: { user: IUserDocument }) {
+  fieldsEdit(_root, { _id, ...doc }: IFieldsEdit, { user }: IContext) {
     return Fields.updateField(_id, { ...doc, lastUpdatedUserId: user._id });
   },
 
@@ -44,11 +57,7 @@ const fieldMutations = {
   /**
    * Update field's visible
    */
-  fieldsUpdateVisible(
-    _root,
-    { _id, isVisible }: { _id: string; isVisible: boolean },
-    { user }: { user: IUserDocument },
-  ) {
+  fieldsUpdateVisible(_root, { _id, isVisible }: { _id: string; isVisible: boolean }, { user }: IContext) {
     return Fields.updateFieldsVisible(_id, isVisible, user._id);
   },
 };
@@ -57,14 +66,14 @@ const fieldsGroupsMutations = {
   /**
    * Create a new group for fields
    */
-  fieldsGroupsAdd(_root, doc: IFieldGroup, { user }: { user: IUserDocument }) {
-    return FieldsGroups.createGroup({ ...doc, lastUpdatedUserId: user._id });
+  fieldsGroupsAdd(_root, doc: IFieldGroup, { user, docModifier }: IContext) {
+    return FieldsGroups.createGroup(docModifier({ ...doc, lastUpdatedUserId: user._id }));
   },
 
   /**
    * Update group for fields
    */
-  fieldsGroupsEdit(_root, { _id, ...doc }: IFieldsGroupsEdit, { user }: { user: IUserDocument }) {
+  fieldsGroupsEdit(_root, { _id, ...doc }: IFieldsGroupsEdit, { user }: IContext) {
     return FieldsGroups.updateGroup(_id, {
       ...doc,
       lastUpdatedUserId: user._id,
@@ -81,16 +90,12 @@ const fieldsGroupsMutations = {
   /**
    * Update field group's visible
    */
-  fieldsGroupsUpdateVisible(
-    _root,
-    { _id, isVisible }: { _id: string; isVisible: boolean },
-    { user }: { user: IUserDocument },
-  ) {
+  fieldsGroupsUpdateVisible(_root, { _id, isVisible }: { _id: string; isVisible: boolean }, { user }: IContext) {
     return FieldsGroups.updateGroupVisible(_id, isVisible, user._id);
   },
 };
 
-moduleCheckPermission(fieldMutations, 'manageFields');
-moduleCheckPermission(fieldsGroupsMutations, 'manageFieldsGroups');
+moduleCheckPermission(fieldMutations, 'manageForms');
+moduleCheckPermission(fieldsGroupsMutations, 'manageForms');
 
 export { fieldsGroupsMutations, fieldMutations };

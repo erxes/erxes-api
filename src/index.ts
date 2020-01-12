@@ -11,7 +11,6 @@ if (NODE_ENV === 'production') {
   apm.start({});
 }
 
-import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
@@ -19,20 +18,37 @@ import * as express from 'express';
 import * as formidable from 'formidable';
 import * as fs from 'fs';
 import { createServer } from 'http';
+import * as mongoose from 'mongoose';
 import * as path from 'path';
-import { userMiddleware } from './auth';
-import resolvers from './data/resolvers';
-import { handleEngageUnSubscribe } from './data/resolvers/mutations/engageUtils';
-import typeDefs from './data/schema';
-import { checkFile, getEnv, importXlsFile, readFileRequest, uploadFile } from './data/utils';
+import * as request from 'request';
+import { filterXSS } from 'xss';
+import apolloServer from './apolloClient';
+import { buildFile } from './data/modules/fileExporter/exporter';
+import insightExports from './data/modules/insights/insightExports';
+import {
+  checkFile,
+  deleteFile,
+  getEnv,
+  handleUnsubscription,
+  readFileRequest,
+  registerOnboardHistory,
+  uploadFile,
+} from './data/utils';
 import { connect } from './db/connection';
-import { Conversations, Customers } from './db/models';
-import { graphqlPubsub } from './pubsub';
-import { init } from './startup';
-import { getAttachment } from './trackers/gmail';
+import { debugExternalApi, debugInit } from './debuggers';
+import './messageBroker';
+import userMiddleware from './middlewares/userMiddleware';
+import widgetsMiddleware from './middlewares/widgetsMiddleware';
+import { initRedis } from './redisClient';
+
+initRedis();
+
+// load environment variables
+dotenv.config();
 
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN', defaultValue: '' });
 const WIDGETS_DOMAIN = getEnv({ name: 'WIDGETS_DOMAIN', defaultValue: '' });
+const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN', defaultValue: '' });
 
 // firebase app initialization
 fs.exists(path.join(__dirname, '..', '/google_cred.json'), exists => {
@@ -56,10 +72,11 @@ connect();
 
 const app = express();
 
+app.disable('x-powered-by');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   bodyParser.json({
-    limit: '10mb',
+    limit: '15mb',
   }),
 );
 app.use(cookieParser());
@@ -71,137 +88,54 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.get('/script-manager', widgetsMiddleware);
+
 app.use(userMiddleware);
 
-let playground: PlaygroundConfig = false;
-
-if (NODE_ENV !== 'production') {
-  playground = {
-    settings: {
-      'general.betaUpdates': false,
-      'editor.theme': 'dark',
-      'editor.cursorShape': 'line',
-      'editor.reuseHeaders': true,
-      'tracing.hideTracingResponse': true,
-      'editor.fontSize': 14,
-      'editor.fontFamily': `'Source Code Pro', 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace`,
-      'request.credentials': 'include',
-    },
-  };
-}
-
-const clients: string[] = [];
-const connectedClients: string[] = [];
-
-const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers,
-  playground,
-  context: ({ req, res }) => {
-    return {
-      user: req && req.user,
-      res,
-    };
-  },
-  subscriptions: {
-    keepAlive: 10000,
-    path: '/subscriptions',
-
-    onConnect(_connectionParams, webSocket) {
-      webSocket.on('message', async message => {
-        const parsedMessage = JSON.parse(message).id || {};
-
-        if (parsedMessage.type === 'messengerConnected') {
-          const messengerData = parsedMessage.value;
-          const integrationId = messengerData.integrationId;
-          webSocket.messengerData = parsedMessage.value;
-
-          const customerId = webSocket.messengerData.customerId;
-
-          if (!connectedClients.includes(customerId)) {
-            connectedClients.push(customerId);
-          }
-
-          // Waited for 5 seconds to reconnect in disconnect hook and disconnect hook
-          // removed this customer from connected clients list. So it means this customer
-          // is back online
-          if (!clients.includes(customerId)) {
-            clients.push(customerId);
-
-            // mark as online
-            await Customers.markCustomerAsActive(customerId);
-
-            // customer has joined + time
-            const conversationMessages = await Conversations.changeCustomerStatus('joined', customerId, integrationId);
-
-            for (const _message of conversationMessages) {
-              graphqlPubsub.publish('conversationMessageInserted', {
-                conversationMessageInserted: _message,
-              });
-            }
-
-            // notify as connected
-            graphqlPubsub.publish('customerConnectionChanged', {
-              customerConnectionChanged: {
-                _id: customerId,
-                status: 'connected',
-              },
-            });
-          }
-        }
-      });
-    },
-
-    async onDisconnect(webSocket) {
-      const messengerData = webSocket.messengerData;
-
-      if (messengerData) {
-        const customerId = messengerData.customerId;
-        const integrationId = messengerData.integrationId;
-
-        // Temporarily marking as disconnected
-        // If client refreshes his browser, It will trigger disconnect, connect hooks.
-        // So to determine this issue. We are marking as disconnected here and waiting
-        // for 5 seconds to reconnect.
-        connectedClients.splice(connectedClients.indexOf(customerId), 1);
-
-        setTimeout(async () => {
-          if (connectedClients.includes(customerId)) {
-            return;
-          }
-
-          clients.splice(clients.indexOf(customerId), 1);
-
-          // mark as offline
-          await Customers.markCustomerAsNotActive(customerId);
-
-          // customer has left + time
-          const conversationMessages = await Conversations.changeCustomerStatus('left', customerId, integrationId);
-
-          for (const message of conversationMessages) {
-            graphqlPubsub.publish('conversationMessageInserted', {
-              conversationMessageInserted: message,
-            });
-          }
-
-          // notify as disconnected
-          graphqlPubsub.publish('customerConnectionChanged', {
-            customerConnectionChanged: {
-              _id: customerId,
-              status: 'disconnected',
-            },
-          });
-        }, 10000);
-      }
-    },
-  },
-});
-
 app.use('/static', express.static(path.join(__dirname, 'private')));
+
+app.get('/download-template', (req: any, res) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const name = req.query.name;
+
+  registerOnboardHistory({ type: `${name}Download`, user: req.user });
+
+  return res.redirect(`${DOMAIN}/static/importTemplates/${name}`);
+});
 
 // for health check
 app.get('/status', async (_req, res) => {
   res.end('ok');
+});
+
+// export insights
+app.get('/insights-export', async (req: any, res) => {
+  try {
+    const { name, response } = await insightExports(req.query, req.user);
+
+    res.attachment(`${name}.xlsx`);
+
+    return res.send(response);
+  } catch (e) {
+    return res.end(filterXSS(e.message));
+  }
+});
+
+// export board
+app.get('/file-export', async (req: any, res) => {
+  const { query, user } = req;
+
+  let result: { name: string; response: string };
+
+  try {
+    result = await buildFile(query, user);
+
+    res.attachment(`${result.name}.xlsx`);
+
+    return res.send(result.response);
+  } catch (e) {
+    return res.end(filterXSS(e.message));
+  }
 });
 
 // read file
@@ -219,23 +153,78 @@ app.get('/read-file', async (req: any, res) => {
 
     return res.send(response);
   } catch (e) {
-    return res.end(e.message);
+    return res.end(filterXSS(e.message));
   }
 });
 
+// get mail attachment file
+app.get('/read-mail-attachment', async (req: any, res) => {
+  const { messageId, attachmentId, kind, integrationId, filename, contentType } = req.query;
+
+  if (!messageId || !attachmentId || !integrationId || !contentType) {
+    return res.status(404).send('Attachment not found');
+  }
+
+  const integrationPath = kind.includes('nylas') ? 'nylas' : kind;
+
+  res.redirect(
+    `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}&contentType=${contentType}`,
+  );
+});
+
+// delete file
+app.post('/delete-file', async (req: any, res) => {
+  // require login
+  if (!req.user) {
+    return res.end('foribidden');
+  }
+
+  const status = await deleteFile(req.body.fileName);
+
+  if (status === 'ok') {
+    return res.send(status);
+  }
+
+  return res.status(500).send(status);
+});
+
 // file upload
-app.post('/upload-file', async (req, res) => {
+app.post('/upload-file', async (req: any, res, next) => {
+  if (req.query.kind === 'nylas') {
+    debugExternalApi(`Pipeing request to ${INTEGRATIONS_API_DOMAIN}`);
+
+    return req.pipe(
+      request
+        .post(`${INTEGRATIONS_API_DOMAIN}/nylas/upload`)
+        .on('response', response => {
+          if (response.statusCode !== 200) {
+            return next(response.statusMessage);
+          }
+
+          return response.pipe(res);
+        })
+        .on('error', e => {
+          debugExternalApi(`Error from pipe ${e.message}`);
+          next(e);
+        }),
+    );
+  }
+
   const form = new formidable.IncomingForm();
 
   form.parse(req, async (_error, _fields, response) => {
-    const status = await checkFile(response.file);
+    const file = response.file || response.upload;
+
+    // check file ====
+    const status = await checkFile(file, req.headers.source);
 
     if (status === 'ok') {
       try {
-        const url = await uploadFile(response.file);
-        return res.end(url);
+        const result = await uploadFile(file, response.upload ? true : false);
+
+        return res.send(result);
       } catch (e) {
-        return res.status(500).send(e.message);
+        return res.status(500).send(filterXSS(e.message));
       }
     }
 
@@ -243,56 +232,51 @@ app.post('/upload-file', async (req, res) => {
   });
 });
 
-// file import
-app.post('/import-file', (req: any, res) => {
-  const form = new formidable.IncomingForm();
+// redirect to integration
+app.get('/connect-integration', async (req: any, res, _next) => {
+  if (!req.user) {
+    return res.end('forbidden');
+  }
 
+  const { link, kind } = req.query;
+
+  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}?kind=${kind}`);
+});
+
+// file import
+app.post('/import-file', async (req: any, res, next) => {
   // require login
   if (!req.user) {
     return res.end('foribidden');
   }
 
-  form.parse(req, async (_err, fields: any, response) => {
-    const status = await checkFile(response.file);
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
 
-    // if file is not ok then send error
-    if (status !== 'ok') {
-      return res.json(status);
-    }
+  debugExternalApi(`Pipeing request to ${WORKERS_API_DOMAIN}`);
 
-    importXlsFile(response.file, fields.type, { user: req.user })
-      .then(result => {
-        res.json(result);
+  return req.pipe(
+    request
+      .post(`${WORKERS_API_DOMAIN}/import-file`)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
       })
-      .catch(e => {
-        res.json(e);
-      });
-  });
-});
-
-// get gmail attachment file
-app.get('/read-gmail-attachment', async (req: any, res) => {
-  if (!req.query.message || !req.query.attach) {
-    return res.status(404).send('Attachment not found');
-  }
-
-  const attachment: { filename?: string; data?: string } = await getAttachment(req.query.message, req.query.attach);
-
-  if (!attachment.data) {
-    return res.status(404).send('Attachment not found');
-  }
-
-  res.attachment(attachment.filename);
-  res.write(attachment.data, 'base64');
-  res.end();
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
 });
 
 // engage unsubscribe
-app.get('/unsubscribe', async (req, res) => {
-  const unsubscribed = await handleEngageUnSubscribe(req.query);
+app.get('/unsubscribe', async (req: any, res) => {
+  const unsubscribed = await handleUnsubscription(req.query);
 
   if (unsubscribed) {
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     const template = fs.readFileSync(__dirname + '/private/emailTemplates/unsubscribe.html');
     res.send(template);
   }
@@ -301,6 +285,35 @@ app.get('/unsubscribe', async (req, res) => {
 });
 
 apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
+
+// handle engage trackers
+app.post(`/service/engage/tracker`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+
+  const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+});
+
+// Error handling middleware
+app.use((error, _req, res, _next) => {
+  console.error(error.stack);
+  res.status(500).send(error.message);
+});
 
 // Wrap the Express server
 const httpServer = createServer(app);
@@ -311,8 +324,28 @@ const PORT = getEnv({ name: 'PORT' });
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
-  console.log(`GraphQL Server is now running on ${PORT}`);
-
-  // execute startup actions
-  init(app);
+  debugInit(`GraphQL Server is now running on ${PORT}`);
 });
+
+// GRACEFULL SHUTDOWN
+process.stdin.resume(); // so the program will not close instantly
+
+// If the Node process ends, close the Mongoose connection
+if (NODE_ENV === 'production') {
+  (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach(sig => {
+    process.on(sig, () => {
+      // Stops the server from accepting new connections and finishes existing connections.
+      httpServer.close(error => {
+        if (error) {
+          console.error(error.message);
+          process.exit(1);
+        }
+
+        mongoose.connection.close(() => {
+          console.log('Mongoose connection disconnected');
+          process.exit(0);
+        });
+      });
+    });
+  });
+}

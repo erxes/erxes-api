@@ -32,6 +32,8 @@ import {
   types as EmailTemplate,
 } from './emailTemplate';
 
+import { queries as EmailDeliveryQueries, types as EmailDelivery } from './emailDelivery';
+
 import {
   fieldsGroupsMutations as FieldGroupMutations,
   fieldsGroupsQueries as FieldGroupQueries,
@@ -79,6 +81,8 @@ import {
 
 import { queries as ActivityLogQueries, types as ActivityLogTypes } from './activityLog';
 
+import { mutations as BoardMutations, queries as BoardQueries, types as BoardTypes } from './board';
+
 import { mutations as DealMutations, queries as DealQueries, types as DealTypes } from './deal';
 
 import { mutations as ProductMutations, queries as ProductQueries, types as ProductTypes } from './product';
@@ -97,7 +101,32 @@ import {
   types as MessengerAppTypes,
 } from './messengerApp';
 
-import { mutations as AccountMutations, queries as AccountQueries, types as AccountTypes } from './accounts';
+import { mutations as TicketMutations, queries as TicketQueries, types as TicketTypes } from './ticket';
+
+import { mutations as TaskMutations, queries as TaskQueries, types as TaskTypes } from './task';
+
+import { mutations as GrowthHackMutations, queries as GrowthHackQueries, types as GrowthHackTypes } from './growthHack';
+
+import { queries as LogQueries, types as LogTypes } from './log';
+
+import {
+  mutations as PipelineTemplateMutations,
+  queries as PipelineTemplateQueries,
+  types as PipelineTemplateTypes,
+} from './pipelineTemplate';
+
+import { mutations as RobotMutations, queries as RobotQueries, types as RobotTypes } from './robot';
+
+import { mutations as ConformityMutations, types as ConformityTypes } from './conformity';
+
+import { mutations as ChecklistMutations, queries as ChecklistQueries, types as ChecklistTypes } from './checklist';
+import {
+  mutations as PipelineLabelMutations,
+  queries as PipelineLabelQueries,
+  types as PipelineLabelTypes,
+} from './pipelineLabel';
+
+import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 export const types = `
   scalar JSON
@@ -114,23 +143,34 @@ export const types = `
   ${Script}
   ${EmailTemplate}
   ${EngageTypes}
+  ${EmailDelivery}
   ${TagTypes}
   ${FieldTypes}
   ${FormTypes}
+  ${ConformityTypes}
   ${CustomerTypes}
   ${SegmentTypes}
   ${ConversationTypes}
   ${InsightTypes}
   ${KnowledgeBaseTypes}
   ${NotificationTypes}
+  ${BoardTypes}
   ${DealTypes}
   ${ProductTypes}
   ${ConfigTypes}
   ${FieldGroupTypes}
   ${ImportHistoryTypes}
   ${MessengerAppTypes}
-  ${AccountTypes}
   ${PermissionTypes}
+  ${TicketTypes}
+  ${TaskTypes}
+  ${LogTypes}
+  ${GrowthHackTypes}
+  ${PipelineTemplateTypes}
+  ${ChecklistTypes}
+  ${RobotTypes}
+  ${PipelineLabelTypes}
+  ${WidgetTypes}
 `;
 
 export const queries = `
@@ -138,10 +178,12 @@ export const queries = `
     ${UserQueries}
     ${ChannelQueries}
     ${BrandQueries}
+    ${BoardQueries}
     ${IntegrationQueries}
     ${ResponseTemplateQueries}
     ${ScriptQueries}
     ${EmailTemplateQueries}
+    ${EmailDeliveryQueries}
     ${FieldQueries}
     ${EngageQueries}
     ${FormQueries}
@@ -161,8 +203,16 @@ export const queries = `
     ${FieldGroupQueries}
     ${ImportHistoryQueries}
     ${MessengerAppQueries}
-    ${AccountQueries}
     ${PermissionQueries}
+    ${TicketQueries}
+    ${TaskQueries}
+    ${LogQueries}
+    ${GrowthHackQueries}
+    ${PipelineTemplateQueries}
+    ${ChecklistQueries}
+    ${RobotQueries}
+    ${PipelineLabelQueries}
+    ${WidgetQueries}
   }
 `;
 
@@ -173,6 +223,7 @@ export const mutations = `
     ${ConversationMutations}
     ${EngageMutations}
     ${TagMutations}
+    ${BoardMutations}
     ${BrandMutations}
     ${ResponseTemplateMutations}
     ${ScriptMutations}
@@ -192,8 +243,16 @@ export const mutations = `
     ${FieldGroupMutations}
     ${ImportHistoryMutations}
     ${MessengerAppMutations}
-    ${AccountMutations}
     ${PermissionMutations}
+    ${TicketMutations}
+    ${TaskMutations}
+    ${GrowthHackMutations}
+    ${PipelineTemplateMutations}
+    ${ConformityMutations}
+    ${ChecklistMutations}
+    ${RobotMutations}
+    ${PipelineLabelMutations}
+    ${WidgetMutations}
   }
 `;
 
@@ -202,9 +261,14 @@ export const subscriptions = `
     conversationChanged(_id: String!): ConversationChangedResponse
     conversationMessageInserted(_id: String!): ConversationMessage
     conversationClientMessageInserted(userId: String!): ConversationMessage
-    conversationAdminMessageInserted(customerId: String!): ConversationMessage
+    conversationClientTypingStatusChanged(_id: String!): ConversationClientTypingStatusChangedResponse
+    conversationAdminMessageInserted(customerId: String!): ConversationAdminMessageInsertedResponse
+    conversationExternalIntegrationMessageInserted: JSON
     customerConnectionChanged(_id: String): CustomerConnectionChangedResponse
     activityLogsChanged: Boolean
+    importHistoryChanged(_id: String!): ImportHistory
+    notificationInserted(userId: String): Notification
+    onboardingChanged(userId: String!): OnboardingNotification
   }
 `;
 

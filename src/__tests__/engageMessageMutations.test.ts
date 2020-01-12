@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
 import * as sinon from 'sinon';
-import { INTEGRATION_KIND_CHOICES } from '../data/constants';
+import { MESSAGE_KINDS } from '../data/constants';
 import * as engageUtils from '../data/resolvers/mutations/engageUtils';
 import { graphqlRequest } from '../db/connection';
 import {
@@ -9,7 +9,6 @@ import {
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
-  emailTemplateFactory,
   engageMessageFactory,
   integrationFactory,
   segmentFactory,
@@ -28,8 +27,12 @@ import {
   Tags,
   Users,
 } from '../db/models';
+import * as messageBroker from '../messageBroker';
 
-import { awsRequests } from '../trackers/engageTracker';
+import { EngagesAPI } from '../data/dataSources';
+import utils, { handleUnsubscription } from '../data/utils';
+import { KIND_CHOICES, STATUSES } from '../db/models/definitions/constants';
+import './setup.ts';
 
 describe('engage message mutation tests', () => {
   let _message;
@@ -39,9 +42,7 @@ describe('engage message mutation tests', () => {
   let _segment;
   let _customer;
   let _integration;
-  let _emailTemplate;
   let _doc;
-  let context;
   let spy;
 
   const commonParamDefs = `
@@ -52,9 +53,10 @@ describe('engage message mutation tests', () => {
     $isDraft: Boolean,
     $isLive: Boolean,
     $stopDate: Date,
-    $segmentId: String,
-    $customerIds: [String],
+    $segmentIds: [String],
+    $brandIds: [String],
     $tagIds: [String],
+    $customerIds: [String],
     $email: EngageMessageEmail,
     $scheduleDate: EngageScheduleDateInput,
     $messenger: EngageMessageMessenger,
@@ -68,9 +70,10 @@ describe('engage message mutation tests', () => {
     isDraft: $isDraft
     isLive: $isLive
     stopDate: $stopDate
-    segmentId: $segmentId
-    customerIds: $customerIds
+    segmentIds: $segmentIds
+    brandIds: $brandIds
     tagIds: $tagIds
+    customerIds: $customerIds
     email: $email
     scheduleDate: $scheduleDate
     messenger: $messenger
@@ -93,25 +96,29 @@ describe('engage message mutation tests', () => {
         brandId: _brand.id,
       },
     });
-    _emailTemplate = await emailTemplateFactory({});
     _customer = await customerFactory({
       hasValidEmail: true,
+      status: STATUSES.ACTIVE,
+      profileScore: 1,
+      primaryEmail: faker.internet.email(),
+      firstName: faker.random.word(),
+      lastName: faker.random.word(),
     });
     _integration = await integrationFactory({ brandId: 'brandId' });
 
     _doc = {
       title: 'Message test',
-      kind: 'manual',
+      kind: 'chat',
       method: 'email',
       fromUserId: _user._id,
       isDraft: true,
       isLive: true,
       stopDate: new Date(),
-      segmentId: _segment._id,
-      customerIds: [_customer._id],
+      segmentIds: [_segment._id],
+      brandIds: [_brand._id],
       tagIds: [_tag._id],
+      customerIds: [_customer._id],
       email: {
-        templateId: _emailTemplate._id,
         subject: faker.random.word(),
         content: faker.random.word(),
       },
@@ -137,9 +144,6 @@ describe('engage message mutation tests', () => {
         ],
       },
     };
-
-    context = { user: _user };
-
     spy = jest.spyOn(engageUtils, 'send');
   });
 
@@ -165,20 +169,8 @@ describe('engage message mutation tests', () => {
       method: 'messenger',
       title: 'Send via messenger',
       userId: _user._id,
-      segmentId: _segment._id,
+      segmentIds: [_segment._id],
       customerIds: [_customer._id],
-      isLive: true,
-      messenger: {
-        brandId: brand._id,
-        content: 'content',
-      },
-    });
-
-    const emessageWithoutUser = await engageMessageFactory({
-      method: 'messenger',
-      title: 'Send via messenger',
-      userId: 'fromUserId',
-      segmentId: _segment._id,
       isLive: true,
       messenger: {
         brandId: brand._id,
@@ -192,6 +184,18 @@ describe('engage message mutation tests', () => {
       expect(e.message).toEqual('Integration not found');
     }
 
+    const emessageWithoutUser = await engageMessageFactory({
+      method: 'messenger',
+      title: 'Send via messenger',
+      userId: 'fromUserId',
+      segmentIds: [_segment._id],
+      isLive: true,
+      messenger: {
+        brandId: brand._id,
+        content: 'content',
+      },
+    });
+
     try {
       await engageUtils.send(emessageWithoutUser);
     } catch (e) {
@@ -200,14 +204,14 @@ describe('engage message mutation tests', () => {
 
     const integration = await integrationFactory({
       brandId: brand._id,
-      kind: INTEGRATION_KIND_CHOICES.MESSENGER,
+      kind: KIND_CHOICES.MESSENGER,
     });
 
     const emessageWithBrand = await engageMessageFactory({
       method: 'messenger',
       title: 'Send via messenger',
       userId: _user._id,
-      segmentId: _segment._id,
+      segmentIds: [_segment._id],
       isLive: true,
       customerIds: [_customer._id],
       messenger: {
@@ -252,9 +256,55 @@ describe('engage message mutation tests', () => {
     expect(newMessage.engageData.messageId).toBe(emessageWithBrand._id);
     expect(newMessage.engageData.fromUserId).toBe(_user._id);
     expect(newMessage.engageData.brandId).toBe(brand._id);
+
+    const emessageNoMessenger = await engageMessageFactory({
+      isLive: true,
+      userId: _user._id,
+      method: 'messenger',
+    });
+
+    await engageUtils.send(emessageNoMessenger);
+  });
+
+  test('Engage utils send via messenger without initial values', async () => {
+    _customer.firstName = undefined;
+    _customer.lastName = undefined;
+    _customer.primaryEmail = undefined;
+
+    _customer.save();
+
+    const user = await userFactory();
+
+    user.email = undefined;
+    user.details = undefined;
+    user.save();
+
+    const brand = await brandFactory();
+
+    await integrationFactory({
+      brandId: brand._id,
+      kind: KIND_CHOICES.MESSENGER,
+    });
+
+    const emessage = await engageMessageFactory({
+      method: 'messenger',
+      customerIds: [_customer._id],
+      userId: user._id,
+      isLive: true,
+      messenger: {
+        brandId: brand._id,
+        content: 'content',
+      },
+    });
+
+    await engageUtils.send(emessage);
   });
 
   test('Engage utils send via email', async () => {
+    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     process.env.AWS_SES_ACCESS_KEY_ID = '123';
     process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
@@ -262,16 +312,12 @@ describe('engage message mutation tests', () => {
     process.env.MAIL_PORT = '123';
     process.env.AWS_REGION = 'us-west-2';
 
-    sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
-
-    const emailTemplate = await emailTemplateFactory();
     const emessage = await engageMessageFactory({
       method: 'email',
       title: 'Send via email',
       userId: 'fromUserId',
-      segmentId: _segment._id,
+      segmentIds: [_segment._id],
       email: {
-        templateId: emailTemplate._id,
         subject: 'subject',
         content: 'content',
         attachments: [],
@@ -284,15 +330,13 @@ describe('engage message mutation tests', () => {
       expect(e.message).toBe('User not found');
     }
 
-    const executeSendViaEmail = jest.spyOn(engageUtils.utils, 'executeSendViaEmail');
-
     const emessageWithUser = await engageMessageFactory({
       method: 'email',
       title: 'Send via email',
       userId: _user._id,
-      segmentId: _segment._id,
+      segmentIds: [_segment._id],
+      isLive: true,
       email: {
-        templateId: emailTemplate._id,
         subject: 'subject',
         content: 'content',
         attachments: [],
@@ -301,14 +345,44 @@ describe('engage message mutation tests', () => {
 
     await engageUtils.send(emessageWithUser);
 
-    expect(executeSendViaEmail.mock.calls.length).toBe(1);
+    _customer.firstName = undefined;
+    _customer.lastName = undefined;
+
+    _customer.save();
+
+    const emessageNoInitial = await engageMessageFactory({
+      method: 'email',
+      title: 'Send via email',
+      userId: _user._id,
+      isLive: true,
+      customerIds: [_customer._id],
+      segmentIds: [_segment._id],
+      email: {
+        subject: 'subject',
+        content: 'content',
+        attachments: [],
+      },
+    });
+
+    await engageUtils.send(emessageNoInitial);
+
+    const emessageNotLive = await engageMessageFactory({
+      isLive: false,
+      userId: _user._id,
+    });
+
+    await engageUtils.send(emessageNotLive);
+
+    mock.restore();
   });
 
   const engageMessageAddMutation = `
     mutation engageMessageAdd(${commonParamDefs}) {
       engageMessageAdd(${commonParams}) {
         kind
-        segmentId
+        segmentIds
+        brandIds
+        tagIds
         customerIds
         title
         fromUserId
@@ -318,17 +392,15 @@ describe('engage message mutation tests', () => {
         isLive
         stopDate
         messengerReceivedCustomerIds
-        tagIds
         email
         messenger
-        deliveryReports
         scheduleDate {
           type
           day
           month
           time
         }
-        segment {
+        segments {
           _id
         }
         fromUser {
@@ -342,6 +414,10 @@ describe('engage message mutation tests', () => {
   `;
 
   test('Add engage message', async () => {
+    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     process.env.AWS_SES_ACCESS_KEY_ID = '123';
     process.env.AWS_SES_SECRET_ACCESS_KEY = '123';
     process.env.AWS_SES_CONFIG_SET = 'aws-ses';
@@ -353,26 +429,16 @@ describe('engage message mutation tests', () => {
       throw new Error('User not found');
     }
 
-    const sandbox = sinon.createSandbox();
-
-    sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve({ VerifiedEmailAddresses: [user.email] });
-      });
-    });
-
-    const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
-    const sendSpy = jest.spyOn(engageUtils, 'send');
-
-    const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
+    const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
-    expect(spy.mock.calls.length).toBe(1);
-    expect(sendSpy.mock.calls.length).toBe(1);
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
-    expect(engageMessage.segmentId).toBe(_doc.segmentId);
+    expect(engageMessage.segmentIds).toEqual(_doc.segmentIds);
+    expect(engageMessage.segments[0]._id).toContain(_doc.segmentIds);
+    expect(engageMessage.tagIds).toEqual(_doc.tagIds);
+    expect(engageMessage.brandIds).toEqual(_doc.brandIds);
     expect(engageMessage.customerIds).toEqual(_doc.customerIds);
     expect(engageMessage.title).toBe(_doc.title);
     expect(engageMessage.fromUserId).toBe(_doc.fromUserId);
@@ -383,41 +449,12 @@ describe('engage message mutation tests', () => {
     expect(tags).toEqual(_doc.tagIds);
     expect(engageMessage.email.toJSON()).toEqual(_doc.email);
     expect(engageMessage.messenger.toJSON()).toMatchObject(_doc.messenger);
-    expect(engageMessage.deliveryReports).toEqual({});
     expect(engageMessage.scheduleDate.type).toEqual('year');
     expect(engageMessage.scheduleDate.month).toEqual('2');
     expect(engageMessage.scheduleDate.day).toEqual('14');
-    expect(engageMessage.segment._id).toBe(_doc.segmentId);
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
-    expect(engageMessage.tagIds).toEqual(_doc.tagIds);
-    awsSpy.mockRestore();
-    sendSpy.mockRestore();
-  });
 
-  test('Engage add with unverified email', async () => {
-    expect.assertions(1);
-
-    process.env.AWS_SES_CONFIG_SET = 'aws-ses';
-    process.env.AWS_ENDPOINT = '123';
-
-    const sandbox = sinon.createSandbox();
-    const awsSpy = jest.spyOn(awsRequests, 'getVerifiedEmails');
-    const mock = sinon.stub(engageUtils.utils, 'executeSendViaEmail').callsFake();
-
-    sandbox.stub(awsRequests, 'getVerifiedEmails').callsFake(() => {
-      return new Promise(resolve => {
-        return resolve({ VerifiedEmailAddresses: [] });
-      });
-    });
-
-    try {
-      await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc, context);
-    } catch (e) {
-      expect(e.toString()).toContain('Email not verified');
-    }
-
-    awsSpy.mockRestore();
-    mock.mockRestore();
+    mock.restore();
   });
 
   test('Edit engage message', async () => {
@@ -426,7 +463,9 @@ describe('engage message mutation tests', () => {
         engageMessageEdit(_id: $_id ${commonParams}) {
           _id
           kind
-          segmentId
+          segmentIds
+          brandIds
+          tagIds
           customerIds
           title
           fromUserId
@@ -435,10 +474,9 @@ describe('engage message mutation tests', () => {
           isLive
           stopDate
           messengerReceivedCustomerIds
-          tagIds
           email
           messenger
-          segment {
+          segments {
             _id
           }
           fromUser {
@@ -450,13 +488,20 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
+
+    fetchSpy.mockRestore();
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
     expect(engageMessage.kind).toBe(_doc.kind);
-    expect(engageMessage.segmentId).toBe(_doc.segmentId);
+    expect(engageMessage.segmentIds).toEqual(_doc.segmentIds);
+    expect(engageMessage.segments[0]._id).toContain(_doc.segmentIds);
+    expect(engageMessage.brandIds).toEqual(_doc.brandIds);
+    expect(engageMessage.tagIds).toEqual(_doc.tagIds);
     expect(engageMessage.customerIds).toEqual(_doc.customerIds);
     expect(engageMessage.title).toBe(_doc.title);
     expect(engageMessage.fromUserId).toBe(_doc.fromUserId);
@@ -474,9 +519,17 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.messengerReceivedCustomerIds).toEqual([]);
     expect(tags).toEqual(_doc.tagIds);
     expect(engageMessage.email.toJSON()).toEqual(_doc.email);
-    expect(engageMessage.segment._id).toBe(_doc.segmentId);
     expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
-    expect(engageMessage.tagIds).toEqual(_doc.tagIds);
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Remove engage message', async () => {
@@ -488,9 +541,26 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id }, context);
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+
+    await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
 
     expect(await EngageMessages.findOne({ _id: _message._id })).toBe(null);
+
+    fetchSpy.mockRestore();
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    _message = await engageMessageFactory({ kind: 'post' });
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Set live engage message', async () => {
@@ -501,9 +571,31 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id }, context);
 
-    expect(engageMessage.isLive).toBe(true);
+    const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
+    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+
+    let response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
+
+    expect(response.isLive).toBe(true);
+
+    fetchSpy.mockRestore();
+
+    const manualMessage = await engageMessageFactory({ kind: MESSAGE_KINDS.MANUAL });
+
+    response = await graphqlRequest(mutation, 'engageMessageSetLive', { _id: manualMessage._id });
+
+    expect(response.isLive).toBe(true);
+
+    process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    try {
+      await graphqlRequest(mutation, 'engageMessageSetLive', { _id: _message._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+      );
+    }
   });
 
   test('Set pause engage message', async () => {
@@ -515,7 +607,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetPause', { _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetPause', { _id: _message._id });
 
     expect(engageMessage.isLive).toBe(false);
   });
@@ -545,7 +637,7 @@ describe('engage message mutation tests', () => {
     const conversation = await conversationFactory(conversationObj);
     const conversationMessage = await conversationMessageFactory(conversationMessageObj);
 
-    _message.segmentId = _segment._id;
+    _message.segmentIds = [_segment._id];
     _message.messenger.brandId = _integration.brandId;
 
     await _message.save();
@@ -558,15 +650,12 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    const sendSpy = jest.spyOn(engageUtils, 'send');
-
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLiveManual', { _id: _message._id }, context);
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageSetLiveManual', { _id: _message._id });
 
     if (!conversationMessage.engageData) {
       throw new Error('Conversation engageData not found');
     }
 
-    expect(engageUtils.send).toHaveBeenCalled();
     expect(engageMessage.isLive).toBe(true);
     expect(conversation.userId).toBe(conversationObj.userId);
     expect(conversation.customerId).toBe(conversationObj.customerId);
@@ -577,6 +666,86 @@ describe('engage message mutation tests', () => {
     expect(conversationMessage.userId).toBe(conversationMessageObj.userId);
     expect(conversationMessage.customerId).toBe(conversationMessageObj.customerId);
     expect(conversationMessage.content).toBe(conversationMessageObj.content);
-    sendSpy.mockRestore();
+  });
+
+  test('Handle engage unsubscribe', async () => {
+    const customer = await customerFactory({ doNotDisturb: 'No' });
+    const user = await userFactory({ doNotDisturb: 'No' });
+
+    await handleUnsubscription({ cid: customer._id, uid: user._id });
+
+    const updatedCustomer = await Customers.getCustomer(customer._id);
+
+    expect(updatedCustomer.doNotDisturb).toBe('Yes');
+
+    const updatedUser = await Users.getUser(user._id);
+
+    expect(updatedUser.doNotDisturb).toBe('Yes');
+  });
+
+  test('configSave', async () => {
+    process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
+
+    const mutation = `
+      mutation engagesConfigSave($accessKeyId: String, $secretAccessKey: String, $region: String) {
+        engagesConfigSave(accessKeyId: $accessKeyId, secretAccessKey: $secretAccessKey, region: $region) {
+          accessKeyId
+          secretAccessKey
+          region
+        }
+      }
+    `;
+
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
+    try {
+      await graphqlRequest(mutation, 'engagesConfigSave', {}, { dataSources });
+    } catch (e) {
+      expect(e[0].message).toBe('Engages api is not running');
+    }
+  });
+
+  test('dataSources', async () => {
+    process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
+
+    const dataSources = { EngagesAPI: new EngagesAPI() };
+
+    const check = async (mutation, name, args) => {
+      try {
+        await graphqlRequest(mutation, name, args, { dataSources });
+      } catch (e) {
+        expect(e[0].message).toBe('Engages api is not running');
+      }
+    };
+
+    await check(
+      `
+      mutation engageMessageVerifyEmail($email: String!) {
+        engageMessageVerifyEmail(email: $email)
+      }
+    `,
+      'engageMessageVerifyEmail',
+      { email: 'email@yahoo.com' },
+    );
+
+    await check(
+      `
+      mutation engageMessageRemoveVerifiedEmail($email: String!) {
+        engageMessageRemoveVerifiedEmail(email: $email)
+      }
+    `,
+      'engageMessageRemoveVerifiedEmail',
+      { email: 'email@yahoo.com' },
+    );
+
+    await check(
+      `
+      mutation engageMessageSendTestEmail($from: String!, $to: String!, $content: String!) {
+        engageMessageSendTestEmail(from: $from, to: $to, content: $content)
+      }
+    `,
+      'engageMessageSendTestEmail',
+      { from: 'from@yahoo.com', to: 'to@yahoo.com', content: 'content' },
+    );
   });
 });

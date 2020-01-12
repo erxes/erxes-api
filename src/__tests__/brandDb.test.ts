@@ -1,6 +1,8 @@
 import { brandFactory, integrationFactory, userFactory } from '../db/factories';
 import { Brands, Integrations, Users } from '../db/models';
 
+import './setup.ts';
+
 describe('Brands db', () => {
   let _brand;
   let _user;
@@ -26,6 +28,18 @@ describe('Brands db', () => {
     // try using not existing one
     code = await Brands.generateCode('DFAFFADFSF');
     expect(code).toBeDefined();
+  });
+
+  test('Get brand', async () => {
+    try {
+      await Brands.getBrand('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Brand not found');
+    }
+
+    const brandObj = await Brands.getBrand(_brand._id);
+
+    expect(brandObj).toBeDefined();
   });
 
   test('Create brand', async () => {

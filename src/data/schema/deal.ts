@@ -1,133 +1,83 @@
-const commonTypes = `
-  order: Int
-  createdAt: Date
-`;
+import { commonTypes, conformityQueryFields } from './common';
 
 export const types = `
-  type DealBoard {
-    _id: String!
-    name: String!
-    ${commonTypes}
-    pipelines: [DealPipeline]
-  }
-
-  type DealPipeline {
-    _id: String!
-    name: String!
-    boardId: String!
-    ${commonTypes}
-  }
-
-  type DealStage {
-    _id: String!
-    name: String!
-    probability: String
-    pipelineId: String!
-    amount: JSON
-    deals: [Deal]
-    dealsTotalCount: Int
-    ${commonTypes}
-  }
-
   type Deal {
     _id: String!
-    name: String!
-    stageId: String
-    pipeline: DealPipeline
-    boardId: String
-    companyIds: [String]
-    customerIds: [String]
-    assignedUserIds: [String]
     amount: JSON
-    closeDate: Date
-    description: String
     companies: [Company]
     customers: [Customer]
     products: JSON
     productsData: JSON
-    assignedUsers: [User]
-    modifiedAt: Date
-    modifiedBy: String
-    stage: DealStage
     ${commonTypes}
   }
 
-  type DealTotalAmount {
-    _id: String
-    currency: String
+  type DealTotalCurrency {
     amount: Float
+    name: String
+  }
+
+  type TotalForType {
+    _id: String
+    name: String
+    currencies: [DealTotalCurrency]
   }
 
   type DealTotalAmounts {
     _id: String
     dealCount: Int
-    dealAmounts: [DealTotalAmount]
-  }
-
-  input DealDate {
-    month: Int
-    year: Int
+    totalForType: [TotalForType]
   }
 `;
 
-export const queries = `
-  dealBoards: [DealBoard]
-  dealBoardGetLast: DealBoard
-  dealBoardDetail(_id: String!): DealBoard
-  dealPipelines(boardId: String!): [DealPipeline]
-  dealPipelineDetail(_id: String!): DealPipeline
-  dealStages(pipelineId: String!, search: String): [DealStage]
-  dealStageDetail(_id: String!): DealStage
-  dealDetail(_id: String!): Deal
-  deals(
-    pipelineId: String,
-    stageId: String, 
-    customerId: String, 
-    companyId: String,
-    date: DealDate,
-    skip: Int
-    search: String,
-  ): [Deal]
-  dealsTotalAmounts(date: DealDate pipelineId: String): DealTotalAmounts
-`;
-
-const dealMutationParams = `
-  name: String!,
+const commonMutationParams = `
   stageId: String,
   assignedUserIds: [String],
-  companyIds: [String],
-  customerIds: [String],
+  attachments: [AttachmentInput],
   closeDate: Date,
   description: String,
   order: Int,
-  productsData: JSON
+  productsData: JSON,
+  reminderMinute: Int,
+  isComplete: Boolean,
+  priority: String
+  sourceConversationId: String,
 `;
 
-const dealStageMutationParams = `
-  name: String!,
-  probability: String,
-  pipelineId: String!
+const commonQueryParams = `
+  date: ItemDate
+  pipelineId: String
+  customerIds: [String]
+  companyIds: [String]
+  assignedUserIds: [String]
+  productIds: [String]
+  closeDateType: String
+  labelIds: [String]
+  search: String
+  priority: [String]
+  sortField: String
+  sortDirection: Int
+`;
+
+export const queries = `
+  dealDetail(_id: String!): Deal
+  deals(
+    initialStageId: String
+    stageId: String
+    skip: Int
+    ${commonQueryParams}
+    ${conformityQueryFields}
+  ): [Deal]
+  dealsTotalAmounts(
+    ${commonQueryParams}
+    ${conformityQueryFields}
+  ): DealTotalAmounts
 `;
 
 export const mutations = `
-  dealBoardsAdd(name: String!): DealBoard
-  dealBoardsEdit(_id: String!, name: String!): DealBoard
-  dealBoardsRemove(_id: String!): JSON
-
-  dealPipelinesAdd(name: String!, boardId: String!, stages: JSON): DealPipeline
-  dealPipelinesEdit(_id: String!, name: String!, boardId: String!, stages: JSON): DealPipeline
-  dealPipelinesUpdateOrder(orders: [OrderItem]): [DealPipeline]
-  dealPipelinesRemove(_id: String!): JSON
-
-  dealStagesAdd(${dealStageMutationParams}): DealStage
-  dealStagesEdit(_id: String!, ${dealStageMutationParams}): DealStage
-  dealStagesChange(_id: String!, pipelineId: String!): DealStage
-  dealStagesUpdateOrder(orders: [OrderItem]): [DealStage]
-  dealStagesRemove(_id: String!): JSON
-
-  dealsAdd(${dealMutationParams}): Deal
-  dealsEdit(_id: String!, ${dealMutationParams}): Deal
-  dealsChange( _id: String!): Deal
+  dealsAdd(name: String!, companyIds: [String], customerIds: [String], ${commonMutationParams}): Deal
+  dealsEdit(_id: String!, name: String, ${commonMutationParams}): Deal
+  dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
+  dealsWatch(_id: String, isAdd: Boolean): Deal
 `;

@@ -12,6 +12,7 @@ export interface INotificationModel extends Model<INotificationDocument> {
   markAsRead(ids: string[], userId?: string): void;
   createNotification(doc: INotification, createdUser?: IUserDocument | string): Promise<INotificationDocument>;
   updateNotification(_id: string, doc: INotification): Promise<INotificationDocument>;
+  checkIfRead(userId: string, contentTypeId: string): Promise<boolean>;
   removeNotification(_id: string): void;
 }
 
@@ -23,7 +24,7 @@ export const loadNotificationClass = () => {
     public static markAsRead(ids: string[], userId: string) {
       let selector: any = { receiver: userId };
 
-      if (ids) {
+      if (ids && ids.length > 0) {
         selector = { _id: { $in: ids } };
       }
 
@@ -31,13 +32,18 @@ export const loadNotificationClass = () => {
     }
 
     /**
+     * Check if user has read notification
+     */
+    public static async checkIfRead(userId, contentTypeId) {
+      const notification = await Notifications.findOne({ isRead: false, receiver: userId, contentTypeId });
+
+      return notification ? false : true;
+    }
+
+    /**
      * Create a notification
      */
-    public static async createNotification(doc: INotification, createdUser?: IUserDocument | string) {
-      if (!createdUser) {
-        throw new Error('createdUser must be supplied');
-      }
-
+    public static async createNotification(doc: INotification, createdUserId: string) {
       // if receiver is configured to get this notification
       const config = await NotificationConfigurations.findOne({
         user: doc.receiver,
@@ -49,7 +55,7 @@ export const loadNotificationClass = () => {
         throw new Error('Configuration does not exist');
       }
 
-      return Notifications.create({ ...doc, createdUser });
+      return Notifications.create({ ...doc, createdUser: createdUserId });
     }
 
     /**
@@ -90,10 +96,6 @@ export const loadNotificationConfigClass = () => {
       { notifType, isAllowed }: { notifType?: string; isAllowed?: boolean },
       user?: IUserDocument | string,
     ) {
-      if (!user) {
-        throw new Error('user must be supplied');
-      }
-
       const selector: any = { user, notifType };
 
       const oldOne = await NotificationConfigurations.findOne(selector);

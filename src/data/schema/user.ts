@@ -6,6 +6,7 @@ export const types = `
     position: String
     location: String
     description: String
+    operatorPhone: String
   }
 
   input UserLinks {
@@ -24,6 +25,7 @@ export const types = `
 
   input InvitationEntry {
     email: String
+    password: String
     groupId: String
   }
 
@@ -34,6 +36,7 @@ export const types = `
     position: String
     location: String
     description: String
+    operatorPhone: String
   }
 
   type UserLinksType {
@@ -53,11 +56,13 @@ export const types = `
     details: UserDetailsType
     links: UserLinksType
     status: String
-    hasSeenOnBoard: Boolean
     emailSignatures: JSON
     getNotificationByEmail: Boolean
     groupIds: [String]
+    brandIds: [String]
+    doNotDisturb: String
 
+    brands: [Brand]
     isOwner: Boolean
     permissionActions: JSON
   }
@@ -75,15 +80,19 @@ const commonParams = `
   links: UserLinks,	
   channelIds: [String],	
   groupIds: [String]
+  brandIds: [String]
 `;
 
 const commonSelector = `
   searchValue: String,
-  isActive: Boolean
+  isActive: Boolean,
+  requireUsername: Boolean,
+  ids: [String]
 `;
 
 export const queries = `
-  users(page: Int, perPage: Int, ${commonSelector}): [User]
+  users(page: Int, perPage: Int, status: String ${commonSelector}): [User]
+  allUsers(isActive: Boolean): [User]
   userDetail(_id: String): User
   usersTotalCount(${commonSelector}): Int
   currentUser: User
@@ -95,6 +104,7 @@ export const mutations = `
   logout: String
   forgotPassword(email: String!): String!
   resetPassword(token: String!, newPassword: String!): JSON
+  usersResetMemberPassword(_id: String!, newPassword: String!): User
   usersEditProfile(
     username: String!,
     email: String!,

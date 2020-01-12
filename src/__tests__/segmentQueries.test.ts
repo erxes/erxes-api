@@ -3,6 +3,8 @@ import { graphqlRequest } from '../db/connection';
 import { segmentFactory } from '../db/factories';
 import { Segments } from '../db/models';
 
+import './setup.ts';
+
 describe('segmentQueries', () => {
   afterEach(async () => {
     // Clearing test data
@@ -18,15 +20,6 @@ describe('segmentQueries', () => {
       query segments($contentType: String!) {
         segments(contentType: $contentType) {
           _id
-          contentType
-          name
-          description
-          subOf
-          color
-          connector
-          conditions
-
-          getSubSegments { _id }
         }
       }
     `;
@@ -49,10 +42,22 @@ describe('segmentQueries', () => {
   test('Segment detail', async () => {
     const segment = await segmentFactory();
 
+    await segmentFactory({ subOf: segment._id });
+    await segmentFactory({ subOf: segment._id });
+
     const qry = `
       query segmentDetail($_id: String) {
         segmentDetail(_id: $_id) {
           _id
+          contentType
+          name
+          description
+          subOf
+          color
+          connector
+          conditions
+
+          getSubSegments { _id }
         }
       }
     `;
@@ -62,6 +67,7 @@ describe('segmentQueries', () => {
     });
 
     expect(response._id).toBe(segment._id);
+    expect(response.getSubSegments.length).toBe(2);
   });
 
   test('Get segment head', async () => {

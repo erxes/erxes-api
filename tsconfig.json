@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "allowJs": true,
-    "target": "es5",
+    "target": "es6",
     "moduleResolution": "node",
     "module": "commonjs",
     "lib": ["es2015", "es6", "es7", "esnext.asynciterable"],
@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["./src/**/*.ts", "./migrations/**/*.ts", "typings.d.ts"],
+  "include": ["./src/**/*.ts", "typings.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,11 +1,13 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs, Customers, Deals, Fields, InternalNotes } from './';
+import { validSearchText } from '../../data/utils';
+import { ActivityLogs, Conformities, Fields, InternalNotes } from './';
 import { companySchema, ICompany, ICompanyDocument } from './definitions/companies';
-import { COMPANY_BASIC_INFOS, STATUSES } from './definitions/constants';
+import { STATUSES } from './definitions/constants';
 import { IUserDocument } from './definitions/users';
-import { bulkInsert } from './utils';
 
 export interface ICompanyModel extends Model<ICompanyDocument> {
+  getCompanyName(company: ICompany): string;
+
   checkDuplication(
     companyFields: {
       primaryName?: string;
@@ -13,13 +15,15 @@ export interface ICompanyModel extends Model<ICompanyDocument> {
     idsToExclude?: string[] | string,
   ): never;
 
+  fillSearchText(doc: ICompany): string;
+
+  getCompany(_id: string): Promise<ICompanyDocument>;
+
   createCompany(doc: ICompany, user?: IUserDocument): Promise<ICompanyDocument>;
 
   updateCompany(_id: string, doc: ICompany): Promise<ICompanyDocument>;
 
-  updateCustomers(_id: string, customerIds: string[]): Promise<ICompanyDocument>;
-
-  removeCompany(_id: string): void;
+  removeCompanies(_ids: string[]): Promise<{ n: number; ok: number }>;
 
   mergeCompanies(companyIds: string[], companyFields: ICompany): Promise<ICompanyDocument>;
 
@@ -41,7 +45,7 @@ export const loadClass = () => {
 
       // Adding exclude operator to the query
       if (idsToExclude) {
-        query._id = idsToExclude instanceof Array ? { $nin: idsToExclude } : { $ne: idsToExclude };
+        query._id = { $nin: idsToExclude };
       }
 
       if (companyFields.primaryName) {
@@ -67,6 +71,35 @@ export const loadClass = () => {
       }
     }
 
+    public static fillSearchText(doc: ICompany) {
+      return validSearchText([
+        (doc.names || []).join(' '),
+        (doc.emails || []).join(' '),
+        (doc.phones || []).join(' '),
+        doc.website || '',
+        doc.industry || '',
+        doc.plan || '',
+        doc.description || '',
+      ]);
+    }
+
+    public static getCompanyName(company: ICompany) {
+      return company.primaryName || company.primaryEmail || company.primaryPhone || 'Unknown';
+    }
+
+    /**
+     * Retreives company
+     */
+    public static async getCompany(_id: string) {
+      const company = await Companies.findOne({ _id });
+
+      if (!company) {
+        throw new Error('Company not found');
+      }
+
+      return company;
+    }
+
     /**
      * Create a company
      */
@@ -85,10 +118,11 @@ export const loadClass = () => {
         ...doc,
         createdAt: new Date(),
         modifiedAt: new Date(),
+        searchText: Companies.fillSearchText(doc),
       });
 
       // create log
-      await ActivityLogs.createCompanyLog(company);
+      await ActivityLogs.createCocLog({ coc: company, contentType: 'company' });
 
       return company;
     }
@@ -100,27 +134,12 @@ export const loadClass = () => {
       // Checking duplicated fields of company
       await Companies.checkDuplication(doc, [_id]);
 
-      if (doc.customFieldsData) {
-        // clean custom field values
-        doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
-      }
+      // clean custom field values
+      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
-      await Companies.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+      const searchText = Companies.fillSearchText(Object.assign(await Companies.getCompany(_id), doc) as ICompany);
 
-      return Companies.findOne({ _id });
-    }
-
-    /**
-     * Update company customers
-     */
-    public static async updateCustomers(_id: string, customerIds: string[]) {
-      // Removing companyIds from users
-      await Customers.updateMany({ companyIds: { $in: [_id] } }, { $pull: { companyIds: _id } });
-
-      // Adding companyId to the each customers
-      for (const customerId of customerIds) {
-        await Customers.findByIdAndUpdate({ _id: customerId }, { $addToSet: { companyIds: _id } }, { upsert: true });
-      }
+      await Companies.updateOne({ _id }, { $set: { ...doc, searchText, modifiedAt: new Date() } });
 
       return Companies.findOne({ _id });
     }
@@ -128,13 +147,15 @@ export const loadClass = () => {
     /**
      * Remove company
      */
-    public static async removeCompany(companyId: string) {
+    public static async removeCompanies(companyIds: string[]) {
       // Removing modules associated with company
-      await InternalNotes.removeCompanyInternalNotes(companyId);
+      await InternalNotes.removeCompaniesInternalNotes(companyIds);
 
-      await Customers.updateMany({ companyIds: { $in: [companyId] } }, { $pull: { companyIds: companyId } });
+      for (const companyId of companyIds) {
+        await Conformities.removeConformity({ mainType: 'company', mainTypeId: companyId });
+      }
 
-      return Companies.deleteOne({ _id: companyId });
+      return Companies.deleteMany({ _id: { $in: companyIds } });
     }
 
     /**
@@ -144,6 +165,8 @@ export const loadClass = () => {
       // Checking duplicated fields of company
       await this.checkDuplication(companyFields, companyIds);
 
+      let scopeBrandIds: string[] = [];
+      let customFieldsData = {};
       let tagIds: string[] = [];
       let names: string[] = [];
       let emails: string[] = [];
@@ -151,47 +174,48 @@ export const loadClass = () => {
 
       // Merging company tags
       for (const companyId of companyIds) {
-        const companyObj = await Companies.findOne({ _id: companyId });
+        const companyObj = await Companies.getCompany(companyId);
 
-        if (companyObj) {
-          const companyTags = companyObj.tagIds || [];
-          const companyNames = companyObj.names || [];
-          const companyEmails = companyObj.emails || [];
-          const companyPhones = companyObj.phones || [];
+        const companyTags = companyObj.tagIds || [];
+        const companyNames = companyObj.names || [];
+        const companyEmails = companyObj.emails || [];
+        const companyPhones = companyObj.phones || [];
+        const companyScopeBrandIds = companyObj.scopeBrandIds || [];
 
-          // Merging company's tag into 1 array
-          tagIds = tagIds.concat(companyTags);
+        // Merging scopeBrandIds
+        scopeBrandIds = scopeBrandIds.concat(companyScopeBrandIds);
 
-          // Merging company names
-          names = names.concat(companyNames);
+        // merge custom fields data
+        customFieldsData = { ...customFieldsData, ...(companyObj.customFieldsData || {}) };
 
-          // Merging company emails
-          emails = emails.concat(companyEmails);
+        // Merging company's tag into 1 array
+        tagIds = tagIds.concat(companyTags);
 
-          // Merging company phones
-          phones = phones.concat(companyPhones);
+        // Merging company names
+        names = names.concat(companyNames);
 
-          companyObj.status = STATUSES.DELETED;
+        // Merging company emails
+        emails = emails.concat(companyEmails);
 
-          await Companies.findByIdAndUpdate(companyId, { $set: { status: STATUSES.DELETED } });
-        }
+        // Merging company phones
+        phones = phones.concat(companyPhones);
+
+        companyObj.status = STATUSES.DELETED;
+
+        await Companies.findByIdAndUpdate(companyId, { $set: { status: STATUSES.DELETED } });
       }
 
-      // Removing Duplicated Tags from company
+      // Removing Duplicates
       tagIds = Array.from(new Set(tagIds));
-
-      // Removing Duplicated names from company
       names = Array.from(new Set(names));
-
-      // Removing Duplicated names from company
       emails = Array.from(new Set(emails));
-
-      // Removing Duplicated names from company
       phones = Array.from(new Set(phones));
 
       // Creating company with properties
       const company = await Companies.createCompany({
         ...companyFields,
+        scopeBrandIds,
+        customFieldsData,
         tagIds,
         mergedIds: companyIds,
         names,
@@ -199,35 +223,13 @@ export const loadClass = () => {
         phones,
       });
 
-      // Updating customer companies
-      await Customers.updateMany({ companyIds: { $in: companyIds } }, { $push: { companyIds: company._id } });
-
-      await Customers.updateMany({ companyIds: { $in: companyIds } }, { $pullAll: { companyIds } });
+      // Updating customer companies, deals, tasks, tickets
+      await Conformities.changeConformity({ type: 'company', newTypeId: company._id, oldTypeIds: companyIds });
 
       // Removing modules associated with current companies
       await InternalNotes.changeCompany(company._id, companyIds);
-      await Deals.changeCompany(company._id, companyIds);
-
-      // create log
-      await ActivityLogs.createCompanyLog(company);
 
       return company;
-    }
-
-    /**
-     * Imports customers with basic fields and custom properties
-     */
-    public static async bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument) {
-      const params = {
-        fieldNames,
-        fieldValues,
-        user,
-        basicInfos: COMPANY_BASIC_INFOS,
-        contentType: 'company',
-        create: (doc, userObj) => this.createCompany(doc, userObj),
-      };
-
-      return bulkInsert(params);
     }
   }
 

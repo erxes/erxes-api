@@ -6,6 +6,7 @@ export const fieldsTypes = `
     type: String
     validation: String
     text: String
+    name: String
     description: String
     options: [String]
     isRequired: Boolean
@@ -31,7 +32,7 @@ export const fieldsTypes = `
 
 export const fieldsQueries = `
   fields(contentType: String!, contentTypeId: String): [Field]
-  fieldsCombinedByContentType(contentType: String!): JSON
+  fieldsCombinedByContentType(contentType: String!, source: String): JSON
   fieldsDefaultColumnsConfig(contentType: String!): [ColumnConfigItem]
 `;
 

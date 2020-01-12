@@ -1,10 +1,12 @@
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as faker from 'faker';
 import * as moment from 'moment';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Brands, Channels, Users } from '../db/models';
+
+import './setup.ts';
 
 /*
  * Generated test data
@@ -174,7 +176,7 @@ describe('User mutations', () => {
     const group = await usersGroupFactory();
 
     const params = {
-      entries: [{ email: 'test@example.com', groupId: group._id }],
+      entries: [{ email: 'test@example.com', password: '123', groupId: group._id }],
     };
 
     await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
@@ -242,26 +244,6 @@ describe('User mutations', () => {
     spyEmail.mockRestore();
   });
 
-  test('usersSeenOnBoard', async () => {
-    const mutation = `
-      mutation usersSeenOnBoard {
-        usersSeenOnBoard {
-          _id
-        }
-      }
-  `;
-
-    await graphqlRequest(mutation, 'usersSeenOnBoard', {}, context);
-    const userObj = await Users.findOne({ _id: _user._id });
-
-    if (!userObj) {
-      throw new Error('User not found');
-    }
-
-    // send email call
-    expect(userObj.hasSeenOnBoard).toBeTruthy();
-  });
-
   test('usersConfirmInvitation', async () => {
     await userFactory({
       email: 'test@example.com',
@@ -288,10 +270,6 @@ describe('User mutations', () => {
     await graphqlRequest(mutation, 'usersConfirmInvitation', params);
 
     const userObj = await Users.findOne({ email: 'test@example.com' });
-
-    if (!userObj) {
-      throw new Error('User not found');
-    }
 
     // send email call
     expect(userObj).toBeDefined();
@@ -329,13 +307,9 @@ describe('User mutations', () => {
       }
     `;
 
-    const user = await graphqlRequest(mutation, 'usersEdit', { _id: _user._id, ...doc }, { user: _admin });
+    let user = await graphqlRequest(mutation, 'usersEdit', { _id: _user._id, ...doc }, { user: _admin });
 
-    const channel = await Channels.findOne({ _id: _channel._id });
-
-    if (!channel) {
-      throw new Error('Channel not found');
-    }
+    let channel = await Channels.getChannel(_channel._id);
 
     expect(channel.memberIds).toContain(user._id);
     expect(user.username).toBe(doc.username);
@@ -351,6 +325,17 @@ describe('User mutations', () => {
     expect(user.links.github).toBe(doc.links.github);
     expect(user.links.youtube).toBe(doc.links.youtube);
     expect(user.links.website).toBe(doc.links.website);
+
+    // if channelIds is empty
+    user = await graphqlRequest(
+      mutation,
+      'usersEdit',
+      { _id: _user._id, ...doc, channelIds: undefined },
+      { user: _admin },
+    );
+    channel = await Channels.getChannel(_channel._id);
+
+    expect(channel.memberIds).not.toContain(user._id);
   });
 
   test('Edit user profile', async () => {
@@ -405,6 +390,22 @@ describe('User mutations', () => {
     expect(user.links.github).toBe(args.links.github);
     expect(user.links.youtube).toBe(args.links.youtube);
     expect(user.links.website).toBe(args.links.website);
+
+    // if password is empty
+    args.password = '';
+    try {
+      await graphqlRequest(mutation, 'usersEditProfile', args, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Invalid password. Try again');
+    }
+
+    // if password is not match
+    args.password = 'updated';
+    try {
+      await graphqlRequest(mutation, 'usersEditProfile', args, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Invalid password. Try again');
+    }
   });
 
   test('Change user password', async () => {
@@ -434,11 +435,7 @@ describe('User mutations', () => {
       context,
     );
 
-    const user = await Users.findOne({ _id: _user._id });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
+    const user = await Users.getUser(_user._id);
 
     expect(user.password).not.toBe(previousPassword);
   });
@@ -455,15 +452,16 @@ describe('User mutations', () => {
 
     await Users.updateOne({ _id: _user._id }, { $unset: { registrationToken: 1, isOwner: false } });
 
-    await graphqlRequest(mutation, 'usersSetActiveStatus', { _id: _user._id }, { user: _admin });
+    const response = await graphqlRequest(mutation, 'usersSetActiveStatus', { _id: _user._id }, { user: _admin });
 
-    const deactivedUser = await Users.findOne({ _id: _user._id });
+    expect(response.isActive).toBe(false);
 
-    if (!deactivedUser) {
-      throw new Error('User not found');
+    // if deactivate yourself
+    try {
+      await graphqlRequest(mutation, 'usersSetActiveStatus', { _id: _admin._id }, { user: _admin });
+    } catch (e) {
+      expect(e[0].message).toBe('You can not delete yourself');
     }
-
-    expect(deactivedUser.isActive).toBe(false);
   });
 
   test('Config user email signature', async () => {
@@ -499,5 +497,56 @@ describe('User mutations', () => {
     const user = await graphqlRequest(mutation, 'usersConfigGetNotificationByEmail', { isAllowed: true }, context);
 
     expect(user.getNotificationByEmail).toBeDefined();
+  });
+
+  test('Logout', async () => {
+    const mutation = `
+      mutation logout {
+        logout
+      }
+    `;
+
+    const res = {
+      clearCookie: () => {
+        return 'clearCookie';
+      },
+    };
+
+    const response = await graphqlRequest(mutation, 'logout', {}, { res });
+
+    expect(response).toBe('loggedout');
+  });
+
+  test('Reset member password', async () => {
+    const previousPassword = _user.password;
+
+    const mutation = `
+      mutation usersResetMemberPassword(
+        $_id: String!
+        $newPassword: String!
+      ) {
+        usersResetMemberPassword(
+          _id: $_id
+          newPassword: $newPassword
+        ) {
+          _id
+        }
+      }
+    `;
+
+    const user = await graphqlRequest(
+      mutation,
+      'usersResetMemberPassword',
+      { _id: _user.id, newPassword: 'newpassword' },
+      context,
+    );
+    // if not newPassword
+    try {
+      await graphqlRequest(mutation, 'usersResetMemberPassword', { _id: _user.id, newPassword: '' }, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Password is required.');
+    }
+
+    expect(user.password).not.toBe(previousPassword);
   });
 });

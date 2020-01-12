@@ -2,7 +2,7 @@
   role="presentation"
   cellpadding="0"
   cellspacing="0"
-  style="    max-width: 560px;font-size:0px;width:100%;background: #fff; padding-bottom: 30px;box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.2);border-radius: 10px;"
+  style="max-width: 560px;font-size:0px;width:100%;background: #fff; padding-bottom: 30px;box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.2);border-radius: 10px;"
   align="center"
   border="0"
 >
@@ -19,10 +19,10 @@
                   <img
                     src="https://i.imgur.com/7pXtCWF.png"
                     style="
-                                width: 60px;
-                                margin-top: 20px;
-                                margin-bottom: 5px;
-                        "
+                      width: 60px;
+                      margin-top: 20px;
+                      margin-bottom: 5px;
+                      "
                   />
                 </td>
                 <td width="80px"><img style="width: 30px;" src="https://i.imgur.com/Obpdd9r.png" /></td>
@@ -31,25 +31,30 @@
             </table>
           </div>
 
-          <p style="font-size: 26px;color: #333;line-height:32px;margin-bottom: 0;margin-top: 50px;">
-            <strong>{{ notification.title }}</strong> <br />
+          <p style="font-size: 21px;color: #444;margin: 40px 30px 10px;padding-bottom:15px;font-weight: 500;border-bottom: 1px solid #eee;">
+            {{ notification.title }}
           </p>
-          <p style="font-size: 15px;color: #666;line-height: 26px;padding: 15px 30px;">{{{ notification.content }}}</p>
-          <p style="border-collapse:collapse; font-size:12px; color:#888;">{{ notification.date }}</p>
+          <div style="text-align: left; padding: 0 30px; margin-bottom: 30px;">
+            <p style="color: #444; font-size: 14px;"><strong>{{{ userName }}}</strong> {{{ action }}}:</p>
+            <div style="color: #666; text-align: justify; border-left: 5px solid #5628b6; padding-left: 10px; font-size: 12px;">
+              {{{ notification.content }}}
+            </div>
+            <p style="border-collapse:collapse; font-size:12px; color:#888;">{{ notification.date }}</p>
+          </div>
 
           <table
             role="presentation"
             cellpadding="0"
             cellspacing="0"
-            style="border-collapse:separate;     margin: 30px auto 20px;"
+            style="border-collapse:separate; margin: 10px auto 30px;"
             align="center"
             border="0"
           >
             <tbody>
               <tr>
-                <td style="" align="center" valign="middle">
+                <td align="center" valign="middle">
                   <a
-                    href="http://crm.nmma.co{{ notification.link }}"
+                    href="{{ notification.link }}"
                     style="    border-radius: 300px;
                   box-shadow: 0 4px 28px rgba(0,0,0,.1);
                   transition: .1s ease-in-out;
@@ -66,35 +71,27 @@
                   >
                     View notification
                   </a>
+
+                  <div style="margin-top: 20px; padding: 10px 20px;">
+                    <div> or click the <a style="color: #63d2d6;" href="{{ notification.link }}" target="_blank"><strong> link </strong></a></div>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
+          <div >
+            <a style="color: #5629b6; text-decoration: none;" target="_blank" href="https://erxes.io/team" alt="About us"> About us &nbsp;</a> |
+            <a style="color: #5629b6; text-decoration: none;" target="_blank" href="https://erxes.io/contact" alt="Contact us">&nbsp; Contact us &nbsp;</a> |
+            <a style="color: #5629b6; text-decoration: none;" target="_blank" href="{{ domain }}/unsubscribe?uid={{uid}}" alt="Click here to unsubscribe">&nbsp; Unsubscribe </a>
+          </div>
         </div>
       </td>
     </tr>
   </tbody>
 </table>
 <!--footer-->
-<table style="    margin-top: 20px;" align="center" border="0">
+<table style="margin-top: 20px;" align="center" border="0">
   <tbody>
-    <tr>
-      <td style="text-align:center;vertical-align:top;">
-        <div style="margin-bottom: 5px;">
-          <a
-            target="_blank"
-            style="font-family: Helvetica Neue;
-                text-decoration: underline;
-      font-size: 12px;
-      color: #ccc;
-      padding: 0px 5px;
-      border-radius: 10px;"
-            href="https://erxes.io"
-            >www.erxes.io</a
-          >
-        </div>
-      </td>
-    </tr>
     <tr>
       <td style="text-align:center;vertical-align:top;">
         <div>

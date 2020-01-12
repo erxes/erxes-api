@@ -1,10 +1,9 @@
-import { createSchedule, updateOrRemoveSchedule } from '../../../cronJobs/engages';
-import { EngageMessages, Users } from '../../../db/models';
+import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
-import { awsRequests } from '../../../trackers/engageTracker';
-import { MESSAGE_KINDS, METHODS } from '../../constants';
-import { checkPermission } from '../../permissions';
-import { getEnv } from '../../utils';
+import { MESSAGE_KINDS } from '../../constants';
+import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
@@ -15,30 +14,20 @@ const engageMutations = {
   /**
    * Create new message
    */
-  async engageMessageAdd(_root, doc: IEngageMessage) {
-    const { method, fromUserId } = doc;
+  async engageMessageAdd(_root, doc: IEngageMessage, { user, docModifier }: IContext) {
+    const engageMessage = await EngageMessages.createEngageMessage(docModifier(doc));
 
-    if (method === METHODS.EMAIL) {
-      // Checking if configs exist
-      getEnv({ name: 'AWS_SES_CONFIG_SET' });
-      getEnv({ name: 'AWS_ENDPOINT' });
+    await send(engageMessage);
 
-      const user = await Users.findOne({ _id: fromUserId });
-
-      const { VerifiedEmailAddresses = [] } = await awsRequests.getVerifiedEmails();
-
-      // If verified creates engagemessage
-      if (user && !VerifiedEmailAddresses.includes(user.email)) {
-        throw new Error('Email not verified');
-      }
-    }
-
-    const engageMessage = await EngageMessages.createEngageMessage(doc);
-
-    // if manual and live then send immediately
-    if (doc.kind === MESSAGE_KINDS.MANUAL && doc.isLive) {
-      await send(engageMessage);
-    }
+    await putCreateLog(
+      {
+        type: 'engage',
+        newData: JSON.stringify(doc),
+        object: engageMessage,
+        description: `${engageMessage.title} has been created`,
+      },
+      user,
+    );
 
     return engageMessage;
   },
@@ -46,10 +35,25 @@ const engageMutations = {
   /**
    * Edit message
    */
-  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit) {
-    await EngageMessages.updateEngageMessage(_id, doc);
+  async engageMessageEdit(_root, { _id, ...doc }: IEngageMessageEdit, { user }: IContext) {
+    const engageMessage = await EngageMessages.getEngageMessage(_id);
+    const updated = await EngageMessages.updateEngageMessage(_id, doc);
 
-    updateOrRemoveSchedule({ _id }, true);
+    try {
+      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
+    } catch (e) {
+      throw new Error(e);
+    }
+
+    await putUpdateLog(
+      {
+        type: 'engage',
+        object: engageMessage,
+        newData: JSON.stringify(updated),
+        description: `${engageMessage.title} has been edited`,
+      },
+      user,
+    );
 
     return EngageMessages.findOne({ _id });
   },
@@ -57,10 +61,27 @@ const engageMutations = {
   /**
    * Remove message
    */
-  engageMessageRemove(_root, { _id }: { _id: string }) {
-    updateOrRemoveSchedule({ _id });
+  async engageMessageRemove(_root, { _id }: { _id: string }, { user }: IContext) {
+    const engageMessage = await EngageMessages.getEngageMessage(_id);
 
-    return EngageMessages.removeEngageMessage(_id);
+    try {
+      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
+    } catch (e) {
+      throw new Error(e);
+    }
+
+    const removed = await EngageMessages.removeEngageMessage(_id);
+
+    await putDeleteLog(
+      {
+        type: 'engage',
+        object: engageMessage,
+        description: `${engageMessage.title} has been removed`,
+      },
+      user,
+    );
+
+    return removed;
   },
 
   /**
@@ -71,8 +92,16 @@ const engageMutations = {
 
     const { kind } = engageMessage;
 
-    if (kind === MESSAGE_KINDS.AUTO || kind === MESSAGE_KINDS.VISITOR_AUTO) {
-      createSchedule(engageMessage);
+    if (kind !== MESSAGE_KINDS.MANUAL) {
+      try {
+        await utils.fetchCronsApi({
+          path: '/create-schedule',
+          method: 'POST',
+          body: { message: JSON.stringify(engageMessage) },
+        });
+      } catch (e) {
+        throw new Error(e);
+      }
     }
 
     return engageMessage;
@@ -88,12 +117,30 @@ const engageMutations = {
   /**
    * Engage message set live manual
    */
-  async engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
+  engageMessageSetLiveManual(_root, { _id }: { _id: string }) {
+    return EngageMessages.engageMessageSetLive(_id);
+  },
 
-    await send(engageMessage);
+  engagesConfigSave(_root, args, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesConfigSave(args);
+  },
 
-    return engageMessage;
+  /**
+   * Engage message verify email
+   */
+  engageMessageVerifyEmail(_root, { email }: { email: string }, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesVerifyEmail({ email });
+  },
+
+  /**
+   * Engage message remove verified email
+   */
+  engageMessageRemoveVerifiedEmail(_root, { email }: { email: string }, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesRemoveVerifiedEmail({ email });
+  },
+
+  engageMessageSendTestEmail(_root, args, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesSendTestEmail(args);
   },
 };
 
@@ -103,5 +150,8 @@ checkPermission(engageMutations, 'engageMessageRemove', 'engageMessageRemove');
 checkPermission(engageMutations, 'engageMessageSetLive', 'engageMessageSetLive');
 checkPermission(engageMutations, 'engageMessageSetPause', 'engageMessageSetPause');
 checkPermission(engageMutations, 'engageMessageSetLiveManual', 'engageMessageSetLiveManual');
+checkPermission(engageMutations, 'engageMessageVerifyEmail', 'engageMessageRemove');
+checkPermission(engageMutations, 'engageMessageRemoveVerifiedEmail', 'engageMessageRemove');
+checkPermission(engageMutations, 'engageMessageSendTestEmail', 'engageMessageRemove');
 
 export default engageMutations;

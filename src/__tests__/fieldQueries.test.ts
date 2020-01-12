@@ -1,7 +1,17 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { fieldFactory, fieldGroupFactory } from '../db/factories';
+import {
+  brandFactory,
+  customerFactory,
+  fieldFactory,
+  fieldGroupFactory,
+  integrationFactory,
+  usersGroupFactory,
+} from '../db/factories';
 import { Companies, Customers, Fields, FieldsGroups } from '../db/models';
+
+import { KIND_CHOICES } from '../db/models/definitions/constants';
+import './setup.ts';
 
 describe('fieldQueries', () => {
   afterEach(async () => {
@@ -22,21 +32,11 @@ describe('fieldQueries', () => {
     const qry = `
       query fields($contentType: String! $contentTypeId: String) {
         fields(contentType: $contentType contentTypeId: $contentTypeId) {
+          name
           _id
-          contentType
-          contentTypeId
-          type
-          validation
-          text
-          description
-          options
-          isRequired
-          order
-          isVisible
-          isDefinedByErxes
-          groupId
-          lastUpdatedUser { _id }
-          lastUpdatedUserId
+          lastUpdatedUser {
+            _id
+          }
         }
       }
     `;
@@ -74,12 +74,17 @@ describe('fieldQueries', () => {
 
   test('Fields combined by content type', async () => {
     // Creating test data
+    const visibleGroup = await usersGroupFactory({ isVisible: true });
+    const invisibleGroup = await usersGroupFactory({ isVisible: false });
+
     await fieldFactory({ contentType: 'company' });
-    await fieldFactory({ contentType: 'customer' });
+    await fieldFactory({ contentType: 'company' });
+    await fieldFactory({ contentType: 'customer', groupId: visibleGroup._id });
+    await fieldFactory({ contentType: 'customer', groupId: invisibleGroup._id });
 
     const qry = `
-      query fieldsCombinedByContentType($contentType: String!) {
-        fieldsCombinedByContentType(contentType: $contentType)
+      query fieldsCombinedByContentType($contentType: String!, $source: String) {
+        fieldsCombinedByContentType(contentType: $contentType, source: $source)
       }
     `;
 
@@ -99,14 +104,40 @@ describe('fieldQueries', () => {
     expect(responseFields.name).toBe(companyFields.name);
 
     // customer =======================
-    responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
-      contentType: 'customer',
+    const brand = await brandFactory({});
+    const integration = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
+    const integration1 = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
+    const integration2 = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
+    const integration3 = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
+
+    await customerFactory({ integrationId: integration._id });
+    await customerFactory({ integrationId: integration1._id, messengerData: {} });
+    await customerFactory({
+      integrationId: integration2._id,
+      messengerData: { customData: {} },
+    });
+    await customerFactory({
+      integrationId: integration3._id,
+      messengerData: { customData: { data1: 'Data 1', data2: 'Data 2' } },
     });
 
+    responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
+      contentType: 'customer',
+      source: 'fromSegments',
+    });
+
+    const data1 = responses.find(response => response.name === 'messengerData.customData.data1');
+    const data2 = responses.find(response => response.name === 'messengerData.customData.data2');
+
+    expect(data1).toBeDefined();
+    expect(data2).toBeDefined();
+
+    responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', { contentType: 'customer' });
+
     // getting fields of customers schema
-    const customerFields: any = [];
     responseFields = responses.map(response => response.name);
 
+    const customerFields: any = [];
     Customers.schema.eachPath(path => {
       customerFields.push(path);
     });
@@ -158,14 +189,18 @@ describe('fieldQueries', () => {
       query fieldsGroups($contentType: String) {
         fieldsGroups(contentType: $contentType) {
           _id
+          lastUpdatedUser {
+            _id
+          }
+          fields {
+            _id
+          }
         }
       }
     `;
 
     // customer content type ============
-    let responses = await graphqlRequest(qry, 'fieldsGroups', {
-      contentType: 'customer',
-    });
+    let responses = await graphqlRequest(qry, 'fieldsGroups');
 
     expect(responses.length).toBe(1);
 

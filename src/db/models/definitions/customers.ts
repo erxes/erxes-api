@@ -2,11 +2,12 @@ import { Document, Schema } from 'mongoose';
 
 import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
 
-import { field } from '../utils';
+import { field, schemaWrapper } from './utils';
 
 export interface ILocation {
   remoteAddress: string;
   country: string;
+  countryCode: string;
   city: string;
   region: string;
   hostname: string;
@@ -32,27 +33,6 @@ export interface IMessengerData {
 
 export interface IMessengerDataDocument extends IMessengerData, Document {}
 
-export interface ITwitterData {
-  id?: number;
-  id_str?: string;
-  name?: string;
-  screen_name?: string;
-  profile_image_url?: string;
-}
-
-export interface ITwitterDataDocument extends ITwitterData, Document {
-  id: number;
-}
-
-export interface IFacebookData {
-  id: string;
-  profilePic?: string;
-}
-
-export interface IFacebookDataDocument extends IFacebookData, Document {
-  id: string;
-}
-
 export interface ILink {
   linkedIn?: string;
   twitter?: string;
@@ -65,6 +45,7 @@ export interface ILink {
 interface ILinkDocument extends ILink, Document {}
 
 export interface ICustomer {
+  scopeBrandIds?: string[];
   firstName?: string;
   lastName?: string;
   primaryEmail?: string;
@@ -86,51 +67,52 @@ export interface ICustomer {
   isUser?: boolean;
   integrationId?: string;
   tagIds?: string[];
+  // TODO migrate after remove 1row
   companyIds?: string[];
   mergedIds?: string[];
   status?: string;
   customFieldsData?: any;
   messengerData?: IMessengerData;
-  twitterData?: ITwitterData;
-  facebookData?: IFacebookData;
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
   urlVisits?: any;
   deviceTokens?: string[];
+  code?: string;
 }
 
 export interface ICustomerDocument extends ICustomer, Document {
   _id: string;
   messengerData?: IMessengerDataDocument;
-  twitterData?: ITwitterDataDocument;
-  facebookData?: IFacebookDataDocument;
   location?: ILocationDocument;
   links?: ILinkDocument;
   visitorContactInfo?: IVisitorContactDocument;
+  profileScore?: number;
   status?: string;
   createdAt: Date;
   modifiedAt: Date;
   deviceTokens?: string[];
+  searchText?: string;
 }
 
 /* location schema */
 const locationSchema = new Schema(
   {
-    remoteAddress: String,
-    country: String,
-    city: String,
-    region: String,
-    hostname: String,
-    language: String,
-    userAgent: String,
+    remoteAddress: field({ type: String, label: 'Remote address' }),
+    country: field({ type: String, label: 'Country' }),
+    countryCode: field({ type: String, label: 'Country code' }),
+    city: field({ type: String, label: 'City' }),
+    region: field({ type: String, label: 'Region' }),
+    hostname: field({ type: String, label: 'Host name' }),
+    language: field({ type: String, label: 'Language' }),
+    userAgent: field({ type: String, label: 'User agent' }),
   },
   { _id: false },
 );
 
 const visitorContactSchema = new Schema(
   {
-    email: String,
-    phone: String,
+    email: field({ type: String, label: 'Email' }),
+    phone: field({ type: String, label: 'Phone' }),
   },
   { _id: false },
 );
@@ -155,41 +137,7 @@ const messengerSchema = new Schema(
     customData: field({
       type: Object,
       optional: true,
-    }),
-  },
-  { _id: false },
-);
-
-/*
- * Twitter schema
- * Saving fields with underscores because, we want to store it exactly
- * like twitter response so that we can use it in findParentTweets helper to
- * not send extra request to twitter
- */
-const twitterSchema = new Schema(
-  {
-    id: field({ type: Number, label: 'Twitter ID (Number)' }),
-    id_str: field({ type: String, label: 'Twitter ID' }),
-    name: field({ type: String, label: 'Twitter name' }),
-    screen_name: field({ type: String, label: 'Twitter screen name' }),
-    profile_image_url: field({ type: String, label: 'Twitter photo' }),
-  },
-  { _id: false },
-);
-
-/*
- * facebook schema
- */
-const facebookSchema = new Schema(
-  {
-    id: field({
-      type: String,
-      label: 'Facebook ID',
-    }),
-    profilePic: field({
-      type: String,
-      optional: true,
-      label: 'Facebook photo',
+      label: 'Custom data',
     }),
   },
   { _id: false },
@@ -207,83 +155,85 @@ const linkSchema = new Schema(
   { _id: false },
 );
 
-export const customerSchema = new Schema({
-  _id: field({ pkey: true }),
+export const customerSchema = schemaWrapper(
+  new Schema({
+    _id: field({ pkey: true }),
 
-  createdAt: field({ type: Date, label: 'Created at' }),
-  modifiedAt: field({ type: Date, label: 'Modified at' }),
-  avatar: field({ type: String, optional: true }),
+    createdAt: field({ type: Date, label: 'Created at' }),
+    modifiedAt: field({ type: Date, label: 'Modified at' }),
+    avatar: field({ type: String, optional: true }),
 
-  firstName: field({ type: String, label: 'First name', optional: true }),
-  lastName: field({ type: String, label: 'Last name', optional: true }),
+    firstName: field({ type: String, label: 'First name', optional: true }),
+    lastName: field({ type: String, label: 'Last name', optional: true }),
 
-  primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
-  emails: field({ type: [String], optional: true }),
-  hasValidEmail: field({ type: Boolean, optional: true }),
+    primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
+    emails: field({ type: [String], optional: true, label: 'Emails' }),
+    hasValidEmail: field({ type: Boolean, optional: true, label: 'Has valid email' }),
 
-  primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
-  phones: field({ type: [String], optional: true }),
+    primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
+    phones: field({ type: [String], optional: true, label: 'Phones' }),
+    profileScore: field({ type: Number, index: true, optional: true, label: 'Profile score' }),
 
-  ownerId: field({ type: String, optional: true }),
-  position: field({ type: String, optional: true, label: 'Position' }),
-  department: field({ type: String, optional: true, label: 'Department' }),
+    ownerId: field({ type: String, optional: true, label: 'Owner' }),
+    position: field({ type: String, optional: true, label: 'Position' }),
+    department: field({ type: String, optional: true, label: 'Department' }),
 
-  leadStatus: field({
-    type: String,
-    enum: CUSTOMER_LEAD_STATUS_TYPES,
-    optional: true,
-    label: 'Lead Status',
+    leadStatus: field({
+      type: String,
+      enum: CUSTOMER_LEAD_STATUS_TYPES,
+      optional: true,
+      label: 'Lead Status',
+    }),
+
+    status: field({
+      type: String,
+      enum: STATUSES.ALL,
+      default: STATUSES.ACTIVE,
+      optional: true,
+      label: 'Status',
+      index: true,
+    }),
+
+    lifecycleState: field({
+      type: String,
+      enum: CUSTOMER_LIFECYCLE_STATE_TYPES,
+      optional: true,
+      label: 'Lifecycle State',
+    }),
+
+    hasAuthority: field({ type: String, optional: true, label: 'Has authority' }),
+    description: field({ type: String, optional: true, label: 'Description' }),
+    doNotDisturb: field({
+      type: String,
+      optional: true,
+      label: 'Do not disturb',
+    }),
+    links: field({ type: linkSchema, default: {}, label: 'Links' }),
+
+    isUser: field({ type: Boolean, label: 'Is user', optional: true }),
+
+    integrationId: field({ type: String, optional: true, label: 'Integration' }),
+    tagIds: field({ type: [String], optional: true, index: true, label: 'Tags' }),
+
+    // Merged customer ids
+    mergedIds: field({ type: [String], optional: true, label: 'Merged customers' }),
+
+    customFieldsData: field({ type: Object, optional: true, label: 'Custom fields' }),
+    messengerData: field({ type: messengerSchema, optional: true, label: 'Messenger data' }),
+
+    location: field({ type: locationSchema, optional: true, label: 'Location' }),
+
+    // if customer is not a user then we will contact with this visitor using
+    // this information
+    visitorContactInfo: field({
+      type: visitorContactSchema,
+      optional: true,
+      label: 'Visitor contact info',
+    }),
+    urlVisits: Object,
+
+    deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
+    searchText: field({ type: String, optional: true, index: true }),
+    code: field({ type: String, label: 'Code', optional: true }),
   }),
-
-  status: field({
-    type: String,
-    enum: STATUSES.ALL,
-    default: STATUSES.ACTIVE,
-    optional: true,
-    label: 'Status',
-    index: true,
-  }),
-
-  lifecycleState: field({
-    type: String,
-    enum: CUSTOMER_LIFECYCLE_STATE_TYPES,
-    optional: true,
-    label: 'Lifecycle State',
-  }),
-
-  hasAuthority: field({ type: String, optional: true, label: 'Has authority' }),
-  description: field({ type: String, optional: true, label: 'Description' }),
-  doNotDisturb: field({
-    type: String,
-    optional: true,
-    label: 'Do not disturb',
-  }),
-  links: field({ type: linkSchema, default: {} }),
-
-  isUser: field({ type: Boolean, label: 'Is user', optional: true }),
-
-  integrationId: field({ type: String, optional: true }),
-  tagIds: field({ type: [String], optional: true, index: true }),
-  companyIds: field({ type: [String], optional: true }),
-
-  // Merged customer ids
-  mergedIds: field({ type: [String], optional: true }),
-
-  customFieldsData: field({ type: Object, optional: true }),
-  messengerData: field({ type: messengerSchema, optional: true }),
-  twitterData: field({ type: twitterSchema, optional: true }),
-  facebookData: field({ type: facebookSchema, optional: true }),
-
-  location: field({ type: locationSchema, optional: true }),
-
-  // if customer is not a user then we will contact with this visitor using
-  // this information
-  visitorContactInfo: field({
-    type: visitorContactSchema,
-    optional: true,
-    label: 'Visitor contact info',
-  }),
-  urlVisits: Object,
-
-  deviceTokens: field({ type: [String], default: [] }),
-});
+);

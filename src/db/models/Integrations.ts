@@ -1,165 +1,107 @@
-import { Model, model } from 'mongoose';
+import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
-import { Accounts, ConversationMessages, Conversations, Customers, Forms } from '.';
-import { KIND_CHOICES } from '../../data/constants';
-import { getEnv } from '../../data/utils';
-import { getPageInfo, subscribePage } from '../../trackers/facebookTracker';
+import { Brands, ConversationMessages, Conversations, Customers, Forms } from '.';
+import { KIND_CHOICES } from './definitions/constants';
 import {
-  IFacebookData,
-  IFormData,
-  IGmailData,
   IIntegration,
   IIntegrationDocument,
+  ILeadData,
   IMessengerData,
   integrationSchema,
-  ITwitterData,
   IUiOptions,
 } from './definitions/integrations';
 
 export interface IMessengerIntegration {
+  kind: string;
   name: string;
   brandId: string;
   languageCode: string;
 }
 
-interface IGmailParams {
+export interface IExternalIntegrationParams {
+  kind: string;
   name: string;
   brandId: string;
-  gmailData: IGmailData;
+  accountId: string;
 }
 
+interface IIntegrationBasicInfo {
+  name: string;
+  brandId: string;
+}
+
+export const isTimeInBetween = (date: Date, startTime: string, closeTime: string): boolean => {
+  // concatnating time ranges with today's date
+  const dateString = date.toLocaleDateString();
+  const startDate = new Date(`${dateString} ${startTime}`);
+  const closeDate = new Date(`${dateString} ${closeTime}`);
+
+  return startDate <= date && date <= closeDate;
+};
+
 export interface IIntegrationModel extends Model<IIntegrationDocument> {
-  generateFormDoc(mainDoc: IIntegration, formData: IFormData): IIntegration;
-  createIntegration(doc: IIntegration): Promise<IIntegrationDocument>;
-  createMessengerIntegration(doc: IIntegration): Promise<IIntegrationDocument>;
-
-  createTwitterIntegration({
-    name,
-    brandId,
-    twitterData,
-  }: {
-    name: string;
-    brandId: string;
-    twitterData: ITwitterData;
-  }): Promise<IIntegrationDocument>;
-
-  createFacebookIntegration({
-    name,
-    brandId,
-    facebookData,
-  }: {
-    name: string;
-    brandId: string;
-    facebookData: IFacebookData;
-  }): Promise<IIntegrationDocument>;
-
-  createGmailIntegration(params: IGmailParams): Promise<IIntegrationDocument>;
-
+  getIntegration(_id: string): IIntegrationDocument;
+  findIntegrations(query: any, options?: any): Query<IIntegrationDocument[]>;
+  generateLeadDoc(mainDoc: IIntegration, leadData: ILeadData): IIntegration;
+  createIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
+  createMessengerIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
   updateMessengerIntegration(_id: string, doc: IIntegration): Promise<IIntegrationDocument>;
-
   saveMessengerAppearanceData(_id: string, doc: IUiOptions): Promise<IIntegrationDocument>;
-
   saveMessengerConfigs(_id: string, messengerData: IMessengerData): Promise<IIntegrationDocument>;
-
-  createFormIntegration(doc: IIntegration): Promise<IIntegrationDocument>;
-
-  updateFormIntegration(_id: string, doc: IIntegration): Promise<IIntegrationDocument>;
-
+  createLeadIntegration(doc: IIntegration, userId: string): Promise<IIntegrationDocument>;
+  updateLeadIntegration(_id: string, doc: IIntegration): Promise<IIntegrationDocument>;
+  createExternalIntegration(doc: IExternalIntegrationParams, userId: string): Promise<IIntegrationDocument>;
   removeIntegration(_id: string): void;
+  updateBasicInfo(_id: string, doc: IIntegrationBasicInfo): Promise<IIntegrationDocument>;
+
+  getWidgetIntegration(brandCode: string, kind: string, brandObject?: boolean): any;
+  increaseViewCount(formId: string): Promise<IIntegrationDocument>;
+  increaseContactsGathered(formId: string): Promise<IIntegrationDocument>;
+  isOnline(integration: IIntegrationDocument, now?: Date): boolean;
 }
 
 export const loadClass = () => {
   class Integration {
     /**
-     * Generate form integration data based on the given form data (formData)
+     * Retreives integration
+     */
+    public static async getIntegration(_id: string) {
+      const integration = await Integrations.findOne({ _id });
+
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      return integration;
+    }
+
+    /**
+     * Find integrations
+     */
+    public static findIntegrations(query, options) {
+      return Integrations.find({ ...query, isActive: { $ne: false } }, options);
+    }
+
+    /**
+     * Generate lead integration data based on the given lead data (leadData)
      * and integration data (mainDoc)
      */
-    public static generateFormDoc(mainDoc: IIntegration, formData: IFormData) {
-      return {
-        ...mainDoc,
-        kind: KIND_CHOICES.FORM,
-        formData,
-      };
+    public static generateLeadDoc(mainDoc: IIntegration, leadData: ILeadData) {
+      return { ...mainDoc, kind: KIND_CHOICES.LEAD, leadData };
     }
 
     /**
      * Create an integration, intended as a private method
      */
-    public static createIntegration(doc: IIntegration) {
-      return Integrations.create(doc);
+    public static createIntegration(doc: IIntegration, userId: string) {
+      return Integrations.create({ ...doc, isActive: true, createdUserId: userId });
     }
 
     /**
      * Create a messenger kind integration
      */
-    public static createMessengerIntegration(doc: IMessengerIntegration) {
-      return this.createIntegration({
-        ...doc,
-        kind: KIND_CHOICES.MESSENGER,
-      });
-    }
-
-    /**
-     * Create twitter integration
-     */
-    public static async createTwitterIntegration({
-      name,
-      brandId,
-      twitterData,
-    }: {
-      name: string;
-      brandId: string;
-      twitterData: ITwitterData;
-    }) {
-      return this.createIntegration({
-        name,
-        brandId,
-        kind: KIND_CHOICES.TWITTER,
-        twitterData,
-      });
-    }
-
-    /**
-     * Create facebook integration
-     */
-    public static async createFacebookIntegration({
-      name,
-      brandId,
-      facebookData,
-    }: {
-      name: string;
-      brandId: string;
-      facebookData: IFacebookData;
-    }) {
-      getEnv({ name: 'FACEBOOK_APP_ID' });
-      getEnv({ name: 'DOMAIN' });
-
-      const { pageIds, accountId } = facebookData;
-
-      const account = await Accounts.findOne({ _id: accountId });
-
-      if (!account) {
-        throw new Error('Account not found');
-      }
-
-      for (const pageId of pageIds) {
-        const pageInfo = await getPageInfo(pageId, account.token);
-
-        const pageToken = pageInfo.access_token;
-
-        const res = await subscribePage(pageId, pageToken);
-
-        if (res.success !== true) {
-          throw new Error('Couldnt subscribe page');
-        }
-      }
-
-      return this.createIntegration({
-        name,
-        brandId,
-        kind: KIND_CHOICES.FACEBOOK,
-        facebookData,
-      });
+    public static createMessengerIntegration(doc: IMessengerIntegration, userId: string) {
+      return this.createIntegration({ ...doc, kind: KIND_CHOICES.MESSENGER }, userId);
     }
 
     /**
@@ -193,23 +135,33 @@ export const loadClass = () => {
     }
 
     /**
-     * Create a form kind integration
+     * Create a lead kind integration
      */
-    public static createFormIntegration({ formData = {}, ...mainDoc }: IIntegration) {
-      const doc = this.generateFormDoc({ ...mainDoc }, formData);
+    public static createLeadIntegration({ leadData = {}, ...mainDoc }: IIntegration, userId: string) {
+      const doc = this.generateLeadDoc({ ...mainDoc }, leadData);
 
-      if (Object.keys(formData || {}).length === 0) {
-        throw new Error('formData must be supplied');
+      if (Object.keys(leadData).length === 0) {
+        throw new Error('leadData must be supplied');
       }
 
-      return Integrations.create(doc);
+      return Integrations.createIntegration(doc, userId);
     }
 
     /**
-     * Update form integration
+     * Create external integrations like facebook, twitter integration
      */
-    public static async updateFormIntegration(_id: string, { formData = {}, ...mainDoc }: IIntegration) {
-      const doc = this.generateFormDoc(mainDoc, formData);
+    public static createExternalIntegration(
+      doc: IExternalIntegrationParams,
+      userId: string,
+    ): Promise<IIntegrationDocument> {
+      return Integrations.createIntegration(doc, userId);
+    }
+
+    /**
+     * Update lead integration
+     */
+    public static async updateLeadIntegration(_id: string, { leadData = {}, ...mainDoc }: IIntegration) {
+      const doc = this.generateLeadDoc(mainDoc, leadData);
 
       await Integrations.updateOne({ _id }, { $set: doc }, { runValidators: true });
 
@@ -230,20 +182,17 @@ export const loadClass = () => {
       const conversations = await Conversations.find({ integrationId: _id }, { _id: true });
       const conversationIds = conversations.map(conv => conv._id);
 
-      await ConversationMessages.deleteMany({
-        conversationId: { $in: conversationIds },
-      });
+      await ConversationMessages.deleteMany({ conversationId: { $in: conversationIds } });
+
       await Conversations.deleteMany({ integrationId: _id });
 
       // Remove customers ==================
       const customers = await Customers.find({ integrationId: _id });
       const customerIds = customers.map(cus => cus._id);
 
-      for (const customerId of customerIds) {
-        await Customers.removeCustomer(customerId);
-      }
+      await Customers.removeCustomers(customerIds);
 
-      // Remove form & fields
+      // Remove form
       if (integration.formId) {
         await Forms.removeForm(integration.formId);
       }
@@ -251,22 +200,136 @@ export const loadClass = () => {
       return Integrations.deleteMany({ _id });
     }
 
-    public static async createGmailIntegration({ name, brandId, gmailData }: IGmailParams) {
-      const prevEntry = await Integrations.findOne({
-        gmailData: { $exists: true },
-        'gmailData.email': gmailData.email,
-      });
+    public static async updateBasicInfo(_id: string, doc: IIntegrationBasicInfo) {
+      const integration = await Integrations.findOne({ _id });
 
-      if (prevEntry) {
-        return prevEntry;
+      if (!integration) {
+        throw new Error('Integration not found');
       }
 
-      return this.createIntegration({
-        name,
-        brandId,
-        kind: KIND_CHOICES.GMAIL,
-        gmailData,
-      });
+      await Integrations.updateOne({ _id }, { $set: doc });
+
+      return Integrations.findOne({ _id });
+    }
+
+    public static async getWidgetIntegration(brandCode: string, kind: string, brandObject = false) {
+      const brand = await Brands.findOne({ code: brandCode });
+
+      if (!brand) {
+        throw new Error('Brand not found');
+      }
+
+      const integration = await Integrations.findOne({ brandId: brand._id, kind });
+
+      if (brandObject) {
+        return { integration, brand };
+      }
+
+      return integration;
+    }
+
+    public static async increaseViewCount(formId: string) {
+      const integration = await Integrations.findOne({ formId });
+
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      const leadData = integration.leadData || { viewCount: 0 };
+
+      let viewCount = leadData.viewCount || 0;
+
+      viewCount++;
+
+      leadData.viewCount = viewCount;
+
+      await Integrations.updateOne({ formId }, { leadData });
+
+      return Integrations.findOne({ formId });
+    }
+
+    /*
+     * Increase form submitted count
+     */
+    public static async increaseContactsGathered(formId: string) {
+      const integration = await Integrations.findOne({ formId });
+
+      if (!integration) {
+        throw new Error('Integration not found');
+      }
+
+      const leadData = integration.leadData || { contactsGathered: 0 };
+
+      let contactsGathered = leadData.contactsGathered || 0;
+
+      contactsGathered++;
+
+      leadData.contactsGathered = contactsGathered;
+
+      await Integrations.updateOne({ formId }, { leadData });
+
+      return Integrations.findOne({ formId });
+    }
+
+    public static isOnline(integration: IIntegrationDocument, now = new Date()) {
+      const daysAsString = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+      const isWeekday = (d: string): boolean => {
+        return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(d);
+      };
+
+      const isWeekend = (d: string): boolean => {
+        return ['saturday', 'sunday'].includes(d);
+      };
+
+      if (!integration.messengerData) {
+        return false;
+      }
+
+      const { messengerData } = integration;
+      const { availabilityMethod, onlineHours = [] } = messengerData;
+
+      /*
+       * Manual: We can determine state from isOnline field value when method is manual
+       */
+      if (availabilityMethod === 'manual') {
+        return messengerData.isOnline;
+      }
+
+      /*
+       * Auto
+       */
+      const day = daysAsString[now.getDay()];
+
+      // check by everyday config
+      const everydayConf = onlineHours.find(c => c.day === 'everyday');
+
+      if (everydayConf) {
+        return isTimeInBetween(now, everydayConf.from || '', everydayConf.to || '');
+      }
+
+      // check by weekdays config
+      const weekdaysConf = onlineHours.find(c => c.day === 'weekdays');
+
+      if (weekdaysConf && isWeekday(day)) {
+        return isTimeInBetween(now, weekdaysConf.from || '', weekdaysConf.to || '');
+      }
+
+      // check by weekends config
+      const weekendsConf = onlineHours.find(c => c.day === 'weekends');
+
+      if (weekendsConf && isWeekend(day)) {
+        return isTimeInBetween(now, weekendsConf.from || '', weekendsConf.to || '');
+      }
+
+      // check by regular day config
+      const dayConf = onlineHours.find(c => c.day === day);
+
+      if (dayConf) {
+        return isTimeInBetween(now, dayConf.from || '', dayConf.to || '');
+      }
+
+      return false;
     }
   }
 

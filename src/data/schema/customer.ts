@@ -1,3 +1,5 @@
+import { conformityQueryFields } from './common';
+
 // TODO: remove customer's email and phone field after customCommand
 
 export const types = `
@@ -39,8 +41,6 @@ export const types = `
     visitorContactInfo: JSON
     customFieldsData: JSON
     messengerData: JSON
-    twitterData: JSON
-    facebookData: JSON
     ownerId: String
     position: String
     department: String
@@ -49,12 +49,12 @@ export const types = `
     hasAuthority: String
     description: String
     doNotDisturb: String
+    code: String
 
     integration: Integration
     links: CustomerLinks
     companies: [Company]
     conversations: [Conversation]
-    deals: [Deal]
     getIntegrationData: JSON
     getMessengerCustomData: JSON
     getTags: [Tag]
@@ -71,7 +71,7 @@ const queryParams = `
   page: Int
   perPage: Int
   segment: String
-  type: String 
+  type: String
   tag: String
   ids: [String]
   searchValue: String
@@ -84,6 +84,7 @@ const queryParams = `
   leadStatus: String
   sortField: String
   sortDirection: Int
+  ${conformityQueryFields}
 `;
 
 export const queries = `
@@ -92,7 +93,6 @@ export const queries = `
   customerCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
   customerDetail(_id: String!): Customer
   customerListForSegmentPreview(segment: JSON, limit: Int): [Customer]
-  customersExport(${queryParams}): String
 `;
 
 const fields = `
@@ -113,12 +113,12 @@ const fields = `
   doNotDisturb: String
   links: JSON
   customFieldsData: JSON
+  code: String
 `;
 
 export const mutations = `
   customersAdd(${fields}): Customer
   customersEdit(_id: String!, ${fields}): Customer
-  customersEditCompanies(_id: String!, companyIds: [String]): Customer
   customersMerge(customerIds: [String], customerFields: JSON): Customer
   customersRemove(customerIds: [String]): [String]
 `;

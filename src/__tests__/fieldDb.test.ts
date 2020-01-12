@@ -2,6 +2,8 @@ import { customerFactory, fieldFactory, fieldGroupFactory, formFactory, userFact
 import { Customers, Fields, FieldsGroups, Forms } from '../db/models';
 import { FIELDS_GROUPS_CONTENT_TYPES } from '../db/models/definitions/constants';
 
+import './setup.ts';
+
 /**
  * Field related tests
  */
@@ -28,19 +30,20 @@ describe('Fields', () => {
     }
 
     // first attempt
-    let field = await Fields.createField({ contentType: 'customer' });
+    let field = await Fields.createField({ contentType: 'customer', text: 'text' });
     expect(field.order).toBe(0);
 
     // second attempt
-    field = await Fields.createField({ contentType: 'customer' });
+    field = await Fields.createField({ contentType: 'customer', text: 'text' });
     expect(field.order).toBe(1);
 
     // third attempt
-    field = await Fields.createField({ contentType: 'customer' });
+    field = await Fields.createField({ contentType: 'customer', text: 'text' });
     expect(field.order).toBe(2);
 
     field = await Fields.createField({
       contentType: 'customer',
+      text: 'text',
       groupId: group._id,
     });
     expect(field.order).toBe(0);
@@ -54,16 +57,17 @@ describe('Fields', () => {
     // first attempt
     let field = await Fields.createField({
       contentType,
+      text: 'text',
       contentTypeId: form1._id,
     });
     expect(field.order).toBe(0);
 
     // second attempt
-    field = await Fields.createField({ contentType, contentTypeId: form1._id });
+    field = await Fields.createField({ contentType, contentTypeId: form1._id, text: 'text' });
     expect(field.order).toBe(1);
 
     // must create new order
-    field = await Fields.createField({ contentType, contentTypeId: form2._id });
+    field = await Fields.createField({ contentType, contentTypeId: form2._id, text: 'text' });
     expect(field.order).toBe(0);
   });
 
@@ -71,7 +75,7 @@ describe('Fields', () => {
     expect.assertions(1);
 
     try {
-      await Fields.createField({ contentType: 'form' });
+      await Fields.createField({ contentType: 'form', text: 'text' });
     } catch (e) {
       expect(e.message).toEqual('Content type id is required');
     }
@@ -84,6 +88,7 @@ describe('Fields', () => {
       await Fields.createField({
         contentType: 'form',
         contentTypeId: 'DFAFDFADS',
+        text: 'text',
       });
     } catch (e) {
       expect(e.message).toEqual('Form not found with _id of DFAFDFADS');
@@ -124,7 +129,7 @@ describe('Fields', () => {
     const fieldObj = await Fields.updateField(_field._id, fieldDoc);
 
     try {
-      await Fields.updateField(testField._id, {});
+      await Fields.updateField(testField._id, { text: 'text' });
     } catch (e) {
       expect(e.message).toBe('Cant update this field');
     }
@@ -151,10 +156,6 @@ describe('Fields', () => {
     await customerFactory({ customFieldsData: { [_field._id]: '1231' } });
     const testField = await fieldFactory({ isDefinedByErxes: true });
 
-    if (!testField) {
-      throw new Error('Couldnt create field');
-    }
-
     try {
       await Fields.removeField('DFFFDSFD');
     } catch (e) {
@@ -162,7 +163,7 @@ describe('Fields', () => {
     }
 
     try {
-      await Fields.updateField(testField._id, {});
+      await Fields.updateField(testField._id, { text: 'text' });
     } catch (e) {
       expect(e.message).toBe('Cant update this field');
     }
@@ -256,8 +257,8 @@ describe('Fields', () => {
     expect(res).toEqual(expect.any(Date));
   });
 
-  test('Validate fields: invalid values', async () => {
-    expect.assertions(1);
+  test('Validate fields', async () => {
+    expect.assertions(4);
 
     // required =====
     _field.isRequired = true;
@@ -268,6 +269,24 @@ describe('Fields', () => {
     } catch (e) {
       expect(e.message).toBe(`${_field.text}: required`);
     }
+
+    // if empty object pass
+    let response = await Fields.cleanMulti({});
+
+    expect(response).toEqual({});
+
+    // if field is empty
+    _field.isRequired = false;
+    await _field.save();
+
+    response = await Fields.cleanMulti({ [_field._id]: '' });
+
+    expect(response[_field._id]).toBe('');
+
+    // if value is not empty
+    response = await Fields.cleanMulti({ [_field._id]: 10 });
+
+    expect(response[_field._id]).toBe(10);
   });
 
   test('Update field visible', async () => {
@@ -315,7 +334,7 @@ describe('Fields groups', () => {
   });
 
   test('Create group', async () => {
-    expect.assertions(5);
+    expect.assertions(6);
     const user = await userFactory({});
 
     const doc = {
@@ -330,11 +349,17 @@ describe('Fields groups', () => {
     expect(groupObj.description).toBe(doc.description);
     expect(groupObj.contentType).toBe(doc.contentType);
     // we already created fieldGroup on beforeEach of every test
-    expect(groupObj.order).toBe(2);
+    expect(groupObj.order).toBe(1);
 
     groupObj = await FieldsGroups.createGroup(doc);
 
-    expect(groupObj.order).toBe(3);
+    expect(groupObj.order).toBe(2);
+
+    // create first group whose contentType is company
+    doc.contentType = FIELDS_GROUPS_CONTENT_TYPES.COMPANY;
+    groupObj = await FieldsGroups.createGroup(doc);
+
+    expect(groupObj.contentType).toBe(FIELDS_GROUPS_CONTENT_TYPES.COMPANY);
   });
 
   test('Update group', async () => {

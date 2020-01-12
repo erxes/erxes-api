@@ -4,15 +4,30 @@ import { Conversations } from '.';
 import { IMessage, IMessageDocument, messageSchema } from './definitions/conversationMessages';
 
 export interface IMessageModel extends Model<IMessageDocument> {
+  getMessage(_id: string): Promise<IMessageDocument>;
   createMessage(doc: IMessage): Promise<IMessageDocument>;
   addMessage(doc: IMessage, userId?: string): Promise<IMessageDocument>;
   getNonAsnweredMessage(conversationId: string): Promise<IMessageDocument>;
   getAdminMessages(conversationId: string): Promise<IMessageDocument[]>;
+  widgetsGetUnreadMessagesCount(conversationId: string): Promise<number>;
   markSentAsReadMessages(conversationId: string): Promise<IMessageDocument>;
+  forceReadCustomerPreviousEngageMessages(customerId: string): Promise<IMessageDocument>;
 }
 
 export const loadClass = () => {
   class Message {
+    /**
+     * Retreives message
+     */
+    public static async getMessage(_id: string) {
+      const message = await Messages.findOne({ _id });
+
+      if (!message) {
+        throw new Error('Conversation message not found');
+      }
+
+      return message;
+    }
     /**
      * Create a message
      */
@@ -20,24 +35,23 @@ export const loadClass = () => {
       const message = await Messages.create({
         internal: false,
         ...doc,
-        createdAt: new Date(),
+        createdAt: doc.createdAt || new Date(),
       });
 
       const messageCount = await Messages.find({
         conversationId: message.conversationId,
       }).countDocuments();
 
-      await Conversations.updateOne(
-        { _id: message.conversationId },
-        {
-          $set: {
-            messageCount,
+      // update conversation ====
+      const convDocModifier: { messageCount?: number; updatedAt: Date } = {
+        updatedAt: new Date(),
+      };
 
-            // updating updatedAt
-            updatedAt: new Date(),
-          },
-        },
-      );
+      if (!doc.fromBot) {
+        convDocModifier.messageCount = messageCount;
+      }
+
+      await Conversations.updateConversation(message.conversationId, convDocModifier);
 
       if (message.userId) {
         // add created user to participators
@@ -45,9 +59,7 @@ export const loadClass = () => {
       }
 
       // add mentioned users to participators
-      if (message.mentionedUserIds) {
-        await Conversations.addManyParticipatedUsers(message.conversationId, message.mentionedUserIds);
-      }
+      await Conversations.addManyParticipatedUsers(message.conversationId, message.mentionedUserIds || []);
 
       return message;
     }
@@ -83,7 +95,7 @@ export const loadClass = () => {
         firstRespondedDate?: Date;
       } = {};
 
-      if (!doc.fromBot) {
+      if (!doc.fromBot && !doc.internal) {
         modifier.content = doc.content;
       }
 
@@ -92,7 +104,7 @@ export const loadClass = () => {
         modifier.firstRespondedDate = new Date();
       }
 
-      await Conversations.updateOne({ _id: doc.conversationId }, { $set: modifier });
+      await Conversations.updateConversation(doc.conversationId, modifier);
 
       return this.createMessage({ ...doc, userId });
     }
@@ -121,6 +133,15 @@ export const loadClass = () => {
       }).sort({ createdAt: 1 });
     }
 
+    public static widgetsGetUnreadMessagesCount(conversationId: string) {
+      return Messages.countDocuments({
+        conversationId,
+        userId: { $exists: true },
+        internal: false,
+        isCustomerRead: { $ne: true },
+      });
+    }
+
     /**
      * Mark sent messages as read
      */
@@ -130,6 +151,21 @@ export const loadClass = () => {
           conversationId,
           userId: { $exists: true },
           isCustomerRead: { $exists: false },
+        },
+        { $set: { isCustomerRead: true } },
+        { multi: true },
+      );
+    }
+
+    /**
+     * Force read previous unread engage messages ============
+     */
+    public static forceReadCustomerPreviousEngageMessages(customerId: string) {
+      return Messages.updateMany(
+        {
+          customerId,
+          engageData: { $exists: true },
+          isCustomerRead: { $ne: true },
         },
         { $set: { isCustomerRead: true } },
         { multi: true },

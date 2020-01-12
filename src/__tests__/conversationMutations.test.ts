@@ -9,9 +9,16 @@ import {
   integrationFactory,
   userFactory,
 } from '../db/factories';
-import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../db/models';
-import { twitMap } from '../trackers/twitter';
-import { twitRequest } from '../trackers/twitterTracker';
+import { Conversations, Customers, Integrations, Users } from '../db/models';
+
+import { IntegrationsAPI } from '../data/dataSources';
+import { CONVERSATION_STATUSES, KIND_CHOICES } from '../db/models/definitions/constants';
+import { IConversationDocument } from '../db/models/definitions/conversations';
+import { ICustomerDocument } from '../db/models/definitions/customers';
+import { IUserDocument } from '../db/models/definitions/users';
+import * as messageBroker from '../messageBroker';
+
+import './setup.ts';
 
 const toJSON = value => {
   // sometimes object key order is different even though it has same value.
@@ -21,35 +28,87 @@ const toJSON = value => {
 const spy = jest.spyOn(utils, 'sendNotification');
 
 describe('Conversation message mutations', () => {
-  let _conversation;
-  let _conversationMessage;
-  let _user;
-  let _integration;
-  let _integrationTwitter;
-  let _customer;
-  let context;
+  let leadConversation: IConversationDocument;
+  let facebookConversation: IConversationDocument;
+  let facebookMessengerConversation: IConversationDocument;
+  let messengerConversation: IConversationDocument;
+  let chatfuelConversation: IConversationDocument;
+  let twitterConversation: IConversationDocument;
+
+  let user: IUserDocument;
+  let customer: ICustomerDocument;
+
+  const addMutation = `
+    mutation conversationMessageAdd(
+      $conversationId: String
+      $content: String
+      $mentionedUserIds: [String]
+      $internal: Boolean
+      $attachments: [AttachmentInput]
+    ) {
+      conversationMessageAdd(
+        conversationId: $conversationId
+        content: $content
+        mentionedUserIds: $mentionedUserIds
+        internal: $internal
+        attachments: $attachments
+      ) {
+        conversationId
+        content
+        mentionedUserIds
+        internal
+        attachments {
+          url
+          name
+          type
+          size
+        }
+      }
+    }
+  `;
 
   beforeEach(async () => {
-    // Creating test data
-    _conversation = await conversationFactory({});
-    _conversationMessage = await conversationMessageFactory({});
-    _user = await userFactory({});
-    _customer = await customerFactory({});
-    _integration = await integrationFactory({ kind: 'form' });
-    _integrationTwitter = await integrationFactory({ kind: 'twitter' });
-    _conversation.integrationId = _integration._id;
-    _conversation.customerId = _customer._id;
-    _conversation.assignedUserId = _user._id;
+    spy.mockImplementation();
 
-    await _conversation.save();
+    user = await userFactory({});
+    customer = await customerFactory({ primaryEmail: faker.internet.email() });
 
-    context = { user: _user };
+    const leadIntegration = await integrationFactory({
+      kind: KIND_CHOICES.LEAD,
+      messengerData: { welcomeMessage: 'welcome', notifyCustomer: true },
+    });
+    leadConversation = await conversationFactory({
+      integrationId: leadIntegration._id,
+      customerId: customer._id,
+      assignedUserId: user._id,
+      content: 'lead content',
+    });
+
+    const facebookIntegration = await integrationFactory({ kind: KIND_CHOICES.FACEBOOK_POST });
+    facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
+
+    const facebookMessengerIntegration = await integrationFactory({ kind: KIND_CHOICES.FACEBOOK_MESSENGER });
+    facebookMessengerConversation = await conversationFactory({ integrationId: facebookMessengerIntegration._id });
+
+    const chatfuelIntegration = await integrationFactory({ kind: KIND_CHOICES.CHATFUEL });
+    chatfuelConversation = await conversationFactory({ integrationId: chatfuelIntegration._id });
+
+    const twitterIntegration = await integrationFactory({ kind: KIND_CHOICES.TWITTER_DM });
+    twitterConversation = await conversationFactory({ integrationId: twitterIntegration._id });
+
+    const messengerIntegration = await integrationFactory({ kind: 'messenger' });
+    messengerConversation = await conversationFactory({
+      customerId: customer._id,
+      firstRespondedUserId: user._id,
+      firstRespondedDate: new Date(),
+      integrationId: messengerIntegration._id,
+      status: CONVERSATION_STATUSES.CLOSED,
+    });
   });
 
   afterEach(async () => {
     // Clearing test data
     await Conversations.deleteMany({});
-    await ConversationMessages.deleteMany({});
     await Users.deleteMany({});
     await Integrations.deleteMany({});
     await Customers.deleteMany({});
@@ -57,205 +116,147 @@ describe('Conversation message mutations', () => {
     spy.mockRestore();
   });
 
-  test('Add conversation message', async () => {
+  test('Add internal conversation message', async () => {
+    const args = {
+      conversationId: messengerConversation._id,
+      content: 'content',
+      internal: true,
+    };
+
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    expect(response.conversationId).toBe(args.conversationId);
+    expect(response.content).toBe(args.content);
+    expect(response.internal).toBeTruthy();
+  });
+
+  test('Add lead conversation message', async () => {
     process.env.DEFAULT_EMAIL_SERIVCE = ' ';
     process.env.COMPANY_EMAIL_FROM = ' ';
 
     const args = {
-      conversationId: _conversation._id,
-      content: _conversationMessage.content,
-      mentionedUserIds: [_user._id],
+      conversationId: leadConversation._id,
+      content: 'content',
+      mentionedUserIds: [user._id],
       internal: false,
       attachments: [{ url: 'url', name: 'name', type: 'doc', size: 10 }],
-      tweetReplyToId: faker.random.number().toString(),
-      tweetReplyToScreenName: faker.name.firstName(),
     };
 
-    const mutation = `
-      mutation conversationMessageAdd(
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    expect(response.content).toBe(args.content);
+    expect(response.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
+    expect(toJSON(response.mentionedUserIds)).toEqual(toJSON(args.mentionedUserIds));
+    expect(response.internal).toBe(args.internal);
+  });
+
+  test('Add messenger conversation message', async () => {
+    const args = {
+      conversationId: messengerConversation._id,
+      content: 'content',
+      fromBot: true,
+    };
+
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args);
+
+    expect(response.conversationId).toBe(messengerConversation._id);
+  });
+
+  test('Add conversation message using third party integration', async () => {
+    const mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
+    const args = { conversationId: facebookConversation._id, content: 'content' };
+
+    const response = await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources: {} });
+
+    expect(response).toBeDefined();
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+
+    args.conversationId = facebookMessengerConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+
+    args.conversationId = chatfuelConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+
+    args.conversationId = twitterConversation._id;
+
+    try {
+      await graphqlRequest(addMutation, 'conversationMessageAdd', args, { dataSources });
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+
+    mock.restore();
+  });
+
+  test('Reply facebook comment', async () => {
+    const commentMutation = `
+      mutation conversationsReplyFacebookComment(
         $conversationId: String
+        $commentId: String
         $content: String
-        $mentionedUserIds: [String]
-        $internal: Boolean
-        $attachments: [AttachmentInput]
-        $tweetReplyToId: String
-        $tweetReplyToScreenName: String
       ) {
-        conversationMessageAdd(
+        conversationsReplyFacebookComment(
           conversationId: $conversationId
+          commentId: $commentId
           content: $content
-          mentionedUserIds: $mentionedUserIds
-          internal: $internal
-          attachments: $attachments
-          tweetReplyToId: $tweetReplyToId
-          tweetReplyToScreenName: $tweetReplyToScreenName
         ) {
           conversationId
-          content
-          mentionedUserIds
-          internal
-          attachments {
-            url
-            name
-            type
-            size
-          }
+          commentId
         }
       }
     `;
 
-    const spySendMobileNotification = jest.spyOn(utils, 'sendMobileNotification').mockReturnValueOnce({});
-    const message = await graphqlRequest(mutation, 'conversationMessageAdd', args);
-
-    const calledArgs = spySendMobileNotification.mock.calls[0][0];
-
-    expect(calledArgs.title).toBe('You have a new message.');
-    expect(calledArgs.body).toBe(args.content);
-    expect(calledArgs.receivers).toEqual([_conversation.assignedUserId]);
-    expect(calledArgs.customerId).toEqual(_conversation.customerId);
-
-    expect(message.content).toBe(args.content);
-    expect(message.attachments[0]).toEqual({ url: 'url', name: 'name', type: 'doc', size: 10 });
-    expect(toJSON(message.mentionedUserIds)).toEqual(toJSON(args.mentionedUserIds));
-    expect(message.internal).toBe(args.internal);
-  });
-
-  test('Tweet conversation', async () => {
-    process.env.DEFAULT_EMAIL_SERIVCE = ' ';
-    process.env.COMPANY_EMAIL_FROM = ' ';
-
-    const twit = {};
-
-    twitMap[_integrationTwitter._id] = twit;
+    let mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      return Promise.resolve('success');
+    });
+    const message = await conversationMessageFactory({ conversationId: facebookConversation._id });
+    const comment = await integrationFactory({ kind: 'facebook-post' });
 
     const args = {
-      integrationId: _integrationTwitter._id,
-      text: faker.random.word(),
+      conversationId: facebookConversation._id,
+      content: message.content,
+      commentId: comment._id,
     };
 
-    // mock twitter request
-    const sandbox = sinon.createSandbox();
-
-    const stub = sandbox.stub(twitRequest, 'post').callsFake(() => {
-      return new Promise(resolve => {
-        resolve({});
-      });
+    const response = await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args, {
+      dataSources: {},
     });
 
-    const mutation = `
-      mutation conversationsTweet($integrationId: String $text: String) {
-        conversationsTweet(integrationId: $integrationId text: $text)
-      }
-    `;
+    expect(response).toBeDefined();
 
-    await graphqlRequest(mutation, 'conversationsTweet', args);
+    mock.restore();
 
-    // check twit post params
-    expect(
-      stub.calledWith(twit, 'statuses/update', {
-        status: args.text,
-      }),
-    ).toBe(true);
-
-    stub.restore();
-  });
-
-  test('Retweet conversation', async () => {
-    const twit = {};
-
-    const args = {
-      integrationId: _integrationTwitter._id,
-      id: '123',
-    };
-
-    twitMap[_integrationTwitter._id] = twit;
-
-    // mock twitter request
-    const sandbox = sinon.createSandbox();
-
-    // mock retweet request
-    const postStub = sandbox.stub(twitRequest, 'post').callsFake(() => {
-      return new Promise(resolve => {
-        resolve({
-          retweeted_status: {
-            id_str: '123',
-          },
-        });
-      });
+    mock = sinon.stub(messageBroker, 'sendMessage').callsFake(() => {
+      throw new Error();
     });
 
-    // mock get tweet object request
-    const getStub = sandbox.stub(twitRequest, 'get').callsFake(() => {
-      return new Promise(resolve => {
-        resolve({});
+    try {
+      await graphqlRequest(commentMutation, 'conversationsReplyFacebookComment', args, {
+        dataSources: {},
       });
-    });
-
-    const mutation = `
-      mutation conversationsRetweet($integrationId: String $id: String) {
-        conversationsRetweet(integrationId: $integrationId id: $id)
-      }
-    `;
-
-    await graphqlRequest(mutation, 'conversationsRetweet', args);
-
-    // check twit post params
-    expect(
-      postStub.calledWith(twit, 'statuses/retweet/:id', {
-        id: args.id,
-      }),
-    ).toBe(true);
-
-    postStub.restore();
-    getStub.restore();
-  });
-
-  test('Favorite tweet', async () => {
-    const twit = {};
-
-    const args = {
-      integrationId: _integrationTwitter._id,
-      id: '123',
-    };
-
-    twitMap[_integrationTwitter._id] = twit;
-
-    // mock twitter request
-    const sandbox = sinon.createSandbox();
-
-    // mock retweet request
-    const postStub = sandbox.stub(twitRequest, 'post').callsFake(() => {
-      return new Promise(resolve => {
-        resolve({
-          id_str: '123',
-        });
-      });
-    });
-
-    // mock get tweet object request
-    const getStub = sandbox.stub(twitRequest, 'get').callsFake(() => {
-      return new Promise(resolve => {
-        resolve({});
-      });
-    });
-
-    const mutation = `
-      mutation conversationsFavorite($integrationId: String $id: String) {
-        conversationsFavorite(integrationId: $integrationId id: $id)
-      }
-    `;
-
-    await graphqlRequest(mutation, 'conversationsFavorite', args);
-
-    // check twit post params
-    expect(
-      postStub.calledWith(twit, 'favorites/create', {
-        id: args.id,
-      }),
-    ).toBe(true);
-
-    postStub.restore();
-    getStub.restore();
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
   });
 
   test('Assign conversation', async () => {
@@ -263,8 +264,8 @@ describe('Conversation message mutations', () => {
     process.env.COMPANY_EMAIL_FROM = ' ';
 
     const args = {
-      conversationIds: [_conversation._id],
-      assignedUserId: _user._id,
+      conversationIds: [leadConversation._id],
+      assignedUserId: user._id,
     };
 
     const mutation = `
@@ -283,7 +284,7 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const [conversation] = await graphqlRequest(mutation, 'conversationsAssign', args, context);
+    const [conversation] = await graphqlRequest(mutation, 'conversationsAssign', args);
 
     expect(conversation.assignedUser._id).toEqual(args.assignedUserId);
   });
@@ -299,9 +300,14 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const [conversation] = await graphqlRequest(mutation, 'conversationsUnassign', {
-      _ids: [_conversation._id],
-    });
+    const [conversation] = await graphqlRequest(
+      mutation,
+      'conversationsUnassign',
+      {
+        _ids: [leadConversation._id],
+      },
+      { user },
+    );
 
     expect(conversation.assignedUser).toBe(null);
   });
@@ -311,7 +317,7 @@ describe('Conversation message mutations', () => {
     process.env.COMPANY_EMAIL_FROM = ' ';
 
     const args = {
-      _ids: [_conversation._id],
+      _ids: [leadConversation._id, messengerConversation._id],
       status: 'closed',
     };
 
@@ -326,6 +332,13 @@ describe('Conversation message mutations', () => {
     const [conversation] = await graphqlRequest(mutation, 'conversationsChangeStatus', args);
 
     expect(conversation.status).toEqual(args.status);
+
+    // if status is not closed
+    args.status = CONVERSATION_STATUSES.OPEN;
+
+    const [openConversation] = await graphqlRequest(mutation, 'conversationsChangeStatus', args);
+
+    expect(openConversation.status).toEqual(args.status);
   });
 
   test('Mark conversation as read', async () => {
@@ -341,8 +354,13 @@ describe('Conversation message mutations', () => {
       }
     `;
 
-    const conversation = await graphqlRequest(mutation, 'conversationMarkAsRead', { _id: _conversation._id }, context);
+    const conversation = await graphqlRequest(
+      mutation,
+      'conversationMarkAsRead',
+      { _id: leadConversation._id },
+      { user },
+    );
 
-    expect(conversation.readUserIds).toContain(_user._id);
+    expect(conversation.readUserIds).toContain(user._id);
   });
 });

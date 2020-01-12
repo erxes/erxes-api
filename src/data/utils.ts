@@ -1,4 +1,3 @@
-import { Storage } from '@google-cloud/storage';
 import * as AWS from 'aws-sdk';
 import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
@@ -7,15 +6,22 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
+import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Companies, Customers, Notifications, Users } from '../db/models';
-import { IUserDocument } from '../db/models/definitions/users';
-import { can } from './permissions/utils';
+import { Customers, Notifications, Users } from '../db/models';
+import { IUser, IUserDocument } from '../db/models/definitions/users';
+import { OnboardingHistories } from '../db/models/Robot';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { graphqlPubsub } from '../pubsub';
 
 /*
  * Check that given file is not harmful
  */
-export const checkFile = async file => {
+export const checkFile = async (file, source?: string) => {
+  if (!file) {
+    throw new Error('Invalid file');
+  }
+
   const { size } = file;
 
   // 20mb
@@ -30,22 +36,25 @@ export const checkFile = async file => {
   const ft = fileType(buffer);
 
   if (!ft) {
-    return 'Invalid file';
+    return 'Invalid file type';
   }
+
+  const defaultMimeTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/pdf',
+    'image/gif',
+  ];
+
+  const UPLOAD_FILE_TYPES = getEnv({ name: source === 'widgets' ? 'WIDGETS_UPLOAD_FILE_TYPES' : 'UPLOAD_FILE_TYPES' });
 
   const { mime } = ft;
 
-  if (
-    ![
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/pdf',
-    ].includes(mime)
-  ) {
-    return 'Invalid file';
+  if (!((UPLOAD_FILE_TYPES && UPLOAD_FILE_TYPES.split(',')) || defaultMimeTypes).includes(mime)) {
+    return 'Invalid configured file type';
   }
 
   return 'ok';
@@ -58,16 +67,28 @@ const createAWS = () => {
   const AWS_ACCESS_KEY_ID = getEnv({ name: 'AWS_ACCESS_KEY_ID' });
   const AWS_SECRET_ACCESS_KEY = getEnv({ name: 'AWS_SECRET_ACCESS_KEY' });
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
+  const AWS_COMPATIBLE_SERVICE_ENDPOINT = getEnv({ name: 'AWS_COMPATIBLE_SERVICE_ENDPOINT' });
+  const AWS_FORCE_PATH_STYLE = getEnv({ name: 'AWS_FORCE_PATH_STYLE' });
 
   if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_BUCKET) {
     throw new Error('AWS credentials are not configured');
   }
 
-  // initialize s3
-  return new AWS.S3({
+  const options: { accessKeyId: string; secretAccessKey: string; endpoint?: string; s3ForcePathStyle?: boolean } = {
     accessKeyId: AWS_ACCESS_KEY_ID,
     secretAccessKey: AWS_SECRET_ACCESS_KEY,
-  });
+  };
+
+  if (AWS_FORCE_PATH_STYLE === 'true') {
+    options.s3ForcePathStyle = true;
+  }
+
+  if (AWS_COMPATIBLE_SERVICE_ENDPOINT) {
+    options.endpoint = AWS_COMPATIBLE_SERVICE_ENDPOINT;
+  }
+
+  // initialize s3
+  return new AWS.S3(options);
 };
 
 /**
@@ -82,6 +103,8 @@ const createGCS = () => {
     throw new Error('Google Cloud Storage credentials are not configured');
   }
 
+  const Storage = require('@google-cloud/storage').Storage;
+
   // initializing Google Cloud Storage
   return new Storage({
     projectId: GOOGLE_PROJECT_ID,
@@ -92,7 +115,7 @@ const createGCS = () => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFileAWS = async (file: { name: string; path: string }): Promise<string> => {
+export const uploadFileAWS = async (file: { name: string; path: string; type: string }): Promise<string> => {
   const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
   const AWS_PREFIX = getEnv({ name: 'AWS_PREFIX', defaultValue: '' });
   const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
@@ -110,6 +133,7 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
   const response: any = await new Promise((resolve, reject) => {
     s3.upload(
       {
+        ContentType: file.type,
         Bucket: AWS_BUCKET,
         Key: fileName,
         Body: buffer,
@@ -126,6 +150,28 @@ export const uploadFileAWS = async (file: { name: string; path: string }): Promi
   });
 
   return IS_PUBLIC === 'true' ? response.Location : fileName;
+};
+
+/*
+ * Delete file from amazon s3
+ */
+const deleteFileAWS = (fileName: string) => {
+  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
+
+  const params = { Bucket: AWS_BUCKET, Key: fileName };
+
+  // initialize s3
+  const s3 = createAWS();
+
+  return new Promise((resolve, reject) => {
+    s3.deleteObject(params, err => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve('ok');
+    });
+  });
 };
 
 /*
@@ -170,11 +216,34 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
   return IS_PUBLIC === 'true' ? metadata.mediaLink : name;
 };
 
+const deleteFileGCS = async (fileName: string) => {
+  const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+
+  // initialize GCS
+  const storage = createGCS();
+
+  // select bucket
+  const bucket = storage.bucket(BUCKET);
+
+  return new Promise((resolve, reject) => {
+    bucket
+      .file(fileName)
+      .delete()
+      .then(err => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve('ok');
+      });
+  });
+};
+
 /**
  * Read file from GCS, AWS
  */
 export const readFileRequest = async (key: string): Promise<any> => {
-  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
+  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_T`YPE', defaultValue: 'AWS' });
 
   if (UPLOAD_SERVICE_TYPE === 'GCS') {
     const GCS_BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
@@ -213,14 +282,34 @@ export const readFileRequest = async (key: string): Promise<any> => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFile = async (file): Promise<string> => {
+export const uploadFile = async (file, fromEditor = false): Promise<any> => {
+  const IS_PUBLIC = getEnv({ name: 'FILE_SYSTEM_PUBLIC', defaultValue: 'true' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
+
+  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+
+  if (fromEditor) {
+    const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
+
+    if (IS_PUBLIC !== 'true') {
+      editorResult.url = `${DOMAIN}/read-file?key=${nameOrLink}`;
+    }
+
+    return editorResult;
+  }
+
+  return nameOrLink;
+};
+
+export const deleteFile = async (fileName: string): Promise<any> => {
   const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
 
   if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    return uploadFileAWS(file);
+    return deleteFileAWS(fileName);
   }
 
-  return uploadFileGCS(file);
+  return deleteFileGCS(fileName);
 };
 
 /**
@@ -284,19 +373,23 @@ export const createTransporter = ({ ses }) => {
  * Send email
  */
 export const sendEmail = async ({
-  toEmails,
+  toEmails = [],
   fromEmail,
   title,
   template = {},
+  modifier,
 }: {
   toEmails?: string[];
   fromEmail?: string;
   title?: string;
   template?: { name?: string; data?: any; isCustom?: boolean };
+  modifier?: (data: any, email: string) => void;
 }) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' });
+  const DEFAULT_EMAIL_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_SERVICE', defaultValue: '' }) || 'SES';
   const COMPANY_EMAIL_FROM = getEnv({ name: 'COMPANY_EMAIL_FROM' });
+  const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET', defaultValue: '' });
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
 
   // do not send email it is running in test mode
   if (NODE_ENV === 'test') {
@@ -309,56 +402,74 @@ export const sendEmail = async ({
   try {
     transporter = createTransporter({ ses: DEFAULT_EMAIL_SERVICE === 'SES' });
   } catch (e) {
-    return console.log(e.message); // eslint-disable-line
+    return debugEmail(e.message);
   }
 
   const { isCustom, data, name } = template;
 
-  // generate email content by given template
-  let html = await applyTemplate(data, name || '');
+  // for unsubscribe url
+  data.domain = DOMAIN;
 
-  if (!isCustom) {
-    html = await applyTemplate({ content: html }, 'base');
-  }
+  for (const toEmail of toEmails) {
+    if (modifier) {
+      modifier(data, toEmail);
+    }
 
-  return (toEmails || []).map(toEmail => {
+    // generate email content by given template
+    let html = await applyTemplate(data, name || '');
+
+    if (!isCustom) {
+      html = await applyTemplate({ content: html }, 'base');
+    }
+
     const mailOptions = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
       subject: title,
       html,
+      headers: {
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
+      },
     };
 
     return transporter.sendMail(mailOptions, (error, info) => {
-      console.log(error); // eslint-disable-line
-      console.log(info); // eslint-disable-line
+      debugEmail(error);
+      debugEmail(info);
     });
-  });
+  }
 };
 
 /**
- * Send a notification
+ * Returns user's name or email
  */
-export const sendNotification = async ({
-  createdUser,
-  receivers,
-  ...doc
-}: {
-  createdUser: string;
+export const getUserDetail = (user: IUser) => {
+  return (user.details && user.details.fullName) || user.email;
+};
+
+export interface ISendNotification {
+  createdUser: IUserDocument;
   receivers: string[];
   title: string;
   content: string;
   notifType: string;
   link: string;
-}) => {
-  const createdUserObj = await Users.findOne({ _id: createdUser });
+  action: string;
+  contentType: string;
+  contentTypeId: string;
+}
 
-  if (!createdUserObj) {
-    throw new Error('Created user not found');
-  }
+/**
+ * Send a notification
+ */
+export const sendNotification = async (doc: ISendNotification) => {
+  const { createdUser, receivers, title, content, notifType, action, contentType, contentTypeId } = doc;
+  let link = doc.link;
+
+  // remove duplicated ids
+  const receiverIds = [...new Set(receivers)];
 
   // collecting emails
-  const recipients = await Users.find({ _id: { $in: receivers } });
+  const recipients = await Users.find({ _id: { $in: receiverIds }, isActive: true, doNotDisturb: { $ne: 'Yes' } });
 
   // collect recipient emails
   const toEmails: string[] = [];
@@ -370,103 +481,58 @@ export const sendNotification = async ({
   }
 
   // loop through receiver ids
-  for (const receiverId of receivers) {
+  for (const receiverId of receiverIds) {
     try {
       // send web and mobile notification
-      await Notifications.createNotification({ ...doc, receiver: receiverId }, createdUser);
+      const notification = await Notifications.createNotification(
+        { link, title, content, notifType, receiver: receiverId, action, contentType, contentTypeId },
+        createdUser._id,
+      );
+
+      graphqlPubsub.publish('notificationInserted', {
+        notificationInserted: {
+          _id: notification._id,
+          userId: receiverId,
+          title: notification.title,
+          content: notification.content,
+        },
+      });
     } catch (e) {
       // Any other error is serious
       if (e.message !== 'Configuration does not exist') {
         throw e;
       }
     }
-  }
+  } // end receiverIds loop
 
-  return sendEmail({
+  const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
+
+  link = `${MAIN_APP_DOMAIN}${link}`;
+
+  // for controlling email template data filling
+  const modifier = (data: any, email: string) => {
+    const user = recipients.find(item => item.email === email);
+
+    if (user) {
+      data.uid = user._id;
+    }
+  };
+
+  await sendEmail({
     toEmails,
     title: 'Notification',
     template: {
       name: 'notification',
       data: {
-        notification: doc,
+        notification: { ...doc, link },
+        action,
+        userName: getUserDetail(createdUser),
       },
     },
+    modifier,
   });
-};
 
-/**
- * Receives and saves xls file in private/xlsImports folder
- * and imports customers to the database
- */
-export const importXlsFile = async (file: any, type: string, { user }: { user: IUserDocument }) => {
-  return new Promise(async (resolve, reject) => {
-    if (!(await can('importXlsFile', user._id))) {
-      return reject('Permission denied!');
-    }
-
-    const readStream = fs.createReadStream(file.path);
-
-    // Directory to save file
-    const downloadDir = `${__dirname}/../private/xlsTemplateOutputs/${file.name}`;
-
-    // Converting pipe into promise
-    const pipe = stream =>
-      new Promise((resolver, rejecter) => {
-        stream.on('finish', resolver);
-        stream.on('error', rejecter);
-      });
-
-    // Creating streams
-    const writeStream = fs.createWriteStream(downloadDir);
-    const streamObj = readStream.pipe(writeStream);
-
-    pipe(streamObj)
-      .then(async () => {
-        // After finished saving instantly create and load workbook from xls
-        const workbook = await xlsxPopulate.fromFileAsync(downloadDir);
-
-        // Deleting file after read
-        fs.unlink(downloadDir, () => {
-          return true;
-        });
-
-        const usedRange = workbook.sheet(0).usedRange();
-
-        if (!usedRange) {
-          return reject(['Invalid file']);
-        }
-
-        const usedSheets = usedRange.value();
-
-        // Getting columns
-        const fieldNames = usedSheets[0];
-
-        let collection;
-
-        // Removing column
-        usedSheets.shift();
-
-        switch (type) {
-          case 'customers':
-            collection = Customers;
-            break;
-
-          case 'companies':
-            collection = Companies;
-            break;
-
-          default:
-            reject(['Invalid import type']);
-        }
-
-        const response = await collection.bulkInsert(fieldNames, usedSheets, user);
-
-        resolve(response);
-      })
-      .catch(e => {
-        reject(e);
-      });
-  });
+  return true;
 };
 
 /**
@@ -482,31 +548,211 @@ export const createXlsFile = async () => {
 /**
  * Generates downloadable xls file on the url
  */
-export const generateXlsx = async (workbook: any, name: string): Promise<string> => {
-  // Url to download xls file
-  const url = `xlsTemplateOutputs/${name}.xlsx`;
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  // Saving xls workbook to the directory
-  await workbook.toFileAsync(`${__dirname}/../private/${url}`);
-
-  return `${DOMAIN}/static/${url}`;
+export const generateXlsx = async (workbook: any): Promise<string> => {
+  return workbook.outputAsync();
 };
+
+interface IRequestParams {
+  url?: string;
+  path?: string;
+  method?: string;
+  headers?: { [key: string]: string };
+  params?: { [key: string]: string };
+  body?: { [key: string]: string };
+  form?: { [key: string]: string };
+}
+
+export interface ILogQueryParams {
+  start?: string;
+  end?: string;
+  userId?: string;
+  action?: string;
+  page?: number;
+  perPage?: number;
+}
+
+interface ILogParams {
+  type: string;
+  newData?: string;
+  description?: string;
+  object: any;
+}
+
 /**
  * Sends post request to specific url
  */
-export const sendPostRequest = (url: string, params: { [key: string]: string }) =>
-  requestify.request(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: { ...params },
+export const sendRequest = async (
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage?: string,
+) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
+  debugExternalApi(`
+    Sending request to
+    url: ${url}
+    method: ${method}
+    body: ${JSON.stringify(body)}
+    params: ${JSON.stringify(params)}
+  `);
+
+  try {
+    const response = await requestify.request(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', origin: DOMAIN, ...(headers || {}) },
+      form,
+      body,
+      params,
+    });
+
+    const responseBody = response.getBody();
+
+    debugExternalApi(`
+      Success from : ${url}
+      responseBody: ${JSON.stringify(responseBody)}
+    `);
+
+    return responseBody;
+  } catch (e) {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
+      throw new Error(errorMessage);
+    } else {
+      const message = e.body || e.message;
+      throw new Error(message);
+    }
+  }
+};
+
+/**
+ * Send request to crons api
+ */
+export const fetchCronsApi = ({ path, method, body, params }: IRequestParams) => {
+  const CRONS_API_DOMAIN = getEnv({ name: 'CRONS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${CRONS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect crons api. Check CRONS_API_DOMAIN env or crons api is not running',
+  );
+};
+
+/**
+ * Send request to workers api
+ */
+export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) => {
+  const WORKERS_API_DOMAIN = getEnv({ name: 'WORKERS_API_DOMAIN' });
+
+  return sendRequest(
+    { url: `${WORKERS_API_DOMAIN}${path}`, method, body, params },
+    'Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+  );
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
+
+  registerOnboardHistory({ type: `${doc.type}Create`, user });
+
+  return putLog(doc, user);
+};
+
+export const registerOnboardHistory = ({ type, user }: { type: string; user: IUserDocument }) =>
+  OnboardingHistories.getOrCreate({ type, user })
+    .then(({ status }) => {
+      if (status === 'created') {
+        graphqlPubsub.publish('onboardingChanged', {
+          onboardingChanged: { userId: user._id, type },
+        });
+      }
+    })
+    .catch(e => debugBase(e));
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'update', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
+  const doc = { ...params, action: 'delete', object: JSON.stringify(params.object) };
+
+  return putLog(doc, user);
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} body Request
+ * @param {Object} user User information from mutation context
+ */
+const putLog = (body: ILogParams, user: IUserDocument) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return;
+  }
+
+  const doc = {
+    ...body,
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+  };
+
+  return new Promise(resolve => {
+    sendRequest(
+      { url: `${LOGS_DOMAIN}/logs/create`, method: 'post', body: { params: JSON.stringify(doc) } },
+      'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+    )
+      .then(response => console.log(response))
+      .catch(error => console.log(error.message));
+
+    return resolve('received log');
   });
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogs = (params: ILogQueryParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return {
+      logs: [],
+      totalCount: 0,
+    };
+  }
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body: { params: JSON.stringify(params) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
+};
 
 /**
  * Validates email using MX record resolver
  * @param email as String
  */
 export const validateEmail = async email => {
+  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
+
+  if (NODE_ENV === 'test') {
+    return true;
+  }
+
   const emailValidator = new EmailValidator();
   const { validDomain, validMailbox } = await emailValidator.verify(email);
 
@@ -521,21 +767,15 @@ export const validateEmail = async email => {
   return true;
 };
 
-export const authCookieOptions = () => {
+export const authCookieOptions = (secure: boolean) => {
   const oneDay = 1 * 24 * 3600 * 1000; // 1 day
 
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     maxAge: oneDay,
-    secure: false,
+    secure,
   };
-
-  const HTTPS = getEnv({ name: 'HTTPS', defaultValue: 'false' });
-
-  if (HTTPS === 'true') {
-    cookieOptions.secure = true;
-  }
 
   return cookieOptions;
 };
@@ -545,10 +785,6 @@ export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: st
 
   if (!value && typeof defaultValue !== 'undefined') {
     return defaultValue;
-  }
-
-  if (!value) {
-    console.log(`Missing environment variable configuration for ${name}`);
   }
 
   return value || '';
@@ -566,11 +802,13 @@ export const sendMobileNotification = async ({
   title,
   body,
   customerId,
+  conversationId,
 }: {
   receivers: string[];
   customerId?: string;
   title: string;
   body: string;
+  conversationId: string;
 }): Promise<void> => {
   if (!admin.apps.length) {
     return;
@@ -590,9 +828,64 @@ export const sendMobileNotification = async ({
   if (tokens.length > 0) {
     // send notification
     for (const token of tokens) {
-      await transporter.send({ token, notification: { title, body } });
+      await transporter.send({ token, notification: { title, body }, data: { conversationId } });
     }
   }
+};
+
+export const paginate = (collection, params: { ids?: string[]; page?: number; perPage?: number }) => {
+  const { page = 0, perPage = 0, ids } = params || { ids: null };
+
+  const _page = Number(page || '1');
+  const _limit = Number(perPage || '20');
+
+  if (ids) {
+    return collection;
+  }
+
+  return collection.limit(_limit).skip((_page - 1) * _limit);
+};
+
+/*
+ * Converts given value to date or if value in valid date
+ * then returns default value
+ */
+export const fixDate = (value, defaultValue = new Date()): Date => {
+  const date = new Date(value);
+
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+
+  return defaultValue;
+};
+
+export const getDate = (date: Date, day: number): Date => {
+  const currentDate = new Date();
+
+  date.setDate(currentDate.getDate() + day + 1);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+};
+
+export const getToday = (date: Date): Date => {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
+};
+
+export const getNextMonth = (date: Date): { start: number; end: number } => {
+  const today = getToday(date);
+  const currentMonth = new Date().getMonth();
+
+  if (currentMonth === 11) {
+    today.setFullYear(today.getFullYear() + 1);
+  }
+
+  const month = (currentMonth + 1) % 12;
+  const start = today.setMonth(month, 1);
+  const end = today.setMonth(month + 1, 0);
+
+  return { start, end };
 };
 
 export default {
@@ -602,4 +895,68 @@ export default {
   sendMobileNotification,
   readFile,
   createTransporter,
+  fetchCronsApi,
+  fetchWorkersApi,
+};
+
+export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
+
+export const validSearchText = (values: string[]) => {
+  const value = values.join(' ');
+
+  if (value.length < 512) {
+    return value;
+  }
+
+  return value.substring(0, 511);
+};
+
+const stringToRegex = (value: string) => {
+  const specialChars = [...'{}[]\\^$.|?*+()'];
+
+  const result = [...value].map(char => (specialChars.includes(char) ? '.?\\' + char : '.?' + char));
+
+  return '.*' + result.join('').substring(2) + '.*';
+};
+
+export const regexSearchText = (searchValue: string) => {
+  const result: any[] = [];
+
+  searchValue = searchValue.replace(/\s\s+/g, ' ');
+
+  const words = searchValue.split(' ');
+
+  for (const word of words) {
+    result.push({ searchText: new RegExp(`${stringToRegex(word)}`, 'mui') });
+  }
+
+  return { $and: result };
+};
+
+/**
+ * Check user ids whether its added or removed from array of ids
+ */
+export const checkUserIds = (oldUserIds: string[] = [], newUserIds: string[]) => {
+  const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
+
+  const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
+
+  return { addedUserIds, removedUserIds };
+};
+
+/*
+ * Handle engage unsubscribe request
+ */
+export const handleUnsubscription = async (query: { cid: string; uid: string }) => {
+  const { cid, uid } = query;
+
+  if (cid) {
+    await Customers.updateOne({ _id: cid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  if (uid) {
+    await Users.updateOne({ _id: uid }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  return true;
 };

@@ -1,8 +1,19 @@
 import * as faker from 'faker';
 import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
-import { customerFactory, formFactory, integrationFactory, segmentFactory, tagsFactory } from '../db/factories';
-import { Customers, Segments, Tags } from '../db/models';
+import {
+  brandFactory,
+  customerFactory,
+  formFactory,
+  formSubmissionFactory,
+  integrationFactory,
+  segmentFactory,
+  tagsFactory,
+} from '../db/factories';
+import { Customers, FormSubmissions, Segments, Tags } from '../db/models';
+
+import { KIND_CHOICES } from '../db/models/definitions/constants';
+import './setup.ts';
 
 const count = response => {
   return Object.keys(response).length;
@@ -41,48 +52,6 @@ describe('customerQueries', () => {
     query customers(${commonParamDefs}) {
       customers(${commonParams}) {
         _id
-        createdAt
-        modifiedAt
-        integrationId
-        firstName
-        lastName
-        primaryEmail
-        emails
-        primaryPhone
-        phones
-        isUser
-        tagIds
-        remoteAddress
-        internalNotes
-        location
-        visitorContactInfo
-        customFieldsData
-        messengerData
-        twitterData
-        facebookData
-        ownerId
-        position
-        department
-        leadStatus
-        lifecycleState
-        hasAuthority
-        description
-        doNotDisturb
-        links {
-          linkedIn
-          twitter
-          facebook
-          youtube
-          github
-          website
-        }
-        companies { _id }
-        conversations { _id }
-        deals { _id }
-        getIntegrationData
-        getMessengerCustomData
-        getTags { _id }
-        owner { _id }
       }
     }
   `;
@@ -111,7 +80,7 @@ describe('customerQueries', () => {
 
   const firstName = faker.name.firstName();
   const lastName = faker.name.lastName();
-  const primaryEmail = faker.internet.email();
+  const primaryEmail = 'test@test.com';
   const primaryPhone = '12345678';
 
   afterEach(async () => {
@@ -119,13 +88,14 @@ describe('customerQueries', () => {
     await Customers.deleteMany({});
     await Segments.deleteMany({});
     await Tags.deleteMany({});
+    await FormSubmissions.deleteMany({});
   });
 
   test('Customers', async () => {
     const integration = await integrationFactory();
-    await customerFactory({ integrationId: integration._id });
-    await customerFactory({});
-    await customerFactory({});
+    await customerFactory({ integrationId: integration._id }, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
     const args = { page: 1, perPage: 3 };
     const responses = await graphqlRequest(qryCustomers, 'customers', args);
@@ -134,13 +104,13 @@ describe('customerQueries', () => {
   });
 
   test('Customers filtered by ids', async () => {
-    const customer1 = await customerFactory({});
-    const customer2 = await customerFactory({});
-    const customer3 = await customerFactory({});
+    const customer1 = await customerFactory({}, true);
+    const customer2 = await customerFactory({}, true);
+    const customer3 = await customerFactory({}, true);
 
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({});
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
     const ids = [customer1._id, customer2._id, customer3._id];
 
@@ -152,10 +122,10 @@ describe('customerQueries', () => {
   test('Customers filtered by tag', async () => {
     const tag = await tagsFactory({});
 
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({ tagIds: tag._id });
-    await customerFactory({ tagIds: tag._id });
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({ tagIds: [tag._id] }, true);
+    await customerFactory({ tagIds: [tag._id] }, true);
 
     const tagResponse = await Tags.findOne({}, '_id');
 
@@ -167,10 +137,10 @@ describe('customerQueries', () => {
   });
 
   test('Customers filtered by leadStatus', async () => {
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({ leadStatus: 'new' });
-    await customerFactory({ leadStatus: 'new' });
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({ leadStatus: 'new' }, true);
+    await customerFactory({ leadStatus: 'new' }, true);
 
     const responses = await graphqlRequest(qryCustomers, 'customers', {
       leadStatus: 'new',
@@ -180,10 +150,10 @@ describe('customerQueries', () => {
   });
 
   test('Customers filtered by lifecycleState', async () => {
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({ lifecycleState: 'subscriber' });
-    await customerFactory({ lifecycleState: 'subscriber' });
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({ lifecycleState: 'subscriber' }, true);
+    await customerFactory({ lifecycleState: 'subscriber' }, true);
 
     const responses = await graphqlRequest(qryCustomers, 'customers', {
       lifecycleState: 'subscriber',
@@ -193,8 +163,8 @@ describe('customerQueries', () => {
   });
 
   test('Customers filtered by segment', async () => {
-    await customerFactory({ firstName });
-    await customerFactory({});
+    await customerFactory({ firstName }, true);
+    await customerFactory({}, true);
 
     const args = {
       contentType: 'customer',
@@ -218,26 +188,24 @@ describe('customerQueries', () => {
   });
 
   test('Customers filtered by search value', async () => {
-    await customerFactory({ firstName });
-    await customerFactory({ lastName });
-    await customerFactory({ primaryPhone, phones: [primaryPhone] });
-    await customerFactory({ primaryEmail, emails: [primaryEmail] });
+    await customerFactory({ firstName: 'firstName' }, true);
+    await customerFactory({ lastName: 'lastName' }, true);
+    await customerFactory({ primaryPhone, phones: [primaryPhone] }, true);
+    await customerFactory({ primaryEmail, emails: [primaryEmail] }, true);
 
     // customers by firstName ==============
     let responses = await graphqlRequest(qryCustomers, 'customers', {
-      searchValue: firstName,
+      searchValue: 'firstName',
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].firstName).toBe(firstName);
 
     // customers by lastName ===========
     responses = await graphqlRequest(qryCustomers, 'customers', {
-      searchValue: lastName,
+      searchValue: 'lastName',
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].lastName).toBe(lastName);
 
     // customers by email ==========
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -245,7 +213,6 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].primaryEmail).toBe(primaryEmail);
 
     // customers by phone ==============
     responses = await graphqlRequest(qryCustomers, 'customers', {
@@ -253,14 +220,20 @@ describe('customerQueries', () => {
     });
 
     expect(responses.length).toBe(1);
-    expect(responses[0].primaryPhone).toBe(primaryPhone);
+
+    // customer by contains name
+    responses = await graphqlRequest(qryCustomers, 'customers', {
+      searchValue: 'sname',
+    });
+
+    expect(responses.length).toBe(2);
   });
 
   test('Main customers', async () => {
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({});
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
     const args = { page: 1, perPage: 3 };
     const responses = await graphqlRequest(qryCustomersMain, 'customersMain', args);
@@ -270,22 +243,114 @@ describe('customerQueries', () => {
   });
 
   test('Count customers', async () => {
-    await customerFactory({});
-    await customerFactory({});
+    const customer1 = await customerFactory({}, true);
+    const customer2 = await customerFactory({}, true);
+    const customer3 = await customerFactory({}, true);
 
     // Creating test data
     await segmentFactory({ contentType: 'customer' });
+
+    const args = { only: 'bySegment', ids: [customer1._id, customer2._id, customer3._id] };
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+  });
+
+  test('Count customers by segment', async () => {
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+
+    // Creating test data
+    await segmentFactory({ contentType: 'customer' });
+
+    const args = { only: 'bySegment' };
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', args);
+
+    expect(count(response.bySegment)).toBe(1);
+  });
+
+  test('Count companies by segment', async () => {
+    // Creating test data
+    await customerFactory({});
+    await customerFactory({});
+
+    await segmentFactory({ contentType: 'customer' });
+
+    let response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'bySegment',
+    });
+
+    expect(count(response.bySegment)).toBe(1);
+
+    const args: any = {
+      contentType: 'customer',
+      conditions: [
+        {
+          field: 'primaryName',
+          operator: 'c',
+          value: 'name',
+          type: 'date',
+        },
+      ],
+    };
+
+    await segmentFactory(args);
+
+    try {
+      response = await graphqlRequest(qryCount, 'customerCounts', {
+        only: 'bySegment',
+      });
+    } catch (e) {
+      expect(e[0].message).toBe('TypeError: str.replace is not a function');
+    }
+  });
+
+  test('Customer count by segment (CastError)', async () => {
+    await customerFactory({});
+    await customerFactory({});
+
+    const args = {
+      contentType: 'customer',
+      conditions: [
+        {
+          field: 'profileScore',
+          operator: 'igt',
+          value: 'name',
+          type: 'string',
+        },
+      ],
+    };
+
+    const segment = await segmentFactory(args);
 
     const response = await graphqlRequest(qryCount, 'customerCounts', {
       only: 'bySegment',
     });
 
-    expect(count(response.bySegment)).toBe(1);
+    expect(response.bySegment[segment._id]).toBe(0);
+  });
+
+  test('Count customers by brand', async () => {
+    const brand = await brandFactory({});
+
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+
+    // Creating test data
+    await segmentFactory({ contentType: 'customer' });
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byBrand',
+    });
+
+    expect(response.byBrand[brand._id]).toBe(0);
   });
 
   test('Customer count by tag', async () => {
-    await customerFactory({});
-    await customerFactory({});
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
     await tagsFactory({ type: 'company' });
     await tagsFactory({ type: 'customer' });
@@ -297,22 +362,8 @@ describe('customerQueries', () => {
     expect(count(response.byTag)).toBe(1);
   });
 
-  test('Customer count by segment', async () => {
-    await customerFactory({});
-    await customerFactory({});
-
-    await segmentFactory({ contentType: 'customer' });
-    await segmentFactory({ contentType: 'company' });
-
-    const response = await graphqlRequest(qryCount, 'customerCounts', {
-      only: 'bySegment',
-    });
-
-    expect(count(response.bySegment)).toBe(1);
-  });
-
   test('Customer count by fake segment', async () => {
-    await customerFactory({ lastName });
+    await customerFactory({ lastName }, true);
 
     const byFakeSegment = {
       contentType: 'customer',
@@ -333,11 +384,26 @@ describe('customerQueries', () => {
     expect(response.byFakeSegment).toBe(1);
   });
 
+  test('Customer count by form', async () => {
+    const form = await formFactory({});
+
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byForm',
+    });
+
+    expect(response.byForm[form._id]).toBe(0);
+  });
+
   test('Customer count by leadStatus', async () => {
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({ leadStatus: 'new' });
-    await customerFactory({ leadStatus: 'new' });
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({ leadStatus: 'new' }, true);
+    await customerFactory({ leadStatus: 'new' }, true);
 
     const response = await graphqlRequest(qryCount, 'customerCounts', {
       only: 'byLeadStatus',
@@ -348,10 +414,10 @@ describe('customerQueries', () => {
   });
 
   test('Customer count by lifecycleState', async () => {
-    await customerFactory({});
-    await customerFactory({});
-    await customerFactory({ lifecycleState: 'subscriber' });
-    await customerFactory({ lifecycleState: 'subscriber' });
+    await customerFactory({}, true);
+    await customerFactory({}, true);
+    await customerFactory({ lifecycleState: 'subscriber' }, true);
+    await customerFactory({ lifecycleState: 'subscriber' }, true);
 
     const response = await graphqlRequest(qryCount, 'customerCounts', {
       only: 'byLifecycleState',
@@ -361,102 +427,61 @@ describe('customerQueries', () => {
     expect(response.byLifecycleState.lead).toBe(2);
   });
 
-  test('Customer detail', async () => {
-    const customer = await customerFactory({});
+  test('Customer count by IntegrationType', async () => {
+    const messengerIntegration = await integrationFactory({ kind: KIND_CHOICES.MESSENGER });
+    const integration = await integrationFactory({ kind: '' });
 
-    const qry = `
-      query customerDetail($_id: String!) {
-        customerDetail(_id: $_id) {
-          _id
-        }
-      }
-    `;
+    await customerFactory({ integrationId: messengerIntegration._id });
+    await customerFactory({ integrationId: messengerIntegration._id });
+    await customerFactory({ integrationId: integration._id });
+    await customerFactory({ integrationId: integration._id });
 
-    const response = await graphqlRequest(qry, 'customerDetail', {
-      _id: customer._id,
+    const response = await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byIntegrationType',
     });
 
-    expect(response._id).toBe(customer._id);
+    expect(response.byIntegrationType.messenger).toBe(0);
   });
 
   test('Customer filtered by submitted form', async () => {
-    const customer = await customerFactory({});
-    let submissions = [{ customerId: customer._id, submittedAt: new Date() }];
-    const form = await formFactory({ submissions });
+    const customer1 = await customerFactory({}, true);
+    const customer2 = await customerFactory({}, true);
+    const form = await formFactory({});
 
-    const testCustomer = await customerFactory({});
+    await formSubmissionFactory({ customerId: customer1._id, formId: form._id });
+    await formSubmissionFactory({ customerId: customer2._id, formId: form._id });
 
-    submissions = [
-      { customerId: testCustomer._id, submittedAt: new Date() },
-      { customerId: customer._id, submittedAt: new Date() },
-    ];
-
-    const testForm = await formFactory({ submissions });
-
-    let responses = await graphqlRequest(qryCustomersMain, 'customersMain', {
+    const responses = await graphqlRequest(qryCustomersMain, 'customersMain', {
       form: form._id,
-    });
-
-    expect(responses.list.length).toBe(1);
-
-    responses = await graphqlRequest(qryCustomersMain, 'customersMain', {
-      form: testForm._id,
     });
 
     expect(responses.list.length).toBe(2);
   });
 
   test('Customer filtered by submitted form with startDate and endDate', async () => {
-    const customer = await customerFactory({});
-    const customer1 = await customerFactory({});
-    const customer2 = await customerFactory({});
+    const customer = await customerFactory({}, true);
+    const customer1 = await customerFactory({}, true);
+    const customer2 = await customerFactory({}, true);
 
-    const startDate = '2018-04-03 10:00';
-    const endDate = '2018-04-03 18:00';
+    const startDate = moment().format('YYYY-MM-DD HH:mm');
+    const endDate = moment(startDate)
+      .add(25, 'days')
+      .format('YYYY-MM-DD HH:mm');
+
+    const form = await formFactory();
 
     // Creating 3 submissions for form
-    const submissions = [
-      {
-        customerId: customer._id,
-        submittedAt: moment(startDate)
-          .add(5, 'days')
-          .toDate(),
-      },
-      {
-        customerId: customer1._id,
-        submittedAt: moment(startDate)
-          .add(20, 'days')
-          .toDate(),
-      },
-      {
-        customerId: customer2._id,
-        submittedAt: moment(startDate)
-          .add(1, 'hours')
-          .toDate(),
-      },
-    ];
+    await formSubmissionFactory({ customerId: customer._id, formId: form._id });
+    await formSubmissionFactory({ customerId: customer1._id, formId: form._id });
+    await formSubmissionFactory({ customerId: customer2._id, formId: form._id });
 
-    const form = await formFactory({ submissions });
-
-    let args = {
+    const args = {
       startDate,
       endDate,
       form: form._id,
     };
 
-    let responses = await graphqlRequest(qryCustomersMain, 'customersMain', args);
-
-    expect(responses.list.length).toBe(1);
-
-    args = {
-      startDate,
-      endDate: moment(endDate)
-        .add(25, 'days')
-        .format('YYYY-MM-DD HH:mm'),
-      form: form._id,
-    };
-
-    responses = await graphqlRequest(qryCustomersMain, 'customersMain', args);
+    const responses = await graphqlRequest(qryCustomersMain, 'customersMain', args);
 
     expect(responses.list.length).toBe(3);
   });
@@ -464,11 +489,107 @@ describe('customerQueries', () => {
   test('Customer filtered by default selector', async () => {
     const integration = await integrationFactory({});
     await Customers.createCustomer({ integrationId: integration._id });
-    await customerFactory({});
-    await customerFactory({});
+    await customerFactory({}, true);
+    await customerFactory({}, true);
 
     const responses = await graphqlRequest(qryCustomersMain, 'customersMain', {});
 
     expect(responses.list.length).toBe(2);
+  });
+
+  test('Customer list for segment preview', async () => {
+    const headSegment = await segmentFactory({});
+    const segment = await segmentFactory({ subOf: headSegment._id });
+
+    const messengerData = { sessionCount: 10 };
+
+    await customerFactory({ messengerData });
+    await customerFactory();
+
+    const qry = `
+      query customerListForSegmentPreview($segment: JSON, $limit: Int) {
+        customerListForSegmentPreview(segment: $segment, limit: $limit) {
+          _id
+        }
+      }
+    `;
+
+    const args = { segment };
+
+    const responses = await graphqlRequest(qry, 'customerListForSegmentPreview', args);
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Customer detail', async () => {
+    const customer = await customerFactory({}, true);
+    const customerWithCustomData = await customerFactory({ messengerData: { customData: { data: 'data' } } });
+    const customerNoMessengerData = await customerFactory();
+
+    const qry = `
+      query customerDetail($_id: String!) {
+        customerDetail(_id: $_id) {
+          _id
+          createdAt
+          modifiedAt
+          integrationId
+          firstName
+          lastName
+          primaryEmail
+          emails
+          primaryPhone
+          phones
+          isUser
+          tagIds
+          remoteAddress
+          internalNotes
+          location
+          visitorContactInfo
+          customFieldsData
+          messengerData
+          ownerId
+          position
+          department
+          leadStatus
+          lifecycleState
+          hasAuthority
+          description
+          doNotDisturb
+          links {
+            linkedIn
+            twitter
+            facebook
+            youtube
+            github
+            website
+          }
+          conversations { _id }
+          getIntegrationData
+          getMessengerCustomData
+          getTags { _id }
+          owner { _id }
+          integration { _id }
+          companies { _id }
+        }
+      }
+    `;
+
+    let response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customer._id,
+    });
+
+    expect(response._id).toBe(customer._id);
+
+    response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customerWithCustomData._id,
+    });
+
+    expect(response._id).toBe(customerWithCustomData._id);
+
+    response = await graphqlRequest(qry, 'customerDetail', {
+      _id: customerNoMessengerData._id,
+    });
+
+    expect(response._id).toBe(customerNoMessengerData._id);
   });
 });

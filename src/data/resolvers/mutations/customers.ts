@@ -1,8 +1,8 @@
-import { Customers } from '../../../db/models';
-
+import { ActivityLogs, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
-import { IUserDocument } from '../../../db/models/definitions/users';
-import { checkPermission } from '../../permissions';
+import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -12,8 +12,18 @@ const customerMutations = {
   /**
    * Create new customer also adds Customer registration log
    */
-  async customersAdd(_root, doc: ICustomer, { user }: { user: IUserDocument }) {
-    const customer = await Customers.createCustomer(doc, user);
+  async customersAdd(_root, doc: ICustomer, { user, docModifier }: IContext) {
+    const customer = await Customers.createCustomer(docModifier(doc), user);
+
+    await putCreateLog(
+      {
+        type: 'customer',
+        newData: JSON.stringify(doc),
+        object: customer,
+        description: `${customer.firstName} has been created`,
+      },
+      user,
+    );
 
     return customer;
   },
@@ -21,31 +31,53 @@ const customerMutations = {
   /**
    * Update customer
    */
-  async customersEdit(_root, { _id, ...doc }: ICustomersEdit) {
-    return Customers.updateCustomer(_id, doc);
-  },
+  async customersEdit(_root, { _id, ...doc }: ICustomersEdit, { user }: IContext) {
+    const customer = await Customers.getCustomer(_id);
+    const updated = await Customers.updateCustomer(_id, doc);
 
-  /**
-   * Update customer Companies
-   */
-  async customersEditCompanies(_root, { _id, companyIds }: { _id: string; companyIds: string[] }) {
-    return Customers.updateCompanies(_id, companyIds);
+    await putUpdateLog(
+      {
+        type: 'customer',
+        object: customer,
+        newData: JSON.stringify(doc),
+        description: `${customer.firstName} has been updated`,
+      },
+      user,
+    );
+
+    return updated;
   },
 
   /**
    * Merge customers
    */
-  async customersMerge(_root, { customerIds, customerFields }: { customerIds: string[]; customerFields: ICustomer }) {
-    return Customers.mergeCustomers(customerIds, customerFields);
+  async customersMerge(
+    _root,
+    { customerIds, customerFields }: { customerIds: string[]; customerFields: ICustomer },
+    { user }: IContext,
+  ) {
+    return Customers.mergeCustomers(customerIds, customerFields, user);
   },
 
   /**
    * Remove customers
    */
-  async customersRemove(_root, { customerIds }: { customerIds: string[] }) {
-    for (const customerId of customerIds) {
-      // Removing every customer and modules associated with
-      await Customers.removeCustomer(customerId);
+  async customersRemove(_root, { customerIds }: { customerIds: string[] }, { user }: IContext) {
+    const customers = await Customers.find({ _id: { $in: customerIds } }, { firstName: 1 }).lean();
+
+    await Customers.removeCustomers(customerIds);
+
+    for (const customer of customers) {
+      await ActivityLogs.removeActivityLog(customer._id);
+
+      await putDeleteLog(
+        {
+          type: 'customer',
+          object: customer,
+          description: `${customer.firstName} has been deleted`,
+        },
+        user,
+      );
     }
 
     return customerIds;
@@ -54,7 +86,6 @@ const customerMutations = {
 
 checkPermission(customerMutations, 'customersAdd', 'customersAdd');
 checkPermission(customerMutations, 'customersEdit', 'customersEdit');
-checkPermission(customerMutations, 'customersEditCompanies', 'customersEditCompanies');
 checkPermission(customerMutations, 'customersMerge', 'customersMerge');
 checkPermission(customerMutations, 'customersRemove', 'customersRemove');
 

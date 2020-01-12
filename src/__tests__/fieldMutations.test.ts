@@ -3,6 +3,8 @@ import { graphqlRequest } from '../db/connection';
 import { fieldFactory, fieldGroupFactory, userFactory } from '../db/factories';
 import { Fields, FieldsGroups, Users } from '../db/models';
 
+import './setup.ts';
+
 /*
  * Generate test data
  */
@@ -239,12 +241,12 @@ describe('Fields mutations', () => {
       }
     `;
 
-    const fieldGroup = await graphqlRequest(mutation, 'fieldsGroupsAdd', fieldGroupArgs, context);
+    const fieldGroup = await graphqlRequest(mutation, 'fieldsGroupsAdd', fieldGroupArgs);
 
     expect(fieldGroup.contentType).toBe(fieldGroupArgs.contentType);
     expect(fieldGroup.name).toBe(fieldGroupArgs.name);
     expect(fieldGroup.description).toBe(fieldGroupArgs.description);
-    expect(fieldGroup.order).toBe(fieldGroupArgs.order);
+    expect(fieldGroup.order).toBe(1);
     expect(fieldGroup.isVisible).toBe(fieldGroupArgs.isVisible);
   });
 

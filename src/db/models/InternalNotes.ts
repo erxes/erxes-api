@@ -1,10 +1,10 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs } from '.';
 import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { IInternalNote, IInternalNoteDocument, internalNoteSchema } from './definitions/internalNotes';
 import { IUserDocument } from './definitions/users';
 
 export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
+  getInternalNote(_id: string): Promise<IInternalNoteDocument>;
   createInternalNote(
     { contentType, contentTypeId, ...fields }: IInternalNote,
     user: IUserDocument,
@@ -16,14 +16,23 @@ export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
 
   changeCustomer(newCustomerId: string, customerIds: string[]): Promise<IInternalNoteDocument[]>;
 
-  removeCustomerInternalNotes(customerId: string): void;
-  removeCompanyInternalNotes(companyId: string): void;
+  removeCustomersInternalNotes(customerIds: string[]): Promise<{ n: number; ok: number }>;
+  removeCompaniesInternalNotes(companyIds: string[]): void;
 
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<IInternalNoteDocument[]>;
 }
 
 export const loadClass = () => {
   class InternalNote {
+    public static async getInternalNote(_id: string) {
+      const internalNote = await InternalNotes.findOne({ _id });
+
+      if (!internalNote) {
+        throw new Error('Internal note not found');
+      }
+
+      return internalNote;
+    }
     /*
      * Create new internalNote
      */
@@ -35,12 +44,9 @@ export const loadClass = () => {
         contentType,
         contentTypeId,
         createdUserId: user._id,
-        createdDate: new Date(),
+        createdAt: Date.now(),
         ...fields,
       });
-
-      // create log
-      await ActivityLogs.createInternalNoteLog(internalNote);
 
       return internalNote;
     }
@@ -88,24 +94,24 @@ export const loadClass = () => {
     }
 
     /**
-     * Removing customers' internal notes
+     * Remove customers' internal notes
      */
-    public static async removeCustomerInternalNotes(customerId: string) {
+    public static async removeCustomersInternalNotes(customerIds: string) {
       // Removing every internal notes of customer
       return InternalNotes.deleteMany({
         contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
-        contentTypeId: customerId,
+        contentTypeId: { $in: customerIds },
       });
     }
 
     /**
-     * Removing companies' internal notes
+     * Remove companies' internal notes
      */
-    public static async removeCompanyInternalNotes(companyId: string) {
+    public static async removeCompaniesInternalNotes(companyIds: string[]) {
       // Removing every internal notes of company
       return InternalNotes.deleteMany({
         contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
-        contentTypeId: companyId,
+        contentTypeId: { $in: companyIds },
       });
     }
 

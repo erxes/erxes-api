@@ -2,6 +2,8 @@ import { graphqlRequest } from '../db/connection';
 import { notificationConfigurationFactory, notificationFactory, userFactory } from '../db/factories';
 import { NotificationConfigurations, Notifications, Users } from '../db/models';
 
+import './setup.ts';
+
 describe('notificationsQueries', () => {
   const commonParamDefs = `
     $limit: Int,
@@ -38,14 +40,14 @@ describe('notificationsQueries', () => {
       title: title1,
       createdUser: user,
       receiver,
-      requireRead: true,
+      isRead: true,
     });
 
     await notificationFactory({
       title: title2,
       createdUser: user,
       receiver,
-      requireRead: false,
+      isRead: false,
     });
 
     const qry = `
@@ -84,6 +86,11 @@ describe('notificationsQueries', () => {
 
     expect(response.length).toBe(1);
     expect(response[0].title).toBe(title2);
+
+    response = await graphqlRequest(qry, 'notifications', { requireRead: true }, { user: receiver });
+
+    expect(response.length).toBe(1);
+    expect(response[0].isRead).toBe(false);
   });
 
   test('Count notifications', async () => {
@@ -108,7 +115,7 @@ describe('notificationsQueries', () => {
     expect(response).toBe(2);
 
     // notification for receiver 2
-    response = await graphqlRequest(qry, 'notificationCounts', { requireRead: false }, { user: receiver2 });
+    response = await graphqlRequest(qry, 'notificationCounts', { requireRead: true }, { user: receiver2 });
 
     expect(response).toBe(1);
   });

@@ -1,123 +1,32 @@
-import { DealBoards, DealPipelines, Deals, DealStages } from '../../../db/models';
-import { checkPermission, moduleRequireLogin } from '../../permissions';
-import { dealsCommonFilter } from './utils';
+import { Deals } from '../../../db/models';
+import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { IListParams } from './boards';
+import { checkItemPermByUser, generateDealCommonFilters, generateSort } from './boardUtils';
 
-interface IDate {
-  month: number;
-  year: number;
+interface IDealListParams extends IListParams {
+  productIds?: [string];
 }
-
-interface IDealListParams {
-  pipelineId?: string;
-  stageId: string;
-  customerId: string;
-  companyId: string;
-  skip?: number;
-  date?: IDate;
-  search?: string;
-}
-
-const dateSelector = (date: IDate) => {
-  const { year, month } = date;
-  const currentDate = new Date();
-
-  const start = currentDate.setFullYear(year, month, 1);
-  const end = currentDate.setFullYear(year, month + 1, 0);
-
-  return {
-    $gte: new Date(start),
-    $lte: new Date(end),
-  };
-};
 
 const dealQueries = {
   /**
-   * Deal Boards list
-   */
-  dealBoards() {
-    return DealBoards.find({}).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal Board detail
-   */
-  dealBoardDetail(_root, { _id }: { _id: string }) {
-    return DealBoards.findOne({ _id });
-  },
-
-  /**
-   * Get last board
-   */
-  dealBoardGetLast() {
-    return DealBoards.findOne().sort({ createdAt: -1 });
-  },
-
-  /**
-   * Deal Pipelines list
-   */
-  dealPipelines(_root, { boardId }: { boardId: string }) {
-    return DealPipelines.find({ boardId }).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal pipeline detail
-   */
-  dealPipelineDetail(_root, { _id }: { _id: string }) {
-    return DealPipelines.findOne({ _id });
-  },
-
-  /**
-   * Deal Stages list
-   */
-  dealStages(_root, { pipelineId }: { pipelineId: string }) {
-    return DealStages.find({ pipelineId }).sort({ order: 1, createdAt: -1 });
-  },
-
-  /**
-   * Deal stage detail
-   */
-  dealStageDetail(_root, { _id }: { _id: string }) {
-    return DealStages.findOne({ _id });
-  },
-
-  /**
    * Deals list
    */
-  async deals(_root, { pipelineId, stageId, customerId, companyId, date, skip, search }: IDealListParams) {
-    const filter: any = dealsCommonFilter({}, { search });
-    const sort = { order: 1, createdAt: -1 };
-
-    if (stageId) {
-      filter.stageId = stageId;
-    }
-
-    if (customerId) {
-      filter.customerIds = { $in: [customerId] };
-    }
-
-    if (companyId) {
-      filter.companyIds = { $in: [companyId] };
-    }
-
-    if (date) {
-      const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
-
-      filter.closeDate = dateSelector(date);
-      filter.stageId = { $in: stageIds };
-    }
+  async deals(_root, args: IDealListParams, { user, commonQuerySelector }: IContext) {
+    const filter = { ...commonQuerySelector, ...(await generateDealCommonFilters(user._id, args)) };
+    const sort = generateSort(args);
 
     return Deals.find(filter)
       .sort(sort)
-      .skip(skip || 0)
+      .skip(args.skip || 0)
       .limit(10);
   },
 
   /**
    *  Deal total amounts
    */
-  async dealsTotalAmounts(_root, { pipelineId, date }: { date: IDate; pipelineId: string }) {
-    const stageIds = await DealStages.find({ pipelineId }).distinct('_id');
-    const filter = { stageId: { $in: stageIds }, closeDate: dateSelector(date) };
+  async dealsTotalAmounts(_root, args: IDealListParams, { user }: IContext) {
+    const filter = await generateDealCommonFilters(user._id, args);
 
     const dealCount = await Deals.find(filter).countDocuments();
     const amountList = await Deals.aggregate([
@@ -125,34 +34,81 @@ const dealQueries = {
         $match: filter,
       },
       {
+        $lookup: {
+          from: 'stages',
+          let: { letStageId: '$stageId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$letStageId'],
+                },
+              },
+            },
+            {
+              $project: {
+                probability: {
+                  $cond: {
+                    if: {
+                      $or: [{ $eq: ['$probability', 'Won'] }, { $eq: ['$probability', 'Lost'] }],
+                    },
+                    then: '$probability',
+                    else: 'In progress',
+                  },
+                },
+              },
+            },
+          ],
+          as: 'stageProbability',
+        },
+      },
+      {
         $unwind: '$productsData',
+      },
+      {
+        $unwind: '$stageProbability',
       },
       {
         $project: {
           amount: '$productsData.amount',
           currency: '$productsData.currency',
+          type: '$stageProbability.probability',
         },
       },
       {
         $group: {
-          _id: '$currency',
+          _id: { currency: '$currency', type: '$type' },
+
           amount: { $sum: '$amount' },
         },
       },
+      {
+        $group: {
+          _id: '$_id.type',
+          currencies: {
+            $push: { amount: '$amount', name: '$_id.currency' },
+          },
+        },
+      },
+      {
+        $sort: { _id: -1 },
+      },
     ]);
 
-    const dealAmounts = amountList.map(deal => {
-      return { _id: Math.random(), currency: deal._id, amount: deal.amount };
+    const totalForType = amountList.map(type => {
+      return { _id: Math.random(), name: type._id, currencies: type.currencies };
     });
 
-    return { _id: Math.random(), dealCount, dealAmounts };
+    return { _id: Math.random(), dealCount, totalForType };
   },
 
   /**
    * Deal detail
    */
-  dealDetail(_root, { _id }: { _id: string }) {
-    return Deals.findOne({ _id });
+  async dealDetail(_root, { _id }: { _id: string }, { user }: IContext) {
+    const deal = await Deals.getDeal(_id);
+
+    return checkItemPermByUser(user._id, deal);
   },
 };
 

@@ -1,6 +1,8 @@
 import { responseTemplateFactory } from '../db/factories';
 import { ResponseTemplates } from '../db/models';
 
+import './setup.ts';
+
 describe('Response template db', () => {
   let _responseTemplate;
 
@@ -12,6 +14,18 @@ describe('Response template db', () => {
   afterEach(async () => {
     // Clearing test data
     await ResponseTemplates.deleteMany({});
+  });
+
+  test('Get response template', async () => {
+    try {
+      await ResponseTemplates.getResponseTemplate('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Response template not found');
+    }
+
+    const response = await ResponseTemplates.getResponseTemplate(_responseTemplate._id);
+
+    expect(response).toBeDefined();
   });
 
   test('Create response template', async () => {

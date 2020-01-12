@@ -1,8 +1,10 @@
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import * as moment from 'moment';
 import { userFactory, usersGroupFactory } from '../db/factories';
 import { Users } from '../db/models';
+
+import './setup.ts';
 
 beforeAll(() => {
   Users.collection.createIndex({ email: 1 }, { unique: true });
@@ -19,6 +21,18 @@ describe('User db utils', () => {
   afterEach(async () => {
     // Clearing test data
     await Users.deleteMany({});
+  });
+
+  test('Get user', async () => {
+    try {
+      await Users.getUser('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('User not found');
+    }
+
+    const response = await Users.getUser(_user._id);
+
+    expect(response).toBeDefined();
   });
 
   test('Create user', async () => {
@@ -116,7 +130,7 @@ describe('User db utils', () => {
 
   test('createUserWithConfirmation', async () => {
     const group = await usersGroupFactory();
-    const token = await Users.createUserWithConfirmation({ email: '123@gmail.com', groupId: group._id });
+    const token = await Users.invite({ email: '123@gmail.com', password: '123', groupId: group._id });
 
     const userObj = await Users.findOne({ registrationToken: token }).lean();
 
@@ -134,7 +148,7 @@ describe('User db utils', () => {
   test('resendInvitation', async () => {
     const email = '123@gmail.com';
     const group = await usersGroupFactory();
-    const token = await Users.createUserWithConfirmation({ email, groupId: group._id });
+    const token = await Users.invite({ email, password: '123', groupId: group._id });
     const newToken = await Users.resendInvitation({ email });
 
     const user = await Users.findOne({ email }).lean();
@@ -148,30 +162,28 @@ describe('User db utils', () => {
     expect(user.registrationTokenExpires).toBeDefined();
   });
 
-  test('resendInvitation: invalid', async () => {
-    expect.assertions(1);
-
-    const user = await userFactory({});
-
+  test('invite: invalid group', async () => {
     try {
-      await Users.resendInvitation({ email: user.email || 'invalid' });
+      await Users.invite({ email: 'email', password: 'password', groupId: 'fakeId' });
+    } catch (e) {
+      expect(e.message).toBe('Invalid group');
+    }
+  });
+
+  test('resendInvitation: invalid request', async () => {
+    try {
+      await Users.resendInvitation({ email: _user.email || 'invalid' });
     } catch (e) {
       expect(e.message).toBe('Invalid request');
     }
   });
 
-  test('updateOnBoardSeen', async () => {
-    const user = await userFactory({});
-
-    await Users.updateOnBoardSeen({ _id: user._id });
-
-    const userObj = await Users.findOne({ _id: user._id });
-
-    if (!userObj) {
-      throw new Error('User not found');
+  test('resendInvitation: user not found', async () => {
+    try {
+      await Users.resendInvitation({ email: 'invalid' });
+    } catch (e) {
+      expect(e.message).toBe('User not found');
     }
-
-    expect(userObj.hasSeenOnBoard).toBeTruthy();
   });
 
   test('confirmInvitation', async () => {
@@ -210,7 +222,7 @@ describe('User db utils', () => {
     expect(result.details.fullName).toBe('fullname');
     expect(result.username).toBe('username');
 
-    await Users.remove({ _id: userObj._id });
+    await Users.deleteMany({ _id: userObj._id });
 
     userObj = await userFactory({
       email,
@@ -250,7 +262,7 @@ describe('User db utils', () => {
       expect(e.message).toBe('Password does not match');
     }
 
-    await Users.update(
+    await Users.updateOne(
       { _id: userObj._id },
       {
         $set: {
@@ -326,6 +338,11 @@ describe('User db utils', () => {
     } catch (e) {
       expect(e.message).toBe('User not found');
     }
+
+    const inActiveUser = await userFactory({ isActive: false });
+    const activeUser = await Users.setUserActiveOrInactive(inActiveUser._id);
+
+    expect(activeUser.isActive).toBeTruthy();
 
     // Can not remove owner
     try {
@@ -498,7 +515,7 @@ describe('User db utils', () => {
   });
 
   test('Login', async () => {
-    expect.assertions(4);
+    expect.assertions(8);
 
     // invalid email ==============
     try {
@@ -515,13 +532,40 @@ describe('User db utils', () => {
     }
 
     // valid
-    const { token, refreshToken } = await Users.login({
+    let response = await Users.login({
       email: _user.email.toUpperCase(),
       password: 'pass',
     });
 
-    expect(token).toBeDefined();
-    expect(refreshToken).toBeDefined();
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
+
+    // device token
+    const tokenUser = await userFactory({ deviceTokens: ['mobile'] });
+
+    if (!tokenUser) {
+      throw new Error('User not found');
+    }
+
+    // when device token
+    response = await Users.login({
+      email: (tokenUser.email || '').toUpperCase(),
+      password: 'pass',
+      deviceToken: 'web',
+    });
+
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
+
+    // when adding same device token
+    response = await Users.login({
+      email: (tokenUser.email || '').toUpperCase(),
+      password: 'pass',
+      deviceToken: 'web',
+    });
+
+    expect(response.token).toBeDefined();
+    expect(response.refreshToken).toBeDefined();
   });
 
   test('Refresh tokens', async () => {
@@ -539,5 +583,23 @@ describe('User db utils', () => {
 
     expect(token).toBeDefined();
     expect(refreshToken).toBeDefined();
+  });
+
+  test('Reset member password', async () => {
+    expect.assertions(2);
+
+    try {
+      await Users.resetMemberPassword({ _id: _user._id, newPassword: '' });
+    } catch (e) {
+      expect(e.message).toBe('Password is required.');
+    }
+
+    // valid
+    const updatedUser = await Users.resetMemberPassword({
+      _id: _user._id,
+      newPassword: 'newpassword',
+    });
+
+    expect(await Users.comparePassword('newpassword', updatedUser.password)).toBeTruthy();
   });
 });

@@ -2,6 +2,8 @@ import { graphqlRequest } from '../db/connection';
 import { formFactory } from '../db/factories';
 import { Fields, FieldsGroups } from '../db/models';
 
+import './setup.ts';
+
 describe('formQueries', () => {
   afterEach(async () => {
     // Clearing test data
@@ -21,6 +23,14 @@ describe('formQueries', () => {
           _id
           title
           code
+
+          createdUser {
+            _id
+          }
+
+          fields {
+            _id
+          }
         }
       }
     `;
@@ -45,6 +55,9 @@ describe('formQueries', () => {
           _id
           title
           code
+          createdUser {
+            _id
+          }
         }
       }
     `;

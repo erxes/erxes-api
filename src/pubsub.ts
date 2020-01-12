@@ -1,60 +1,75 @@
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import * as Redis from 'ioredis';
-import { ActivityLogs } from './db/models';
+import * as path from 'path';
+import { redisOptions } from './redisClient';
 
 // load environment variables
 dotenv.config();
 
-const {
-  REDIS_HOST = 'localhost',
-  REDIS_PORT = 6379,
-  REDIS_PASSWORD = '',
-}: {
-  REDIS_HOST?: string;
-  REDIS_PORT?: number;
-  REDIS_PASSWORD?: string;
-} = process.env;
+interface IGoogleOptions {
+  projectId: string;
+  credentials: {
+    client_email: string;
+    private_key: string;
+  };
+}
 
-// Docs on the different redis options
-// https://github.com/NodeRedis/node_redis#options-object-properties
-const redisOptions = {
-  host: REDIS_HOST,
-  port: REDIS_PORT,
-  password: REDIS_PASSWORD,
-  connect_timeout: 15000,
-  enable_offline_queue: true,
-  retry_unfulfilled_commands: true,
-  retry_strategy: options => {
-    // reconnect after
-    return Math.max(options.attempt * 100, 3000);
-  },
+const { PUBSUB_TYPE, NODE_ENV, PROCESS_NAME } = process.env;
+
+// Google pubsub message handler
+const commonMessageHandler = payload => {
+  return JSON.parse(payload.data.toString());
 };
 
-export const graphqlPubsub = new RedisPubSub({
-  connectionListener: error => {
-    if (error) {
-      console.error(error);
-    }
-  },
-  publisher: new Redis(redisOptions),
-  subscriber: new Redis(redisOptions),
-});
+const configGooglePubsub = (): IGoogleOptions => {
+  const checkHasConfigFile = fs.existsSync(path.join(__dirname, '..', '/google_cred.json'));
 
-export const broker = new Redis(redisOptions);
-
-broker.subscribe('widgetNotification');
-
-broker.on('message', (channel, message) => {
-  if (channel === 'widgetNotification') {
-    const { action, data } = JSON.parse(message);
-
-    if (action === 'callPublish') {
-      graphqlPubsub.publish(data.trigger, { [data.trigger]: data.payload });
-    }
-
-    if (action === 'activityLog') {
-      ActivityLogs.createLogFromWidget(data.type, data.payload);
-    }
+  if (!checkHasConfigFile) {
+    throw new Error('Google credentials file not found!');
   }
-});
+
+  const serviceAccount = require('../google_cred.json');
+
+  return {
+    projectId: serviceAccount.project_id,
+    credentials: {
+      client_email: serviceAccount.client_email,
+      private_key: serviceAccount.private_key,
+    },
+  };
+};
+
+const createPubsubInstance = () => {
+  let pubsub;
+
+  if (NODE_ENV === 'test' || NODE_ENV === 'command' || PROCESS_NAME === 'crons') {
+    pubsub = {
+      asyncIterator: () => null,
+      publish: () => null,
+    };
+
+    return pubsub;
+  }
+
+  if (PUBSUB_TYPE === 'GOOGLE') {
+    const googleOptions = configGooglePubsub();
+
+    const GooglePubSub = require('@axelspringer/graphql-google-pubsub').GooglePubSub;
+
+    return new GooglePubSub(googleOptions, undefined, commonMessageHandler);
+  } else {
+    return new RedisPubSub({
+      connectionListener: error => {
+        if (error) {
+          console.error(error);
+        }
+      },
+      publisher: new Redis(redisOptions),
+      subscriber: new Redis(redisOptions),
+    });
+  }
+};
+
+export const graphqlPubsub = createPubsubInstance();

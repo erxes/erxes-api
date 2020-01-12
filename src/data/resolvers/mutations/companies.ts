@@ -1,7 +1,8 @@
 import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
-import { IUserDocument } from '../../../db/models/definitions/users';
-import { checkPermission } from '../../permissions';
+import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;
@@ -11,33 +12,59 @@ const companyMutations = {
   /**
    * Create new company also adds Company registration log
    */
-  async companiesAdd(_root, doc: ICompany, { user }: { user: IUserDocument }) {
-    const company = await Companies.createCompany(doc, user);
+  async companiesAdd(_root, doc: ICompany, { user, docModifier }: IContext) {
+    const company = await Companies.createCompany(docModifier(doc), user);
+
+    await putCreateLog(
+      {
+        type: 'company',
+        newData: JSON.stringify(doc),
+        object: company,
+        description: `${company.primaryName} has been created`,
+      },
+      user,
+    );
 
     return company;
   },
 
   /**
-   * Update company
+   * Updates a company
    */
-  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit) {
-    return Companies.updateCompany(_id, doc);
-  },
+  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user }: IContext) {
+    const company = await Companies.getCompany(_id);
+    const updated = await Companies.updateCompany(_id, doc);
 
-  /**
-   * Update company Customers
-   */
-  async companiesEditCustomers(_root, { _id, customerIds }: { _id: string; customerIds: string[] }) {
-    return Companies.updateCustomers(_id, customerIds);
+    await putUpdateLog(
+      {
+        type: 'company',
+        object: company,
+        newData: JSON.stringify(doc),
+        description: `${company.primaryName} has been updated`,
+      },
+      user,
+    );
+
+    return updated;
   },
 
   /**
    * Remove companies
    */
-  async companiesRemove(_root, { companyIds }: { companyIds: string[] }) {
-    for (const companyId of companyIds) {
-      // Removing every company and modules associated with
-      await Companies.removeCompany(companyId);
+  async companiesRemove(_root, { companyIds }: { companyIds: string[] }, { user }: IContext) {
+    const companies = await Companies.find({ _id: { $in: companyIds } }, { primaryName: 1 }).lean();
+
+    await Companies.removeCompanies(companyIds);
+
+    for (const company of companies) {
+      await putDeleteLog(
+        {
+          type: 'company',
+          object: company,
+          description: `${company.primaryName} has been removed`,
+        },
+        user,
+      );
     }
 
     return companyIds;
@@ -53,7 +80,6 @@ const companyMutations = {
 
 checkPermission(companyMutations, 'companiesAdd', 'companiesAdd');
 checkPermission(companyMutations, 'companiesEdit', 'companiesEdit');
-checkPermission(companyMutations, 'companiesEditCustomers', 'companiesEditCustomers');
 checkPermission(companyMutations, 'companiesRemove', 'companiesRemove');
 checkPermission(companyMutations, 'companiesMerge', 'companiesMerge');
 

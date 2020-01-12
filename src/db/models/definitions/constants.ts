@@ -1,21 +1,8 @@
-export const EMAIL_CONTENT_CLASS = 'erxes-email-content';
-export const EMAIL_CONTENT_PLACEHOLDER = `<div class="${EMAIL_CONTENT_CLASS}"></div>`;
-
-export const LANGUAGE_CHOICES = ['', 'mn', 'en'];
-
 export const CONVERSATION_STATUSES = {
   NEW: 'new',
   OPEN: 'open',
   CLOSED: 'closed',
   ALL: ['new', 'open', 'closed'],
-};
-
-export const INTEGRATION_KIND_CHOICES = {
-  MESSENGER: 'messenger',
-  FORM: 'form',
-  TWITTER: 'twitter',
-  FACEBOOK: 'facebook',
-  ALL: ['messenger', 'form', 'twitter', 'facebook'],
 };
 
 export const TAG_TYPES = {
@@ -24,13 +11,8 @@ export const TAG_TYPES = {
   ENGAGE_MESSAGE: 'engageMessage',
   COMPANY: 'company',
   INTEGRATION: 'integration',
-  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration'],
-};
-
-export const FACEBOOK_DATA_KINDS = {
-  FEED: 'feed',
-  MESSENGER: 'messenger',
-  ALL: ['feed', 'messenger'],
+  PRODUCT: 'product',
+  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration', 'product'],
 };
 
 export const MESSENGER_KINDS = {
@@ -47,20 +29,13 @@ export const SENT_AS_CHOICES = {
   ALL: ['badge', 'snippet', 'fullMessage'],
 };
 
-export const MESSAGE_KINDS = {
-  AUTO: 'auto',
-  VISITOR_AUTO: 'visitorAuto',
-  MANUAL: 'manual',
-  ALL: ['auto', 'visitorAuto', 'manual'],
-};
-
 export const METHODS = {
   MESSENGER: 'messenger',
   EMAIL: 'email',
   ALL: ['messenger', 'email'],
 };
 
-export const FORM_LOAD_TYPES = {
+export const LEAD_LOAD_TYPES = {
   SHOUTBOX: 'shoutbox',
   POPUP: 'popup',
   EMBEDDED: 'embedded',
@@ -70,7 +45,7 @@ export const FORM_LOAD_TYPES = {
   ALL: ['', 'shoutbox', 'popup', 'embedded', 'dropdown', 'slideInLeft', 'slideInRight'],
 };
 
-export const FORM_SUCCESS_ACTIONS = {
+export const LEAD_SUCCESS_ACTIONS = {
   EMAIL: 'email',
   REDIRECT: 'redirect',
   ONPAGE: 'onPage',
@@ -79,74 +54,49 @@ export const FORM_SUCCESS_ACTIONS = {
 
 export const KIND_CHOICES = {
   MESSENGER: 'messenger',
-  FORM: 'form',
-  TWITTER: 'twitter',
-  FACEBOOK: 'facebook',
+  LEAD: 'lead',
+  FACEBOOK_MESSENGER: 'facebook-messenger',
+  FACEBOOK_POST: 'facebook-post',
   GMAIL: 'gmail',
-  ALL: ['messenger', 'form', 'twitter', 'facebook', 'gmail'],
+  NYLAS_GMAIL: 'nylas-gmail',
+  NYLAS_IMAP: 'nylas-imap',
+  NYLAS_OFFICE365: 'nylas-office365',
+  NYLAS_OUTLOOK: 'nylas-outlook',
+  NYLAS_YAHOO: 'nylas-yahoo',
+  CALLPRO: 'callpro',
+  TWITTER_DM: 'twitter-dm',
+  CHATFUEL: 'chatfuel',
+  ALL: [
+    'messenger',
+    'lead',
+    'facebook-messenger',
+    'facebook-post',
+    'gmail',
+    'callpro',
+    'chatfuel',
+    'nylas-gmail',
+    'nylas-imap',
+    'nylas-office365',
+    'nylas-outlook',
+    'nylas-yahoo',
+    'twitter-dm',
+  ],
 };
 
-// module constants
-export const NOTIFICATION_TYPES = {
-  CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
-  CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
-  CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
-  CONVERSATION_STATE_CHANGE: 'conversationStateChange',
-  ALL: ['channelMembersChange', 'conversationAddMessage', 'conversationAssigneeChange', 'conversationStateChange'],
-};
-
-export const NOTIFICATION_MODULES = [
-  {
-    name: 'conversations',
-    description: 'Conversations',
-    types: [
-      {
-        name: 'conversationStateChange',
-        text: 'State change',
-      },
-      {
-        name: 'conversationAssigneeChange',
-        text: 'Assignee change',
-      },
-      {
-        name: 'conversationAddMessage',
-        text: 'Add message',
-      },
-    ],
-  },
-
-  {
-    name: 'channels',
-    description: 'Channels',
-    types: [
-      {
-        name: 'channelMembersChange',
-        text: 'Members change',
-      },
-    ],
-  },
-];
-
-export const FORM_FIELDS = {
-  TYPES: {
-    INPUT: 'input',
-    TEXT_AREA: 'textarea',
-    RADIO: 'radio',
-    CHECK: 'check',
-    SELECT: 'select',
-    DIVIDER: 'divider',
-    EMAIL: 'email',
-    FIRST_NAME: 'firstName',
-    LAST_NAME: 'lastName',
-    ALL: ['input', 'textarea', 'radio', 'check', 'select', 'divider', 'email', 'firstName', 'lastName'],
-  },
-  VALIDATION: {
-    BLANK: '',
-    NUMBER: 'number',
-    DATE: 'date',
-    EMAIL: 'email',
-    ALL: ['', 'number', 'date', 'email'],
-  },
+export const INTEGRATION_NAMES_MAP = {
+  messenger: 'Web messenger',
+  lead: 'Lead',
+  'facebook-messenger': 'Facebook messenger',
+  'facebook-post': 'Facebook post',
+  gmail: 'Gmail',
+  callpro: 'Call pro',
+  chatfuel: 'Chatfuel',
+  'nylas-gmail': 'Gmail',
+  'nylas-imap': 'Imap',
+  'nylas-office365': 'Office 365',
+  'nylas-outlook': 'Outook',
+  'nylas-yahoo': 'Yahoo',
+  'twitter-dm': 'Twitter dm',
 };
 
 // messenger data availability constants
@@ -156,19 +106,17 @@ export const MESSENGER_DATA_AVAILABILITY = {
   ALL: ['manual', 'auto'],
 };
 
-export const FIELD_CONTENT_TYPES = {
-  FORM: 'form',
-  CUSTOMER: 'customer',
-  COMPANY: 'company',
-  ALL: ['form', 'customer', 'company'],
-};
-
 export const ACTIVITY_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
   USER: 'user',
   DEAL: 'deal',
-  ALL: ['customer', 'company', 'user', 'deal'],
+  TICKET: 'ticket',
+  TASK: 'task',
+  PRODUCT: 'product',
+  GROWTH_HACK: 'growthHack',
+
+  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'product', 'growthHack'],
 };
 
 export const PUBLISH_STATUSES = {
@@ -181,12 +129,30 @@ export const ACTIVITY_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
   INTERNAL_NOTE: 'internal_note',
+  CHECKLIST: 'checklist',
   CONVERSATION: 'conversation',
   SEGMENT: 'segment',
   DEAL: 'deal',
   EMAIL: 'email',
+  TICKET: 'ticket',
+  TASK: 'task',
+  BRAND: 'brand',
+  GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'internal_note', 'conversation', 'segment', 'deal', 'email'],
+  ALL: [
+    'customer',
+    'company',
+    'internal_note',
+    'checklist',
+    'conversation',
+    'segment',
+    'deal',
+    'email',
+    'ticket',
+    'task',
+    'brand',
+    'growthHack',
+  ],
 };
 
 export const ACTIVITY_ACTIONS = {
@@ -195,8 +161,10 @@ export const ACTIVITY_ACTIONS = {
   DELETE: 'delete',
   MERGE: 'merge',
   SEND: 'send',
+  MOVED: 'moved',
+  CONVERT: 'convert',
 
-  ALL: ['create', 'update', 'delete', 'merge', 'send'],
+  ALL: ['create', 'update', 'delete', 'merge', 'send', 'moved', 'convert'],
 };
 
 export const ACTIVITY_PERFORMER_TYPES = {
@@ -214,10 +182,24 @@ export const PRODUCT_TYPES = {
   ALL: ['product', 'service'],
 };
 
+export const PIPELINE_VISIBLITIES = {
+  PUBLIC: 'public',
+  PRIVATE: 'private',
+  ALL: ['public', 'private'],
+};
+
+export const HACK_SCORING_TYPES = {
+  RICE: 'rice',
+  ICE: 'ice',
+  PIE: 'pie',
+  ALL: ['rice', 'ice', 'pie'],
+};
+
 export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
-  ALL: ['customer', 'company'],
+  PRODUCT: 'product',
+  ALL: ['customer', 'company', 'product'],
 };
 
 export const CUSTOMER_LEAD_STATUS_TYPES = [
@@ -242,21 +224,6 @@ export const CUSTOMER_LIFECYCLE_STATE_TYPES = [
   'customer',
   'evangelist',
   'other',
-];
-
-export const CUSTOMER_BASIC_INFOS = [
-  'firstName',
-  'lastName',
-  'primaryEmail',
-  'primaryPhone',
-  'ownerId',
-  'position',
-  'department',
-  'leadStatus',
-  'lifecycleState',
-  'hasAuthority',
-  'description',
-  'doNotDisturb',
 ];
 
 export const COMPANY_LEAD_STATUS_TYPES = [
@@ -326,6 +293,7 @@ export const COMPANY_INDUSTRY_TYPES = [
   'Finance, Insurance & Real Estate',
   'Food & Beverage',
   'Foundations, Philanthropists & Non-Profits',
+  'Government Organization',
   'Health',
   'Hotels, Motels & Tourism',
   'Insurance',
@@ -354,23 +322,6 @@ export const COMPANY_INDUSTRY_TYPES = [
   'TV / Movies / Music',
 ];
 
-export const COMPANY_BASIC_INFOS = [
-  'primaryName',
-  'names',
-  'size',
-  'industry',
-  'website',
-  'plan',
-  'primaryPhone',
-  'primaryEmail',
-  'leadStatus',
-  'lifecycleState',
-  'businessType',
-  'description',
-  'employees',
-  'doNotDisturb',
-];
-
 export const PROBABILITY = {
   TEN: '10%',
   TWENTY: '20%',
@@ -383,7 +334,9 @@ export const PROBABILITY = {
   NINETY: '90%',
   WON: 'Won',
   LOST: 'Lost',
-  ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost'],
+  DONE: 'Done',
+  RESOLVED: 'Resolved',
+  ALL: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', 'Won', 'Lost', 'Done', 'Resolved'],
 };
 
 export const STATUSES = {
@@ -392,8 +345,93 @@ export const STATUSES = {
   ALL: ['Active', 'Deleted'],
 };
 
-export const EMAIL_TYPES = {
-  GMAIL: 'gmail',
-  OTHER: 'other',
-  ALL: ['gmail', 'other'],
+export const BOARD_TYPES = {
+  DEAL: 'deal',
+  TICKET: 'ticket',
+  TASK: 'task',
+  GROWTH_HACK: 'growthHack',
+  ALL: ['deal', 'ticket', 'task', 'growthHack'],
+};
+
+// module constants
+export const NOTIFICATION_TYPES = {
+  CHANNEL_MEMBERS_CHANGE: 'channelMembersChange',
+  CONVERSATION_ADD_MESSAGE: 'conversationAddMessage',
+  CONVERSATION_ASSIGNEE_CHANGE: 'conversationAssigneeChange',
+  CONVERSATION_STATE_CHANGE: 'conversationStateChange',
+  DEAL_ADD: 'dealAdd',
+  DEAL_REMOVE_ASSIGN: 'dealRemoveAssign',
+  DEAL_EDIT: 'dealEdit',
+  DEAL_CHANGE: 'dealChange',
+  DEAL_DUE_DATE: 'dealDueDate',
+  DEAL_DELETE: 'dealDelete',
+  GROWTHHACK_ADD: 'growthHackAdd',
+  GROWTHHACK_REMOVE_ASSIGN: 'growthHackRemoveAssign',
+  GROWTHHACK_EDIT: 'growthHackEdit',
+  GROWTHHACK_CHANGE: 'growthHackChange',
+  GROWTHHACK_DUE_DATE: 'growthHackDueDate',
+  GROWTHHACK_DELETE: 'growthHackDelete',
+  TICKET_ADD: 'ticketAdd',
+  TICKET_REMOVE_ASSIGN: 'ticketRemoveAssign',
+  TICKET_EDIT: 'ticketEdit',
+  TICKET_CHANGE: 'ticketChange',
+  TICKET_DUE_DATE: 'ticketDueDate',
+  TICKET_DELETE: 'ticketDelete',
+  TASK_ADD: 'taskAdd',
+  TASK_REMOVE_ASSIGN: 'taskRemoveAssign',
+  TASK_EDIT: 'taskEdit',
+  TASK_CHANGE: 'taskChange',
+  TASK_DUE_DATE: 'taskDueDate',
+  TASK_DELETE: 'taskDelete',
+  CUSTOMER_MENTION: 'customerMention',
+  COMPANY_MENTION: 'companyMention',
+  ALL: [
+    'channelMembersChange',
+    'conversationAddMessage',
+    'conversationAssigneeChange',
+    'conversationStateChange',
+    'dealAdd',
+    'dealRemoveAssign',
+    'dealEdit',
+    'dealChange',
+    'dealDueDate',
+    'dealDelete',
+    'growthHackAdd',
+    'growthHackRemoveAssign',
+    'growthHackEdit',
+    'growthHackChange',
+    'growthHackDueDate',
+    'growthHackDelete',
+    'ticketAdd',
+    'ticketRemoveAssign',
+    'ticketEdit',
+    'ticketChange',
+    'ticketDueDate',
+    'ticketDelete',
+    'taskAdd',
+    'taskRemoveAssign',
+    'taskEdit',
+    'taskChange',
+    'taskDueDate',
+    'taskDelete',
+    'customerMention',
+    'companyMention',
+  ],
+};
+
+export const FORM_TYPES = {
+  LEAD: 'lead',
+  GROWTH_HACK: 'growthHack',
+  ALL: ['lead', 'growthHack'],
+};
+
+export const NOTIFICATION_CONTENT_TYPES = {
+  TASK: 'task',
+  DEAL: 'deal',
+  COMPANY: 'company',
+  CUSTOMER: 'customer',
+  TICKET: 'ticket',
+  CHANNEL: 'channel',
+  CONVERSATION: 'conversation',
+  ALL: ['task', 'deal', 'company', 'customer', 'ticket', 'channel', 'conversation'],
 };

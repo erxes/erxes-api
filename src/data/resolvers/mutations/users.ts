@@ -1,11 +1,12 @@
 import { Channels, Users } from '../../../db/models';
-import { IDetail, IEmailSignature, ILink, IUser, IUserDocument } from '../../../db/models/definitions/users';
-import { checkPermission, requireLogin } from '../../permissions';
+import { IDetail, IEmailSignature, ILink, IUser } from '../../../db/models/definitions/users';
+import { resetPermissionsCache } from '../../permissions/utils';
+import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 import utils, { authCookieOptions, getEnv } from '../../utils';
 
 interface IUsersEdit extends IUser {
   channelIds?: string[];
-  groupIds?: string[];
   _id: string;
 }
 
@@ -31,22 +32,19 @@ const userMutations = {
   /*
    * Login
    */
-  async login(_root, args: { email: string; password: string; deviceToken?: string }, { res }) {
+  async login(_root, args: { email: string; password: string; deviceToken?: string }, { res, requestInfo }: IContext) {
     const response = await Users.login(args);
 
     const { token } = response;
 
-    res.cookie('auth-token', token, authCookieOptions());
+    res.cookie('auth-token', token, authCookieOptions(requestInfo.secure));
 
     return 'loggedIn';
   },
 
-  async logout(_root, _args, { user, res }) {
-    const response = await Users.logout(user);
-
+  async logout(_root, _args, { res }) {
     res.clearCookie('auth-token');
-
-    return response;
+    return 'loggedout';
   },
 
   /*
@@ -82,13 +80,16 @@ const userMutations = {
   },
 
   /*
+   * Reset member's password
+   */
+  usersResetMemberPassword(_root, args: { _id: string; newPassword: string }) {
+    return Users.resetMemberPassword(args);
+  },
+
+  /*
    * Change user password
    */
-  usersChangePassword(
-    _root,
-    args: { currentPassword: string; newPassword: string },
-    { user }: { user: IUserDocument },
-  ) {
+  usersChangePassword(_root, args: { currentPassword: string; newPassword: string }, { user }: IContext) {
     return Users.changePassword({ _id: user._id, ...args });
   },
 
@@ -96,7 +97,7 @@ const userMutations = {
    * Update user
    */
   async usersEdit(_root, args: IUsersEdit) {
-    const { _id, username, email, channelIds = [], groupIds = [], details, links } = args;
+    const { _id, username, email, channelIds, groupIds = [], brandIds = [], details, links } = args;
 
     const updatedUser = await Users.updateUser(_id, {
       username,
@@ -104,10 +105,13 @@ const userMutations = {
       details,
       links,
       groupIds,
+      brandIds,
     });
 
     // add new user to channels
-    await Channels.updateUserChannels(channelIds, _id);
+    await Channels.updateUserChannels(channelIds || [], _id);
+
+    resetPermissionsCache();
 
     return updatedUser;
   },
@@ -130,13 +134,9 @@ const userMutations = {
       details: IDetail;
       links: ILink;
     },
-    { user }: { user: IUserDocument },
+    { user }: IContext,
   ) {
-    const userOnDb = await Users.findOne({ _id: user._id });
-
-    if (!userOnDb) {
-      throw new Error('User not found');
-    }
+    const userOnDb = await Users.getUser(user._id);
 
     const valid = await Users.comparePassword(password, userOnDb.password);
 
@@ -151,7 +151,7 @@ const userMutations = {
   /*
    * Set Active or inactive user
    */
-  async usersSetActiveStatus(_root, { _id }: { _id: string }, { user }: { user: IUserDocument }) {
+  async usersSetActiveStatus(_root, { _id }: { _id: string }, { user }: IContext) {
     if (user._id === _id) {
       throw new Error('You can not delete yourself');
     }
@@ -162,11 +162,11 @@ const userMutations = {
   /*
    * Invites users to team members
    */
-  async usersInvite(_root, { entries }: { entries: Array<{ email: string; groupId: string }> }) {
+  async usersInvite(_root, { entries }: { entries: Array<{ email: string; password: string; groupId: string }> }) {
     for (const entry of entries) {
       await Users.checkDuplication({ email: entry.email });
 
-      const token = await Users.createUserWithConfirmation(entry);
+      const token = await Users.invite(entry);
 
       sendInvitationEmail({ email: entry.email, token });
     }
@@ -181,13 +181,6 @@ const userMutations = {
     sendInvitationEmail({ email, token });
 
     return token;
-  },
-
-  /*
-   * User has seen onboard
-   */
-  async usersSeenOnBoard(_root, {}, { user }: { user: IUserDocument }) {
-    return Users.updateOnBoardSeen({ _id: user._id });
   },
 
   async usersConfirmInvitation(
@@ -209,15 +202,11 @@ const userMutations = {
     return Users.confirmInvitation({ token, password, passwordConfirmation, fullName, username });
   },
 
-  usersConfigEmailSignatures(
-    _root,
-    { signatures }: { signatures: IEmailSignature[] },
-    { user }: { user: IUserDocument },
-  ) {
+  usersConfigEmailSignatures(_root, { signatures }: { signatures: IEmailSignature[] }, { user }: IContext) {
     return Users.configEmailSignatures(user._id, signatures);
   },
 
-  usersConfigGetNotificationByEmail(_root, { isAllowed }: { isAllowed: boolean }, { user }: { user: IUserDocument }) {
+  usersConfigGetNotificationByEmail(_root, { isAllowed }: { isAllowed: boolean }, { user }: IContext) {
     return Users.configGetNotificationByEmail(user._id, isAllowed);
   },
 };
@@ -231,5 +220,6 @@ checkPermission(userMutations, 'usersEdit', 'usersEdit');
 checkPermission(userMutations, 'usersInvite', 'usersInvite');
 checkPermission(userMutations, 'usersResendInvitation', 'usersInvite');
 checkPermission(userMutations, 'usersSetActiveStatus', 'usersSetActiveStatus');
+checkPermission(userMutations, 'usersResetMemberPassword', 'usersEdit');
 
 export default userMutations;

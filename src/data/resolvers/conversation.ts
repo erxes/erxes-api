@@ -1,5 +1,7 @@
 import { ConversationMessages, Customers, Integrations, Tags, Users } from '../../db/models';
 import { IConversationDocument } from '../../db/models/definitions/conversations';
+import { debugExternalApi } from '../../debuggers';
+import { IContext } from '../types';
 
 export default {
   /**
@@ -41,6 +43,26 @@ export default {
     return ConversationMessages.find({ conversationId: conv._id }).sort({
       createdAt: 1,
     });
+  },
+
+  async facebookPost(conv: IConversationDocument, _args, { dataSources }: IContext) {
+    const integration = await Integrations.findOne({ _id: conv.integrationId }).lean();
+
+    if (integration && integration.kind !== 'facebook-post') {
+      return null;
+    }
+
+    try {
+      const response = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-post', {
+        erxesApiId: conv._id,
+        integrationId: integration._id,
+      });
+
+      return response;
+    } catch (e) {
+      debugExternalApi(e);
+      return null;
+    }
   },
 
   tags(conv: IConversationDocument) {

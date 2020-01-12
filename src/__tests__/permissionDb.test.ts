@@ -1,6 +1,8 @@
 import { registerModule } from '../data/permissions/utils';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
-import { Permissions, UsersGroups } from '../db/models';
+import { Permissions, Users, UsersGroups } from '../db/models';
+
+import './setup.ts';
 
 describe('Test permissions model', () => {
   let _permission;
@@ -14,7 +16,6 @@ describe('Test permissions model', () => {
 
   const doc = {
     actions: ['up', ' test'],
-    allowed: true,
     module: 'module name',
   };
 
@@ -26,7 +27,7 @@ describe('Test permissions model', () => {
         { name: 'action', description: 'd', use: [] },
         { name: 'action1', description: 'd', use: [] },
         { name: 'action2', description: 'd', use: [] },
-        { name: 'action3', description: 'd', use: [] },
+        { name: 'action3', description: 'd' },
       ],
     },
   });
@@ -36,16 +37,25 @@ describe('Test permissions model', () => {
     _permission = await permissionFactory();
     _user = await userFactory();
     _group = await usersGroupFactory();
-    _group = await usersGroupFactory();
   });
 
   afterEach(async () => {
     // Clearing test data
-    await Permissions.remove({});
-    await UsersGroups.remove({});
+    await Permissions.deleteMany({});
+    await UsersGroups.deleteMany({});
   });
 
-  test('Create permission invalid action', async () => {
+  test('Create permission (Error: Actions not found)', async () => {
+    expect.assertions(1);
+
+    try {
+      await Permissions.createPermission({});
+    } catch (e) {
+      expect(e.message).toEqual('Actions not found');
+    }
+  });
+
+  test('Create permission (Error: Invalid data)', async () => {
     expect.assertions(1);
     try {
       await Permissions.createPermission({ userIds: [_user._id], ...doc });
@@ -54,17 +64,30 @@ describe('Test permissions model', () => {
     }
   });
 
+  test('Create permission without user and group', async () => {
+    const permission = await Permissions.createPermission({
+      ...doc,
+      actions: ['action', 'action1', 'action2', 'action3'],
+    });
+
+    expect(permission.length).toEqual(0);
+  });
+
   test('Create permission', async () => {
     const permission = await Permissions.createPermission({
       ...doc,
+      allowed: true,
       userIds: [_user._id],
       groupIds: [_group._id],
-      actions: ['action', 'action1', 'action2', 'action3'],
+      actions: ['action', 'action', 'action1', 'action2', 'action3'],
     });
 
     expect(permission.length).toEqual(8);
     const per = permission.find(p => p.groupId === _group._id && p.action === 'action');
-    expect(per.module).toEqual(doc.module);
+
+    if (per) {
+      expect(per.module).toEqual(doc.module);
+    }
   });
 
   test('Remove permission not found', async () => {
@@ -82,20 +105,63 @@ describe('Test permissions model', () => {
     expect(isDeleted).toBeTruthy();
   });
 
+  test('Get user group', async () => {
+    try {
+      await UsersGroups.getGroup('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('User group not found');
+    }
+
+    const userGroup = await usersGroupFactory();
+
+    const response = await UsersGroups.getGroup(userGroup._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create user group', async () => {
-    const groupObj = await UsersGroups.createGroup(docGroup);
+    const user1 = await userFactory({});
+    const user2 = await userFactory({});
+
+    const groupObj = await UsersGroups.createGroup(docGroup, [user1._id, user2._id]);
+    const updatedUser1 = await Users.findOne({ _id: user1._id });
+    const updatedUser2 = await Users.findOne({ _id: user2._id });
 
     expect(groupObj).toBeDefined();
     expect(groupObj.name).toEqual(docGroup.name);
     expect(groupObj.description).toEqual(docGroup.description);
+
+    expect((updatedUser1 && updatedUser1.groupIds) || []).toContain(groupObj._id);
+    expect((updatedUser2 && updatedUser2.groupIds) || []).toContain(groupObj._id);
   });
 
   test('Update group', async () => {
-    const groupObj = await UsersGroups.updateGroup(_group._id, docGroup);
+    expect.assertions(7);
+
+    const otherGroup = await usersGroupFactory();
+    const user1 = await userFactory({ groupIds: [otherGroup._id, _group._id] });
+    const user2 = await userFactory({ groupIds: [otherGroup._id, _group._id] });
+
+    const user3 = await userFactory({ groupIds: [otherGroup._id] });
+    const user4 = await userFactory({ groupIds: [otherGroup._id] });
+
+    const groupObj = await UsersGroups.updateGroup(_group._id, docGroup, [user3._id, user4._id]);
+
+    const updatedUser1 = await Users.findOne({ _id: user1._id });
+    const updatedUser2 = await Users.findOne({ _id: user2._id });
+    const updatedUser3 = await Users.findOne({ _id: user3._id });
+    const updatedUser4 = await Users.findOne({ _id: user4._id });
 
     expect(groupObj).toBeDefined();
     expect(groupObj.name).toEqual(docGroup.name);
     expect(groupObj.description).toEqual(docGroup.description);
+
+    if (updatedUser1 && updatedUser2 && updatedUser3 && updatedUser4) {
+      expect(JSON.stringify(updatedUser1.groupIds)).toContain(JSON.stringify([otherGroup._id]));
+      expect(JSON.stringify(updatedUser2.groupIds)).toEqual(JSON.stringify([otherGroup._id]));
+      expect(JSON.stringify(updatedUser3.groupIds)).toEqual(JSON.stringify([otherGroup._id, _group._id]));
+      expect(JSON.stringify(updatedUser4.groupIds)).toEqual(JSON.stringify([otherGroup._id, _group._id]));
+    }
   });
 
   test('Remove group', async () => {

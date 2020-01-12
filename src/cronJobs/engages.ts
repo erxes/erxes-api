@@ -3,6 +3,7 @@ import * as schedule from 'node-schedule';
 import { send } from '../data/resolvers/mutations/engageUtils';
 import { EngageMessages } from '../db/models';
 import { IEngageMessageDocument, IScheduleDate } from '../db/models/definitions/engages';
+import { debugCrons } from '../debuggers';
 
 interface IEngageSchedules {
   id: string;
@@ -17,8 +18,8 @@ export const ENGAGE_SCHEDULES: IEngageSchedules[] = [];
  * @param _id - Engage id
  * @param update - Action type
  */
-export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: boolean) => {
-  const selectedIndex = ENGAGE_SCHEDULES.findIndex(engage => engage.id === _id);
+export const updateOrRemoveSchedule = async (engageMessageId: string, update?: boolean) => {
+  const selectedIndex = ENGAGE_SCHEDULES.findIndex(engage => engage.id === engageMessageId);
 
   if (selectedIndex === -1) {
     return;
@@ -32,7 +33,7 @@ export const updateOrRemoveSchedule = async ({ _id }: { _id: string }, update?: 
     return;
   }
 
-  const message = await EngageMessages.findOne({ _id });
+  const message = await EngageMessages.findOne({ _id: engageMessageId });
 
   if (!message) {
     return;
@@ -51,6 +52,8 @@ export const createSchedule = (message: IEngageMessageDocument) => {
     const rule = createScheduleRule(scheduleDate);
 
     const job = schedule.scheduleJob(rule, () => {
+      debugCrons(`Running cron with rule ${rule}`);
+
       send(message);
     });
 
@@ -64,17 +67,17 @@ export const createSchedule = (message: IEngageMessageDocument) => {
  */
 export const createScheduleRule = (scheduleDate: IScheduleDate) => {
   if (!scheduleDate || (!scheduleDate.type && !scheduleDate.time)) {
-    return '* 45 23 * ';
+    return '0 45 23 * * *';
   }
 
   if (!scheduleDate.time) {
-    return '* 45 23 * ';
+    return '0 45 23 * * *';
   }
 
   const time = moment(new Date(scheduleDate.time));
 
   const hour = time.hour() || '*';
-  const minute = time.minute() || '*';
+  const minute = time.minute() || '0';
   const month = scheduleDate.month || '*';
 
   let dayOfWeek = '*';

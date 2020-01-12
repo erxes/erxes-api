@@ -1,25 +1,25 @@
-import * as Random from 'meteor-random';
 import {
   ConversationMessages,
   Conversations,
   Customers,
-  EmailTemplates,
   EngageMessages,
   Integrations,
   Segments,
   Users,
 } from '../../../db/models';
+import { CONVERSATION_STATUSES, KIND_CHOICES, METHODS } from '../../../db/models/definitions/constants';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
-import { EMAIL_CONTENT_PLACEHOLDER, INTEGRATION_KIND_CHOICES, MESSAGE_KINDS, METHODS } from '../../constants';
-import { createTransporter, getEnv } from '../../utils';
-import QueryBuilder from '../queries/segmentQueryBuilder';
+import { sendMessage } from '../../../messageBroker';
+import { MESSAGE_KINDS } from '../../constants';
+import { Builder as CustomerQueryBuilder } from '../../modules/coc/customers';
+import QueryBuilder from '../../modules/segments/queryBuilder';
 
 /**
  * Dynamic content tags
  */
-export const replaceKeys = ({
+const replaceKeys = ({
   content,
   customer,
   user,
@@ -30,8 +30,13 @@ export const replaceKeys = ({
 }): string => {
   let result = content;
 
-  const customerName = `${customer.firstName} + ${customer.lastName}`;
-  const details = user.details ? user.details.toJSON() : {};
+  let customerName = customer.firstName || customer.lastName || 'Customer';
+
+  if (customer.firstName && customer.lastName) {
+    customerName = `${customer.firstName} ${customer.lastName}`;
+  }
+
+  const details = user.details && Object.keys(user.details.toJSON()).length > 0 ? user.details.toJSON() : {};
 
   // replace customer fields
   result = result.replace(/{{\s?customer.name\s?}}/gi, customerName);
@@ -50,72 +55,66 @@ export const replaceKeys = ({
  */
 const findCustomers = async ({
   customerIds,
-  segmentId,
+  segmentIds = [],
+  tagIds = [],
+  brandIds = [],
 }: {
-  customerIds: string[];
-  segmentId?: string;
+  customerIds?: string[];
+  segmentIds?: string[];
+  tagIds?: string[];
+  brandIds?: string[];
 }): Promise<ICustomerDocument[]> => {
   // find matched customers
-  let customerQuery: any = { _id: { $in: customerIds || [] } };
+  let customerQuery: any = {};
 
-  if (segmentId) {
-    const segment = await Segments.findOne({ _id: segmentId });
-    customerQuery = await QueryBuilder.segments(segment);
+  if (customerIds && customerIds.length > 0) {
+    customerQuery = { _id: { $in: customerIds } };
   }
 
-  return Customers.find({ ...customerQuery, $or: [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }] });
+  const doNotDisturbQuery = [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }];
+  const customerQb = new CustomerQueryBuilder({});
+  await customerQb.buildAllQueries();
+  const customerFilter = customerQb.mainQuery();
+
+  if (tagIds.length > 0) {
+    customerQuery = { $and: [customerFilter, { $or: doNotDisturbQuery, tagIds: { $in: tagIds } }] };
+  }
+
+  if (brandIds.length > 0) {
+    const brandQueries: any[] = [];
+
+    customerQuery = { $and: [customerFilter] };
+
+    for (const brandId of brandIds) {
+      const brandQuery = await customerQb.brandFilter(brandId);
+
+      brandQueries.push(brandQuery);
+    }
+
+    customerQuery = { $and: [customerFilter, { $or: brandQueries }] };
+  }
+
+  if (segmentIds.length > 0) {
+    const segmentQueries: any = [];
+
+    const segments = await Segments.find({ _id: { $in: segmentIds } });
+
+    for (const segment of segments) {
+      const filter = await QueryBuilder.segments(segment);
+
+      filter.$or = doNotDisturbQuery;
+
+      segmentQueries.push(filter);
+    }
+
+    customerQuery = { $and: [customerFilter, { $or: segmentQueries }] };
+  }
+
+  return Customers.find(customerQuery);
 };
 
-const executeSendViaEmail = async (
-  userEmail: string,
-  attachments: any,
-  customer: ICustomerDocument,
-  replacedSubject: string,
-  replacedContent: string,
-  AWS_SES_CONFIG_SET: string,
-  messageId: string,
-  mailMessageId: string,
-) => {
-  const transporter = await createTransporter({ ses: true });
-  let mailAttachment = [];
-
-  if (attachments.length > 0) {
-    mailAttachment = attachments.map(file => {
-      return {
-        filename: file.name || '',
-        path: file.url || '',
-      };
-    });
-  }
-
-  transporter.sendMail({
-    from: userEmail,
-    to: customer.primaryEmail,
-    subject: replacedSubject,
-    attachments: mailAttachment,
-    html: replacedContent,
-    headers: {
-      'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET,
-      EngageMessageId: messageId,
-      CustomerId: customer._id,
-      MailMessageId: mailMessageId,
-    },
-  });
-};
-/**
- * Send via email
- */
-const sendViaEmail = async (message: IEngageMessageDocument) => {
-  const { fromUserId, segmentId, customerIds = [] } = message;
-
-  if (!message.email) {
-    return;
-  }
-
-  const { templateId, subject, content, attachments = [] } = message.email.toJSON();
-
-  const AWS_SES_CONFIG_SET = getEnv({ name: 'AWS_SES_CONFIG_SET' });
-  const AWS_ENDPOINT = getEnv({ name: 'AWS_ENDPOINT' });
+export const send = async (engageMessage: IEngageMessageDocument) => {
+  const { customerIds, segmentIds, tagIds, brandIds, fromUserId } = engageMessage;
 
   const user = await Users.findOne({ _id: fromUserId });
 
@@ -123,98 +122,78 @@ const sendViaEmail = async (message: IEngageMessageDocument) => {
     throw new Error('User not found');
   }
 
-  const userEmail = user.email;
-  if (!userEmail) {
-    throw new Error(`email not found with ${userEmail}`);
+  if (!engageMessage.isLive) {
+    return;
   }
 
-  const template = await EmailTemplates.findOne({ _id: templateId });
-
-  // find matched customers
-  const customers = await findCustomers({ customerIds, segmentId });
+  const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
 
   // save matched customer ids
-  EngageMessages.setCustomerIds(message._id, customers);
+  EngageMessages.setCustomerIds(engageMessage._id, customers);
 
-  for (const customer of customers) {
-    // replace keys in subject
-    const replacedSubject = replaceKeys({ content: subject, customer, user });
+  if (engageMessage.method === METHODS.EMAIL) {
+    const customerInfos = customers.map(customer => {
+      return {
+        _id: customer._id,
+        name: Customers.getCustomerName(customer),
+        email: customer.primaryEmail,
+      };
+    });
 
-    // replace keys such as {{ customer.name }} in content
-    let replacedContent = replaceKeys({ content, customer, user });
+    await sendMessage('erxes-api:send-engage', {
+      customers: customerInfos,
+      email: engageMessage.email,
+      user: {
+        email: user.email,
+        name: user.details && user.details.fullName,
+        position: user.details && user.details.position,
+      },
+      engageMessageId: engageMessage._id,
+    });
+  }
 
-    // if sender choosed some template then use it
-    if (template) {
-      replacedContent = template.content.replace(EMAIL_CONTENT_PLACEHOLDER, replacedContent);
-    }
-
-    // Add unsubscribe link ========
-    const unSubscribeUrl = `${AWS_ENDPOINT}/unsubscribe/?cid=${customer._id}`;
-
-    replacedContent += `<div style="padding: 10px; color: #ccc; text-align: center; font-size:12px;">If you want to use service like this click <a style="text-decoration: underline; color: #ccc;" href="https://erxes.io" target="_blank">here</a> to read more. Also you can opt out from our email subscription <a style="text-decoration: underline;color: #ccc;" rel="noopener" target="_blank" href="${unSubscribeUrl}">here</a>.  <br>© 2019 erxes inc Growth Marketing Platform </div>`;
-
-    const mailMessageId = Random.id();
-
-    // add new delivery report
-    EngageMessages.addNewDeliveryReport(message._id, mailMessageId, customer._id);
-
-    // send email =========
-    utils.executeSendViaEmail(
-      userEmail,
-      attachments,
-      customer,
-      replacedSubject,
-      replacedContent,
-      AWS_SES_CONFIG_SET,
-      message._id,
-      mailMessageId,
-    );
+  if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
+    await sendViaMessenger(engageMessage, customers, user);
   }
 };
 
 /**
  * Send via messenger
  */
-const sendViaMessenger = async (message: IEngageMessageDocument) => {
-  const { fromUserId, segmentId, customerIds = [] } = message;
+const sendViaMessenger = async (
+  message: IEngageMessageDocument,
+  customers: ICustomerDocument[],
+  user: IUserDocument,
+) => {
+  const { fromUserId } = message;
 
   if (!message.messenger) {
     return;
   }
 
-  const { brandId, content = '' } = message.messenger;
-
-  const user = await Users.findOne({ _id: fromUserId });
-
-  if (!user) {
-    throw new Error('User not found');
-  }
+  const { brandId, content } = message.messenger;
 
   // find integration
   const integration = await Integrations.findOne({
     brandId,
-    kind: INTEGRATION_KIND_CHOICES.MESSENGER,
+    kind: KIND_CHOICES.MESSENGER,
   });
 
   if (integration === null) {
     throw new Error('Integration not found');
   }
 
-  // find matched customers
-  const customers = await findCustomers({ customerIds, segmentId });
-
-  // save matched customer ids
-  EngageMessages.setCustomerIds(message._id, customers);
-
   for (const customer of customers) {
     // replace keys in content
     const replacedContent = replaceKeys({ content, customer, user });
+
     // create conversation
     const conversation = await Conversations.createConversation({
       userId: fromUserId,
       customerId: customer._id,
       integrationId: integration._id,
       content: replacedContent,
+      status: CONVERSATION_STATUSES.NEW,
     });
 
     // create message
@@ -230,35 +209,4 @@ const sendViaMessenger = async (message: IEngageMessageDocument) => {
       content: replacedContent,
     });
   }
-};
-
-/*
- *  Send engage messages
- */
-export const send = (message: IEngageMessageDocument) => {
-  const { method, kind } = message;
-
-  if (method === METHODS.EMAIL) {
-    return sendViaEmail(message);
-  }
-
-  // when kind is visitor auto, do not do anything
-  if (method === METHODS.MESSENGER && kind !== MESSAGE_KINDS.VISITOR_AUTO) {
-    return sendViaMessenger(message);
-  }
-};
-
-/*
- * Handle engage unsubscribe request
- */
-export const handleEngageUnSubscribe = (query: { cid: string }) =>
-  Customers.updateOne({ _id: query.cid }, { $set: { doNotDisturb: 'Yes' } });
-
-export const utils = {
-  executeSendViaEmail,
-};
-
-export default {
-  replaceKeys,
-  send,
 };

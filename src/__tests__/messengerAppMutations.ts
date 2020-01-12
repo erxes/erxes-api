@@ -1,47 +1,13 @@
 import { graphqlRequest } from '../db/connection';
-import { formFactory, messengerAppFactory, userFactory } from '../db/factories';
-import { MessengerApps, Users } from '../db/models';
+import { formFactory, messengerAppFactory } from '../db/factories';
+import { MessengerApps } from '../db/models';
+
+import './setup.ts';
 
 describe('mutations', () => {
-  let _user;
-  let context;
-
-  beforeEach(async () => {
-    // Creating test data
-    _user = await userFactory({});
-
-    context = { user: _user };
-  });
-
   afterEach(async () => {
     // Clearing test data
     await MessengerApps.deleteMany({});
-    await Users.deleteMany({});
-  });
-
-  test('Add google meet', async () => {
-    const args = {
-      name: 'google meet',
-      accountId: Math.random().toString(),
-    };
-
-    const mutation = `
-      mutation messengerAppsAddGoogleMeet($name: String!, $accountId: String!) {
-        messengerAppsAddGoogleMeet(name: $name, accountId: $accountId) {
-          name
-          kind
-          showInInbox
-          accountId
-        }
-      }
-    `;
-
-    const app = await graphqlRequest(mutation, 'messengerAppsAddGoogleMeet', args, context);
-
-    expect(app.kind).toBe('googleMeet');
-    expect(app.showInInbox).toBe(true);
-    expect(app.name).toBe(args.name);
-    expect(app.accountId).toBe(args.accountId);
   });
 
   test('Add knowledgebase', async () => {
@@ -62,7 +28,7 @@ describe('mutations', () => {
       }
     `;
 
-    const app = await graphqlRequest(mutation, 'messengerAppsAddKnowledgebase', args, context);
+    const app = await graphqlRequest(mutation, 'messengerAppsAddKnowledgebase', args);
 
     expect(app.kind).toBe('knowledgebase');
     expect(app.showInInbox).toBe(false);
@@ -70,6 +36,37 @@ describe('mutations', () => {
     expect(app.credentials).toEqual({
       integrationId: args.integrationId,
       topicId: args.topicId,
+    });
+  });
+
+  test('Add website', async () => {
+    const args = {
+      name: 'website',
+      integrationId: 'integrationId',
+      description: 'description',
+      buttonText: 'submit',
+      url: 'https://google.com',
+    };
+
+    const mutation = `
+      mutation messengerAppsAddWebsite($name: String!, $integrationId: String!, $description: String!, $buttonText: String!, $url: String!) {
+        messengerAppsAddWebsite(name: $name, integrationId: $integrationId, description: $description, buttonText: $buttonText, url: $url) {
+          name
+          kind
+          credentials
+        }
+      }
+    `;
+
+    const app = await graphqlRequest(mutation, 'messengerAppsAddWebsite', args);
+
+    expect(app.kind).toBe('website');
+    expect(app.name).toBe(args.name);
+    expect(app.credentials).toEqual({
+      integrationId: args.integrationId,
+      description: args.description,
+      buttonText: args.buttonText,
+      url: args.url,
     });
   });
 
@@ -93,7 +90,7 @@ describe('mutations', () => {
       }
     `;
 
-    const app = await graphqlRequest(mutation, 'messengerAppsAddLead', args, context);
+    const app = await graphqlRequest(mutation, 'messengerAppsAddLead', args);
 
     expect(app.kind).toBe('lead');
     expect(app.showInInbox).toBe(false);
@@ -113,7 +110,7 @@ describe('mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'messengerAppsRemove', { _id: app._id }, context);
+    await graphqlRequest(mutation, 'messengerAppsRemove', { _id: app._id });
 
     const count = await MessengerApps.find().countDocuments();
 

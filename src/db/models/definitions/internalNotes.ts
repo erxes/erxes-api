@@ -1,17 +1,18 @@
 import { Document, Schema } from 'mongoose';
-import { field } from '../utils';
 import { ACTIVITY_CONTENT_TYPES } from './constants';
+import { field } from './utils';
 
 export interface IInternalNote {
   contentType: string;
   contentTypeId: string;
   content: string;
+  mentionedUserIds?: string[];
 }
 
 export interface IInternalNoteDocument extends IInternalNote, Document {
   _id: string;
   createdUserId: string;
-  createdDate: Date;
+  createdAt: Date;
 }
 
 // Mongoose schemas =======================
@@ -29,7 +30,7 @@ export const internalNoteSchema = new Schema({
   createdUserId: field({
     type: String,
   }),
-  createdDate: field({
+  createdAt: field({
     type: Date,
   }),
 });

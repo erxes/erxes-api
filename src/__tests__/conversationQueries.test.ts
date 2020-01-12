@@ -11,6 +11,9 @@ import {
 } from '../db/factories';
 import { Brands, Channels, Conversations, Integrations, Tags, Users } from '../db/models';
 
+import { IntegrationsAPI } from '../data/dataSources';
+import './setup.ts';
+
 describe('conversationQueries', () => {
   let user;
   let channel;
@@ -51,6 +54,26 @@ describe('conversationQueries', () => {
     query conversations(${commonParamDefs}) {
       conversations(${commonParams}) {
         _id
+      }
+    }
+  `;
+
+  const qryCount = `
+    query conversationCounts(${commonParamDefs}, $only: String) {
+      conversationCounts(${commonParams}, only: $only)
+    }
+  `;
+
+  const qryTotalCount = `
+    query conversationsTotalCount(${commonParamDefs}) {
+      conversationsTotalCount(${commonParams})
+    }
+  `;
+
+  const qryConversationDetail = `
+    query conversationDetail($_id: String!) {
+      conversationDetail(_id: $_id) {
+        _id
         content
         integrationId
         customerId
@@ -64,9 +87,6 @@ describe('conversationQueries', () => {
         messageCount
         number
         tagIds
-        twitterData { id }
-        facebookData { kind }
-
         messages {
           _id
           content
@@ -92,7 +112,6 @@ describe('conversationQueries', () => {
             sentAs
           }
           formWidgetData
-          twitterData { id }
           user { _id }
           customer { _id }
         }
@@ -103,26 +122,10 @@ describe('conversationQueries', () => {
         assignedUser { _id }
         participatedUsers { _id }
         participatorCount
-      }
-    }
-  `;
-
-  const qryCount = `
-    query conversationCounts(${commonParamDefs}, $only: String) {
-      conversationCounts(${commonParams}, only: $only)
-    }
-  `;
-
-  const qryTotalCount = `
-    query conversationsTotalCount(${commonParamDefs}) {
-      conversationsTotalCount(${commonParams})
-    }
-  `;
-
-  const qryConversationDetail = `
-    query conversationDetail($_id: String!) {
-      conversationDetail(_id: $_id) {
-        _id
+        idleTime
+        facebookPost {
+          postId
+        }
       }
     }
   `;
@@ -141,16 +144,19 @@ describe('conversationQueries', () => {
     }
   `;
 
-  const qryConversationMessagesFacebook = `
-    query conversationMessagesFacebook($conversationId: String, $commentId: String, $postId: String, $limit: Int) {
-      conversationMessagesFacebook(conversationId: $conversationId, commentId: $commentId, postId: $postId, limit: $limit) {
-        list {
+  const qryConversationMessage = `
+      query conversationMessages($conversationId: String! $skip: Int $limit: Int) {
+        conversationMessages(conversationId: $conversationId skip: $skip limit: $limit) {
           _id
+          internal
+          user { _id }
+          customer { _id }
+          mailData {
+            messageId
+          }
         }
-        commentCount
       }
-    }
-  `;
+    `;
 
   beforeEach(async () => {
     brand = await brandFactory();
@@ -185,21 +191,127 @@ describe('conversationQueries', () => {
     await conversationMessageFactory({ conversationId: conversation._id });
     await conversationMessageFactory({ conversationId: conversation._id });
 
-    const qry = `
-      query conversationMessages($conversationId: String! $skip: Int $limit: Int) {
-        conversationMessages(conversationId: $conversationId skip: $skip limit: $limit) {
-          _id
-        }
-      }
-    `;
-
-    const responses = await graphqlRequest(qry, 'conversationMessages', {
+    let responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
       conversationId: conversation._id,
       skip: 1,
       limit: 3,
     });
 
     expect(responses.length).toBe(3);
+
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: conversation._id,
+      limit: 3,
+    });
+
+    expect(responses.length).toBe(3);
+
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: conversation._id,
+    });
+
+    expect(responses.length).toBe(4);
+
+    // conversation is fake
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: 'fakeConversationId',
+    });
+
+    expect(responses.length).toBe(0);
+
+    // internal is true
+    responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: conversation._id,
+    });
+
+    expect(responses.length).toBe(4);
+  });
+
+  test('Conversation messages (messenger kind)', async () => {
+    const messageIntegration = await integrationFactory({ kind: 'messenger' });
+    const messageIntegrationConversation = await conversationFactory({ integrationId: messageIntegration._id });
+
+    await conversationMessageFactory({ conversationId: messageIntegrationConversation._id, internal: false });
+
+    const responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: messageIntegrationConversation._id,
+    });
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Conversation messages (No integration)', async () => {
+    // no integration
+    const noIntegrationConversation = await conversationFactory();
+
+    await conversationMessageFactory({ conversationId: noIntegrationConversation._id, internal: false });
+
+    const responses = await graphqlRequest(qryConversationMessage, 'conversationMessages', {
+      conversationId: noIntegrationConversation._id,
+    });
+
+    expect(responses.length).toBe(1);
+  });
+
+  test('Conversation messages (Integrations api is not running)', async () => {
+    const nyalsGmailIntegration = await integrationFactory({ kind: 'nylas-gmail' });
+    const nyalsGmailConversation = await conversationFactory({ integrationId: nyalsGmailIntegration._id });
+
+    await conversationMessageFactory({ conversationId: nyalsGmailConversation._id, internal: false });
+
+    const gmailIntegration = await integrationFactory({ kind: 'gmail' });
+    const gmailConversation = await conversationFactory({ integrationId: gmailIntegration._id });
+
+    await conversationMessageFactory({ conversationId: gmailConversation._id, internal: false });
+
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    try {
+      await graphqlRequest(
+        qryConversationMessage,
+        'conversationMessages',
+        {
+          conversationId: nyalsGmailConversation._id,
+        },
+        { dataSources },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Integrations api is not running');
+    }
+
+    try {
+      await graphqlRequest(
+        qryConversationMessage,
+        'conversationMessages',
+        {
+          conversationId: gmailConversation._id,
+        },
+        { dataSources },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Integrations api is not running');
+    }
+  });
+
+  test('Conversation messages total count', async () => {
+    const conversation = await conversationFactory();
+
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+    await conversationMessageFactory({ conversationId: conversation._id });
+
+    const qry = `
+      query conversationMessagesTotalCount($conversationId: String!) {
+        conversationMessagesTotalCount(conversationId: $conversationId)
+      }
+    `;
+
+    const responses = await graphqlRequest(qry, 'conversationMessagesTotalCount', { conversationId: conversation._id });
+
+    expect(responses).toBe(4);
   });
 
   test('Conversations filtered by ids', async () => {
@@ -224,11 +336,21 @@ describe('conversationQueries', () => {
     await conversationFactory();
     await conversationFactory();
 
-    const responses = await graphqlRequest(qryConversations, 'conversations', {
+    let responses = await graphqlRequest(qryConversations, 'conversations', {
       channelId: channel._id,
     });
 
     expect(responses.length).toBe(1);
+
+    const channelNoIntegration = await channelFactory({
+      memberIds: [user._id],
+    });
+
+    responses = await graphqlRequest(qryConversations, 'conversations', {
+      channelId: channelNoIntegration._id,
+    });
+
+    expect(responses.length).toBe(0);
   });
 
   test('Conversations filtered by brand', async () => {
@@ -326,8 +448,8 @@ describe('conversationQueries', () => {
   });
 
   test('Conversations filtered by integration type', async () => {
-    const integration1 = await integrationFactory({ kind: 'form' });
-    const integration2 = await integrationFactory({ kind: 'form' });
+    const integration1 = await integrationFactory({ kind: 'lead' });
+    const integration2 = await integrationFactory({ kind: 'lead' });
 
     await conversationFactory({ integrationId: integration._id });
     await conversationFactory({ integrationId: integration1._id });
@@ -547,8 +669,8 @@ describe('conversationQueries', () => {
   });
 
   test('Count conversations by integration type', async () => {
-    const integration1 = await integrationFactory({ kind: 'form' });
-    const integration2 = await integrationFactory({ kind: 'form' });
+    const integration1 = await integrationFactory({ kind: 'lead' });
+    const integration2 = await integrationFactory({ kind: 'lead' });
 
     // conversation with integration type 'messenger'
     await conversationFactory({ integrationId: integration._id });
@@ -706,8 +828,8 @@ describe('conversationQueries', () => {
   });
 
   test('Get total count of conversations by integration type', async () => {
-    const integration1 = await integrationFactory({ kind: 'form' });
-    const integration2 = await integrationFactory({ kind: 'form' });
+    const integration1 = await integrationFactory({ kind: 'lead' });
+    const integration2 = await integrationFactory({ kind: 'lead' });
 
     // integration with type messenger
     await conversationFactory({ integrationId: integration._id });
@@ -756,6 +878,40 @@ describe('conversationQueries', () => {
     );
 
     expect(response._id).toBe(conversation._id);
+    expect(response.facebookPost).toBe(null);
+
+    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
+
+    const facebookIntegration = await integrationFactory({ kind: 'facebook-post' });
+    const facebookConversation = await conversationFactory({ integrationId: facebookIntegration._id });
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
+
+    try {
+      await graphqlRequest(
+        qryConversationDetail,
+        'conversationDetail',
+        { _id: facebookConversation._id },
+        { user, dataSources },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Integrations api is not running');
+    }
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
+
+    spy.mockImplementation(() => Promise.resolve());
+
+    try {
+      await graphqlRequest(
+        qryConversationDetail,
+        'conversationDetail',
+        { _id: facebookConversation._id },
+        { user, dataSources },
+      );
+    } catch (e) {
+      expect(e[0].message).toBeDefined();
+    }
   });
 
   test('Get last conversation by channel', async () => {
@@ -788,157 +944,23 @@ describe('conversationQueries', () => {
     expect(response).toBe(1);
   });
 
-  test('Conversation messages facebook test', async () => {
-    const feedConversation = await conversationFactory({
-      facebookData: {
-        kind: 'feed',
-      },
-    });
+  test('Facebook comments', async () => {
+    process.env.INTEGRATION_API_DOMAIN = 'http://fake.erxes.io';
 
-    const badConversation = await conversationFactory({
-      facebookData: {
-        kind: 'messenger',
-      },
-    });
+    const qry = `
+      query converstationFacebookComments($postId: String!) {
+        converstationFacebookComments(postId: $postId) {
+          postId
+        }
+      }
+    `;
+
+    const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
 
     try {
-      await graphqlRequest(
-        qryConversationMessagesFacebook,
-        'conversationMessagesFacebook',
-        {
-          conversationId: badConversation._id,
-        },
-        { user },
-      );
+      await graphqlRequest(qry, 'converstationFacebookComments', { postId: 'postId' }, { dataSources });
     } catch (e) {
-      expect(e).toBeDefined();
+      expect(e[0].message).toBe('Integrations api is not running');
     }
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        isPost: true,
-        postId: 'postId',
-        createdTime: moment(new Date())
-          .add(-5, 'days')
-          .toISOString(),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '11',
-        createdTime: moment(new Date())
-          .add(-4, 'days')
-          .toISOString(),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '22',
-        createdTime: moment(new Date())
-          .add(-3, 'days')
-          .toISOString(),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '33',
-        createdTime: moment(new Date())
-          .add(-2, 'days')
-          .toISOString(),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: 'parentComment',
-        createdTime: moment(new Date())
-          .add(-6, 'days')
-          .toISOString(),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '111',
-        parentId: 'parentComment',
-        createdTime: moment(new Date())
-          .add(0, 'days')
-          .toISOString(),
-      },
-    });
-
-    let response = await graphqlRequest(
-      qryConversationMessagesFacebook,
-      'conversationMessagesFacebook',
-      {
-        conversationId: feedConversation._id,
-      },
-      { user },
-    );
-
-    // we have 1 post 5 comments and the latest one is a reply
-    // by default there must be 1 post msg and latest 3 comments = 4 msg
-    // since last one is a reply we are gathering the parent comment for it
-    // 1 post msg 3 latest comment , 1 reply and its 1 parent = 6
-    expect(response.list.length).toBe(6);
-
-    response = await graphqlRequest(
-      qryConversationMessagesFacebook,
-      'conversationMessagesFacebook',
-      {
-        conversationId: feedConversation._id,
-        commentId: 'parentComment',
-      },
-      { user },
-    );
-
-    // we have 1 comment reply
-    expect(response.list.length).toBe(1);
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '66',
-        createdTime: moment(new Date()).add(13, 'days'),
-      },
-    });
-
-    await conversationMessageFactory({
-      conversationId: feedConversation._id,
-      facebookData: {
-        postId: 'postId',
-        commentId: '77',
-        createdTime: moment(new Date()).add(13, 'days'),
-      },
-    });
-
-    response = await graphqlRequest(
-      qryConversationMessagesFacebook,
-      'conversationMessagesFacebook',
-      {
-        conversationId: feedConversation._id,
-        postId: 'postId',
-        limit: 10,
-      },
-      { user },
-    );
-
-    // fetching the comments of post
-    expect(response.list.length).toBe(7);
   });
 });

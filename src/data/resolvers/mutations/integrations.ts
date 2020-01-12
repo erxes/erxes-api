@@ -1,18 +1,13 @@
-import { Accounts, Integrations } from '../../../db/models';
+import { Customers, EmailDeliveries, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
-import { IUserDocument } from '../../../db/models/definitions/users';
-import { IMessengerIntegration } from '../../../db/models/Integrations';
-import { sendGmail, updateHistoryId } from '../../../trackers/gmail';
-import { utils } from '../../../trackers/gmailTracker';
-import { socUtils } from '../../../trackers/twitterTracker';
-import { checkPermission } from '../../permissions';
-import { getEnv, sendPostRequest } from '../../utils';
+import { IExternalIntegrationParams } from '../../../db/models/Integrations';
+import { debugExternalApi } from '../../../debuggers';
+import { sendRPCMessage } from '../../../messageBroker';
+import { checkPermission } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
-interface IEditMessengerIntegration extends IMessengerIntegration {
-  _id: string;
-}
-
-interface IEditFormIntegration extends IIntegration {
+interface IEditIntegration extends IIntegration {
   _id: string;
 }
 
@@ -20,15 +15,40 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateMessengerIntegration(_root, doc: IMessengerIntegration) {
-    return Integrations.createMessengerIntegration(doc);
+  async integrationsCreateMessengerIntegration(_root, doc: IIntegration, { user }: IContext) {
+    const integration = await Integrations.createMessengerIntegration(doc, user._id);
+
+    await putCreateLog(
+      {
+        type: 'messengerIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
+      },
+      user,
+    );
+
+    return integration;
   },
 
   /**
    * Update messenger integration
    */
-  integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditMessengerIntegration) {
-    return Integrations.updateMessengerIntegration(_id, fields);
+  async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditIntegration, { user }: IContext) {
+    const integration = await Integrations.getIntegration(_id);
+    const updated = await Integrations.updateMessengerIntegration(_id, fields);
+
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: integration,
+        newData: JSON.stringify(fields),
+        description: `${integration.name} has been edited`,
+      },
+      user,
+    );
+
+    return updated;
   },
 
   /**
@@ -48,123 +68,207 @@ const integrationMutations = {
   /**
    * Create a new messenger integration
    */
-  integrationsCreateFormIntegration(_root, doc: IIntegration) {
-    return Integrations.createFormIntegration(doc);
-  },
+  async integrationsCreateLeadIntegration(_root, doc: IIntegration, { user }: IContext) {
+    const integration = await Integrations.createLeadIntegration(doc, user._id);
 
-  /**
-   * Create a new twitter integration
-   */
-  async integrationsCreateTwitterIntegration(_root, { accountId, brandId }: { accountId: string; brandId: string }) {
-    const account = await Accounts.findOne({ _id: accountId });
-
-    if (!account) {
-      throw new Error('Account not found');
-    }
-
-    const integration = await Integrations.createTwitterIntegration({
-      name: account.name,
-      brandId,
-      twitterData: {
-        profileId: account.uid,
-        accountId: account._id,
+    await putCreateLog(
+      {
+        type: 'leadIntegration',
+        newData: JSON.stringify(doc),
+        object: integration,
+        description: `${integration.name} has been created`,
       },
-    });
-
-    // start tracking new twitter entries
-    socUtils.trackIntegration(account, integration);
+      user,
+    );
 
     return integration;
   },
 
   /**
-   * Create a new facebook integration
+   * Edit a lead integration
    */
-  async integrationsCreateFacebookIntegration(
+  integrationsEditLeadIntegration(_root, { _id, ...doc }: IEditIntegration) {
+    return Integrations.updateLeadIntegration(_id, doc);
+  },
+
+  /*
+   * Create external integrations like twitter, facebook, gmail etc ...
+   */
+  async integrationsCreateExternalIntegration(
     _root,
-    { name, brandId, pageIds, accountId }: { name: string; brandId: string; pageIds: string[]; accountId: string },
+    { data, ...doc }: IExternalIntegrationParams & { data: object },
+    { user, dataSources }: IContext,
   ) {
-    const integration = Integrations.createFacebookIntegration({
-      name,
-      brandId,
-      facebookData: {
-        accountId,
-        pageIds,
-      },
-    });
+    const integration = await Integrations.createExternalIntegration(doc, user._id);
 
-    const INTEGRATION_ENDPOINT_URL = getEnv({ name: 'INTEGRATION_ENDPOINT_URL', defaultValue: '' });
-    const FACEBOOK_APP_ID = getEnv({ name: 'FACEBOOK_APP_ID' });
-    const DOMAIN = getEnv({ name: 'DOMAIN' });
+    let kind = doc.kind;
 
-    if (INTEGRATION_ENDPOINT_URL !== '') {
-      for (const pageId of pageIds) {
-        await sendPostRequest(`${INTEGRATION_ENDPOINT_URL}/service/facebook/${FACEBOOK_APP_ID}/webhook-callback`, {
-          endPoint: DOMAIN || '',
-          pageId,
-        });
-      }
+    if (kind.includes('nylas')) {
+      kind = 'nylas';
+    }
+
+    if (kind.includes('facebook')) {
+      kind = 'facebook';
+    }
+
+    if (kind === 'twitter-dm') {
+      kind = 'twitter';
+    }
+
+    try {
+      await dataSources.IntegrationsAPI.createIntegration(kind, {
+        accountId: doc.accountId,
+        kind: doc.kind,
+        integrationId: integration._id,
+        data: data ? JSON.stringify(data) : '',
+      });
+
+      await putCreateLog(
+        {
+          type: `${kind}Integration`,
+          newData: JSON.stringify(doc),
+          object: integration,
+          description: `${integration.name} has been created`,
+        },
+        user,
+      );
+    } catch (e) {
+      await Integrations.remove({ _id: integration._id });
+      throw new Error(e);
     }
 
     return integration;
   },
 
+  async integrationsEditCommonFields(_root, { _id, name, brandId }, { user }) {
+    const integration = await Integrations.getIntegration(_id);
+
+    const updated = Integrations.updateBasicInfo(_id, { name, brandId });
+
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: { name: integration.name, brandId: integration.brandId },
+        newData: JSON.stringify({ name, brandId }),
+        description: `${integration.name} has been edited`,
+      },
+      user,
+    );
+
+    return updated;
+  },
+
   /**
-   * Edit a form integration
+   * Create IMAP account
    */
-  integrationsEditFormIntegration(_root, { _id, ...doc }: IEditFormIntegration) {
-    return Integrations.updateFormIntegration(_id, doc);
+  integrationAddImapAccount(_root, data, { dataSources }) {
+    return dataSources.IntegrationsAPI.createAccount(data);
+  },
+
+  /**
+   * Create Yahoo, Outlook account
+   */
+  integrationAddMailAccount(_root, data, { dataSources }) {
+    return dataSources.IntegrationsAPI.createAccount(data);
   },
 
   /**
    * Delete an integration
    */
-  async integrationsRemove(_root, { _id }: { _id: string }) {
-    const integration = await Integrations.findOne({ _id });
-    if (integration && integration.kind === 'gmail' && integration.gmailData) {
-      const account = await Accounts.findOne({ _id: integration.gmailData.accountId });
-      if (account) {
-        const credentials = await Accounts.getGmailCredentials(account.uid);
-        // remove email from google push notification
-        await utils.stopReceivingEmail(account.uid, credentials);
-      }
+  async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
+    const integration = await Integrations.getIntegration(_id);
+
+    if (
+      [
+        'facebook-messenger',
+        'facebook-post',
+        'gmail',
+        'callpro',
+        'nylas-gmail',
+        'nylas-imap',
+        'nylas-office365',
+        'nylas-outlook',
+        'nylas-yahoo',
+        'chatfuel',
+        'twitter-dm',
+      ].includes(integration.kind)
+    ) {
+      await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }
+
+    await putDeleteLog(
+      {
+        type: 'integration',
+        object: integration,
+        description: `${integration.name} has been removed`,
+      },
+      user,
+    );
 
     return Integrations.removeIntegration(_id);
   },
 
   /**
-   * Create gmail integration
+   * Delete an account
    */
-  async integrationsCreateGmailIntegration(
-    _root,
-    { name, accountId, brandId }: { name: string; accountId: string; brandId: string },
-  ) {
-    const account = await Accounts.findOne({ _id: accountId });
+  async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
+    const { erxesApiIds } = await sendRPCMessage({ action: 'remove-account', data: { _id } });
 
-    if (!account) {
-      throw new Error(`Account not found id with ${accountId}`);
+    for (const id of erxesApiIds) {
+      await Integrations.removeIntegration(id);
     }
 
-    const integration = await Integrations.createGmailIntegration({
-      name,
-      brandId,
-      gmailData: {
-        email: account.uid,
-        accountId,
-      },
-    });
-
-    await updateHistoryId(integration);
-
-    return integration;
+    return 'success';
   },
 
   /**
-   * Send mail by gmail api
+   * Send mail
    */
-  integrationsSendGmail(_root, args, { user }: { user: IUserDocument }) {
-    return sendGmail(args, user);
+  async integrationSendMail(_root, args: any, { dataSources, user }: IContext) {
+    const { erxesApiId, ...doc } = args;
+
+    let kind = doc.kind;
+
+    if (kind.includes('nylas')) {
+      kind = 'nylas';
+    }
+
+    try {
+      await dataSources.IntegrationsAPI.sendEmail(kind, {
+        erxesApiId,
+        data: JSON.stringify(doc),
+      });
+    } catch (e) {
+      debugExternalApi(e);
+      throw new Error(e);
+    }
+
+    const customerIds = await Customers.find({ primaryEmail: { $in: doc.to } }).distinct('_id');
+
+    doc.userId = user._id;
+
+    for (const customerId of customerIds) {
+      await EmailDeliveries.createEmailDelivery({ ...doc, customerId });
+    }
+
+    return;
+  },
+
+  async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {
+    const integration = await Integrations.getIntegration(_id);
+    await Integrations.updateOne({ _id }, { $set: { isActive: false } });
+
+    await putUpdateLog(
+      {
+        type: 'integration',
+        object: integration,
+        newData: JSON.stringify({ isActive: false }),
+        description: `Integration "${integration.name}" has been archived.`,
+      },
+      user,
+    );
+
+    return Integrations.findOne({ _id });
   },
 };
 
@@ -179,12 +283,10 @@ checkPermission(
   'integrationsSaveMessengerAppearanceData',
 );
 checkPermission(integrationMutations, 'integrationsSaveMessengerConfigs', 'integrationsSaveMessengerConfigs');
-checkPermission(integrationMutations, 'integrationsCreateFormIntegration', 'integrationsCreateFormIntegration');
-checkPermission(integrationMutations, 'integrationsEditFormIntegration', 'integrationsEditFormIntegration');
-checkPermission(integrationMutations, 'integrationsCreateTwitterIntegration', 'integrationsCreateTwitterIntegration');
-checkPermission(integrationMutations, 'integrationsCreateFacebookIntegration', 'integrationsCreateFacebookIntegration');
-checkPermission(integrationMutations, 'integrationsCreateGmailIntegration', 'integrationsCreateGmailIntegration');
-checkPermission(integrationMutations, 'integrationsSendGmail', 'integrationsSendGmail');
+checkPermission(integrationMutations, 'integrationsCreateLeadIntegration', 'integrationsCreateLeadIntegration');
+checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integrationsEditLeadIntegration');
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
+checkPermission(integrationMutations, 'integrationsArchive', 'integrationsArchive');
+checkPermission(integrationMutations, 'integrationsEditCommonFields', 'integrationsEdit');
 
 export default integrationMutations;

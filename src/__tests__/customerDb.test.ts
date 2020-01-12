@@ -1,4 +1,5 @@
 import {
+  conformityFactory,
   conversationFactory,
   conversationMessageFactory,
   customerFactory,
@@ -8,8 +9,19 @@ import {
   internalNoteFactory,
   userFactory,
 } from '../db/factories';
-import { ConversationMessages, Conversations, Customers, Deals, ImportHistory, InternalNotes } from '../db/models';
+import {
+  Conformities,
+  ConversationMessages,
+  Conversations,
+  Customers,
+  Deals,
+  ImportHistory,
+  InternalNotes,
+} from '../db/models';
 import { ACTIVITY_CONTENT_TYPES, STATUSES } from '../db/models/definitions/constants';
+
+import { ICustomerDocument } from '../db/models/definitions/customers';
+import './setup.ts';
 
 describe('Customers model tests', () => {
   let _customer;
@@ -20,6 +32,7 @@ describe('Customers model tests', () => {
       emails: ['email@gmail.com', 'otheremail@gmail.com'],
       primaryPhone: '99922210',
       phones: ['99922210', '99922211'],
+      code: 'code',
     });
   });
 
@@ -29,9 +42,53 @@ describe('Customers model tests', () => {
     await ImportHistory.deleteMany({});
   });
 
-  test('Create customer', async () => {
-    expect.assertions(14);
+  test('Get customer', async () => {
+    try {
+      await Customers.getCustomer('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
 
+    const response = await Customers.getCustomer(_customer._id);
+
+    expect(response).toBeDefined();
+  });
+
+  test('Get customer name', async () => {
+    let customer = await customerFactory({});
+    let response = await Customers.getCustomerName(customer);
+    expect(response).toBe('Unknown');
+
+    customer = await customerFactory({ firstName: 'firstName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('firstName ');
+
+    customer = await customerFactory({ lastName: 'lastName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe(' lastName');
+
+    customer = await customerFactory({ firstName: 'firstName', lastName: 'lastName' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('firstName lastName');
+
+    customer = await customerFactory({ primaryEmail: 'primaryEmail' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('primaryEmail');
+
+    customer = await customerFactory({ primaryPhone: 'primaryPhone' });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('primaryPhone');
+
+    customer = await customerFactory({ visitorContactInfo: { phone: 8880, email: 'email@yahoo.com' } });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('8880');
+
+    customer = await customerFactory({ visitorContactInfo: { email: 'email@yahoo.com' } });
+    response = await Customers.getCustomerName(customer);
+    expect(response).toBe('email@yahoo.com');
+  });
+
+  test('Create customer', async () => {
     // check duplication ===============
     try {
       await Customers.createCustomer({ primaryEmail: 'email@gmail.com' });
@@ -58,9 +115,9 @@ describe('Customers model tests', () => {
     }
 
     try {
-      await Customers.createCustomer({ twitterData: _customer.twitterData });
+      await Customers.createCustomer({ code: 'code' });
     } catch (e) {
-      expect(e.message).toBe('Duplicated twitter');
+      expect(e.message).toBe('Duplicated code');
     }
 
     // Create without any error
@@ -71,9 +128,10 @@ describe('Customers model tests', () => {
       lastName: 'lastName',
       primaryPhone: '12312132',
       phones: ['12312132'],
+      code: 'code1234',
     };
 
-    const customerObj = await Customers.createCustomer(doc);
+    let customerObj = await Customers.createCustomer(doc);
 
     expect(customerObj.createdAt).toBeDefined();
     expect(customerObj.modifiedAt).toBeDefined();
@@ -83,18 +141,27 @@ describe('Customers model tests', () => {
     expect(customerObj.emails).toEqual(expect.arrayContaining(doc.emails));
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
     expect(customerObj.phones).toEqual(expect.arrayContaining(doc.phones));
+    expect(customerObj.searchText).toEqual('dombo@yahoo.com 12312132 firstName lastName code1234');
 
-    // Create customer with invalid email
-    const invalidEmailDoc = {
-      primaryEmail: 'dombo@blabla.mn',
-      emails: ['dombo@blabla.mn'],
-      firstName: 'firstName',
-      lastName: 'lastName',
-      primaryPhone: '1234567',
-      phones: ['1234567'],
+    customerObj = await Customers.createCustomer(
+      {
+        visitorContactInfo: {},
+      },
+      await userFactory(),
+    );
+
+    expect(customerObj).toBeDefined();
+  });
+
+  test('Create customer: searchText', async () => {
+    const doc = {
+      primaryEmail: 'dombo@yahoo.com',
+      primaryPhone: '12312132',
     };
-    const invalidEmailObj = await Customers.createCustomer(invalidEmailDoc);
-    expect(invalidEmailObj.hasValidEmail).toBeFalsy();
+
+    const customerObj = await Customers.createCustomer(doc);
+
+    expect(customerObj.searchText).toEqual('dombo@yahoo.com 12312132');
   });
 
   test('Create customer: with customer fields validation error', async () => {
@@ -118,7 +185,7 @@ describe('Customers model tests', () => {
   });
 
   test('Update customer', async () => {
-    expect.assertions(7);
+    expect.assertions(6);
 
     const previousCustomer = await customerFactory({
       primaryEmail: 'dombo@yahoo.com',
@@ -139,21 +206,20 @@ describe('Customers model tests', () => {
     } catch (e) {
       expect(e.message).toBe('Duplicated email');
     }
-    // update invalid email address
-    await Customers.updateCustomer(previousCustomer._id, { primaryEmail: 'dombo@blabla.mn' });
-    expect(previousCustomer.hasValidEmail).toBeFalsy();
-    const validMailObj = await Customers.updateCustomer(previousCustomer._id, { primaryEmail: 'dombo1@yahoo.com' });
-    expect(validMailObj.hasValidEmail).toBeFalsy();
 
     // remove previous duplicated entry
     await Customers.deleteOne({ _id: previousCustomer._id });
 
-    const customerObj = await Customers.updateCustomer(_customer._id, doc);
+    let customerObj = await Customers.updateCustomer(_customer._id, doc);
 
     expect(customerObj.modifiedAt).toBeDefined();
     expect(customerObj.firstName).toBe(doc.firstName);
     expect(customerObj.primaryEmail).toBe(doc.primaryEmail);
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
+
+    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' });
+
+    expect(customerObj.primaryEmail).toBe('');
   });
 
   test('Mark customer as inactive', async () => {
@@ -191,14 +257,6 @@ describe('Customers model tests', () => {
     }
   });
 
-  test('Update customer companies', async () => {
-    const companyIds = ['12313qwrqwe', '123', '11234'];
-
-    const customerObj = await Customers.updateCompanies(_customer._id, companyIds);
-
-    expect(customerObj.companyIds).toEqual(expect.arrayContaining(companyIds));
-  });
-
   test('removeCustomer', async () => {
     const customer = await customerFactory({});
 
@@ -211,12 +269,16 @@ describe('Customers model tests', () => {
       customerId: customer._id,
     });
 
+    await conversationFactory({
+      customerId: customer._id,
+    });
+
     await conversationMessageFactory({
       conversationId: conversation._id,
       customerId: customer._id,
     });
 
-    await Customers.removeCustomer(customer._id);
+    await Customers.removeCustomers([customer._id]);
 
     const internalNote = await InternalNotes.find({
       contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
@@ -244,46 +306,61 @@ describe('Customers model tests', () => {
     expect(merged.phones).toContain('2555225');
   });
 
+  test('Merge customers: without primaryEmail and primaryPhone', async () => {
+    const visitor1 = await customerFactory({});
+    const visitor2 = await customerFactory({});
+
+    const customerIds = [visitor1._id, visitor2._id];
+
+    const merged = await Customers.mergeCustomers(customerIds, {});
+
+    expect(merged.emails).toHaveLength(0);
+    expect(merged.phones).toHaveLength(0);
+  });
+
   test('Merge customers', async () => {
-    expect.assertions(23);
+    expect.assertions(20);
 
     const integration = await integrationFactory({});
 
     const customer1 = await customerFactory({
-      companyIds: ['123', '1234', '12345'],
       tagIds: ['2343', '234', '234'],
       integrationId: integration._id,
     });
-
     const customer2 = await customerFactory({
-      companyIds: ['123', '456', '45678'],
       tagIds: ['qwe', '2343', '123'],
       integrationId: integration._id,
     });
 
-    if (!customer1 || !customer1.companyIds || !customer1.tagIds) {
+    await ['123', '1234', '12345'].map(async item => {
+      await conformityFactory({
+        mainType: 'company',
+        mainTypeId: item,
+        relType: 'customer',
+        relTypeId: customer1._id,
+      });
+    });
+
+    await ['123', '456', '45678'].map(async item => {
+      await conformityFactory({
+        mainType: 'customer',
+        mainTypeId: customer2._id,
+        relType: 'company',
+        relTypeId: item,
+      });
+    });
+
+    if (!customer1 || !customer1.tagIds) {
       throw new Error('Customer1 not found');
     }
 
-    if (!customer2 || !customer2.companyIds || !customer2.tagIds) {
+    if (!customer2 || !customer2.tagIds) {
       throw new Error('Customer2 not found');
     }
 
     const customerIds = [customer1._id, customer2._id];
 
-    // Merging both customers companyIds and tagIds
-    const mergedCompanyIds = Array.from(new Set(customer1.companyIds.concat(customer2.companyIds)));
-
     const mergedTagIds = Array.from(new Set(customer1.tagIds.concat(customer2.tagIds)));
-
-    // test duplication ============
-    try {
-      await Customers.mergeCustomers(customerIds, {
-        twitterData: _customer.twitterData,
-      });
-    } catch (e) {
-      expect(e.message).toBe('Duplicated twitter');
-    }
 
     try {
       await Customers.mergeCustomers(customerIds, {
@@ -307,8 +384,22 @@ describe('Customers model tests', () => {
       customerId: customerIds[0],
     });
 
-    await dealFactory({
-      customerIds,
+    const deal1 = await dealFactory({});
+
+    customerIds.map(async customerId => {
+      await conformityFactory({
+        mainType: 'deal',
+        mainTypeId: deal1._id,
+        relType: 'customer',
+        relTypeId: customerId,
+      });
+    });
+
+    // Merging both customers companyIds and tagIds
+    const mergedCompanyIds = await Conformities.filterConformity({
+      mainType: 'customer',
+      mainTypeIds: customerIds,
+      relType: 'company',
     });
 
     const doc = {
@@ -316,12 +407,6 @@ describe('Customers model tests', () => {
       lastName: 'Test last name',
       primaryEmail: 'Test email',
       primaryPhone: 'Test phone',
-      facebookData: {
-        id: '1231312asd',
-      },
-      twitterData: {
-        id: 1234123,
-      },
       messengerData: {
         sessionCount: 6,
       },
@@ -332,15 +417,9 @@ describe('Customers model tests', () => {
       ownerId: '456',
     };
 
-    const mergedCustomer = await Customers.mergeCustomers(customerIds, doc);
+    const mergedCustomer = await Customers.mergeCustomers([...customerIds, 'fakeId'], doc);
 
-    if (
-      !mergedCustomer ||
-      !mergedCustomer.twitterData ||
-      !mergedCustomer.facebookData ||
-      !mergedCustomer.messengerData ||
-      !mergedCustomer.visitorContactInfo
-    ) {
+    if (!mergedCustomer || !mergedCustomer.messengerData || !mergedCustomer.visitorContactInfo) {
       throw new Error('Merged customer not found');
     }
 
@@ -349,10 +428,15 @@ describe('Customers model tests', () => {
     expect(mergedCustomer.lastName).toBe(doc.lastName);
     expect(mergedCustomer.primaryEmail).toBe(doc.primaryEmail);
     expect(mergedCustomer.primaryPhone).toBe(doc.primaryPhone);
-    expect(mergedCustomer.twitterData.toJSON()).toEqual(doc.twitterData);
     expect(mergedCustomer.messengerData.toJSON()).toEqual(doc.messengerData);
-    expect(mergedCustomer.facebookData.toJSON()).toEqual(doc.facebookData);
-    expect(mergedCustomer.companyIds).toEqual(expect.arrayContaining(mergedCompanyIds));
+
+    const companyIds = await Conformities.savedConformity({
+      mainType: 'customer',
+      relTypes: ['company'],
+      mainTypeId: mergedCustomer._id,
+    });
+    expect(mergedCompanyIds.sort()).toEqual(companyIds.sort());
+
     expect(mergedCustomer.tagIds).toEqual(expect.arrayContaining(mergedTagIds));
     expect(mergedCustomer.visitorContactInfo.toJSON()).toEqual(doc.visitorContactInfo);
     expect(mergedCustomer.ownerId).toBe('456');
@@ -382,110 +466,283 @@ describe('Customers model tests', () => {
 
     expect(internalNote).not.toHaveLength(0);
 
+    const relTypeIds = await Conformities.filterConformity({
+      mainType: 'customer',
+      mainTypeIds: customerIds,
+      relType: 'deal',
+    });
+    expect(relTypeIds.length).toBe(0);
+
+    const newRelTypeIds = await Conformities.savedConformity({
+      mainType: 'customer',
+      mainTypeId: mergedCustomer._id,
+      relTypes: ['deal'],
+    });
+
     const deals = await Deals.find({
-      customerIds: { $in: customerIds },
+      _id: { $in: newRelTypeIds },
     });
 
-    expect(deals.length).toBe(0);
-
-    const deal = await Deals.findOne({
-      customerIds: { $in: [mergedCustomer._id] },
-    });
-    if (!deal) {
-      throw new Error('Deal not found');
-    }
-    expect(deal.customerIds).toContain(mergedCustomer._id);
+    expect(deals).toHaveLength(1);
   });
 
-  test('bulkInsert', async () => {
-    await fieldFactory({
-      contentType: 'customer',
-      text: 'First referred site',
-      validation: '',
-    });
+  test('Update profile score', async () => {
+    const response = await Customers.updateProfileScore('fakeId', true);
 
-    await fieldFactory({
-      contentType: 'customer',
-      text: 'Fax number',
-      validation: '',
-    });
-    const user = await userFactory({});
+    expect(response).toBe(0);
 
-    const fieldNames = ['primaryEmail', 'primaryPhone', 'First referred site', 'Fax number'];
+    const customer = await customerFactory({});
 
-    const fieldValues = [
-      ['customer1email@yahoo.com', 'customer1phone', 'customer1property1', 'customer1property2'],
-      ['customer2email@yahoo.com', 'customer2phone', 'customer2property1', 'customer2property2'],
-    ];
-
-    const response = await Customers.bulkInsert(fieldNames, fieldValues, user);
-    const customers = await Customers.find({});
-
-    const history = await ImportHistory.findOne({ userId: user._id });
-
-    if (!history || !history.ids) {
-      throw new Error('History not found');
-    }
-
-    // Before each test we create 1 customer so it should be 3 total
-    expect(customers.length).toBe(3);
-    expect(response.length).toBe(0);
-    expect(history.success).toBe(2);
-    expect(history.total).toBe(2);
-    expect(history.ids.length).toBe(2);
-    expect(history.failed).toBe(0);
+    Customers.updateProfileScore(customer._id, false);
   });
 
-  test('bulkInsert with errors', async () => {
-    const user = await userFactory({});
-    const badFieldNames = ['badColumn name1'];
+  test('Mark as active', async () => {
+    const customer = await customerFactory({});
 
-    let response = await Customers.bulkInsert(badFieldNames, [], user);
-    // We sent bad column name
-    expect(response.length).toBe(1);
-    expect(response[0]).toBe('Bad column name badColumn name1');
+    const response = await Customers.markCustomerAsActive(customer._id);
 
-    await fieldFactory({
-      contentType: 'customer',
-      text: 'Fax number',
-      validation: '',
-    });
-    const customer = await customerFactory({
-      emails: ['testCustomerEmail@gmail.com'],
-      primaryEmail: 'testCustomerEmail@gmail.com',
-    });
+    expect(response.messengerData && response.messengerData.isActive).toBeTruthy();
+  });
 
-    const fieldNames = ['primaryEmail', 'firstName', 'Fax number'];
+  test('createMessengerCustomer() must return a new customer', async () => {
+    const now = new Date();
 
-    const fieldValues: any = [
-      [customer.primaryEmail, 'Heyy', '12313'], // this one has duplicated email
-      ['newEmail@gmail.com', 'Ayyy', '12313'], // this one should be inserted
-      [customer.primaryEmail, '', ''], // this one has duplicated email too
-    ];
+    const firstName = 'test first name';
+    const lastName = 'test last name';
+    const bio = 'test BIO 1231321312';
+    const email = 'uniqueEmail@gmail.com';
+    const phone = '422999';
 
-    response = await Customers.bulkInsert(fieldNames, fieldValues, user);
+    const customData = {
+      first_name: firstName,
+      last_name: lastName,
+      bio,
+      created_at: new Date(),
+    };
 
-    expect(response.length).toBe(2);
-    expect(response[0]).toBe('Duplicated email at the row 1');
-    expect(response[1]).toBe('Duplicated email at the row 3');
+    const customer = await Customers.createMessengerCustomer(
+      {
+        integrationId: _customer.integrationId,
+        email,
+        phone,
+        isUser: _customer.isUser,
+      },
+      customData,
+    );
 
-    const history = await ImportHistory.findOne({ userId: user._id });
+    expect(customer).toBeDefined();
 
-    if (!history || !history.ids) {
-      throw new Error('History not found');
+    expect(customer.createdAt).toBeDefined();
+    expect(customer.searchText).toBeDefined();
+    expect(customer.profileScore).toBeDefined();
+    expect(customer.modifiedAt).toBeDefined();
+    expect(customer.primaryEmail).toBe(email);
+    expect(customer.emails).toContain(email);
+
+    expect(customer.primaryPhone).toBe(phone);
+    expect(customer.phones).toContain(phone);
+
+    expect(customer.isUser).toBe(_customer.isUser);
+    expect(customer.createdAt >= now).toBe(true);
+    expect(customer.lastName).toBe(lastName);
+    expect(customer.description).toBe(bio);
+
+    const messengerData = customer.messengerData;
+
+    if (!messengerData) {
+      throw new Error('messengerData is null');
     }
 
-    expect(history.total).toBe(3);
-    expect(history.success).toBe(1);
-    expect(history.failed).toBe(2);
-    expect(history.ids.length).toBe(1);
+    expect(messengerData.lastSeenAt).toBeDefined();
+    expect(messengerData.isActive).toBe(true);
+    expect(messengerData.sessionCount).toBe(1);
+    expect(messengerData.customData.first_name).toBeUndefined();
+    expect(messengerData.customData.last_name).toBeUndefined();
+    expect(messengerData.customData.bio).toBeUndefined();
+    expect(messengerData.customData.created_at).toBeDefined();
+  });
 
-    process.env.MAX_IMPORT_SIZE = '2';
+  test('updateMessengerCustomer()', async () => {
+    try {
+      await Customers.updateMessengerCustomer({ _id: '_id', doc: {}, customData: {} });
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
 
-    // Max import size error
-    response = await Customers.bulkInsert(fieldNames, fieldValues, user);
+    const firstName = 'test first name';
+    const lastName = 'test last name';
+    const bio = 'test BIO 1231321312';
+    const email = 'uniqueEmail@gmail.com';
+    const phone = '422999';
+    const deviceToken = 'token';
 
-    expect(response.length).toBe(1);
-    expect(response[0]).toBe(`You can only import max ${process.env.MAX_IMPORT_SIZE} at a time`);
+    const customData = {
+      first_name: firstName,
+      last_name: lastName,
+      bio,
+      created_at: '1321313',
+    };
+
+    _customer.isUser = true;
+    await _customer.save();
+
+    const customer = await Customers.updateMessengerCustomer({
+      _id: _customer._id,
+      doc: {
+        email,
+        phone,
+        isUser: true,
+        deviceToken,
+      },
+      customData,
+    });
+
+    expect(customer.primaryEmail).toBe(email);
+    expect(customer.emails).toContain(email);
+    expect(customer.deviceTokens).toContain(deviceToken);
+
+    expect(customer.primaryPhone).toBe(phone);
+    expect(customer.phones).toContain(phone);
+
+    expect(customer.isUser).toBe(true);
+    expect(customer.lastName).toBe(lastName);
+    expect(customer.description).toBe(bio);
+
+    const messengerData = customer.messengerData;
+
+    if (!messengerData) {
+      throw new Error('messengerData is null');
+    }
+
+    expect(messengerData.customData.first_name).toBeUndefined();
+    expect(messengerData.customData.last_name).toBeUndefined();
+    expect(messengerData.customData.bio).toBeUndefined();
+
+    // Do not replace previous non empty value with empty value
+    const customerWithCustomData = await customerFactory({
+      messengerData: { customData: { organization: 'test' } },
+    });
+
+    const updated = await Customers.updateMessengerCustomer({
+      _id: customerWithCustomData._id,
+      doc: {},
+      customData: {},
+    });
+
+    if (!updated.messengerData) {
+      throw new Error('messengerData is null');
+    }
+
+    expect(updated.messengerData.customData.organization).toBe('test');
+  });
+
+  test('getWidgetCustomer()', async () => {
+    // emails, primaryEmail ==============
+    let customer: ICustomerDocument | null = await customerFactory({
+      primaryEmail: 'customer@gmail.com',
+      emails: ['main@gmail.com'],
+    });
+
+    let foundCustomer = await Customers.getWidgetCustomer({
+      email: 'customer@gmail.com',
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // phones
+    customer = await customerFactory({
+      phones: ['911111'],
+    });
+
+    foundCustomer = await Customers.getWidgetCustomer({
+      phone: '911111',
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // primaryPhone
+    customer = await customerFactory({
+      primaryPhone: '24244242',
+    });
+
+    foundCustomer = await Customers.getWidgetCustomer({
+      phone: '24244242',
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // code
+    customer = await customerFactory({
+      code: '24244242',
+    });
+
+    foundCustomer = await Customers.getWidgetCustomer({
+      code: '24244242',
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+
+    // cached customer id
+    foundCustomer = await Customers.getWidgetCustomer({
+      cachedCustomerId: customer._id,
+    });
+
+    expect(foundCustomer && foundCustomer._id).toBe(customer._id);
+  });
+
+  test('updateMessengerSession()', async () => {
+    try {
+      await Customers.updateMessengerSession('_id', '/career/open');
+    } catch (e) {
+      expect(e.message).toBe('Customer not found');
+    }
+
+    const now = new Date();
+
+    const customer = await Customers.updateMessengerSession(_customer._id, '/career/open');
+
+    const { messengerData } = customer;
+
+    expect(messengerData).toBeDefined();
+
+    if (messengerData) {
+      expect(messengerData.isActive).toBeTruthy();
+      expect(messengerData.lastSeenAt && messengerData.lastSeenAt >= now.getTime()).toBeTruthy();
+    }
+
+    expect(customer.urlVisits['/career/open']).toBe(1);
+  });
+
+  test('saveVisitorContactInfo()', async () => {
+    // email ==========
+    let customer = await Customers.saveVisitorContactInfo({
+      customerId: _customer._id,
+      type: 'email',
+      value: 'test@gmail.com',
+    });
+
+    let visitorContactInfo: any = customer.visitorContactInfo || {};
+
+    expect(visitorContactInfo.email).toBe('test@gmail.com');
+
+    // phone ===============
+    customer = await Customers.saveVisitorContactInfo({
+      customerId: _customer._id,
+      type: 'phone',
+      value: '985435353',
+    });
+
+    visitorContactInfo = customer.visitorContactInfo || {};
+
+    // check company in companyIds
+    expect(visitorContactInfo.phone).toBe('985435353');
+  });
+
+  test('updateLocation()', async () => {
+    const updated = await Customers.updateLocation(_customer._id, {
+      language: 'en',
+    });
+
+    expect(updated.location && updated.location.language).toBe('en');
   });
 });

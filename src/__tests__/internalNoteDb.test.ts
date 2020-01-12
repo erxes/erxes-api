@@ -3,6 +3,8 @@ import { companyFactory, customerFactory, internalNoteFactory, userFactory } fro
 import { InternalNotes, Users } from '../db/models';
 import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 
+import './setup.ts';
+
 /*
  * Generate test data
  */
@@ -35,6 +37,18 @@ describe('InternalNotes model test', () => {
     // Clearing test data
     await InternalNotes.deleteMany({});
     await Users.deleteMany({});
+  });
+
+  test('Get internal note', async () => {
+    try {
+      await InternalNotes.getInternalNote('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Internal note not found');
+    }
+
+    const response = await InternalNotes.getInternalNote(_internalNote._id);
+
+    expect(response).toBeDefined();
   });
 
   test('Create internalNote', async () => {
@@ -111,7 +125,12 @@ describe('InternalNotes model test', () => {
       contentTypeId: customer._id,
     });
 
-    await InternalNotes.removeCustomerInternalNotes(customer._id);
+    await internalNoteFactory({
+      contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
+      contentTypeId: customer._id,
+    });
+
+    await InternalNotes.removeCustomersInternalNotes([customer._id]);
 
     const internalNote = await InternalNotes.find({
       contentType: ACTIVITY_CONTENT_TYPES.CUSTOMER,
@@ -129,13 +148,18 @@ describe('InternalNotes model test', () => {
       contentTypeId: company._id,
     });
 
-    await InternalNotes.removeCompanyInternalNotes(company._id);
-
-    const internalNote = await InternalNotes.find({
+    await internalNoteFactory({
       contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
       contentTypeId: company._id,
     });
 
-    expect(internalNote).toHaveLength(0);
+    await InternalNotes.removeCompaniesInternalNotes([company._id]);
+
+    const internalNotes = await InternalNotes.find({
+      contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
+      contentTypeId: company._id,
+    });
+
+    expect(internalNotes).toHaveLength(0);
   });
 });

@@ -30,6 +30,18 @@ export default {
   },
 
   /*
+   * Admin is listening for this subscription to show typing notification
+   */
+  conversationClientTypingStatusChanged: {
+    subscribe: withFilter(
+      () => graphqlPubsub.asyncIterator('conversationClientTypingStatusChanged'),
+      async (payload, variables) => {
+        return payload.conversationClientTypingStatusChanged.conversationId === variables._id;
+      },
+    ),
+  },
+
+  /*
    * Admin is listening for this subscription to show unread notification
    */
   conversationClientMessageInserted: {
@@ -50,7 +62,7 @@ export default {
           return false;
         }
 
-        const availableChannelsCount = await Channels.count({
+        const availableChannelsCount = await Channels.countDocuments({
           integrationIds: { $in: [integration._id] },
           memberIds: { $in: [variables.userId] },
         });
@@ -71,5 +83,12 @@ export default {
         return payload.conversationAdminMessageInserted.customerId === variables.customerId;
       },
     ),
+  },
+
+  /*
+   * Integrations api is listener
+   */
+  conversationExternalIntegrationMessageInserted: {
+    subscribe: () => graphqlPubsub.asyncIterator('conversationExternalIntegrationMessageInserted'),
   },
 };

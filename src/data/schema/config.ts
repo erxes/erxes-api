@@ -7,9 +7,6 @@ export const types = `
 
   type GitInfos {
     packageVersion: String
-    lastCommittedUser: String
-    lastCommittedDate: String
-    lastCommitMessage: String
     branch: String
     sha: String
     abbreviatedSha: String
@@ -19,13 +16,17 @@ export const types = `
     erxesVersion: GitInfos
     apiVersion: GitInfos
     widgetVersion: GitInfos
-    widgetApiVersion: GitInfos
+  }
+
+  type ENV {
+    USE_BRAND_RESTRICTIONS: String
   }
 `;
 
 export const queries = `
   configsDetail(code: String!): Config
   configsVersions: ProjectInfos
+  configsGetEnv: ENV
 `;
 
 export const mutations = `

@@ -5,6 +5,7 @@ import mongoose = require('mongoose');
 import resolvers from '../data/resolvers';
 import typeDefs from '../data/schema';
 import { getEnv } from '../data/utils';
+import { debugDb } from '../debuggers';
 import { userFactory } from './factories';
 
 dotenv.config();
@@ -12,29 +13,34 @@ dotenv.config();
 const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 const MONGO_URL = getEnv({ name: 'MONGO_URL', defaultValue: '' });
 
-mongoose.set('useFindAndModify', false);
+export const connectionOptions = {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  autoReconnect: true,
+  useFindAndModify: false,
+};
 
 mongoose.Promise = global.Promise;
 
 mongoose.connection
   .on('connected', () => {
     if (NODE_ENV !== 'test') {
-      console.log(`Connected to the database: ${MONGO_URL}`);
+      debugDb(`Connected to the database: ${MONGO_URL}`);
     }
   })
   .on('disconnected', () => {
-    console.log(`Disconnected from the database: ${MONGO_URL}`);
+    debugDb(`Disconnected from the database: ${MONGO_URL}`);
   })
   .on('error', error => {
-    console.log(`Database connection error: ${MONGO_URL}`, error);
+    debugDb(`Database connection error: ${MONGO_URL}`, error);
   });
 
-export function connect() {
-  return mongoose.connect(
-    MONGO_URL,
-    { useNewUrlParser: true, useCreateIndex: true, poolSize: 100, autoReconnect: true },
-  );
-}
+export const connect = async (URL?: string, options?) => {
+  return mongoose.connect(URL || MONGO_URL, {
+    ...connectionOptions,
+    ...(options || { poolSize: 100 }),
+  });
+};
 
 export function disconnect() {
   return mongoose.connection.close();
@@ -45,10 +51,8 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context?: any) => {
+export const graphqlRequest = async (source: string = '', name: string = '', args?: any, context: any = {}) => {
   const user = await userFactory({});
-
-  const rootValue = {};
 
   const res = {
     cookie: () => {
@@ -56,7 +60,20 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
     },
   };
 
-  const response: any = await graphql(schema, source, rootValue, context || { user, res }, args);
+  const finalContext: any = {};
+
+  finalContext.requestInfo = { secure: false };
+  finalContext.dataSources = context.dataSources;
+  finalContext.user = context.user || user;
+  finalContext.res = context.res || res;
+  finalContext.commonQuerySelector = {};
+  finalContext.userBrandIdsSelector = {};
+  finalContext.brandIdSelector = {};
+  finalContext.docModifier = doc => doc;
+
+  const rootValue = {};
+
+  const response: any = await graphql(schema, source, rootValue, finalContext, args);
 
   if (response.errors || !response.data) {
     throw response.errors;

@@ -1,7 +1,8 @@
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from '../../../db/models';
 
-import { checkPermission, requireLogin } from '../../permissions';
-import { paginate } from './utils';
+import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
+import { paginate } from '../../utils';
 
 /* Articles list & total count helper */
 const articlesQuery = async ({ categoryIds }: { categoryIds: string[] }) => {
@@ -61,6 +62,7 @@ const knowledgeBaseQueries = {
    */
   async knowledgeBaseArticles(_root, args: { page: number; perPage: number; categoryIds: string[] }) {
     const query = await articlesQuery(args);
+
     const articles = KnowledgeBaseArticles.find(query).sort({
       createdData: -1,
     });
@@ -118,15 +120,15 @@ const knowledgeBaseQueries = {
   /**
    * Get last category
    */
-  knowledgeBaseCategoriesGetLast() {
-    return KnowledgeBaseCategories.findOne({}).sort({ createdDate: -1 });
+  knowledgeBaseCategoriesGetLast(_root, _args, { commonQuerySelector }: IContext) {
+    return KnowledgeBaseCategories.findOne(commonQuerySelector).sort({ createdDate: -1 });
   },
 
   /**
    * Topic list
    */
-  knowledgeBaseTopics(_root, args: { page: number; perPage: number }) {
-    const topics = paginate(KnowledgeBaseTopics.find({}), args);
+  knowledgeBaseTopics(_root, args: { page: number; perPage: number }, { commonQuerySelector }: IContext) {
+    const topics = paginate(KnowledgeBaseTopics.find(commonQuerySelector), args);
     return topics.sort({ modifiedDate: -1 });
   },
 
@@ -140,18 +142,16 @@ const knowledgeBaseQueries = {
   /**
    * Total topic count
    */
-  knowledgeBaseTopicsTotalCount() {
-    return KnowledgeBaseTopics.find({}).countDocuments();
+  knowledgeBaseTopicsTotalCount(_root, _args, { commonQuerySelector }: IContext) {
+    return KnowledgeBaseTopics.find(commonQuerySelector).countDocuments();
   },
 };
 
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticlesTotalCount');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicsTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicDetail');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesGetLast');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoryDetail');
 
 checkPermission(knowledgeBaseQueries, 'knowledgeBaseArticles', 'showKnowledgeBase', []);
 checkPermission(knowledgeBaseQueries, 'knowledgeBaseTopics', 'showKnowledgeBase', []);

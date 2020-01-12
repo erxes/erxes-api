@@ -9,12 +9,10 @@ export const types = `
     formId: String
     tagIds: [String]
     tags: [Tag]
-    formData: JSON
+    leadData: JSON
     messengerData: JSON
-    twitterData: JSON
-    facebookData: JSON
-    gmailData: JSON
     uiOptions: JSON
+    isActive: Boolean
 
     brand: Brand
     form: Form
@@ -29,12 +27,12 @@ export const types = `
     byKind: JSON
   }
 
-  type GmailResponseData {
-    status: Int!
-    statusText: String
+  type integrationsGetUsedTypes {
+    _id: String
+    name: String
   }
 
-  input IntegrationFormData {
+  input IntegrationLeadData {
     loadType: String
     successAction: String
     fromEmail: String,
@@ -45,6 +43,9 @@ export const types = `
     adminEmailContent: String
     thankContent: String
     redirectUrl: String
+    themeColor: String
+    callout: JSON,
+    rules: [InputRule]
   }
 
   input MessengerOnlineHoursSchema {
@@ -72,19 +73,15 @@ export const types = `
     links: IntegrationLinks
     supporterIds: [String]
     requireAuth: Boolean
+    showChat: Boolean
+    showLauncher: Boolean
+    forceLogoutWhenResolve: Boolean
   }
 
   input MessengerUiOptions {
     color: String
     wallpaper: String
     logo: String
-  }
-
-  input gmailAttachmentData {
-    filename: String
-    size: Int
-    mimeType: String
-    data: String
   }
 `;
 
@@ -99,10 +96,11 @@ export const queries = `
     tag: String
   ): [Integration]
 
+  integrationsGetUsedTypes: [integrationsGetUsedTypes]
+
   integrationDetail(_id: String!): Integration
   integrationsTotalCount: integrationsTotalCount
-  integrationFacebookAppsList: [JSON]
-  integrationFacebookPagesList(accountId: String): [JSON]
+  integrationsFetchApi(path: String!, params: JSON!): JSON
 `;
 
 export const mutations = `
@@ -127,49 +125,66 @@ export const mutations = `
     _id: String!,
     messengerData: IntegrationMessengerData): Integration
 
-  integrationsCreateFormIntegration(
+  integrationsCreateLeadIntegration(
     name: String!,
     brandId: String!,
     languageCode: String,
     formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadData: IntegrationLeadData!): Integration
 
-  integrationsCreateTwitterIntegration(
-    brandId: String!,
-    accountId: String!
-  ): Integration
-
-  integrationsCreateFacebookIntegration(
-    brandId: String!,
-    name: String!,
-    accountId: String!,
-    pageIds: [String!]!,
-  ): Integration
-
-  integrationsEditFormIntegration(
+  integrationsEditLeadIntegration(
     _id: String!
     name: String!,
     brandId: String!,
     languageCode: String,
     formId: String!,
-    formData: IntegrationFormData!): Integration
+    leadData: IntegrationLeadData!): Integration
+
+  integrationsCreateExternalIntegration(
+    kind: String!,
+    name: String!,
+    brandId: String!,
+    accountId: String,
+    data: JSON): Integration
+
+  integrationsEditCommonFields(_id: String!, name: String!, brandId: String!): Integration
 
   integrationsRemove(_id: String!): JSON
+  integrationsRemoveAccount(_id: String!): JSON
 
-  integrationsCreateGmailIntegration(name: String!, accountId: String!, brandId: String!): Integration
+  integrationsArchive(_id: String!): Integration
 
-  integrationsSendGmail(
-    integrationId: String!,
-    cocType: String!,
-    cocId: String!,
-    subject: String!,
-    body: String!,
-    toEmails: String!,
-    cc: String,
-    bcc: String,
-    attachments: [gmailAttachmentData],
-    headerId: String,
-    references: String,
+  integrationSendMail(
+    erxesApiId: String!
+    subject: String!
+    body: String
+    to: [String]!
+    cc: [String]
+    bcc: [String]
+    from: String!
+    shouldResolve: Boolean
+    headerId: String
     threadId: String
-  ): GmailResponseData
+    messageId: String
+    replyToMessageId: String
+    kind: String
+    references: String
+    attachments: [JSON]
+  ): JSON
+
+  integrationAddImapAccount(
+    email: String!
+    password: String!
+    imapHost: String!
+    imapPort: Int!
+    smtpHost: String!
+    smtpPort: Int!
+    kind: String!
+  ): JSON
+
+  integrationAddMailAccount(
+    email: String!
+    password: String!
+    kind: String!
+  ): JSON
 `;

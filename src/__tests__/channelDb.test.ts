@@ -1,11 +1,14 @@
 import { channelFactory, integrationFactory, userFactory } from '../db/factories';
 import { Channels, Integrations, Users } from '../db/models';
 
+import './setup.ts';
+
 describe('test channel creation error', () => {
   test(`check if Error('userId must be supplied') is being thrown as intended`, async () => {
     try {
       Channels.createChannel({
         name: 'Channel test',
+        integrationIds: [],
       });
     } catch (e) {
       expect(e.message).toBe('userId must be supplied');
@@ -26,6 +29,20 @@ describe('channel creation', () => {
     await Channels.deleteMany({});
     await Users.deleteMany({});
     await Integrations.deleteMany({});
+  });
+
+  test('Get channel', async () => {
+    const channel = await channelFactory();
+
+    try {
+      await Channels.getChannel('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Channel not found');
+    }
+
+    const response = await Channels.getChannel(channel._id);
+
+    expect(response).toBeDefined();
   });
 
   test('check if channel is getting created successfully', async () => {
@@ -126,6 +143,7 @@ describe('channel update', () => {
     // testing whether the updated field is not overwriting whole document ========
     channel = await Channels.updateChannel(channel._id, {
       name: 'Channel test 2',
+      integrationIds: [],
     });
 
     expect(channel.description).toBe('Channel test description');
@@ -140,6 +158,7 @@ describe('channel remove', () => {
     _channel = await Channels.createChannel(
       {
         name: 'Channel test',
+        integrationIds: [],
       },
       user._id,
     );

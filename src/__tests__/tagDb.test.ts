@@ -1,6 +1,8 @@
 import { engageMessageFactory, tagsFactory } from '../db/factories';
 import { EngageMessages, Tags } from '../db/models';
 
+import './setup.ts';
+
 describe('Test tags model', () => {
   let _tag;
   let _tag2;
@@ -17,6 +19,18 @@ describe('Test tags model', () => {
     // Clearing test data
     await Tags.deleteMany({});
     await EngageMessages.deleteMany({});
+  });
+
+  test('Get tag', async () => {
+    try {
+      await Tags.getTag('fakeId');
+    } catch (e) {
+      expect(e.message).toBe('Tag not found');
+    }
+
+    const response = await Tags.getTag(_tag._id);
+
+    expect(response).toBeDefined();
   });
 
   test('Validate unique tag', async () => {
@@ -45,8 +59,16 @@ describe('Test tags model', () => {
     }
   });
 
-  test('Attach tag type', async () => {
+  test('Attach customer tag', async () => {
     Tags.tagsTag('customer', [], []);
+  });
+
+  test('Attach integration tag', async () => {
+    Tags.tagsTag('integration', [], []);
+  });
+
+  test('Attach product tag', async () => {
+    Tags.tagsTag('product', [], []);
   });
 
   test('Create tag check duplicated', async () => {
