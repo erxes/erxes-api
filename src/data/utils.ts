@@ -13,6 +13,7 @@ import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
+import { get, set } from '../redisClient';
 
 /*
  * Check that given file is not harmful
@@ -962,15 +963,34 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
 };
 
 export const getConfigs = async () => {
-  return Configs.find({});
+  const configsCache = await get('configs');
+
+  if (configsCache && configsCache !== '{}') {
+    return JSON.parse(configsCache);
+  }
+
+  const configsMap = {};
+  const configs = await Configs.find({});
+
+  for (const config of configs) {
+    configsMap[config.code] = config.value;
+  }
+
+  set('configs', JSON.stringify(configsMap));
+
+  return configsMap;
 };
 
 export const getConfig = async (code, defaultValue?) => {
-  const config = await Configs.findOne({ code });
+  const configs = await getConfigs();
 
-  if (!config) {
+  if (!configs[code]) {
     return defaultValue;
   }
 
-  return config.value || defaultValue;
+  return configs[code];
+};
+
+export const resetConfigsCache = () => {
+  set('configs', '');
 };

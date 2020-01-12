@@ -1,7 +1,7 @@
 import { Configs } from '../../../db/models';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { registerOnboardHistory } from '../../utils';
+import { registerOnboardHistory, resetConfigsCache } from '../../utils';
 
 const configMutations = {
   /**
@@ -21,6 +21,8 @@ const configMutations = {
       const doc = { code, value };
 
       await Configs.createOrUpdateConfig(doc);
+
+      resetConfigsCache();
 
       const updatedConfig = await Configs.getConfig(code);
 
