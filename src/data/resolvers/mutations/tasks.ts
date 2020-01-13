@@ -23,11 +23,11 @@ const taskMutations = {
   /**
    * Creates a new task
    */
-  async tasksAdd(_root, doc: ITask, { user }: IContext) {
+  async tasksAdd(_root, doc: ITask, { user, docModifier }: IContext) {
     doc.watchedUserIds = [user._id];
 
     const extendedDoc = {
-      ...doc,
+      ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
     };

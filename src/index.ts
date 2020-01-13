@@ -179,11 +179,6 @@ app.post('/delete-file', async (req: any, res) => {
 
 // file upload
 app.post('/upload-file', async (req: any, res, next) => {
-  // require login
-  if (!req.user) {
-    return res.end('foribidden');
-  }
-
   if (req.query.kind === 'nylas') {
     debugExternalApi(`Pipeing request to ${INTEGRATIONS_API_DOMAIN}`);
 
@@ -210,7 +205,7 @@ app.post('/upload-file', async (req: any, res, next) => {
     const file = response.file || response.upload;
 
     // check file ====
-    const status = await checkFile(file);
+    const status = await checkFile(file, req.headers.source);
 
     if (status === 'ok') {
       try {
@@ -329,7 +324,7 @@ if (NODE_ENV === 'production') {
   (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach(sig => {
     process.on(sig, () => {
       // Stops the server from accepting new connections and finishes existing connections.
-      httpServer.close((error: Error) => {
+      httpServer.close(error => {
         if (error) {
           console.error(error.message);
           process.exit(1);

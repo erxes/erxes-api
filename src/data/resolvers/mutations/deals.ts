@@ -31,11 +31,12 @@ const dealMutations = {
   /**
    * Creates a new deal
    */
-  async dealsAdd(_root, doc: IDeal, { user }: IContext) {
+  async dealsAdd(_root, doc: IDeal, { user, docModifier }: IContext) {
+    doc.initialStageId = doc.stageId;
+    doc.watchedUserIds = [user._id];
+
     const extendedDoc = {
-      ...doc,
-      initialStageId: doc.stageId,
-      watchedUserIds: [user._id],
+      ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
     };

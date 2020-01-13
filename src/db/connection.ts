@@ -65,6 +65,7 @@ export const graphqlRequest = async (source: string = '', name: string = '', arg
 
   const finalContext: any = {};
 
+  finalContext.requestInfo = { secure: false };
   finalContext.dataSources = context.dataSources;
   finalContext.user = context.user || user;
   finalContext.res = context.res || res;

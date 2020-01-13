@@ -119,8 +119,10 @@ export const productDataSchema = new Schema(
   { _id: false },
 );
 
-export const dealSchema = new Schema({
-  ...commonItemFieldsSchema,
+export const dealSchema = schemaWrapper(
+  new Schema({
+    ...commonItemFieldsSchema,
 
-  productsData: field({ type: [productDataSchema], label: 'Products' }),
-});
+    productsData: field({ type: [productDataSchema], label: 'Products' }),
+  }),
+);
