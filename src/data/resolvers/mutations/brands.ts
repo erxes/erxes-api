@@ -105,6 +105,7 @@ const brandMutations = {
       {
         type: 'brand',
         object: brand,
+        newData: JSON.stringify({ emailConfig }),
         description: `${brand.name} email config has been changed`,
         extraDesc: JSON.stringify(extraDesc),
       },
