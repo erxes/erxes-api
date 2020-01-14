@@ -116,12 +116,12 @@ describe('Test deals mutations', () => {
     expect(response.stageId).toEqual(stage._id);
 
     // if assignedUserIds is not empty
-    const user = await userFactory();
-    args.assignedUserIds = [user._id];
+    const user1 = await userFactory();
+    args.assignedUserIds = [user1._id];
 
     response = await graphqlRequest(mutation, 'dealsEdit', args);
 
-    expect(response.assignedUserIds).toContain(user._id);
+    expect(response.assignedUserIds).toContain(user1._id);
   });
 
   test('Change deal', async () => {
