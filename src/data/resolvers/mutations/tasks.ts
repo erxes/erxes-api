@@ -6,9 +6,11 @@ import { IContext } from '../../types';
 import { checkUserIds, putCreateLog } from '../../utils';
 import {
   copyPipelineLabels,
+  createChecklists,
   createConformity,
   IBoardNotificationParams,
   itemsChange,
+  prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
 
@@ -156,6 +158,33 @@ const taskMutations = {
    */
   async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Tasks.watchTask(_id, isAdd, user._id);
+  },
+
+  async tasksCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+    const task = await Tasks.getTask(_id);
+
+    const doc = await prepareBoardItemDoc(_id, 'task', user._id);
+
+    const clone = await Tasks.createTask(doc);
+
+    const companies = await Tasks.getCompanies(task._id);
+    const customers = await Tasks.getCustomers(task._id);
+
+    await createConformity({
+      mainType: 'task',
+      mainTypeId: clone._id,
+      customerIds: customers.map(c => c._id),
+      companyIds: companies.map(c => c._id),
+    });
+
+    await createChecklists({
+      contentType: 'task',
+      contentTypeId: task._id,
+      targetContentId: clone._id,
+      user,
+    });
+
+    return clone;
   },
 };
 

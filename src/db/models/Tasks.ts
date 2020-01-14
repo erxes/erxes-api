@@ -1,7 +1,9 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs } from '.';
+import { ActivityLogs, Companies, Conformities, Customers } from '.';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from './definitions/boards';
+import { ICompanyDocument } from './definitions/companies';
+import { ICustomerDocument } from './definitions/customers';
 import { ITaskDocument, taskSchema } from './definitions/tasks';
 
 export interface ITaskModel extends Model<ITaskDocument> {
@@ -10,6 +12,8 @@ export interface ITaskModel extends Model<ITaskDocument> {
   updateTask(_id: string, doc: ITask): Promise<ITaskDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITaskDocument[]>;
   watchTask(_id: string, isAdd: boolean, userId: string): void;
+  getCustomers(_id: string): Promise<ICustomerDocument[]>;
+  getCompanies(_id: string): Promise<ICompanyDocument[]>;
 }
 
 export const loadTaskClass = () => {
@@ -80,6 +84,22 @@ export const loadTaskClass = () => {
      */
     public static async watchTask(_id: string, isAdd: boolean, userId: string) {
       return watchItem(Tasks, _id, isAdd, userId);
+    }
+
+    public static async getCompanies(_id: string) {
+      const conformities = await Conformities.find({ mainType: 'task', mainTypeId: _id, relType: 'company' });
+
+      const companyIds = conformities.map(c => c.relTypeId);
+
+      return Companies.find({ _id: { $in: companyIds } });
+    }
+
+    public static async getCustomers(_id: string) {
+      const conformities = await Conformities.find({ mainType: 'task', mainTypeId: _id, relType: 'customer' });
+
+      const customerIds = conformities.map(c => c.relTypeId);
+
+      return Customers.find({ _id: { $in: customerIds } });
     }
   }
 
