@@ -1,5 +1,10 @@
 import { Permissions, Users, UsersGroups } from '../../../db/models';
-import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
+import {
+  IPermission,
+  IPermissionEditParams,
+  IPermissionParams,
+  IUserGroup,
+} from '../../../db/models/definitions/permissions';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -48,6 +53,21 @@ const permissionMutations = {
     return result;
   },
 
+  async permissionsEdit(_root, params: IPermissionEditParams) {
+    const { _id, module, action, userId, groupId, allowed } = params;
+
+    const doc: IPermission = {
+      module,
+      allowed,
+      action,
+      requiredActions: [],
+      userId,
+      groupId,
+    };
+
+    return Permissions.updatePermission(_id, doc);
+  },
+
   /**
    * Remove permission
    * @param {[String]} ids
@@ -87,6 +107,17 @@ const permissionMutations = {
     resetPermissionsCache();
 
     return result;
+  },
+
+  async permissionsCopy(_root, { _id }: { _id: string }) {
+    const permission = await Permissions.getPermission(_id);
+
+    return Permissions.create({
+      module: permission.module,
+      requiredActions: permission.requiredActions,
+      allowed: permission.allowed,
+      action: permission.action,
+    });
   },
 };
 
@@ -165,6 +196,29 @@ const usersGroupMutations = {
     resetPermissionsCache();
 
     return result;
+  },
+
+  async usersGroupsCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+    const group = await UsersGroups.getGroup(_id);
+
+    const doc = {
+      name: `${group.name}-copied`,
+      description: `${group.description}-copied`,
+    };
+
+    const clone = await UsersGroups.createGroup(doc);
+
+    await putCreateLog(
+      {
+        type: 'userGroup',
+        object: clone,
+        newData: JSON.stringify(doc),
+        description: `"${group.name}" has been copied`,
+      },
+      user,
+    );
+
+    return clone;
   },
 };
 

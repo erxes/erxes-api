@@ -1,6 +1,7 @@
 import { registerModule } from '../data/permissions/utils';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
+import { IPermission } from '../db/models/definitions/permissions';
 
 import './setup.ts';
 
@@ -45,20 +46,10 @@ describe('Test permissions model', () => {
     await UsersGroups.deleteMany({});
   });
 
-  test('Create permission (Error: Actions not found)', async () => {
-    expect.assertions(1);
-
-    try {
-      await Permissions.createPermission({});
-    } catch (e) {
-      expect(e.message).toEqual('Actions not found');
-    }
-  });
-
   test('Create permission (Error: Invalid data)', async () => {
     expect.assertions(1);
     try {
-      await Permissions.createPermission({ userIds: [_user._id], ...doc });
+      await Permissions.createPermission({ userIds: [_user._id], ...doc, allowed: true });
     } catch (e) {
       expect(e.message).toEqual('Invalid data');
     }
@@ -68,6 +59,7 @@ describe('Test permissions model', () => {
     const permission = await Permissions.createPermission({
       ...doc,
       actions: ['action', 'action1', 'action2', 'action3'],
+      allowed: true,
     });
 
     expect(permission.length).toEqual(0);
@@ -97,6 +89,68 @@ describe('Test permissions model', () => {
     } catch (e) {
       expect(e.message).toEqual(`Permission not found`);
     }
+  });
+
+  test('Test getPermission()', async () => {
+    expect.assertions(1);
+
+    try {
+      await Permissions.getPermission('not-found');
+    } catch (e) {
+      expect(e.message).toBe('Permission not found');
+    }
+  });
+
+  test('Test updatePermission() without userId or groupId', async () => {
+    const updateDoc: IPermission = {
+      userId: '',
+      groupId: '',
+      module: 'mod',
+      action: 'action',
+      allowed: true,
+      requiredActions: [],
+    };
+
+    try {
+      await Permissions.updatePermission(_permission._id, updateDoc);
+    } catch (e) {
+      expect(e.message).toBe('Either a user or group is required');
+    }
+  });
+
+  test('Test updatePermission() with wrong action', async () => {
+    const updateDoc: IPermission = {
+      userId: _user._id,
+      module: 'mod',
+      action: 'randomAction',
+      allowed: false,
+      requiredActions: [],
+    };
+
+    try {
+      await Permissions.updatePermission(_permission._id, updateDoc);
+    } catch (e) {
+      expect(e.message).toBe('Invalid action');
+    }
+  });
+
+  test('Test updatePermission() with *All action that has use[] field', async () => {
+    const updateDoc: IPermission = {
+      userId: _user._id,
+      module: 'brands',
+      action: 'brandsAll',
+      allowed: true,
+      requiredActions: [],
+    };
+
+    const updated = await Permissions.updatePermission(_permission._id, updateDoc);
+
+    expect.assertions(4);
+
+    expect(updated.userId).toBe(updateDoc.userId);
+    expect(updated.module).toBe(updateDoc.module);
+    expect(updated.action).toBe(updateDoc.action);
+    expect(updated.allowed).toBe(updateDoc.allowed);
   });
 
   test('Remove permission', async () => {

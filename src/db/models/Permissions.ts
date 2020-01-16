@@ -14,6 +14,8 @@ import {
 export interface IPermissionModel extends Model<IPermissionDocument> {
   createPermission(doc: IPermissionParams): Promise<IPermissionDocument[]>;
   removePermission(ids: string[]): Promise<IPermissionDocument>;
+  getPermission(id: string): Promise<IPermissionDocument>;
+  updatePermission(id: string, doc: IPermission): Promise<IPermissionDocument>;
 }
 
 export interface IUserGroupModel extends Model<IUserGroupDocument> {
@@ -32,10 +34,6 @@ export const permissionLoadClass = () => {
      */
     public static async createPermission(doc: IPermissionParams) {
       const permissions: IPermissionDocument[] = [];
-
-      if (!doc.actions) {
-        throw new Error('Actions not found');
-      }
 
       for (const action of doc.actions) {
         if (!actionsMap[action]) {
@@ -104,6 +102,49 @@ export const permissionLoadClass = () => {
       }
 
       return Permissions.deleteMany({ _id: { $in: ids } });
+    }
+
+    public static async getPermission(id: string) {
+      const permission = await Permissions.findOne({ _id: id });
+
+      if (!permission) {
+        throw new Error('Permission not found');
+      }
+
+      return permission;
+    }
+
+    public static async updatePermission(id: string, doc: IPermission) {
+      const { allowed, module, action, userId, groupId } = doc;
+
+      await Permissions.getPermission(id);
+
+      if (!(userId || groupId)) {
+        throw new Error('Either a user or group is required');
+      }
+
+      if (!actionsMap[action]) {
+        throw new Error('Invalid action');
+      }
+
+      const actionObj: IActionsMap = actionsMap[action];
+
+      const entry: IPermission = {
+        action,
+        module,
+        allowed,
+        requiredActions: [],
+        userId: userId || '',
+        groupId: groupId || '',
+      };
+
+      if (actionObj.use) {
+        entry.requiredActions = actionObj.use;
+      }
+
+      await Permissions.update({ _id: id }, { $set: entry });
+
+      return Permissions.findOne({ _id: id });
     }
   }
 
