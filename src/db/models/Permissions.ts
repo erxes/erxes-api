@@ -172,6 +172,8 @@ export const userGroupLoadClass = () => {
 
       await Users.updateMany({ groupIds: { $in: [_id] } }, { $pull: { groupIds: { $in: [_id] } } });
 
+      await Permissions.remove({ groupId: groupObj._id });
+
       return groupObj.remove();
     }
 
