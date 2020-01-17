@@ -18,10 +18,6 @@ export interface IPermissionParams {
   allowed: boolean;
 }
 
-export interface IPermissionEditParams extends IPermission {
-  _id: string;
-}
-
 export interface IPermissionDocument extends IPermission, Document {
   _id: string;
 }

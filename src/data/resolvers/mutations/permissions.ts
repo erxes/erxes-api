@@ -1,10 +1,5 @@
 import { Permissions, Users, UsersGroups } from '../../../db/models';
-import {
-  IPermission,
-  IPermissionEditParams,
-  IPermissionParams,
-  IUserGroup,
-} from '../../../db/models/definitions/permissions';
+import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -53,21 +48,6 @@ const permissionMutations = {
     return result;
   },
 
-  async permissionsEdit(_root, params: IPermissionEditParams) {
-    const { _id, module, action, userId, groupId, allowed } = params;
-
-    const doc: IPermission = {
-      module,
-      allowed,
-      action,
-      requiredActions: [],
-      userId,
-      groupId,
-    };
-
-    return Permissions.updatePermission(_id, doc);
-  },
-
   /**
    * Remove permission
    * @param {[String]} ids
@@ -107,17 +87,6 @@ const permissionMutations = {
     resetPermissionsCache();
 
     return result;
-  },
-
-  async permissionsCopy(_root, { _id }: { _id: string }) {
-    const permission = await Permissions.getPermission(_id);
-
-    return Permissions.create({
-      module: permission.module,
-      requiredActions: permission.requiredActions,
-      allowed: permission.allowed,
-      action: permission.action,
-    });
   },
 };
 
@@ -198,21 +167,16 @@ const usersGroupMutations = {
     return result;
   },
 
-  async usersGroupsCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+  async usersGroupsCopy(_root, { _id, memberIds }: { _id: string; memberIds: string[] }, { user }: IContext) {
     const group = await UsersGroups.getGroup(_id);
 
-    const doc = {
-      name: `${group.name}-copied`,
-      description: `${group.description}-copied`,
-    };
-
-    const clone = await UsersGroups.createGroup(doc);
+    const clone = await UsersGroups.copyGroup(group._id, memberIds);
 
     await putCreateLog(
       {
         type: 'userGroup',
         object: clone,
-        newData: JSON.stringify(doc),
+        newData: JSON.stringify({ name: clone.name, description: clone.description }),
         description: `"${group.name}" has been copied`,
       },
       user,

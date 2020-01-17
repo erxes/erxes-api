@@ -15,7 +15,6 @@ export interface IPermissionModel extends Model<IPermissionDocument> {
   createPermission(doc: IPermissionParams): Promise<IPermissionDocument[]>;
   removePermission(ids: string[]): Promise<IPermissionDocument>;
   getPermission(id: string): Promise<IPermissionDocument>;
-  updatePermission(id: string, doc: IPermission): Promise<IPermissionDocument>;
 }
 
 export interface IUserGroupModel extends Model<IUserGroupDocument> {
@@ -23,6 +22,7 @@ export interface IUserGroupModel extends Model<IUserGroupDocument> {
   createGroup(doc: IUserGroup, memberIds?: string[]): Promise<IUserGroupDocument>;
   updateGroup(_id: string, doc: IUserGroup, memberIds?: string[]): Promise<IUserGroupDocument>;
   removeGroup(_id: string): Promise<IUserGroupDocument>;
+  copyGroup(sourceGroupId: string, memberIds?: string[]): Promise<IUserGroupDocument>;
 }
 
 export const permissionLoadClass = () => {
@@ -113,39 +113,6 @@ export const permissionLoadClass = () => {
 
       return permission;
     }
-
-    public static async updatePermission(id: string, doc: IPermission) {
-      const { allowed, module, action, userId, groupId } = doc;
-
-      await Permissions.getPermission(id);
-
-      if (!(userId || groupId)) {
-        throw new Error('Either a user or group is required');
-      }
-
-      if (!actionsMap[action]) {
-        throw new Error('Invalid action');
-      }
-
-      const actionObj: IActionsMap = actionsMap[action];
-
-      const entry: IPermission = {
-        action,
-        module,
-        allowed,
-        requiredActions: [],
-        userId: userId || '',
-        groupId: groupId || '',
-      };
-
-      if (actionObj.use) {
-        entry.requiredActions = actionObj.use;
-      }
-
-      await Permissions.update({ _id: id }, { $set: entry });
-
-      return Permissions.findOne({ _id: id });
-    }
   }
 
   permissionSchema.loadClass(Permission);
@@ -206,6 +173,32 @@ export const userGroupLoadClass = () => {
       await Users.updateMany({ groupIds: { $in: [_id] } }, { $pull: { groupIds: { $in: [_id] } } });
 
       return groupObj.remove();
+    }
+
+    public static async copyGroup(sourceGroupId: string, memberIds?: string[]) {
+      const sourceGroup = await UsersGroups.getGroup(sourceGroupId);
+
+      const clone = await UsersGroups.createGroup(
+        {
+          name: `${sourceGroup.name}-copied`,
+          description: `${sourceGroup.description}-copied`,
+        },
+        memberIds,
+      );
+
+      const permissions = await Permissions.find({ groupId: sourceGroupId });
+
+      for (const perm of permissions) {
+        await Permissions.create({
+          groupId: clone._id,
+          action: perm.action,
+          module: perm.module,
+          requiredActions: perm.requiredActions,
+          allowed: perm.allowed,
+        });
+      }
+
+      return clone;
     }
   }
 

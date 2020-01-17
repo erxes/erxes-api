@@ -1,4 +1,3 @@
-// import { actionsMap } from '../data/permissions/utils';
 import { permissionMutations } from '../data/resolvers/mutations/permissions';
 import { graphqlRequest } from '../db/connection';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
@@ -130,68 +129,6 @@ describe('Test permissions mutations', () => {
 
     expect(await Permissions.find({ _id: userPermission._id })).toEqual([]);
     expect(await Permissions.find({ _id: groupPermission._id })).toEqual([]);
-  });
-
-  test('Test permissionsCopy()', async () => {
-    const mutation = `
-      mutation permissionsCopy($_id: String!) {
-        permissionsCopy(_id: $_id) {
-          ${permissionFields}
-        }
-      }
-    `;
-
-    const permission = await permissionFactory();
-
-    const clone = await graphqlRequest(mutation, 'permissionsCopy', { _id: permission._id }, context);
-
-    expect(clone.requiredActions.length).toBe(permission.requiredActions.length);
-    expect(clone.module).toBe(permission.module);
-    expect(clone.action).toBe(permission.action);
-    expect(clone.allowed).toBe(permission.allowed);
-  });
-
-  test('Test permissionsEdit()', async () => {
-    const mutation = `
-      mutation permissionsEdit(
-        $_id: String!,
-        $module: String!,
-        $action: String!,
-        $userId: String,
-        $groupId: String,
-        $allowed: Boolean
-      ) {
-        permissionsEdit(
-          _id: $_id,
-          module: $module,
-          action: $action,
-          userId: $userId,
-          groupId: $groupId,
-          allowed: $allowed
-        ) {
-          ${permissionFields}
-        }
-      }
-    `;
-
-    const user = await userFactory();
-
-    const args = {
-      _id: userPermission._id,
-      module: 'brands',
-      action: 'manageBrands',
-      userId: user._id,
-      groupId: '',
-      allowed: false,
-    };
-
-    const result = await graphqlRequest(mutation, 'permissionsEdit', args);
-
-    expect(result.allowed).toBe(args.allowed);
-    expect(result.module).toBe(args.module);
-    expect(result.action).toBe(args.action);
-    expect(result.userId).toBe(args.userId);
-    expect(result.groupId).toBe(args.groupId);
   });
 
   test('Create group', async () => {

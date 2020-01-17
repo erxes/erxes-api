@@ -1,7 +1,6 @@
 import { registerModule } from '../data/permissions/utils';
 import { permissionFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Permissions, Users, UsersGroups } from '../db/models';
-import { IPermission } from '../db/models/definitions/permissions';
 
 import './setup.ts';
 
@@ -91,7 +90,7 @@ describe('Test permissions model', () => {
     }
   });
 
-  test('Test getPermission()', async () => {
+  test('Test getPermission() with fake id', async () => {
     expect.assertions(1);
 
     try {
@@ -101,56 +100,10 @@ describe('Test permissions model', () => {
     }
   });
 
-  test('Test updatePermission() without userId or groupId', async () => {
-    const updateDoc: IPermission = {
-      userId: '',
-      groupId: '',
-      module: 'mod',
-      action: 'action',
-      allowed: true,
-      requiredActions: [],
-    };
+  test('Test getPermission() with real id', async () => {
+    const perm = await Permissions.getPermission(_permission._id);
 
-    try {
-      await Permissions.updatePermission(_permission._id, updateDoc);
-    } catch (e) {
-      expect(e.message).toBe('Either a user or group is required');
-    }
-  });
-
-  test('Test updatePermission() with wrong action', async () => {
-    const updateDoc: IPermission = {
-      userId: _user._id,
-      module: 'mod',
-      action: 'randomAction',
-      allowed: false,
-      requiredActions: [],
-    };
-
-    try {
-      await Permissions.updatePermission(_permission._id, updateDoc);
-    } catch (e) {
-      expect(e.message).toBe('Invalid action');
-    }
-  });
-
-  test('Test updatePermission() with *All action that has use[] field', async () => {
-    const updateDoc: IPermission = {
-      userId: _user._id,
-      module: 'brands',
-      action: 'brandsAll',
-      allowed: true,
-      requiredActions: [],
-    };
-
-    const updated = await Permissions.updatePermission(_permission._id, updateDoc);
-
-    expect.assertions(4);
-
-    expect(updated.userId).toBe(updateDoc.userId);
-    expect(updated.module).toBe(updateDoc.module);
-    expect(updated.action).toBe(updateDoc.action);
-    expect(updated.allowed).toBe(updateDoc.allowed);
+    expect(perm._id).toBe(_permission._id);
   });
 
   test('Remove permission', async () => {
@@ -229,5 +182,27 @@ describe('Test permissions model', () => {
     } catch (e) {
       expect(e.message).toBe('Group not found with id groupId');
     }
+  });
+
+  test('Test copyGroup()', async () => {
+    const user1 = await userFactory({});
+    const user2 = await userFactory({});
+    const group = await UsersGroups.createGroup(
+      {
+        name: 'groupName',
+        description: 'groupDescription',
+      },
+      [user1._id, user2._id],
+    );
+
+    await permissionFactory({ groupId: group._id });
+    await permissionFactory({ groupId: group._id });
+
+    const clone = await UsersGroups.copyGroup(group._id, [user1._id, user2._id]);
+    const clonedPermissions = await Permissions.find({ groupId: clone._id });
+
+    expect(clone.name).toBe(`${group.name}-copied`);
+    expect(clone.description).toBe(`${group.description}-copied`);
+    expect(clonedPermissions.length).toBe(2);
   });
 });
