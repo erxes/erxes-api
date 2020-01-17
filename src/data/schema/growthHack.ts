@@ -30,6 +30,7 @@ const commonQueryFields = `
   closeDateType: String
   hackStage: [String]
   priority: [String]
+  labelIds: [String]
 `;
 
 export const queries = `
@@ -68,7 +69,7 @@ const commonParams = `
 `;
 
 export const mutations = `
-  growthHacksAdd(${commonParams}): GrowthHack
+  growthHacksAdd(${commonParams}, labelIds: [String]): GrowthHack
   growthHacksEdit(_id: String!, ${commonParams}): GrowthHack
   growthHacksChange( _id: String!, destinationStageId: String!): GrowthHack
   growthHacksUpdateOrder(stageId: String!, orders: [OrderItem]): [GrowthHack]
