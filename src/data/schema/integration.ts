@@ -170,6 +170,7 @@ export const mutations = `
     kind: String
     references: String
     attachments: [JSON]
+    isDraft: Boolean
   ): JSON
 
   integrationAddImapAccount(

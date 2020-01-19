@@ -225,7 +225,7 @@ const integrationMutations = {
    * Send mail
    */
   async integrationSendMail(_root, args: any, { dataSources, user }: IContext) {
-    const { erxesApiId, ...doc } = args;
+    const { erxesApiId, isDraft, ...doc } = args;
 
     let kind = doc.kind;
 
@@ -233,11 +233,19 @@ const integrationMutations = {
       kind = 'nylas';
     }
 
+    const params = {
+      erxesApiId,
+      data: JSON.stringify(doc),
+    };
+
+    const { IntegrationsAPI } = dataSources;
+
     try {
-      await dataSources.IntegrationsAPI.sendEmail(kind, {
-        erxesApiId,
-        data: JSON.stringify(doc),
-      });
+      if (isDraft) {
+        await IntegrationsAPI.draftEmail(kind, params);
+      } else {
+        await IntegrationsAPI.sendEmail(kind, params);
+      }
     } catch (e) {
       debugExternalApi(e);
       throw new Error(e);

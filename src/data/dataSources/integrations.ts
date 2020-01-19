@@ -47,6 +47,10 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post(`/${kind}/send`, params);
   }
 
+  public async draftEmail(kind, params) {
+    return this.post(`/${kind}/draft`, params);
+  }
+
   public async fetchApi(path, params) {
     return this.get(path, params);
   }
