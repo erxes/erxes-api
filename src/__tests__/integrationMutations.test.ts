@@ -491,7 +491,7 @@ describe('mutations', () => {
 
     const customer = await customerFactory({ primaryEmail: args.to[0] });
 
-    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'sendEmail');
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'sendOrDraftEmail');
 
     spy.mockImplementation(() => Promise.resolve());
 

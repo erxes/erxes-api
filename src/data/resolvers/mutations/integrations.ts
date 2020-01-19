@@ -233,19 +233,11 @@ const integrationMutations = {
       kind = 'nylas';
     }
 
-    const params = {
-      erxesApiId,
-      data: JSON.stringify(doc),
-    };
-
-    const { IntegrationsAPI } = dataSources;
-
     try {
-      if (isDraft) {
-        await IntegrationsAPI.draftEmail(kind, params);
-      } else {
-        await IntegrationsAPI.sendEmail(kind, params);
-      }
+      await dataSources.IntegrationsAPI.sendOrDraftEmail(kind, isDraft ? 'draft' : 'send', {
+        erxesApiId,
+        data: JSON.stringify(doc),
+      });
     } catch (e) {
       debugExternalApi(e);
       throw new Error(e);

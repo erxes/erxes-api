@@ -43,12 +43,8 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post('/chatfuel/reply', params);
   }
 
-  public async sendEmail(kind, params) {
-    return this.post(`/${kind}/send`, params);
-  }
-
-  public async draftEmail(kind, params) {
-    return this.post(`/${kind}/draft`, params);
+  public async sendOrDraftEmail(kind, type, params) {
+    return this.post(`/${kind}/${type}`, params);
   }
 
   public async fetchApi(path, params) {
