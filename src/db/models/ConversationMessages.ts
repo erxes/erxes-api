@@ -1,5 +1,4 @@
 import { Model, model } from 'mongoose';
-import * as strip from 'strip';
 import { Conversations } from '.';
 import { IMessage, IMessageDocument, messageSchema } from './definitions/conversationMessages';
 
@@ -84,7 +83,7 @@ export const loadClass = () => {
       doc.attachments = attachments;
 
       // if there is no attachments and no content then throw content required error
-      if (attachments.length === 0 && !strip(content)) {
+      if (attachments.length === 0 && !content) {
         throw new Error('Content is required');
       }
 
