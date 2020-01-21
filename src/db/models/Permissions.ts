@@ -180,9 +180,11 @@ export const userGroupLoadClass = () => {
     public static async copyGroup(sourceGroupId: string, memberIds?: string[]) {
       const sourceGroup = await UsersGroups.getGroup(sourceGroupId);
 
+      const nameCount = await UsersGroups.countDocuments({ name: new RegExp(`${sourceGroup.name}`, 'i') });
+
       const clone = await UsersGroups.createGroup(
         {
-          name: `${sourceGroup.name}-copied`,
+          name: `${sourceGroup.name}-copied-${nameCount}`,
           description: `${sourceGroup.description}-copied`,
         },
         memberIds,

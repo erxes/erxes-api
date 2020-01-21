@@ -200,8 +200,9 @@ describe('Test permissions model', () => {
 
     const clone = await UsersGroups.copyGroup(group._id, [user1._id, user2._id]);
     const clonedPermissions = await Permissions.find({ groupId: clone._id });
+    const nameCount = await UsersGroups.countDocuments({ name: new RegExp(`${group.name}`, 'i') });
 
-    expect(clone.name).toBe(`${group.name}-copied`);
+    expect(clone.name).toBe(`${group.name}-copied-${nameCount - 1}`);
     expect(clone.description).toBe(`${group.description}-copied`);
     expect(clonedPermissions.length).toBe(2);
   });
