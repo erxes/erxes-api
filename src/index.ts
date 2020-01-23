@@ -24,6 +24,7 @@ import {
 } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
+import { saveEvent } from './elasticsearch';
 import './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
@@ -78,6 +79,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.get('/script-manager', widgetsMiddleware);
+
+// receive events
+app.post('/receive-event', async (req, res) => {
+  saveEvent(req.body);
+
+  res.end('received');
+});
 
 app.use(userMiddleware);
 

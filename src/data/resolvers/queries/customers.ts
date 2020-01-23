@@ -3,7 +3,7 @@ import { ACTIVITY_CONTENT_TYPES, KIND_CHOICES, TAG_TYPES } from '../../../db/mod
 import { ISegment } from '../../../db/models/definitions/segments';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
 import { Builder as BuildQuery, IListArgs, sortBuilder } from '../../modules/coc/customers';
-import QueryBuilder from '../../modules/segments/queryBuilder';
+import QueryBuilder, { countBySegments } from '../../modules/segments/queryBuilder';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
@@ -22,7 +22,7 @@ const count = (query, mainQuery) => {
   return Customers.find(findQuery).countDocuments();
 };
 
-const countBySegment = async (qb: any, mainQuery: any): Promise<ICountBy> => {
+const countBySegment = async (): Promise<ICountBy> => {
   const counts: ICountBy = {};
 
   // Count customers by segments
@@ -32,16 +32,7 @@ const countBySegment = async (qb: any, mainQuery: any): Promise<ICountBy> => {
 
   // Count customers by segment
   for (const s of segments) {
-    try {
-      counts[s._id] = await count(await qb.segmentFilter(s._id), mainQuery);
-    } catch (e) {
-      // catch mongo error
-      if (e.name === 'CastError') {
-        counts[s._id] = 0;
-      } else {
-        throw new Error(e);
-      }
-    }
+    counts[s._id] = await countBySegments(s);
   }
 
   return counts;
@@ -223,7 +214,7 @@ const customerQueries = {
 
     switch (only) {
       case 'bySegment':
-        counts.bySegment = await countBySegment(qb, mainQuery);
+        counts.bySegment = await countBySegment();
         break;
 
       case 'byBrand':
