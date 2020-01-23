@@ -6,7 +6,7 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { send } from './engageUtils';
-import { gatherBrandNames, gatherSegmentNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherEngageFieldNames, LogDesc } from './logUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
   _id: string;
@@ -30,38 +30,7 @@ const engageMutations = {
 
     await send(engageMessage);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (doc.segmentIds && doc.segmentIds.length > 0) {
-      extraDesc = await gatherSegmentNames({
-        idFields: doc.segmentIds,
-        foreignKey: 'segmentIds',
-      });
-    }
-
-    if (doc.brandIds && doc.brandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: doc.brandIds,
-        foreignKey: 'brandIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.fromUserId) {
-      extraDesc = await gatherUsernames({
-        idFields: [doc.fromUserId],
-        foreignKey: 'fromUserId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.messenger && doc.messenger.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [doc.messenger.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherEngageFieldNames(doc);
 
     await putCreateLog(
       {
@@ -96,95 +65,9 @@ const engageMutations = {
       throw new Error(e);
     }
 
-    let extraDesc: LogDesc[] = [];
+    let extraDesc: LogDesc[] = await gatherEngageFieldNames(engageMessage);
 
-    // gather unique segment names
-    let segmentIds: string[] = engageMessage.segmentIds || [];
-
-    if (doc.segmentIds && doc.segmentIds.length > 0) {
-      segmentIds = segmentIds.concat(doc.segmentIds);
-    }
-
-    if (segmentIds.length > 0) {
-      segmentIds = _.uniq(segmentIds);
-
-      extraDesc = await gatherSegmentNames({
-        idFields: segmentIds,
-        foreignKey: 'segmentIds',
-      });
-    }
-
-    // gather unique brand names
-    let brandIds: string[] = engageMessage.brandIds || [];
-
-    if (doc.brandIds && doc.brandIds.length > 0) {
-      brandIds = brandIds.concat(doc.brandIds);
-    }
-
-    if (brandIds.length > 0) {
-      brandIds = _.uniq(brandIds);
-
-      extraDesc = await gatherBrandNames({
-        idFields: brandIds,
-        foreignKey: 'brandIds',
-        prevList: extraDesc,
-      });
-    }
-
-    let tagIds: string[] = engageMessage.tagIds || [];
-
-    if (doc.tagIds && doc.tagIds.length > 0) {
-      tagIds = tagIds.concat(doc.tagIds);
-    }
-
-    if (tagIds.length > 0) {
-      tagIds = _.uniq(tagIds);
-
-      extraDesc = await gatherTagNames({
-        idFields: tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    const userIds: string[] = [];
-
-    if (engageMessage.fromUserId) {
-      userIds.push(engageMessage.fromUserId);
-    }
-
-    if (doc.fromUserId && doc.fromUserId !== engageMessage.fromUserId) {
-      userIds.push(doc.fromUserId);
-    }
-
-    if (userIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: userIds,
-        foreignKey: 'fromUserId',
-        prevList: extraDesc,
-      });
-    }
-
-    // gather unique messenger brands
-    let msngrBrands: string[] = [];
-
-    if (engageMessage.messenger && engageMessage.messenger.brandId) {
-      msngrBrands.push(engageMessage.messenger.brandId);
-    }
-
-    if (doc.messenger && doc.messenger.brandId) {
-      msngrBrands.push(doc.messenger.brandId);
-    }
-
-    if (msngrBrands.length > 0) {
-      msngrBrands = _.uniq(msngrBrands);
-
-      extraDesc = await gatherBrandNames({
-        idFields: msngrBrands,
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherEngageFieldNames(doc, extraDesc);
 
     await putUpdateLog(
       {
@@ -214,46 +97,7 @@ const engageMutations = {
 
     const removed = await EngageMessages.removeEngageMessage(_id);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (engageMessage.segmentIds && engageMessage.segmentIds.length > 0) {
-      extraDesc = await gatherSegmentNames({
-        idFields: engageMessage.segmentIds,
-        foreignKey: 'segmentIds',
-      });
-    }
-
-    if (engageMessage.brandIds && engageMessage.brandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: engageMessage.brandIds,
-        foreignKey: 'brandIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (engageMessage.tagIds && engageMessage.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: engageMessage.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (engageMessage.fromUserId) {
-      extraDesc = await gatherUsernames({
-        idFields: [engageMessage.fromUserId],
-        foreignKey: 'fromUserId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (engageMessage.messenger && engageMessage.messenger.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [engageMessage.messenger.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherEngageFieldNames(engageMessage);
 
     await putDeleteLog(
       {

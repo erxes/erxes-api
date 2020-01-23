@@ -7,6 +7,7 @@ import {
   growthHackFactory,
   internalNoteFactory,
   notificationConfigurationFactory,
+  productFactory,
   taskFactory,
   ticketFactory,
   userFactory,
@@ -85,7 +86,7 @@ describe('InternalNotes mutations', () => {
     await notificationConfigurationFactory({ isAllowed: true, user: _user, notifType: NOTIFICATION_TYPES.DEAL_EDIT });
 
     const args: any = {
-      contentType: 'deal',
+      contentType: MODULE_NAMES.DEAL,
       contentTypeId: deal._id,
       content: `@${mentionedUser.details.fullName}`,
       mentionedUserIds: mentionedUser._id,
@@ -108,7 +109,7 @@ describe('InternalNotes mutations', () => {
     // task
     const task = await taskFactory();
 
-    args.contentType = 'task';
+    args.contentType = MODULE_NAMES.TASK;
     args.contentTypeId = task._id;
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
@@ -118,7 +119,7 @@ describe('InternalNotes mutations', () => {
     // ticket
     const ticket = await ticketFactory();
 
-    args.contentType = 'ticket';
+    args.contentType = MODULE_NAMES.TICKET;
     args.contentTypeId = ticket._id;
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
@@ -128,7 +129,7 @@ describe('InternalNotes mutations', () => {
     // company
     const company = await companyFactory();
 
-    args.contentType = 'company';
+    args.contentType = MODULE_NAMES.COMPANY;
     args.contentTypeId = company._id;
     args.mentionedUserIds = undefined;
 
@@ -139,7 +140,7 @@ describe('InternalNotes mutations', () => {
     // growthHack
     const hack = await growthHackFactory();
 
-    args.contentType = 'growthHack';
+    args.contentType = MODULE_NAMES.GROWTH_HACK;
     args.contentTypeId = hack._id;
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
@@ -149,8 +150,18 @@ describe('InternalNotes mutations', () => {
     // user
     const user = await userFactory();
 
-    args.contentType = 'user';
+    args.contentType = MODULE_NAMES.USER;
     args.contentTypeId = user._id;
+
+    internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
+
+    checkContentType(internalNote, args);
+
+    // product
+    const product = await productFactory();
+
+    args.contentType = MODULE_NAMES.PRODUCT;
+    args.contentTypeId = product._id;
 
     internalNote = await graphqlRequest(addMutation, 'internalNotesAdd', args, context);
 
@@ -161,7 +172,7 @@ describe('InternalNotes mutations', () => {
     const customer = await customerFactory({});
 
     const args: any = {
-      contentType: 'customer',
+      contentType: MODULE_NAMES.CUSTOMER,
       contentTypeId: customer._id,
       content: `@${_user.details.fullName}`,
     };
@@ -178,7 +189,7 @@ describe('InternalNotes mutations', () => {
 
   test('Edit internal note', async () => {
     const customer = await customerFactory();
-    const note = await internalNoteFactory({ contentType: 'customer', contentTypeId: customer._id });
+    const note = await internalNoteFactory({ contentType: MODULE_NAMES.CUSTOMER, contentTypeId: customer._id });
 
     const { _id, content } = note;
     const args = { _id, content };
@@ -211,6 +222,7 @@ describe('InternalNotes mutations', () => {
     const task = await taskFactory();
     const ticket = await ticketFactory();
     const hack = await growthHackFactory();
+    const product = await productFactory();
 
     const note1 = await internalNoteFactory({ contentType: MODULE_NAMES.DEAL, contentTypeId: deal._id });
     const note2 = await internalNoteFactory({ contentType: MODULE_NAMES.COMPANY, contentTypeId: company._id });
@@ -218,6 +230,7 @@ describe('InternalNotes mutations', () => {
     const note4 = await internalNoteFactory({ contentType: MODULE_NAMES.TICKET, contentTypeId: ticket._id });
     const note5 = await internalNoteFactory({ contentType: MODULE_NAMES.GROWTH_HACK, contentTypeId: hack._id });
     const note6 = await internalNoteFactory({ contentType: MODULE_NAMES.USER, contentTypeId: _user._id });
+    const note7 = await internalNoteFactory({ contentType: MODULE_NAMES.PRODUCT, contentTypeId: product._id });
 
     const mutation = `
       mutation internalNotesRemove($_id: String!) {
@@ -233,6 +246,7 @@ describe('InternalNotes mutations', () => {
     await graphqlRequest(mutation, 'internalNotesRemove', { _id: note4._id }, context);
     await graphqlRequest(mutation, 'internalNotesRemove', { _id: note5._id }, context);
     await graphqlRequest(mutation, 'internalNotesRemove', { _id: note6._id }, context);
+    await graphqlRequest(mutation, 'internalNotesRemove', { _id: note7._id }, context);
 
     expect(await InternalNotes.findOne({ _id: note1._id })).toBe(null);
     expect(await InternalNotes.findOne({ _id: note2._id })).toBe(null);
@@ -240,5 +254,6 @@ describe('InternalNotes mutations', () => {
     expect(await InternalNotes.findOne({ _id: note4._id })).toBe(null);
     expect(await InternalNotes.findOne({ _id: note5._id })).toBe(null);
     expect(await InternalNotes.findOne({ _id: note6._id })).toBe(null);
+    expect(await InternalNotes.findOne({ _id: note7._id })).toBe(null);
   });
 });

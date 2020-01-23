@@ -13,7 +13,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
-import { gatherLabelNames, gatherStageNames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
+import { gatherBoardItemFieldNames, gatherStageNames, LogDesc } from './logUtils';
 
 interface ITasksEdit extends ITask {
   _id: string;
@@ -112,35 +112,9 @@ const taskMutations = {
 
     await sendNotifications(notificationDoc);
 
-    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
+    let extraDesc: LogDesc[] = await gatherBoardItemFieldNames(oldTask);
 
-    extraDesc = await gatherUsernamesOfBoardItem(oldTask, updatedTask);
-
-    // new labels are set by different mutation,
-    // so only the saved label names are necessary
-    if (oldTask.labelIds && oldTask.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: oldTask.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (oldTask.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [oldTask.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.stageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [doc.stageId],
-        foreignKey: 'stageId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherBoardItemFieldNames(updatedTask, extraDesc);
 
     await putUpdateLog(
       {
@@ -212,31 +186,9 @@ const taskMutations = {
     await Checklists.removeChecklists(MODULE_NAMES.TASK, task._id);
     await ActivityLogs.removeActivityLog(task._id);
 
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(task);
+    const extraDesc: LogDesc[] = await gatherBoardItemFieldNames(task);
 
     const removed = await task.remove();
-
-    if (task.labelIds && task.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: task.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (task.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [task.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    extraDesc = await gatherStageNames({
-      idFields: [task.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
 
     await putDeleteLog(
       {

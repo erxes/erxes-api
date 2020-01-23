@@ -5,6 +5,7 @@ import {
   GrowthHacks,
   InternalNotes,
   Pipelines,
+  Products,
   Stages,
   Tasks,
   Tickets,
@@ -43,7 +44,7 @@ const sendNotificationOfItems = async (
   utils.sendNotification(notifDocItems);
 };
 
-const findContentItemName = async (contentType: string, contentTypeId: string) => {
+const findContentItemName = async (contentType: string, contentTypeId: string): Promise<string> => {
   let name: string = '';
 
   if (contentType === MODULE_NAMES.DEAL) {
@@ -99,6 +100,14 @@ const findContentItemName = async (contentType: string, contentTypeId: string) =
 
     if (user) {
       name = user.username || user.email || '';
+    }
+  }
+
+  if (contentType === MODULE_NAMES.PRODUCT) {
+    const product = await Products.getProduct({ _id: contentTypeId });
+
+    if (product) {
+      name = product.name;
     }
   }
 
@@ -213,6 +222,14 @@ const internalNoteMutations = {
       notifDoc.content = `${usr.username || usr.email}`;
 
       extraDesc.push({ contentTypeId, name: notifDoc.content });
+    }
+
+    if (contentType === MODULE_NAMES.PRODUCT) {
+      const product = await Products.getProduct({ _id: contentTypeId });
+
+      notifDoc.content = product.name;
+
+      extraDesc.push({ contentTypeId, name: product.name });
     }
 
     if (notifDoc.contentType) {

@@ -7,7 +7,7 @@ import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, gatherFormNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherBrandNames, gatherIntegrationFieldNames, LogDesc } from './logUtils';
 
 interface IEditIntegration extends IIntegration {
   _id: string;
@@ -20,15 +20,7 @@ const integrationMutations = {
   async integrationsCreateMessengerIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
-    let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
-
-    if (doc.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [doc.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherIntegrationFieldNames(integration);
 
     await putCreateLog(
       {
@@ -51,42 +43,9 @@ const integrationMutations = {
     const integration = await Integrations.getIntegration(_id);
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
-    const brandIds: string[] = [];
+    let extraDesc: LogDesc[] = await gatherIntegrationFieldNames(integration);
 
-    if (integration.brandId) {
-      brandIds.push(integration.brandId);
-    }
-
-    if (fields.brandId && fields.brandId !== integration.brandId) {
-      brandIds.push(fields.brandId);
-    }
-
-    let extraDesc: LogDesc[] = await gatherBrandNames({
-      idFields: brandIds,
-      foreignKey: 'brandId',
-    });
-
-    extraDesc = await gatherUsernames({
-      idFields: [integration.createdUserId],
-      foreignKey: 'createdUserId',
-      prevList: extraDesc,
-    });
-
-    if (integration.tagIds && integration.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: integration.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (integration.formId) {
-      extraDesc = await gatherFormNames({
-        idFields: [integration.formId],
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherIntegrationFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -122,23 +81,7 @@ const integrationMutations = {
   async integrationsCreateLeadIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createLeadIntegration(doc, user._id);
 
-    let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
-
-    if (doc.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [doc.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.formId) {
-      extraDesc = await gatherFormNames({
-        idFields: [doc.formId],
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherIntegrationFieldNames(integration);
 
     await putCreateLog(
       {
@@ -193,13 +136,7 @@ const integrationMutations = {
         data: data ? JSON.stringify(data) : '',
       });
 
-      let extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
-
-      extraDesc = await gatherBrandNames({
-        idFields: [doc.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
+      const extraDesc: LogDesc[] = await gatherIntegrationFieldNames(integration);
 
       await putCreateLog(
         {
@@ -221,7 +158,6 @@ const integrationMutations = {
 
   async integrationsEditCommonFields(_root, { _id, name, brandId }, { user }) {
     const integration = await Integrations.getIntegration(_id);
-
     const updated = Integrations.updateBasicInfo(_id, { name, brandId });
 
     const brandIds: string[] = [];
@@ -291,34 +227,7 @@ const integrationMutations = {
       await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [integration.createdUserId],
-      foreignKey: 'createdUserId',
-    });
-
-    if (integration.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [integration.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (integration.tagIds && integration.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: integration.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (integration.formId) {
-      extraDesc = await gatherFormNames({
-        idFields: [integration.formId],
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherIntegrationFieldNames(integration);
 
     await putDeleteLog(
       {

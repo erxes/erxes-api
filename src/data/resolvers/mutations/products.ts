@@ -1,15 +1,10 @@
 import { ProductCategories, Products } from '../../../db/models';
-import {
-  IProduct,
-  IProductCategory,
-  IProductCategoryDocument,
-  IProductDocument,
-} from '../../../db/models/definitions/deals';
+import { IProduct, IProductCategory, IProductDocument } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherProductCategoryNames, gatherTagNames, LogDesc } from './logUtils';
+import { gatherProductCategoryNames, gatherProductFieldNames, LogDesc } from './logUtils';
 
 interface IProductsEdit extends IProduct {
   _id: string;
@@ -25,9 +20,9 @@ const productMutations = {
    * @param {Object} doc Product document
    */
   async productsAdd(_root, doc: IProduct, { user, docModifier }: IContext) {
-    const product: IProductDocument = await Products.createProduct(docModifier(doc));
+    const product = await Products.createProduct(docModifier(doc));
 
-    const category: IProductCategoryDocument | null = await ProductCategories.findOne({ _id: product.categoryId });
+    const category = await ProductCategories.findOne({ _id: product.categoryId });
 
     const extraDesc: LogDesc[] = [];
 
@@ -59,36 +54,12 @@ const productMutations = {
    * @param {Object} param2.doc Product info
    */
   async productsEdit(_root, { _id, ...doc }: IProductsEdit, { user }: IContext) {
-    const product: IProductDocument = await Products.getProduct({ _id });
-    const updated: IProductDocument = await Products.updateProduct(_id, doc);
+    const product = await Products.getProduct({ _id });
+    const updated = await Products.updateProduct(_id, doc);
 
-    let extraDesc: LogDesc[] = [];
+    let extraDesc: LogDesc[] = await gatherProductFieldNames(product);
 
-    if (product.tagIds) {
-      extraDesc = await gatherTagNames({
-        idFields: product.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    const categoryIds: string[] = [];
-
-    if (product.categoryId) {
-      categoryIds.push(product.categoryId);
-    }
-
-    if (doc.categoryId && doc.categoryId !== product.categoryId) {
-      categoryIds.push(doc.categoryId);
-    }
-
-    if (categoryIds.length > 0) {
-      extraDesc = await gatherProductCategoryNames({
-        idFields: categoryIds,
-        foreignKey: 'categoryId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherProductFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -114,22 +85,7 @@ const productMutations = {
     await Products.removeProducts(productIds);
 
     for (const product of products) {
-      let extraDesc: LogDesc[] = [];
-
-      if (product.tagIds) {
-        extraDesc = await gatherTagNames({
-          idFields: product.tagIds,
-          foreignKey: 'tagIds',
-        });
-      }
-
-      if (product.categoryId) {
-        extraDesc = await gatherProductCategoryNames({
-          idFields: [product.categoryId],
-          foreignKey: 'categoryId',
-          prevList: extraDesc,
-        });
-      }
+      const extraDesc: LogDesc[] = await gatherProductFieldNames(product);
 
       await putDeleteLog(
         {
@@ -155,7 +111,7 @@ const productMutations = {
     const extraDesc: LogDesc[] = [];
 
     if (doc.parentId) {
-      const parent: IProductCategoryDocument | null = await ProductCategories.findOne({ _id: doc.parentId });
+      const parent = await ProductCategories.findOne({ _id: doc.parentId });
 
       if (parent) {
         extraDesc.push({ parentId: parent._id, name: parent.name });

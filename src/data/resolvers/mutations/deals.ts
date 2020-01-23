@@ -14,14 +14,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
-import {
-  gatherLabelNames,
-  gatherProductNames,
-  gatherStageNames,
-  gatherUsernames,
-  gatherUsernamesOfBoardItem,
-  LogDesc,
-} from './logUtils';
+import { gatherDealFieldNames, LogDesc } from './logUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -59,30 +52,7 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     });
 
-    const usernameOrEmail = user.username || user.email;
-
-    let extraDesc: LogDesc[] = [
-      { modifiedBy: user._id, name: usernameOrEmail },
-      { userId: user._id, name: usernameOrEmail },
-    ];
-
-    extraDesc = await gatherUsernames({
-      idFields: [user._id],
-      foreignKey: 'watchedUserIds',
-      prevList: extraDesc,
-    });
-
-    extraDesc = await gatherStageNames({
-      idFields: [doc.stageId],
-      foreignKey: 'initialStageId',
-      prevList: extraDesc,
-    });
-
-    extraDesc = await gatherStageNames({
-      idFields: [doc.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
+    const extraDesc: LogDesc[] = await gatherDealFieldNames(deal);
 
     await putCreateLog(
       {
@@ -110,9 +80,6 @@ const dealMutations = {
       modifiedBy: user._id,
     });
 
-    let extraDesc: LogDesc[] = [];
-    let productIds: string[] = [];
-
     await copyPipelineLabels({ item: oldDeal, doc, user });
 
     const notificationDoc: IBoardNotificationParams = {
@@ -131,57 +98,11 @@ const dealMutations = {
       notificationDoc.removedUsers = removedUserIds;
     }
 
-    extraDesc = await gatherUsernamesOfBoardItem(oldDeal, updatedDeal);
-
-    if (oldDeal.labelIds && oldDeal.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: oldDeal.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
-
-    extraDesc = await gatherStageNames({
-      idFields: [oldDeal.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
-
-    if (oldDeal.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [oldDeal.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (oldDeal.productsData && oldDeal.productsData.length > 0) {
-      productIds = oldDeal.productsData.map(p => p.productId);
-    }
-
-    if (doc.productsData && doc.productsData.length > 0) {
-      productIds = productIds.concat(doc.productsData.map(p => p.productId));
-
-      productIds = _.uniq(productIds);
-    }
-
-    if (productIds.length > 0) {
-      extraDesc = await gatherProductNames({
-        idFields: productIds,
-        foreignKey: 'productId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.stageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [doc.stageId],
-        foreignKey: 'stageId',
-        prevList: extraDesc,
-      });
-    }
-
     await sendNotifications(notificationDoc);
+
+    let extraDesc: LogDesc[] = await gatherDealFieldNames(oldDeal);
+
+    extraDesc = await gatherDealFieldNames(updatedDeal, extraDesc);
 
     await putUpdateLog(
       {
@@ -255,37 +176,7 @@ const dealMutations = {
 
     const removed = await deal.remove();
 
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(deal);
-
-    extraDesc = await gatherStageNames({
-      idFields: [deal.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
-
-    if (deal.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [deal.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (deal.labelIds && deal.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: deal.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (deal.productsData && deal.productsData.length > 0) {
-      extraDesc = await gatherProductNames({
-        idFields: deal.productsData.map(p => p.productId),
-        foreignKey: 'productId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherDealFieldNames(deal);
 
     await putDeleteLog(
       {

@@ -4,7 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherIntegrationNames, gatherKbTopicNames, LogDesc } from './logUtils';
+import { gatherScriptFieldNames, LogDesc } from './logUtils';
 
 interface IScriptsEdit extends IScript {
   _id: string;
@@ -18,30 +18,7 @@ const scriptMutations = {
     const modifiedDoc = docModifier(doc);
     const script = await Scripts.createScript(modifiedDoc);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (doc.messengerId) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: [doc.messengerId],
-        foreignKey: 'messengerId',
-      });
-    }
-
-    if (doc.kbTopicId) {
-      extraDesc = await gatherKbTopicNames({
-        idFields: [doc.kbTopicId],
-        foreignKey: 'kbTopicId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.leadIds && doc.leadIds.length > 0) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: doc.leadIds,
-        foreignKey: 'leadIds',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
 
     await putCreateLog(
       {
@@ -64,62 +41,9 @@ const scriptMutations = {
     const script = await Scripts.getScript(_id);
     const updated = await Scripts.updateScript(_id, fields);
 
-    const { messengerId, kbTopicId, leadIds } = fields;
+    let extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
 
-    let extraDesc: LogDesc[] = [];
-
-    // gather unique messenger ids
-    const msngrIds: string[] = [];
-
-    if (script.messengerId) {
-      msngrIds.push(script.messengerId);
-    }
-
-    if (messengerId && messengerId !== script.messengerId) {
-      msngrIds.push(messengerId);
-    }
-
-    if (msngrIds.length > 0) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: msngrIds,
-        foreignKey: 'messengerId',
-        prevList: extraDesc,
-      });
-    }
-
-    // gather unique kb topics
-    const kbTopicIds: string[] = [];
-
-    if (script.kbTopicId) {
-      kbTopicIds.push(script.kbTopicId);
-    }
-
-    if (kbTopicId && kbTopicId !== script.kbTopicId) {
-      kbTopicIds.push(kbTopicId);
-    }
-
-    if (kbTopicIds.length > 0) {
-      extraDesc = await gatherKbTopicNames({
-        idFields: kbTopicIds,
-        foreignKey: 'kbTopicId',
-        prevList: extraDesc,
-      });
-    }
-
-    // gather unique lead integrations
-    let leads: string[] = script.leadIds || [];
-
-    if (leadIds && leadIds.length > 0) {
-      leads = leads.concat(leadIds);
-    }
-
-    if (leads.length > 0) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: leads,
-        foreignKey: 'leadIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherScriptFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -142,30 +66,7 @@ const scriptMutations = {
     const script = await Scripts.getScript(_id);
     const removed = await Scripts.removeScript(_id);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (script.messengerId) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: [script.messengerId],
-        foreignKey: 'messengerId',
-      });
-    }
-
-    if (script.kbTopicId) {
-      extraDesc = await gatherKbTopicNames({
-        idFields: [script.kbTopicId],
-        foreignKey: 'kbTopicId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (script.leadIds && script.leadIds.length > 0) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: script.leadIds,
-        foreignKey: 'leadIds',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
 
     await putDeleteLog(
       {

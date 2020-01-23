@@ -1,5 +1,6 @@
 import { Brands } from '../../../db/models';
 import { IBrand, IBrandEmailConfig } from '../../../db/models/definitions/brands';
+import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
@@ -18,7 +19,7 @@ const brandMutations = {
 
     await putCreateLog(
       {
-        type: 'brand',
+        type: MODULE_NAMES.BRAND,
         newData: JSON.stringify({ ...doc, userId: user._id }),
         object: brand,
         description: `"${doc.name}" has been created`,
@@ -45,7 +46,7 @@ const brandMutations = {
 
       await putUpdateLog(
         {
-          type: 'brand',
+          type: MODULE_NAMES.BRAND,
           object: brand,
           newData: JSON.stringify(fields),
           description: `"${fields.name}" has been edited`,
@@ -73,7 +74,7 @@ const brandMutations = {
 
       await putDeleteLog(
         {
-          type: 'brand',
+          type: MODULE_NAMES.BRAND,
           object: brand,
           description: `"${brand.name}" has been removed`,
           extraDesc: JSON.stringify(extraDesc),
@@ -103,7 +104,7 @@ const brandMutations = {
 
     await putUpdateLog(
       {
-        type: 'brand',
+        type: MODULE_NAMES.BRAND,
         object: brand,
         newData: JSON.stringify({ emailConfig }),
         description: `${brand.name} email config has been changed`,

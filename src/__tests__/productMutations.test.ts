@@ -1,6 +1,6 @@
 import { graphqlRequest } from '../db/connection';
-import { productCategoryFactory, productFactory } from '../db/factories';
-import { ProductCategories, Products } from '../db/models';
+import { productCategoryFactory, productFactory, tagsFactory } from '../db/factories';
+import { ProductCategories, Products, Tags } from '../db/models';
 
 import './setup.ts';
 
@@ -45,13 +45,17 @@ describe('Test products mutations', () => {
     // Creating test data
     parentCategory = await productCategoryFactory();
     productCategory = await productCategoryFactory({ parentId: parentCategory._id });
-    product = await productFactory({ type: 'product', categoryId: productCategory._id });
+
+    const tag = await tagsFactory();
+
+    product = await productFactory({ type: 'product', categoryId: productCategory._id, tagIds: [tag._id] });
   });
 
   afterEach(async () => {
     // Clearing test data
     await Products.deleteMany({});
     await ProductCategories.deleteMany({});
+    await Tags.deleteMany({});
   });
 
   test('Create product', async () => {

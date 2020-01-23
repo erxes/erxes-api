@@ -13,7 +13,7 @@ import {
   itemsChange,
   sendNotifications,
 } from '../boardUtils';
-import { gatherStageNames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
+import { gatherBoardItemFieldNames, LogDesc } from './logUtils';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
@@ -50,13 +50,7 @@ const ticketMutations = {
       contentType: MODULE_NAMES.TICKET,
     });
 
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(ticket);
-
-    extraDesc = await gatherStageNames({
-      idFields: [doc.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
+    const extraDesc: LogDesc[] = await gatherBoardItemFieldNames(ticket);
 
     await putCreateLog(
       {

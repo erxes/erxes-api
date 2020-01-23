@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { Channels, Integrations } from '../../../db/models';
+import { Channels } from '../../../db/models';
 import { IChannel, IChannelDocument } from '../../../db/models/definitions/channels';
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
@@ -7,7 +7,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
-import { gatherIntegrationNames, gatherNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherChannelFieldNames, LogDesc } from './logUtils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -52,16 +52,8 @@ const channelMutations = {
 
     await sendChannelNotifications(channel, 'invited', user);
 
-    // for showing usernames instead of user id
-    let extraDesc: LogDesc[] = [{ userId: user._id, name: user.username || user.email }];
-
-    if (doc.memberIds) {
-      extraDesc = await gatherUsernames({
-        idFields: doc.memberIds,
-        foreignKey: 'memberIds',
-        prevList: extraDesc,
-      });
-    }
+    // for showing names instead of id fields in logs
+    const extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
 
     await putCreateLog(
       {
@@ -83,58 +75,16 @@ const channelMutations = {
   async channelsEdit(_root, { _id, ...doc }: IChannelsEdit, { user }: IContext) {
     const channel = await Channels.getChannel(_id);
 
-    const { integrationIds, memberIds } = doc;
-
-    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], memberIds || []);
+    const { addedUserIds, removedUserIds } = checkUserIds(channel.memberIds || [], doc.memberIds || []);
 
     await sendChannelNotifications(channel, 'invited', user, addedUserIds);
     await sendChannelNotifications(channel, 'removed', user, removedUserIds);
 
     const updated = await Channels.updateChannel(_id, doc);
 
-    let extraDesc: LogDesc[] = [];
+    let extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
 
-    if (channel.userId) {
-      extraDesc = await gatherUsernames({
-        idFields: [channel.userId],
-        foreignKey: 'userId',
-      });
-    }
-
-    // prevent saving of duplicated ids in log
-    let combinedMemberIds = memberIds || [];
-    let combinedIntegrationIds = integrationIds || [];
-
-    // previous member ids should be saved
-    if (channel.memberIds && channel.memberIds.length > 0) {
-      combinedMemberIds = combinedMemberIds.concat(channel.memberIds);
-
-      combinedMemberIds = _.uniq(combinedMemberIds);
-    }
-
-    if (combinedMemberIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: combinedMemberIds,
-        foreignKey: 'memberIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (channel.integrationIds && channel.integrationIds.length > 0) {
-      combinedIntegrationIds = combinedIntegrationIds.concat(channel.integrationIds);
-
-      combinedIntegrationIds = _.uniq(combinedIntegrationIds);
-    }
-
-    if (combinedIntegrationIds.length > 0) {
-      extraDesc = await gatherNames({
-        collection: Integrations,
-        idFields: combinedIntegrationIds,
-        foreignKey: 'integrationIds',
-        nameFields: ['name'],
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherChannelFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -164,30 +114,7 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (channel.userId) {
-      extraDesc = await gatherUsernames({
-        idFields: [channel.userId],
-        foreignKey: 'userId',
-      });
-    }
-
-    if (channel.memberIds && channel.memberIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: channel.memberIds,
-        foreignKey: 'memberIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (channel.integrationIds && channel.integrationIds.length > 0) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: channel.integrationIds,
-        foreignKey: 'integrationIds',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
 
     await putDeleteLog(
       {

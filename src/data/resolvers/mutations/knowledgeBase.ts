@@ -5,7 +5,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, gatherKbArticleNames, gatherKbCategoryNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherKbArticleNames, gatherKbTopicFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 const knowledgeBaseMutations = {
   /**
@@ -14,15 +14,7 @@ const knowledgeBaseMutations = {
   async knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user, docModifier }: IContext) {
     const topic = await KnowledgeBaseTopics.createDoc(docModifier(doc), user._id);
 
-    let extraDesc: LogDesc[] = [{ createdBy: user._id, name: user.username || user.email }];
-
-    if (doc.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [doc.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
 
     await putCreateLog(
       {
@@ -39,45 +31,15 @@ const knowledgeBaseMutations = {
   },
 
   /**
-   * Update topic document
+   * Updates a topic document
    */
   async knowledgeBaseTopicsEdit(_root, { _id, doc }: { _id: string; doc: ITopic }, { user }: IContext) {
     const topic = await KnowledgeBaseTopics.getTopic(_id);
     const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
 
-    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
+    let extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
 
-    extraDesc = await gatherUsernames({
-      idFields: [topic.createdBy],
-      foreignKey: 'createdBy',
-      prevList: extraDesc,
-    });
-
-    if (topic.categoryIds && topic.categoryIds) {
-      extraDesc = await gatherKbCategoryNames({
-        idFields: topic.categoryIds,
-        foreignKey: 'categoryIds',
-        prevList: extraDesc,
-      });
-    }
-
-    const brandIds: string[] = [];
-
-    if (topic.brandId) {
-      brandIds.push(topic.brandId);
-    }
-
-    if (doc.brandId && doc.brandId !== topic.brandId) {
-      brandIds.push(doc.brandId);
-    }
-
-    if (brandIds.length > 0) {
-      extraDesc = await gatherBrandNames({
-        idFields: brandIds,
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherKbTopicFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -98,40 +60,9 @@ const knowledgeBaseMutations = {
    */
   async knowledgeBaseTopicsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const topic = await KnowledgeBaseTopics.getTopic(_id);
-    // categories are removed alongside
-    const categories = await KnowledgeBaseCategories.find({ _id: { $in: topic.categoryIds } }, { title: 1 });
-
     const removed = await KnowledgeBaseTopics.removeDoc(_id);
 
-    let extraDesc: LogDesc[] = [];
-
-    extraDesc = await gatherUsernames({
-      idFields: [topic.createdBy],
-      foreignKey: 'createdBy',
-    });
-
-    extraDesc = await gatherUsernames({
-      idFields: [topic.modifiedBy],
-      foreignKey: 'modifiedBy',
-      prevList: extraDesc,
-    });
-
-    if (topic.brandId) {
-      extraDesc = await gatherBrandNames({
-        idFields: [topic.brandId],
-        foreignKey: 'brandId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (topic.categoryIds && topic.categoryIds.length > 0) {
-      for (const cat of categories) {
-        extraDesc.push({
-          categoryIds: cat._id,
-          name: cat.title,
-        });
-      }
-    }
+    const extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
 
     await putDeleteLog(
       {

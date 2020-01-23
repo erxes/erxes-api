@@ -4,7 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherCompanyNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherCompanyFieldNames, LogDesc } from './logUtils';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;
@@ -17,24 +17,7 @@ const companyMutations = {
   async companiesAdd(_root, doc: ICompany, { user, docModifier }: IContext) {
     const company = await Companies.createCompany(docModifier(doc), user);
 
-    const { ownerId, parentCompanyId } = doc;
-
-    let extraDesc: LogDesc[] = [];
-
-    if (parentCompanyId) {
-      extraDesc = await gatherCompanyNames({
-        idFields: [parentCompanyId],
-        foreignKey: 'parentCompanyId',
-      });
-    }
-
-    if (ownerId) {
-      extraDesc = await gatherUsernames({
-        idFields: [ownerId],
-        foreignKey: 'ownerId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
 
     await putCreateLog(
       {
@@ -57,56 +40,9 @@ const companyMutations = {
     const company = await Companies.getCompany(_id);
     const updated = await Companies.updateCompany(_id, doc);
 
-    const { ownerId, parentCompanyId } = doc;
+    let extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
 
-    const ownerIds: string[] = [];
-    const parentIds: string[] = [];
-    let extraDesc: LogDesc[] = [];
-
-    if (ownerId) {
-      ownerIds.push(ownerId);
-    }
-    if (company.ownerId && company.ownerId !== ownerId) {
-      ownerIds.push(company.ownerId);
-    }
-
-    if (parentCompanyId) {
-      parentIds.push(parentCompanyId);
-    }
-    if (company.parentCompanyId && company.parentCompanyId !== parentCompanyId) {
-      parentIds.push(company.parentCompanyId);
-    }
-
-    if (ownerIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: ownerIds,
-        foreignKey: 'ownerId',
-      });
-    }
-
-    if (parentIds.length > 0) {
-      extraDesc = await gatherCompanyNames({
-        idFields: parentIds,
-        foreignKey: 'parentCompanyId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (company.mergedIds && company.mergedIds.length > 0) {
-      extraDesc = await gatherCompanyNames({
-        idFields: company.mergedIds,
-        foreignKey: 'mergedIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (company.tagIds && company.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: company.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherCompanyFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -131,38 +67,7 @@ const companyMutations = {
     await Companies.removeCompanies(companyIds);
 
     for (const company of companies) {
-      let extraDesc: LogDesc[] = [];
-
-      if (company.ownerId) {
-        extraDesc = await gatherUsernames({
-          idFields: [company.ownerId],
-          foreignKey: 'ownerId',
-        });
-      }
-
-      if (company.parentCompanyId) {
-        extraDesc = await gatherCompanyNames({
-          idFields: [company.parentCompanyId],
-          foreignKey: 'parentCompanyId',
-          prevList: extraDesc,
-        });
-      }
-
-      if (company.mergedIds && company.mergedIds.length > 0) {
-        extraDesc = await gatherCompanyNames({
-          idFields: company.mergedIds,
-          foreignKey: 'mergedIds',
-          prevList: extraDesc,
-        });
-      }
-
-      if (company.tagIds && company.tagIds.length > 0) {
-        extraDesc = await gatherTagNames({
-          idFields: company.tagIds,
-          foreignKey: 'tagIds',
-          prevList: extraDesc,
-        });
-      }
+      const extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
 
       await putDeleteLog(
         {

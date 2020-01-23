@@ -1,4 +1,4 @@
-import { ActivityLogs, GrowthHacks, Stages } from '../../../db/models';
+import { ActivityLogs, GrowthHacks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -8,7 +8,7 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { IBoardNotificationParams, itemsChange, sendNotifications } from '../boardUtils';
-import { gatherLabelNames, gatherStageNames, gatherUsernames, gatherUsernamesOfBoardItem, LogDesc } from './logUtils';
+import { gatherGHFieldNames, LogDesc } from './logUtils';
 
 interface IGrowthHacksEdit extends IGrowthHack {
   _id: string;
@@ -39,15 +39,7 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
 
-    const extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(growthHack);
-
-    // stage names
-    const stage = await Stages.findOne({ _id: doc.stageId });
-
-    if (stage) {
-      extraDesc.push({ stageId: stage._id, name: stage.name });
-      extraDesc.push({ initialStageId: stage._id, name: stage.name });
-    }
+    const extraDesc: LogDesc[] = await gatherGHFieldNames(growthHack);
 
     await putCreateLog(
       {
@@ -103,54 +95,9 @@ const growthHackMutations = {
 
     await sendNotifications(notificationDoc);
 
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(oldGrowthHack, updatedGrowthHack);
+    let extraDesc: LogDesc[] = await gatherGHFieldNames(oldGrowthHack);
 
-    // gather stage names
-    const stageIds: string[] = [oldGrowthHack.stageId];
-
-    if (doc.stageId !== oldGrowthHack.stageId) {
-      stageIds.push(doc.stageId);
-    }
-
-    if (stageIds.length > 0) {
-      extraDesc = await gatherStageNames({
-        idFields: stageIds,
-        foreignKey: 'stageId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (oldGrowthHack.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [oldGrowthHack.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    // gather voted users
-    let votedUserIds: string[] = [];
-
-    if (oldGrowthHack.votedUserIds) {
-      votedUserIds = oldGrowthHack.votedUserIds;
-    }
-
-    if (votedUserIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: votedUserIds,
-        foreignKey: 'votedUserIds',
-        prevList: extraDesc,
-      });
-    }
-
-    // gather label names
-    if (oldGrowthHack.labelIds && oldGrowthHack.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: oldGrowthHack.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherGHFieldNames(updatedGrowthHack, extraDesc);
 
     await putUpdateLog(
       {
@@ -223,37 +170,7 @@ const growthHackMutations = {
     const removed = growthHack.remove();
 
     // prepare log description
-    let extraDesc: LogDesc[] = await gatherUsernamesOfBoardItem(growthHack);
-
-    extraDesc = await gatherStageNames({
-      idFields: [growthHack.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
-
-    if (growthHack.initialStageId) {
-      extraDesc = await gatherStageNames({
-        idFields: [growthHack.initialStageId],
-        foreignKey: 'initialStageId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (growthHack.labelIds && growthHack.labelIds.length > 0) {
-      extraDesc = await gatherLabelNames({
-        idFields: growthHack.labelIds,
-        foreignKey: 'labelIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (growthHack.votedUserIds && growthHack.votedUserIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: growthHack.votedUserIds,
-        foreignKey: 'votedUserIds',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherGHFieldNames(growthHack);
 
     await putDeleteLog(
       {

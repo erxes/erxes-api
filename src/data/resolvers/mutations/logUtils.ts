@@ -1,7 +1,14 @@
 import * as _ from 'underscore';
+import { IChannelDocument } from '../../../db/models/definitions/channels';
+import { ICompanyDocument } from '../../../db/models/definitions/companies';
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
-import { IDealDocument } from '../../../db/models/definitions/deals';
+import { ICustomerDocument } from '../../../db/models/definitions/customers';
+import { IDealDocument, IProductDocument } from '../../../db/models/definitions/deals';
+import { IEngageMessage, IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IGrowthHackDocument } from '../../../db/models/definitions/growthHacks';
+import { IIntegrationDocument } from '../../../db/models/definitions/integrations';
+import { ITopicDocument } from '../../../db/models/definitions/knowledgebase';
+import { IScriptDocument } from '../../../db/models/definitions/scripts';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import {
@@ -179,18 +186,6 @@ export const gatherKbArticleNames = async (params: ILogNameParams): Promise<LogD
   });
 };
 
-export const gatherKbCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: KnowledgeBaseCategories,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['title'],
-  });
-};
-
 export const gatherKbTopicNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
@@ -213,79 +208,6 @@ export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]
     prevList,
     nameFields: ['title'],
   });
-};
-
-// all user mapped field names of board items are fetched here
-export const gatherUsernamesOfBoardItem = async (
-  oldItem: BoardItemDocument,
-  newItem?: BoardItemDocument,
-): Promise<LogDesc[]> => {
-  const { assignedUserIds, modifiedBy, watchedUserIds, userId } = oldItem;
-
-  let list: LogDesc[] = [];
-
-  // unique assigned users
-  let assignedUsers: string[] = assignedUserIds || [];
-
-  if (newItem && newItem.assignedUserIds) {
-    assignedUsers = assignedUsers.concat(newItem.assignedUserIds);
-  }
-
-  if (assignedUsers.length > 0) {
-    assignedUsers = _.uniq(assignedUsers);
-    assignedUsers = _.compact(assignedUsers);
-
-    list = await gatherUsernames({
-      idFields: assignedUsers,
-      foreignKey: 'assignedUserIds',
-    });
-  }
-
-  // modified user checking
-  if (modifiedBy) {
-    const user = await Users.findOne({ _id: modifiedBy });
-
-    if (user) {
-      list.push({ modifiedBy: user._id, name: user.username || user.email });
-    }
-  }
-
-  if (newItem && newItem.modifiedBy !== modifiedBy) {
-    const modifier = await Users.findOne({ _id: newItem.modifiedBy });
-
-    if (modifier) {
-      list.push({ modifiedBy: modifier._id, name: modifier.username || modifier.email });
-    }
-  }
-
-  // unique watched users
-  let watchedUsers: string[] = watchedUserIds || [];
-
-  if (newItem && newItem.watchedUserIds) {
-    watchedUsers = watchedUsers.concat(newItem.watchedUserIds);
-  }
-
-  if (watchedUsers.length > 0) {
-    watchedUsers = _.uniq(watchedUsers);
-    watchedUsers = _.compact(watchedUsers);
-
-    list = await gatherUsernames({
-      idFields: watchedUsers,
-      foreignKey: 'watchedUserIds',
-      prevList: list,
-    });
-  }
-
-  // userId is set once at creation & remain unchanged
-  if (userId) {
-    const user = await Users.findOne({ _id: userId });
-
-    if (user) {
-      list.push({ userId, name: user.username || user.email });
-    }
-  }
-
-  return list;
 };
 
 export const gatherSegmentNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
@@ -316,7 +238,9 @@ export const gatherNames = async (params: ILogParams): Promise<LogDesc[]> => {
     options = prevList;
   }
 
-  for (const id of idFields) {
+  const uniqueIds = _.compact(_.uniq(idFields));
+
+  for (const id of uniqueIds) {
     const item = await collection.findOne({ _id: id });
     let name: string = '';
 
@@ -355,4 +279,419 @@ export const findItemName = async ({ contentType, contentTypeId }: IContentTypeP
   }
 
   return name;
+};
+
+export const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.parentCompanyId) {
+    options = await gatherCompanyNames({
+      idFields: [doc.parentCompanyId],
+      foreignKey: 'parentCompanyId',
+      prevList: options,
+    });
+  }
+
+  if (doc.ownerId) {
+    options = await gatherUsernames({
+      idFields: [doc.ownerId],
+      foreignKey: 'ownerId',
+      prevList: options,
+    });
+  }
+
+  if (doc.mergedIds && doc.mergedIds.length > 0) {
+    options = await gatherCompanyNames({
+      idFields: doc.mergedIds,
+      foreignKey: 'mergedIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.tagIds && doc.tagIds.length > 0) {
+    options = await gatherTagNames({
+      idFields: doc.tagIds,
+      foreignKey: 'tagIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherCustomerFieldNames = async (doc: ICustomerDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.ownerId) {
+    options = await gatherUsernames({ idFields: [doc.ownerId], foreignKey: 'ownerId', prevList: options });
+  }
+
+  if (doc.integrationId) {
+    options = await gatherIntegrationNames({
+      idFields: [doc.integrationId],
+      foreignKey: 'integrationId',
+      prevList: options,
+    });
+  }
+
+  if (doc.tagIds && doc.tagIds.length > 0) {
+    options = await gatherTagNames({
+      idFields: doc.tagIds,
+      foreignKey: 'tagIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.mergedIds) {
+    options = await gatherCustomerNames({
+      idFields: doc.mergedIds,
+      foreignKey: 'mergedIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.userId) {
+    options = await gatherUsernames({
+      idFields: [doc.userId],
+      foreignKey: 'userId',
+      prevList: options,
+    });
+  }
+
+  if (doc.assignedUserIds && doc.assignedUserIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.assignedUserIds,
+      foreignKey: 'assignedUserIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.watchedUserIds && doc.watchedUserIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.watchedUserIds,
+      foreignKey: 'watchedUserIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.labelIds && doc.labelIds.length > 0) {
+    options = await gatherLabelNames({
+      idFields: doc.labelIds,
+      foreignKey: 'labelIds',
+      prevList: options,
+    });
+  }
+
+  options = await gatherStageNames({
+    idFields: [doc.stageId],
+    foreignKey: 'stageId',
+    prevList: options,
+  });
+
+  if (doc.initialStageId) {
+    options = await gatherStageNames({
+      idFields: [doc.initialStageId],
+      foreignKey: 'initialStageId',
+      prevList: options,
+    });
+  }
+
+  if (doc.modifiedBy) {
+    options = await gatherUsernames({
+      idFields: [doc.modifiedBy],
+      foreignKey: 'modifiedBy',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherDealFieldNames = async (doc: IDealDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  options = await gatherBoardItemFieldNames(doc, options);
+
+  if (doc.productsData && doc.productsData.length > 0) {
+    options = await gatherProductNames({
+      idFields: doc.productsData.map(p => p.productId),
+      foreignKey: 'productId',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherEngageFieldNames = async (
+  doc: IEngageMessageDocument | IEngageMessage,
+  prevList?: LogDesc[],
+): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.segmentIds && doc.segmentIds.length > 0) {
+    options = await gatherSegmentNames({
+      idFields: doc.segmentIds,
+      foreignKey: 'segmentIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.brandIds && doc.brandIds.length > 0) {
+    options = await gatherBrandNames({
+      idFields: doc.brandIds,
+      foreignKey: 'brandIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.tagIds && doc.tagIds.length > 0) {
+    options = await gatherTagNames({
+      idFields: doc.tagIds,
+      foreignKey: 'tagIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.fromUserId) {
+    options = await gatherUsernames({
+      idFields: [doc.fromUserId],
+      foreignKey: 'fromUserId',
+      prevList: options,
+    });
+  }
+
+  if (doc.messenger && doc.messenger.brandId) {
+    options = await gatherBrandNames({
+      idFields: [doc.messenger.brandId],
+      foreignKey: 'brandId',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherChannelFieldNames = async (doc: IChannelDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.userId) {
+    options = await gatherUsernames({
+      idFields: [doc.userId],
+      foreignKey: 'userId',
+      prevList: options,
+    });
+  }
+
+  if (doc.memberIds && doc.memberIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.memberIds,
+      foreignKey: 'memberIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.integrationIds && doc.integrationIds.length > 0) {
+    options = await gatherIntegrationNames({
+      idFields: doc.integrationIds,
+      foreignKey: 'integrationIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherGHFieldNames = async (doc: IGrowthHackDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  options = await gatherBoardItemFieldNames(doc, options);
+
+  if (doc.votedUserIds && doc.votedUserIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.votedUserIds,
+      foreignKey: 'votedUserIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherIntegrationFieldNames = async (doc: IIntegrationDocument, prevList?: LogDesc[]) => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.createdUserId) {
+    options = await gatherUsernames({
+      idFields: [doc.createdUserId],
+      foreignKey: 'createdUserId',
+      prevList: options,
+    });
+  }
+
+  if (doc.brandId) {
+    options = await gatherBrandNames({
+      idFields: [doc.brandId],
+      foreignKey: 'brandId',
+      prevList: options,
+    });
+  }
+
+  if (doc.tagIds && doc.tagIds.length > 0) {
+    options = await gatherTagNames({
+      idFields: doc.tagIds,
+      foreignKey: 'tagIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.formId) {
+    options = await gatherFormNames({
+      idFields: [doc.formId],
+      foreignKey: 'formId',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherKbTopicFieldNames = async (doc: ITopicDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  options = await gatherUsernames({
+    idFields: [doc.createdBy],
+    foreignKey: 'createdBy',
+    prevList: options,
+  });
+
+  options = await gatherUsernames({
+    idFields: [doc.modifiedBy],
+    foreignKey: 'modifiedBy',
+    prevList: options,
+  });
+
+  if (doc.brandId) {
+    options = await gatherBrandNames({
+      idFields: [doc.brandId],
+      foreignKey: 'brandId',
+      prevList: options,
+    });
+  }
+
+  if (doc.categoryIds && doc.categoryIds.length > 0) {
+    // categories are removed alongside
+    const categories = await KnowledgeBaseCategories.find({ _id: { $in: doc.categoryIds } }, { title: 1 });
+
+    for (const cat of categories) {
+      options.push({
+        categoryIds: cat._id,
+        name: cat.title,
+      });
+    }
+  }
+
+  return options;
+};
+
+export const gatherProductFieldNames = async (doc: IProductDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.tagIds && doc.tagIds.length > 0) {
+    options = await gatherTagNames({
+      idFields: doc.tagIds,
+      foreignKey: 'tagIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.categoryId) {
+    options = await gatherProductCategoryNames({
+      idFields: [doc.categoryId],
+      foreignKey: 'categoryId',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  if (doc.messengerId) {
+    options = await gatherIntegrationNames({
+      idFields: [doc.messengerId],
+      foreignKey: 'messengerId',
+      prevList: options,
+    });
+  }
+
+  if (doc.kbTopicId) {
+    options = await gatherKbTopicNames({
+      idFields: [doc.kbTopicId],
+      foreignKey: 'kbTopicId',
+      prevList: options,
+    });
+  }
+
+  if (doc.leadIds && doc.leadIds.length > 0) {
+    options = await gatherIntegrationNames({
+      idFields: doc.leadIds,
+      foreignKey: 'leadIds',
+      prevList: options,
+    });
+  }
+
+  return options;
 };

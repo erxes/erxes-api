@@ -4,7 +4,7 @@ import { MODULE_NAMES } from '../../constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherCustomerNames, gatherIntegrationNames, gatherTagNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherCustomerFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;
@@ -48,47 +48,9 @@ const customerMutations = {
     const customer = await Customers.getCustomer(_id);
     const updated = await Customers.updateCustomer(_id, doc);
 
-    const ownerIds: string[] = [];
-    let extraDesc: LogDesc[] = [];
+    let extraDesc: LogDesc[] = await gatherCustomerFieldNames(customer);
 
-    if (customer.ownerId) {
-      ownerIds.push(customer.ownerId);
-    }
-
-    if (doc.ownerId && doc.ownerId !== customer.ownerId) {
-      ownerIds.push(doc.ownerId);
-    }
-
-    if (ownerIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: ownerIds,
-        foreignKey: 'ownerId',
-      });
-    }
-
-    if (customer.tagIds && customer.tagIds.length > 0) {
-      extraDesc = await gatherTagNames({
-        idFields: customer.tagIds,
-        foreignKey: 'tagIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (customer.integrationId) {
-      extraDesc = await gatherIntegrationNames({
-        idFields: [customer.integrationId],
-        foreignKey: 'integrationId',
-        prevList: extraDesc,
-      });
-    }
-
-    if (customer.mergedIds) {
-      extraDesc = await gatherCustomerNames({
-        idFields: customer.mergedIds,
-        foreignKey: 'mergedIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherCustomerFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -126,35 +88,7 @@ const customerMutations = {
     for (const customer of customers) {
       await ActivityLogs.removeActivityLog(customer._id);
 
-      let extraDesc: LogDesc[] = [];
-
-      if (customer.ownerId) {
-        extraDesc = await gatherUsernames({ idFields: [customer.ownerId], foreignKey: 'ownerId ' });
-      }
-
-      if (customer.integrationId) {
-        extraDesc = await gatherIntegrationNames({
-          idFields: [customer.integrationId],
-          foreignKey: 'integrationId',
-          prevList: extraDesc,
-        });
-      }
-
-      if (customer.tagIds && customer.tagIds.length > 0) {
-        extraDesc = await gatherTagNames({
-          idFields: customer.tagIds,
-          foreignKey: 'tagIds',
-          prevList: extraDesc,
-        });
-      }
-
-      if (customer.mergedIds) {
-        extraDesc = await gatherCustomerNames({
-          idFields: customer.mergedIds,
-          foreignKey: 'mergedIds',
-          prevList: extraDesc,
-        });
-      }
+      const extraDesc: LogDesc[] = await gatherCustomerFieldNames(customer);
 
       await putDeleteLog(
         {
