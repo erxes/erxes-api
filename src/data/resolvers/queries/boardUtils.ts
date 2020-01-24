@@ -31,7 +31,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
     return value.length === 1 && value[0].length === 0;
   };
 
-  const filter: any = {};
+  const filter: any = { status: { $ne: 'archived' } };
 
   let filterIds: string[] = [];
 

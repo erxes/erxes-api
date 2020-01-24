@@ -59,6 +59,7 @@ const commonParams = `
   assignedUserIds: [String],
   attachments: [AttachmentInput],
   closeDate: Date,
+  status: String,
   description: String,
   hackStages: [String],
   priority: String,

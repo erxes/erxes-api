@@ -1,4 +1,4 @@
-import { commonTypes, conformityQueryFields } from './common';
+import { commonMutationParams, commonTypes, conformityQueryFields, copyParams } from './common';
 
 export const types = `
   type Deal {
@@ -29,18 +29,8 @@ export const types = `
   }
 `;
 
-const commonMutationParams = `
-  stageId: String,
-  assignedUserIds: [String],
-  attachments: [AttachmentInput],
-  closeDate: Date,
-  description: String,
-  order: Int,
+const dealMutationParams = `
   productsData: JSON,
-  reminderMinute: Int,
-  isComplete: Boolean,
-  priority: String
-  sourceConversationId: String,
 `;
 
 const commonQueryParams = `
@@ -73,11 +63,9 @@ export const queries = `
   ): DealTotalAmounts
 `;
 
-const copyParams = `companyIds: [String], customerIds: [String], labelIds: [String]`;
-
 export const mutations = `
-  dealsAdd(name: String!, ${copyParams}, ${commonMutationParams}): Deal
-  dealsEdit(_id: String!, name: String, ${commonMutationParams}): Deal
+  dealsAdd(name: String!, ${copyParams}, ${dealMutationParams}, ${commonMutationParams}): Deal
+  dealsEdit(_id: String!, name: String, ${dealMutationParams}, ${commonMutationParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
