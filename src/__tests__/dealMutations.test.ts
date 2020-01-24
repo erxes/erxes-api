@@ -1,6 +1,11 @@
 import { graphqlRequest } from '../db/connection';
 import {
   boardFactory,
+  checklistFactory,
+  checklistItemFactory,
+  companyFactory,
+  conformityFactory,
+  customerFactory,
   dealFactory,
   pipelineFactory,
   pipelineLabelFactory,
@@ -8,11 +13,22 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Boards, Deals, PipelineLabels, Pipelines, Products, Stages } from '../db/models';
+import {
+  Boards,
+  ChecklistItems,
+  Checklists,
+  Conformities,
+  Deals,
+  PipelineLabels,
+  Pipelines,
+  Products,
+  Stages,
+} from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
 import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
+import { IUserDocument } from '../db/models/definitions/users';
 
 import './setup.ts';
 
@@ -23,6 +39,7 @@ describe('Test deals mutations', () => {
   let deal: IDealDocument;
   let label: IPipelineLabelDocument;
   let product: IProductDocument;
+  let user: IUserDocument;
 
   const commonDealParamDefs = `
     $name: String!,
@@ -40,7 +57,7 @@ describe('Test deals mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
-    const user = await userFactory();
+    user = await userFactory();
 
     board = await boardFactory({ type: BOARD_TYPES.DEAL });
     pipeline = await pipelineFactory({ boardId: board._id, watchedUserIds: [user._id] });
@@ -114,12 +131,12 @@ describe('Test deals mutations', () => {
     expect(response.stageId).toEqual(stage._id);
 
     // if assignedUserIds is not empty
-    const user = await userFactory();
-    args.assignedUserIds = [user._id];
+    const user1 = await userFactory();
+    args.assignedUserIds = [user1._id];
 
     response = await graphqlRequest(mutation, 'dealsEdit', args);
 
-    expect(response.assignedUserIds).toContain(user._id);
+    expect(response.assignedUserIds).toContain(user1._id);
   });
 
   test('Change deal', async () => {
@@ -168,7 +185,10 @@ describe('Test deals mutations', () => {
     const dealToStage = await dealFactory({});
 
     const args = {
-      orders: [{ _id: deal._id, order: 9 }, { _id: dealToStage._id, order: 3 }],
+      orders: [
+        { _id: deal._id, order: 9 },
+        { _id: dealToStage._id, order: 3 },
+      ],
       stageId: stage._id,
     };
 
@@ -220,5 +240,67 @@ describe('Test deals mutations', () => {
     const watchRemoveDeal = await graphqlRequest(mutation, 'dealsWatch', { _id: deal._id, isAdd: false });
 
     expect(watchRemoveDeal.isWatched).toBe(false);
+  });
+
+  test('Test dealsCopy()', async () => {
+    const mutation = `
+      mutation dealsCopy($_id: String!) {
+        dealsCopy(_id: $_id) {
+          _id
+          userId
+          name
+          stageId
+        }
+      }
+    `;
+
+    const checklist = await checklistFactory({
+      contentType: 'deal',
+      contentTypeId: deal._id,
+      title: 'deal-checklist',
+    });
+
+    await checklistItemFactory({
+      checklistId: checklist._id,
+      content: 'Improve deal mutation test coverage',
+      isChecked: true,
+    });
+
+    const company = await companyFactory();
+    const customer = await customerFactory();
+
+    await conformityFactory({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      relType: 'company',
+      relTypeId: company._id,
+    });
+
+    await conformityFactory({
+      mainType: 'deal',
+      mainTypeId: deal._id,
+      relType: 'customer',
+      relTypeId: customer._id,
+    });
+
+    const result = await graphqlRequest(mutation, 'dealsCopy', { _id: deal._id }, { user });
+
+    const clonedDealCompanies = await Conformities.find({ mainTypeId: result._id, relTypeId: company._id });
+    const clonedDealCustomers = await Conformities.find({ mainTypeId: result._id, relTypeId: company._id });
+    const clonedDealChecklist = await Checklists.findOne({ contentTypeId: result._id });
+
+    if (clonedDealChecklist) {
+      const clonedDealChecklistItems = await ChecklistItems.find({ checklistId: clonedDealChecklist._id });
+
+      expect(clonedDealChecklist.contentTypeId).toBe(result._id);
+      expect(clonedDealChecklistItems.length).toBe(1);
+    }
+
+    expect(result.userId).toBe(user._id);
+    expect(result.name).toBe(`${deal.name}-copied`);
+    expect(result.stageId).toBe(deal.stageId);
+
+    expect(clonedDealCompanies.length).toBe(1);
+    expect(clonedDealCustomers.length).toBe(1);
   });
 });

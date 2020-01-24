@@ -1,5 +1,6 @@
 import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
+import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { MODULE_NAMES } from '../../constants';
@@ -7,10 +8,12 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import {
+  copyChecklists,
   copyPipelineLabels,
   createConformity,
   IBoardNotificationParams,
   itemsChange,
+  prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
 import { gatherBoardItemFieldNames, gatherStageNames, LogDesc } from './logUtils';
@@ -208,6 +211,32 @@ const taskMutations = {
    */
   async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Tasks.watchTask(_id, isAdd, user._id);
+  },
+
+  async tasksCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+    const task = await Tasks.getTask(_id);
+
+    const doc = await prepareBoardItemDoc(_id, 'task', user._id);
+
+    const clone = await Tasks.createTask(doc);
+
+    const companies = await getCompanies('task', _id);
+    const customers = await getCustomers('task', _id);
+
+    await createConformity({
+      mainType: 'task',
+      mainTypeId: clone._id,
+      customerIds: customers.map(c => c._id),
+      companyIds: companies.map(c => c._id),
+    });
+    await copyChecklists({
+      contentType: 'task',
+      contentTypeId: task._id,
+      targetContentId: clone._id,
+      user,
+    });
+
+    return clone;
   },
 };
 

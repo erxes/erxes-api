@@ -1,13 +1,15 @@
 import { graphqlRequest } from '../db/connection';
 import {
   boardFactory,
+  checklistFactory,
+  checklistItemFactory,
   growthHackFactory,
   pipelineFactory,
   pipelineLabelFactory,
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Boards, GrowthHacks, PipelineLabels, Pipelines, Stages } from '../db/models';
+import { Boards, ChecklistItems, Checklists, GrowthHacks, PipelineLabels, Pipelines, Stages } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { BOARD_TYPES } from '../db/models/definitions/constants';
 import { IGrowthHackDocument } from '../db/models/definitions/growthHacks';
@@ -140,7 +142,10 @@ describe('Test growthHacks mutations', () => {
     const growthHackToStage = await growthHackFactory({});
 
     const args = {
-      orders: [{ _id: growthHack._id, order: 9 }, { _id: growthHackToStage._id, order: 3 }],
+      orders: [
+        { _id: growthHack._id, order: 9 },
+        { _id: growthHackToStage._id, order: 3 },
+      ],
       stageId: stage._id,
     };
 
@@ -244,5 +249,44 @@ describe('Test growthHacks mutations', () => {
     expect(unvotedGrowthHack.voteCount).toBe(0);
     expect(unvotedGrowthHack.votedUsers.length).toBe(0);
     expect(unvotedGrowthHack.isVoted).toBe(false);
+  });
+
+  test('Test growthHacksCopy()', async () => {
+    const mutation = `
+      mutation growthHacksCopy($_id: String!) {
+        growthHacksCopy(_id: $_id) {
+          _id
+          userId
+          name
+          stageId
+        }
+      }
+    `;
+
+    const checklist = await checklistFactory({
+      contentType: 'growthHack',
+      contentTypeId: growthHack._id,
+      title: 'gh-checklist',
+    });
+
+    await checklistItemFactory({
+      checklistId: checklist._id,
+      content: 'Improve growthHack mutation test coverage',
+      isChecked: true,
+    });
+
+    const result = await graphqlRequest(mutation, 'growthHacksCopy', { _id: growthHack._id }, context);
+
+    const clonedGhChecklist = await Checklists.findOne({ contentTypeId: result._id });
+
+    if (clonedGhChecklist) {
+      const clonedGhChecklistItems = await ChecklistItems.find({ checklistId: clonedGhChecklist._id });
+
+      expect(clonedGhChecklist.contentTypeId).toBe(result._id);
+      expect(clonedGhChecklistItems.length).toBe(1);
+    }
+
+    expect(result.name).toBe(`${growthHack.name}-copied`);
+    expect(result.stageId).toBe(growthHack.stageId);
   });
 });
