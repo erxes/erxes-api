@@ -1,9 +1,7 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs, Companies, Conformities, Customers } from '.';
+import { ActivityLogs } from '.';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
-import { ICompanyDocument } from './definitions/companies';
-import { ICustomerDocument } from './definitions/customers';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
 
 export interface ITicketModel extends Model<ITicketDocument> {
@@ -12,8 +10,6 @@ export interface ITicketModel extends Model<ITicketDocument> {
   updateTicket(_id: string, doc: ITicket): Promise<ITicketDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITicketDocument[]>;
   watchTicket(_id: string, isAdd: boolean, userId: string): void;
-  getCustomers(_id: string): Promise<ICustomerDocument[]>;
-  getCompanies(_id: string): Promise<ICompanyDocument[]>;
 }
 
 export const loadTicketClass = () => {
@@ -84,22 +80,6 @@ export const loadTicketClass = () => {
      */
     public static async watchTicket(_id: string, isAdd: boolean, userId: string) {
       return watchItem(Tickets, _id, isAdd, userId);
-    }
-
-    public static async getCompanies(_id: string) {
-      const conformities = await Conformities.find({ mainType: 'ticket', mainTypeId: _id, relType: 'company' });
-
-      const companyIds = conformities.map(c => c.relTypeId);
-
-      return Companies.find({ _id: { $in: companyIds } });
-    }
-
-    public static async getCustomers(_id: string) {
-      const conformities = await Conformities.find({ mainType: 'ticket', mainTypeId: _id, relType: 'customer' });
-
-      const customerIds = conformities.map(c => c.relTypeId);
-
-      return Customers.find({ _id: { $in: customerIds } });
     }
   }
 

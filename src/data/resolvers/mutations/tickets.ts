@@ -1,4 +1,5 @@
 import { ActivityLogs, Checklists, Conformities, Tickets } from '../../../db/models';
+import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
@@ -6,8 +7,8 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog } from '../../utils';
 import {
+  copyChecklists,
   copyPipelineLabels,
-  createChecklists,
   createConformity,
   IBoardNotificationParams,
   itemsChange,
@@ -169,8 +170,8 @@ const ticketMutations = {
 
     const clone = await Tickets.createTicket(doc);
 
-    const companies = await Tickets.getCompanies(ticket._id);
-    const customers = await Tickets.getCustomers(ticket._id);
+    const companies = await getCompanies('ticket', _id);
+    const customers = await getCustomers('ticket', _id);
 
     await createConformity({
       mainType: 'ticket',
@@ -178,8 +179,7 @@ const ticketMutations = {
       customerIds: customers.map(c => c._id),
       companyIds: companies.map(c => c._id),
     });
-
-    await createChecklists({
+    await copyChecklists({
       contentType: 'ticket',
       contentTypeId: ticket._id,
       targetContentId: clone._id,

@@ -1,4 +1,5 @@
 import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
+import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
@@ -6,8 +7,8 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import {
+  copyChecklists,
   copyPipelineLabels,
-  createChecklists,
   createConformity,
   IBoardNotificationParams,
   itemsChange,
@@ -182,8 +183,8 @@ const dealMutations = {
 
     const clone = await Deals.createDeal(doc);
 
-    const companies = await Deals.getCompanies(deal._id);
-    const customers = await Deals.getCustomers(deal._id);
+    const companies = await getCompanies('deal', _id);
+    const customers = await getCustomers('deal', _id);
 
     await createConformity({
       mainType: 'deal',
@@ -192,7 +193,7 @@ const dealMutations = {
       companyIds: companies.map(c => c._id),
     });
 
-    await createChecklists({
+    await copyChecklists({
       contentType: 'deal',
       contentTypeId: deal._id,
       targetContentId: clone._id,

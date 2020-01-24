@@ -1,9 +1,7 @@
 import { Model, model } from 'mongoose';
-import { ActivityLogs, Companies, Conformities, Customers } from '.';
+import { ActivityLogs } from '.';
 import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
 import { IOrderInput } from './definitions/boards';
-import { ICompanyDocument } from './definitions/companies';
-import { ICustomerDocument } from './definitions/customers';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
 
 export interface IDealModel extends Model<IDealDocument> {
@@ -12,8 +10,6 @@ export interface IDealModel extends Model<IDealDocument> {
   updateDeal(_id: string, doc: IDeal): Promise<IDealDocument>;
   updateOrder(stageId: string, orders: IOrderInput[]): Promise<IDealDocument[]>;
   watchDeal(_id: string, isAdd: boolean, userId: string): void;
-  getCustomers(_id: string): Promise<ICustomerDocument[]>;
-  getCompanies(_id: string): Promise<ICompanyDocument[]>;
 }
 
 export const loadDealClass = () => {
@@ -81,22 +77,6 @@ export const loadDealClass = () => {
      */
     public static watchDeal(_id: string, isAdd: boolean, userId: string) {
       return watchItem(Deals, _id, isAdd, userId);
-    }
-
-    public static async getCompanies(_id: string) {
-      const conformities = await Conformities.find({ mainType: 'deal', mainTypeId: _id, relType: 'company' });
-
-      const companyIds = conformities.map(c => c.relTypeId);
-
-      return Companies.find({ _id: { $in: companyIds } });
-    }
-
-    public static async getCustomers(_id: string) {
-      const conformities = await Conformities.find({ mainType: 'deal', mainTypeId: _id, relType: 'customer' });
-
-      const customerIds = conformities.map(c => c.relTypeId);
-
-      return Customers.find({ _id: { $in: customerIds } });
     }
   }
 

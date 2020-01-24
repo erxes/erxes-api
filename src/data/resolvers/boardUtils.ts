@@ -309,7 +309,7 @@ interface IChecklistParams {
 /**
  * Copies checklists of board item
  */
-export const createChecklists = async (params: IChecklistParams) => {
+export const copyChecklists = async (params: IChecklistParams) => {
   const { contentType, contentTypeId, targetContentId, user } = params;
 
   const checklists = await Checklists.find({ contentType, contentTypeId });

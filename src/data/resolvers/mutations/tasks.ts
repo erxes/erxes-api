@@ -1,12 +1,13 @@
 import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
+import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog } from '../../utils';
 import {
+  copyChecklists,
   copyPipelineLabels,
-  createChecklists,
   createConformity,
   IBoardNotificationParams,
   itemsChange,
@@ -167,8 +168,8 @@ const taskMutations = {
 
     const clone = await Tasks.createTask(doc);
 
-    const companies = await Tasks.getCompanies(task._id);
-    const customers = await Tasks.getCustomers(task._id);
+    const companies = await getCompanies('task', _id);
+    const customers = await getCustomers('task', _id);
 
     await createConformity({
       mainType: 'task',
@@ -176,8 +177,7 @@ const taskMutations = {
       customerIds: customers.map(c => c._id),
       companyIds: companies.map(c => c._id),
     });
-
-    await createChecklists({
+    await copyChecklists({
       contentType: 'task',
       contentTypeId: task._id,
       targetContentId: clone._id,

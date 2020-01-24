@@ -7,7 +7,7 @@ import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import {
-  createChecklists,
+  copyChecklists,
   IBoardNotificationParams,
   itemsChange,
   prepareBoardItemDoc,
@@ -199,7 +199,7 @@ const growthHackMutations = {
 
     const clone = await GrowthHacks.createGrowthHack(doc);
 
-    await createChecklists({
+    await copyChecklists({
       contentType: 'growthHack',
       contentTypeId: growthHack._id,
       targetContentId: clone._id,
