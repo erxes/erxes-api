@@ -24,7 +24,7 @@ export const saveEvent = (args: { type: string; name: string; customerId: string
         name,
         customerId,
         createdAt: new Date(),
-        ...(attributes || {}),
+        attributes: attributes || {},
       },
     },
 

@@ -23,7 +23,7 @@ import {
   uploadFile,
 } from './data/utils';
 import { connect } from './db/connection';
-import { debugExternalApi, debugInit } from './debuggers';
+import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { trackCustomEvent } from './events';
 import './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
@@ -84,11 +84,15 @@ app.get('/script-manager', widgetsMiddleware);
 app.post('/receive-event', async (req, res) => {
   const { name, customerId, attributes } = req.body;
 
-  trackCustomEvent({
-    name,
-    customerId,
-    attributes,
-  });
+  try {
+    await trackCustomEvent({
+      name,
+      customerId,
+      attributes,
+    });
+  } catch (e) {
+    debugBase(e.message);
+  }
 
   res.end('received');
 });
