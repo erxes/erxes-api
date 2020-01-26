@@ -1,6 +1,5 @@
 import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
-import { Brands, Companies, Customers, Fields, FieldsGroups, Integrations } from '../../../db/models';
-import { KIND_CHOICES } from '../../../db/models/definitions/constants';
+import { Companies, Customers, Fields, FieldsGroups } from '../../../db/models';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -38,49 +37,6 @@ const generateFieldsFromSchema = (queSchema: any, namePrefix: string) => {
   return queFields;
 };
 
-/*
- * Generates fields using customer's messengerData.customData field
- */
-const generateMessengerDataCustomDataFields = async fields => {
-  const messengerIntegrations = await Integrations.findIntegrations({
-    kind: KIND_CHOICES.MESSENGER,
-  });
-
-  // generate messengerData.customData fields
-  for (const integration of messengerIntegrations) {
-    const brand = await Brands.findOne({ _id: integration.brandId });
-
-    const lastCustomers = await Customers.find({
-      integrationId: integration._id,
-      $and: [
-        { 'messengerData.customData': { $exists: true } },
-        { 'messengerData.customData': { $ne: null } },
-        { 'messengerData.customData': { $ne: {} } },
-      ],
-    })
-      .sort({ createdAt: -1 })
-      .limit(1);
-
-    if (brand && integration && lastCustomers.length > 0) {
-      const [lastCustomer] = lastCustomers;
-
-      if (lastCustomer.messengerData) {
-        const customDataFields = Object.keys(lastCustomer.messengerData.customData || {});
-
-        for (const customDataField of customDataFields) {
-          fields.push({
-            _id: Math.random(),
-            name: `messengerData.customData.${customDataField}`,
-            label: customDataField,
-            brandName: brand.name,
-            brandId: brand._id,
-          });
-        }
-      }
-    }
-  }
-};
-
 const fieldQueries = {
   /**
    * Fields list
@@ -97,20 +53,13 @@ const fieldQueries = {
 
   /**
    * Generates all field choices base on given kind.
-   * For example if kind is customer
-   * then it will generate customer related fields
-   * [{ name: 'messengerData.isActive', text: 'Messenger: is Active' }]
    */
-  async fieldsCombinedByContentType(_root, { contentType, source }: { contentType: string; source: string }) {
+  async fieldsCombinedByContentType(_root, { contentType }: { contentType: string }) {
     let schema: any = Companies.schema;
-    let fields: Array<{ _id: number; name: string; label?: string; brandName?: string; brandId?: string }> = [];
+    let fields: Array<{ _id: number; name: string; label?: string }> = [];
 
     if (contentType === FIELD_CONTENT_TYPES.CUSTOMER) {
       schema = Customers.schema;
-
-      if (source === 'fromSegments') {
-        await generateMessengerDataCustomDataFields(fields);
-      }
     }
 
     // generate list using customer or company schema

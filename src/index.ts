@@ -24,7 +24,7 @@ import {
 } from './data/utils';
 import { connect } from './db/connection';
 import { debugExternalApi, debugInit } from './debuggers';
-import { saveEvent } from './elasticsearch';
+import { trackCustomEvent } from './events';
 import './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
@@ -82,7 +82,13 @@ app.get('/script-manager', widgetsMiddleware);
 
 // receive events
 app.post('/receive-event', async (req, res) => {
-  saveEvent(req.body);
+  const { name, customerId, attributes } = req.body;
+
+  trackCustomEvent({
+    name,
+    customerId,
+    attributes,
+  });
 
   res.end('received');
 });

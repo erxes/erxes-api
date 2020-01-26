@@ -297,7 +297,6 @@ interface IConditionsInput {
   field?: string;
   operator?: string;
   value?: any;
-  dateUnit?: string;
   type?: string;
 }
 
@@ -316,7 +315,6 @@ export const segmentFactory = (params: ISegmentFactoryInput = {}) => {
       field: 'messengerData.sessionCount',
       operator: 'e',
       value: '10',
-      dateUnit: 'days',
       type: 'string',
     },
   ];

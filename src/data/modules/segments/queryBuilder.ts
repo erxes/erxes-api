@@ -1,6 +1,6 @@
 import { Segments } from '../../../db/models';
 import { ICondition, ISegment, ISegmentDocument } from '../../../db/models/definitions/segments';
-import { performCount } from '../../../elasticsearch';
+import { fetchElk } from '../../../elasticsearch';
 
 export default {
   async segments(
@@ -59,7 +59,9 @@ export const countBySegments = async (segment: ISegment) => {
     must_not: negative,
   };
 
-  return performCount('customers', { bool });
+  const response = await fetchElk('count', 'customers', { query: { bool } });
+
+  return response.count;
 };
 
 function elkConvertConditionToQuery(condition: ICondition, { positive, negative }) {

@@ -5,35 +5,16 @@ export const client = new elasticsearch.Client({
   hosts: ['http://localhost:9200/'],
 });
 
-export const performCount = async (index: string, query: any) => {
+export const fetchElk = async (action, index: string, body: any) => {
   try {
-    const response = await client.count({
+    const response = await client[action]({
       index,
-      body: {
-        query,
-      },
+      body,
     });
 
-    return response.count;
+    return response;
   } catch (e) {
     debugBase(`Error during elk query ${e}`);
     throw new Error(e);
   }
-};
-
-export const saveEvent = event => {
-  client.index(
-    {
-      index: 'events',
-      body: event,
-    },
-
-    (err, resp, status) => {
-      if (err) {
-        return debugBase(`Error during event save ${err}`);
-      }
-
-      return debugBase(`Succesfully saved event ${JSON.stringify(resp)} ${status}`);
-    },
-  );
 };
