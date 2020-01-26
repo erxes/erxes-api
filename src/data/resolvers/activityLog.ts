@@ -107,5 +107,12 @@ export default {
 
       return result;
     }
+
+    if (action === ACTIVITY_ACTIONS.ASSIGNE) {
+      const addedUsers = await Users.find({ _id: { $in: content.addedUserIds } });
+      const removedUsers = await Users.find({ _id: { $in: content.removedUserIds } });
+
+      return { addedUsers, removedUsers };
+    }
   },
 };

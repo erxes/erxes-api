@@ -9,6 +9,7 @@ import { ISegmentDocument } from './definitions/segments';
 export interface IActivityLogModel extends Model<IActivityLogDocument> {
   addActivityLog(doc: IActivityLogInput): Promise<IActivityLogDocument>;
   removeActivityLog(contentId: string): void;
+
   createSegmentLog(segment: ISegmentDocument, customer: ICustomerDocument, type: string);
   createLogFromWidget(type: string, payload): Promise<IActivityLogDocument>;
   createCocLog({ coc, contentType }: { coc: any; contentType: string }): Promise<IActivityLogDocument>;
@@ -25,6 +26,17 @@ export interface IActivityLogModel extends Model<IActivityLogDocument> {
     userId: string,
     content: object,
   ): Promise<IActivityLogDocument>;
+  createAssigneLog({
+    contentId,
+    userId,
+    contentType,
+    content,
+  }: {
+    contentId: string;
+    userId: string;
+    contentType: string;
+    content: object;
+  }): Promise<IActivityLogDocument>;
 }
 
 export const loadClass = () => {
@@ -35,6 +47,26 @@ export const loadClass = () => {
 
     public static async removeActivityLog(contentId: IActivityLogInput) {
       await ActivityLogs.deleteMany({ contentId });
+    }
+
+    public static async createAssigneLog({
+      contentId,
+      userId,
+      contentType,
+      content,
+    }: {
+      contentId: string;
+      userId: string;
+      contentType: string;
+      content: object;
+    }) {
+      return ActivityLogs.addActivityLog({
+        contentType,
+        contentId,
+        action: 'assignee',
+        content,
+        createdBy: userId || '',
+      });
     }
 
     public static createBoardItemLog({ item, contentType }: { item: IItemCommonFieldsDocument; contentType: string }) {

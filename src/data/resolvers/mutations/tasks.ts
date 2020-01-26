@@ -71,7 +71,9 @@ const taskMutations = {
     });
 
     // labels should be copied to newly moved pipeline
-    await copyPipelineLabels({ item: oldTask, doc, user });
+    if (doc.stageId) {
+      await copyPipelineLabels({ item: oldTask, doc, user });
+    }
 
     const notificationDoc: IBoardNotificationParams = {
       item: updatedTask,
@@ -82,6 +84,15 @@ const taskMutations = {
 
     if (doc.assignedUserIds) {
       const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds, doc.assignedUserIds);
+
+      const activityContent = { addedUserIds, removedUserIds };
+
+      await ActivityLogs.createAssigneLog({
+        contentId: _id,
+        userId: user._id,
+        contentType: 'task',
+        content: activityContent,
+      });
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
