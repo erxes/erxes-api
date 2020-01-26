@@ -13,7 +13,7 @@ export const types = `
     propertyValue: String,
 
     eventName: String,
-    eventAttributeFilter: [EventAttributeFilter],
+    eventAttributeFilters: [EventAttributeFilter],
   }
 
   type Segment {
