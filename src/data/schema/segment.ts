@@ -1,6 +1,6 @@
 export const types = `
   input EventAttributeFilter {
-    field: String,
+    name: String,
     operator: String,
     value: String,
   }
