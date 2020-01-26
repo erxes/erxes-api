@@ -26,10 +26,10 @@ const segmentQueries = {
   },
 
   /**
-   * Get event names
+   * Return event names with attribute names
    */
-  async segmentsEventNames(_root) {
-    const events = await fetchElk('search', 'events', {
+  async segmentsEvents(_root) {
+    const aggreEvents = await fetchElk('search', 'events', {
       aggs: {
         names: {
           terms: {
@@ -40,13 +40,29 @@ const segmentQueries = {
       size: 0,
     });
 
-    return events.aggregations.names.buckets.map(bucket => bucket.key);
+    const aggreHits = await fetchElk('search', 'events', {
+      aggs: {
+        names: {
+          terms: {
+            field: 'name.keyword',
+          },
+        },
+      },
+      size: aggreEvents.aggregations.names.buckets.length,
+    });
+
+    const events = aggreHits.hits.hits.map(hit => ({
+      name: hit._source.name,
+      attributeNames: Object.keys(hit._source.attributes),
+    }));
+
+    return events;
   },
 };
 
 requireLogin(segmentQueries, 'segmentsGetHeads');
 requireLogin(segmentQueries, 'segmentDetail');
-requireLogin(segmentQueries, 'segmentsEventNames');
+requireLogin(segmentQueries, 'segmentsEvents');
 
 checkPermission(segmentQueries, 'segments', 'showSegments', []);
 
