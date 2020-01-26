@@ -5,7 +5,7 @@ import { MODULE_NAMES } from '../../constants';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
-import { gatherFormNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherPipelineTemplateFieldNames, LogDesc } from './logUtils';
 
 interface IPipelineTemplatesEdit extends IPipelineTemplate {
   _id: string;
@@ -24,13 +24,7 @@ const pipelineTemplateMutations = {
       stages,
     );
 
-    let extraDesc: LogDesc[] = [{ createdBy: user._id, name: user.username || user.email }];
-
-    extraDesc = await gatherFormNames({
-      idFields: stages.map(stage => stage.formId),
-      foreignKey: 'formId',
-      prevList: extraDesc,
-    });
+    const extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
 
     await putCreateLog(
       {
@@ -53,33 +47,11 @@ const pipelineTemplateMutations = {
     await checkPermission(doc.type, user, 'templatesEdit');
 
     const pipelineTemplate = await PipelineTemplates.getPipelineTemplate(_id);
-
     const updated = await PipelineTemplates.updatePipelineTemplate(_id, doc, stages);
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [pipelineTemplate.createdBy],
-      foreignKey: 'createdBy',
-    });
+    let extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
 
-    let formIds: string[] = [];
-
-    if (pipelineTemplate.stages && pipelineTemplate.stages.length > 0) {
-      formIds = pipelineTemplate.stages.map(s => s.formId);
-    }
-
-    if (stages && stages.length > 0) {
-      formIds = formIds.concat(stages.map(s => s.formId));
-    }
-
-    formIds = _.uniq(formIds);
-
-    if (formIds.length > 0) {
-      extraDesc = await gatherFormNames({
-        idFields: formIds,
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherPipelineTemplateFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -114,18 +86,7 @@ const pipelineTemplateMutations = {
 
     await checkPermission(pipelineTemplate.type, user, 'templatesRemove');
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [pipelineTemplate.createdBy],
-      foreignKey: 'createdBy',
-    });
-
-    if (pipelineTemplate.stages && pipelineTemplate.stages.length > 0) {
-      extraDesc = await gatherFormNames({
-        idFields: pipelineTemplate.stages.map(s => s.formId),
-        foreignKey: 'formId',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
 
     const removed = await PipelineTemplates.removePipelineTemplate(_id);
 

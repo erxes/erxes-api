@@ -79,7 +79,7 @@ describe('Checklists mutations', () => {
     const pipeline = await pipelineFactory({});
     const stage = await stageFactory({ pipelineId: pipeline._id });
     const deal = await dealFactory({ stageId: stage._id });
-    const checklist = await checklistFactory({ contentType: 'task', contentTypeId: deal._id });
+    const checklist = await checklistFactory({ contentType: 'deal', contentTypeId: deal._id });
 
     if (!user || !user.details) {
       throw new Error('User not found');

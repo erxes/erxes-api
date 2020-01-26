@@ -5,7 +5,7 @@ import { MODULE_NAMES } from '../../constants';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherKbArticleNames, gatherKbTopicFieldNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherKbCategoryFieldNames, gatherKbTopicFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 const knowledgeBaseMutations = {
   /**
@@ -114,21 +114,9 @@ const knowledgeBaseMutations = {
     const kbCategory = await KnowledgeBaseCategories.getCategory(_id);
     const updated = await KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
 
-    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
+    let extraDesc: LogDesc[] = await gatherKbCategoryFieldNames(kbCategory);
 
-    extraDesc = await gatherUsernames({
-      idFields: [kbCategory.createdBy],
-      foreignKey: 'createdBy',
-      prevList: extraDesc,
-    });
-
-    if (kbCategory.articleIds && kbCategory.articleIds.length > 0) {
-      extraDesc = await gatherKbArticleNames({
-        idFields: kbCategory.articleIds,
-        foreignKey: 'articleIds',
-        prevList: extraDesc,
-      });
-    }
+    extraDesc = await gatherKbCategoryFieldNames(updated, extraDesc);
 
     await putUpdateLog(
       {
@@ -150,26 +138,9 @@ const knowledgeBaseMutations = {
   async knowledgeBaseCategoriesRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const kbCategory = await KnowledgeBaseCategories.getCategory(_id);
 
-    const articles = await KnowledgeBaseArticles.find({ _id: { $in: kbCategory.articleIds } }, { title: 1 });
-
     const removed = await KnowledgeBaseCategories.removeDoc(_id);
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [kbCategory.createdBy],
-      foreignKey: 'createdBy',
-    });
-
-    extraDesc = await gatherUsernames({
-      idFields: [kbCategory.modifiedBy],
-      foreignKey: 'modifiedBy',
-      prevList: extraDesc,
-    });
-
-    if (articles.length > 0) {
-      for (const article of articles) {
-        extraDesc.push({ articleIds: article._id, name: article.title });
-      }
-    }
+    const extraDesc: LogDesc[] = await gatherKbCategoryFieldNames(kbCategory);
 
     await putDeleteLog(
       {

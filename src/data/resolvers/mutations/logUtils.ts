@@ -1,4 +1,5 @@
 import * as _ from 'underscore';
+import { IPipelineDocument } from '../../../db/models/definitions/boards';
 import { IChannelDocument } from '../../../db/models/definitions/channels';
 import { ICompanyDocument } from '../../../db/models/definitions/companies';
 import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
@@ -7,11 +8,13 @@ import { IDealDocument, IProductDocument } from '../../../db/models/definitions/
 import { IEngageMessage, IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IGrowthHackDocument } from '../../../db/models/definitions/growthHacks';
 import { IIntegrationDocument } from '../../../db/models/definitions/integrations';
-import { ITopicDocument } from '../../../db/models/definitions/knowledgebase';
+import { ICategoryDocument, ITopicDocument } from '../../../db/models/definitions/knowledgebase';
+import { IPipelineTemplateDocument } from '../../../db/models/definitions/pipelineTemplates';
 import { IScriptDocument } from '../../../db/models/definitions/scripts';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import {
+  Boards,
   Brands,
   Companies,
   Customers,
@@ -126,18 +129,6 @@ export const gatherStageNames = async (params: ILogNameParams): Promise<LogDesc[
   });
 };
 
-export const gatherLabelNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: PipelineLabels,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['name'],
-  });
-};
-
 export const gatherProductNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
@@ -171,30 +162,6 @@ export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[
     foreignKey,
     prevList,
     nameFields: ['name'],
-  });
-};
-
-export const gatherKbArticleNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: KnowledgeBaseArticles,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['title'],
-  });
-};
-
-export const gatherKbTopicNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: KnowledgeBaseTopics,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['title'],
   });
 };
 
@@ -393,10 +360,12 @@ export const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList
   }
 
   if (doc.labelIds && doc.labelIds.length > 0) {
-    options = await gatherLabelNames({
+    options = await gatherNames({
+      collection: PipelineLabels,
       idFields: doc.labelIds,
       foreignKey: 'labelIds',
       prevList: options,
+      nameFields: ['name'],
     });
   }
 
@@ -636,6 +605,36 @@ export const gatherKbTopicFieldNames = async (doc: ITopicDocument, prevList?: Lo
   return options;
 };
 
+export const gatherKbCategoryFieldNames = async (doc: ICategoryDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  const articles = await KnowledgeBaseArticles.find({ _id: { $in: doc.articleIds } }, { title: 1 });
+
+  options = await gatherUsernames({
+    idFields: [doc.createdBy],
+    foreignKey: 'createdBy',
+    prevList: options,
+  });
+
+  options = await gatherUsernames({
+    idFields: [doc.modifiedBy],
+    foreignKey: 'modifiedBy',
+    prevList: options,
+  });
+
+  if (articles.length > 0) {
+    for (const article of articles) {
+      options.push({ articleIds: article._id, name: article.title });
+    }
+  }
+
+  return options;
+};
+
 export const gatherProductFieldNames = async (doc: IProductDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
@@ -678,10 +677,12 @@ export const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: Lo
   }
 
   if (doc.kbTopicId) {
-    options = await gatherKbTopicNames({
+    options = await gatherNames({
+      collection: KnowledgeBaseTopics,
       idFields: [doc.kbTopicId],
       foreignKey: 'kbTopicId',
       prevList: options,
+      nameFields: ['title'],
     });
   }
 
@@ -689,6 +690,83 @@ export const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: Lo
     options = await gatherIntegrationNames({
       idFields: doc.leadIds,
       foreignKey: 'leadIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherPipelineFieldNames = async (doc: IPipelineDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  options = await gatherNames({
+    collection: Boards,
+    idFields: [doc.boardId],
+    foreignKey: 'boardId',
+    nameFields: ['name'],
+    prevList: options,
+  });
+
+  if (doc.userId) {
+    options = await gatherUsernames({
+      idFields: [doc.userId],
+      foreignKey: 'userId',
+      prevList: options,
+    });
+  }
+
+  if (doc.excludeCheckUserIds && doc.excludeCheckUserIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.excludeCheckUserIds,
+      foreignKey: 'excludeCheckUserIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.memberIds && doc.memberIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.memberIds,
+      foreignKey: 'memberIds',
+      prevList: options,
+    });
+  }
+
+  if (doc.watchedUserIds && doc.watchedUserIds.length > 0) {
+    options = await gatherUsernames({
+      idFields: doc.watchedUserIds,
+      foreignKey: 'watchedUserIds',
+      prevList: options,
+    });
+  }
+
+  return options;
+};
+
+export const gatherPipelineTemplateFieldNames = async (
+  doc: IPipelineTemplateDocument,
+  prevList?: LogDesc[],
+): Promise<LogDesc[]> => {
+  let options: LogDesc[] = [];
+
+  if (prevList) {
+    options = prevList;
+  }
+
+  options = await gatherUsernames({
+    idFields: [doc.createdBy],
+    foreignKey: 'createdBy',
+    prevList: options,
+  });
+
+  if (doc.stages && doc.stages.length > 0) {
+    options = await gatherFormNames({
+      idFields: doc.stages.map(s => s.formId),
+      foreignKey: 'formId',
       prevList: options,
     });
   }

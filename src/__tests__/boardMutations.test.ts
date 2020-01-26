@@ -220,7 +220,10 @@ describe('Test boards mutations', () => {
     const pipelineToUpdate = await pipelineFactory({});
 
     const args = {
-      orders: [{ _id: pipeline._id, order: 9 }, { _id: pipelineToUpdate._id, order: 3 }],
+      orders: [
+        { _id: pipeline._id, order: 9 },
+        { _id: pipelineToUpdate._id, order: 3 },
+      ],
     };
 
     const mutation = `
@@ -282,16 +285,22 @@ describe('Test boards mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'pipelinesRemove', { _id: pipeline._id }, context);
+    const user = await userFactory();
+    const pipe = await pipelineFactory({ watchedUserIds: [user._id] });
 
-    expect(await Pipelines.findOne({ _id: pipeline._id })).toBe(null);
+    await graphqlRequest(mutation, 'pipelinesRemove', { _id: pipe._id }, context);
+
+    expect(await Pipelines.findOne({ _id: pipe._id })).toBe(null);
   });
 
   test('Stage update orders', async () => {
     const stageToUpdate = await stageFactory({});
 
     const args = {
-      orders: [{ _id: stage._id, order: 9 }, { _id: stageToUpdate._id, order: 3 }],
+      orders: [
+        { _id: stage._id, order: 9 },
+        { _id: stageToUpdate._id, order: 3 },
+      ],
     };
 
     const mutation = `

@@ -3,7 +3,7 @@ import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/mode
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
-import { gatherNames, gatherUsernames, LogDesc } from './logUtils';
+import { gatherPipelineFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -110,31 +110,7 @@ const boardMutations = {
 
     const pipeline = await Pipelines.createPipeline({ userId: user._id, ...doc }, stages);
 
-    let extraDesc: LogDesc[] = [{ userId: user._id, name: user.username || user.email }];
-
-    extraDesc = await gatherNames({
-      collection: Boards,
-      idFields: [doc.boardId],
-      foreignKey: 'boardId',
-      nameFields: ['name'],
-      prevList: extraDesc,
-    });
-
-    if (doc.excludeCheckUserIds && doc.excludeCheckUserIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: doc.excludeCheckUserIds,
-        foreignKey: 'excludeCheckUserIds',
-        prevList: extraDesc,
-      });
-    }
-
-    if (doc.memberIds && doc.memberIds.length > 0) {
-      extraDesc = await gatherUsernames({
-        idFields: doc.memberIds,
-        foreignKey: 'memberIds',
-        prevList: extraDesc,
-      });
-    }
+    const extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
 
     await putCreateLog(
       {
@@ -156,7 +132,26 @@ const boardMutations = {
   async pipelinesEdit(_root, { _id, stages, ...doc }: IPipelinesEdit, { user }: IContext) {
     await checkPermission(doc.type, user, 'pipelinesEdit');
 
-    return Pipelines.updatePipeline(_id, doc, stages);
+    const pipeline = await Pipelines.getPipeline(_id);
+
+    const updated = await Pipelines.updatePipeline(_id, doc, stages);
+
+    let extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
+
+    extraDesc = await gatherPipelineFieldNames(updated, extraDesc);
+
+    await putUpdateLog(
+      {
+        type: `${doc.type}Pipelines`,
+        newData: JSON.stringify(doc),
+        description: `"${doc.name}" has been edited`,
+        object: pipeline,
+        extraDesc: JSON.stringify(extraDesc),
+      },
+      user,
+    );
+
+    return updated;
   },
 
   /**
@@ -183,7 +178,21 @@ const boardMutations = {
 
     await checkPermission(pipeline.type, user, 'pipelinesRemove');
 
-    return Pipelines.removePipeline(_id);
+    const removed = await Pipelines.removePipeline(_id);
+
+    const extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
+
+    await putDeleteLog(
+      {
+        type: `${pipeline.type}Pipelines`,
+        object: pipeline,
+        description: `${pipeline.name} has been removed`,
+        extraDesc: JSON.stringify(extraDesc),
+      },
+      user,
+    );
+
+    return removed;
   },
 
   /**
