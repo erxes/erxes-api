@@ -61,11 +61,11 @@
   "addons": [
     {
       "plan": "mongolab:sandbox",
-      "as": "MONGO"
+      "as": "MONGO_API"
     },
     {
       "plan": "mongolab:sandbox",
-      "as": "MONGO"
+      "as": "MONGO_LOGGER"
     },
     {
       "plan": "heroku-redis:hobby-dev",
