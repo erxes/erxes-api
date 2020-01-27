@@ -59,7 +59,7 @@ const importHistoryMutations = {
         type: MODULE_NAMES.IMPORT_HISTORY,
         object: importHistory,
         description: `${importHistory._id}-${importHistory.date} has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

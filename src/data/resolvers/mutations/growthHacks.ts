@@ -50,15 +50,15 @@ const growthHackMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.GROWTH_HACK,
-        newData: JSON.stringify({
+        newData: {
           ...extendedDoc,
           createdAt: growthHack.createdAt,
           modifiedAt: growthHack.modifiedAt,
           order: growthHack.order,
-        }),
+        },
         object: growthHack,
         description: `"${growthHack.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -109,9 +109,9 @@ const growthHackMutations = {
       {
         type: MODULE_NAMES.GROWTH_HACK,
         object: oldGrowthHack,
-        newData: JSON.stringify(extendedDoc),
+        newData: extendedDoc,
         description: `"${updatedGrowthHack.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -183,7 +183,7 @@ const growthHackMutations = {
         type: MODULE_NAMES.GROWTH_HACK,
         object: growthHack,
         description: `"${growthHack.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

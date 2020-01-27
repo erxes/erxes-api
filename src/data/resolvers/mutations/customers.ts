@@ -30,10 +30,10 @@ const customerMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.CUSTOMER,
-        newData: JSON.stringify(modifiedDoc),
+        newData: modifiedDoc,
         object: customer,
         description: `"${customer.firstName}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -56,9 +56,9 @@ const customerMutations = {
       {
         type: MODULE_NAMES.CUSTOMER,
         object: customer,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${customer.firstName || doc.firstName}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -95,7 +95,7 @@ const customerMutations = {
           type: MODULE_NAMES.CUSTOMER,
           object: customer,
           description: `"${customer.firstName}" has been deleted`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );

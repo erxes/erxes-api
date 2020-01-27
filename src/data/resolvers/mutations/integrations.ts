@@ -25,10 +25,10 @@ const integrationMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.INTEGRATION,
-        newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
+        newData: { ...doc, createdUserId: user._id, isActive: true },
         object: integration,
         description: `"${integration.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -51,9 +51,9 @@ const integrationMutations = {
       {
         type: MODULE_NAMES.INTEGRATION,
         object: integration,
-        newData: JSON.stringify(fields),
+        newData: fields,
         description: `"${integration.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -86,10 +86,10 @@ const integrationMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.INTEGRATION,
-        newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
+        newData: { ...doc, createdUserId: user._id, isActive: true },
         object: integration,
         description: `"${integration.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -141,10 +141,10 @@ const integrationMutations = {
       await putCreateLog(
         {
           type: MODULE_NAMES.INTEGRATION,
-          newData: JSON.stringify({ ...doc, createdUserId: user._id, isActive: true }),
+          newData: { ...doc, createdUserId: user._id, isActive: true },
           object: integration,
           description: `"${integration.name}" has been created`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -179,9 +179,9 @@ const integrationMutations = {
       {
         type: MODULE_NAMES.INTEGRATION,
         object: { name: integration.name, brandId: integration.brandId },
-        newData: JSON.stringify({ name, brandId }),
+        newData: { name, brandId },
         description: `"${integration.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -234,7 +234,7 @@ const integrationMutations = {
         type: MODULE_NAMES.INTEGRATION,
         object: integration,
         description: `"${integration.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -297,7 +297,7 @@ const integrationMutations = {
       {
         type: 'integration',
         object: { isActive: integration.isActive },
-        newData: JSON.stringify({ isActive: false }),
+        newData: { isActive: false },
         description: `Integration "${integration.name}" has been archived.`,
       },
       user,

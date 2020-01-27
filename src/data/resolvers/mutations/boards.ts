@@ -31,10 +31,10 @@ const boardMutations = {
     await putCreateLog(
       {
         type: `${doc.type}Boards`,
-        newData: JSON.stringify(extendedDoc),
+        newData: extendedDoc,
         description: `"${extendedDoc.name}" has been created`,
         object: board,
-        extraDesc: JSON.stringify([{ userId: user._id, name: user.username || user.email }]),
+        extraDesc: [{ userId: user._id, name: user.username || user.email }],
       },
       user,
     );
@@ -59,10 +59,10 @@ const boardMutations = {
     await putUpdateLog(
       {
         type: `${doc.type}Boards`,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${doc.name}" has been edited`,
         object: board,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -94,7 +94,7 @@ const boardMutations = {
         type: `${board.type}Boards`,
         object: board,
         description: `"${board.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -115,10 +115,10 @@ const boardMutations = {
     await putCreateLog(
       {
         type: `${doc.type}Pipelines`,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${doc.name}" has been created`,
         object: pipeline,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -143,10 +143,10 @@ const boardMutations = {
     await putUpdateLog(
       {
         type: `${doc.type}Pipelines`,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${doc.name}" has been edited`,
         object: pipeline,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -187,7 +187,7 @@ const boardMutations = {
         type: `${pipeline.type}Pipelines`,
         object: pipeline,
         description: `${pipeline.name} has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

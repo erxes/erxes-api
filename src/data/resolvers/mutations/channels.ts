@@ -58,10 +58,10 @@ const channelMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.CHANNEL,
-        newData: JSON.stringify({ ...doc, userId: user._id }),
+        newData: { ...doc, userId: user._id },
         object: channel,
         description: `"${doc.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -90,9 +90,9 @@ const channelMutations = {
       {
         type: MODULE_NAMES.CHANNEL,
         object: channel,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${channel.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -121,7 +121,7 @@ const channelMutations = {
         type: MODULE_NAMES.CHANNEL,
         object: channel,
         description: `"${channel.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

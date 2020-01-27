@@ -22,10 +22,10 @@ const companyMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.COMPANY,
-        newData: JSON.stringify(doc),
+        newData: doc,
         object: company,
         description: `"${company.primaryName}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -48,9 +48,9 @@ const companyMutations = {
       {
         type: MODULE_NAMES.COMPANY,
         object: company,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${company.primaryName}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -74,7 +74,7 @@ const companyMutations = {
           type: MODULE_NAMES.COMPANY,
           object: company,
           description: `"${company.primaryName}" has been removed`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );

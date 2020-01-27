@@ -44,9 +44,9 @@ const permissionMutations = {
         {
           type: MODULE_NAMES.PERMISSION,
           object: perm,
-          newData: JSON.stringify(perm),
+          newData: perm,
           description,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -94,7 +94,7 @@ const permissionMutations = {
           type: MODULE_NAMES.PERMISSION,
           object: perm,
           description,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -120,7 +120,7 @@ const usersGroupMutations = {
       {
         type: MODULE_NAMES.USER_GROUP,
         object: result,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${result.name}" has been created`,
       },
       user,
@@ -149,7 +149,7 @@ const usersGroupMutations = {
       {
         type: MODULE_NAMES.USER_GROUP,
         object: group,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${group.name}" has been edited`,
       },
       user,
@@ -192,7 +192,7 @@ const usersGroupMutations = {
       {
         type: 'userGroup',
         object: clone,
-        newData: JSON.stringify({ name: clone.name, description: clone.description }),
+        newData: { name: clone.name, description: clone.description },
         description: `"${group.name}" has been copied`,
       },
       user,

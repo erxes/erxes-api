@@ -19,7 +19,7 @@ const emailTemplateMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.EMAIL_TEMPLATE,
-        newData: JSON.stringify(doc),
+        newData: doc,
         object: template,
         description: `"${template.name}" has been created`,
       },
@@ -40,7 +40,7 @@ const emailTemplateMutations = {
       {
         type: MODULE_NAMES.EMAIL_TEMPLATE,
         object: template,
-        newData: JSON.stringify(fields),
+        newData: fields,
         description: `"${template.name}" has been edited`,
       },
       user,

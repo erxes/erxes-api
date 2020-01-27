@@ -23,10 +23,10 @@ const scriptMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.SCRIPT,
-        newData: JSON.stringify(modifiedDoc),
+        newData: modifiedDoc,
         object: script,
         description: `"${script.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -49,9 +49,9 @@ const scriptMutations = {
       {
         type: MODULE_NAMES.SCRIPT,
         object: script,
-        newData: JSON.stringify(fields),
+        newData: fields,
         description: `"${script.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -73,7 +73,7 @@ const scriptMutations = {
         type: MODULE_NAMES.SCRIPT,
         object: script,
         description: `"${script.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

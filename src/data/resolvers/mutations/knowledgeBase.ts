@@ -19,10 +19,10 @@ const knowledgeBaseMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_TOPIC,
-        newData: JSON.stringify({ ...doc, createdBy: user._id, createdDate: topic.createdDate }),
+        newData: { ...doc, createdBy: user._id, createdDate: topic.createdDate },
         object: topic,
         description: `"${topic.title}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -45,9 +45,9 @@ const knowledgeBaseMutations = {
       {
         type: MODULE_NAMES.KB_TOPIC,
         object: topic,
-        newData: JSON.stringify({ ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate }),
+        newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
         description: `"${topic.title}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -69,7 +69,7 @@ const knowledgeBaseMutations = {
         type: MODULE_NAMES.KB_TOPIC,
         object: topic,
         description: `"${topic.title}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -96,10 +96,10 @@ const knowledgeBaseMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_CATEGORY,
-        newData: JSON.stringify({ ...doc, createdBy: user._id, createdDate: kbCategory.createdDate }),
+        newData: { ...doc, createdBy: user._id, createdDate: kbCategory.createdDate },
         description: `"${kbCategory.title}" has been created`,
         object: kbCategory,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -122,9 +122,9 @@ const knowledgeBaseMutations = {
       {
         type: MODULE_NAMES.KB_CATEGORY,
         object: kbCategory,
-        newData: JSON.stringify({ ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate }),
+        newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
         description: `"${kbCategory.title}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -147,7 +147,7 @@ const knowledgeBaseMutations = {
         type: MODULE_NAMES.KB_CATEGORY,
         object: kbCategory,
         description: `"${kbCategory.title}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -166,10 +166,10 @@ const knowledgeBaseMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_ARTICLE,
-        newData: JSON.stringify({ ...doc, createdBy: user._id, createdDate: kbArticle.createdDate }),
+        newData: { ...doc, createdBy: user._id, createdDate: kbArticle.createdDate },
         description: `"${kbArticle.title}" has been created`,
         object: kbArticle,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -196,9 +196,9 @@ const knowledgeBaseMutations = {
       {
         type: MODULE_NAMES.KB_ARTICLE,
         object: kbArticle,
-        newData: JSON.stringify({ ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate }),
+        newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
         description: `"${kbArticle.title}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -231,7 +231,7 @@ const knowledgeBaseMutations = {
         type: MODULE_NAMES.KB_ARTICLE,
         object: kbArticle,
         description: `"${kbArticle.title}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

@@ -29,10 +29,10 @@ const responseTemplateMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.RESPONSE_TEMPLATE,
-        newData: JSON.stringify(doc),
+        newData: doc,
         object: template,
         description: `"${template.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -69,9 +69,9 @@ const responseTemplateMutations = {
       {
         type: MODULE_NAMES.RESPONSE_TEMPLATE,
         object: template,
-        newData: JSON.stringify(fields),
+        newData: fields,
         description: `"${template.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -96,7 +96,7 @@ const responseTemplateMutations = {
         type: MODULE_NAMES.RESPONSE_TEMPLATE,
         object: template,
         description: `"${template.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

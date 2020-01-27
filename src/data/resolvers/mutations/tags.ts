@@ -20,7 +20,7 @@ const tagMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.TAG,
-        newData: JSON.stringify(tag),
+        newData: tag,
         object: tag,
         description: `"${tag.name}" has been created`,
       },
@@ -41,7 +41,7 @@ const tagMutations = {
       {
         type: MODULE_NAMES.TAG,
         object: tag,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${tag.name}" has been edited`,
       },
       user,

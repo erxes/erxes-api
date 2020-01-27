@@ -20,10 +20,10 @@ const brandMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.BRAND,
-        newData: JSON.stringify({ ...doc, userId: user._id }),
+        newData: { ...doc, userId: user._id },
         object: brand,
         description: `"${doc.name}" has been created`,
-        extraDesc: JSON.stringify([{ userId: user._id, name: user.username || user.email }]),
+        extraDesc: [{ userId: user._id, name: user.username || user.email }],
       },
       user,
     );
@@ -48,9 +48,9 @@ const brandMutations = {
         {
           type: MODULE_NAMES.BRAND,
           object: brand,
-          newData: JSON.stringify(fields),
+          newData: fields,
           description: `"${fields.name}" has been edited`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -77,7 +77,7 @@ const brandMutations = {
           type: MODULE_NAMES.BRAND,
           object: brand,
           description: `"${brand.name}" has been removed`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -106,9 +106,9 @@ const brandMutations = {
       {
         type: MODULE_NAMES.BRAND,
         object: brand,
-        newData: JSON.stringify({ emailConfig }),
+        newData: { emailConfig },
         description: `${brand.name} email config has been changed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

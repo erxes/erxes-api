@@ -33,14 +33,14 @@ const productMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.PRODUCT,
-        newData: JSON.stringify({
+        newData: {
           ...doc,
           categoryId: product.categoryId,
           customFieldsData: product.customFieldsData,
-        }),
+        },
         object: product,
         description: `"${product.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -65,9 +65,9 @@ const productMutations = {
       {
         type: MODULE_NAMES.PRODUCT,
         object: product,
-        newData: JSON.stringify({ ...doc, customFieldsData: updated.customFieldsData }),
+        newData: { ...doc, customFieldsData: updated.customFieldsData },
         description: `${product.name} has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -92,7 +92,7 @@ const productMutations = {
           type: MODULE_NAMES.PRODUCT,
           object: product,
           description: `"${product.name}" has been removed`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -121,10 +121,10 @@ const productMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.PRODUCT_CATEGORY,
-        newData: JSON.stringify({ ...doc, order: productCategory.order }),
+        newData: { ...doc, order: productCategory.order },
         object: productCategory,
         description: `"${productCategory.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -164,9 +164,9 @@ const productMutations = {
       {
         type: MODULE_NAMES.PRODUCT_CATEGORY,
         object: productCategory,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${productCategory.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -196,7 +196,7 @@ const productMutations = {
         type: MODULE_NAMES.PRODUCT_CATEGORY,
         object: productCategory,
         description: `"${productCategory.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

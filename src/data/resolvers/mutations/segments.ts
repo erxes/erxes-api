@@ -30,10 +30,10 @@ const segmentMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.SEGMENT,
-        newData: JSON.stringify(doc),
+        newData: doc,
         object: segment,
         description: `"${segment.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -71,9 +71,9 @@ const segmentMutations = {
       {
         type: MODULE_NAMES.SEGMENT,
         object: segment,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${segment.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -102,7 +102,7 @@ const segmentMutations = {
         type: MODULE_NAMES.SEGMENT,
         object: segment,
         description: `"${segment.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

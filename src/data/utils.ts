@@ -574,10 +574,10 @@ export interface ILogQueryParams {
 
 interface ILogParams {
   type: string;
-  newData?: string;
   description?: string;
   object: any;
-  extraDesc?: string;
+  newData?: object;
+  extraDesc?: object[];
 }
 
 /**
@@ -654,11 +654,19 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
  * @param user User information from mutation context
  */
 export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'create', object: JSON.stringify(params.object) };
+  const doc = {
+    ...params,
+    action: 'create',
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+    object: JSON.stringify(params.object),
+    newData: JSON.stringify(params.newData),
+    extraDesc: JSON.stringify(params.extraDesc),
+  };
 
   registerOnboardHistory({ type: `${doc.type}Create`, user });
 
-  return putLog(doc, user);
+  return sendMessage('putLog', doc);
 };
 
 export const registerOnboardHistory = ({ type, user }: { type: string; user: IUserDocument }) =>
@@ -678,9 +686,17 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
  * @param user User information from mutation context
  */
 export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'update', object: JSON.stringify(params.object) };
+  const doc = {
+    ...params,
+    action: 'update',
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+    object: JSON.stringify(params.object),
+    newData: JSON.stringify(params.newData),
+    extraDesc: JSON.stringify(params.extraDesc),
+  };
 
-  return putLog(doc, user);
+  return sendMessage('putLog', doc);
 };
 
 /**
@@ -689,22 +705,17 @@ export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
  * @param user User information from mutation context
  */
 export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = { ...params, action: 'delete', object: JSON.stringify(params.object) };
-
-  return putLog(doc, user);
-};
-
-/**
- * Sends a request to logs api
- * @param {Object} body Request
- * @param {Object} user User information from mutation context
- */
-const putLog = (body: ILogParams, user: IUserDocument) => {
-  return sendMessage('putLog', {
-    ...body,
+  const doc = {
+    ...params,
+    action: 'delete',
     createdBy: user._id,
     unicode: user.username || user.email || user._id,
-  });
+    object: JSON.stringify(params.object),
+    newData: JSON.stringify(params.newData),
+    extraDesc: JSON.stringify(params.extraDesc),
+  };
+
+  return sendMessage('putLog', doc);
 };
 
 /**

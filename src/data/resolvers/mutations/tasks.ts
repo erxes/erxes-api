@@ -71,10 +71,10 @@ const taskMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.TASK,
-        newData: JSON.stringify(extendedDoc),
+        newData: extendedDoc,
         object: task,
         description: `"${task.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -123,9 +123,9 @@ const taskMutations = {
       {
         type: MODULE_NAMES.TASK,
         object: oldTask,
-        newData: JSON.stringify(extendedDoc),
+        newData: extendedDoc,
         description: `"${updatedTask.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -198,7 +198,7 @@ const taskMutations = {
         type: MODULE_NAMES.TASK,
         object: task,
         description: `"${task.name}" has been deleted`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

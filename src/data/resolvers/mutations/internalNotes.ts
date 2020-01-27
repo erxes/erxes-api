@@ -242,10 +242,10 @@ const internalNoteMutations = {
       await putCreateLog(
         {
           type: MODULE_NAMES.INTERNAL_NOTE,
-          newData: JSON.stringify({ ...args, createdUserId: user._id, createdAt: internalNote.createdAt }),
+          newData: { ...args, createdUserId: user._id, createdAt: internalNote.createdAt },
           object: internalNote,
           description: `A note for ${internalNote.contentType} "${notifDoc.content}" has been created`,
-          extraDesc: JSON.stringify(extraDesc),
+          extraDesc,
         },
         user,
       );
@@ -278,9 +278,9 @@ const internalNoteMutations = {
       {
         type: MODULE_NAMES.INTERNAL_NOTE,
         object: internalNote,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `Note of type ${internalNote.contentType} has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -313,7 +313,7 @@ const internalNoteMutations = {
         type: MODULE_NAMES.INTERNAL_NOTE,
         object: internalNote,
         description: `Note of type ${internalNote.contentType} has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

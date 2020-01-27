@@ -33,10 +33,10 @@ const checklistMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.CHECKLIST,
-        newData: JSON.stringify(args),
+        newData: args,
         object: checklist,
         description: `"${title}" has been created in ${contentType.toUpperCase()} "${itemName}"`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -69,9 +69,9 @@ const checklistMutations = {
       {
         type: MODULE_NAMES.CHECKLIST,
         object: checklist,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${title}" saved in ${contentType.toUpperCase()} "${itemName}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -101,7 +101,7 @@ const checklistMutations = {
         type: MODULE_NAMES.CHECKLIST,
         object: checklist,
         description: `"${title}" from ${contentType.toUpperCase()} "${itemName}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -125,10 +125,10 @@ const checklistMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.CHECKLIST_ITEM,
-        newData: JSON.stringify(args),
+        newData: args,
         object: checklistItem,
         description: `"${checklistItem.content}" has been added to "${checklist.title}"`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -155,9 +155,9 @@ const checklistMutations = {
       {
         type: MODULE_NAMES.CHECKLIST_ITEM,
         object: checklistItem,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${checklistItem.content}" has been edited /checked/`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -185,7 +185,7 @@ const checklistMutations = {
         type: MODULE_NAMES.CHECKLIST,
         object: checklistItem,
         description: `"${checklistItem.content}" has been removed from "${checklist.title}"`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

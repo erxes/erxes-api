@@ -29,10 +29,10 @@ const pipelineTemplateMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.PIPELINE_TEMPLATE,
-        newData: JSON.stringify({ ...doc, stages: pipelineTemplate.stages }),
+        newData: { ...doc, stages: pipelineTemplate.stages },
         description: `"${doc.name}" has been created`,
         object: pipelineTemplate,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -56,10 +56,10 @@ const pipelineTemplateMutations = {
     await putUpdateLog(
       {
         type: MODULE_NAMES.PIPELINE_TEMPLATE,
-        newData: JSON.stringify({ ...doc, stages: updated.stages }),
+        newData: { ...doc, stages: updated.stages },
         description: `"${doc.name}" has been edited`,
         object: pipelineTemplate,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -95,7 +95,7 @@ const pipelineTemplateMutations = {
         type: MODULE_NAMES.PIPELINE_TEMPLATE,
         object: pipelineTemplate,
         description: `"${pipelineTemplate.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

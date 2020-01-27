@@ -26,10 +26,10 @@ const pipelineLabelMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.PIPELINE_LABEL,
-        newData: JSON.stringify({ ...doc, createdBy: user._id, createdAt: pipelineLabel.createdAt }),
+        newData: { ...doc, createdBy: user._id, createdAt: pipelineLabel.createdAt },
         description: `"${doc.name}" has been created`,
         object: pipelineLabel,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -62,10 +62,10 @@ const pipelineLabelMutations = {
     await putUpdateLog(
       {
         type: MODULE_NAMES.PIPELINE_LABEL,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${doc.name}" has been edited`,
         object: pipelineLabel,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -99,7 +99,7 @@ const pipelineLabelMutations = {
         type: MODULE_NAMES.PIPELINE_LABEL,
         object: pipelineLabel,
         description: `"${pipelineLabel.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

@@ -35,16 +35,16 @@ const engageMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.ENGAGE,
-        newData: JSON.stringify({
+        newData: {
           ...doc,
           ...emptyCustomers,
-        }),
+        },
         object: {
           ...engageMessage.toObject(),
           ...emptyCustomers,
         },
         description: `"${engageMessage.title}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -73,9 +73,9 @@ const engageMutations = {
       {
         type: MODULE_NAMES.ENGAGE,
         object: { ...engageMessage.toObject(), ...emptyCustomers },
-        newData: JSON.stringify({ ...updated.toObject(), ...emptyCustomers }),
+        newData: { ...updated.toObject(), ...emptyCustomers },
         description: `"${engageMessage.title}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -104,7 +104,7 @@ const engageMutations = {
         type: MODULE_NAMES.ENGAGE,
         object: { ...engageMessage.toObject(), ...emptyCustomers },
         description: `"${engageMessage.title}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

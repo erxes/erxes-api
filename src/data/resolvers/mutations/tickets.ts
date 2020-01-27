@@ -58,15 +58,15 @@ const ticketMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.TICKET,
-        newData: JSON.stringify({
+        newData: {
           ...extendedDoc,
           order: ticket.order,
           createdAt: ticket.createdAt,
           modifiedAt: ticket.modifiedAt,
-        }),
+        },
         object: ticket,
         description: `"${ticket.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );

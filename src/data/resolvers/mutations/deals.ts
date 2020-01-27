@@ -53,10 +53,10 @@ const dealMutations = {
     await putCreateLog(
       {
         type: MODULE_NAMES.DEAL,
-        newData: JSON.stringify(extendedDoc),
+        newData: extendedDoc,
         object: deal,
         description: `"${deal.name}" has been created`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -104,9 +104,9 @@ const dealMutations = {
       {
         type: MODULE_NAMES.DEAL,
         object: oldDeal,
-        newData: JSON.stringify(doc),
+        newData: doc,
         description: `"${updatedDeal.name}" has been edited`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
@@ -179,7 +179,7 @@ const dealMutations = {
         type: MODULE_NAMES.DEAL,
         object: deal,
         description: `"${deal.name}" has been removed`,
-        extraDesc: JSON.stringify(extraDesc),
+        extraDesc,
       },
       user,
     );
