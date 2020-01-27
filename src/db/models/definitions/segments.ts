@@ -27,7 +27,6 @@ export interface ISegment {
   description?: string;
   subOf: string;
   color: string;
-  connector: string;
   conditions: ICondition[];
 }
 
@@ -85,7 +84,6 @@ export const segmentSchema = schemaWrapper(
     description: field({ type: String, optional: true }),
     subOf: field({ type: String, optional: true }),
     color: field({ type: String }),
-    connector: field({ type: String }),
     conditions: field({ type: [conditionSchema] }),
   }),
 );

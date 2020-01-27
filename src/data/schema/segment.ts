@@ -23,7 +23,6 @@ export const types = `
     description: String
     subOf: String
     color: String
-    connector: String
     conditions: JSON
 
     getSubSegments: [Segment]
@@ -42,7 +41,6 @@ const commonFields = `
   description: String,
   subOf: String,
   color: String,
-  connector: String,
   conditions: [SegmentCondition]
 `;
 

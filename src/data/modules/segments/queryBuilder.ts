@@ -10,7 +10,7 @@ export default {
   ): Promise<any> {
     const query: any = { $and: [] };
 
-    if (!segment || !segment.connector || !segment.conditions) {
+    if (!segment || !segment.conditions) {
       return {};
     }
 
@@ -25,7 +25,7 @@ export default {
 };
 
 export const countBySegments = async (segment: ISegment) => {
-  if (!segment || !segment.connector || !segment.conditions) {
+  if (!segment || !segment.conditions) {
     return 0;
   }
 
@@ -65,7 +65,9 @@ export const countBySegments = async (segment: ISegment) => {
 };
 
 function elkConvertConditionToQuery(condition: ICondition, { positive, negative }) {
-  const { operator, field, value = '' } = condition;
+  const operator = condition.propertyOperator || '';
+  const field = condition.propertyName || '';
+  const value = condition.propertyValue || '';
 
   const fixedValue = value.toLocaleLowerCase();
 

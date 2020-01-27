@@ -305,7 +305,6 @@ interface ISegmentFactoryInput {
   description?: string;
   subOf?: string;
   color?: string;
-  connector?: string;
   conditions?: IConditionsInput[];
 }
 
@@ -325,7 +324,6 @@ export const segmentFactory = (params: ISegmentFactoryInput = {}) => {
     description: params.description || faker.random.word(),
     subOf: params.subOf,
     color: params.color || '#809b87',
-    connector: params.connector || 'any',
     conditions: params.conditions || defaultConditions,
   });
 
