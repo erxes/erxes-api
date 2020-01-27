@@ -64,6 +64,10 @@
       "as": "MONGO"
     },
     {
+      "plan": "mongolab:sandbox",
+      "as": "MONGO"
+    },
+    {
       "plan": "heroku-redis:hobby-dev",
       "as": "REDIS"
     },
