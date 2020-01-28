@@ -1,3 +1,4 @@
+import * as _ from 'underscore';
 import { Segments } from '../../../db/models';
 import { ICondition, ISegment, ISegmentDocument } from '../../../db/models/definitions/segments';
 import { fetchElk } from '../../../elasticsearch';
@@ -24,23 +25,21 @@ export default {
   },
 };
 
-export const countBySegments = async (segment: ISegment) => {
-  if (!segment || !segment.conditions) {
-    return 0;
-  }
-
-  let positive = [];
-  let negative = [];
-
-  for (const condition of segment.conditions) {
-    elkConvertConditionToQuery(condition, { positive, negative });
-  }
+const generateQueryBySegment = async (args: {
+  propertyPositive;
+  propertyNegative;
+  eventPositive;
+  eventNegative;
+  segment: ISegment;
+}) => {
+  const { segment, propertyNegative, propertyPositive, eventNegative, eventPositive } = args;
 
   // Fetching parent segment
   const embeddedParentSegment = await Segments.findOne({ _id: segment.subOf });
   const parentSegment = embeddedParentSegment;
 
   if (parentSegment) {
+    await generateQueryBySegment({ ...args, segment: parentSegment });
     const parentPositive = [];
     const parentNegative = [];
 
@@ -52,22 +51,86 @@ export const countBySegments = async (segment: ISegment) => {
     negative = [...negative, ...parentNegative];
   }
 
-  console.log(JSON.stringify(positive), JSON.stringify(negative));
+  const propertyConditions: ICondition[] = [];
+  const eventConditions: ICondition[] = [];
 
-  const bool = {
-    must: positive,
-    must_not: negative,
-  };
+  for (const condition of segment.conditions) {
+    if (condition.type === 'property') {
+      propertyConditions.push(condition);
+    }
 
-  const response = await fetchElk('count', 'customers', { query: { bool } });
+    if (condition.type === 'event') {
+      eventConditions.push(condition);
+    }
+  }
 
-  return response.count;
+  for (const condition of propertyConditions) {
+    elkConvertConditionToQuery({
+      field: condition.propertyName || '',
+      operator: condition.propertyOperator || '',
+      value: condition.propertyValue || '',
+      positive: propertyPositive,
+      negative: propertyNegative,
+    });
+  }
+
+  for (const condition of eventConditions) {
+    const { eventAttributeFilters = [] } = condition;
+
+    for (const filter of eventAttributeFilters) {
+      elkConvertConditionToQuery({
+        field: `attributes.${filter.name}`,
+        operator: filter.operator,
+        value: filter.value,
+        positive: eventPositive,
+        negative: eventNegative,
+      });
+    }
+  }
 };
 
-function elkConvertConditionToQuery(condition: ICondition, { positive, negative }) {
-  const operator = condition.propertyOperator || '';
-  const field = condition.propertyName || '';
-  const value = condition.propertyValue || '';
+export const countBySegments = async (segment: ISegment) => {
+  if (!segment || !segment.conditions) {
+    return 0;
+  }
+
+  const propertyPositive = [];
+  const propertyNegative = [];
+  const eventPositive = [];
+  const eventNegative = [];
+
+  generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
+
+  const customersResponse = await fetchElk('search', 'customers', {
+    _source: '_id',
+    query: {
+      bool: {
+        must: propertyPositive,
+        must_not: propertyNegative,
+      },
+    },
+  });
+
+  const customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
+
+  const eventsResponse = await fetchElk('search', 'events', {
+    _source: 'customerId',
+    query: {
+      bool: {
+        must: eventPositive,
+        must_not: eventNegative,
+      },
+    },
+  });
+
+  const customerIdsByEvents = eventsResponse.hits.hits.map(hit => hit._source.customerId);
+  const customerIds = _.intersection(customerIdsByCustomers, customerIdsByEvents);
+
+  return customerIds.length;
+};
+
+function elkConvertConditionToQuery(args: { field: string; operator: string; value: string; positive; negative }) {
+  const { field, operator, value, positive, negative } = args;
 
   const fixedValue = value.toLocaleLowerCase();
 
