@@ -46,6 +46,7 @@ export const commonTypes = `
   priority: String
   status: String
   attachments: [Attachment]
+  userId: String
 `;
 
 export const commonMutationParams = `
