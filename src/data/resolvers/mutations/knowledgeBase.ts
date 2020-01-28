@@ -2,10 +2,17 @@ import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } f
 import { ITopic } from '../../../db/models/definitions/knowledgebase';
 import { IArticleCreate, ICategoryCreate } from '../../../db/models/KnowledgeBase';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherKbCategoryFieldNames,
+  gatherKbTopicFieldNames,
+  gatherUsernames,
+  LogDesc,
+  putCreateLog,
+  putDeleteLog,
+  putUpdateLog,
+} from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherKbCategoryFieldNames, gatherKbTopicFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 const knowledgeBaseMutations = {
   /**

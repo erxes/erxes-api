@@ -4,9 +4,10 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
+import { gatherBoardItemFieldNames, LogDesc, putCreateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog } from '../../utils';
+import { checkUserIds } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -16,7 +17,6 @@ import {
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
-import { gatherBoardItemFieldNames, LogDesc } from './logUtils';
 
 interface ITicketsEdit extends ITicket {
   _id: string;

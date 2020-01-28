@@ -38,8 +38,8 @@ import { tagSchema } from '../../../db/models/definitions/tags';
 import { taskSchema } from '../../../db/models/definitions/tasks';
 import { ticketSchema } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
+import { fetchLogs, ILogQueryParams } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
-import { fetchLogs, ILogQueryParams } from '../../utils';
 
 interface INameLabel {
   name: string;

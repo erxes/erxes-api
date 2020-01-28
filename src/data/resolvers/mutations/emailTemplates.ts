@@ -1,9 +1,9 @@
 import { EmailTemplates } from '../../../db/models';
 import { IEmailTemplate } from '../../../db/models/definitions/emailTemplates';
 import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 
 interface IEmailTemplatesEdit extends IEmailTemplate {
   _id: string;

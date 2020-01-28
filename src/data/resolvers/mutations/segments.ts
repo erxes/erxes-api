@@ -1,10 +1,9 @@
 import { Segments } from '../../../db/models';
 import { ISegment } from '../../../db/models/definitions/segments';
 import { MODULE_NAMES } from '../../constants';
+import { gatherSegmentNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherSegmentNames, LogDesc } from './logUtils';
 
 interface ISegmentsEdit extends ISegment {
   _id: string;

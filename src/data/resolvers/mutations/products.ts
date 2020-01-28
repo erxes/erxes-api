@@ -1,10 +1,16 @@
 import { ProductCategories, Products } from '../../../db/models';
 import { IProduct, IProductCategory, IProductDocument } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherProductCategoryNames,
+  gatherProductFieldNames,
+  LogDesc,
+  putCreateLog,
+  putDeleteLog,
+  putUpdateLog,
+} from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherProductCategoryNames, gatherProductFieldNames, LogDesc } from './logUtils';
 
 interface IProductsEdit extends IProduct {
   _id: string;

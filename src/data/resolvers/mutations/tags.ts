@@ -1,9 +1,9 @@
 import { Tags } from '../../../db/models';
 import { ITag } from '../../../db/models/definitions/tags';
 import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { publishConversationsChanged } from './conversations';
 
 interface ITagsEdit extends ITag {

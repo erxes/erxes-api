@@ -4,10 +4,16 @@ import { IExternalIntegrationParams } from '../../../db/models/Integrations';
 import { debugExternalApi } from '../../../debuggers';
 import { sendRPCMessage } from '../../../messageBroker';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherBrandNames,
+  gatherIntegrationFieldNames,
+  LogDesc,
+  putCreateLog,
+  putDeleteLog,
+  putUpdateLog,
+} from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, gatherIntegrationFieldNames, LogDesc } from './logUtils';
 
 interface IEditIntegration extends IIntegration {
   _id: string;

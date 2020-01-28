@@ -4,9 +4,10 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
+import { gatherGHFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { checkUserIds } from '../../utils';
 import {
   copyChecklists,
   IBoardNotificationParams,
@@ -14,7 +15,6 @@ import {
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
-import { gatherGHFieldNames, LogDesc } from './logUtils';
 
 interface IGrowthHacksEdit extends IGrowthHack {
   _id: string;

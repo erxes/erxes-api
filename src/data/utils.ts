@@ -12,7 +12,6 @@ import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
-import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -563,23 +562,6 @@ interface IRequestParams {
   form?: { [key: string]: string };
 }
 
-export interface ILogQueryParams {
-  start?: string;
-  end?: string;
-  userId?: string;
-  action?: string;
-  page?: number;
-  perPage?: number;
-}
-
-interface ILogParams {
-  type: string;
-  description?: string;
-  object: any;
-  newData?: object;
-  extraDesc?: object[];
-}
-
 /**
  * Sends post request to specific url
  */
@@ -648,27 +630,6 @@ export const fetchWorkersApi = ({ path, method, body, params }: IRequestParams) 
   );
 };
 
-/**
- * Prepares a create log request to log server
- * @param params Log document params
- * @param user User information from mutation context
- */
-export const putCreateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = {
-    ...params,
-    action: 'create',
-    createdBy: user._id,
-    unicode: user.username || user.email || user._id,
-    object: JSON.stringify(params.object),
-    newData: JSON.stringify(params.newData),
-    extraDesc: JSON.stringify(params.extraDesc),
-  };
-
-  registerOnboardHistory({ type: `${doc.type}Create`, user });
-
-  return sendMessage('putLog', doc);
-};
-
 export const registerOnboardHistory = ({ type, user }: { type: string; user: IUserDocument }) =>
   OnboardingHistories.getOrCreate({ type, user })
     .then(({ status }) => {
@@ -679,64 +640,6 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
       }
     })
     .catch(e => debugBase(e));
-
-/**
- * Prepares a create log request to log server
- * @param params Log document params
- * @param user User information from mutation context
- */
-export const putUpdateLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = {
-    ...params,
-    action: 'update',
-    createdBy: user._id,
-    unicode: user.username || user.email || user._id,
-    object: JSON.stringify(params.object),
-    newData: JSON.stringify(params.newData),
-    extraDesc: JSON.stringify(params.extraDesc),
-  };
-
-  return sendMessage('putLog', doc);
-};
-
-/**
- * Prepares a create log request to log server
- * @param params Log document params
- * @param user User information from mutation context
- */
-export const putDeleteLog = (params: ILogParams, user: IUserDocument) => {
-  const doc = {
-    ...params,
-    action: 'delete',
-    createdBy: user._id,
-    unicode: user.username || user.email || user._id,
-    object: JSON.stringify(params.object),
-    newData: JSON.stringify(params.newData),
-    extraDesc: JSON.stringify(params.extraDesc),
-  };
-
-  return sendMessage('putLog', doc);
-};
-
-/**
- * Sends a request to logs api
- * @param {Object} param0 Request
- */
-export const fetchLogs = (params: ILogQueryParams) => {
-  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
-
-  if (!LOGS_DOMAIN) {
-    return {
-      logs: [],
-      totalCount: 0,
-    };
-  }
-
-  return sendRequest(
-    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body: { params: JSON.stringify(params) } },
-    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
-  );
-};
 
 /**
  * Validates email using MX record resolver

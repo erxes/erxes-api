@@ -17,11 +17,11 @@ import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
+import { gatherUsernames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { ISendNotification, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import utils, { ISendNotification } from '../../utils';
 import { notifiedUserIds } from '../boardUtils';
-import { gatherUsernames, LogDesc } from './logUtils';
 
 interface IInternalNotesEdit extends IInternalNote {
   _id: string;

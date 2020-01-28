@@ -1,10 +1,9 @@
 import { Scripts } from '../../../db/models';
 import { IScript } from '../../../db/models/definitions/scripts';
 import { MODULE_NAMES } from '../../constants';
+import { gatherScriptFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherScriptFieldNames, LogDesc } from './logUtils';
 
 interface IScriptsEdit extends IScript {
   _id: string;

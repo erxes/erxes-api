@@ -1,11 +1,10 @@
 import { Permissions, Users, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
 import { MODULE_NAMES } from '../../constants';
+import { LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { LogDesc } from './logUtils';
 
 const permissionMutations = {
   /**

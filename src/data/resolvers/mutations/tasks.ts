@@ -4,9 +4,17 @@ import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherBoardItemFieldNames,
+  gatherStageNames,
+  LogDesc,
+  putCreateLog,
+  putDeleteLog,
+  putUpdateLog,
+} from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { checkUserIds } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -16,7 +24,6 @@ import {
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
-import { gatherBoardItemFieldNames, gatherStageNames, LogDesc } from './logUtils';
 
 interface ITasksEdit extends ITask {
   _id: string;

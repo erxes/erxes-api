@@ -2,11 +2,11 @@ import * as _ from 'underscore';
 import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { MESSAGE_KINDS, MODULE_NAMES } from '../../constants';
+import { gatherEngageFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import utils from '../../utils';
 import { send } from './engageUtils';
-import { gatherEngageFieldNames, LogDesc } from './logUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
   _id: string;

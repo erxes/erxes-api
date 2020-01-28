@@ -2,10 +2,9 @@ import * as _ from 'underscore';
 import { PipelineTemplates } from '../../../db/models';
 import { IPipelineTemplate, IPipelineTemplateStage } from '../../../db/models/definitions/pipelineTemplates';
 import { MODULE_NAMES } from '../../constants';
+import { gatherPipelineTemplateFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
-import { gatherPipelineTemplateFieldNames, LogDesc } from './logUtils';
 
 interface IPipelineTemplatesEdit extends IPipelineTemplate {
   _id: string;

@@ -1,10 +1,9 @@
 import { ResponseTemplates } from '../../../db/models';
 import { IResponseTemplate } from '../../../db/models/definitions/responseTemplates';
 import { MODULE_NAMES } from '../../constants';
+import { gatherBrandNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherBrandNames, LogDesc } from './logUtils';
 
 interface IResponseTemplatesEdit extends IResponseTemplate {
   _id: string;

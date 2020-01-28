@@ -1,10 +1,9 @@
 import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { MODULE_NAMES } from '../../constants';
+import { gatherCompanyFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherCompanyFieldNames, LogDesc } from './logUtils';
 
 interface ICompaniesEdit extends ICompany {
   _id: string;

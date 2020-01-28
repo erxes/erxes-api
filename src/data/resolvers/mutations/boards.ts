@@ -1,9 +1,8 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
-import { gatherPipelineFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -32,9 +31,7 @@ const boardMutations = {
       {
         type: `${doc.type}Boards`,
         newData: extendedDoc,
-        description: `"${extendedDoc.name}" has been created`,
         object: board,
-        extraDesc: [{ userId: user._id, name: user.username || user.email }],
       },
       user,
     );
@@ -51,18 +48,12 @@ const boardMutations = {
     const board = await Boards.getBoard(_id);
     const updated = await Boards.updateBoard(_id, doc);
 
-    const extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [board.userId || ''],
-      foreignKey: 'userId',
-    });
-
     await putUpdateLog(
       {
         type: `${doc.type}Boards`,
         newData: doc,
-        description: `"${doc.name}" has been edited`,
         object: board,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -80,24 +71,7 @@ const boardMutations = {
 
     const removed = await Boards.removeBoard(_id);
 
-    let extraDesc: LogDesc[] = [];
-
-    if (board.userId) {
-      extraDesc = await gatherUsernames({
-        idFields: [board.userId],
-        foreignKey: 'userId',
-      });
-    }
-
-    await putDeleteLog(
-      {
-        type: `${board.type}Boards`,
-        object: board,
-        description: `"${board.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: `${board.type}Boards`, object: board }, user);
 
     return removed;
   },
@@ -110,15 +84,11 @@ const boardMutations = {
 
     const pipeline = await Pipelines.createPipeline({ userId: user._id, ...doc }, stages);
 
-    const extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
-
     await putCreateLog(
       {
         type: `${doc.type}Pipelines`,
         newData: doc,
-        description: `"${doc.name}" has been created`,
         object: pipeline,
-        extraDesc,
       },
       user,
     );
@@ -136,17 +106,12 @@ const boardMutations = {
 
     const updated = await Pipelines.updatePipeline(_id, doc, stages);
 
-    let extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
-
-    extraDesc = await gatherPipelineFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: `${doc.type}Pipelines`,
         newData: doc,
-        description: `"${doc.name}" has been edited`,
         object: pipeline,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -180,17 +145,7 @@ const boardMutations = {
 
     const removed = await Pipelines.removePipeline(_id);
 
-    const extraDesc: LogDesc[] = await gatherPipelineFieldNames(pipeline);
-
-    await putDeleteLog(
-      {
-        type: `${pipeline.type}Pipelines`,
-        object: pipeline,
-        description: `${pipeline.name} has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: `${pipeline.type}Pipelines`, object: pipeline }, user);
 
     return removed;
   },

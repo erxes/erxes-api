@@ -1,21 +1,23 @@
 import * as _ from 'underscore';
-import { IPipelineDocument } from '../../../db/models/definitions/boards';
-import { IChannelDocument } from '../../../db/models/definitions/channels';
-import { ICompanyDocument } from '../../../db/models/definitions/companies';
-import { ACTIVITY_CONTENT_TYPES } from '../../../db/models/definitions/constants';
-import { ICustomerDocument } from '../../../db/models/definitions/customers';
-import { IDealDocument, IProductDocument } from '../../../db/models/definitions/deals';
-import { IEngageMessage, IEngageMessageDocument } from '../../../db/models/definitions/engages';
-import { IGrowthHackDocument } from '../../../db/models/definitions/growthHacks';
-import { IIntegrationDocument } from '../../../db/models/definitions/integrations';
-import { ICategoryDocument, ITopicDocument } from '../../../db/models/definitions/knowledgebase';
-import { IPipelineTemplateDocument } from '../../../db/models/definitions/pipelineTemplates';
-import { IScriptDocument } from '../../../db/models/definitions/scripts';
-import { ITaskDocument } from '../../../db/models/definitions/tasks';
-import { ITicketDocument } from '../../../db/models/definitions/tickets';
+import { IPipelineDocument } from '../db/models/definitions/boards';
+import { IChannelDocument } from '../db/models/definitions/channels';
+import { ICompanyDocument } from '../db/models/definitions/companies';
+import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
+import { ICustomerDocument } from '../db/models/definitions/customers';
+import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
+import { IEngageMessage, IEngageMessageDocument } from '../db/models/definitions/engages';
+import { IGrowthHackDocument } from '../db/models/definitions/growthHacks';
+import { IIntegrationDocument } from '../db/models/definitions/integrations';
+import { ICategoryDocument, ITopicDocument } from '../db/models/definitions/knowledgebase';
+import { IPipelineTemplateDocument } from '../db/models/definitions/pipelineTemplates';
+import { IScriptDocument } from '../db/models/definitions/scripts';
+import { ITaskDocument } from '../db/models/definitions/tasks';
+import { ITicketDocument } from '../db/models/definitions/tickets';
+import { IUserDocument } from '../db/models/definitions/users';
 import {
   Boards,
   Brands,
+  Checklists,
   Companies,
   Customers,
   Deals,
@@ -33,7 +35,10 @@ import {
   Tasks,
   Tickets,
   Users,
-} from '../../../db/models/index';
+} from '../db/models/index';
+import { sendMessage } from '../messageBroker';
+import { MODULE_NAMES } from './constants';
+import { getEnv, registerOnboardHistory, sendRequest } from './utils';
 
 export type LogDesc = {
   [key: string]: any;
@@ -55,7 +60,47 @@ interface IContentTypeParams {
   contentTypeId: string;
 }
 
+export interface ILogDataParams {
+  type: string;
+  description?: string;
+  object: any;
+  newData?: object;
+  extraDesc?: object[];
+  updatedDocument?: any;
+}
+
+interface IFinalLogParams extends ILogDataParams {
+  action: string;
+}
+
+export interface ILogQueryParams {
+  start?: string;
+  end?: string;
+  userId?: string;
+  action?: string;
+  page?: number;
+  perPage?: number;
+}
+
+interface IDescriptions {
+  description?: string;
+  extraDesc?: LogDesc[];
+}
+
+interface IDescriptionParams {
+  action: string;
+  type: string;
+  obj: any;
+  updatedDocument?: any;
+}
+
 type BoardItemDocument = IDealDocument | ITaskDocument | ITicketDocument | IGrowthHackDocument;
+
+const LOG_ACTIONS = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+};
 
 export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
@@ -467,7 +512,7 @@ export const gatherEngageFieldNames = async (
   return options;
 };
 
-export const gatherChannelFieldNames = async (doc: IChannelDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherChannelFieldNames = async (doc: IChannelDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -772,4 +817,189 @@ export const gatherPipelineTemplateFieldNames = async (
   }
 
   return options;
+};
+
+const gatherDescriptions = async (params: IDescriptionParams): Promise<IDescriptions> => {
+  const { action, type, obj, updatedDocument } = params;
+
+  let extraDesc: LogDesc[] = [];
+  let description: string = '';
+
+  switch (type) {
+    case MODULE_NAMES.BRAND:
+    case MODULE_NAMES.BOARD_DEAL:
+    case MODULE_NAMES.BOARD_GH:
+    case MODULE_NAMES.BOARD_TASK:
+    case MODULE_NAMES.BOARD_TICKET:
+      if (obj.userId) {
+        extraDesc = await gatherUsernames({ idFields: [obj.userId], foreignKey: 'userId' });
+      }
+
+      description = `"${obj.name}" has been ${action}d`;
+
+      break;
+    case MODULE_NAMES.PIPELINE_DEAL:
+    case MODULE_NAMES.PIPELINE_GH:
+    case MODULE_NAMES.PIPELINE_TASK:
+    case MODULE_NAMES.PIPELINE_TICKET:
+      extraDesc = await gatherPipelineFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherPipelineFieldNames(updatedDocument, extraDesc);
+      }
+
+      description = `"${obj.name}" has been ${action}d`;
+
+      break;
+    case MODULE_NAMES.CHANNEL:
+      extraDesc = await gatherChannelFieldNames(obj);
+      description = `"${obj.name}" has been ${action}d`;
+
+      if (updatedDocument) {
+        extraDesc = await gatherChannelFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.CHECKLIST:
+      const itemName = await findItemName({ contentType: obj.contentType, contentTypeId: obj.contentTypeId });
+
+      extraDesc = await gatherUsernames({ idFields: [obj.createdUserId], foreignKey: 'createdUserId' });
+
+      extraDesc.push({ contentTypeId: obj.contentTypeId, name: itemName });
+
+      if (action === LOG_ACTIONS.CREATE) {
+        description = `"${obj.title}" has been created in ${obj.contentType.toUpperCase()} "${itemName}"`;
+      }
+      if (action === LOG_ACTIONS.UPDATE) {
+        description = `"${obj.title}" saved in ${obj.contentType.toUpperCase()} "${itemName}" has been edited`;
+      }
+      if (action === LOG_ACTIONS.DELETE) {
+        description = `"${obj.title}" from ${obj.contentType.toUpperCase()} "${itemName}" has been removed`;
+      }
+
+      break;
+    case MODULE_NAMES.CHECKLIST_ITEM:
+      const checklist = await Checklists.getChecklist(obj.checklistId);
+
+      extraDesc = await gatherUsernames({ idFields: [obj.createdUserId], foreignKey: 'createdUserid' });
+
+      extraDesc.push({ checklistId: checklist._id, name: checklist.title });
+
+      if (action === LOG_ACTIONS.CREATE) {
+        description = `"${obj.content}" has been added to "${checklist.title}"`;
+      }
+      if (action === LOG_ACTIONS.UPDATE) {
+        description = `"${obj.content}" has been edited /checked/`;
+      }
+      if (action === LOG_ACTIONS.DELETE) {
+        description = `"${obj.content}" has been removed from "${checklist.title}"`;
+      }
+
+      break;
+    default:
+      break;
+  }
+
+  return { extraDesc, description };
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putCreateLog = async (params: ILogDataParams, user: IUserDocument) => {
+  await registerOnboardHistory({ type: `${params.type}Create`, user });
+
+  const descriptions = await gatherDescriptions({ action: LOG_ACTIONS.CREATE, type: params.type, obj: params.object });
+
+  return putLog(
+    {
+      ...params,
+      action: LOG_ACTIONS.CREATE,
+      extraDesc: descriptions.extraDesc,
+      description: params.description || descriptions.description,
+    },
+    user,
+  );
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putUpdateLog = async (params: ILogDataParams, user: IUserDocument) => {
+  const descriptions = await gatherDescriptions({
+    action: LOG_ACTIONS.UPDATE,
+    type: params.type,
+    obj: params.object,
+    updatedDocument: params.updatedDocument,
+  });
+
+  return putLog(
+    {
+      ...params,
+      action: LOG_ACTIONS.UPDATE,
+      description: params.description || descriptions.description,
+      extraDesc: descriptions.extraDesc,
+    },
+    user,
+  );
+};
+
+/**
+ * Prepares a create log request to log server
+ * @param params Log document params
+ * @param user User information from mutation context
+ */
+export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) => {
+  const descriptions = await gatherDescriptions({
+    action: LOG_ACTIONS.DELETE,
+    type: params.type,
+    obj: params.object,
+  });
+
+  return putLog(
+    {
+      ...params,
+      action: LOG_ACTIONS.DELETE,
+      extraDesc: descriptions.extraDesc,
+      description: params.description || descriptions.description,
+    },
+    user,
+  );
+};
+
+const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
+  const doc = {
+    ...params,
+    createdBy: user._id,
+    unicode: user.username || user.email || user._id,
+    object: JSON.stringify(params.object),
+    newData: JSON.stringify(params.newData),
+    extraDesc: JSON.stringify(params.extraDesc),
+  };
+
+  return sendMessage('putLog', doc);
+};
+
+/**
+ * Sends a request to logs api
+ * @param {Object} param0 Request
+ */
+export const fetchLogs = (params: ILogQueryParams) => {
+  const LOGS_DOMAIN = getEnv({ name: 'LOGS_API_DOMAIN' });
+
+  if (!LOGS_DOMAIN) {
+    return {
+      logs: [],
+      totalCount: 0,
+    };
+  }
+
+  return sendRequest(
+    { url: `${LOGS_DOMAIN}/logs`, method: 'get', body: { params: JSON.stringify(params) } },
+    'Failed to connect to logs api. Check whether LOGS_API_DOMAIN env is missing or logs api is not running',
+  );
 };

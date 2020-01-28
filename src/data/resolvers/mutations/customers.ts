@@ -1,10 +1,16 @@
 import { ActivityLogs, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherCustomerFieldNames,
+  gatherUsernames,
+  LogDesc,
+  putCreateLog,
+  putDeleteLog,
+  putUpdateLog,
+} from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherCustomerFieldNames, gatherUsernames, LogDesc } from './logUtils';
 
 interface ICustomersEdit extends ICustomer {
   _id: string;

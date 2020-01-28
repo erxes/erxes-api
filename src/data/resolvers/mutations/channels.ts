@@ -4,10 +4,10 @@ import { IChannel, IChannelDocument } from '../../../db/models/definitions/chann
 import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog, registerOnboardHistory } from '../../utils';
-import { gatherChannelFieldNames, LogDesc } from './logUtils';
+import utils, { checkUserIds, registerOnboardHistory } from '../../utils';
 
 interface IChannelsEdit extends IChannel {
   _id: string;
@@ -52,16 +52,11 @@ const channelMutations = {
 
     await sendChannelNotifications(channel, 'invited', user);
 
-    // for showing names instead of id fields in logs
-    const extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.CHANNEL,
         newData: { ...doc, userId: user._id },
         object: channel,
-        description: `"${doc.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -82,17 +77,12 @@ const channelMutations = {
 
     const updated = await Channels.updateChannel(_id, doc);
 
-    let extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
-
-    extraDesc = await gatherChannelFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.CHANNEL,
         object: channel,
         newData: doc,
-        description: `"${channel.name}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -114,17 +104,7 @@ const channelMutations = {
 
     await Channels.removeChannel(_id);
 
-    const extraDesc: LogDesc[] = await gatherChannelFieldNames(channel);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.CHANNEL,
-        object: channel,
-        description: `"${channel.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.CHANNEL, object: channel }, user);
 
     return true;
   },

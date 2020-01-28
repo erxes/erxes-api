@@ -5,9 +5,10 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
+import { gatherDealFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { checkUserIds } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -17,7 +18,6 @@ import {
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
-import { gatherDealFieldNames, LogDesc } from './logUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;

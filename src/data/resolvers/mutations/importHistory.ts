@@ -1,9 +1,16 @@
 import { ImportHistory } from '../../../db/models';
 import { MODULE_NAMES } from '../../constants';
+import {
+  gatherCompanyNames,
+  gatherCustomerNames,
+  gatherProductNames,
+  gatherUsernames,
+  LogDesc,
+  putDeleteLog,
+} from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { putDeleteLog } from '../../utils';
-import { gatherCompanyNames, gatherCustomerNames, gatherProductNames, gatherUsernames, LogDesc } from './logUtils';
+import utils from '../../utils';
 
 const importHistoryMutations = {
   /**

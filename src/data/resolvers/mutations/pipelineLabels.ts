@@ -1,9 +1,8 @@
 import { PipelineLabels, Pipelines } from '../../../db/models';
 import { IPipelineLabel } from '../../../db/models/definitions/pipelineLabels';
 import { MODULE_NAMES } from '../../constants';
+import { gatherUsernames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import { gatherUsernames, LogDesc } from './logUtils';
 
 interface IPipelineLabelsEdit extends IPipelineLabel {
   _id: string;
