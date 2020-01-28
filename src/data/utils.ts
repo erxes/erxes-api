@@ -124,7 +124,7 @@ export const uploadFileAWS = async (file: { name: string; path: string; type: st
   const s3 = createAWS();
 
   // generate unique name
-  const fileName = `${AWS_PREFIX}${Math.random()}${file.name}`;
+  const fileName = `${AWS_PREFIX}${Math.random()}${file.name.replace(/ /g, '')}`;
 
   // read file
   const buffer = await fs.readFileSync(file.path);
@@ -767,21 +767,15 @@ export const validateEmail = async email => {
   return true;
 };
 
-export const authCookieOptions = () => {
+export const authCookieOptions = (secure: boolean) => {
   const oneDay = 1 * 24 * 3600 * 1000; // 1 day
 
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     maxAge: oneDay,
-    secure: false,
+    secure,
   };
-
-  const HTTPS = getEnv({ name: 'HTTPS', defaultValue: 'false' });
-
-  if (HTTPS === 'true') {
-    cookieOptions.secure = true;
-  }
 
   return cookieOptions;
 };

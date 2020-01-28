@@ -73,11 +73,14 @@ export const queries = `
   ): DealTotalAmounts
 `;
 
+const copyParams = `companyIds: [String], customerIds: [String], labelIds: [String]`;
+
 export const mutations = `
-  dealsAdd(name: String!, companyIds: [String], customerIds: [String], ${commonMutationParams}): Deal
+  dealsAdd(name: String!, ${copyParams}, ${commonMutationParams}): Deal
   dealsEdit(_id: String!, name: String, ${commonMutationParams}): Deal
   dealsChange( _id: String!, destinationStageId: String): Deal
   dealsUpdateOrder(stageId: String!, orders: [OrderItem]): [Deal]
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal
+  dealsCopy(_id: String!): Deal
 `;
