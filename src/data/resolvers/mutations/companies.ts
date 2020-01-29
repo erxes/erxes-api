@@ -12,7 +12,7 @@ const companyMutations = {
   /**
    * Create new company also adds Company registration log
    */
-  async companiesAdd(_root, doc: ICompany, { user, docModifier }: IContext) {
+  async companiesAdd(_root, doc: ICompany, { user, docModifier, ipAddress }: IContext) {
     const company = await Companies.createCompany(docModifier(doc), user);
 
     await putCreateLog(
@@ -21,6 +21,7 @@ const companyMutations = {
         newData: JSON.stringify(doc),
         object: company,
         description: `${company.primaryName} has been created`,
+        ipAddress,
       },
       user,
     );
@@ -31,7 +32,7 @@ const companyMutations = {
   /**
    * Updates a company
    */
-  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user }: IContext) {
+  async companiesEdit(_root, { _id, ...doc }: ICompaniesEdit, { user, ipAddress }: IContext) {
     const company = await Companies.getCompany(_id);
     const updated = await Companies.updateCompany(_id, doc);
 
@@ -41,6 +42,7 @@ const companyMutations = {
         object: company,
         newData: JSON.stringify(doc),
         description: `${company.primaryName} has been updated`,
+        ipAddress,
       },
       user,
     );
@@ -51,7 +53,7 @@ const companyMutations = {
   /**
    * Remove companies
    */
-  async companiesRemove(_root, { companyIds }: { companyIds: string[] }, { user }: IContext) {
+  async companiesRemove(_root, { companyIds }: { companyIds: string[] }, { user, ipAddress }: IContext) {
     const companies = await Companies.find({ _id: { $in: companyIds } }, { primaryName: 1 }).lean();
 
     await Companies.removeCompanies(companyIds);
@@ -62,6 +64,7 @@ const companyMutations = {
           type: 'company',
           object: company,
           description: `${company.primaryName} has been removed`,
+          ipAddress,
         },
         user,
       );

@@ -35,6 +35,12 @@ const generateDataSources = () => {
   };
 };
 
+const getIpAddress = req => {
+  const headers = req.headers || {};
+
+  return headers['x-forwarded-for'] || '';
+};
+
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
@@ -94,6 +100,7 @@ const apolloServer = new ApolloServer({
       user,
       res,
       requestInfo,
+      ipAddress: getIpAddress(req),
     };
   },
   subscriptions: {

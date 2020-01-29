@@ -9,6 +9,7 @@ export const types = `
     newData: String
     objectId: String
     unicode: String
+    ipAddress: String
     description: String
   }
 

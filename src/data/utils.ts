@@ -576,6 +576,7 @@ interface ILogParams {
   newData?: string;
   description?: string;
   object: any;
+  ipAddress?: string;
 }
 
 /**

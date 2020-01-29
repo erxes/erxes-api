@@ -6,6 +6,7 @@ export interface IContext {
   requestInfo: any;
   user: IUserDocument;
   docModifier: <T>(doc: T) => any;
+  ipAddress: string;
   brandIdSelector: {};
   userBrandIdsSelector: {};
   commonQuerySelector: {};
