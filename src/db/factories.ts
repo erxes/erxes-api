@@ -355,6 +355,7 @@ interface IChecklistFactoryInput {
   contentType?: string;
   contentTypeId?: string;
   title?: string;
+  createdUserId?: string;
 }
 
 export const checklistFactory = (params: IChecklistFactoryInput) => {
@@ -362,6 +363,7 @@ export const checklistFactory = (params: IChecklistFactoryInput) => {
     contentType: params.contentType || ACTIVITY_CONTENT_TYPES.DEAL,
     contentTypeId: params.contentTypeId || faker.random.uuid().toString(),
     title: params.title || faker.random.uuid().toString(),
+    createdUserId: params.createdUserId || faker.random.uuid().toString(),
   });
 
   return checklist.save();
