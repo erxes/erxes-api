@@ -3,7 +3,8 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
-import { UsersGroups } from '.';
+import { Sessions, UsersGroups } from '.';
+import { USER_STATUSES } from '../../data/constants';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -81,6 +82,7 @@ export interface IUserModel extends Model<IUserDocument> {
     password?: string;
     deviceToken?: string;
   }): { token: string; refreshToken: string };
+  logout(_user: IUserDocument): string;
 }
 
 export const loadClass = () => {
@@ -590,10 +592,31 @@ export const loadClass = () => {
         }
       }
 
+      // save login token
+      await user.update({ $set: { loginToken: token } });
+
+      await Sessions.createSession({
+        userId: user._id,
+        status: USER_STATUSES.LOGGED_IN,
+        loginToken: token,
+      });
+
       return {
         token,
         refreshToken,
       };
+    } // end login()
+
+    public static async logout(user: IUserDocument) {
+      await Sessions.createSession({
+        loginToken: user.loginToken || 'no-token',
+        status: USER_STATUSES.LOGGED_OUT,
+        userId: user._id,
+      });
+
+      await Users.update({ _id: user._id }, { $set: { loginToken: '' } });
+
+      return USER_STATUSES.LOGGED_OUT;
     }
   }
 

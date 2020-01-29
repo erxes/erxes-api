@@ -30,6 +30,7 @@ import ResponseTemplates from './ResponseTemplates';
 import { RobotEntries } from './Robot';
 import Scripts from './Scripts';
 import Segments from './Segments';
+import Sessions from './Sessions';
 import Tags from './Tags';
 import Tasks from './Tasks';
 import Tickets from './Tickets';
@@ -82,4 +83,5 @@ export {
   PipelineLabels,
   Checklists,
   ChecklistItems,
+  Sessions,
 };

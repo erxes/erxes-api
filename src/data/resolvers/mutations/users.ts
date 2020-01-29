@@ -1,5 +1,6 @@
 import { Channels, Users } from '../../../db/models';
 import { IDetail, IEmailSignature, ILink, IUser } from '../../../db/models/definitions/users';
+import { USER_STATUSES } from '../../constants';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -39,12 +40,15 @@ const userMutations = {
 
     res.cookie('auth-token', token, authCookieOptions(requestInfo.secure));
 
-    return 'loggedIn';
+    return USER_STATUSES.LOGGED_IN;
   },
 
-  async logout(_root, _args, { res }) {
+  async logout(_root, _args, { res, user }: IContext) {
+    const response = await Users.logout(user);
+
     res.clearCookie('auth-token');
-    return 'loggedout';
+
+    return response;
   },
 
   /*

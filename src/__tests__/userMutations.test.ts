@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcryptjs';
 import * as faker from 'faker';
 import * as moment from 'moment';
+import { USER_STATUSES } from '../data/constants';
 import utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
@@ -100,7 +101,7 @@ describe('User mutations', () => {
 
     expect(updatedUser.deviceTokens.length).toBe(1);
     expect(updatedUser.deviceTokens).toContain('111');
-    expect(response).toBe('loggedIn');
+    expect(response).toBe(USER_STATUSES.LOGGED_IN);
   });
 
   test('Forgot password', async () => {
@@ -514,7 +515,7 @@ describe('User mutations', () => {
 
     const response = await graphqlRequest(mutation, 'logout', {}, { res });
 
-    expect(response).toBe('loggedout');
+    expect(response).toBe(USER_STATUSES.LOGGED_OUT);
   });
 
   test('Reset member password', async () => {

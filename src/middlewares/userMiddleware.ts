@@ -1,5 +1,6 @@
 import * as jwt from 'jsonwebtoken';
-import { Users } from '../db/models';
+import { USER_STATUSES } from '../data/constants';
+import { Sessions, Users } from '../db/models';
 
 /*
  * Finds user object by passed tokens
@@ -14,6 +15,16 @@ const userMiddleware = async (req, _res, next) => {
     try {
       // verify user token and retrieve stored user information
       const { user } = jwt.verify(token, Users.getSecret());
+
+      const loggedOut = await Sessions.findOne({
+        userId: user._id,
+        loginToken: token,
+        status: USER_STATUSES.LOGGED_OUT,
+      });
+
+      if (loggedOut) {
+        return next();
+      }
 
       // save user in request
       req.user = user;

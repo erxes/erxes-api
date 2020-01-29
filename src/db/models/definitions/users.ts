@@ -50,6 +50,7 @@ export interface IUser {
   groupIds?: string[];
   deviceTokens?: string[];
   doNotDisturb?: string;
+  loginToken?: string;
 }
 
 export interface IUserDocument extends IUser, Document {
@@ -120,4 +121,5 @@ export const userSchema = new Schema({
   groupIds: field({ type: [String], label: 'Groups' }),
   deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
   doNotDisturb: field({ type: String, optional: true, default: 'No', label: 'Do not disturb' }),
+  loginToken: field({ type: String, optional: true, label: 'Login token' }),
 });
