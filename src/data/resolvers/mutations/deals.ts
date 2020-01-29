@@ -5,7 +5,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
-import { gatherDealFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds } from '../../utils';
@@ -48,15 +48,11 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     });
 
-    const extraDesc: LogDesc[] = await gatherDealFieldNames(deal);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.DEAL,
         newData: extendedDoc,
         object: deal,
-        description: `"${deal.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -70,11 +66,13 @@ const dealMutations = {
   async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
     const oldDeal = await Deals.getDeal(_id);
 
-    const updatedDeal = await Deals.updateDeal(_id, {
+    const extendedDoc = {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
-    });
+    };
+
+    const updatedDeal = await Deals.updateDeal(_id, extendedDoc);
 
     await copyPipelineLabels({ item: oldDeal, doc, user });
 
@@ -96,17 +94,12 @@ const dealMutations = {
 
     await sendNotifications(notificationDoc);
 
-    let extraDesc: LogDesc[] = await gatherDealFieldNames(oldDeal);
-
-    extraDesc = await gatherDealFieldNames(updatedDeal, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.DEAL,
         object: oldDeal,
-        newData: doc,
-        description: `"${updatedDeal.name}" has been edited`,
-        extraDesc,
+        newData: extendedDoc,
+        updatedDocument: updatedDeal,
       },
       user,
     );
@@ -172,17 +165,7 @@ const dealMutations = {
 
     const removed = await deal.remove();
 
-    const extraDesc: LogDesc[] = await gatherDealFieldNames(deal);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.DEAL,
-        object: deal,
-        description: `"${deal.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.DEAL, object: deal }, user);
 
     return removed;
   },

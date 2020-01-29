@@ -2,34 +2,22 @@ import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } f
 import { ITopic } from '../../../db/models/definitions/knowledgebase';
 import { IArticleCreate, ICategoryCreate } from '../../../db/models/KnowledgeBase';
 import { MODULE_NAMES } from '../../constants';
-import {
-  gatherKbCategoryFieldNames,
-  gatherKbTopicFieldNames,
-  gatherUsernames,
-  LogDesc,
-  putCreateLog,
-  putDeleteLog,
-  putUpdateLog,
-} from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
 const knowledgeBaseMutations = {
   /**
-   * Create topic document
+   * Creates a topic document
    */
   async knowledgeBaseTopicsAdd(_root, { doc }: { doc: ITopic }, { user, docModifier }: IContext) {
     const topic = await KnowledgeBaseTopics.createDoc(docModifier(doc), user._id);
-
-    const extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
 
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_TOPIC,
         newData: { ...doc, createdBy: user._id, createdDate: topic.createdDate },
         object: topic,
-        description: `"${topic.title}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -44,17 +32,12 @@ const knowledgeBaseMutations = {
     const topic = await KnowledgeBaseTopics.getTopic(_id);
     const updated = await KnowledgeBaseTopics.updateDoc(_id, doc, user._id);
 
-    let extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
-
-    extraDesc = await gatherKbTopicFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.KB_TOPIC,
         object: topic,
         newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
-        description: `"${topic.title}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -69,17 +52,7 @@ const knowledgeBaseMutations = {
     const topic = await KnowledgeBaseTopics.getTopic(_id);
     const removed = await KnowledgeBaseTopics.removeDoc(_id);
 
-    const extraDesc: LogDesc[] = await gatherKbTopicFieldNames(topic);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.KB_TOPIC,
-        object: topic,
-        description: `"${topic.title}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.KB_TOPIC, object: topic }, user);
 
     return removed;
   },
@@ -90,23 +63,11 @@ const knowledgeBaseMutations = {
   async knowledgeBaseCategoriesAdd(_root, { doc }: { doc: ICategoryCreate }, { user }: IContext) {
     const kbCategory = await KnowledgeBaseCategories.createDoc(doc, user._id);
 
-    const extraDesc: LogDesc[] = [{ createdBy: user._id, name: user.username || user.email }];
-
-    if (doc.topicIds && doc.topicIds.length > 0) {
-      const topics = await KnowledgeBaseTopics.find({ _id: { $in: doc.topicIds } }, { title: 1 });
-
-      for (const topic of topics) {
-        extraDesc.push({ topicIds: topic._id, name: topic.title });
-      }
-    }
-
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_CATEGORY,
         newData: { ...doc, createdBy: user._id, createdDate: kbCategory.createdDate },
-        description: `"${kbCategory.title}" has been created`,
         object: kbCategory,
-        extraDesc,
       },
       user,
     );
@@ -121,17 +82,12 @@ const knowledgeBaseMutations = {
     const kbCategory = await KnowledgeBaseCategories.getCategory(_id);
     const updated = await KnowledgeBaseCategories.updateDoc(_id, doc, user._id);
 
-    let extraDesc: LogDesc[] = await gatherKbCategoryFieldNames(kbCategory);
-
-    extraDesc = await gatherKbCategoryFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.KB_CATEGORY,
         object: kbCategory,
         newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
-        description: `"${kbCategory.title}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -147,17 +103,7 @@ const knowledgeBaseMutations = {
 
     const removed = await KnowledgeBaseCategories.removeDoc(_id);
 
-    const extraDesc: LogDesc[] = await gatherKbCategoryFieldNames(kbCategory);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.KB_CATEGORY,
-        object: kbCategory,
-        description: `"${kbCategory.title}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.KB_CATEGORY, object: kbCategory }, user);
 
     return removed;
   },
@@ -168,15 +114,11 @@ const knowledgeBaseMutations = {
   async knowledgeBaseArticlesAdd(_root, { doc }: { doc: IArticleCreate }, { user }: IContext) {
     const kbArticle = await KnowledgeBaseArticles.createDoc(doc, user._id);
 
-    const extraDesc: LogDesc[] = [{ createdBy: user._id, name: user.username || user.email }];
-
     await putCreateLog(
       {
         type: MODULE_NAMES.KB_ARTICLE,
         newData: { ...doc, createdBy: user._id, createdDate: kbArticle.createdDate },
-        description: `"${kbArticle.title}" has been created`,
         object: kbArticle,
-        extraDesc,
       },
       user,
     );
@@ -191,21 +133,12 @@ const knowledgeBaseMutations = {
     const kbArticle = await KnowledgeBaseArticles.getArticle(_id);
     const updated = await KnowledgeBaseArticles.updateDoc(_id, doc, user._id);
 
-    let extraDesc: LogDesc[] = [{ modifiedBy: user._id, name: user.username || user.email }];
-
-    extraDesc = await gatherUsernames({
-      idFields: [kbArticle.createdBy],
-      foreignKey: 'createdBy',
-      prevList: extraDesc,
-    });
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.KB_ARTICLE,
         object: kbArticle,
         newData: { ...doc, modifiedBy: user._id, modifiedDate: updated.modifiedDate },
-        description: `"${kbArticle.title}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -220,28 +153,7 @@ const knowledgeBaseMutations = {
     const kbArticle = await KnowledgeBaseArticles.getArticle(_id);
     const removed = await KnowledgeBaseArticles.removeDoc(_id);
 
-    let extraDesc: LogDesc[] = await gatherUsernames({
-      idFields: [kbArticle.createdBy],
-      foreignKey: 'createdBy',
-    });
-
-    if (kbArticle.modifiedBy) {
-      extraDesc = await gatherUsernames({
-        idFields: [kbArticle.modifiedBy],
-        foreignKey: 'modifiedBy',
-        prevList: extraDesc,
-      });
-    }
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.KB_ARTICLE,
-        object: kbArticle,
-        description: `"${kbArticle.title}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.KB_ARTICLE, object: kbArticle }, user);
 
     return removed;
   },

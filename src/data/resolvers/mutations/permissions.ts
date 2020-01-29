@@ -1,7 +1,7 @@
-import { Permissions, Users, UsersGroups } from '../../../db/models';
+import { Permissions, UsersGroups } from '../../../db/models';
 import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
 import { MODULE_NAMES } from '../../constants';
-import { LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -19,33 +19,11 @@ const permissionMutations = {
     const result = await Permissions.createPermission(doc);
 
     for (const perm of result) {
-      let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
-
-      const extraDesc: LogDesc[] = [];
-
-      if (perm.groupId) {
-        const group = await UsersGroups.getGroup(perm.groupId);
-
-        description = `${description} user group "${group.name}" `;
-
-        extraDesc.push({ groupId: perm.groupId, name: group.name });
-      }
-
-      if (perm.userId) {
-        const permUser = await Users.getUser(perm.userId);
-
-        description = `${description} user "${permUser.email}" has been created`;
-
-        extraDesc.push({ userId: perm.userId, name: permUser.username || permUser.email });
-      }
-
       await putCreateLog(
         {
           type: MODULE_NAMES.PERMISSION,
           object: perm,
           newData: perm,
-          description,
-          extraDesc,
         },
         user,
       );
@@ -66,37 +44,7 @@ const permissionMutations = {
     const result = await Permissions.removePermission(ids);
 
     for (const perm of permissions) {
-      let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
-
-      const extraDesc: LogDesc[] = [];
-
-      // prepare user group related description
-      if (perm.groupId) {
-        const group = await UsersGroups.getGroup(perm.groupId);
-
-        description = `${description} user group "${group.name}" has been removed`;
-
-        extraDesc.push({ groupId: perm.groupId, name: group.name });
-      }
-
-      // prepare user related description
-      if (perm.userId) {
-        const permUser = await Users.getUser(perm.userId);
-
-        description = `${description} user "${permUser.email}" has been removed`;
-
-        extraDesc.push({ userId: perm.userId, name: permUser.username || permUser.email });
-      }
-
-      await putDeleteLog(
-        {
-          type: MODULE_NAMES.PERMISSION,
-          object: perm,
-          description,
-          extraDesc,
-        },
-        user,
-      );
+      await putDeleteLog({ type: MODULE_NAMES.PERMISSION, object: perm }, user);
     } // end for loop
 
     resetPermissionsCache();

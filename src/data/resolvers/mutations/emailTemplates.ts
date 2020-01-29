@@ -21,7 +21,6 @@ const emailTemplateMutations = {
         type: MODULE_NAMES.EMAIL_TEMPLATE,
         newData: doc,
         object: template,
-        description: `"${template.name}" has been created`,
       },
       user,
     );
@@ -41,7 +40,6 @@ const emailTemplateMutations = {
         type: MODULE_NAMES.EMAIL_TEMPLATE,
         object: template,
         newData: fields,
-        description: `"${template.name}" has been edited`,
       },
       user,
     );
@@ -56,14 +54,7 @@ const emailTemplateMutations = {
     const template = await EmailTemplates.getEmailTemplate(_id);
     const removed = await EmailTemplates.removeEmailTemplate(_id);
 
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.EMAIL_TEMPLATE,
-        object: template,
-        description: `"${template.name}" has been removed`,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.EMAIL_TEMPLATE, object: template }, user);
 
     return removed;
   },

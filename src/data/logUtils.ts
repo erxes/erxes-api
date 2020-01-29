@@ -22,11 +22,13 @@ import {
   Customers,
   Deals,
   Forms,
+  GrowthHacks,
   Integrations,
   KnowledgeBaseArticles,
   KnowledgeBaseCategories,
   KnowledgeBaseTopics,
   PipelineLabels,
+  Pipelines,
   ProductCategories,
   Products,
   Segments,
@@ -35,6 +37,7 @@ import {
   Tasks,
   Tickets,
   Users,
+  UsersGroups,
 } from '../db/models/index';
 import { sendMessage } from '../messageBroker';
 import { MODULE_NAMES } from './constants';
@@ -102,7 +105,71 @@ const LOG_ACTIONS = {
   DELETE: 'delete',
 };
 
-export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+// used in internalNotes mutations
+const findContentItemName = async (contentType: string, contentTypeId: string): Promise<string> => {
+  let name: string = '';
+
+  if (contentType === MODULE_NAMES.DEAL) {
+    const deal = await Deals.getDeal(contentTypeId);
+
+    if (deal && deal.name) {
+      name = deal.name;
+    }
+  }
+  if (contentType === MODULE_NAMES.CUSTOMER) {
+    const customer = await Customers.getCustomer(contentTypeId);
+
+    if (customer) {
+      name = Customers.getCustomerName(customer);
+    }
+  }
+  if (contentType === MODULE_NAMES.COMPANY) {
+    const company = await Companies.getCompany(contentTypeId);
+
+    if (company) {
+      name = Companies.getCompanyName(company);
+    }
+  }
+  if (contentType === MODULE_NAMES.TASK) {
+    const task = await Tasks.getTask(contentTypeId);
+
+    if (task && task.name) {
+      name = task.name;
+    }
+  }
+  if (contentType === MODULE_NAMES.TICKET) {
+    const ticket = await Tickets.getTicket(contentTypeId);
+
+    if (ticket && ticket.name) {
+      name = ticket.name;
+    }
+  }
+  if (contentType === MODULE_NAMES.GROWTH_HACK) {
+    const gh = await GrowthHacks.getGrowthHack(contentTypeId);
+
+    if (gh && gh.name) {
+      name = gh.name;
+    }
+  }
+  if (contentType === MODULE_NAMES.USER) {
+    const user = await Users.getUser(contentTypeId);
+
+    if (user) {
+      name = user.username || user.email || '';
+    }
+  }
+  if (contentType === MODULE_NAMES.PRODUCT) {
+    const product = await Products.getProduct({ _id: contentTypeId });
+
+    if (product) {
+      name = product.name;
+    }
+  }
+
+  return name;
+};
+
+const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   return gatherNames({
@@ -114,31 +181,7 @@ export const gatherUsernames = async (params: ILogNameParams): Promise<LogDesc[]
   });
 };
 
-export const gatherCompanyNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Companies,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['primaryName'],
-  });
-};
-
-export const gatherCustomerNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Customers,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['firstName'],
-  });
-};
-
-export const gatherIntegrationNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+const gatherIntegrationNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   return gatherNames({
@@ -162,71 +205,11 @@ export const gatherTagNames = async (params: ILogNameParams): Promise<LogDesc[]>
   });
 };
 
-export const gatherStageNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Stages,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['name'],
-  });
-};
-
-export const gatherProductNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Products,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['name'],
-  });
-};
-
-export const gatherProductCategoryNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: ProductCategories,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['name'],
-  });
-};
-
-export const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
+const gatherBrandNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
   const { idFields, foreignKey, prevList } = params;
 
   return gatherNames({
     collection: Brands,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['name'],
-  });
-};
-
-export const gatherFormNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Forms,
-    idFields,
-    foreignKey,
-    prevList,
-    nameFields: ['title'],
-  });
-};
-
-export const gatherSegmentNames = async (params: ILogNameParams): Promise<LogDesc[]> => {
-  const { idFields, foreignKey, prevList } = params;
-
-  return gatherNames({
-    collection: Segments,
     idFields,
     foreignKey,
     prevList,
@@ -242,7 +225,7 @@ export const gatherSegmentNames = async (params: ILogNameParams): Promise<LogDes
  * @param params.prevList Array to save found id with name
  * @param params.nameFields List of values to be mapped to id field
  */
-export const gatherNames = async (params: ILogParams): Promise<LogDesc[]> => {
+const gatherNames = async (params: ILogParams): Promise<LogDesc[]> => {
   const { collection, idFields, foreignKey, prevList, nameFields = [] } = params;
   let options: LogDesc[] = [];
 
@@ -270,7 +253,7 @@ export const gatherNames = async (params: ILogParams): Promise<LogDesc[]> => {
   return options;
 };
 
-export const findItemName = async ({ contentType, contentTypeId }: IContentTypeParams): Promise<string> => {
+const findItemName = async ({ contentType, contentTypeId }: IContentTypeParams): Promise<string> => {
   let item: any;
   let name: string = '';
 
@@ -286,6 +269,10 @@ export const findItemName = async ({ contentType, contentTypeId }: IContentTypeP
     item = await Tickets.findOne({ _id: contentTypeId });
   }
 
+  if (contentType === ACTIVITY_CONTENT_TYPES.GROWTH_HACK) {
+    item = await GrowthHacks.getGrowthHack(contentTypeId);
+  }
+
   if (item && item.name) {
     name = item.name;
   }
@@ -293,7 +280,7 @@ export const findItemName = async ({ contentType, contentTypeId }: IContentTypeP
   return name;
 };
 
-export const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -301,10 +288,12 @@ export const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: 
   }
 
   if (doc.parentCompanyId) {
-    options = await gatherCompanyNames({
+    options = await gatherNames({
+      collection: Companies,
       idFields: [doc.parentCompanyId],
       foreignKey: 'parentCompanyId',
       prevList: options,
+      nameFields: ['primaryName'],
     });
   }
 
@@ -317,10 +306,12 @@ export const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: 
   }
 
   if (doc.mergedIds && doc.mergedIds.length > 0) {
-    options = await gatherCompanyNames({
+    options = await gatherNames({
+      collection: Companies,
       idFields: doc.mergedIds,
       foreignKey: 'mergedIds',
       prevList: options,
+      nameFields: ['primaryName'],
     });
   }
 
@@ -335,7 +326,7 @@ export const gatherCompanyFieldNames = async (doc: ICompanyDocument, prevList?: 
   return options;
 };
 
-export const gatherCustomerFieldNames = async (doc: ICustomerDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherCustomerFieldNames = async (doc: ICustomerDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -363,17 +354,19 @@ export const gatherCustomerFieldNames = async (doc: ICustomerDocument, prevList?
   }
 
   if (doc.mergedIds) {
-    options = await gatherCustomerNames({
+    options = await gatherNames({
+      collection: Customers,
       idFields: doc.mergedIds,
       foreignKey: 'mergedIds',
       prevList: options,
+      nameFields: ['firstName'],
     });
   }
 
   return options;
 };
 
-export const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -414,17 +407,21 @@ export const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList
     });
   }
 
-  options = await gatherStageNames({
+  options = await gatherNames({
+    collection: Stages,
     idFields: [doc.stageId],
     foreignKey: 'stageId',
     prevList: options,
+    nameFields: ['name'],
   });
 
   if (doc.initialStageId) {
-    options = await gatherStageNames({
+    options = await gatherNames({
+      collection: Stages,
       idFields: [doc.initialStageId],
       foreignKey: 'initialStageId',
       prevList: options,
+      nameFields: ['name'],
     });
   }
 
@@ -439,7 +436,7 @@ export const gatherBoardItemFieldNames = async (doc: BoardItemDocument, prevList
   return options;
 };
 
-export const gatherDealFieldNames = async (doc: IDealDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherDealFieldNames = async (doc: IDealDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -449,17 +446,19 @@ export const gatherDealFieldNames = async (doc: IDealDocument, prevList?: LogDes
   options = await gatherBoardItemFieldNames(doc, options);
 
   if (doc.productsData && doc.productsData.length > 0) {
-    options = await gatherProductNames({
+    options = await gatherNames({
+      collection: Products,
       idFields: doc.productsData.map(p => p.productId),
       foreignKey: 'productId',
       prevList: options,
+      nameFields: ['name'],
     });
   }
 
   return options;
 };
 
-export const gatherEngageFieldNames = async (
+const gatherEngageFieldNames = async (
   doc: IEngageMessageDocument | IEngageMessage,
   prevList?: LogDesc[],
 ): Promise<LogDesc[]> => {
@@ -470,10 +469,12 @@ export const gatherEngageFieldNames = async (
   }
 
   if (doc.segmentIds && doc.segmentIds.length > 0) {
-    options = await gatherSegmentNames({
+    options = await gatherNames({
+      collection: Segments,
       idFields: doc.segmentIds,
       foreignKey: 'segmentIds',
       prevList: options,
+      nameFields: ['name'],
     });
   }
 
@@ -546,7 +547,7 @@ const gatherChannelFieldNames = async (doc: IChannelDocument, prevList?: LogDesc
   return options;
 };
 
-export const gatherGHFieldNames = async (doc: IGrowthHackDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherGHFieldNames = async (doc: IGrowthHackDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -566,7 +567,7 @@ export const gatherGHFieldNames = async (doc: IGrowthHackDocument, prevList?: Lo
   return options;
 };
 
-export const gatherIntegrationFieldNames = async (doc: IIntegrationDocument, prevList?: LogDesc[]) => {
+const gatherIntegrationFieldNames = async (doc: IIntegrationDocument, prevList?: LogDesc[]) => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -598,17 +599,19 @@ export const gatherIntegrationFieldNames = async (doc: IIntegrationDocument, pre
   }
 
   if (doc.formId) {
-    options = await gatherFormNames({
+    options = await gatherNames({
+      collection: Forms,
       idFields: [doc.formId],
       foreignKey: 'formId',
       prevList: options,
+      nameFields: ['title'],
     });
   }
 
   return options;
 };
 
-export const gatherKbTopicFieldNames = async (doc: ITopicDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherKbTopicFieldNames = async (doc: ITopicDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -650,7 +653,7 @@ export const gatherKbTopicFieldNames = async (doc: ITopicDocument, prevList?: Lo
   return options;
 };
 
-export const gatherKbCategoryFieldNames = async (doc: ICategoryDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherKbCategoryFieldNames = async (doc: ICategoryDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -680,7 +683,7 @@ export const gatherKbCategoryFieldNames = async (doc: ICategoryDocument, prevLis
   return options;
 };
 
-export const gatherProductFieldNames = async (doc: IProductDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherProductFieldNames = async (doc: IProductDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -696,17 +699,19 @@ export const gatherProductFieldNames = async (doc: IProductDocument, prevList?: 
   }
 
   if (doc.categoryId) {
-    options = await gatherProductCategoryNames({
+    options = await gatherNames({
+      collection: ProductCategories,
       idFields: [doc.categoryId],
       foreignKey: 'categoryId',
       prevList: options,
+      nameFields: ['name'],
     });
   }
 
   return options;
 };
 
-export const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -742,7 +747,7 @@ export const gatherScriptFieldNames = async (doc: IScriptDocument, prevList?: Lo
   return options;
 };
 
-export const gatherPipelineFieldNames = async (doc: IPipelineDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
+const gatherPipelineFieldNames = async (doc: IPipelineDocument, prevList?: LogDesc[]): Promise<LogDesc[]> => {
   let options: LogDesc[] = [];
 
   if (prevList) {
@@ -792,7 +797,7 @@ export const gatherPipelineFieldNames = async (doc: IPipelineDocument, prevList?
   return options;
 };
 
-export const gatherPipelineTemplateFieldNames = async (
+const gatherPipelineTemplateFieldNames = async (
   doc: IPipelineTemplateDocument,
   prevList?: LogDesc[],
 ): Promise<LogDesc[]> => {
@@ -809,10 +814,12 @@ export const gatherPipelineTemplateFieldNames = async (
   });
 
   if (doc.stages && doc.stages.length > 0) {
-    options = await gatherFormNames({
+    options = await gatherNames({
+      collection: Forms,
       idFields: doc.stages.map(s => s.formId),
       foreignKey: 'formId',
       prevList: options,
+      nameFields: ['title'],
     });
   }
 
@@ -893,6 +900,302 @@ const gatherDescriptions = async (params: IDescriptionParams): Promise<IDescript
       }
       if (action === LOG_ACTIONS.DELETE) {
         description = `"${obj.content}" has been removed from "${checklist.title}"`;
+      }
+
+      break;
+    case MODULE_NAMES.COMPANY:
+      extraDesc = await gatherCompanyFieldNames(obj);
+      description = `"${obj.primaryName}" has been ${action}d`;
+
+      if (updatedDocument) {
+        extraDesc = await gatherCompanyFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.CUSTOMER:
+      description = `"${obj.firstName}" has been ${action}d`;
+
+      extraDesc = await gatherCustomerFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherCustomerFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.DEAL:
+      description = `"${obj.name}" has been ${action}d`;
+      extraDesc = await gatherDealFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherDealFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.EMAIL_TEMPLATE:
+      description = `"${obj.name}" has been ${action}d`;
+
+      break;
+    case MODULE_NAMES.ENGAGE:
+      description = `"${obj.title}" has been ${action}d`;
+      extraDesc = await gatherEngageFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherEngageFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.GROWTH_HACK:
+      description = `"${obj.name}" has been ${action}d`;
+
+      extraDesc = await gatherGHFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherGHFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.IMPORT_HISTORY:
+      description = `${obj._id}-${obj.date} has been removed`;
+
+      extraDesc = await gatherUsernames({
+        idFields: [obj.userId],
+        foreignKey: 'userId',
+        prevList: extraDesc,
+      });
+
+      const param = {
+        idFields: obj.ids,
+        foreignKey: 'ids',
+        prevList: extraDesc,
+      };
+
+      switch (obj.contentType) {
+        case MODULE_NAMES.COMPANY:
+          extraDesc = await gatherNames({ ...param, collection: Companies, nameFields: ['primaryName'] });
+          break;
+        case MODULE_NAMES.CUSTOMER:
+          extraDesc = await gatherNames({ ...param, collection: Customers, nameFields: ['firstName'] });
+          break;
+        case MODULE_NAMES.PRODUCT:
+          extraDesc = await gatherNames({ ...param, collection: Products, nameFields: ['name'] });
+          break;
+        default:
+          break;
+      }
+
+      break;
+    case MODULE_NAMES.INTEGRATION:
+      description = `"${obj.name}" has been ${action}d`;
+
+      extraDesc = await gatherIntegrationFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherIntegrationFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.INTERNAL_NOTE:
+      description = `Note of type ${obj.contentType} has been ${action}d`;
+
+      extraDesc = [
+        {
+          contentTypeId: obj.contentTypeId,
+          name: await findContentItemName(obj.contentType, obj.contentTypeId),
+        },
+      ];
+
+      extraDesc = await gatherUsernames({
+        idFields: [obj.createdUserId],
+        foreignKey: 'createdUserId',
+        prevList: extraDesc,
+      });
+
+      break;
+    case MODULE_NAMES.KB_TOPIC:
+      description = `"${obj.title}" has been ${action}d`;
+
+      extraDesc = await gatherKbTopicFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherKbTopicFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.KB_CATEGORY:
+      description = `"${obj.title}" has been ${action}d`;
+
+      extraDesc = await gatherKbCategoryFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherKbCategoryFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.KB_ARTICLE:
+      description = `"${obj.title}" has been ${action}d`;
+
+      extraDesc = await gatherUsernames({ idFields: [obj.createdBy], foreignKey: 'createdBy' });
+
+      if (obj.modifiedBy) {
+        extraDesc = await gatherUsernames({
+          idFields: [obj.modifiedBy],
+          foreignKey: 'modifiedBy',
+          prevList: extraDesc,
+        });
+      }
+
+      if (updatedDocument && updatedDocument.modifiedBy) {
+        extraDesc = await gatherUsernames({
+          idFields: [updatedDocument.modifiedBy],
+          foreignKey: 'modifiedBy',
+          prevList: extraDesc,
+        });
+      }
+
+      break;
+    case MODULE_NAMES.PERMISSION:
+      description = `Permission of module "${obj.module}", action "${obj.action}" assigned to `;
+
+      if (obj.groupId) {
+        const group = await UsersGroups.getGroup(obj.groupId);
+
+        description = `${description} user group "${group.name}" `;
+
+        extraDesc.push({ groupId: obj.groupId, name: group.name });
+      }
+
+      if (obj.userId) {
+        const permUser = await Users.getUser(obj.userId);
+
+        description = `${description} user "${permUser.email}" has been ${action}d`;
+
+        extraDesc.push({ userId: obj.userId, name: permUser.username || permUser.email });
+      }
+
+      break;
+    case MODULE_NAMES.PIPELINE_LABEL:
+      description = `"${obj.name}" has been ${action}d`;
+
+      const pipeline = await Pipelines.findOne({ _id: obj.pipelineId });
+
+      extraDesc = await gatherUsernames({ idFields: [obj.createdBy], foreignKey: 'createdBy' });
+
+      if (pipeline) {
+        extraDesc.push({ pipelineId: pipeline._id, name: pipeline.name });
+      }
+
+      break;
+    case MODULE_NAMES.PIPELINE_TEMPLATE:
+      extraDesc = await gatherPipelineTemplateFieldNames(obj);
+
+      description = `"${obj.name}" has been created`;
+
+      if (updatedDocument) {
+        extraDesc = await gatherPipelineTemplateFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.PRODUCT:
+      description = `${obj.name} has been ${action}d`;
+
+      extraDesc = await gatherProductFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherProductFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.PRODUCT_CATEGORY:
+      description = `"${obj.name}" has been ${action}d`;
+
+      const parentIds: string[] = [];
+
+      if (obj.parentId) {
+        parentIds.push(obj.parentId);
+      }
+
+      if (updatedDocument && updatedDocument.parentId !== obj.parentId) {
+        parentIds.push(updatedDocument.parentId);
+      }
+
+      if (parentIds.length > 0) {
+        extraDesc = await gatherNames({
+          collection: ProductCategories,
+          idFields: parentIds,
+          foreignKey: 'parentId',
+          nameFields: ['name'],
+        });
+      }
+
+      break;
+    case MODULE_NAMES.RESPONSE_TEMPLATE:
+      description = `"${obj.name}" has been created`;
+
+      const brandIds: string[] = [];
+
+      if (obj.brandId) {
+        brandIds.push(obj.brandId);
+      }
+
+      if (updatedDocument && updatedDocument.brandId && updatedDocument.brandId !== obj.brandId) {
+        brandIds.push(updatedDocument.brandId);
+      }
+
+      if (brandIds.length > 0) {
+        extraDesc = await gatherBrandNames({ idFields: brandIds, foreignKey: 'brandId' });
+      }
+
+      break;
+    case MODULE_NAMES.SCRIPT:
+      description = `"${obj.name}" has been ${action}d`;
+
+      extraDesc = await gatherScriptFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherScriptFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.SEGMENT:
+      const parents: string[] = [];
+
+      if (obj.subOf) {
+        parents.push(obj.subOf);
+      }
+
+      if (updatedDocument && updatedDocument.subOf && updatedDocument.subOf !== obj.subOf) {
+        parents.push(updatedDocument.subOf);
+      }
+
+      if (parents.length > 0) {
+        extraDesc = await gatherNames({
+          collection: Segments,
+          idFields: parents,
+          foreignKey: 'subOf',
+          nameFields: ['name'],
+        });
+      }
+
+      description = `"${obj.name}" has been ${action}d`;
+
+      break;
+    case MODULE_NAMES.TASK:
+      description = `"${obj.name}" has been ${action}d`;
+
+      extraDesc = await gatherBoardItemFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherBoardItemFieldNames(updatedDocument, extraDesc);
+      }
+
+      break;
+    case MODULE_NAMES.TICKET:
+      description = `"${obj.name}" has been ${action}`;
+
+      extraDesc = await gatherBoardItemFieldNames(obj);
+
+      if (updatedDocument) {
+        extraDesc = await gatherBoardItemFieldNames(updatedDocument, extraDesc);
       }
 
       break;

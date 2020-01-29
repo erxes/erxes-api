@@ -1,7 +1,7 @@
 import { Companies } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { MODULE_NAMES } from '../../constants';
-import { gatherCompanyFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -16,15 +16,11 @@ const companyMutations = {
   async companiesAdd(_root, doc: ICompany, { user, docModifier }: IContext) {
     const company = await Companies.createCompany(docModifier(doc), user);
 
-    const extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.COMPANY,
         newData: doc,
         object: company,
-        description: `"${company.primaryName}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -39,17 +35,12 @@ const companyMutations = {
     const company = await Companies.getCompany(_id);
     const updated = await Companies.updateCompany(_id, doc);
 
-    let extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
-
-    extraDesc = await gatherCompanyFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.COMPANY,
         object: company,
         newData: doc,
-        description: `"${company.primaryName}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -66,17 +57,7 @@ const companyMutations = {
     await Companies.removeCompanies(companyIds);
 
     for (const company of companies) {
-      const extraDesc: LogDesc[] = await gatherCompanyFieldNames(company);
-
-      await putDeleteLog(
-        {
-          type: MODULE_NAMES.COMPANY,
-          object: company,
-          description: `"${company.primaryName}" has been removed`,
-          extraDesc,
-        },
-        user,
-      );
+      await putDeleteLog({ type: MODULE_NAMES.COMPANY, object: company }, user);
     }
 
     return companyIds;

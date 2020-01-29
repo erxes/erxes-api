@@ -4,14 +4,7 @@ import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { MODULE_NAMES } from '../../constants';
-import {
-  gatherBoardItemFieldNames,
-  gatherStageNames,
-  LogDesc,
-  putCreateLog,
-  putDeleteLog,
-  putUpdateLog,
-} from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds } from '../../utils';
@@ -44,21 +37,6 @@ const taskMutations = {
 
     const task = await Tasks.createTask(extendedDoc);
 
-    const usernameOrEmail = user.username || user.email;
-
-    // only these mapped id fields are created initially
-    let extraDesc: LogDesc[] = [
-      { userId: user._id, name: usernameOrEmail },
-      { watchedUserIds: user._id, name: usernameOrEmail },
-      { modifiedBy: user._id, name: usernameOrEmail },
-    ];
-
-    extraDesc = await gatherStageNames({
-      idFields: [doc.stageId],
-      foreignKey: 'stageId',
-      prevList: extraDesc,
-    });
-
     await createConformity({
       mainType: MODULE_NAMES.TASK,
       mainTypeId: task._id,
@@ -80,8 +58,6 @@ const taskMutations = {
         type: MODULE_NAMES.TASK,
         newData: extendedDoc,
         object: task,
-        description: `"${task.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -122,17 +98,12 @@ const taskMutations = {
 
     await sendNotifications(notificationDoc);
 
-    let extraDesc: LogDesc[] = await gatherBoardItemFieldNames(oldTask);
-
-    extraDesc = await gatherBoardItemFieldNames(updatedTask, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.TASK,
         object: oldTask,
         newData: extendedDoc,
-        description: `"${updatedTask.name}" has been edited`,
-        extraDesc,
+        updatedDocument: updatedTask,
       },
       user,
     );
@@ -196,19 +167,9 @@ const taskMutations = {
     await Checklists.removeChecklists(MODULE_NAMES.TASK, task._id);
     await ActivityLogs.removeActivityLog(task._id);
 
-    const extraDesc: LogDesc[] = await gatherBoardItemFieldNames(task);
-
     const removed = await task.remove();
 
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.TASK,
-        object: task,
-        description: `"${task.name}" has been deleted`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.TASK, object: task }, user);
 
     return removed;
   },

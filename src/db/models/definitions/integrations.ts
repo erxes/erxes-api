@@ -289,9 +289,9 @@ export const integrationSchema = new Schema({
   tagIds: field({ type: [String], label: 'Tags' }),
   formId: field({ type: String, label: 'Form' }),
   leadData: field({ type: leadDataSchema, label: 'Lead data' }),
+  isActive: field({ type: Boolean, optional: true, default: true, label: 'Is active' }),
   // TODO: remove
   formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
   uiOptions: field({ type: uiOptionsSchema }),
-  isActive: field({ type: Boolean, optional: true, default: true }),
 });

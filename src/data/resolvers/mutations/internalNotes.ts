@@ -17,7 +17,7 @@ import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
-import { gatherUsernames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils, { ISendNotification } from '../../utils';
@@ -44,76 +44,6 @@ const sendNotificationOfItems = async (
   utils.sendNotification(notifDocItems);
 };
 
-const findContentItemName = async (contentType: string, contentTypeId: string): Promise<string> => {
-  let name: string = '';
-
-  if (contentType === MODULE_NAMES.DEAL) {
-    const deal = await Deals.getDeal(contentTypeId);
-
-    if (deal && deal.name) {
-      name = deal.name;
-    }
-  }
-
-  if (contentType === MODULE_NAMES.CUSTOMER) {
-    const customer = await Customers.getCustomer(contentTypeId);
-
-    if (customer) {
-      name = Customers.getCustomerName(customer);
-    }
-  }
-
-  if (contentType === MODULE_NAMES.COMPANY) {
-    const company = await Companies.getCompany(contentTypeId);
-
-    if (company) {
-      name = Companies.getCompanyName(company);
-    }
-  }
-
-  if (contentType === MODULE_NAMES.TASK) {
-    const task = await Tasks.getTask(contentTypeId);
-
-    if (task && task.name) {
-      name = task.name;
-    }
-  }
-
-  if (contentType === MODULE_NAMES.TICKET) {
-    const ticket = await Tickets.getTicket(contentTypeId);
-
-    if (ticket && ticket.name) {
-      name = ticket.name;
-    }
-  }
-
-  if (contentType === MODULE_NAMES.GROWTH_HACK) {
-    const gh = await GrowthHacks.getGrowthHack(contentTypeId);
-
-    if (gh && gh.name) {
-      name = gh.name;
-    }
-  }
-
-  if (contentType === MODULE_NAMES.USER) {
-    const user = await Users.getUser(contentTypeId);
-
-    if (user) {
-      name = user.username || user.email || '';
-    }
-  }
-
-  if (contentType === MODULE_NAMES.PRODUCT) {
-    const product = await Products.getProduct({ _id: contentTypeId });
-
-    if (product) {
-      name = product.name;
-    }
-  }
-
-  return name;
-};
-
 const internalNoteMutations = {
   /**
    * Adds internalNote object and also adds an activity log
@@ -134,8 +64,6 @@ const internalNoteMutations = {
       contentTypeId: '',
     };
 
-    const extraDesc: LogDesc[] = [{ createdUserId: user._id, name: user.username || user.email }];
-
     if (contentType === MODULE_NAMES.DEAL) {
       const deal = await Deals.getDeal(contentTypeId);
       const stage = await Stages.getStage(deal.stageId);
@@ -146,8 +74,6 @@ const internalNoteMutations = {
       notifDoc.link = `/deal/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${deal._id}`;
       notifDoc.contentTypeId = deal._id;
       notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.DEAL;
-
-      extraDesc.push({ contentTypeId, name: deal.name });
 
       await sendNotificationOfItems(deal, notifDoc, contentType, [...mentionedUserIds, user._id]);
     }
@@ -160,8 +86,6 @@ const internalNoteMutations = {
       notifDoc.link = `/contacts/customers/details/${customer._id}`;
       notifDoc.contentTypeId = customer._id;
       notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.CUSTOMER;
-
-      extraDesc.push({ contentTypeId, name: Customers.getCustomerName(customer) });
     }
 
     if (contentType === MODULE_NAMES.COMPANY) {
@@ -172,8 +96,6 @@ const internalNoteMutations = {
       notifDoc.link = `/contacts/companies/details/${company._id}`;
       notifDoc.contentTypeId = company._id;
       notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.COMPANY;
-
-      extraDesc.push({ contentTypeId, name: Companies.getCompanyName(company) });
     }
 
     if (contentType === MODULE_NAMES.TICKET) {
@@ -186,8 +108,6 @@ const internalNoteMutations = {
       notifDoc.link = `/inbox/ticket/board?id=${pipeline.boardId}&pipelineId=${pipeline._id}&itemId=${ticket._id}`;
       notifDoc.contentTypeId = ticket._id;
       notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TICKET;
-
-      extraDesc.push({ contentTypeId, name: ticket.name });
 
       await sendNotificationOfItems(ticket, notifDoc, contentType, [...mentionedUserIds, user._id]);
     }
@@ -203,8 +123,6 @@ const internalNoteMutations = {
       notifDoc.contentTypeId = task._id;
       notifDoc.contentType = NOTIFICATION_CONTENT_TYPES.TASK;
 
-      extraDesc.push({ contentTypeId, name: task.name });
-
       await sendNotificationOfItems(task, notifDoc, contentType, [...mentionedUserIds, user._id]);
     }
 
@@ -212,24 +130,18 @@ const internalNoteMutations = {
       const hack = await GrowthHacks.getGrowthHack(contentTypeId);
 
       notifDoc.content = `${hack.name}`;
-
-      extraDesc.push({ contentTypeId, name: hack.name });
     }
 
     if (contentType === MODULE_NAMES.USER) {
       const usr = await Users.getUser(contentTypeId);
 
       notifDoc.content = `${usr.username || usr.email}`;
-
-      extraDesc.push({ contentTypeId, name: notifDoc.content });
     }
 
     if (contentType === MODULE_NAMES.PRODUCT) {
       const product = await Products.getProduct({ _id: contentTypeId });
 
       notifDoc.content = product.name;
-
-      extraDesc.push({ contentTypeId, name: product.name });
     }
 
     if (notifDoc.contentType) {
@@ -245,7 +157,6 @@ const internalNoteMutations = {
           newData: { ...args, createdUserId: user._id, createdAt: internalNote.createdAt },
           object: internalNote,
           description: `A note for ${internalNote.contentType} "${notifDoc.content}" has been created`,
-          extraDesc,
         },
         user,
       );
@@ -261,26 +172,11 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.getInternalNote(_id);
     const updated = await InternalNotes.updateInternalNote(_id, doc);
 
-    let extraDesc: LogDesc[] = [
-      {
-        contentTypeId: internalNote.contentTypeId,
-        name: await findContentItemName(internalNote.contentType, internalNote.contentTypeId),
-      },
-    ];
-
-    extraDesc = await gatherUsernames({
-      idFields: [internalNote.createdUserId],
-      foreignKey: 'createdUserId',
-      prevList: extraDesc,
-    });
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.INTERNAL_NOTE,
         object: internalNote,
         newData: doc,
-        description: `Note of type ${internalNote.contentType} has been edited`,
-        extraDesc,
       },
       user,
     );
@@ -295,28 +191,7 @@ const internalNoteMutations = {
     const internalNote = await InternalNotes.getInternalNote(_id);
     const removed = await InternalNotes.removeInternalNote(_id);
 
-    let extraDesc: LogDesc[] = [
-      {
-        contentTypeId: internalNote.contentTypeId,
-        name: await findContentItemName(internalNote.contentType, internalNote.contentTypeId),
-      },
-    ];
-
-    extraDesc = await gatherUsernames({
-      idFields: [internalNote.createdUserId],
-      foreignKey: 'createdUserId',
-      prevList: extraDesc,
-    });
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.INTERNAL_NOTE,
-        object: internalNote,
-        description: `Note of type ${internalNote.contentType} has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.INTERNAL_NOTE, object: internalNote }, user);
 
     return removed;
   },

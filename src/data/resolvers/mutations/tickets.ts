@@ -4,7 +4,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
 import { MODULE_NAMES } from '../../constants';
-import { gatherBoardItemFieldNames, LogDesc, putCreateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds } from '../../utils';
@@ -53,8 +53,6 @@ const ticketMutations = {
       contentType: MODULE_NAMES.TICKET,
     });
 
-    const extraDesc: LogDesc[] = await gatherBoardItemFieldNames(ticket);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.TICKET,
@@ -65,8 +63,6 @@ const ticketMutations = {
           modifiedAt: ticket.modifiedAt,
         },
         object: ticket,
-        description: `"${ticket.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -80,11 +76,13 @@ const ticketMutations = {
   async ticketsEdit(_root, { _id, ...doc }: ITicketsEdit, { user }: IContext) {
     const oldTicket = await Tickets.getTicket(_id);
 
-    const updatedTicket = await Tickets.updateTicket(_id, {
+    const extendedDoc = {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
-    });
+    };
+
+    const updatedTicket = await Tickets.updateTicket(_id, extendedDoc);
 
     await copyPipelineLabels({ item: oldTicket, doc, user });
 
@@ -103,6 +101,16 @@ const ticketMutations = {
     }
 
     await sendNotifications(notificationDoc);
+
+    await putUpdateLog(
+      {
+        type: MODULE_NAMES.TICKET,
+        object: oldTicket,
+        newData: extendedDoc,
+        updatedDocument: updatedTicket,
+      },
+      user,
+    );
 
     return updatedTicket;
   },
@@ -163,7 +171,11 @@ const ticketMutations = {
     await Checklists.removeChecklists(MODULE_NAMES.TICKET, ticket._id);
     await ActivityLogs.removeActivityLog(ticket._id);
 
-    return ticket.remove();
+    const removed = await ticket.remove();
+
+    await putDeleteLog({ type: MODULE_NAMES.TICKET, object: ticket }, user);
+
+    return removed;
   },
 
   /**

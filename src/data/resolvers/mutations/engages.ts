@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { MESSAGE_KINDS, MODULE_NAMES } from '../../constants';
-import { gatherEngageFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils from '../../utils';
@@ -30,8 +30,6 @@ const engageMutations = {
 
     await send(engageMessage);
 
-    const extraDesc: LogDesc[] = await gatherEngageFieldNames(doc);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.ENGAGE,
@@ -43,8 +41,6 @@ const engageMutations = {
           ...engageMessage.toObject(),
           ...emptyCustomers,
         },
-        description: `"${engageMessage.title}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -65,17 +61,12 @@ const engageMutations = {
       throw new Error(e);
     }
 
-    let extraDesc: LogDesc[] = await gatherEngageFieldNames(engageMessage);
-
-    extraDesc = await gatherEngageFieldNames(doc, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.ENGAGE,
         object: { ...engageMessage.toObject(), ...emptyCustomers },
         newData: { ...updated.toObject(), ...emptyCustomers },
-        description: `"${engageMessage.title}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -97,14 +88,10 @@ const engageMutations = {
 
     const removed = await EngageMessages.removeEngageMessage(_id);
 
-    const extraDesc: LogDesc[] = await gatherEngageFieldNames(engageMessage);
-
     await putDeleteLog(
       {
         type: MODULE_NAMES.ENGAGE,
         object: { ...engageMessage.toObject(), ...emptyCustomers },
-        description: `"${engageMessage.title}" has been removed`,
-        extraDesc,
       },
       user,
     );

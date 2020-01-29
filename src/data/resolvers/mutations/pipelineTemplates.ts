@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import { PipelineTemplates } from '../../../db/models';
 import { IPipelineTemplate, IPipelineTemplateStage } from '../../../db/models/definitions/pipelineTemplates';
 import { MODULE_NAMES } from '../../constants';
-import { gatherPipelineTemplateFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
 import { checkPermission } from '../boardUtils';
 
@@ -23,15 +23,11 @@ const pipelineTemplateMutations = {
       stages,
     );
 
-    const extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.PIPELINE_TEMPLATE,
         newData: { ...doc, stages: pipelineTemplate.stages },
-        description: `"${doc.name}" has been created`,
         object: pipelineTemplate,
-        extraDesc,
       },
       user,
     );
@@ -48,17 +44,12 @@ const pipelineTemplateMutations = {
     const pipelineTemplate = await PipelineTemplates.getPipelineTemplate(_id);
     const updated = await PipelineTemplates.updatePipelineTemplate(_id, doc, stages);
 
-    let extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
-
-    extraDesc = await gatherPipelineTemplateFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.PIPELINE_TEMPLATE,
         newData: { ...doc, stages: updated.stages },
-        description: `"${doc.name}" has been edited`,
         object: pipelineTemplate,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -85,19 +76,9 @@ const pipelineTemplateMutations = {
 
     await checkPermission(pipelineTemplate.type, user, 'templatesRemove');
 
-    const extraDesc: LogDesc[] = await gatherPipelineTemplateFieldNames(pipelineTemplate);
-
     const removed = await PipelineTemplates.removePipelineTemplate(_id);
 
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.PIPELINE_TEMPLATE,
-        object: pipelineTemplate,
-        description: `"${pipelineTemplate.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.PIPELINE_TEMPLATE, object: pipelineTemplate }, user);
 
     return removed;
   },

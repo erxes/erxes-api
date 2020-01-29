@@ -108,13 +108,7 @@ const checklistMutations = {
     const checklistItem = await ChecklistItems.getChecklistItem(_id);
     const removed = await ChecklistItems.removeChecklistItem(_id);
 
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.CHECKLIST,
-        object: checklistItem,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.CHECKLIST_ITEM, object: checklistItem }, user);
 
     return removed;
   },

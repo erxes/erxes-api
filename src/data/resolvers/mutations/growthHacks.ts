@@ -4,7 +4,7 @@ import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
-import { gatherGHFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds } from '../../utils';
@@ -45,8 +45,6 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
 
-    const extraDesc: LogDesc[] = await gatherGHFieldNames(growthHack);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.GROWTH_HACK,
@@ -57,8 +55,6 @@ const growthHackMutations = {
           order: growthHack.order,
         },
         object: growthHack,
-        description: `"${growthHack.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -101,17 +97,12 @@ const growthHackMutations = {
 
     await sendNotifications(notificationDoc);
 
-    let extraDesc: LogDesc[] = await gatherGHFieldNames(oldGrowthHack);
-
-    extraDesc = await gatherGHFieldNames(updatedGrowthHack, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.GROWTH_HACK,
         object: oldGrowthHack,
         newData: extendedDoc,
-        description: `"${updatedGrowthHack.name}" has been edited`,
-        extraDesc,
+        updatedDocument: updatedGrowthHack,
       },
       user,
     );
@@ -175,18 +166,7 @@ const growthHackMutations = {
 
     const removed = growthHack.remove();
 
-    // prepare log description
-    const extraDesc: LogDesc[] = await gatherGHFieldNames(growthHack);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.GROWTH_HACK,
-        object: growthHack,
-        description: `"${growthHack.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.GROWTH_HACK, object: growthHack }, user);
 
     await ActivityLogs.removeActivityLog(growthHack._id);
 

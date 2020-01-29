@@ -1,7 +1,7 @@
 import { Scripts } from '../../../db/models';
 import { IScript } from '../../../db/models/definitions/scripts';
 import { MODULE_NAMES } from '../../constants';
-import { gatherScriptFieldNames, LogDesc, putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -17,15 +17,11 @@ const scriptMutations = {
     const modifiedDoc = docModifier(doc);
     const script = await Scripts.createScript(modifiedDoc);
 
-    const extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
-
     await putCreateLog(
       {
         type: MODULE_NAMES.SCRIPT,
         newData: modifiedDoc,
         object: script,
-        description: `"${script.name}" has been created`,
-        extraDesc,
       },
       user,
     );
@@ -40,17 +36,12 @@ const scriptMutations = {
     const script = await Scripts.getScript(_id);
     const updated = await Scripts.updateScript(_id, fields);
 
-    let extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
-
-    extraDesc = await gatherScriptFieldNames(updated, extraDesc);
-
     await putUpdateLog(
       {
         type: MODULE_NAMES.SCRIPT,
         object: script,
         newData: fields,
-        description: `"${script.name}" has been edited`,
-        extraDesc,
+        updatedDocument: updated,
       },
       user,
     );
@@ -65,17 +56,7 @@ const scriptMutations = {
     const script = await Scripts.getScript(_id);
     const removed = await Scripts.removeScript(_id);
 
-    const extraDesc: LogDesc[] = await gatherScriptFieldNames(script);
-
-    await putDeleteLog(
-      {
-        type: MODULE_NAMES.SCRIPT,
-        object: script,
-        description: `"${script.name}" has been removed`,
-        extraDesc,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.SCRIPT, object: script }, user);
 
     return removed;
   },
