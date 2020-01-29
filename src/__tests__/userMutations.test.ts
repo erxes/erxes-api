@@ -44,6 +44,7 @@ describe('User mutations', () => {
   let _brand;
 
   let context;
+  const strongPassword = 'Password123';
 
   const commonParamDefs = `
     $username: String!
@@ -148,7 +149,7 @@ describe('User mutations', () => {
 
     const params = {
       token,
-      newPassword: 'newPassword',
+      newPassword: strongPassword,
     };
 
     await graphqlRequest(mutation, 'resetPassword', params);
@@ -177,7 +178,7 @@ describe('User mutations', () => {
     const group = await usersGroupFactory();
 
     const params = {
-      entries: [{ email: 'test@example.com', password: '123', groupId: group._id }],
+      entries: [{ email: 'test@example.com', password: strongPassword, groupId: group._id }],
     };
 
     await graphqlRequest(mutation, 'usersInvite', params, { user: _admin });
@@ -264,8 +265,8 @@ describe('User mutations', () => {
 
     const params = {
       token: '123',
-      password: '123',
-      passwordConfirmation: '123',
+      password: strongPassword,
+      passwordConfirmation: strongPassword,
     };
 
     await graphqlRequest(mutation, 'usersConfirmInvitation', params);
@@ -431,7 +432,7 @@ describe('User mutations', () => {
       'usersChangePassword',
       {
         currentPassword: 'pass',
-        newPassword: 'pass1',
+        newPassword: strongPassword,
       },
       context,
     );
@@ -538,7 +539,7 @@ describe('User mutations', () => {
     const user = await graphqlRequest(
       mutation,
       'usersResetMemberPassword',
-      { _id: _user.id, newPassword: 'newpassword' },
+      { _id: _user.id, newPassword: strongPassword },
       context,
     );
     // if not newPassword
