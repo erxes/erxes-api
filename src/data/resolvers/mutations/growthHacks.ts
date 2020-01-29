@@ -75,6 +75,15 @@ const growthHackMutations = {
         doc.assignedUserIds || [],
       );
 
+      const activityContent = { addedUserIds, removedUserIds };
+
+      await ActivityLogs.createAssigneLog({
+        contentId: _id,
+        userId: user._id,
+        contentType: 'growthHack',
+        content: activityContent,
+      });
+
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
     }

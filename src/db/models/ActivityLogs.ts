@@ -69,6 +69,7 @@ export const loadClass = () => {
       contentType: string;
       content: object;
     }) {
+      console.log('jdkasjdklaj');
       return ActivityLogs.addActivityLog({
         contentType,
         contentId,
