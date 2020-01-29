@@ -55,7 +55,7 @@ export default {
         item = (await Checklists.findOne({ _id: content._id })) || {};
         break;
       case 'checklistitem':
-        item = await ChecklistItems.getChecklistItem(content._id);
+        item = (await ChecklistItems.findOne({ _id: content._id })) || {};
         break;
     }
 

@@ -44,7 +44,7 @@ describe('Test activity model', () => {
   });
 
   test('Activity create board item log', async () => {
-    const deal = await dealFactory({});
+    const deal = await dealFactory({ sourceConversationId: '123' });
 
     const activity = await ActivityLogs.createBoardItemLog({ item: deal, contentType: 'deal' });
 
