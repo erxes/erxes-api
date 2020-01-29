@@ -37,6 +37,15 @@ export interface IActivityLogModel extends Model<IActivityLogDocument> {
     contentType: string;
     content: object;
   }): Promise<IActivityLogDocument>;
+  createChecklistLog({
+    item,
+    contentType,
+    action,
+  }: {
+    item: any;
+    contentType: string;
+    action: string;
+  }): Promise<IActivityLogDocument>;
 }
 
 export const loadClass = () => {
@@ -155,6 +164,34 @@ export const loadClass = () => {
       };
 
       return ActivityLogs.create(doc);
+    }
+
+    public static async createChecklistLog({
+      item,
+      contentType,
+      action,
+    }: {
+      item: any;
+      contentType: string;
+      action: string;
+    }) {
+      if (action === 'delete') {
+        await ActivityLogs.updateMany(
+          { 'content._id': item._id },
+          { $set: { 'content.name': item.title || item.content } },
+        );
+      }
+
+      return ActivityLogs.addActivityLog({
+        contentType,
+        contentId: item.contentTypeId || item.checklistId,
+        action,
+        content: {
+          _id: item._id,
+          name: item.title || item.content,
+        },
+        createdBy: item.createdUserId || '',
+      });
     }
   }
 

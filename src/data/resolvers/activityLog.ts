@@ -1,5 +1,7 @@
 import {
   Brands,
+  ChecklistItems,
+  Checklists,
   Companies,
   Customers,
   Deals,
@@ -32,7 +34,7 @@ export default {
   },
 
   async contentTypeDetail(activityLog: IActivityLog) {
-    const { contentType, contentId } = activityLog;
+    const { contentType, contentId, content } = activityLog;
 
     let item = {};
 
@@ -48,6 +50,12 @@ export default {
         break;
       case 'ticket':
         item = await Tickets.getTicket(contentId);
+        break;
+      case 'checklist':
+        item = (await Checklists.findOne({ _id: content._id })) || {};
+        break;
+      case 'checklistitem':
+        item = await ChecklistItems.getChecklistItem(content._id);
         break;
     }
 
