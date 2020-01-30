@@ -1,10 +1,13 @@
+import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog } from '../../utils';
+import { checkUserIds } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -21,19 +24,21 @@ interface ITasksEdit extends ITask {
 
 const taskMutations = {
   /**
-   * Create new task
+   * Creates a new task
    */
   async tasksAdd(_root, doc: ITask, { user, docModifier }: IContext) {
     doc.watchedUserIds = [user._id];
 
-    const task = await Tasks.createTask({
+    const extendedDoc = {
       ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
-    });
+    };
+
+    const task = await Tasks.createTask(extendedDoc);
 
     await createConformity({
-      mainType: 'task',
+      mainType: MODULE_NAMES.TASK,
       mainTypeId: task._id,
       companyIds: doc.companyIds,
       customerIds: doc.customerIds,
@@ -45,15 +50,14 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_ADD,
       action: `invited you to the`,
       content: `'${task.name}'.`,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
     await putCreateLog(
       {
-        type: 'task',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.TASK,
+        newData: extendedDoc,
         object: task,
-        description: `${task.name} has been created`,
       },
       user,
     );
@@ -67,11 +71,13 @@ const taskMutations = {
   async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
     const oldTask = await Tasks.getTask(_id);
 
-    const updatedTask = await Tasks.updateTask(_id, {
+    const extendedDoc = {
       ...doc,
       modifiedAt: new Date(),
       modifiedBy: user._id,
-    });
+    };
+
+    const updatedTask = await Tasks.updateTask(_id, extendedDoc);
 
     // labels should be copied to newly moved pipeline
     if (doc.stageId) {
@@ -82,7 +88,7 @@ const taskMutations = {
       item: updatedTask,
       user,
       type: NOTIFICATION_TYPES.TASK_EDIT,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     };
 
     if (doc.assignedUserIds) {
@@ -103,6 +109,16 @@ const taskMutations = {
 
     await sendNotifications(notificationDoc);
 
+    await putUpdateLog(
+      {
+        type: MODULE_NAMES.TASK,
+        object: oldTask,
+        newData: extendedDoc,
+        updatedDocument: updatedTask,
+      },
+      user,
+    );
+
     return updatedTask;
   },
 
@@ -122,7 +138,7 @@ const taskMutations = {
       stageId: destinationStageId,
     });
 
-    const { content, action } = await itemsChange(user._id, task, 'task', destinationStageId);
+    const { content, action } = await itemsChange(user._id, task, MODULE_NAMES.TASK, destinationStageId);
 
     await sendNotifications({
       item: task,
@@ -130,7 +146,7 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_CHANGE,
       action,
       content,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
     return task;
@@ -155,14 +171,18 @@ const taskMutations = {
       type: NOTIFICATION_TYPES.TASK_DELETE,
       action: `deleted task:`,
       content: `'${task.name}'`,
-      contentType: 'task',
+      contentType: MODULE_NAMES.TASK,
     });
 
-    await Conformities.removeConformity({ mainType: 'task', mainTypeId: task._id });
-    await Checklists.removeChecklists('task', task._id);
+    await Conformities.removeConformity({ mainType: MODULE_NAMES.TASK, mainTypeId: task._id });
+    await Checklists.removeChecklists(MODULE_NAMES.TASK, task._id);
     await ActivityLogs.removeActivityLog(task._id);
 
-    return task.remove();
+    const removed = await task.remove();
+
+    await putDeleteLog({ type: MODULE_NAMES.TASK, object: task }, user);
+
+    return removed;
   },
 
   /**
