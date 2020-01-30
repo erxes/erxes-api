@@ -129,4 +129,5 @@ export const mutations = `
 
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON
+  stagesEdit(_id: String!, type: String, name: String, status: String): Stage
 `;

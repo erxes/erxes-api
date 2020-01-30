@@ -1,5 +1,5 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
-import { IBoard, IOrderInput, IPipeline, IStageDocument } from '../../../db/models/definitions/boards';
+import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { IContext } from '../../types';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
@@ -13,6 +13,10 @@ interface IPipelinesAdd extends IPipeline {
 }
 
 interface IPipelinesEdit extends IPipelinesAdd {
+  _id: string;
+}
+
+interface IStageEdit extends IStage {
   _id: string;
 }
 
@@ -146,6 +150,15 @@ const boardMutations = {
    */
   stagesUpdateOrder(_root, { orders }: { orders: IOrderInput[] }) {
     return Stages.updateOrder(orders);
+  },
+
+  /**
+   * Edit stage
+   */
+  async stagesEdit(_root, { _id, ...doc }: IStageEdit, { user }: IContext) {
+    await checkPermission(doc.type, user, 'stagesEdit');
+
+    return Stages.updateStage(_id, doc);
   },
 };
 

@@ -43,4 +43,5 @@ export const mutations = `
   ticketsRemove(_id: String!): Ticket
   ticketsWatch(_id: String, isAdd: Boolean): Ticket
   ticketsCopy(_id: String!): Ticket
+  ticketsArchive(stageId: String!): String
 `;

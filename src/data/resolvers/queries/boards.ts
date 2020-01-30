@@ -155,7 +155,7 @@ const boardQueries = {
    *  Stages list
    */
   stages(_root, { pipelineId, isNotLost }: { pipelineId: string; isNotLost: boolean }) {
-    const filter: any = {};
+    const filter: any = { status: { $ne: 'archived' } };
 
     filter.pipelineId = pipelineId;
 

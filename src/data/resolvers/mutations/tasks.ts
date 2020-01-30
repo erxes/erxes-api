@@ -1,7 +1,7 @@
 import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds, putCreateLog } from '../../utils';
@@ -186,6 +186,12 @@ const taskMutations = {
 
     return clone;
   },
+
+  async tasksArchive(_root, { stageId }: { stageId: string }) {
+    await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    return 'ok';
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
@@ -193,5 +199,6 @@ checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
 checkPermission(taskMutations, 'tasksUpdateOrder', 'tasksUpdateOrder');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
 checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
+checkPermission(taskMutations, 'tasksArchive', 'tasksArchive');
 
 export default taskMutations;

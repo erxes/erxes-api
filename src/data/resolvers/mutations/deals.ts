@@ -1,7 +1,7 @@
 import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -202,6 +202,12 @@ const dealMutations = {
 
     return clone;
   },
+
+  async dealsArchive(_root, { stageId }: { stageId: string }) {
+    await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    return 'ok';
+  },
 };
 
 checkPermission(dealMutations, 'dealsAdd', 'dealsAdd');
@@ -209,5 +215,6 @@ checkPermission(dealMutations, 'dealsEdit', 'dealsEdit');
 checkPermission(dealMutations, 'dealsUpdateOrder', 'dealsUpdateOrder');
 checkPermission(dealMutations, 'dealsRemove', 'dealsRemove');
 checkPermission(dealMutations, 'dealsWatch', 'dealsWatch');
+checkPermission(dealMutations, 'dealsArchive', 'dealsArchive');
 
 export default dealMutations;

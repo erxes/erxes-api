@@ -1,6 +1,7 @@
 import * as moment from 'moment';
 import { Conformities, Pipelines, Stages } from '../../../db/models';
 import { IItemCommonFields } from '../../../db/models/definitions/boards';
+import { BOARD_STATUSES } from '../../../db/models/definitions/constants';
 import { getNextMonth, getToday, regexSearchText } from '../../utils';
 import { IListParams } from './boards';
 
@@ -31,7 +32,7 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
     return value.length === 1 && value[0].length === 0;
   };
 
-  const filter: any = { status: { $ne: 'archived' } };
+  const filter: any = { status: { $ne: BOARD_STATUSES.ARCHIVED } };
 
   let filterIds: string[] = [];
 

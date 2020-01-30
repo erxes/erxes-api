@@ -1,5 +1,5 @@
 import { Document, Schema } from 'mongoose';
-import { BOARD_ITEM_STATUSES, BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
+import { BOARD_STATUSES, BOARD_TYPES, HACK_SCORING_TYPES, PIPELINE_VISIBLITIES, PROBABILITY } from './constants';
 import { field, schemaWrapper } from './utils';
 
 interface ICommonFields {
@@ -72,6 +72,7 @@ export interface IStage extends ICommonFields {
   probability?: string;
   pipelineId: string;
   formId?: string;
+  status?: string;
 }
 
 export interface IStageDocument extends IStage, Document {
@@ -140,8 +141,8 @@ export const commonItemFieldsSchema = {
   sourceConversationId: field({ type: String, optional: true }),
   status: field({
     type: String,
-    enum: BOARD_ITEM_STATUSES.ALL,
-    default: BOARD_ITEM_STATUSES.ACTIVE,
+    enum: BOARD_STATUSES.ALL,
+    default: BOARD_STATUSES.ACTIVE,
   }),
 };
 
@@ -191,5 +192,10 @@ export const stageSchema = new Schema({
   }), // Win probability
   pipelineId: field({ type: String, label: 'Pipeline' }),
   formId: field({ type: String, label: 'Form' }),
+  status: field({
+    type: String,
+    enum: BOARD_STATUSES.ALL,
+    default: BOARD_STATUSES.ACTIVE,
+  }),
   ...commonFieldsSchema,
 });

@@ -71,4 +71,5 @@ export const mutations = `
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal
   dealsCopy(_id: String!): Deal
+  dealsArchive(stageId: String!): String
 `;

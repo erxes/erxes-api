@@ -38,4 +38,5 @@ export const mutations = `
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task
   tasksCopy(_id: String!): Task
+  tasksArchive(stageId: String!): String
 `;

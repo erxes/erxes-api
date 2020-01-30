@@ -345,10 +345,10 @@ export const STATUSES = {
   ALL: ['Active', 'Deleted'],
 };
 
-export const BOARD_ITEM_STATUSES = {
-  ACTIVE: 'Active',
-  ARCHIVED: 'Archived',
-  ALL: ['Active', 'Archived'],
+export const BOARD_STATUSES = {
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
+  ALL: ['active', 'archived'],
 };
 
 export const BOARD_TYPES = {
