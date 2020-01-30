@@ -92,6 +92,7 @@ export const queries = `
   stageDetail(_id: String!, ${stageParams}): Stage
   convertToInfo(conversationId: String!): ConvertTo
   pipelineStateCount(boardId: String, type: String): JSON
+  archivedStages(pipelineId: String!, search: String, page: Int, perPage: Int): [Stage]
 `;
 
 const commonParams = `

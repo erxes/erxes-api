@@ -28,6 +28,7 @@ export const queries = `
     sortDirection: Int
     ${conformityQueryFields}
   ): [Task]
+  archivedTasks(pipelineId: String!, search: String, page: Int, perPage: Int): [Task]
 `;
 
 export const mutations = `

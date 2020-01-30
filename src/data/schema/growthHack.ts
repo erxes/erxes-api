@@ -51,6 +51,8 @@ export const queries = `
     assignedUserIds: [String]
     closeDateType: String
   ): JSON
+
+  archivedGrowthHacks(search: String, page: Int, perPage: Int): [GrowthHack]
 `;
 
 const commonParams = `

@@ -160,6 +160,16 @@ const boardMutations = {
 
     return Stages.updateStage(_id, doc);
   },
+
+  /**
+   * Remove stage
+   */
+  async stagesRemove(_root, { _id }: { _id: string }, { user }: IContext) {
+    const stage = await Stages.getStage(_id);
+    await checkPermission(stage.type, user, 'stagesRemove');
+
+    return Stages.removeStage(_id);
+  },
 };
 
 export default boardMutations;
