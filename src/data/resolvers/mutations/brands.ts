@@ -35,16 +35,14 @@ const brandMutations = {
     const brand = await Brands.getBrand(_id);
     const updated = await Brands.updateBrand(_id, fields);
 
-    if (brand) {
-      await putUpdateLog(
-        {
-          type: MODULE_NAMES.BRAND,
-          object: brand,
-          newData: fields,
-        },
-        user,
-      );
-    }
+    await putUpdateLog(
+      {
+        type: MODULE_NAMES.BRAND,
+        object: brand,
+        newData: fields,
+      },
+      user,
+    );
 
     return updated;
   },
@@ -56,9 +54,7 @@ const brandMutations = {
     const brand = await Brands.getBrand(_id);
     const removed = await Brands.removeBrand(_id);
 
-    if (brand && removed) {
-      await putDeleteLog({ type: MODULE_NAMES.BRAND, object: brand }, user);
-    }
+    await putDeleteLog({ type: MODULE_NAMES.BRAND, object: brand }, user);
 
     return removed;
   },

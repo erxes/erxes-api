@@ -150,17 +150,15 @@ const internalNoteMutations = {
 
     const internalNote = await InternalNotes.createInternalNote(args, user);
 
-    if (internalNote) {
-      await putCreateLog(
-        {
-          type: MODULE_NAMES.INTERNAL_NOTE,
-          newData: { ...args, createdUserId: user._id, createdAt: internalNote.createdAt },
-          object: internalNote,
-          description: `A note for ${internalNote.contentType} "${notifDoc.content}" has been created`,
-        },
-        user,
-      );
-    }
+    await putCreateLog(
+      {
+        type: MODULE_NAMES.INTERNAL_NOTE,
+        newData: { ...args, createdUserId: user._id, createdAt: internalNote.createdAt },
+        object: internalNote,
+        description: `A note for ${internalNote.contentType} "${notifDoc.content}" has been created`,
+      },
+      user,
+    );
 
     return internalNote;
   },
