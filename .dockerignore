@@ -3,7 +3,9 @@
 .env*
 .git*
 .prettierrc
-.snyk
+# .snyk
+.yarn
+.pnp.js
 Dockerfile*
 google_cred.json.sample
 scripts

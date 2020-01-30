@@ -11,6 +11,7 @@ dump.rdb
 *.swp
 *.swo
 .migrate
+.yarn
 
 # Google config file
 google_cred.json
