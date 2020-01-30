@@ -40,15 +40,6 @@ const generateQueryBySegment = async (args: {
 
   if (parentSegment) {
     await generateQueryBySegment({ ...args, segment: parentSegment });
-    const parentPositive = [];
-    const parentNegative = [];
-
-    for (const condition of parentSegment.conditions) {
-      elkConvertConditionToQuery(condition, { positive: parentPositive, negative: parentNegative });
-    }
-
-    positive = [...positive, ...parentPositive];
-    negative = [...negative, ...parentNegative];
   }
 
   const propertyConditions: ICondition[] = [];
@@ -99,32 +90,44 @@ export const countBySegments = async (segment: ISegment) => {
   const eventPositive = [];
   const eventNegative = [];
 
-  generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
+  await generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
 
-  const customersResponse = await fetchElk('search', 'customers', {
-    _source: '_id',
-    query: {
-      bool: {
-        must: propertyPositive,
-        must_not: propertyNegative,
+  let customerIdsByCustomers = [];
+  let customerIdsByEvents = [];
+
+  if (propertyPositive.length > 0 || propertyNegative.length > 0) {
+    const customersResponse = await fetchElk('search', 'customers', {
+      _source: '_id',
+      query: {
+        bool: {
+          must: propertyPositive,
+          must_not: propertyNegative,
+        },
       },
-    },
-  });
+    });
 
-  const customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
+    customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
+  }
 
-  const eventsResponse = await fetchElk('search', 'events', {
-    _source: 'customerId',
-    query: {
-      bool: {
-        must: eventPositive,
-        must_not: eventNegative,
+  if (eventPositive.length > 0 || eventNegative.length > 0) {
+    const eventsResponse = await fetchElk('search', 'events', {
+      _source: 'customerId',
+      query: {
+        bool: {
+          must: eventPositive,
+          must_not: eventNegative,
+        },
       },
-    },
-  });
+    });
 
-  const customerIdsByEvents = eventsResponse.hits.hits.map(hit => hit._source.customerId);
-  const customerIds = _.intersection(customerIdsByCustomers, customerIdsByEvents);
+    customerIdsByEvents = eventsResponse.hits.hits.map(hit => hit._source.customerId);
+  }
+
+  let customerIds = customerIdsByCustomers.length ? customerIdsByCustomers : customerIdsByEvents;
+
+  if (customerIdsByCustomers.length > 0 && customerIdsByEvents.length > 0) {
+    customerIds = _.intersection(customerIdsByCustomers, customerIdsByEvents);
+  }
 
   return customerIds.length;
 };
@@ -138,7 +141,7 @@ function elkConvertConditionToQuery(args: { field: string; operator: string; val
   if (operator === 'e') {
     positive.push({
       term: {
-        [field]: fixedValue,
+        [`${field}.keyword`]: value,
       },
     });
   }
@@ -147,7 +150,7 @@ function elkConvertConditionToQuery(args: { field: string; operator: string; val
   if (operator === 'dne') {
     negative.push({
       term: {
-        [field]: fixedValue,
+        [`${field}.keyword`]: value,
       },
     });
   }
