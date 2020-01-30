@@ -1275,14 +1275,18 @@ export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) 
 };
 
 const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
-  return sendMessage('putLog', {
-    ...params,
-    createdBy: user._id,
-    unicode: user.username || user.email || user._id,
-    object: JSON.stringify(params.object),
-    newData: JSON.stringify(params.newData),
-    extraDesc: JSON.stringify(params.extraDesc),
-  });
+  try {
+    return sendMessage('putLog', {
+      ...params,
+      createdBy: user._id,
+      unicode: user.username || user.email || user._id,
+      object: JSON.stringify(params.object),
+      newData: JSON.stringify(params.newData),
+      extraDesc: JSON.stringify(params.extraDesc),
+    });
+  } catch (e) {
+    return e.message;
+  }
 };
 
 /**
