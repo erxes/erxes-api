@@ -1,7 +1,7 @@
 import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
 import { checkPermission } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
@@ -27,13 +27,14 @@ const boardMutations = {
   async boardsAdd(_root, doc: IBoard, { user, docModifier }: IContext) {
     await checkPermission(doc.type, user, 'boardsAdd');
 
-    const board = await Boards.createBoard(docModifier({ userId: user._id, ...doc }));
+    const extendedDoc = docModifier({ userId: user._id, ...doc });
+
+    const board = await Boards.createBoard(extendedDoc);
 
     await putCreateLog(
       {
         type: `${doc.type}Boards`,
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        newData: extendedDoc,
         object: board,
       },
       user,
@@ -54,9 +55,9 @@ const boardMutations = {
     await putUpdateLog(
       {
         type: `${doc.type}Boards`,
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been edited`,
+        newData: doc,
         object: board,
+        updatedDocument: updated,
       },
       user,
     );
@@ -72,18 +73,9 @@ const boardMutations = {
 
     await checkPermission(board.type, user, 'boardsRemove');
 
-    const type = `${board.type}Boards`;
-
     const removed = await Boards.removeBoard(_id);
 
-    await putDeleteLog(
-      {
-        type,
-        object: board,
-        description: `${board.name} has been removed`,
-      },
-      user,
-    );
+    await putDeleteLog({ type: `${board.type}Boards`, object: board }, user);
 
     return removed;
   },
@@ -99,8 +91,7 @@ const boardMutations = {
     await putCreateLog(
       {
         type: `${doc.type}Pipelines`,
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        newData: doc,
         object: pipeline,
       },
       user,
@@ -115,7 +106,21 @@ const boardMutations = {
   async pipelinesEdit(_root, { _id, stages, ...doc }: IPipelinesEdit, { user }: IContext) {
     await checkPermission(doc.type, user, 'pipelinesEdit');
 
-    return Pipelines.updatePipeline(_id, doc, stages);
+    const pipeline = await Pipelines.getPipeline(_id);
+
+    const updated = await Pipelines.updatePipeline(_id, doc, stages);
+
+    await putUpdateLog(
+      {
+        type: `${doc.type}Pipelines`,
+        newData: doc,
+        object: pipeline,
+        updatedDocument: updated,
+      },
+      user,
+    );
+
+    return updated;
   },
 
   /**
@@ -142,7 +147,11 @@ const boardMutations = {
 
     await checkPermission(pipeline.type, user, 'pipelinesRemove');
 
-    return Pipelines.removePipeline(_id);
+    const removed = await Pipelines.removePipeline(_id);
+
+    await putDeleteLog({ type: `${pipeline.type}Pipelines`, object: pipeline }, user);
+
+    return removed;
   },
 
   /**
