@@ -50,6 +50,7 @@ import {
 } from './models';
 import {
   ACTIVITY_CONTENT_TYPES,
+  BOARD_STATUSES,
   BOARD_TYPES,
   CONVERSATION_STATUSES,
   FORM_TYPES,
@@ -894,6 +895,7 @@ interface IStageFactoryInput {
   type?: string;
   probability?: string;
   formId?: string;
+  status?: string;
   order?: number;
 }
 
@@ -910,6 +912,7 @@ export const stageFactory = async (params: IStageFactoryInput = {}) => {
     probability: params.probability || PROBABILITY.TEN,
     formId: params.formId,
     order: params.order,
+    status: params.status || BOARD_STATUSES.ACTIVE,
   });
 
   return stage.save();

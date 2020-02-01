@@ -4,6 +4,7 @@ import { Boards, Deals, Pipelines, Stages, Users } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 
 import './setup.ts';
+import { BOARD_TYPES } from '../db/models/definitions/constants';
 
 describe('Test boards mutations', () => {
   let board: IBoardDocument;
@@ -316,5 +317,36 @@ describe('Test boards mutations', () => {
 
     expect(updatedStage.order).toBe(3);
     expect(updatedStageToOrder.order).toBe(9);
+  });
+
+  test('Edit stage', async () => {
+    const mutation = `
+      mutation stagesEdit($_id: String!, $type: String, $name: String) {
+        stagesEdit(_id: $_id, type: $type, name: $name) {
+          _id
+          name
+        }
+      }
+    `;
+
+    const updated = await graphqlRequest(mutation, 'stagesEdit', {
+      _id: stage._id,
+      type: BOARD_TYPES.DEAL,
+      name: 'updated',
+    });
+
+    expect(updated.name).toBe('updated');
+  });
+
+  test('Remove stage', async () => {
+    const mutation = `
+      mutation stagesRemove($_id: String!) {
+        stagesRemove(_id: $_id)
+      }
+    `;
+
+    await graphqlRequest(mutation, 'stagesRemove', { _id: stage._id });
+
+    expect(await Stages.findOne({ _id: stage._id })).toBe(null);
   });
 });

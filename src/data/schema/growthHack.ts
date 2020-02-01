@@ -52,7 +52,7 @@ export const queries = `
     closeDateType: String
   ): JSON
 
-  archivedGrowthHacks(search: String, page: Int, perPage: Int): [GrowthHack]
+  archivedGrowthHacks(pipelineId: String!, search: String, page: Int, perPage: Int): [GrowthHack]
 `;
 
 const commonParams = `

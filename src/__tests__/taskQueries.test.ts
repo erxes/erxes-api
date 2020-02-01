@@ -11,7 +11,7 @@ import {
 } from '../db/factories';
 import { Tasks } from '../db/models';
 
-import { BOARD_TYPES } from '../db/models/definitions/constants';
+import { BOARD_TYPES, BOARD_STATUSES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('taskQueries', () => {
@@ -175,5 +175,55 @@ describe('taskQueries', () => {
 
     expect(response._id).toBe(watchedTask._id);
     expect(response.isWatched).toBe(true);
+  });
+
+  test('Get archived task', async () => {
+    const pipeline = await pipelineFactory({ type: BOARD_TYPES.TASK });
+    const stage = await stageFactory({ pipelineId: pipeline._id });
+    const args = {
+      stageId: stage._id,
+      status: BOARD_STATUSES.ARCHIVED,
+    };
+
+    const task1 = await taskFactory(args);
+    await taskFactory(args);
+    await taskFactory(args);
+
+    const qry = `
+      query archivedTasks(
+        $pipelineId: String!,
+        $search: String,
+        $page: Int,
+        $perPage: Int
+      ) {
+        archivedTasks(
+          pipelineId: $pipelineId
+          search: $search
+          page: $page
+          perPage: $perPage
+        ) {
+          _id
+        }
+      }
+    `;
+
+    let response = await graphqlRequest(qry, 'archivedTasks', {
+      pipelineId: pipeline._id,
+    });
+
+    expect(response.length).toBe(3);
+
+    response = await graphqlRequest(qry, 'archivedTasks', {
+      pipelineId: pipeline._id,
+      search: task1.name,
+    });
+
+    expect(response.length).toBe(1);
+
+    response = await graphqlRequest(qry, 'archivedTasks', {
+      pipelineId: 'fakeId',
+    });
+
+    expect(response.length).toBe(0);
   });
 });

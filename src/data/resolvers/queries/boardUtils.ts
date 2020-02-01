@@ -297,11 +297,13 @@ export const archivedItems = async (params: IArchiveArgs, collection: any) => {
 
   if (stages.length > 0) {
     filter.stageId = { $in: stages.map(stage => stage._id) };
+
+    if (search) {
+      Object.assign(filter, regexSearchText(search, 'name'));
+    }
+
+    return paginate(collection.find(filter).sort({ createdAt: -1 }), listArgs);
   }
 
-  if (search) {
-    Object.assign(filter, regexSearchText(search, 'name'));
-  }
-
-  return paginate(collection.find(filter).sort({ createdAt: -1 }), listArgs);
+  return [];
 };
