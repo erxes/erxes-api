@@ -265,6 +265,10 @@ const conversationMutations = {
       requestName = 'replyTwitterDm';
     }
 
+    if (kind === KIND_CHOICES.WHATSAPP) {
+      requestName = 'replyWhatsapp';
+    }
+
     await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
 
     const dbMessage = await ConversationMessages.getMessage(message._id);
