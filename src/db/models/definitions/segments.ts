@@ -28,6 +28,7 @@ export interface ISegment {
   subOf: string;
   color: string;
   conditions: ICondition[];
+  scopeBrandIds?: string[];
 }
 
 export interface ISegmentDocument extends ISegment, Document {
@@ -44,23 +45,26 @@ const eventAttributeSchema = new Schema(
   { _id: false },
 );
 
-const conditionSchema = new Schema(
+export const conditionSchema = new Schema(
   {
     type: field({ type: String }),
 
     propertyName: field({
       type: String,
       optional: true,
+      label: 'Value',
     }),
 
     propertyOperator: field({
       type: String,
       optional: true,
+      label: 'Date unit',
     }),
 
     propertyValue: field({
       type: String,
       optional: true,
+      label: 'Brand',
     }),
 
     eventName: field({
@@ -79,6 +83,7 @@ export const segmentSchema = schemaWrapper(
     contentType: field({
       type: String,
       enum: ACTIVITY_CONTENT_TYPES.ALL,
+      label: 'Content type',
     }),
     name: field({ type: String }),
     description: field({ type: String, optional: true }),
