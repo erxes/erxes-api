@@ -54,7 +54,7 @@ const countByBrand = async (qb: any, mainQuery: any): Promise<ICountBy> => {
 const countByField = async (
   mainQuery: any,
   field: string,
-  values: [string],
+  values: string[],
   multi: boolean = false,
 ): Promise<ICountBy> => {
   const counts: ICountBy = {};
@@ -88,7 +88,7 @@ const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
     kind: 1,
   });
 
-  const rawIntegrationIds: any = [];
+  const rawIntegrationIds: string[] = [];
   const integrationMap = {};
 
   integrations.forEach(element => {
@@ -112,26 +112,32 @@ const countByIntegration = async (mainQuery: any): Promise<ICountBy> => {
 const countByTag = async (mainQuery: any): Promise<ICountBy> => {
   // Count customers by tag
   const tags = await Tags.find({ type: TAG_TYPES.CUSTOMER }).select('_id');
-  const tagRawIds: any = [];
+  const tagRawIds: string[] = [];
+
   tags.forEach(element => {
     tagRawIds.push(element._id);
   });
+
   return countByField(mainQuery, 'tagIds', tagRawIds, true);
 };
 
 const countByLeadStatus = async (mainQuery: any): Promise<ICountBy> => {
-  const statuses: any = [];
+  const statuses: string[] = [];
+
   COC_LEAD_STATUS_TYPES.forEach(row => {
     statuses.push(row);
   });
+
   return countByField(mainQuery, 'leadStatus', statuses);
 };
 
 const countByLifecycleStatus = async (mainQuery: any): Promise<ICountBy> => {
-  const stateTypes: any = [];
+  const stateTypes: string[] = [];
+
   COC_LIFECYCLE_STATE_TYPES.forEach(row => {
     stateTypes.push(row);
   });
+
   return countByField(mainQuery, 'lifecycleState', stateTypes);
 };
 
