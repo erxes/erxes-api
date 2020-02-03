@@ -11,7 +11,7 @@ import {
 } from '../db/factories';
 import { Tasks } from '../db/models';
 
-import { BOARD_TYPES, BOARD_STATUSES } from '../db/models/definitions/constants';
+import { BOARD_STATUSES, BOARD_TYPES } from '../db/models/definitions/constants';
 import './setup.ts';
 
 describe('taskQueries', () => {
