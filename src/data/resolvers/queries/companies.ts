@@ -2,7 +2,7 @@ import { Brands, Companies, Segments, Tags } from '../../../db/models';
 import { ACTIVITY_CONTENT_TYPES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
 import { brandFilter, filter, IListArgs, sortBuilder } from '../../modules/coc/companies';
-import QueryBuilder from '../../modules/segments/queryBuilder';
+// import QueryBuilder from '../../modules/segments/queryBuilder';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
@@ -24,7 +24,7 @@ const count = async (query: any, args: ICountArgs) => {
   return Companies.find(findQuery).countDocuments();
 };
 
-const countBySegment = async (commonSelector, args: ICountArgs): Promise<ICountBy> => {
+const countBySegment = async (_commonSelector, _args: ICountArgs): Promise<ICountBy> => {
   const counts = {};
 
   // Count companies by segments =========
@@ -34,7 +34,8 @@ const countBySegment = async (commonSelector, args: ICountArgs): Promise<ICountB
 
   for (const s of segments) {
     try {
-      counts[s._id] = await count({ ...commonSelector, ...(await QueryBuilder.segments(s)) }, args);
+      counts[s._id] = 0;
+      // counts[s._id] = await count({ ...commonSelector, ...(await QueryBuilder.segments(s)) }, args);
     } catch (e) {
       // catch mongo error
       if (e.name === 'CastError') {
@@ -144,10 +145,11 @@ const companyQueries = {
 
     // Count companies by fake segment
     if (args.byFakeSegment) {
-      counts.byFakeSegment = await count(
-        { ...commonQuerySelector, ...(await QueryBuilder.segments(args.byFakeSegment)) },
-        args,
-      );
+      counts.byFakeSegment = 0;
+      // counts.byFakeSegment = await count(
+      //   { ...commonQuerySelector, ...(await QueryBuilder.segments(args.byFakeSegment)) },
+      //   args,
+      // );
     }
 
     return counts;

@@ -4,7 +4,6 @@ import {
   Customers,
   EngageMessages,
   Integrations,
-  Segments,
   Users,
 } from '../../../db/models';
 import { CONVERSATION_STATUSES, KIND_CHOICES, METHODS } from '../../../db/models/definitions/constants';
@@ -14,7 +13,6 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { sendMessage } from '../../../messageBroker';
 import { MESSAGE_KINDS } from '../../constants';
 import { Builder as CustomerQueryBuilder } from '../../modules/coc/customers';
-import QueryBuilder from '../../modules/segments/queryBuilder';
 
 /**
  * Dynamic content tags
@@ -55,9 +53,6 @@ const replaceKeys = ({
  */
 const findCustomers = async ({
   customerIds,
-  segmentIds = [],
-  tagIds = [],
-  brandIds = [],
 }: {
   customerIds?: string[];
   segmentIds?: string[];
@@ -71,44 +66,48 @@ const findCustomers = async ({
     customerQuery = { _id: { $in: customerIds } };
   }
 
-  const doNotDisturbQuery = [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }];
+  // const _doNotDisturbQuery = [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }];
   const customerQb = new CustomerQueryBuilder({});
   await customerQb.buildAllQueries();
-  const customerFilter = customerQb.mainQuery();
 
-  if (tagIds.length > 0) {
-    customerQuery = { $and: [customerFilter, { $or: doNotDisturbQuery, tagIds: { $in: tagIds } }] };
-  }
+  // const customerFilter = customerQb.mainQuery();
 
-  if (brandIds.length > 0) {
-    const brandQueries: any[] = [];
+  // if (tagIds.length > 0) {
+  //   customerQuery = { $and: [customerFilter, { $or: doNotDisturbQuery, tagIds: { $in: tagIds } }] };
+  // }
 
-    customerQuery = { $and: [customerFilter] };
+  // if (brandIds.length > 0) {
+  //   const brandQueries: any[] = [];
 
-    for (const brandId of brandIds) {
-      const brandQuery = await customerQb.brandFilter(brandId);
+  //   customerQuery = { $and: [customerFilter] };
 
-      brandQueries.push(brandQuery);
-    }
+  //   for (const brandId of brandIds) {
+  //     const brandQuery = await customerQb.brandFilter(brandId);
 
-    customerQuery = { $and: [customerFilter, { $or: brandQueries }] };
-  }
+  //     brandQueries.push(brandQuery);
+  //   }
 
-  if (segmentIds.length > 0) {
-    const segmentQueries: any = [];
+  //   customerQuery = { $and: [customerFilter, { $or: brandQueries }] };
+  // }
 
-    const segments = await Segments.find({ _id: { $in: segmentIds } });
+  // if (segmentIds.length > 0) {
+  //   const segmentQueries: any = [];
 
-    for (const segment of segments) {
-      const filter = await QueryBuilder.segments(segment);
+  //   const segments = await Segments.find({ _id: { $in: segmentIds } });
 
-      filter.$or = doNotDisturbQuery;
+  //   for (const segment of segments) {
+  //     const cIds = await searchBySegments(segment);
 
-      segmentQueries.push(filter);
-    }
+  //     const filter = {
+  //       _id: { $in: cIds },
+  //       $or: doNotDisturbQuery
+  //     }
 
-    customerQuery = { $and: [customerFilter, { $or: segmentQueries }] };
-  }
+  //     segmentQueries.push(filter);
+  //   }
+
+  //   customerQuery = { $and: [customerFilter, { $or: segmentQueries }] };
+  // }
 
   return Customers.find(customerQuery);
 };

@@ -1,8 +1,8 @@
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
-import { Conformities, Customers, Integrations, Segments } from '../../../db/models';
+import { Conformities, Customers, Integrations } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
 import { regexSearchText } from '../../utils';
-import QueryBuilder from '../segments/queryBuilder';
+// import QueryBuilder from '../segments/queryBuilder';
 import { conformityFilterUtils } from './utils';
 
 export interface IListArgs extends IConformityQueryParams {
@@ -67,12 +67,12 @@ export const filter = async (params: IListArgs) => {
   };
 
   // Filter by segments
-  if (params.segment) {
-    const segment = await Segments.findOne({ _id: params.segment });
-    const query = await QueryBuilder.segments(segment);
+  // if (params.segment) {
+  //   const segment = await Segments.findOne({ _id: params.segment });
+  //   const query = await QueryBuilder.segments(segment);
 
-    Object.assign(selector, query);
-  }
+  //   Object.assign(selector, query);
+  // }
 
   if (params.searchValue) {
     Object.assign(selector, regexSearchText(params.searchValue));

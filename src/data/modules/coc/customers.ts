@@ -1,11 +1,9 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
-import { Brands, FormSubmissions, Integrations, Segments } from '../../../db/models';
-import { STATUSES } from '../../../db/models/definitions/constants';
-import { regexSearchText } from '../../utils';
-import QueryBuilder from '../segments/queryBuilder';
-import { conformityFilterUtils } from './utils';
+import { FormSubmissions, Integrations, Segments } from '../../../db/models';
+import { fetchElk } from '../../../elasticsearch';
+import { searchBySegments } from '../segments/queryBuilder';
 
 interface ISortParams {
   [index: string]: number;
@@ -23,10 +21,6 @@ export const sortBuilder = (params: IListArgs): ISortParams => {
 
   return sortParams;
 };
-
-interface IIn {
-  $in: string[];
-}
 
 export interface IListArgs extends IConformityQueryParams {
   page?: number;
@@ -49,110 +43,115 @@ export interface IListArgs extends IConformityQueryParams {
   integration?: string;
 }
 
-interface IIntegrationIds {
-  integrationId: IIn;
-}
-
-interface IIdsFilter {
-  _id: IIn;
-}
-
 export class Builder {
   public params: IListArgs;
-  public queries: any;
+  public queries: any[];
 
   constructor(params: IListArgs) {
     this.params = params;
-  }
-
-  public async defaultFilters(): Promise<any> {
-    const activeIntegrations = await Integrations.findIntegrations({}, { _id: 1 });
-
-    return {
-      status: { $ne: STATUSES.DELETED },
-      profileScore: { $gt: 0 },
-      $or: [
-        {
-          integrationId: { $in: [null, undefined, ''] },
-        },
-        { integrationId: { $in: activeIntegrations.map(integration => integration._id) } },
-      ],
-    };
+    this.queries = [];
   }
 
   // filter by segment
   public async segmentFilter(segmentId: string) {
     const segment = await Segments.findOne({ _id: segmentId });
-    const brandsMapping = {};
 
-    const brands = await Brands.find({});
-
-    for (const brand of brands) {
-      const integrations = await Integrations.findIntegrations({ brandId: brand._id });
-
-      const integrationIds = integrations.map(integration => integration._id);
-
-      brandsMapping[brand._id] = integrationIds;
+    if (!segment) {
+      return;
     }
 
-    return QueryBuilder.segments(segment, null, brandsMapping);
+    const customerIds = await searchBySegments(segment);
+
+    this.queries.push({
+      terms: {
+        _id: customerIds,
+      },
+    });
   }
 
   // filter by brand
-  public async brandFilter(brandId: string): Promise<IIntegrationIds> {
+  public async brandFilter(brandId: string): Promise<void> {
     const integrations = await Integrations.findIntegrations({ brandId });
 
-    return { integrationId: { $in: integrations.map(i => i._id) } };
-  }
-
-  // filter by integration kind
-  public async integrationTypeFilter(kind: string): Promise<IIntegrationIds> {
-    const integrations = await Integrations.findIntegrations({ kind });
-
-    return { integrationId: { $in: integrations.map(i => i._id) } };
+    this.queries.push({
+      terms: {
+        integrationId: integrations.map(i => i._id),
+      },
+    });
   }
 
   // filter by integration
-  public async integrationFilter(integration: string): Promise<IIntegrationIds> {
+  public async integrationFilter(integration: string): Promise<void> {
     const integrations = await Integrations.findIntegrations({ kind: integration });
     /**
      * Since both of brand and integration filters use a same integrationId field
      * we need to intersect two arrays of integration ids.
      */
-    const ids = integrations.map(i => i._id);
+    this.queries.push({
+      terms: {
+        integrationId: integrations.map(i => i._id),
+      },
+    });
+  }
 
-    const intersectionedIds = this.queries.integrationId ? _.intersection(ids, this.queries.integrationId.$in) : ids;
+  // filter by integration kind
+  public async integrationTypeFilter(kind: string): Promise<void> {
+    const integrations = await Integrations.findIntegrations({ kind });
 
-    return { integrationId: { $in: intersectionedIds } };
+    this.queries.push({
+      terms: {
+        integrationId: integrations.map(i => i._id),
+      },
+    });
   }
 
   // filter by tagId
-  public tagFilter(tagId: string): { tagIds: IIn } {
-    return { tagIds: { $in: [tagId] } };
+  public tagFilter(tagId: string) {
+    this.queries.push({
+      terms: {
+        tagIds: [tagId],
+      },
+    });
   }
 
   // filter by search value
-  public searchFilter(value: string): { $and: any } {
-    return regexSearchText(value);
+  public searchFilter(value: string): void {
+    this.queries.push({
+      regexp: {
+        searchText: `.*+${value}.*`,
+      },
+    });
   }
 
   // filter by id
-  public idsFilter(ids: string[]): IIdsFilter {
-    return { _id: { $in: ids } };
+  public idsFilter(ids: string[]): void {
+    this.queries.push({
+      terms: {
+        _id: ids,
+      },
+    });
   }
 
   // filter by leadStatus
-  public leadStatusFilter(leadStatus: string): { leadStatus: string } {
-    return { leadStatus };
+  public leadStatusFilter(leadStatus: string): void {
+    this.queries.push({
+      term: {
+        leadStatus,
+      },
+    });
   }
 
   // filter by lifecycleState
-  public lifecycleStateFilter(lifecycleState: string): { lifecycleState: string } {
-    return { lifecycleState };
+  public lifecycleStateFilter(lifecycleState: string): void {
+    this.queries.push({
+      term: {
+        lifecycleState,
+      },
+    });
   }
 
   // filter by form
-  public async formFilter(formId: string, startDate?: string, endDate?: string): Promise<IIdsFilter> {
+  public async formFilter(formId: string, startDate?: string, endDate?: string): Promise<void> {
     const submissions = await FormSubmissions.find({ formId });
     const ids: string[] = [];
 
@@ -173,107 +172,99 @@ export class Builder {
       }
     }
 
-    return { _id: { $in: ids } };
+    this.queries.push({
+      terms: {
+        _id: ids,
+      },
+    });
   }
+
   /*
    * prepare all queries. do not do any action
    */
   public async buildAllQueries(): Promise<void> {
-    this.queries = {
-      default: await this.defaultFilters(),
-      type: {},
-      segment: {},
-      tag: {},
-      ids: {},
-      searchValue: {},
-      brand: {},
-      integration: {},
-      form: {},
-      integrationType: {},
-      filterConformity: {},
-    };
-
-    // filter by type
-    if (this.params.type) {
-      this.queries.type = { isUser: this.params.type === 'user' ? true : { $ne: true } };
-    }
+    this.queries = [];
 
     // filter by segment
     if (this.params.segment) {
-      this.queries.segment = await this.segmentFilter(this.params.segment);
+      await this.segmentFilter(this.params.segment);
     }
 
     // filter by tag
     if (this.params.tag) {
-      this.queries.tag = this.tagFilter(this.params.tag);
+      this.tagFilter(this.params.tag);
     }
 
     // filter by brand
     if (this.params.brand) {
-      this.queries.brand = await this.brandFilter(this.params.brand);
+      await this.brandFilter(this.params.brand);
     }
 
     // filter by integration kind
     if (this.params.integrationType) {
-      this.queries.integrationType = await this.integrationTypeFilter(this.params.integrationType);
-    }
-
-    // filter by form
-    if (this.params.form) {
-      this.queries.form = await this.formFilter(this.params.form);
-
-      if (this.params.startDate && this.params.endDate) {
-        this.queries.form = await this.formFilter(this.params.form, this.params.startDate, this.params.endDate);
-      }
-    }
-
-    /* If there are ids and form params, returning ids filter only
-     * filter by ids
-     */
-    if (this.params.ids) {
-      this.queries.ids = this.idsFilter(this.params.ids);
+      await this.integrationTypeFilter(this.params.integrationType);
     }
 
     // filter by integration
     if (this.params.integration) {
-      this.queries.integration = await this.integrationFilter(this.params.integration);
+      await this.integrationFilter(this.params.integration);
     }
-
-    // filter by search value
-    if (this.params.searchValue) {
-      this.queries.searchValue = this.searchFilter(this.params.searchValue);
-    }
-
-    // Filter by related Conformity
-    this.queries.filterConformity = await conformityFilterUtils(this.queries.filterConformity, this.params, 'customer');
 
     // filter by leadStatus
     if (this.params.leadStatus) {
-      this.queries.leadStatus = this.leadStatusFilter(this.params.leadStatus);
+      this.leadStatusFilter(this.params.leadStatus);
     }
 
     // filter by lifecycleState
     if (this.params.lifecycleState) {
-      this.queries.lifecycleState = this.lifecycleStateFilter(this.params.lifecycleState);
+      this.lifecycleStateFilter(this.params.lifecycleState);
+    }
+
+    // filter by form
+    if (this.params.form) {
+      if (this.params.startDate && this.params.endDate) {
+        await this.formFilter(this.params.form, this.params.startDate, this.params.endDate);
+      } else {
+        await this.formFilter(this.params.form);
+      }
+    }
+
+    // If there are ids and form params, returning ids filter only filter by ids
+    if (this.params.ids) {
+      this.idsFilter(this.params.ids);
+    }
+
+    // filter by search value
+    if (this.params.searchValue) {
+      this.searchFilter(this.params.searchValue);
     }
   }
 
-  public mainQuery(): any {
+  /*
+   * Run queries
+   */
+  public async runQueries(action = 'search'): Promise<any> {
+    const customersResponse = await fetchElk(action, 'customers', {
+      size: action === 'search' ? 20 : undefined,
+      query: {
+        bool: {
+          must: this.queries,
+        },
+      },
+    });
+
+    if (action === 'count') {
+      return customersResponse.count;
+    }
+
+    const list = customersResponse.hits.hits.map(hit => ({
+      _id: hit._id,
+      ...hit._source,
+    }));
+
     return {
-      ...this.queries.default,
-      ...this.queries.type,
-      ...this.queries.segment,
-      ...this.queries.tag,
-      ...this.queries.segment,
-      ...this.queries.brand,
-      ...this.queries.integrationType,
-      ...this.queries.form,
-      ...this.queries.ids,
-      ...this.queries.integration,
-      ...this.queries.searchValue,
-      ...this.queries.leadStatus,
-      ...this.queries.lifecycleState,
-      ...this.queries.filterConformity,
+      list,
+      totalCount: customersResponse.hits.total.value,
     };
   }
 }

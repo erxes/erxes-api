@@ -44,6 +44,36 @@ const main = async () => {
             type: 'text',
             analyzer: 'uax_url_email_analyzer',
           },
+          integrationId: {
+            type: 'keyword',
+          },
+          scopeBrandIds: {
+            type: 'keyword',
+          },
+          ownerId: {
+            type: 'keyword',
+          },
+          position: {
+            type: 'keyword',
+          },
+          leadStatus: {
+            type: 'keyword',
+          },
+          lifecycleState: {
+            type: 'keyword',
+          },
+          tagIds: {
+            type: 'keyword',
+          },
+          companyIds: {
+            type: 'keyword',
+          },
+          mergedIds: {
+            type: 'keyword',
+          },
+          status: {
+            type: 'keyword',
+          },
         },
       },
     });

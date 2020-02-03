@@ -60,7 +60,7 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const sort = customersSortBuilder(customerParams);
 
-      data = await Customers.find(qb.mainQuery()).sort(sort);
+      data = await Customers.find(qb.runQueries()).sort(sort);
 
       break;
     case MODULE_NAMES.DEAL:
