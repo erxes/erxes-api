@@ -3,7 +3,7 @@ import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { FormSubmissions, Integrations, Segments } from '../../../db/models';
 import { fetchElk } from '../../../elasticsearch';
-import { searchBySegments } from '../segments/queryBuilder';
+import { fetchBySegments } from '../segments/queryBuilder';
 
 interface ISortParams {
   [index: string]: number;
@@ -45,11 +45,13 @@ export interface IListArgs extends IConformityQueryParams {
 
 export class Builder {
   public params: IListArgs;
-  public queries: any[];
+  public positiveList: any[];
+  public negativeList: any[];
 
   constructor(params: IListArgs) {
     this.params = params;
-    this.queries = [];
+    this.positiveList = [];
+    this.negativeList = [];
   }
 
   // filter by segment
@@ -60,20 +62,26 @@ export class Builder {
       return;
     }
 
-    const customerIds = await searchBySegments(segment);
+    const { customerIdsByEvents, propertyPositive, propertyNegative } = await fetchBySegments(segment, 'count');
 
-    this.queries.push({
-      terms: {
-        _id: customerIds,
-      },
-    });
+    this.positiveList = [...this.positiveList, ...propertyPositive];
+
+    if (customerIdsByEvents.length > 0) {
+      this.positiveList.push({
+        terms: {
+          _id: customerIdsByEvents,
+        },
+      });
+    }
+
+    this.negativeList = [...this.negativeList, ...propertyNegative];
   }
 
   // filter by brand
   public async brandFilter(brandId: string): Promise<void> {
     const integrations = await Integrations.findIntegrations({ brandId });
 
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         integrationId: integrations.map(i => i._id),
       },
@@ -87,7 +95,7 @@ export class Builder {
      * Since both of brand and integration filters use a same integrationId field
      * we need to intersect two arrays of integration ids.
      */
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         integrationId: integrations.map(i => i._id),
       },
@@ -98,7 +106,7 @@ export class Builder {
   public async integrationTypeFilter(kind: string): Promise<void> {
     const integrations = await Integrations.findIntegrations({ kind });
 
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         integrationId: integrations.map(i => i._id),
       },
@@ -107,7 +115,7 @@ export class Builder {
 
   // filter by tagId
   public tagFilter(tagId: string) {
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         tagIds: [tagId],
       },
@@ -116,7 +124,7 @@ export class Builder {
 
   // filter by search value
   public searchFilter(value: string): void {
-    this.queries.push({
+    this.positiveList.push({
       regexp: {
         searchText: `.*+${value}.*`,
       },
@@ -125,7 +133,7 @@ export class Builder {
 
   // filter by id
   public idsFilter(ids: string[]): void {
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         _id: ids,
       },
@@ -134,7 +142,7 @@ export class Builder {
 
   // filter by leadStatus
   public leadStatusFilter(leadStatus: string): void {
-    this.queries.push({
+    this.positiveList.push({
       term: {
         leadStatus,
       },
@@ -143,7 +151,7 @@ export class Builder {
 
   // filter by lifecycleState
   public lifecycleStateFilter(lifecycleState: string): void {
-    this.queries.push({
+    this.positiveList.push({
       term: {
         lifecycleState,
       },
@@ -172,7 +180,7 @@ export class Builder {
       }
     }
 
-    this.queries.push({
+    this.positiveList.push({
       terms: {
         _id: ids,
       },
@@ -183,7 +191,7 @@ export class Builder {
    * prepare all queries. do not do any action
    */
   public async buildAllQueries(): Promise<void> {
-    this.queries = [];
+    this.positiveList = [];
 
     // filter by segment
     if (this.params.segment) {
@@ -248,7 +256,7 @@ export class Builder {
       size: action === 'search' ? 20 : undefined,
       query: {
         bool: {
-          must: this.queries,
+          must: this.positiveList,
         },
       },
     });

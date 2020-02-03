@@ -3,7 +3,7 @@ import { Segments } from '../../../db/models';
 import { ICondition, ISegment } from '../../../db/models/definitions/segments';
 import { fetchElk } from '../../../elasticsearch';
 
-export const searchBySegments = async (segment: ISegment): Promise<string[]> => {
+export const fetchBySegments = async (segment: ISegment, action: 'search' | 'count' = 'search'): Promise<any> => {
   if (!segment || !segment.conditions) {
     return [];
   }
@@ -31,18 +31,6 @@ export const searchBySegments = async (segment: ISegment): Promise<string[]> => 
 
   await generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
 
-  const customersResponse = await fetchElk('search', 'customers', {
-    _source: '_id',
-    query: {
-      bool: {
-        must: propertyPositive,
-        must_not: propertyNegative,
-      },
-    },
-  });
-
-  const customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
-
   let customerIdsByEvents = [];
 
   if (eventPositive.length > 0 || eventNegative.length > 0) {
@@ -58,6 +46,26 @@ export const searchBySegments = async (segment: ISegment): Promise<string[]> => 
 
     customerIdsByEvents = eventsResponse.hits.hits.map(hit => hit._source.customerId);
   }
+
+  if (action === 'count') {
+    return {
+      customerIdsByEvents,
+      propertyPositive,
+      propertyNegative,
+    };
+  }
+
+  const customersResponse = await fetchElk('search', 'customers', {
+    _source: '_id',
+    query: {
+      bool: {
+        must: propertyPositive,
+        must_not: propertyNegative,
+      },
+    },
+  });
+
+  const customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
 
   let customerIds = customerIdsByCustomers.length ? customerIdsByCustomers : customerIdsByEvents;
 
