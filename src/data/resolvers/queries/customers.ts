@@ -85,17 +85,6 @@ const customerQueries = {
 
     const qb = new BuildQuery(params);
 
-    // let mainQuery = { ...commonQuerySelector, ...qb.mainQuery() };
-
-    // // if passed at least one filter other than perPage
-    // // then find all filtered customers then add subsequent filter to it
-    // if (Object.keys(params).length > 1) {
-    //   const customers = await Customers.find(mainQuery, { _id: 1 });
-    //   const customerIds = customers.map(customer => customer._id);
-
-    //   mainQuery = { _id: { $in: customerIds } };
-    // }
-
     switch (only) {
       case 'bySegment':
         counts.bySegment = await countBySegment('customer', qb);

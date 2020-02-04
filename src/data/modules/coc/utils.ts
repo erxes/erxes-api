@@ -225,25 +225,47 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     }
   }
 
+  public async findAllMongo(_limit: number): Promise<any> {
+    return Promise.resolve({
+      list: [],
+      totalCount: 0,
+    });
+  }
+
   /*
    * Run queries
    */
   public async runQueries(action = 'search'): Promise<any> {
     const { page = 0, perPage = 0 } = this.params;
+    const paramKeys = Object.keys(this.params).join(',');
 
     const _page = Number(page || 1);
     const _limit = Number(perPage || 20);
 
-    const response = await fetchElk(action, this.contentType, {
-      from: action === 'search' ? (_page - 1) * _limit : undefined,
-      size: action === 'search' ? _limit : undefined,
+    if (page === 1 && perPage === 20 && (paramKeys === 'page,perPage' || paramKeys === 'page,perPage,type')) {
+      return this.findAllMongo(_limit);
+    }
+
+    const queryOptions: any = {
       query: {
         bool: {
           must: this.positiveList,
           must_not: this.negativeList,
         },
       },
-    });
+    };
+
+    if (action === 'search') {
+      queryOptions.from = (_page - 1) * _limit;
+      queryOptions.size = _limit;
+      queryOptions.sort = {
+        createdAt: {
+          order: 'desc',
+        },
+      };
+    }
+
+    const response = await fetchElk(action, this.contentType, queryOptions);
 
     if (action === 'count') {
       return response.count;

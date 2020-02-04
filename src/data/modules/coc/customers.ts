@@ -1,7 +1,8 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
-import { FormSubmissions, Integrations } from '../../../db/models';
+import { Customers, FormSubmissions, Integrations } from '../../../db/models';
+import { STATUSES } from '../../../db/models/definitions/constants';
 import { CommonBuilder } from './utils';
 
 interface ISortParams {
@@ -107,6 +108,31 @@ export class Builder extends CommonBuilder<IListArgs> {
         _id: ids,
       },
     });
+  }
+
+  public async findAllMongo(limit: number) {
+    const activeIntegrations = await Integrations.findIntegrations({}, { _id: 1 });
+
+    const selector = {
+      status: { $ne: STATUSES.DELETED },
+      profileScore: { $gt: 0 },
+      $or: [
+        {
+          integrationId: { $in: [null, undefined, ''] },
+        },
+        { integrationId: { $in: activeIntegrations.map(integration => integration._id) } },
+      ],
+    };
+
+    const customers = await Customers.find(selector)
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    const count = await Customers.find(selector).countDocuments();
+
+    return {
+      list: customers,
+      totalCount: count,
+    };
   }
 
   /*

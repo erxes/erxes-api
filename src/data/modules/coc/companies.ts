@@ -1,6 +1,7 @@
 import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
-import { Conformities, Customers, Integrations } from '../../../db/models';
+import { Companies, Conformities, Customers, Integrations } from '../../../db/models';
+import { STATUSES } from '../../../db/models/definitions/constants';
 import { CommonBuilder } from './utils';
 
 type TSortBuilder = { primaryName: number } | { [index: string]: number };
@@ -54,6 +55,22 @@ export class Builder extends CommonBuilder<IListArgs> {
         _id: companyIds || [],
       },
     });
+  }
+
+  public async findAllMongo(limit: number) {
+    const selector = {
+      status: { $ne: STATUSES.DELETED },
+    };
+
+    const companies = await Companies.find(selector)
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    const count = await Companies.find(selector).countDocuments();
+
+    return {
+      list: companies,
+      totalCount: count,
+    };
   }
 
   /*
