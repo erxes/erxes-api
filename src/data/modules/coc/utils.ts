@@ -98,6 +98,8 @@ export const countByIntegrationType = async (qb): Promise<ICountBy> => {
 };
 
 interface ICommonListArgs {
+  page?: number;
+  perPage?: number;
   segment?: string;
   tag?: string;
   ids?: string[];
@@ -227,8 +229,14 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
    * Run queries
    */
   public async runQueries(action = 'search'): Promise<any> {
+    const { page = 0, perPage = 0 } = this.params;
+
+    const _page = Number(page || 1);
+    const _limit = Number(perPage || 20);
+
     const response = await fetchElk(action, this.contentType, {
-      size: action === 'search' ? 20 : undefined,
+      from: action === 'search' ? (_page - 1) * _limit : undefined,
+      size: action === 'search' ? _limit : undefined,
       query: {
         bool: {
           must: this.positiveList,
