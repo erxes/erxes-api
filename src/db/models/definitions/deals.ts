@@ -46,6 +46,7 @@ export interface IProductData extends Document {
   discountPercent?: number;
   discount?: number;
   amount?: number;
+  tickUsed?: boolean;
 }
 
 interface IPaymentsData {
@@ -123,6 +124,7 @@ export const productDataSchema = new Schema(
     discountPercent: field({ type: Number, label: 'Discount percent' }),
     discount: field({ type: Number, label: 'Discount' }),
     amount: field({ type: Number, label: 'Amount' }),
+    tickUsed: field({ type: Boolean, label: 'TickUsed' }),
   },
   { _id: false },
 );
@@ -132,6 +134,6 @@ export const dealSchema = schemaWrapper(
     ...commonItemFieldsSchema,
 
     productsData: field({ type: [productDataSchema], label: 'Products' }),
-    paymentsData: field({ type: Object, optional: true }),
+    paymentsData: field({ type: Object, optional: true, label: 'Payments' }),
   }),
 );
