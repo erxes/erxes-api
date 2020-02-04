@@ -33,7 +33,7 @@ export const queries = `
   segments(contentType: String!): [Segment]
   segmentDetail(_id: String): Segment
   segmentsGetHeads: [Segment]
-  segmentsEvents: [JSON]
+  segmentsEvents(contentType: String!): [JSON]
 `;
 
 const commonFields = `

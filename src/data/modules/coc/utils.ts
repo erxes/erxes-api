@@ -1,4 +1,257 @@
-import { Conformities } from '../../../db/models';
+import * as _ from 'underscore';
+import { Brands, Conformities, Segments, Tags } from '../../../db/models';
+import { KIND_CHOICES } from '../../../db/models/definitions/constants';
+import { fetchElk } from '../../../elasticsearch';
+import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
+import { fetchBySegments } from '../segments/queryBuilder';
+
+export interface ICountBy {
+  [index: string]: number;
+}
+
+export const countBySegment = async (contentType: string, qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  // Count customers by segments
+  const segments = await Segments.find({ contentType });
+
+  // Count customers by segment
+  for (const s of segments) {
+    await qb.buildAllQueries();
+    await qb.segmentFilter(s._id);
+
+    counts[s._id] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+export const countByBrand = async (qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  // Count customers by brand
+  const brands = await Brands.find({});
+
+  for (const brand of brands) {
+    await qb.buildAllQueries();
+    await qb.brandFilter(brand._id);
+
+    counts[brand._id] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+export const countByTag = async (type: string, qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  // Count customers by tag
+  const tags = await Tags.find({ type }).select('_id');
+
+  for (const tag of tags) {
+    await qb.buildAllQueries();
+    await qb.tagFilter(tag._id);
+
+    counts[tag._id] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+export const countByLeadStatus = async (qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  for (const type of COC_LEAD_STATUS_TYPES) {
+    await qb.buildAllQueries();
+    qb.leadStatusFilter(type);
+
+    counts[type] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+export const countByLifecycleStatus = async (qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  for (const type of COC_LIFECYCLE_STATE_TYPES) {
+    await qb.buildAllQueries();
+    qb.lifecycleStateFilter(type);
+
+    counts[type] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+export const countByIntegrationType = async (qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  for (const type of KIND_CHOICES.ALL) {
+    await qb.buildAllQueries();
+    await qb.integrationTypeFilter(type);
+
+    counts[type] = await qb.runQueries('count');
+  }
+
+  return counts;
+};
+
+interface ICommonListArgs {
+  segment?: string;
+  tag?: string;
+  ids?: string[];
+  searchValue?: string;
+  brand?: string;
+  lifecycleState?: string;
+  leadStatus?: string;
+}
+
+export class CommonBuilder<IListArgs extends ICommonListArgs> {
+  public params: IListArgs;
+  public positiveList: any[];
+  public negativeList: any[];
+
+  private contentType: 'customers' | 'companies';
+
+  constructor(contentType: 'customers' | 'companies', params: IListArgs) {
+    this.contentType = contentType;
+    this.params = params;
+    this.positiveList = [];
+    this.negativeList = [];
+  }
+
+  // filter by segment
+  public async segmentFilter(segmentId: string) {
+    const segment = await Segments.getSegment(segmentId);
+
+    const { idsByEvents, propertyPositive, propertyNegative } = await fetchBySegments(segment, 'count');
+
+    this.positiveList = [...this.positiveList, ...propertyPositive];
+
+    if (idsByEvents.length > 0) {
+      this.positiveList.push({
+        terms: {
+          _id: idsByEvents,
+        },
+      });
+    }
+
+    this.negativeList = [...this.negativeList, ...propertyNegative];
+  }
+
+  // filter by tagId
+  public tagFilter(tagId: string) {
+    this.positiveList.push({
+      terms: {
+        'tagIds.keyword': [tagId],
+      },
+    });
+  }
+
+  // filter by search value
+  public searchFilter(value: string): void {
+    this.positiveList.push({
+      regexp: {
+        searchText: `.*+${value}.*`,
+      },
+    });
+  }
+
+  // filter by id
+  public idsFilter(ids: string[]): void {
+    this.positiveList.push({
+      terms: {
+        _id: ids,
+      },
+    });
+  }
+
+  // filter by leadStatus
+  public leadStatusFilter(leadStatus: string): void {
+    this.positiveList.push({
+      term: {
+        leadStatus,
+      },
+    });
+  }
+
+  // filter by lifecycleState
+  public lifecycleStateFilter(lifecycleState: string): void {
+    this.positiveList.push({
+      term: {
+        lifecycleState,
+      },
+    });
+  }
+
+  /*
+   * prepare all queries. do not do any action
+   */
+  public async buildAllQueries(): Promise<void> {
+    this.positiveList = [];
+    this.negativeList = [];
+
+    // filter by segment
+    if (this.params.segment) {
+      await this.segmentFilter(this.params.segment);
+    }
+
+    // filter by tag
+    if (this.params.tag) {
+      this.tagFilter(this.params.tag);
+    }
+
+    // filter by leadStatus
+    if (this.params.leadStatus) {
+      this.leadStatusFilter(this.params.leadStatus);
+    }
+
+    // filter by lifecycleState
+    if (this.params.lifecycleState) {
+      this.lifecycleStateFilter(this.params.lifecycleState);
+    }
+
+    // If there are ids and form params, returning ids filter only filter by ids
+    if (this.params.ids) {
+      this.idsFilter(this.params.ids);
+    }
+
+    // filter by search value
+    if (this.params.searchValue) {
+      this.searchFilter(this.params.searchValue);
+    }
+  }
+
+  /*
+   * Run queries
+   */
+  public async runQueries(action = 'search'): Promise<any> {
+    const response = await fetchElk(action, this.contentType, {
+      size: action === 'search' ? 20 : undefined,
+      query: {
+        bool: {
+          must: this.positiveList,
+          must_not: this.negativeList,
+        },
+      },
+    });
+
+    if (action === 'count') {
+      return response.count;
+    }
+
+    const list = response.hits.hits.map(hit => ({
+      _id: hit._id,
+      ...hit._source,
+    }));
+
+    return {
+      list,
+      totalCount: response.hits.total.value,
+    };
+  }
+}
 
 export const conformityFilterUtils = async (baseQuery, params, relType) => {
   if (params.conformityMainType && params.conformityMainTypeId) {

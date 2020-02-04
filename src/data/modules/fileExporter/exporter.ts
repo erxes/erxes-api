@@ -16,12 +16,12 @@ import { MODULE_NAMES } from '../../constants';
 import { can } from '../../permissions/utils';
 import { createXlsFile, generateXlsx, paginate } from '../../utils';
 import {
-  filter as companiesFilter,
+  Builder as CompanyBuildQuery,
   IListArgs as ICompanyListArgs,
   sortBuilder as companiesSortBuilder,
 } from '../coc/companies';
 import {
-  Builder as BuildQuery,
+  Builder as CustomerBuildQuery,
   IListArgs as ICustomerListArgs,
   sortBuilder as customersSortBuilder,
 } from '../coc/customers';
@@ -41,10 +41,13 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const companyParams: ICompanyListArgs = query;
 
-      const selector = await companiesFilter(companyParams);
+      const companyQb = new CompanyBuildQuery(companyParams);
+
+      await companyQb.buildAllQueries();
+
       const sorter = companiesSortBuilder(companyParams);
 
-      data = await paginate(Companies.find(selector), companyParams).sort(sorter);
+      data = await paginate(Companies.find(companyQb.runQueries()), companyParams).sort(sorter);
 
       break;
     case MODULE_NAMES.CUSTOMER:
@@ -54,7 +57,7 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const customerParams: ICustomerListArgs = query;
 
-      const qb = new BuildQuery(customerParams);
+      const qb = new CustomerBuildQuery(customerParams);
 
       await qb.buildAllQueries();
 

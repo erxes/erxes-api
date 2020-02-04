@@ -1,9 +1,8 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
 import { IConformityQueryParams } from '../../../data/modules/conformities/types';
-import { FormSubmissions, Integrations, Segments } from '../../../db/models';
-import { fetchElk } from '../../../elasticsearch';
-import { fetchBySegments } from '../segments/queryBuilder';
+import { FormSubmissions, Integrations } from '../../../db/models';
+import { CommonBuilder } from './utils';
 
 interface ISortParams {
   [index: string]: number;
@@ -23,8 +22,6 @@ export const sortBuilder = (params: IListArgs): ISortParams => {
 };
 
 export interface IListArgs extends IConformityQueryParams {
-  page?: number;
-  perPage?: number;
   segment?: string;
   tag?: string;
   ids?: string[];
@@ -36,45 +33,15 @@ export interface IListArgs extends IConformityQueryParams {
   lifecycleState?: string;
   leadStatus?: string;
   type?: string;
-  sortField?: string;
-  sortDirection?: number;
-  byFakeSegment?: any;
   integrationType?: string;
   integration?: string;
+  sortField?: string;
+  sortDirection?: number;
 }
 
-export class Builder {
-  public params: IListArgs;
-  public positiveList: any[];
-  public negativeList: any[];
-
+export class Builder extends CommonBuilder<IListArgs> {
   constructor(params: IListArgs) {
-    this.params = params;
-    this.positiveList = [];
-    this.negativeList = [];
-  }
-
-  // filter by segment
-  public async segmentFilter(segmentId: string) {
-    const segment = await Segments.findOne({ _id: segmentId });
-
-    if (!segment) {
-      return;
-    }
-
-    const { customerIdsByEvents, propertyPositive, propertyNegative } = await fetchBySegments(segment, 'count');
-
-    this.positiveList = [...this.positiveList, ...propertyPositive];
-
-    if (customerIdsByEvents.length > 0) {
-      this.positiveList.push({
-        terms: {
-          _id: customerIdsByEvents,
-        },
-      });
-    }
-
-    this.negativeList = [...this.negativeList, ...propertyNegative];
+    super('customers', params);
   }
 
   // filter by brand
@@ -83,7 +50,7 @@ export class Builder {
 
     this.positiveList.push({
       terms: {
-        integrationId: integrations.map(i => i._id),
+        'integrationId.keyword': integrations.map(i => i._id),
       },
     });
   }
@@ -109,51 +76,6 @@ export class Builder {
     this.positiveList.push({
       terms: {
         integrationId: integrations.map(i => i._id),
-      },
-    });
-  }
-
-  // filter by tagId
-  public tagFilter(tagId: string) {
-    this.positiveList.push({
-      terms: {
-        tagIds: [tagId],
-      },
-    });
-  }
-
-  // filter by search value
-  public searchFilter(value: string): void {
-    this.positiveList.push({
-      regexp: {
-        searchText: `.*+${value}.*`,
-      },
-    });
-  }
-
-  // filter by id
-  public idsFilter(ids: string[]): void {
-    this.positiveList.push({
-      terms: {
-        _id: ids,
-      },
-    });
-  }
-
-  // filter by leadStatus
-  public leadStatusFilter(leadStatus: string): void {
-    this.positiveList.push({
-      term: {
-        leadStatus,
-      },
-    });
-  }
-
-  // filter by lifecycleState
-  public lifecycleStateFilter(lifecycleState: string): void {
-    this.positiveList.push({
-      term: {
-        lifecycleState,
       },
     });
   }
@@ -191,17 +113,7 @@ export class Builder {
    * prepare all queries. do not do any action
    */
   public async buildAllQueries(): Promise<void> {
-    this.positiveList = [];
-
-    // filter by segment
-    if (this.params.segment) {
-      await this.segmentFilter(this.params.segment);
-    }
-
-    // filter by tag
-    if (this.params.tag) {
-      this.tagFilter(this.params.tag);
-    }
+    await super.buildAllQueries();
 
     // filter by brand
     if (this.params.brand) {
@@ -218,16 +130,6 @@ export class Builder {
       await this.integrationFilter(this.params.integration);
     }
 
-    // filter by leadStatus
-    if (this.params.leadStatus) {
-      this.leadStatusFilter(this.params.leadStatus);
-    }
-
-    // filter by lifecycleState
-    if (this.params.lifecycleState) {
-      this.lifecycleStateFilter(this.params.lifecycleState);
-    }
-
     // filter by form
     if (this.params.form) {
       if (this.params.startDate && this.params.endDate) {
@@ -236,43 +138,5 @@ export class Builder {
         await this.formFilter(this.params.form);
       }
     }
-
-    // If there are ids and form params, returning ids filter only filter by ids
-    if (this.params.ids) {
-      this.idsFilter(this.params.ids);
-    }
-
-    // filter by search value
-    if (this.params.searchValue) {
-      this.searchFilter(this.params.searchValue);
-    }
-  }
-
-  /*
-   * Run queries
-   */
-  public async runQueries(action = 'search'): Promise<any> {
-    const customersResponse = await fetchElk(action, 'customers', {
-      size: action === 'search' ? 20 : undefined,
-      query: {
-        bool: {
-          must: this.positiveList,
-        },
-      },
-    });
-
-    if (action === 'count') {
-      return customersResponse.count;
-    }
-
-    const list = customersResponse.hits.hits.map(hit => ({
-      _id: hit._id,
-      ...hit._source,
-    }));
-
-    return {
-      list,
-      totalCount: customersResponse.hits.total.value,
-    };
   }
 }

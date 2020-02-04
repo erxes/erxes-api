@@ -28,26 +28,30 @@ const segmentQueries = {
   /**
    * Return event names with attribute names
    */
-  async segmentsEvents(_root) {
-    const aggreEvents = await fetchElk('search', 'events', {
-      aggs: {
-        names: {
-          terms: {
-            field: 'name.keyword',
-          },
+  async segmentsEvents(_root, { contentType }: { contentType: string }) {
+    const aggs = {
+      names: {
+        terms: {
+          field: 'name.keyword',
         },
       },
+    };
+
+    const query = {
+      exists: {
+        field: contentType === 'customer' ? 'customerId' : 'companyId',
+      },
+    };
+
+    const aggreEvents = await fetchElk('search', 'events', {
+      aggs,
+      query,
       size: 0,
     });
 
     const aggreHits = await fetchElk('search', 'events', {
-      aggs: {
-        names: {
-          terms: {
-            field: 'name.keyword',
-          },
-        },
-      },
+      aggs,
+      query,
       size: aggreEvents.aggregations.names.buckets.length,
     });
 

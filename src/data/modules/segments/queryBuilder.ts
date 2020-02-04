@@ -8,34 +8,39 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
     return [];
   }
 
-  const propertyPositive = [
-    {
+  const { contentType } = segment;
+  const index = contentType === 'customer' ? 'customers' : 'companies';
+  const idField = contentType === 'customer' ? 'customerId' : 'companyId';
+
+  const propertyPositive: any[] = [];
+  const propertyNegative: any[] = [];
+
+  if (contentType === 'customer') {
+    propertyPositive.push({
       range: {
         profileScore: {
           gt: 0,
         },
       },
-    },
-  ];
+    });
 
-  const propertyNegative = [
-    {
+    propertyNegative.push({
       term: {
         status: 'Deleted',
       },
-    },
-  ];
+    });
+  }
 
   const eventPositive = [];
   const eventNegative = [];
 
   await generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
 
-  let customerIdsByEvents = [];
+  let idsByEvents = [];
 
   if (eventPositive.length > 0 || eventNegative.length > 0) {
     const eventsResponse = await fetchElk('search', 'events', {
-      _source: 'customerId',
+      _source: idField,
       query: {
         bool: {
           must: eventPositive,
@@ -44,18 +49,18 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
       },
     });
 
-    customerIdsByEvents = eventsResponse.hits.hits.map(hit => hit._source.customerId);
+    idsByEvents = eventsResponse.hits.hits.map(hit => hit._source[idField]);
   }
 
   if (action === 'count') {
     return {
-      customerIdsByEvents,
+      idsByEvents,
       propertyPositive,
       propertyNegative,
     };
   }
 
-  const customersResponse = await fetchElk('search', 'customers', {
+  const response = await fetchElk('search', index, {
     _source: '_id',
     query: {
       bool: {
@@ -65,15 +70,15 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
     },
   });
 
-  const customerIdsByCustomers = customersResponse.hits.hits.map(hit => hit._id);
+  const idsByContentType = response.hits.hits.map(hit => hit._id);
 
-  let customerIds = customerIdsByCustomers.length ? customerIdsByCustomers : customerIdsByEvents;
+  let ids = idsByContentType.length ? idsByContentType : idsByEvents;
 
-  if (customerIdsByCustomers.length > 0 && customerIdsByEvents.length > 0) {
-    customerIds = _.intersection(customerIdsByCustomers, customerIdsByEvents);
+  if (idsByContentType.length > 0 && idsByEvents.length > 0) {
+    ids = _.intersection(idsByContentType, idsByEvents);
   }
 
-  return customerIds;
+  return ids;
 };
 
 const generateQueryBySegment = async (args: {
