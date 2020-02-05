@@ -54,6 +54,7 @@ import {
   BOARD_TYPES,
   CONVERSATION_STATUSES,
   FORM_TYPES,
+  MESSAGE_TYPES,
   NOTIFICATION_TYPES,
   PROBABILITY,
   PRODUCT_TYPES,
@@ -598,6 +599,7 @@ interface IConversationMessageFactoryInput {
   engageData?: any;
   formWidgetData?: any;
   kind?: string;
+  contentType?: string;
 }
 
 export const conversationMessageFactory = async (params: IConversationMessageFactoryInput) => {
@@ -615,7 +617,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
 
   return ConversationMessages.createMessage({
     content: params.content,
-    attachments: {},
+    attachments: [],
     mentionedUserIds: params.mentionedUserIds || [Random.id()],
     conversationId,
     internal: params.internal === undefined || params.internal === null ? true : params.internal,
@@ -624,6 +626,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     isCustomerRead: params.isCustomerRead,
     engageData: params.engageData || {},
     formWidgetData: params.formWidgetData || {},
+    contentType: params.contentType || MESSAGE_TYPES.TEXT,
   });
 };
 
