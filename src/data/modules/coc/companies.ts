@@ -32,8 +32,8 @@ export interface IListArgs extends IConformityQueryParams {
 }
 
 export class Builder extends CommonBuilder<IListArgs> {
-  constructor(params: IListArgs) {
-    super('companies', params);
+  constructor(params: IListArgs, context) {
+    super('companies', params, context);
   }
 
   // filter by brand
@@ -59,12 +59,14 @@ export class Builder extends CommonBuilder<IListArgs> {
 
   public async findAllMongo(limit: number) {
     const selector = {
+      ...this.context.commonQuerySelector,
       status: { $ne: STATUSES.DELETED },
     };
 
     const companies = await Companies.find(selector)
       .sort({ createdAt: -1 })
       .limit(limit);
+
     const count = await Companies.find(selector).countDocuments();
 
     return {

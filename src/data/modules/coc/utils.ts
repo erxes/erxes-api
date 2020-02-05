@@ -115,16 +115,29 @@ interface ICommonListArgs {
 
 export class CommonBuilder<IListArgs extends ICommonListArgs> {
   public params: IListArgs;
+  public context;
   public positiveList: any[];
   public negativeList: any[];
 
   private contentType: 'customers' | 'companies';
 
-  constructor(contentType: 'customers' | 'companies', params: IListArgs) {
+  constructor(contentType: 'customers' | 'companies', params: IListArgs, context) {
     this.contentType = contentType;
+    this.context = context;
     this.params = params;
+
     this.positiveList = [];
     this.negativeList = [];
+
+    this.resetPositiveList();
+  }
+
+  public resetPositiveList() {
+    this.positiveList = [];
+
+    if (this.context.commonQuerySelectorElk) {
+      this.positiveList.push(this.context.commonQuerySelectorElk);
+    }
   }
 
   // filter by segment
@@ -233,7 +246,7 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
    * prepare all queries. do not do any action
    */
   public async buildAllQueries(): Promise<void> {
-    this.positiveList = [];
+    this.resetPositiveList();
     this.negativeList = [];
 
     // filter by segment

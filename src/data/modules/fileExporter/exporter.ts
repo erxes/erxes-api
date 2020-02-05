@@ -41,7 +41,7 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const companyParams: ICompanyListArgs = query;
 
-      const companyQb = new CompanyBuildQuery(companyParams);
+      const companyQb = new CompanyBuildQuery(companyParams, {});
 
       await companyQb.buildAllQueries();
 
@@ -57,7 +57,7 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const customerParams: ICustomerListArgs = query;
 
-      const qb = new CustomerBuildQuery(customerParams);
+      const qb = new CustomerBuildQuery(customerParams, {});
 
       await qb.buildAllQueries();
 

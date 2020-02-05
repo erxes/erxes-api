@@ -41,8 +41,8 @@ export interface IListArgs extends IConformityQueryParams {
 }
 
 export class Builder extends CommonBuilder<IListArgs> {
-  constructor(params: IListArgs) {
-    super('customers', params);
+  constructor(params: IListArgs, context) {
+    super('customers', params, context);
   }
 
   // filter by brand
@@ -114,6 +114,7 @@ export class Builder extends CommonBuilder<IListArgs> {
     const activeIntegrations = await Integrations.findIntegrations({}, { _id: 1 });
 
     const selector = {
+      ...this.context.commonQuerySelector,
       status: { $ne: STATUSES.DELETED },
       profileScore: { $gt: 0 },
       $or: [
@@ -127,6 +128,7 @@ export class Builder extends CommonBuilder<IListArgs> {
     const customers = await Customers.find(selector)
       .sort({ createdAt: -1 })
       .limit(limit);
+
     const count = await Customers.find(selector).countDocuments();
 
     return {

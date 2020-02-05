@@ -10,6 +10,7 @@ import {
   ICountBy,
 } from '../../modules/coc/utils';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 
 interface ICountParams extends IListArgs {
   only: string;
@@ -48,8 +49,8 @@ const customerQueries = {
   /**
    * Customers list
    */
-  async customers(_root, params: IListArgs) {
-    const qb = new BuildQuery(params);
+  async customers(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
+    const qb = new BuildQuery(params, { commonQuerySelector, commonQuerySelectorElk });
 
     await qb.buildAllQueries();
 
@@ -61,8 +62,8 @@ const customerQueries = {
   /**
    * Customers for only main list
    */
-  async customersMain(_root, params: IListArgs) {
-    const qb = new BuildQuery(params);
+  async customersMain(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
+    const qb = new BuildQuery(params, { commonQuerySelector, commonQuerySelectorElk });
 
     await qb.buildAllQueries();
 
@@ -74,7 +75,7 @@ const customerQueries = {
   /**
    * Group customer counts by brands, segments, integrations, tags
    */
-  async customerCounts(_root, params: ICountParams) {
+  async customerCounts(_root, params: ICountParams, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
     const { only } = params;
 
     const counts = {
@@ -87,7 +88,7 @@ const customerQueries = {
       byLifecycleState: {},
     };
 
-    const qb = new BuildQuery(params);
+    const qb = new BuildQuery(params, { commonQuerySelector, commonQuerySelectorElk });
 
     switch (only) {
       case 'bySegment':

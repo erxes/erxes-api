@@ -9,6 +9,7 @@ import {
   countByTag,
 } from '../../modules/coc/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
+import { IContext } from '../../types';
 
 interface ICountArgs extends IListArgs {
   only?: string;
@@ -18,8 +19,8 @@ const companyQueries = {
   /**
    * Companies list
    */
-  async companies(_root, params: IListArgs) {
-    const qb = new Builder(params);
+  async companies(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
+    const qb = new Builder(params, { commonQuerySelector, commonQuerySelectorElk });
 
     await qb.buildAllQueries();
 
@@ -31,8 +32,8 @@ const companyQueries = {
   /**
    * Companies for only main list
    */
-  async companiesMain(_root, params: IListArgs) {
-    const qb = new Builder(params);
+  async companiesMain(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
+    const qb = new Builder(params, { commonQuerySelector, commonQuerySelectorElk });
 
     await qb.buildAllQueries();
 
@@ -44,7 +45,7 @@ const companyQueries = {
   /**
    * Group company counts by segments
    */
-  async companyCounts(_root, args: ICountArgs) {
+  async companyCounts(_root, args: ICountArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
     const counts = {
       bySegment: {},
       byTag: {},
@@ -55,7 +56,7 @@ const companyQueries = {
 
     const { only } = args;
 
-    const qb = new Builder(args);
+    const qb = new Builder(args, { commonQuerySelector, commonQuerySelectorElk });
 
     switch (only) {
       case 'byTag':

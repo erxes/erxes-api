@@ -12,7 +12,6 @@ import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { sendMessage } from '../../../messageBroker';
 import { MESSAGE_KINDS } from '../../constants';
-import { Builder as CustomerQueryBuilder } from '../../modules/coc/customers';
 
 /**
  * Dynamic content tags
@@ -67,8 +66,8 @@ const findCustomers = async ({
   }
 
   // const _doNotDisturbQuery = [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }];
-  const customerQb = new CustomerQueryBuilder({});
-  await customerQb.buildAllQueries();
+  // const customerQb = new CustomerQueryBuilder({});
+  // await customerQb.buildAllQueries();
 
   // const customerFilter = customerQb.mainQuery();
 
