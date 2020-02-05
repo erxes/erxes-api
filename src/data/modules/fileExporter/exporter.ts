@@ -1,30 +1,11 @@
 import * as moment from 'moment';
-import {
-  Brands,
-  Channels,
-  Companies,
-  Customers,
-  Deals,
-  Fields,
-  Permissions,
-  Tasks,
-  Tickets,
-  Users,
-} from '../../../db/models';
+import { Brands, Channels, Deals, Fields, Permissions, Tasks, Tickets, Users } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
 import { can } from '../../permissions/utils';
-import { createXlsFile, generateXlsx, paginate } from '../../utils';
-import {
-  Builder as CompanyBuildQuery,
-  IListArgs as ICompanyListArgs,
-  sortBuilder as companiesSortBuilder,
-} from '../coc/companies';
-import {
-  Builder as CustomerBuildQuery,
-  IListArgs as ICustomerListArgs,
-  sortBuilder as customersSortBuilder,
-} from '../coc/customers';
+import { createXlsFile, generateXlsx } from '../../utils';
+import { Builder as CompanyBuildQuery, IListArgs as ICompanyListArgs } from '../coc/companies';
+import { Builder as CustomerBuildQuery, IListArgs as ICustomerListArgs } from '../coc/customers';
 import { fillCellValue, fillHeaders, IColumnLabel } from './spreadsheet';
 
 // Prepares data depending on module type
@@ -42,12 +23,11 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
       const companyParams: ICompanyListArgs = query;
 
       const companyQb = new CompanyBuildQuery(companyParams, {});
-
       await companyQb.buildAllQueries();
 
-      const sorter = companiesSortBuilder(companyParams);
+      const companyResponse = await companyQb.runQueries();
 
-      data = await paginate(Companies.find(companyQb.runQueries()), companyParams).sort(sorter);
+      data = companyResponse.list;
 
       break;
     case MODULE_NAMES.CUSTOMER:
@@ -58,12 +38,11 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
       const customerParams: ICustomerListArgs = query;
 
       const qb = new CustomerBuildQuery(customerParams, {});
-
       await qb.buildAllQueries();
 
-      const sort = customersSortBuilder(customerParams);
+      const customerResponse = await qb.runQueries();
 
-      data = await Customers.find(qb.runQueries()).sort(sort);
+      data = customerResponse.list;
 
       break;
     case MODULE_NAMES.DEAL:
