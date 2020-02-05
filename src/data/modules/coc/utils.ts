@@ -271,10 +271,12 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
       return response.count;
     }
 
-    const list = response.hits.hits.map(hit => ({
-      _id: hit._id,
-      ...hit._source,
-    }));
+    const list = response.hits.hits.map(hit => {
+      return {
+        _id: hit._id,
+        ...hit._source,
+      };
+    });
 
     return {
       list,
