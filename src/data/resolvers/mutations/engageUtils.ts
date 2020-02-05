@@ -4,6 +4,7 @@ import {
   Customers,
   EngageMessages,
   Integrations,
+  Segments,
   Users,
 } from '../../../db/models';
 import { CONVERSATION_STATUSES, KIND_CHOICES, METHODS } from '../../../db/models/definitions/constants';
@@ -12,6 +13,7 @@ import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { sendMessage } from '../../../messageBroker';
 import { MESSAGE_KINDS } from '../../constants';
+import { fetchBySegments } from '../../modules/segments/queryBuilder';
 
 /**
  * Dynamic content tags
@@ -52,6 +54,9 @@ const replaceKeys = ({
  */
 const findCustomers = async ({
   customerIds,
+  segmentIds = [],
+  tagIds = [],
+  brandIds = [],
 }: {
   customerIds?: string[];
   segmentIds?: string[];
@@ -65,50 +70,37 @@ const findCustomers = async ({
     customerQuery = { _id: { $in: customerIds } };
   }
 
-  // const _doNotDisturbQuery = [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }];
-  // const customerQb = new CustomerQueryBuilder({});
-  // await customerQb.buildAllQueries();
+  if (tagIds.length > 0) {
+    customerQuery = { tagIds: { $in: tagIds } };
+  }
 
-  // const customerFilter = customerQb.mainQuery();
+  if (brandIds.length > 0) {
+    let integrationIds: string[] = [];
 
-  // if (tagIds.length > 0) {
-  //   customerQuery = { $and: [customerFilter, { $or: doNotDisturbQuery, tagIds: { $in: tagIds } }] };
-  // }
+    for (const brandId of brandIds) {
+      const integrations = await Integrations.findIntegrations({ brandId });
 
-  // if (brandIds.length > 0) {
-  //   const brandQueries: any[] = [];
+      integrationIds = [...integrationIds, ...integrations.map(i => i._id)];
+    }
 
-  //   customerQuery = { $and: [customerFilter] };
+    customerQuery = { integrationId: { $in: integrationIds } };
+  }
 
-  //   for (const brandId of brandIds) {
-  //     const brandQuery = await customerQb.brandFilter(brandId);
+  if (segmentIds.length > 0) {
+    const segments = await Segments.find({ _id: { $in: segmentIds } });
 
-  //     brandQueries.push(brandQuery);
-  //   }
+    let customerIdsBySegments: string[] = [];
 
-  //   customerQuery = { $and: [customerFilter, { $or: brandQueries }] };
-  // }
+    for (const segment of segments) {
+      const cIds = await fetchBySegments(segment);
 
-  // if (segmentIds.length > 0) {
-  //   const segmentQueries: any = [];
+      customerIdsBySegments = [...customerIdsBySegments, ...cIds];
+    }
 
-  //   const segments = await Segments.find({ _id: { $in: segmentIds } });
+    customerQuery = { _id: { $in: customerIdsBySegments } };
+  }
 
-  //   for (const segment of segments) {
-  //     const cIds = await searchBySegments(segment);
-
-  //     const filter = {
-  //       _id: { $in: cIds },
-  //       $or: doNotDisturbQuery
-  //     }
-
-  //     segmentQueries.push(filter);
-  //   }
-
-  //   customerQuery = { $and: [customerFilter, { $or: segmentQueries }] };
-  // }
-
-  return Customers.find(customerQuery);
+  return Customers.find({ $or: [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }], ...customerQuery });
 };
 
 export const send = async (engageMessage: IEngageMessageDocument) => {
