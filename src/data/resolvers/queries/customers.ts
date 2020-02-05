@@ -10,7 +10,6 @@ import {
   ICountBy,
 } from '../../modules/coc/utils';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
-import { paginate } from '../../utils';
 
 interface ICountParams extends IListArgs {
   only: string;
@@ -50,8 +49,13 @@ const customerQueries = {
    * Customers list
    */
   async customers(_root, params: IListArgs) {
-    // TODO:
-    return paginate(Customers.find({}), params);
+    const qb = new BuildQuery(params);
+
+    await qb.buildAllQueries();
+
+    const { list } = await qb.runQueries();
+
+    return list;
   },
 
   /**

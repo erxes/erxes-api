@@ -107,6 +107,10 @@ interface ICommonListArgs {
   brand?: string;
   lifecycleState?: string;
   leadStatus?: string;
+  conformityMainType?: string;
+  conformityMainTypeId?: string;
+  conformityIsRelated?: boolean;
+  conformityIsSaved?: boolean;
 }
 
 export class CommonBuilder<IListArgs extends ICommonListArgs> {
@@ -187,6 +191,44 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     });
   }
 
+  public async conformityFilter() {
+    const { conformityMainType, conformityMainTypeId, conformityIsRelated, conformityIsSaved } = this.params;
+
+    if (!conformityMainType && !conformityMainTypeId) {
+      return;
+    }
+
+    const relType = this.contentType === 'customers' ? 'customer' : 'company';
+
+    if (conformityIsRelated) {
+      const relTypeIds = await Conformities.relatedConformity({
+        mainType: conformityMainType || '',
+        mainTypeId: conformityMainTypeId || '',
+        relType,
+      });
+
+      this.positiveList.push({
+        terms: {
+          _id: relTypeIds || [],
+        },
+      });
+    }
+
+    if (conformityIsSaved) {
+      const relTypeIds = await Conformities.savedConformity({
+        mainType: conformityMainType || '',
+        mainTypeId: conformityMainTypeId || '',
+        relTypes: [relType],
+      });
+
+      this.positiveList.push({
+        terms: {
+          _id: relTypeIds || [],
+        },
+      });
+    }
+  }
+
   /*
    * prepare all queries. do not do any action
    */
@@ -223,6 +265,8 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     if (this.params.searchValue) {
       this.searchFilter(this.params.searchValue);
     }
+
+    await this.conformityFilter();
   }
 
   public async findAllMongo(_limit: number): Promise<any> {
@@ -284,28 +328,3 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     };
   }
 }
-
-export const conformityFilterUtils = async (baseQuery, params, relType) => {
-  if (params.conformityMainType && params.conformityMainTypeId) {
-    if (params.conformityIsRelated) {
-      const relTypeIds = await Conformities.relatedConformity({
-        mainType: params.conformityMainType || '',
-        mainTypeId: params.conformityMainTypeId || '',
-        relType,
-      });
-
-      baseQuery = { _id: { $in: relTypeIds || [] } };
-    }
-
-    if (params.conformityIsSaved) {
-      const relTypeIds = await Conformities.savedConformity({
-        mainType: params.conformityMainType || '',
-        mainTypeId: params.conformityMainTypeId || '',
-        relTypes: [relType],
-      });
-
-      baseQuery = { _id: { $in: relTypeIds || [] } };
-    }
-  }
-  return baseQuery;
-};

@@ -9,7 +9,6 @@ import {
   countByTag,
 } from '../../modules/coc/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
-import { paginate } from '../../utils';
 
 interface ICountArgs extends IListArgs {
   only?: string;
@@ -20,8 +19,13 @@ const companyQueries = {
    * Companies list
    */
   async companies(_root, params: IListArgs) {
-    // TODO
-    return paginate(Companies.find({}), params);
+    const qb = new Builder(params);
+
+    await qb.buildAllQueries();
+
+    const { list } = await qb.runQueries();
+
+    return list;
   },
 
   /**
