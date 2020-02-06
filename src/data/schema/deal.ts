@@ -8,6 +8,7 @@ export const types = `
     customers: [Customer]
     products: JSON
     productsData: JSON
+    paymentsData: JSON
     ${commonTypes}
   }
 
@@ -30,6 +31,7 @@ export const types = `
 `;
 
 const dealMutationParams = `
+  paymentsData: JSON,
   productsData: JSON,
 `;
 
