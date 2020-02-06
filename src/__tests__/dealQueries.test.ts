@@ -563,9 +563,9 @@ describe('dealQueries', () => {
       status: BOARD_STATUSES.ARCHIVED,
     };
 
-    const deal1 = await dealFactory(args);
-    await dealFactory(args);
-    await dealFactory(args);
+    await dealFactory({ ...args, name: 'james' });
+    await dealFactory({ ...args, name: 'jone' });
+    await dealFactory({ ...args, name: 'gerrad' });
 
     const qry = `
       query archivedDeals(
@@ -593,7 +593,7 @@ describe('dealQueries', () => {
 
     response = await graphqlRequest(qry, 'archivedDeals', {
       pipelineId: pipeline._id,
-      search: deal1.name,
+      search: 'james',
     });
 
     expect(response.length).toBe(1);

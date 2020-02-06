@@ -189,9 +189,9 @@ describe('ticketQueries', () => {
       status: BOARD_STATUSES.ARCHIVED,
     };
 
-    const ticket1 = await ticketFactory(args);
-    await ticketFactory(args);
-    await ticketFactory(args);
+    await ticketFactory({ ...args, name: 'james' });
+    await ticketFactory({ ...args, name: 'jone' });
+    await ticketFactory({ ...args, name: 'gerrad' });
 
     const qry = `
       query archivedTickets(
@@ -219,7 +219,7 @@ describe('ticketQueries', () => {
 
     response = await graphqlRequest(qry, 'archivedTickets', {
       pipelineId: pipeline._id,
-      search: ticket1.name,
+      search: 'james',
     });
 
     expect(response.length).toBe(1);

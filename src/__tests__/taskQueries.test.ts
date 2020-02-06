@@ -185,9 +185,9 @@ describe('taskQueries', () => {
       status: BOARD_STATUSES.ARCHIVED,
     };
 
-    const task1 = await taskFactory(args);
-    await taskFactory(args);
-    await taskFactory(args);
+    await taskFactory({ ...args, name: 'james' });
+    await taskFactory({ ...args, name: 'jone' });
+    await taskFactory({ ...args, name: 'gerrad' });
 
     const qry = `
       query archivedTasks(
@@ -215,7 +215,7 @@ describe('taskQueries', () => {
 
     response = await graphqlRequest(qry, 'archivedTasks', {
       pipelineId: pipeline._id,
-      search: task1.name,
+      search: 'james',
     });
 
     expect(response.length).toBe(1);

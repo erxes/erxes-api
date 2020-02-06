@@ -970,6 +970,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
 };
 
 interface ITaskFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   noCloseDate?: boolean;
@@ -995,7 +996,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
 
   const task = new Tasks({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
@@ -1011,6 +1012,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
 };
 
 interface ITicketFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   noCloseDate?: boolean;
@@ -1029,7 +1031,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
 
   const ticket = new Tickets({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
@@ -1045,6 +1047,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
 };
 
 interface IGrowthHackFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   customerIds?: string[];
@@ -1068,7 +1071,7 @@ export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) =>
 
   const growthHack = new GrowthHacks({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     companyIds: params.companyIds || [faker.random.word()],
     customerIds: params.customerIds || [faker.random.word()],

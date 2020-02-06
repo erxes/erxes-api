@@ -219,9 +219,9 @@ describe('growthHackQueries', () => {
       status: BOARD_STATUSES.ARCHIVED,
     };
 
-    const gh1 = await growthHackFactory(args);
-    await growthHackFactory(args);
-    await growthHackFactory(args);
+    await growthHackFactory({ ...args, name: 'james' });
+    await growthHackFactory({ ...args, name: 'jone' });
+    await growthHackFactory({ ...args, name: 'gerrad' });
 
     const qry = `
       query archivedGrowthHacks(
@@ -249,7 +249,7 @@ describe('growthHackQueries', () => {
 
     response = await graphqlRequest(qry, 'archivedGrowthHacks', {
       pipelineId: pipeline._id,
-      search: gh1.name,
+      search: 'james',
     });
 
     expect(response.length).toBe(1);
