@@ -1,5 +1,6 @@
 import { Segments } from '../../../db/models';
 import { fetchElk } from '../../../elasticsearch';
+import { fetchBySegments } from '../../modules/segments/queryBuilder';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -62,10 +63,20 @@ const segmentQueries = {
 
     return events;
   },
+
+  /**
+   * Preview count
+   */
+  async segmentsPreviewCount(_root, { contentType, conditions }: { contentType: string; conditions }) {
+    const ids = await fetchBySegments({ name: 'preview', color: '#fff', subOf: '', contentType, conditions });
+
+    return ids.length;
+  },
 };
 
 requireLogin(segmentQueries, 'segmentsGetHeads');
 requireLogin(segmentQueries, 'segmentDetail');
+requireLogin(segmentQueries, 'segmentsPreviewCount');
 requireLogin(segmentQueries, 'segmentsEvents');
 
 checkPermission(segmentQueries, 'segments', 'showSegments', []);
