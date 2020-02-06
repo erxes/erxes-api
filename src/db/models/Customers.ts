@@ -61,6 +61,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string): never;
   getCustomer(_id: string): Promise<ICustomerDocument>;
   getCustomerName(customer: ICustomer): string;
+  createVisitor(): Promise<string>;
   createCustomer(doc: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   updateCustomer(_id: string, doc: ICustomer): Promise<ICustomerDocument>;
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
@@ -179,6 +180,20 @@ export const loadClass = () => {
       }
 
       return customer;
+    }
+
+    /**
+     * Create a visitor
+     */
+    public static async createVisitor(): Promise<string> {
+      const customer = await Customers.create({
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+      });
+
+      await ActivityLogs.createCocLog({ coc: customer, contentType: 'customer' });
+
+      return customer._id;
     }
 
     /**
