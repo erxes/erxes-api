@@ -38,6 +38,7 @@ export interface IListArgs extends IConformityQueryParams {
   integration?: string;
   sortField?: string;
   sortDirection?: number;
+  popupData?: string;
 }
 
 export class Builder extends CommonBuilder<IListArgs> {

@@ -1,5 +1,15 @@
 import * as moment from 'moment';
-import { Brands, Channels, Deals, Fields, Permissions, Tasks, Tickets, Users } from '../../../db/models';
+import {
+  Brands,
+  Channels,
+  ConversationMessages,
+  Deals,
+  Fields,
+  Permissions,
+  Tasks,
+  Tickets,
+  Users,
+} from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
 import { can } from '../../permissions/utils';
@@ -43,6 +53,16 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
       const customerResponse = await qb.runQueries();
 
       data = customerResponse.list;
+
+      if (customerParams.form && customerParams.popupData) {
+        const formQuery = {
+          formWidgetData: { $exists: true },
+        };
+
+        const conversationMessages = await ConversationMessages.find(formQuery, { formWidgetData: 1 });
+
+        data = conversationMessages.map(message => message.formWidgetData);
+      }
 
       break;
     case MODULE_NAMES.DEAL:
@@ -108,11 +128,51 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
   return data;
 };
 
+const addCell = (col: IColumnLabel, value: string, sheet: any, columnNames: string[], rowIndex: number): void => {
+  // Checking if existing column
+  if (columnNames.includes(col.name)) {
+    // If column already exists adding cell
+    sheet.cell(rowIndex, columnNames.indexOf(col.name) + 1).value(value);
+  } else {
+    // Creating column
+    sheet.cell(1, columnNames.length + 1).value(col.label || col.name);
+    // Creating cell
+    sheet.cell(rowIndex, columnNames.length + 1).value(value);
+
+    columnNames.push(col.name);
+  }
+};
+
+const fillLeadHeaders = async (formId: string) => {
+  const headers: IColumnLabel[] = [];
+
+  const fields = await Fields.find({ contentType: 'form', contentTypeId: formId }).sort({ order: 1 });
+
+  for (const field of fields) {
+    headers.push({ name: field.text, label: field.text });
+  }
+
+  return headers;
+};
+
+const buildLeadFile = async (data: any, formId: string, sheet: any, columnNames: string[], rowIndex: number) => {
+  const headers: IColumnLabel[] = await fillLeadHeaders(formId);
+
+  for (const item of data) {
+    rowIndex++;
+    // Iterating through basic info columns
+    for (const column of headers) {
+      const cellValue = await item.find(obj => obj.text === column.name).value;
+
+      addCell(column, cellValue, sheet, columnNames, rowIndex);
+    }
+  }
+};
+
 export const buildFile = async (query: any, user: IUserDocument): Promise<{ name: string; response: string }> => {
-  const { type } = query;
+  let type = query.type;
 
   const data = await prepareData(query, user);
-  const headers: IColumnLabel[] = fillHeaders(type);
 
   // Reads default template
   const { workbook, sheet } = await createXlsFile();
@@ -120,46 +180,44 @@ export const buildFile = async (query: any, user: IUserDocument): Promise<{ name
   const columnNames: string[] = [];
   let rowIndex: number = 1;
 
-  const addCell = (col: IColumnLabel, value: string): void => {
-    // Checking if existing column
-    if (columnNames.includes(col.name)) {
-      // If column already exists adding cell
-      sheet.cell(rowIndex, columnNames.indexOf(col.name) + 1).value(value);
-    } else {
-      // Creating column
-      sheet.cell(1, columnNames.length + 1).value(col.label || col.name);
-      // Creating cell
-      sheet.cell(rowIndex, columnNames.length + 1).value(value);
+  if (type === MODULE_NAMES.CUSTOMER && query.form && query.popupData) {
+    await buildLeadFile(data, query.form, sheet, columnNames, rowIndex);
 
-      columnNames.push(col.name);
-    }
-  };
+    type = 'Pop-Ups';
+  } else {
+    const headers: IColumnLabel[] = fillHeaders(type);
 
-  for (const item of data) {
-    rowIndex++;
+    for (const item of data) {
+      rowIndex++;
+      // Iterating through basic info columns
+      for (const column of headers) {
+        const cellValue = await fillCellValue(column.name, item);
 
-    // Iterating through basic info columns
-    for (const column of headers) {
-      const cellValue = await fillCellValue(column.name, item);
+        addCell(column, cellValue, sheet, columnNames, rowIndex);
+      }
 
-      addCell(column, cellValue);
-    }
+      if (type === MODULE_NAMES.CUSTOMER || type === MODULE_NAMES.COMPANY) {
+        // Iterating through coc custom properties
+        if (item.customFieldsData) {
+          const keys = Object.getOwnPropertyNames(item.customFieldsData) || [];
 
-    if (type === MODULE_NAMES.CUSTOMER || type === MODULE_NAMES.COMPANY) {
-      // Iterating through coc custom properties
-      if (item.customFieldsData) {
-        const keys = Object.getOwnPropertyNames(item.customFieldsData) || [];
+          for (const fieldId of keys) {
+            const propertyObj = await Fields.findOne({ _id: fieldId });
 
-        for (const fieldId of keys) {
-          const propertyObj = await Fields.findOne({ _id: fieldId });
-
-          if (propertyObj && propertyObj.text) {
-            addCell({ name: propertyObj.text, label: propertyObj.text }, item.customFieldsData[fieldId]);
+            if (propertyObj && propertyObj.text) {
+              addCell(
+                { name: propertyObj.text, label: propertyObj.text },
+                item.customFieldsData[fieldId],
+                sheet,
+                columnNames,
+                rowIndex,
+              );
+            }
           }
         }
-      }
-    } // customer or company checking
-  } // end items for loop
+      } // customer or company checking
+    } // end items for loop
+  }
 
   return {
     name: `${type} - ${moment().format('YYYY-MM-DD HH:mm')}`,
