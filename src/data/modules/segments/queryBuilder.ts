@@ -41,6 +41,7 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
   if (eventPositive.length > 0 || eventNegative.length > 0) {
     const eventsResponse = await fetchElk('search', 'events', {
       _source: idField,
+      size: 10000,
       query: {
         bool: {
           must: eventPositive,
@@ -53,15 +54,23 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
   }
 
   if (action === 'count') {
+    if (idsByEvents.length > 0) {
+      propertyPositive.push({
+        terms: {
+          _id: idsByEvents,
+        },
+      });
+    }
+
     return {
-      idsByEvents,
-      propertyPositive,
-      propertyNegative,
+      positiveList: propertyPositive,
+      negativeList: propertyNegative,
     };
   }
 
   const response = await fetchElk('search', index, {
-    _source: '_id',
+    _source: false,
+    size: 10000,
     query: {
       bool: {
         must: propertyPositive,

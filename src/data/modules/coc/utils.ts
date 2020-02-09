@@ -144,19 +144,10 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
   public async segmentFilter(segmentId: string) {
     const segment = await Segments.getSegment(segmentId);
 
-    const { idsByEvents, propertyPositive, propertyNegative } = await fetchBySegments(segment, 'count');
+    const { positiveList, negativeList } = await fetchBySegments(segment, 'count');
 
-    this.positiveList = [...this.positiveList, ...propertyPositive];
-
-    if (idsByEvents.length > 0) {
-      this.positiveList.push({
-        terms: {
-          _id: idsByEvents,
-        },
-      });
-    }
-
-    this.negativeList = [...this.negativeList, ...propertyNegative];
+    this.positiveList = [...this.positiveList, ...positiveList];
+    this.negativeList = [...this.negativeList, ...negativeList];
   }
 
   // filter by tagId

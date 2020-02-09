@@ -68,9 +68,21 @@ const segmentQueries = {
    * Preview count
    */
   async segmentsPreviewCount(_root, { contentType, conditions }: { contentType: string; conditions }) {
-    const ids = await fetchBySegments({ name: 'preview', color: '#fff', subOf: '', contentType, conditions });
+    const { positiveList, negativeList } = await fetchBySegments(
+      { name: 'preview', color: '#fff', subOf: '', contentType, conditions },
+      'count',
+    );
 
-    return ids.length;
+    const response = await fetchElk('count', contentType === 'customer' ? 'customers' : 'companies', {
+      query: {
+        bool: {
+          must: positiveList,
+          must_not: negativeList,
+        },
+      },
+    });
+
+    return response.count;
   },
 };
 
