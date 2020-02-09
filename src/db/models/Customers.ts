@@ -28,7 +28,6 @@ interface ICreateMessengerCustomerParams {
   firstName?: string;
   lastName?: string;
   description?: string;
-  messengerData?: any;
   deviceToken?: string;
 }
 
@@ -75,7 +74,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
   createMessengerCustomer(doc: ICreateMessengerCustomerParams, customData: any): Promise<ICustomerDocument>;
   updateMessengerCustomer(param: IUpdateMessengerCustomerParams): Promise<ICustomerDocument>;
-  updateMessengerSession(_id: string, url: string): Promise<ICustomerDocument>;
+  updateSession(_id: string): Promise<ICustomerDocument>;
   updateLocation(_id: string, browserInfo: IBrowserInfo): Promise<ICustomerDocument>;
   saveVisitorContactInfo(doc: IVisitorContactInfoParams): Promise<ICustomerDocument>;
 }
@@ -264,7 +263,7 @@ export const loadClass = () => {
      * Mark customer as active
      */
     public static async markCustomerAsActive(customerId: string) {
-      await Customers.updateOne({ _id: customerId }, { $set: { 'messengerData.isActive': true } });
+      await Customers.updateOne({ _id: customerId }, { $set: { isOnline: true } });
 
       return Customers.findOne({ _id: customerId });
     }
@@ -277,8 +276,8 @@ export const loadClass = () => {
         _id,
         {
           $set: {
-            'messengerData.isActive': false,
-            'messengerData.lastSeenAt': new Date(),
+            isOnline: false,
+            lastSeenAt: new Date(),
           },
         },
         { new: true },
@@ -443,37 +442,6 @@ export const loadClass = () => {
     }
 
     /*
-     * Fix firstName, lastName, description abbriviations
-     */
-    public static fixCustomData(customData: any): { extractedInfo: any; updatedCustomData: any } {
-      const extractedInfo: any = {};
-      const updatedCustomData = { ...customData };
-
-      // Setting customData fields to customer fields
-      Object.keys(updatedCustomData).forEach(key => {
-        if (key === 'first_name' || key === 'firstName') {
-          extractedInfo.firstName = updatedCustomData[key];
-
-          delete updatedCustomData[key];
-        }
-
-        if (key === 'last_name' || key === 'lastName') {
-          extractedInfo.lastName = updatedCustomData[key];
-
-          delete updatedCustomData[key];
-        }
-
-        if (key === 'bio' || key === 'description') {
-          extractedInfo.description = updatedCustomData[key];
-
-          delete updatedCustomData[key];
-        }
-      });
-
-      return { extractedInfo, updatedCustomData };
-    }
-
-    /*
      * Get widget customer
      */
     public static async getWidgetCustomer(params: IGetCustomerParams) {
@@ -553,18 +521,12 @@ export const loadClass = () => {
     /*
      * Create a new messenger customer
      */
-    public static async createMessengerCustomer(doc: ICreateMessengerCustomerParams, customData: any) {
-      const { extractedInfo, updatedCustomData } = this.fixCustomData(customData || {});
-
+    public static async createMessengerCustomer(doc: ICreateMessengerCustomerParams) {
       return this.createCustomer({
-        ...extractedInfo,
         ...this.fixMessengerListFields(doc),
-        messengerData: {
-          lastSeenAt: new Date(),
-          isActive: true,
-          sessionCount: 1,
-          customData: updatedCustomData,
-        },
+        lastSeenAt: new Date(),
+        isActive: true,
+        sessionCount: 1,
       });
     }
 
@@ -572,7 +534,7 @@ export const loadClass = () => {
      * Update messenger customer
      */
     public static async updateMessengerCustomer(param: IUpdateMessengerCustomerParams) {
-      const { _id, doc, customData } = param;
+      const { _id, doc } = param;
 
       const customer = await Customers.findOne({ _id });
 
@@ -580,24 +542,13 @@ export const loadClass = () => {
         throw new Error('Customer not found');
       }
 
-      const { extractedInfo, updatedCustomData } = this.fixCustomData(customData || {});
-
       if (customer.isUser) {
         doc.isUser = true;
       }
 
-      let fixedCustomData = updatedCustomData;
-
-      // Do not replace previous non empty value with empty value
-      if (customer.messengerData && customer.messengerData.customData && Object.keys(updatedCustomData).length === 0) {
-        fixedCustomData = customer.messengerData.customData;
-      }
-
       const modifier = {
-        ...extractedInfo,
         ...this.fixMessengerListFields(doc, customer),
         modifiedAt: new Date(),
-        'messengerData.customData': fixedCustomData,
       };
 
       await Customers.updateOne({ _id }, { $set: modifier });
@@ -608,9 +559,9 @@ export const loadClass = () => {
     }
 
     /*
-     * Update messenger session data
+     * Update session data
      */
-    public static async updateMessengerSession(_id: string, url: string) {
+    public static async updateSession(_id: string) {
       const now = new Date();
       const customer = await Customers.findOne({ _id });
 
@@ -620,27 +571,17 @@ export const loadClass = () => {
 
       const query: any = {
         $set: {
-          // update messengerData
-          'messengerData.lastSeenAt': now,
-          'messengerData.isActive': true,
+          lastSeenAt: now,
+          isOnline: true,
         },
       };
-
-      const messengerData = customer.messengerData;
 
       // Preventing session count to increase on page every refresh
       // Close your web site tab and reopen it after 6 seconds then it will increase
       // session count by 1
-      if (messengerData && messengerData.lastSeenAt && now.getTime() - messengerData.lastSeenAt > 6 * 1000) {
+      if (customer.lastSeenAt && now.getTime() - customer.lastSeenAt > 6 * 1000) {
         // update session count
-        query.$inc = { 'messengerData.sessionCount': 1 };
-
-        // save access history by location.pathname
-        const urlVisits = customer.urlVisits || {};
-
-        urlVisits[url] = (urlVisits[url] || 0) + 1;
-
-        query.urlVisits = urlVisits;
+        query.$inc = { sessionCount: 1 };
       }
 
       // update

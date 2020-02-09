@@ -42,7 +42,7 @@ export const types = `
     location: JSON
     visitorContactInfo: JSON
     customFieldsData: JSON
-    messengerData: JSON
+    trackedData: JSON
     ownerId: String
     position: String
     department: String
@@ -53,12 +53,15 @@ export const types = `
     doNotDisturb: String
     code: String
 
+    isOnline: Boolean
+    lastSeenAt: Date
+    sessionCount: Int
+
     integration: Integration
     links: CustomerLinks
     companies: [Company]
     conversations: [Conversation]
-    getIntegrationData: JSON
-    getMessengerCustomData: JSON
+    getTrackedData: JSON
     getTags: [Tag]
     owner: User
   }

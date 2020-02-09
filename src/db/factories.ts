@@ -457,7 +457,6 @@ interface ICustomerFactoryInput {
   leadStatus?: string;
   status?: string;
   lifecycleState?: string;
-  messengerData?: any;
   customFieldsData?: any;
   tagIds?: string[];
   ownerId?: string;
@@ -488,11 +487,6 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
-    messengerData: params.messengerData || {
-      lastSeenAt: faker.date.between(createdAt, new Date()),
-      isActive: params.isActive || false,
-      sessionCount: faker.random.number(),
-    },
     urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
     tagIds: params.tagIds || [Random.id()],

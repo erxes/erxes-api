@@ -468,7 +468,7 @@ const widgetMutations = {
     await Customers.updateLocation(customerId, browserInfo);
 
     // update messenger session data
-    const customer = await Customers.updateMessengerSession(customerId, browserInfo.url || '');
+    const customer = await Customers.updateSession(customerId);
 
     // Preventing from displaying non messenger integrations like form's messages
     // as last unread message
