@@ -66,7 +66,7 @@ export interface ICustomer {
   mergedIds?: string[];
   status?: string;
   customFieldsData?: any;
-  trackedData: any;
+  trackedData?: any;
   messengerData?: IMessengerData;
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
