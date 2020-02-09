@@ -16,7 +16,7 @@ export interface ICondition {
   propertyValue?: string;
 
   eventName?: string;
-  eventOccurence?: string;
+  eventOccurence?: 'exactly' | 'atleast' | 'atmost';
   eventOccurenceValue?: number;
   eventAttributeFilters?: IAttributeFilter[];
 }

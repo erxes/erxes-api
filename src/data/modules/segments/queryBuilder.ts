@@ -122,7 +122,45 @@ const generateQueryBySegment = async (args: {
   }
 
   for (const condition of eventConditions) {
-    const { eventAttributeFilters = [] } = condition;
+    const { eventOccurence, eventName, eventOccurenceValue, eventAttributeFilters = [] } = condition;
+
+    if (!eventOccurence || !eventOccurenceValue) {
+      continue;
+    }
+
+    eventPositive.push({
+      term: {
+        'name.keyword': eventName,
+      },
+    });
+
+    if (eventOccurence === 'exactly') {
+      eventPositive.push({
+        term: {
+          count: eventOccurenceValue,
+        },
+      });
+    }
+
+    if (eventOccurence === 'atleast') {
+      eventPositive.push({
+        range: {
+          count: {
+            gte: eventOccurenceValue,
+          },
+        },
+      });
+    }
+
+    if (eventOccurence === 'atmost') {
+      eventPositive.push({
+        range: {
+          count: {
+            lte: eventOccurenceValue,
+          },
+        },
+      });
+    }
 
     for (const filter of eventAttributeFilters) {
       elkConvertConditionToQuery({
