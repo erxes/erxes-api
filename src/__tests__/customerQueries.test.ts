@@ -207,9 +207,7 @@ describe('customerQueries', () => {
   });
 
   test('Customer detail', async () => {
-    const customer = await customerFactory({}, true);
-    const customerWithCustomData = await customerFactory({});
-    const customerNoMessengerData = await customerFactory();
+    const customer = await customerFactory({ trackedData: { t1: 'v1' } }, true);
 
     const qry = `
       query customerDetail($_id: String!) {
@@ -257,22 +255,10 @@ describe('customerQueries', () => {
       }
     `;
 
-    let response = await graphqlRequest(qry, 'customerDetail', {
+    const response = await graphqlRequest(qry, 'customerDetail', {
       _id: customer._id,
     });
 
     expect(response._id).toBe(customer._id);
-
-    response = await graphqlRequest(qry, 'customerDetail', {
-      _id: customerWithCustomData._id,
-    });
-
-    expect(response._id).toBe(customerWithCustomData._id);
-
-    response = await graphqlRequest(qry, 'customerDetail', {
-      _id: customerNoMessengerData._id,
-    });
-
-    expect(response._id).toBe(customerNoMessengerData._id);
   });
 });

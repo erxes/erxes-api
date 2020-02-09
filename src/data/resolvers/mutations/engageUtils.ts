@@ -52,7 +52,7 @@ const replaceKeys = ({
 /**
  * Find customers
  */
-const findCustomers = async ({
+export const findCustomers = async ({
   customerIds,
   segmentIds = [],
   tagIds = [],

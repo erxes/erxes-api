@@ -458,6 +458,7 @@ interface ICustomerFactoryInput {
   status?: string;
   lifecycleState?: string;
   customFieldsData?: any;
+  trackedData?: any;
   tagIds?: string[];
   ownerId?: string;
   hasValidEmail?: boolean;
@@ -491,6 +492,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     lifecycleState: params.lifecycleState || 'lead',
     urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
+    trackedData: params.trackedData || {},
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || false,

@@ -11,6 +11,7 @@ import {
   customerFactory,
   engageMessageFactory,
   integrationFactory,
+  segmentFactory,
   tagsFactory,
   userFactory,
 } from '../db/factories';
@@ -160,6 +161,14 @@ describe('engage message mutation tests', () => {
     await Integrations.deleteMany({});
     await Conversations.deleteMany({});
     await ConversationMessages.deleteMany({});
+  });
+
+  test('findCustomrs', async () => {
+    const segment = await segmentFactory({});
+    const brand = await brandFactory({});
+    await integrationFactory({ brandId: brand._id });
+
+    await engageUtils.findCustomers({ segmentIds: [segment._id], brandIds: [brand._id] });
   });
 
   test('Engage utils send via messenger', async () => {
