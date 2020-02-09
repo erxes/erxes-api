@@ -126,7 +126,13 @@ export const updateCustomerProperty = async ({
     throw new Error('Customer id is required');
   }
 
-  await Customers.updateOne({ _id: customerId }, { $set: { [name]: value } });
+  let modifier: any = { [name]: value };
+
+  if (!['firstName', 'lastName', 'primaryPhone', 'primaryEmail', 'code'].includes(name)) {
+    modifier = { [`trackedData.${name}`]: value };
+  }
+
+  await Customers.updateOne({ _id: customerId }, { $set: modifier });
 
   return { status: 'ok' };
 };

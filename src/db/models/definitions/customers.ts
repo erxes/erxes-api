@@ -66,6 +66,7 @@ export interface ICustomer {
   mergedIds?: string[];
   status?: string;
   customFieldsData?: any;
+  trackedData: any;
   messengerData?: IMessengerData;
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
@@ -202,7 +203,8 @@ export const customerSchema = schemaWrapper(
     // Merged customer ids
     mergedIds: field({ type: [String], optional: true, label: 'Merged customers' }),
 
-    customFieldsData: field({ type: Object, optional: true, label: 'Custom fields' }),
+    trackedData: field({ type: Object, optional: true, label: 'Tracked Data' }),
+    customFieldsData: field({ type: Object, optional: true, label: 'Custom fields data' }),
     messengerData: field({ type: messengerSchema, optional: true, label: 'Messenger data' }),
 
     location: field({ type: locationSchema, optional: true, label: 'Location' }),

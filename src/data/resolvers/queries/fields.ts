@@ -1,5 +1,7 @@
 import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
 import { Companies, Customers, Fields, FieldsGroups } from '../../../db/models';
+import { debugBase } from '../../../debuggers';
+import { client } from '../../../elasticsearch';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -76,7 +78,7 @@ const fieldQueries = {
 
     const customFields = await Fields.find({ contentType });
 
-    // extend fields list using custom fields
+    // extend fields list using custom fields data
     for (const customField of customFields) {
       const group = await FieldsGroups.findOne({ _id: customField.groupId });
 
@@ -87,6 +89,28 @@ const fieldQueries = {
           label: customField.text,
         });
       }
+    }
+
+    // extend fields list using tracked fields data
+    try {
+      const index = contentType === 'customer' ? 'customers' : 'companies';
+      const response = await client.indices.getMapping({ index });
+
+      const mappingProperties = response[index].mappings.properties;
+
+      if (mappingProperties.trackedData) {
+        const trackedDataFields = Object.keys(mappingProperties.trackedData.properties);
+
+        for (const trackedDataField of trackedDataFields) {
+          fields.push({
+            _id: Math.random(),
+            name: `trackedData.${trackedDataField}`,
+            label: trackedDataField,
+          });
+        }
+      }
+    } catch (e) {
+      debugBase(e.message);
     }
 
     return fields;
