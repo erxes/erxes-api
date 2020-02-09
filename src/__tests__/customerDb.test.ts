@@ -153,6 +153,12 @@ describe('Customers model tests', () => {
     expect(customerObj).toBeDefined();
   });
 
+  test('Create visitor', async () => {
+    const customerId = await Customers.createVisitor();
+
+    expect(customerId).toBeDefined();
+  });
+
   test('Create customer: searchText', async () => {
     const doc = {
       primaryEmail: 'dombo@yahoo.com',
@@ -624,7 +630,7 @@ describe('Customers model tests', () => {
     expect(foundCustomer && foundCustomer._id).toBe(customer._id);
   });
 
-  test('updateMessengerSession()', async () => {
+  test('updateSession()', async () => {
     try {
       await Customers.updateSession('_id');
     } catch (e) {

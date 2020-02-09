@@ -1,6 +1,7 @@
 import * as moment from 'moment';
 import { graphqlRequest } from '../db/connection';
 import {
+  brandFactory,
   customerFactory,
   formFactory,
   formSubmissionFactory,
@@ -121,6 +122,14 @@ describe('customerQueries', () => {
     const args = { only: 'bySegment' };
 
     await graphqlRequest(qryCount, 'customerCounts', args);
+  });
+
+  test('Count customers by brand', async () => {
+    await brandFactory({});
+
+    await graphqlRequest(qryCount, 'customerCounts', {
+      only: 'byBrand',
+    });
   });
 
   test('Customer count by tag', async () => {

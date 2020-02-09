@@ -472,7 +472,7 @@ export const loadClass = () => {
       return customer;
     }
 
-    public static fixMessengerListFields(doc: any, customer?: ICustomerDocument) {
+    public static fixListFields(doc: any, customer?: ICustomerDocument) {
       let emails: string[] = [];
       let phones: string[] = [];
       let deviceTokens: string[] = [];
@@ -523,7 +523,7 @@ export const loadClass = () => {
      */
     public static async createMessengerCustomer(doc: ICreateMessengerCustomerParams) {
       return this.createCustomer({
-        ...this.fixMessengerListFields(doc),
+        ...this.fixListFields(doc),
         lastSeenAt: new Date(),
         isOnline: true,
         sessionCount: 1,
@@ -547,7 +547,7 @@ export const loadClass = () => {
       }
 
       const modifier = {
-        ...this.fixMessengerListFields(doc, customer),
+        ...this.fixListFields(doc, customer),
         modifiedAt: new Date(),
       };
 
@@ -563,11 +563,7 @@ export const loadClass = () => {
      */
     public static async updateSession(_id: string) {
       const now = new Date();
-      const customer = await Customers.findOne({ _id });
-
-      if (!customer) {
-        return null;
-      }
+      const customer = await Customers.getCustomer(_id);
 
       const query: any = {
         $set: {
