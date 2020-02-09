@@ -1,8 +1,8 @@
 import * as moment from 'moment';
 import * as _ from 'underscore';
-import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Customers, FormSubmissions, Integrations } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import { IConformityQueryParams } from '../../resolvers/queries/types';
 import { CommonBuilder } from './utils';
 
 interface ISortParams {

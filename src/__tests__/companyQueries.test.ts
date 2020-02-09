@@ -66,8 +66,8 @@ describe('companyQueries', () => {
   `;
 
   const qryCount = `
-    query companyCounts(${commonParamDefs}, $only: String, $byFakeSegment: JSON) {
-      companyCounts(${commonParams}, only: $only, byFakeSegment: $byFakeSegment)
+    query companyCounts(${commonParamDefs}, $only: String) {
+      companyCounts(${commonParams}, only: $only)
     }
   `;
 
@@ -416,20 +416,6 @@ describe('companyQueries', () => {
     });
 
     expect(response.byBrand[brand._id]).toBe(2);
-  });
-
-  test('Company count by fake segment', async () => {
-    await companyFactory({});
-    await companyFactory({});
-
-    await segmentFactory({ contentType: 'company' });
-    await segmentFactory();
-
-    const response = await graphqlRequest(qryCount, 'companyCounts', {
-      byFakeSegment: {},
-    });
-
-    expect(count(response.bySegment)).toBe(0);
   });
 
   test('Company detail', async () => {

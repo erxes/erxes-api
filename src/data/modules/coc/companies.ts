@@ -1,7 +1,7 @@
 import * as _ from 'underscore';
-import { IConformityQueryParams } from '../../../data/modules/conformities/types';
 import { Companies, Conformities, Customers, Integrations } from '../../../db/models';
 import { STATUSES } from '../../../db/models/definitions/constants';
+import { IConformityQueryParams } from '../../resolvers/queries/types';
 import { CommonBuilder } from './utils';
 
 type TSortBuilder = { primaryName: number } | { [index: string]: number };
