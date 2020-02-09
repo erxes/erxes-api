@@ -16,6 +16,8 @@ export interface ICondition {
   propertyValue?: string;
 
   eventName?: string;
+  eventOccurence?: string;
+  eventOccurenceValue?: number;
   eventAttributeFilters?: IAttributeFilter[];
 }
 
@@ -69,6 +71,14 @@ export const conditionSchema = new Schema(
 
     eventName: field({
       type: String,
+      optional: true,
+    }),
+    eventOccurence: field({
+      type: String,
+      optional: true,
+    }),
+    eventOccurenceValue: field({
+      type: Number,
       optional: true,
     }),
 
