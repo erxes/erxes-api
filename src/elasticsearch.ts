@@ -9,7 +9,7 @@ export const fetchElk = async (action, index: string, body: any) => {
   const { NODE_ENV } = process.env;
 
   if (NODE_ENV === 'test') {
-    return action === 'search' ? { total: { value: 0 }, hits: { hits: [] } } : 0;
+    return action === 'search' ? { hits: { total: { value: 0 }, hits: [] } } : 0;
   }
 
   try {
