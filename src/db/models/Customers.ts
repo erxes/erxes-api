@@ -525,7 +525,7 @@ export const loadClass = () => {
       return this.createCustomer({
         ...this.fixMessengerListFields(doc),
         lastSeenAt: new Date(),
-        isActive: true,
+        isOnline: true,
         sessionCount: 1,
       });
     }

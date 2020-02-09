@@ -319,7 +319,7 @@ describe('Customers model tests', () => {
   });
 
   test('Merge customers', async () => {
-    expect.assertions(20);
+    expect.assertions(19);
 
     const integration = await integrationFactory({});
 
@@ -506,8 +506,6 @@ describe('Customers model tests', () => {
   test('createMessengerCustomer() must return a new customer', async () => {
     const now = new Date();
 
-    const lastName = 'test last name';
-    const bio = 'test BIO 1231321312';
     const email = 'uniqueEmail@gmail.com';
     const phone = '422999';
 
@@ -532,8 +530,6 @@ describe('Customers model tests', () => {
 
     expect(customer.isUser).toBe(_customer.isUser);
     expect(customer.createdAt >= now).toBe(true);
-    expect(customer.lastName).toBe(lastName);
-    expect(customer.description).toBe(bio);
 
     expect(customer.lastSeenAt).toBeDefined();
     expect(customer.isOnline).toBe(true);
@@ -547,19 +543,9 @@ describe('Customers model tests', () => {
       expect(e.message).toBe('Customer not found');
     }
 
-    const firstName = 'test first name';
-    const lastName = 'test last name';
-    const bio = 'test BIO 1231321312';
     const email = 'uniqueEmail@gmail.com';
     const phone = '422999';
     const deviceToken = 'token';
-
-    const customData = {
-      first_name: firstName,
-      last_name: lastName,
-      bio,
-      created_at: '1321313',
-    };
 
     _customer.isUser = true;
     await _customer.save();
@@ -572,7 +558,6 @@ describe('Customers model tests', () => {
         isUser: true,
         deviceToken,
       },
-      customData,
     });
 
     expect(customer.primaryEmail).toBe(email);
@@ -583,8 +568,6 @@ describe('Customers model tests', () => {
     expect(customer.phones).toContain(phone);
 
     expect(customer.isUser).toBe(true);
-    expect(customer.lastName).toBe(lastName);
-    expect(customer.description).toBe(bio);
   });
 
   test('getWidgetCustomer()', async () => {
