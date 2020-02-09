@@ -501,9 +501,7 @@ describe('customerQueries', () => {
     const headSegment = await segmentFactory({});
     const segment = await segmentFactory({ subOf: headSegment._id });
 
-    const messengerData = { sessionCount: 10 };
-
-    await customerFactory({ messengerData });
+    await customerFactory({});
     await customerFactory();
 
     const qry = `
@@ -523,7 +521,7 @@ describe('customerQueries', () => {
 
   test('Customer detail', async () => {
     const customer = await customerFactory({}, true);
-    const customerWithCustomData = await customerFactory({ messengerData: { customData: { data: 'data' } } });
+    const customerWithCustomData = await customerFactory({});
     const customerNoMessengerData = await customerFactory();
 
     const qry = `

@@ -111,14 +111,12 @@ describe('fieldQueries', () => {
     const integration3 = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
 
     await customerFactory({ integrationId: integration._id });
-    await customerFactory({ integrationId: integration1._id, messengerData: {} });
+    await customerFactory({ integrationId: integration1._id });
     await customerFactory({
       integrationId: integration2._id,
-      messengerData: { customData: {} },
     });
     await customerFactory({
       integrationId: integration3._id,
-      messengerData: { customData: { data1: 'Data 1', data2: 'Data 2' } },
     });
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {

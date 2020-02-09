@@ -463,7 +463,9 @@ interface ICustomerFactoryInput {
   hasValidEmail?: boolean;
   profileScore?: number;
   code?: string;
-  isActive?: boolean;
+  isOnline?: boolean;
+  lastSeenAt?: number;
+  sessionCount?: number;
   visitorContactInfo?: any;
   urlVisits?: object;
   deviceTokens?: string[];

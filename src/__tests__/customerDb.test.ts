@@ -224,17 +224,17 @@ describe('Customers model tests', () => {
 
   test('Mark customer as inactive', async () => {
     const customer = await customerFactory({
-      messengerData: { isActive: true, lastSeenAt: null },
+      isOnline: true,
     });
 
     const customerObj = await Customers.markCustomerAsNotActive(customer._id);
 
-    if (!customerObj || !customerObj.messengerData) {
+    if (!customerObj || !customerObj) {
       throw new Error('Customer not found');
     }
 
-    expect(customerObj.messengerData.isActive).toBe(false);
-    expect(customerObj.messengerData.lastSeenAt).toBeDefined();
+    expect(customerObj.isOnline).toBe(false);
+    expect(customerObj.lastSeenAt).toBeDefined();
   });
 
   test('Update customer: with customer fields validation error', async () => {
@@ -419,7 +419,7 @@ describe('Customers model tests', () => {
 
     const mergedCustomer = await Customers.mergeCustomers([...customerIds, 'fakeId'], doc);
 
-    if (!mergedCustomer || !mergedCustomer.messengerData || !mergedCustomer.visitorContactInfo) {
+    if (!mergedCustomer || !mergedCustomer.visitorContactInfo) {
       throw new Error('Merged customer not found');
     }
 
@@ -428,7 +428,6 @@ describe('Customers model tests', () => {
     expect(mergedCustomer.lastName).toBe(doc.lastName);
     expect(mergedCustomer.primaryEmail).toBe(doc.primaryEmail);
     expect(mergedCustomer.primaryPhone).toBe(doc.primaryPhone);
-    expect(mergedCustomer.messengerData.toJSON()).toEqual(doc.messengerData);
 
     const companyIds = await Conformities.savedConformity({
       mainType: 'customer',
@@ -501,34 +500,23 @@ describe('Customers model tests', () => {
 
     const response = await Customers.markCustomerAsActive(customer._id);
 
-    expect(response.messengerData && response.messengerData.isActive).toBeTruthy();
+    expect(response.isOnline).toBeTruthy();
   });
 
   test('createMessengerCustomer() must return a new customer', async () => {
     const now = new Date();
 
-    const firstName = 'test first name';
     const lastName = 'test last name';
     const bio = 'test BIO 1231321312';
     const email = 'uniqueEmail@gmail.com';
     const phone = '422999';
 
-    const customData = {
-      first_name: firstName,
-      last_name: lastName,
-      bio,
-      created_at: new Date(),
-    };
-
-    const customer = await Customers.createMessengerCustomer(
-      {
-        integrationId: _customer.integrationId,
-        email,
-        phone,
-        isUser: _customer.isUser,
-      },
-      customData,
-    );
+    const customer = await Customers.createMessengerCustomer({
+      integrationId: _customer.integrationId,
+      email,
+      phone,
+      isUser: _customer.isUser,
+    });
 
     expect(customer).toBeDefined();
 
@@ -547,19 +535,9 @@ describe('Customers model tests', () => {
     expect(customer.lastName).toBe(lastName);
     expect(customer.description).toBe(bio);
 
-    const messengerData = customer.messengerData;
-
-    if (!messengerData) {
-      throw new Error('messengerData is null');
-    }
-
-    expect(messengerData.lastSeenAt).toBeDefined();
-    expect(messengerData.isActive).toBe(true);
-    expect(messengerData.sessionCount).toBe(1);
-    expect(messengerData.customData.first_name).toBeUndefined();
-    expect(messengerData.customData.last_name).toBeUndefined();
-    expect(messengerData.customData.bio).toBeUndefined();
-    expect(messengerData.customData.created_at).toBeDefined();
+    expect(customer.lastSeenAt).toBeDefined();
+    expect(customer.isOnline).toBe(true);
+    expect(customer.sessionCount).toBe(1);
   });
 
   test('updateMessengerCustomer()', async () => {
@@ -607,33 +585,6 @@ describe('Customers model tests', () => {
     expect(customer.isUser).toBe(true);
     expect(customer.lastName).toBe(lastName);
     expect(customer.description).toBe(bio);
-
-    const messengerData = customer.messengerData;
-
-    if (!messengerData) {
-      throw new Error('messengerData is null');
-    }
-
-    expect(messengerData.customData.first_name).toBeUndefined();
-    expect(messengerData.customData.last_name).toBeUndefined();
-    expect(messengerData.customData.bio).toBeUndefined();
-
-    // Do not replace previous non empty value with empty value
-    const customerWithCustomData = await customerFactory({
-      messengerData: { customData: { organization: 'test' } },
-    });
-
-    const updated = await Customers.updateMessengerCustomer({
-      _id: customerWithCustomData._id,
-      doc: {},
-      customData: {},
-    });
-
-    if (!updated.messengerData) {
-      throw new Error('messengerData is null');
-    }
-
-    expect(updated.messengerData.customData.organization).toBe('test');
   });
 
   test('getWidgetCustomer()', async () => {
@@ -692,25 +643,17 @@ describe('Customers model tests', () => {
 
   test('updateMessengerSession()', async () => {
     try {
-      await Customers.updateMessengerSession('_id', '/career/open');
+      await Customers.updateSession('_id');
     } catch (e) {
       expect(e.message).toBe('Customer not found');
     }
 
     const now = new Date();
 
-    const customer = await Customers.updateMessengerSession(_customer._id, '/career/open');
+    const customer = await Customers.updateSession(_customer._id);
 
-    const { messengerData } = customer;
-
-    expect(messengerData).toBeDefined();
-
-    if (messengerData) {
-      expect(messengerData.isActive).toBeTruthy();
-      expect(messengerData.lastSeenAt && messengerData.lastSeenAt >= now.getTime()).toBeTruthy();
-    }
-
-    expect(customer.urlVisits['/career/open']).toBe(1);
+    expect(customer.isOnline).toBeTruthy();
+    expect(customer.lastSeenAt && customer.lastSeenAt >= now.getTime()).toBeTruthy();
   });
 
   test('saveVisitorContactInfo()', async () => {

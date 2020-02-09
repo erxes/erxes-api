@@ -85,7 +85,6 @@ describe('engage message mutation tests', () => {
     _tag = await tagsFactory({});
     _brand = await brandFactory({});
     _segment = await segmentFactory({
-      connector: 'any',
       conditions: [{ field: 'primaryEmail', operator: 'c', value: '@', type: 'string' }],
     });
 

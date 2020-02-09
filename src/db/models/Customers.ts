@@ -72,7 +72,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
-  createMessengerCustomer(doc: ICreateMessengerCustomerParams, customData: any): Promise<ICustomerDocument>;
+  createMessengerCustomer(doc: ICreateMessengerCustomerParams): Promise<ICustomerDocument>;
   updateMessengerCustomer(param: IUpdateMessengerCustomerParams): Promise<ICustomerDocument>;
   updateSession(_id: string): Promise<ICustomerDocument>;
   updateLocation(_id: string, browserInfo: IBrowserInfo): Promise<ICustomerDocument>;
