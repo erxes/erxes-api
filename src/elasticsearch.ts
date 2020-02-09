@@ -5,6 +5,10 @@ export const client = new elasticsearch.Client({
   hosts: ['http://localhost:9200/'],
 });
 
+export const getMappings = async (index: string) => {
+  return client.indices.getMapping({ index });
+};
+
 export const fetchElk = async (action, index: string, body: any) => {
   const { NODE_ENV } = process.env;
 

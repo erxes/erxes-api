@@ -1,7 +1,7 @@
 import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
 import { Companies, Customers, Fields, FieldsGroups } from '../../../db/models';
 import { debugBase } from '../../../debuggers';
-import { client } from '../../../elasticsearch';
+import { getMappings } from '../../../elasticsearch';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -94,7 +94,7 @@ const fieldQueries = {
     // extend fields list using tracked fields data
     try {
       const index = contentType === 'customer' ? 'customers' : 'companies';
-      const response = await client.indices.getMapping({ index });
+      const response = await getMappings(index);
 
       const mappingProperties = response[index].mappings.properties;
 

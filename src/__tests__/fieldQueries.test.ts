@@ -1,4 +1,5 @@
 import * as faker from 'faker';
+import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import {
   brandFactory,
@@ -9,6 +10,7 @@ import {
   usersGroupFactory,
 } from '../db/factories';
 import { Companies, Customers, Fields, FieldsGroups } from '../db/models';
+import * as elk from '../elasticsearch';
 
 import { KIND_CHOICES } from '../db/models/definitions/constants';
 import './setup.ts';
@@ -73,6 +75,22 @@ describe('fieldQueries', () => {
   });
 
   test('Fields combined by content type', async () => {
+    const mock = sinon.stub(elk, 'getMappings').callsFake(() => {
+      return Promise.resolve({
+        customers: {
+          mappings: {
+            properties: {
+              trackedData: {
+                properties: {
+                  name: 'value',
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
     // Creating test data
     const visibleGroup = await usersGroupFactory({ isVisible: true });
     const invisibleGroup = await usersGroupFactory({ isVisible: false });
@@ -135,6 +153,8 @@ describe('fieldQueries', () => {
 
     expect(responseFields.firstName).toBe(customerFields.firstName);
     expect(responseFields.lastName).toBe(customerFields.lastName);
+
+    mock.restore();
   });
 
   test('Fields default columns config', async () => {
