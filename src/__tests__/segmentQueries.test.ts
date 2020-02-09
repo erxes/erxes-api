@@ -54,7 +54,6 @@ describe('segmentQueries', () => {
           description
           subOf
           color
-          connector
           conditions
 
           getSubSegments { _id }
