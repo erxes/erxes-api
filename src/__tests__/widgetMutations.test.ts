@@ -160,7 +160,6 @@ describe('messenger connect', () => {
     expect(customer.createdAt < now).toBeTruthy();
 
     // must be updated
-    expect(customer.firstName).toBe('name');
     expect(customer.isUser).toBeTruthy();
     expect((customer.deviceTokens || []).length).toBe(2);
     expect(customer.deviceTokens).toContain('111');
