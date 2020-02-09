@@ -1,9 +1,17 @@
 import { Customers } from './db/models';
 import { debugBase } from './debuggers';
-import { client } from './elasticsearch';
+import { client, fetchElk } from './elasticsearch';
 
-export const saveEvent = async (args: { type?: string; name?: string; customerId?: string; attributes?: any }) => {
-  const { type, name, attributes } = args;
+interface ISaveEventArgs {
+  type?: string;
+  name?: string;
+  customerId?: string;
+  attributes?: any;
+  additionalQuery?: any;
+}
+
+export const saveEvent = async (args: ISaveEventArgs) => {
+  const { type, name, attributes, additionalQuery } = args;
 
   if (!type) {
     throw new Error('Type is required');
@@ -19,36 +27,65 @@ export const saveEvent = async (args: { type?: string; name?: string; customerId
     customerId = await Customers.createVisitor();
   }
 
-  client.index(
-    {
+  const searchQuery = {
+    bool: {
+      must: [{ term: { 'name.keyword': name } }, { term: { 'customerId.keyword': customerId } }],
+    },
+  };
+
+  if (additionalQuery) {
+    searchQuery.bool.must.push(additionalQuery);
+  }
+
+  let response = await fetchElk('search', 'events', {
+    size: 1,
+    query: searchQuery,
+  });
+
+  if (response.hits.total.value === 0) {
+    response = await client.index({
       index: 'events',
       body: {
         type,
         name,
         customerId,
         createdAt: new Date(),
+        count: 1,
         attributes: attributes || {},
       },
-    },
+    });
+  } else {
+    response = await client.updateByQuery({
+      index: 'events',
+      refresh: true,
+      body: {
+        script: {
+          lang: 'painless',
+          source: 'ctx._source["count"] += 1',
+        },
+        query: searchQuery,
+      },
+    });
+  }
 
-    (err, resp, status) => {
-      if (err) {
-        return debugBase(`Error during event save ${err}`);
-      }
-
-      return debugBase(`Succesfully saved event ${JSON.stringify(resp)} ${status}`);
-    },
-  );
+  debugBase(`Response ${JSON.stringify(response)}`);
 
   return { customerId };
 };
 
 export const trackViewPageEvent = (args: { customerId: string; attributes: any }) => {
+  const { attributes, customerId } = args;
+
   return saveEvent({
     type: 'lifeCycle',
     name: 'viewPage',
-    customerId: args.customerId,
-    attributes: args.attributes,
+    customerId,
+    attributes,
+    additionalQuery: {
+      term: {
+        'attributes.url.keyword': attributes.url,
+      },
+    },
   });
 };
 
