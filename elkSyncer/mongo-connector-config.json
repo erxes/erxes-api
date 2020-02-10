@@ -19,7 +19,6 @@
     "docManagers": [
         {
             "docManager": "elastic2_doc_manager",
-            "targetURL": "http://elasticsearch:9200",
             "bulkSize": 10,
             "uniqueKey": "_id",
             "args": {

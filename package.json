@@ -32,11 +32,8 @@
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
     "repairPermissionData": "ts-node ./src/commands/repairPermissionData.ts",
-    "prepareElk": "ts-node ./src/commands/prepareElk.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
-    "release": "release-it",
-    "snyk-protect": "snyk protect",
-    "prepare": "yarn run snyk-protect"
+    "release": "release-it"
   },
   "lint-staged": {
     "*.ts": [
