@@ -1,0 +1,32 @@
+{
+    "oplogFile": "oplog.timestamp",
+    "noDump": false,
+    "batchSize": 50,
+    "verbosity": 3,
+    "continueOnError": true,
+    "logging": {
+        "type": "stream"
+    },
+    "namespaces": {
+        "erxes.customers": {
+            "rename": "customers._doc",
+            "excludeFields": ["urlVisits"]
+        },
+        "erxes.companies": {
+            "rename": "companies._doc"
+        }
+    },
+    "docManagers": [
+        {
+            "docManager": "elastic2_doc_manager",
+            "targetURL": "http://elasticsearch:9200",
+            "bulkSize": 10,
+            "uniqueKey": "_id",
+            "args": {
+                "clientOptions": {
+                    "timeout": 5000
+                }
+            }
+        }
+    ]
+}
