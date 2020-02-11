@@ -1,7 +1,7 @@
 import * as elasticsearch from 'elasticsearch';
 import { debugBase } from './debuggers';
 
-const { NODE_ENV, ELASTICSEARCH_URL } = process.env;
+const { NODE_ENV, ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
 
 export const client = new elasticsearch.Client({
   hosts: [ELASTICSEARCH_URL],
