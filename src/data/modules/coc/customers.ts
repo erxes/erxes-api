@@ -52,7 +52,7 @@ export class Builder extends CommonBuilder<IListArgs> {
 
     this.positiveList.push({
       terms: {
-        'integrationId.keyword': integrations.map(i => i._id),
+        integrationId: integrations.map(i => i._id),
       },
     });
   }

@@ -154,7 +154,7 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
   public tagFilter(tagId: string) {
     this.positiveList.push({
       terms: {
-        'tagIds.keyword': [tagId],
+        tagIds: [tagId],
       },
     });
   }
