@@ -89,41 +89,39 @@ company_mapping = {
     },
 }
 
-try:
-    response = client.indices.exists(index='customers')
+analysis = {
+    'analyzer': {
+        'uax_url_email_analyzer': {
+            'tokenizer': 'uax_url_email_tokenizer',
+        },
+    },
+    'tokenizer': {
+        'uax_url_email_tokenizer': {
+            'type': 'uax_url_email',
+        },
+    },
+}
 
-    print('Create customers index', response)
+def put_mappings(index, mapping):
+    response = client.indices.exists(index=index)
+
+    print('Create index for %s' % index, response)
 
     if response == False:
-        analysis = {
-            'analyzer': {
-                'uax_url_email_analyzer': {
-                    'tokenizer': 'uax_url_email_tokenizer',
-                },
-            },
-            'tokenizer': {
-                'uax_url_email_tokenizer': {
-                    'type': 'uax_url_email',
-                },
-            },
-        }
+        response = client.indices.create(index=index, body={ 'settings': { 'analysis': analysis } })
 
-        customers_response = client.indices.create(index='customers', body={ 'settings': { 'analysis': analysis } })
-        companies_response = client.indices.create(index='companies', body={ 'settings': { 'analysis': analysis } })
+        print('Response', response)
 
-        print('Customers response', customers_response)
-        print('Companies response', companies_response)
-except Exception as e:
-    print(e)
+    try:
+        response = client.indices.put_mapping(index=index, body = { 'properties': mapping })
 
-try:
-    response = client.indices.put_mapping(index='customers', body = { 'properties': customer_mapping })
-    companies_response = client.indices.put_mapping(index='companies', body={ 'properties': company_mapping })
+        print(response)
+    except Exception as e:
+        print(e)
 
-    print(response)
-    print(companies_response)
-except Exception as e:
-    print(e)
+
+put_mappings('customers', customer_mapping)
+put_mappings('companies', company_mapping)
 
 command = 'mongo-connector -m %s  -c mongo-connector-config.json --target-url %s' % (MONGO_URL, ELASTICSEARCH_URL)
 
