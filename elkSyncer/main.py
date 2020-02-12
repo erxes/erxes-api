@@ -89,6 +89,18 @@ company_mapping = {
     },
 }
 
+event_mapping = {
+    'type': {
+        'type': 'keyword',
+    },
+    'name': {
+        'type': 'keyword',
+    },
+    'customerId': {
+        'type': 'keyword',
+    },
+}
+
 analysis = {
     'analyzer': {
         'uax_url_email_analyzer': {
@@ -122,6 +134,7 @@ def put_mappings(index, mapping):
 
 put_mappings('customers', customer_mapping)
 put_mappings('companies', company_mapping)
+put_mappings('events', event_mapping)
 
 command = 'mongo-connector -m %s  -c mongo-connector-config.json --target-url %s' % (MONGO_URL, ELASTICSEARCH_URL)
 

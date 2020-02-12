@@ -29,7 +29,7 @@ export const saveEvent = async (args: ISaveEventArgs) => {
 
   const searchQuery = {
     bool: {
-      must: [{ term: { 'name.keyword': name } }, { term: { 'customerId.keyword': customerId } }],
+      must: [{ term: { name } }, { term: { customerId } }],
     },
   };
 

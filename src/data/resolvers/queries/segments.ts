@@ -33,7 +33,7 @@ const segmentQueries = {
     const aggs = {
       names: {
         terms: {
-          field: 'name.keyword',
+          field: 'name',
         },
       },
     };

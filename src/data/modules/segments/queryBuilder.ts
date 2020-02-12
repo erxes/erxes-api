@@ -139,7 +139,7 @@ const generateQueryBySegment = async (args: {
 
     eventPositive.push({
       term: {
-        'name.keyword': eventName,
+        name: eventName,
       },
     });
 
