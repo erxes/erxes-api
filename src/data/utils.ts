@@ -663,6 +663,17 @@ export const validateEmail = async email => {
     return false;
   }
 
+  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+
+  const response = await sendRequest(
+    { url: `${ENGAGES_API_DOMAIN}/emailVerifier/single`, method: 'POST', params: { email } },
+    'Failed to connect engaages api. Check ENGAGES_API_DOMAIN env or engages api is not running',
+  );
+
+  if (response === 'invalid') {
+    return false;
+  }
+
   return true;
 };
 

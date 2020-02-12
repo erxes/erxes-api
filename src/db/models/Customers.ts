@@ -204,6 +204,8 @@ export const loadClass = () => {
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
       const isValid = await validateEmail(doc.primaryEmail);
 
+      console.log('isValid: ', isValid);
+
       if (doc.primaryEmail && isValid) {
         doc.hasValidEmail = true;
       }
