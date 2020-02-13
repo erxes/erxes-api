@@ -1,5 +1,4 @@
 import * as AWS from 'aws-sdk';
-import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -650,17 +649,6 @@ export const validateEmail = async email => {
 
   if (NODE_ENV === 'test') {
     return true;
-  }
-
-  const emailValidator = new EmailValidator();
-  const { validDomain, validMailbox } = await emailValidator.verify(email);
-
-  if (!validDomain) {
-    return false;
-  }
-
-  if (!validMailbox && validMailbox === null) {
-    return false;
   }
 
   const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });

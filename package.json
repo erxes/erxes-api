@@ -31,6 +31,9 @@
     "initProject": "ts-node ./src/commands/initProject.ts",
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
+    "verifyCustomerEmails": "ts-node ./src/commands/verifyCustomerEmails.ts",
+    "checkStatusEmailVerifier": "ts-node ./src/commands/checkStatusEmailVerifier.ts",
+    "downloadVerifiedEmail": "ts-node ./src/commands/downloadVerifiedEmail.ts",
     "repairPermissionData": "ts-node ./src/commands/repairPermissionData.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
     "release": "release-it",
@@ -58,8 +61,8 @@
     "cors": "^2.8.1",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
-    "email-deep-validator": "^3.1.0",
     "express": "^4.15.2",
+    "faker": "^4.1.0",
     "file-type": "^10.4.0",
     "firebase-admin": "^8.6.1",
     "formidable": "^1.1.1",
@@ -83,14 +86,13 @@
     "sha256": "^0.2.0",
     "snyk": "^1.277.1",
     "strip": "^3.0.0",
+    "ts-node": "8.0.3",
     "twit": "^2.2.9",
     "underscore": "^1.8.3",
     "uuid": "^3.3.3",
     "validator": "^9.0.0",
     "xlsx-populate": "^1.20.1",
-    "xss": "^1.0.6",
-    "faker": "^4.1.0",
-    "ts-node": "8.0.3"
+    "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {
     "kerberos": "^1.0.0"
