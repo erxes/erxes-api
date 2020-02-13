@@ -10,7 +10,7 @@
     "namespaces": {
         "erxes.customers": {
             "rename": "customers._doc",
-            "excludeFields": ["urlVisits"]
+            "excludeFields": ["urlVisits", "messengerData"]
         },
         "erxes.companies": {
             "rename": "companies._doc"
