@@ -13,13 +13,17 @@ const download = async () => {
 
   const taskId = argv[2];
 
-  const response = await sendRequest({
-    url: `${ENGAGES_API_DOMAIN}/emailVerifier/bulk/download`,
-    method: 'GET',
-    params: { taskId },
-  });
+  try {
+    const response = await sendRequest({
+      url: `${ENGAGES_API_DOMAIN}/emailVerifier/bulk/download`,
+      method: 'GET',
+      params: { taskId },
+    });
 
-  console.log('response: ', response);
+    console.log('response: ', response);
+  } catch (e) {
+    console.log(e.message);
+  }
 
   process.exit();
 };
