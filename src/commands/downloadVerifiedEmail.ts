@@ -1,9 +1,12 @@
-import { getEnv, sendRequest } from '../data/utils';
+import * as amqplib from 'amqplib';
+import { connect, disconnect } from '../db/connection';
 import { Customers } from '../db/models';
 
-const download = async () => {
-  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
+const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
+let connection;
+let channel;
 
+const download = async () => {
   const argv = process.argv;
 
   if (argv.length < 3) {
@@ -14,29 +17,54 @@ const download = async () => {
 
   const taskId = argv[2];
 
-  try {
-    const emails = await sendRequest({
-      url: `${ENGAGES_API_DOMAIN}/emailVerifier/bulk/download`,
-      method: 'GET',
-      params: { taskId },
-    });
-
-    for (const row of emails) {
-      console.log('email: ', row.email);
-
-      const customer = await Customers.findOne({ primaryEmail: row.email });
-
-      if (customer) {
-        customer.hasValidEmail = row.status === 'valid';
-
-        await customer.save();
-      }
-    }
-  } catch (e) {
-    console.log(e.message);
-  }
-
-  process.exit();
+  await channel.assertQueue('erxes-api:email-verifier-download');
+  await channel.sendToQueue('erxes-api:email-verifier-download', Buffer.from(JSON.stringify(taskId || '')));
 };
 
-download();
+const initConsumer = async () => {
+  connection = await amqplib.connect(RABBITMQ_HOST);
+  channel = await connection.createChannel();
+
+  // listen for engage api ===========
+  await channel.assertQueue('engages-api:email-verifier-download');
+
+  channel.consume('engages-api:email-verifier-download', async msg => {
+    if (msg !== null) {
+      const emails = JSON.parse(msg.content.toString());
+
+      console.log('emails: ', emails);
+
+      if (emails && emails.length > 0) {
+        connect()
+          .then(async () => {
+            for (const row of emails) {
+              const customer = await Customers.findOne({ primaryEmail: row.email });
+
+              if (customer) {
+                customer.hasValidEmail = row.status === 'valid';
+
+                await customer.save();
+              }
+            }
+          })
+          .then(() => {
+            return disconnect();
+          })
+          .then(() => {
+            channel.ack(msg);
+            process.exit();
+          });
+      } else {
+        channel.ack(msg);
+        process.exit();
+      }
+    } else {
+      channel.ack(msg);
+      process.exit();
+    }
+  });
+
+  download();
+};
+
+initConsumer();

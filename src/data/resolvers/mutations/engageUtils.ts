@@ -64,7 +64,7 @@ export const findCustomers = async ({
   brandIds?: string[];
 }): Promise<ICustomerDocument[]> => {
   // find matched customers
-  let customerQuery: any = { hasValidEmail: true };
+  let customerQuery: any = {};
 
   if (customerIds && customerIds.length > 0) {
     customerQuery = { _id: { $in: customerIds } };
@@ -123,11 +123,13 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
 
   if (engageMessage.method === METHODS.EMAIL) {
     const customerInfos = customers.map(customer => {
-      return {
-        _id: customer._id,
-        name: Customers.getCustomerName(customer),
-        email: customer.primaryEmail,
-      };
+      if (customer.hasValidEmail) {
+        return {
+          _id: customer._id,
+          name: Customers.getCustomerName(customer),
+          email: customer.primaryEmail,
+        };
+      }
     });
 
     await sendMessage('erxes-api:send-engage', {
