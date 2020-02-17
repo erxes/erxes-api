@@ -1,4 +1,5 @@
 import { getEnv, sendRequest } from '../data/utils';
+import { Customers } from '../db/models';
 
 const download = async () => {
   const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
@@ -14,13 +15,23 @@ const download = async () => {
   const taskId = argv[2];
 
   try {
-    const response = await sendRequest({
+    const emails = await sendRequest({
       url: `${ENGAGES_API_DOMAIN}/emailVerifier/bulk/download`,
       method: 'GET',
       params: { taskId },
     });
 
-    console.log('response: ', response);
+    for (const row of emails) {
+      console.log('email: ', row.email);
+
+      const customer = await Customers.findOne({ primaryEmail: row.email });
+
+      if (customer) {
+        customer.hasValidEmail = row.status === 'valid';
+
+        await customer.save();
+      }
+    }
   } catch (e) {
     console.log(e.message);
   }

@@ -65,7 +65,7 @@ const findCustomers = async ({
   brandIds?: string[];
 }): Promise<ICustomerDocument[]> => {
   // find matched customers
-  let customerQuery: any = {};
+  let customerQuery: any = { hasValidEmail: true };
 
   if (customerIds && customerIds.length > 0) {
     customerQuery = { _id: { $in: customerIds } };

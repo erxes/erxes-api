@@ -8,7 +8,7 @@ connect()
     const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
 
     const emails = customers.map(customer => customer.primaryEmail);
-    const firstEmail = [emails[1], emails[2]];
+    const firstEmail = [emails[3], emails[4]];
 
     const response = await sendRequest({
       url: `${ENGAGES_API_DOMAIN}/emailVerifier/bulk`,
