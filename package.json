@@ -36,9 +36,7 @@
     "downloadVerifiedEmail": "ts-node ./src/commands/downloadVerifiedEmail.ts",
     "repairPermissionData": "ts-node ./src/commands/repairPermissionData.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
-    "release": "release-it",
-    "snyk-protect": "snyk protect",
-    "prepare": "yarn run snyk-protect"
+    "release": "release-it"
   },
   "lint-staged": {
     "*.ts": [
@@ -61,6 +59,7 @@
     "cors": "^2.8.1",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
+    "elasticsearch": "^16.6.0",
     "express": "^4.15.2",
     "faker": "^4.1.0",
     "file-type": "^10.4.0",
@@ -75,6 +74,7 @@
     "jsonwebtoken": "^8.1.0",
     "meteor-random": "^0.0.3",
     "moment": "^2.18.1",
+    "mongo-uri": "^0.1.2",
     "mongoose": "5.7.5",
     "mongoose-type-email": "^1.0.5",
     "node-schedule": "^1.2.5",
