@@ -216,19 +216,16 @@ export const loadClass = () => {
 
       // clean custom field values
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
-      const isValid = await validateEmail(doc.primaryEmail);
-
-      console.log('isValid: ', isValid);
-
-      if (doc.primaryEmail && isValid) {
-        doc.hasValidEmail = true;
-      }
 
       const customer = await Customers.create({
         createdAt: new Date(),
         modifiedAt: new Date(),
         ...doc,
       });
+
+      if (doc.primaryEmail) {
+        await validateEmail(customer._id, doc.primaryEmail);
+      }
 
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
@@ -249,8 +246,11 @@ export const loadClass = () => {
       doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
 
       if (doc.primaryEmail) {
-        const isValid = await validateEmail(doc.primaryEmail);
-        doc.hasValidEmail = isValid;
+        const oldCustomer = await Customers.getCustomer(_id);
+
+        if (doc.primaryEmail !== oldCustomer.primaryEmail) {
+          await validateEmail(_id, doc.primaryEmail);
+        }
       }
 
       await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });

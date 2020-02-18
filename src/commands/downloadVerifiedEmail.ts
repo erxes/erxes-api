@@ -32,8 +32,6 @@ const initConsumer = async () => {
     if (msg !== null) {
       const emails = JSON.parse(msg.content.toString());
 
-      console.log('emails: ', emails);
-
       if (emails && emails.length > 0) {
         connect()
           .then(async () => {

@@ -11,6 +11,7 @@ import { Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 
 /*
@@ -644,25 +645,8 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
  * Validates email using MX record resolver
  * @param email as String
  */
-export const validateEmail = async email => {
-  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-
-  if (NODE_ENV === 'test') {
-    return true;
-  }
-
-  const ENGAGES_API_DOMAIN = getEnv({ name: 'ENGAGES_API_DOMAIN' });
-
-  const response = await sendRequest(
-    { url: `${ENGAGES_API_DOMAIN}/emailVerifier/single`, method: 'POST', params: { email } },
-    'Failed to connect engaages api. Check ENGAGES_API_DOMAIN env or engages api is not running',
-  );
-
-  if (response === 'invalid') {
-    return false;
-  }
-
-  return true;
+export const validateEmail = async (customerId: string, email: string) => {
+  await sendMessage('erxes-api:email-verifier-single', { email, customerId });
 };
 
 export const authCookieOptions = (secure: boolean) => {

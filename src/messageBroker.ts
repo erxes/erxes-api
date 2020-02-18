@@ -117,6 +117,21 @@ const initConsumer = async () => {
     }
   });
 
+  // listen for engage api ===========
+  await channel.assertQueue('engages-api:email-verifier-single');
+
+  channel.consume('engages-api:email-verifier-single', async msg => {
+    if (msg !== null) {
+      const data = JSON.parse(msg.content.toString());
+
+      console.log('single data: ', data);
+
+      await Customers.updateOne({ _id: data.customerId }, { $set: { hasValidEmail: data.status === 'valid' } });
+
+      channel.ack(msg);
+    }
+  });
+
   // listen for spark notification  =========
   await channel.assertQueue('sparkNotification');
 
