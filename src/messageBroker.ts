@@ -124,8 +124,6 @@ const initConsumer = async () => {
     if (msg !== null) {
       const data = JSON.parse(msg.content.toString());
 
-      console.log('single data: ', data);
-
       await Customers.updateOne({ _id: data.customerId }, { $set: { hasValidEmail: data.status === 'valid' } });
 
       channel.ack(msg);

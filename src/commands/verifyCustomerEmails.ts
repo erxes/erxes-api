@@ -6,69 +6,75 @@ const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 let connection;
 let channel;
 
-const verify = () => {
-  connect()
-    .then(async () => {
-      const customers = await Customers.find({ primaryEmail: { $exists: true, $ne: null } }, { primaryEmail: 1 });
+connect().then(async () => {
+  const exit = async msg => {
+    console.log('exit');
+    channel.ack(msg);
 
-      const emails = customers.map(customer => customer.primaryEmail);
-      const firstEmail = [emails[3], emails[4]];
+    disconnect();
 
-      await channel.assertQueue('erxes-api:email-verifier-bulk');
-      await channel.sendToQueue('erxes-api:email-verifier-bulk', Buffer.from(JSON.stringify(firstEmail || [])));
-    })
+    process.exit();
+  };
 
-    .then(() => {
-      return disconnect();
-    })
+  const verify = async () => {
+    console.log(
+      'Instruction: yarn verifyCustomerEmails emailVerifierType. emailVerifierType`s default value is truemail',
+    );
 
-    .then(() => {
-      process.exit();
-    });
-};
+    const customers = await Customers.find({ primaryEmail: { $exists: true, $ne: null } }, { primaryEmail: 1 });
 
-const initConsumer = async () => {
-  connection = await amqplib.connect(RABBITMQ_HOST);
-  channel = await connection.createChannel();
+    const argv = process.argv;
 
-  // listen for engage api ===========
-  await channel.assertQueue('engages-api:email-verifier-bulk');
+    const type = argv.length === 3 ? argv[2] : 'truemail';
 
-  channel.consume('engages-api:email-verifier-bulk', async msg => {
-    if (msg !== null) {
-      const data = JSON.parse(msg.content.toString());
+    const emails = customers.map(customer => customer.primaryEmail);
 
-      if (data.verifiedEmails && data.verifiedEmails.length > 0) {
-        connect()
-          .then(async () => {
-            for (const row of data.verifiedEmails) {
-              const customer = await Customers.findOne({ primaryEmail: row.email });
+    const firstEmails = [emails[9], emails[10]];
 
-              if (customer) {
-                customer.hasValidEmail = row.status === 'valid';
+    const data = {
+      type,
+      emails: firstEmails,
+    };
 
-                await customer.save();
-              }
+    await channel.assertQueue('erxes-api:email-verifier-bulk');
+    await channel.sendToQueue('erxes-api:email-verifier-bulk', Buffer.from(JSON.stringify(data)));
+  };
+
+  const initConsumer = async () => {
+    connection = await amqplib.connect(RABBITMQ_HOST);
+    channel = await connection.createChannel();
+
+    // listen for engage api ===========
+    await channel.assertQueue('engages-api:email-verifier-bulk');
+
+    channel.consume('engages-api:email-verifier-bulk', async msg => {
+      if (msg !== null) {
+        const data = JSON.parse(msg.content.toString());
+
+        console.log('data: ', data);
+
+        if (data.verifiedEmails && data.verifiedEmails.length > 0) {
+          for (const row of data.verifiedEmails) {
+            const customer = await Customers.findOne({ primaryEmail: row.email });
+
+            if (customer) {
+              customer.hasValidEmail = row.status === 'valid';
+
+              await customer.save();
             }
-          })
-          .then(() => {
-            return disconnect();
-          })
-          .then(() => {
-            channel.ack(msg);
-            process.exit();
-          });
+          }
+
+          await exit(msg);
+        } else {
+          await exit(msg);
+        }
       } else {
-        channel.ack(msg);
-        process.exit();
+        await exit(msg);
       }
-    } else {
-      channel.ack(msg);
-      process.exit();
-    }
-  });
+    });
 
-  verify();
-};
+    verify();
+  };
 
-initConsumer();
+  initConsumer();
+});

@@ -5,6 +5,9 @@ let connection;
 let channel;
 
 const checkStatus = async () => {
+  console.log(
+    'Instruction: yarn checkStatusEmailVerifier taskId emailVerifierType. emailVerifierType`s default value is truemail',
+  );
   const argv = process.argv;
 
   if (argv.length < 3) {

@@ -7,6 +7,9 @@ let connection;
 let channel;
 
 const download = async () => {
+  console.log(
+    'Instruction: yarn downloadVerifiedEmail taskId emailVerifierType. emailVerifierType`s default value is truemail',
+  );
   const argv = process.argv;
 
   if (argv.length < 3) {
@@ -16,9 +19,15 @@ const download = async () => {
   }
 
   const taskId = argv[2];
+  const type = argv.length === 4 ? argv[3] : 'truemail';
+
+  const data = {
+    taskId,
+    type,
+  };
 
   await channel.assertQueue('erxes-api:email-verifier-download');
-  await channel.sendToQueue('erxes-api:email-verifier-download', Buffer.from(JSON.stringify(taskId || '')));
+  await channel.sendToQueue('erxes-api:email-verifier-download', Buffer.from(JSON.stringify(data)));
 };
 
 const initConsumer = async () => {
@@ -31,6 +40,8 @@ const initConsumer = async () => {
   channel.consume('engages-api:email-verifier-download', async msg => {
     if (msg !== null) {
       const emails = JSON.parse(msg.content.toString());
+
+      console.log('downloaded emails: ', emails);
 
       if (emails && emails.length > 0) {
         connect()
