@@ -39,7 +39,11 @@ const initConsumer = async () => {
     if (msg !== null) {
       const data = JSON.parse(msg.content.toString());
 
-      console.log('status: ', data);
+      if (data.status === 'error') {
+        console.log(data.message);
+      } else {
+        console.log('status: ', data);
+      }
     }
 
     process.exit();

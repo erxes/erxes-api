@@ -39,31 +39,42 @@ const initConsumer = async () => {
 
   channel.consume('engages-api:email-verifier-download', async msg => {
     if (msg !== null) {
-      const emails = JSON.parse(msg.content.toString());
+      const response = JSON.parse(msg.content.toString());
 
-      console.log('downloaded emails: ', emails);
+      console.log('response: ', response);
 
-      if (emails && emails.length > 0) {
-        connect()
-          .then(async () => {
-            for (const row of emails) {
-              const customer = await Customers.findOne({ primaryEmail: row.email });
+      if (response.status === 'success') {
+        const { emails } = response;
 
-              if (customer) {
-                customer.hasValidEmail = row.status === 'valid';
+        if (emails && emails.length > 0) {
+          connect()
+            .then(async () => {
+              for (const row of emails) {
+                const customer = await Customers.findOne({ primaryEmail: row.email });
 
-                await customer.save();
+                if (customer) {
+                  customer.hasValidEmail = row.status === 'valid';
+
+                  await customer.save();
+                }
               }
-            }
-          })
-          .then(() => {
-            return disconnect();
-          })
-          .then(() => {
-            channel.ack(msg);
-            process.exit();
-          });
+            })
+            .then(() => {
+              return disconnect();
+            })
+            .then(() => {
+              channel.ack(msg);
+              process.exit();
+            });
+        } else {
+          channel.ack(msg);
+          process.exit();
+        }
       } else {
+        if (response.status === 'error') {
+          console.log(response.message);
+        }
+
         channel.ack(msg);
         process.exit();
       }

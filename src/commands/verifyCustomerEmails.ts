@@ -21,7 +21,10 @@ connect().then(async () => {
       'Instruction: yarn verifyCustomerEmails emailVerifierType. emailVerifierType`s default value is truemail',
     );
 
-    const customers = await Customers.find({ primaryEmail: { $exists: true, $ne: null } }, { primaryEmail: 1 });
+    const customers = await Customers.find(
+      { primaryEmail: { $exists: true, $ne: null }, hasValidEmail: { $exists: false } },
+      { primaryEmail: 1 },
+    );
 
     const argv = process.argv;
 
@@ -29,7 +32,7 @@ connect().then(async () => {
 
     const emails = customers.map(customer => customer.primaryEmail);
 
-    const firstEmails = [emails[9], emails[10]];
+    const firstEmails = [emails[11], emails[12]];
 
     const data = {
       type,
@@ -53,19 +56,27 @@ connect().then(async () => {
 
         console.log('data: ', data);
 
-        if (data.verifiedEmails && data.verifiedEmails.length > 0) {
-          for (const row of data.verifiedEmails) {
-            const customer = await Customers.findOne({ primaryEmail: row.email });
+        if (data.status === 'success') {
+          if (data.verifiedEmails && data.verifiedEmails.length > 0) {
+            for (const row of data.verifiedEmails) {
+              const customer = await Customers.findOne({ primaryEmail: row.email });
 
-            if (customer) {
-              customer.hasValidEmail = row.status === 'valid';
+              if (customer) {
+                customer.hasValidEmail = row.status === 'valid';
 
-              await customer.save();
+                await customer.save();
+              }
             }
+
+            await exit(msg);
+          } else {
+            await exit(msg);
+          }
+        } else {
+          if (data.status === 'error') {
+            console.log(data.message);
           }
 
-          await exit(msg);
-        } else {
           await exit(msg);
         }
       } else {
