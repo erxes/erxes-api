@@ -75,7 +75,7 @@ const dealMutations = {
       const cantRemoveUserIds = removedUserIds.filter(userId => oldAssignedUserPdata.includes(userId));
 
       if (cantRemoveUserIds.length > 0) {
-        throw new Error('will you not unassign some user, because: user selected products data');
+        throw new Error('Cannot remove the team member, it is assigned in the product / service section');
       }
 
       checkedAssignUserIds = { addedUserIds, removedUserIds };
