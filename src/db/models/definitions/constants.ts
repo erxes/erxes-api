@@ -93,6 +93,7 @@ export const INTEGRATION_NAMES_MAP = {
   gmail: 'Gmail',
   callpro: 'Call pro',
   chatfuel: 'Chatfuel',
+  whatsapp: 'Whatsapp',
   'nylas-gmail': 'Gmail',
   'nylas-imap': 'Imap',
   'nylas-office365': 'Office 365',
