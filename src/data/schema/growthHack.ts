@@ -30,6 +30,7 @@ const commonQueryFields = `
   closeDateType: String
   hackStage: [String]
   priority: [String]
+  labelIds: [String]
 `;
 
 export const queries = `
@@ -50,6 +51,8 @@ export const queries = `
     assignedUserIds: [String]
     closeDateType: String
   ): JSON
+
+  archivedGrowthHacks(pipelineId: String!, search: String, page: Int, perPage: Int): [GrowthHack]
 `;
 
 const commonParams = `
@@ -58,6 +61,7 @@ const commonParams = `
   assignedUserIds: [String],
   attachments: [AttachmentInput],
   closeDate: Date,
+  status: String,
   description: String,
   hackStages: [String],
   priority: String,
@@ -68,11 +72,13 @@ const commonParams = `
 `;
 
 export const mutations = `
-  growthHacksAdd(${commonParams}): GrowthHack
+  growthHacksAdd(${commonParams}, labelIds: [String]): GrowthHack
   growthHacksEdit(_id: String!, ${commonParams}): GrowthHack
   growthHacksChange( _id: String!, destinationStageId: String!): GrowthHack
   growthHacksUpdateOrder(stageId: String!, orders: [OrderItem]): [GrowthHack]
   growthHacksRemove(_id: String!): GrowthHack
   growthHacksWatch(_id: String, isAdd: Boolean): GrowthHack
   growthHacksVote(_id: String!, isVote: Boolean): GrowthHack
+  growthHacksCopy(_id: String!): GrowthHack
+  growthHacksArchive(stageId: String!): String
 `;
