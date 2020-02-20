@@ -2,9 +2,7 @@ import * as moment from 'moment';
 import {
   Brands,
   Channels,
-  Companies,
   ConversationMessages,
-  Customers,
   Deals,
   Fields,
   Permissions,
@@ -15,17 +13,9 @@ import {
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
 import { can } from '../../permissions/utils';
-import { createXlsFile, generateXlsx, paginate } from '../../utils';
-import {
-  filter as companiesFilter,
-  IListArgs as ICompanyListArgs,
-  sortBuilder as companiesSortBuilder,
-} from '../coc/companies';
-import {
-  Builder as BuildQuery,
-  IListArgs as ICustomerListArgs,
-  sortBuilder as customersSortBuilder,
-} from '../coc/customers';
+import { createXlsFile, generateXlsx } from '../../utils';
+import { Builder as CompanyBuildQuery, IListArgs as ICompanyListArgs } from '../coc/companies';
+import { Builder as CustomerBuildQuery, IListArgs as ICustomerListArgs } from '../coc/customers';
 import { fillCellValue, fillHeaders, IColumnLabel } from './spreadsheet';
 
 // Prepares data depending on module type
@@ -42,10 +32,12 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const companyParams: ICompanyListArgs = query;
 
-      const selector = await companiesFilter(companyParams);
-      const sorter = companiesSortBuilder(companyParams);
+      const companyQb = new CompanyBuildQuery(companyParams, {});
+      await companyQb.buildAllQueries();
 
-      data = await paginate(Companies.find(selector), companyParams).sort(sorter);
+      const companyResponse = await companyQb.runQueries();
+
+      data = companyResponse.list;
 
       break;
     case MODULE_NAMES.CUSTOMER:
@@ -55,25 +47,21 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const customerParams: ICustomerListArgs = query;
 
-      const qb = new BuildQuery(customerParams);
-
+      const qb = new CustomerBuildQuery(customerParams, {});
       await qb.buildAllQueries();
 
-      const sort = customersSortBuilder(customerParams);
+      const customerResponse = await qb.runQueries();
 
-      const mainQuery = qb.mainQuery();
+      data = customerResponse.list;
 
       if (customerParams.form && customerParams.popupData) {
         const formQuery = {
-          customerId: mainQuery._id,
           formWidgetData: { $exists: true },
         };
 
         const conversationMessages = await ConversationMessages.find(formQuery, { formWidgetData: 1 });
 
         data = conversationMessages.map(message => message.formWidgetData);
-      } else {
-        data = await Customers.find(mainQuery).sort(sort);
       }
 
       break;
@@ -167,14 +155,15 @@ const fillLeadHeaders = async (formId: string) => {
   return headers;
 };
 
-const buildLeadFile = async (data: any, formId: string, sheet: any, columnNames: string[], rowIndex: number) => {
+const buildLeadFile = async (datas: any, formId: string, sheet: any, columnNames: string[], rowIndex: number) => {
   const headers: IColumnLabel[] = await fillLeadHeaders(formId);
 
-  for (const item of data) {
+  for (const data of datas) {
     rowIndex++;
     // Iterating through basic info columns
     for (const column of headers) {
-      const cellValue = await item.find(obj => obj.text === column.name).value;
+      const item = await data.find(obj => obj.text === column.name);
+      const cellValue = item ? item.value : '';
 
       addCell(column, cellValue, sheet, columnNames, rowIndex);
     }
