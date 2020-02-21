@@ -126,3 +126,46 @@ export const receiveIntegrationsNotification = async msg => {
     return sendSuccess({ status: 'ok' });
   }
 };
+
+/*
+ * Engages notification
+ */
+export const receiveEngagesNotification = async msg => {
+  const { action, data } = msg;
+
+  switch (action) {
+    case 'emailVerify': {
+      const bulkOps: Array<{
+        updateOne: {
+          filter: { primaryEmail: string };
+          update: { hasValidEmail: boolean };
+        };
+      }> = [];
+
+      for (const { email, status } of data) {
+        bulkOps.push({
+          updateOne: {
+            filter: { primaryEmail: email },
+            update: { hasValidEmail: status === 'valid' },
+          },
+        });
+      }
+
+      console.log('bulkOps: ', bulkOps);
+
+      await Customers.bulkWrite(bulkOps);
+
+      break;
+    }
+    case 'setDoNotDisturb': {
+      await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+
+      break;
+    }
+    case 'bulk': {
+      console.log('Bulk status: ', data);
+
+      break;
+    }
+  }
+};

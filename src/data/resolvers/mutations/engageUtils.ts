@@ -132,7 +132,7 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
       }
     });
 
-    await sendMessage('erxes-api:send-engage', {
+    const data = {
       customers: customerInfos,
       email: engageMessage.email,
       user: {
@@ -141,7 +141,9 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
         position: user.details && user.details.position,
       },
       engageMessageId: engageMessage._id,
-    });
+    };
+
+    await sendMessage('erxes-api:engages-notification', { action: 'sendEngage', data });
   }
 
   if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {

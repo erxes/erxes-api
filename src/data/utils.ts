@@ -641,14 +641,6 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
     })
     .catch(e => debugBase(e));
 
-/**
- * Validates email using MX record resolver
- * @param email as String
- */
-export const validateEmail = async (customerId: string, email: string) => {
-  await sendMessage('erxes-api:email-verifier-single', { email, customerId });
-};
-
 export const authCookieOptions = (secure: boolean) => {
   const oneDay = 1 * 24 * 3600 * 1000; // 1 day
 
@@ -772,7 +764,6 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
 
 export default {
   sendEmail,
-  validateEmail,
   sendNotification,
   sendMobileNotification,
   readFile,
@@ -841,4 +832,15 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   }
 
   return true;
+};
+
+export const validateEmail = (email: string) => {
+  const DEFAULT_EMAIL_VERIFICATION_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_VERIFICATION_SERVICE' });
+
+  const data = {
+    type: DEFAULT_EMAIL_VERIFICATION_SERVICE || '',
+    email,
+  };
+
+  sendMessage('erxes-api:engages-notification', { action: 'verifyEmail', data });
 };

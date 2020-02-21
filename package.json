@@ -32,8 +32,6 @@
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
     "verifyCustomerEmails": "ts-node ./src/commands/verifyCustomerEmails.ts",
-    "checkStatusEmailVerifier": "ts-node ./src/commands/checkStatusEmailVerifier.ts",
-    "downloadVerifiedEmail": "ts-node ./src/commands/downloadVerifiedEmail.ts",
     "repairPermissionData": "ts-node ./src/commands/repairPermissionData.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
     "release": "release-it"

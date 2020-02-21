@@ -224,7 +224,7 @@ export const loadClass = () => {
       });
 
       if (doc.primaryEmail) {
-        await validateEmail(customer._id, doc.primaryEmail);
+        validateEmail(doc.primaryEmail);
       }
 
       // calculateProfileScore
@@ -249,7 +249,7 @@ export const loadClass = () => {
         const oldCustomer = await Customers.getCustomer(_id);
 
         if (doc.primaryEmail !== oldCustomer.primaryEmail) {
-          await validateEmail(_id, doc.primaryEmail);
+          validateEmail(doc.primaryEmail);
         }
       }
 
