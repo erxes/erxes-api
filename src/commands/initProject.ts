@@ -4,8 +4,8 @@ import { Users } from '../db/models';
 connect()
   .then(async () => {
     // generate random password
-    let generator = require('generate-password');
-    let newPwd = generator.generate({
+    const generator = require('generate-password');
+    const newPwd = generator.generate({
       length: 10,
       numbers: true,
       lowercase: true,
