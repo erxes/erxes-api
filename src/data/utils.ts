@@ -95,10 +95,10 @@ const createAWS = async () => {
 /**
  * Create Google Cloud Storage instance
  */
-const createGCS = () => {
-  const GOOGLE_APPLICATION_CREDENTIALS = getEnv({ name: 'GOOGLE_APPLICATION_CREDENTIALS' });
-  const GOOGLE_PROJECT_ID = getEnv({ name: 'GOOGLE_PROJECT_ID' });
-  const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+const createGCS = async () => {
+  const GOOGLE_APPLICATION_CREDENTIALS = await getConfig('GOOGLE_APPLICATION_CREDENTIALS');
+  const GOOGLE_PROJECT_ID = await getConfig('GOOGLE_PROJECT_ID');
+  const BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
 
   if (!GOOGLE_PROJECT_ID || !GOOGLE_APPLICATION_CREDENTIALS || !BUCKET) {
     throw new Error('Google Cloud Storage credentials are not configured');
@@ -183,7 +183,7 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
 
   // initialize GCS
-  const storage = createGCS();
+  const storage = await createGCS();
 
   // select bucket
   const bucket = storage.bucket(BUCKET);
@@ -221,7 +221,7 @@ const deleteFileGCS = async (fileName: string) => {
   const BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
 
   // initialize GCS
-  const storage = createGCS();
+  const storage = await createGCS();
 
   // select bucket
   const bucket = storage.bucket(BUCKET);
@@ -248,7 +248,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
 
   if (UPLOAD_SERVICE_TYPE === 'GCS') {
     const GCS_BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
-    const storage = createGCS();
+    const storage = await createGCS();
 
     const bucket = storage.bucket(GCS_BUCKET);
 
