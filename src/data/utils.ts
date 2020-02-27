@@ -157,7 +157,7 @@ export const uploadFileAWS = async (file: { name: string; path: string; type: st
  * Delete file from amazon s3
  */
 const deleteFileAWS = async (fileName: string) => {
-  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
+  const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
   const params = { Bucket: AWS_BUCKET, Key: fileName };
 
@@ -179,7 +179,7 @@ const deleteFileAWS = async (fileName: string) => {
  * Save file to google cloud storage
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
-  const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+  const BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
 
   // initialize GCS
@@ -218,7 +218,7 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
 };
 
 const deleteFileGCS = async (fileName: string) => {
-  const BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+  const BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
 
   // initialize GCS
   const storage = createGCS();
@@ -244,10 +244,10 @@ const deleteFileGCS = async (fileName: string) => {
  * Read file from GCS, AWS
  */
 export const readFileRequest = async (key: string): Promise<any> => {
-  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_T`YPE', defaultValue: 'AWS' });
+  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_T`YPE', 'AWS');
 
   if (UPLOAD_SERVICE_TYPE === 'GCS') {
-    const GCS_BUCKET = getEnv({ name: 'GOOGLE_CLOUD_STORAGE_BUCKET' });
+    const GCS_BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
     const storage = createGCS();
 
     const bucket = storage.bucket(GCS_BUCKET);
@@ -260,7 +260,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
     return contents;
   }
 
-  const AWS_BUCKET = getEnv({ name: 'AWS_BUCKET' });
+  const AWS_BUCKET = await getConfig('AWS_BUCKET');
   const s3 = await createAWS();
 
   return new Promise((resolve, reject) => {
@@ -286,7 +286,7 @@ export const readFileRequest = async (key: string): Promise<any> => {
 export const uploadFile = async (file, fromEditor = false): Promise<any> => {
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
   const DOMAIN = getEnv({ name: 'DOMAIN' });
-  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
+  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
   const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
 
@@ -304,7 +304,7 @@ export const uploadFile = async (file, fromEditor = false): Promise<any> => {
 };
 
 export const deleteFile = async (fileName: string): Promise<any> => {
-  const UPLOAD_SERVICE_TYPE = getEnv({ name: 'UPLOAD_SERVICE_TYPE', defaultValue: 'AWS' });
+  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
   if (UPLOAD_SERVICE_TYPE === 'AWS') {
     return deleteFileAWS(fileName);
