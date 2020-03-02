@@ -39,6 +39,7 @@ describe('dealQueries', () => {
     boardId
     pipeline { _id }
     userId
+    createdUser { _id }
   `;
 
   const qryDealFilter = `
