@@ -133,6 +133,13 @@ export const receiveIntegrationsNotification = async msg => {
   }
 };
 
+const MSG_QUEUE_ACTIONS = {
+  EMAIL_VERIFY: 'emailVerify',
+  SET_DONOT_DISTURB: 'setDoNotDisturb',
+  BULK: 'bulk',
+  ALL: ['emailVerify', 'setDoNotDisturb', 'bulk'],
+};
+
 /*
  * Engages notification
  */
@@ -140,7 +147,7 @@ export const receiveEngagesNotification = async msg => {
   const { action, data } = msg;
 
   switch (action) {
-    case 'emailVerify': {
+    case MSG_QUEUE_ACTIONS.EMAIL_VERIFY: {
       const bulkOps: Array<{
         updateOne: {
           filter: { primaryEmail: string };
@@ -163,12 +170,12 @@ export const receiveEngagesNotification = async msg => {
 
       break;
     }
-    case 'setDoNotDisturb': {
+    case MSG_QUEUE_ACTIONS.SET_DONOT_DISTURB: {
       await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
 
       break;
     }
-    case 'bulk': {
+    case MSG_QUEUE_ACTIONS.BULK: {
       console.log('Bulk status: ', data);
 
       break;
