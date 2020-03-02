@@ -173,7 +173,9 @@ export const generateCommonFilters = async (currentUserId: string, args: any) =>
   }
 
   if (userIds) {
-    filter.userId = contains(userIds);
+    const isEmpty = isListEmpty(userIds);
+
+    filter.userId = isEmpty ? { $in: [null, []] } : { $in: userIds };
   }
 
   return filter;
