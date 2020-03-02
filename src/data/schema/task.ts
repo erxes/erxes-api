@@ -26,6 +26,7 @@ export const queries = `
     labelIds: [String]
     sortField: String
     sortDirection: Int
+    userIds: [String]
     ${conformityQueryFields}
   ): [Task]
   archivedTasks(pipelineId: String!, search: String, page: Int, perPage: Int): [Task]
