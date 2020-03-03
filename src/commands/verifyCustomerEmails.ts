@@ -18,7 +18,7 @@ connect().then(async () => {
 
     const args = {
       action: 'verifyEmail',
-      data: { emails: [emails[14], emails[15]] },
+      data: { emails },
     };
 
     await channel.assertQueue('erxes-api:engages-notification');
