@@ -39,7 +39,6 @@ describe('engage message mutation tests', () => {
   let _user;
   let _tag;
   let _brand;
-  let _segment;
   let _customer;
   let _integration;
   let _doc;
@@ -84,18 +83,7 @@ describe('engage message mutation tests', () => {
     _user = await userFactory({});
     _tag = await tagsFactory({});
     _brand = await brandFactory({});
-    _segment = await segmentFactory({
-      connector: 'any',
-      conditions: [{ field: 'primaryEmail', operator: 'c', value: '@', type: 'string' }],
-    });
-    _message = await engageMessageFactory({
-      kind: 'auto',
-      userId: _user._id,
-      messenger: {
-        content: 'content',
-        brandId: _brand.id,
-      },
-    });
+
     _customer = await customerFactory({
       hasValidEmail: true,
       status: STATUSES.ACTIVE,
@@ -104,6 +92,19 @@ describe('engage message mutation tests', () => {
       firstName: faker.random.word(),
       lastName: faker.random.word(),
     });
+
+    _message = await engageMessageFactory({
+      kind: 'auto',
+      userId: _user._id,
+      messenger: {
+        content: 'content',
+        brandId: _brand.id,
+      },
+      customerIds: [_customer._id],
+      brandIds: [_brand._id],
+      tagIds: [_tag._id],
+    });
+
     _integration = await integrationFactory({ brandId: 'brandId' });
 
     _doc = {
@@ -114,7 +115,6 @@ describe('engage message mutation tests', () => {
       isDraft: true,
       isLive: true,
       stopDate: new Date(),
-      segmentIds: [_segment._id],
       brandIds: [_brand._id],
       tagIds: [_tag._id],
       customerIds: [_customer._id],
@@ -163,13 +163,20 @@ describe('engage message mutation tests', () => {
     await ConversationMessages.deleteMany({});
   });
 
+  test('findCustomrs', async () => {
+    const segment = await segmentFactory({});
+    const brand = await brandFactory({});
+    await integrationFactory({ brandId: brand._id });
+
+    await engageUtils.findCustomers({ segmentIds: [segment._id], brandIds: [brand._id] });
+  });
+
   test('Engage utils send via messenger', async () => {
     const brand = await brandFactory();
     const emessage = await engageMessageFactory({
       method: 'messenger',
       title: 'Send via messenger',
       userId: _user._id,
-      segmentIds: [_segment._id],
       customerIds: [_customer._id],
       isLive: true,
       messenger: {
@@ -188,7 +195,7 @@ describe('engage message mutation tests', () => {
       method: 'messenger',
       title: 'Send via messenger',
       userId: 'fromUserId',
-      segmentIds: [_segment._id],
+      customerIds: [_customer._id],
       isLive: true,
       messenger: {
         brandId: brand._id,
@@ -211,7 +218,6 @@ describe('engage message mutation tests', () => {
       method: 'messenger',
       title: 'Send via messenger',
       userId: _user._id,
-      segmentIds: [_segment._id],
       isLive: true,
       customerIds: [_customer._id],
       messenger: {
@@ -316,7 +322,7 @@ describe('engage message mutation tests', () => {
       method: 'email',
       title: 'Send via email',
       userId: 'fromUserId',
-      segmentIds: [_segment._id],
+      customerIds: [_customer],
       email: {
         subject: 'subject',
         content: 'content',
@@ -334,7 +340,7 @@ describe('engage message mutation tests', () => {
       method: 'email',
       title: 'Send via email',
       userId: _user._id,
-      segmentIds: [_segment._id],
+      customerIds: [_customer._id],
       isLive: true,
       email: {
         subject: 'subject',
@@ -356,7 +362,6 @@ describe('engage message mutation tests', () => {
       userId: _user._id,
       isLive: true,
       customerIds: [_customer._id],
-      segmentIds: [_segment._id],
       email: {
         subject: 'subject',
         content: 'content',
@@ -435,8 +440,6 @@ describe('engage message mutation tests', () => {
 
     expect(engageMessage.kind).toBe(_doc.kind);
     expect(new Date(engageMessage.stopDate)).toEqual(_doc.stopDate);
-    expect(engageMessage.segmentIds).toEqual(_doc.segmentIds);
-    expect(engageMessage.segments[0]._id).toContain(_doc.segmentIds);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
     expect(engageMessage.brandIds).toEqual(_doc.brandIds);
     expect(engageMessage.customerIds).toEqual(_doc.customerIds);
@@ -488,23 +491,25 @@ describe('engage message mutation tests', () => {
         }
       }
     `;
+
     const fetchSpy = jest.spyOn(utils, 'fetchCronsApi');
     fetchSpy.mockImplementation(() => Promise.resolve('ok'));
 
-    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', { ..._doc, _id: _message._id });
+    const editedUser = await userFactory();
+    const args = { ..._doc, _id: _message._id, fromUserId: editedUser._id };
+
+    const engageMessage = await graphqlRequest(mutation, 'engageMessageEdit', args);
 
     fetchSpy.mockRestore();
 
     const tags = engageMessage.getTags.map(tag => tag._id);
 
     expect(engageMessage.kind).toBe(_doc.kind);
-    expect(engageMessage.segmentIds).toEqual(_doc.segmentIds);
-    expect(engageMessage.segments[0]._id).toContain(_doc.segmentIds);
     expect(engageMessage.brandIds).toEqual(_doc.brandIds);
     expect(engageMessage.tagIds).toEqual(_doc.tagIds);
     expect(engageMessage.customerIds).toEqual(_doc.customerIds);
     expect(engageMessage.title).toBe(_doc.title);
-    expect(engageMessage.fromUserId).toBe(_doc.fromUserId);
+    expect(engageMessage.fromUserId).toBe(args.fromUserId);
     expect(engageMessage.messenger.brandId).toBe(_doc.messenger.brandId);
     expect(engageMessage.messenger.kind).toBe(_doc.messenger.kind);
     expect(engageMessage.messenger.sentAs).toBe(_doc.messenger.sentAs);
@@ -519,7 +524,7 @@ describe('engage message mutation tests', () => {
     expect(engageMessage.messengerReceivedCustomerIds).toEqual([]);
     expect(tags).toEqual(_doc.tagIds);
     expect(engageMessage.email.toJSON()).toEqual(_doc.email);
-    expect(engageMessage.fromUser._id).toBe(_doc.fromUserId);
+    expect(engageMessage.fromUser._id).toBe(args.fromUserId);
 
     process.env.CRONS_API_DOMAIN = 'http://fake.erxes.io';
 
@@ -637,7 +642,7 @@ describe('engage message mutation tests', () => {
     const conversation = await conversationFactory(conversationObj);
     const conversationMessage = await conversationMessageFactory(conversationMessageObj);
 
-    _message.segmentIds = [_segment._id];
+    _message.customerIds = [_customer._id];
     _message.messenger.brandId = _integration.brandId;
 
     await _message.save();

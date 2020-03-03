@@ -14,17 +14,14 @@ export const types = `
     plan: String
     parentCompanyId: String
     ownerId: String
+    mergedIds: [String]
 
     names: [String]
     primaryName: String
-
     emails: [String]
     primaryEmail: String
-
-
     phones: [String]
     primaryPhone: String
-
 
     leadStatus: String
     lifecycleState: String
@@ -76,7 +73,7 @@ const queryParams = `
 export const queries = `
   companiesMain(${queryParams}): CompaniesListResponse
   companies(${queryParams}): [Company]
-  companyCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
+  companyCounts(${queryParams}, only: String): JSON
   companyDetail(_id: String!): Company
 `;
 
