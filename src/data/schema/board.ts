@@ -39,6 +39,7 @@ export const types = `
     name: String!
     pipelineId: String!
     probability: String
+    status: String
     amount: JSON
     itemsTotalCount: Int
     compareNextStage: JSON
@@ -86,12 +87,14 @@ export const queries = `
   pipelineDetail(_id: String!): Pipeline
   stages(
     isNotLost: Boolean,
+    isAll: Boolean,
     pipelineId: String!,
     ${stageParams}
   ): [Stage]
   stageDetail(_id: String!, ${stageParams}): Stage
   convertToInfo(conversationId: String!): ConvertTo
   pipelineStateCount(boardId: String, type: String): JSON
+  archivedStages(pipelineId: String!, search: String, page: Int, perPage: Int): [Stage]
 `;
 
 const commonParams = `
@@ -129,4 +132,5 @@ export const mutations = `
 
   stagesUpdateOrder(orders: [OrderItem]): [Stage]
   stagesRemove(_id: String!): JSON
+  stagesEdit(_id: String!, type: String, name: String, status: String): Stage
 `;

@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -80,7 +80,9 @@ const taskMutations = {
     const updatedTask = await Tasks.updateTask(_id, extendedDoc);
 
     // labels should be copied to newly moved pipeline
-    await copyPipelineLabels({ item: oldTask, doc, user });
+    if (doc.stageId) {
+      await copyPipelineLabels({ item: oldTask, doc, user });
+    }
 
     const notificationDoc: IBoardNotificationParams = {
       item: updatedTask,
@@ -91,6 +93,15 @@ const taskMutations = {
 
     if (doc.assignedUserIds) {
       const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds, doc.assignedUserIds);
+
+      const activityContent = { addedUserIds, removedUserIds };
+
+      await ActivityLogs.createAssigneLog({
+        contentId: _id,
+        userId: user._id,
+        contentType: 'task',
+        content: activityContent,
+      });
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -206,6 +217,12 @@ const taskMutations = {
 
     return clone;
   },
+
+  async tasksArchive(_root, { stageId }: { stageId: string }) {
+    await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    return 'ok';
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
@@ -213,5 +230,6 @@ checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
 checkPermission(taskMutations, 'tasksUpdateOrder', 'tasksUpdateOrder');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
 checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
+checkPermission(taskMutations, 'tasksArchive', 'tasksArchive');
 
 export default taskMutations;

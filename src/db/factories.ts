@@ -50,9 +50,11 @@ import {
 } from './models';
 import {
   ACTIVITY_CONTENT_TYPES,
+  BOARD_STATUSES,
   BOARD_TYPES,
   CONVERSATION_STATUSES,
   FORM_TYPES,
+  MESSAGE_TYPES,
   NOTIFICATION_TYPES,
   PROBABILITY,
   PRODUCT_TYPES,
@@ -299,7 +301,6 @@ interface IConditionsInput {
   field?: string;
   operator?: string;
   value?: any;
-  dateUnit?: string;
   type?: string;
 }
 
@@ -308,7 +309,6 @@ interface ISegmentFactoryInput {
   description?: string;
   subOf?: string;
   color?: string;
-  connector?: string;
   conditions?: IConditionsInput[];
 }
 
@@ -318,7 +318,6 @@ export const segmentFactory = (params: ISegmentFactoryInput = {}) => {
       field: 'messengerData.sessionCount',
       operator: 'e',
       value: '10',
-      dateUnit: 'days',
       type: 'string',
     },
   ];
@@ -329,7 +328,6 @@ export const segmentFactory = (params: ISegmentFactoryInput = {}) => {
     description: params.description || faker.random.word(),
     subOf: params.subOf,
     color: params.color || '#809b87',
-    connector: params.connector || 'any',
     conditions: params.conditions || defaultConditions,
   });
 
@@ -375,6 +373,7 @@ interface IChecklistItemFactoryInput {
   checklistId?: string;
   content?: string;
   isChecked?: boolean;
+  createdUserId?: string;
 }
 
 export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
@@ -382,6 +381,7 @@ export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
     checklistId: params.checklistId || faker.random.uuid().toString,
     content: params.content || faker.random.uuid().toString,
     isChecked: params.isChecked || false,
+    createdUserId: params.createdUserId || faker.random.uuid().toString(),
   });
 
   return checklistItem.save();
@@ -459,14 +459,16 @@ interface ICustomerFactoryInput {
   leadStatus?: string;
   status?: string;
   lifecycleState?: string;
-  messengerData?: any;
   customFieldsData?: any;
+  trackedData?: any;
   tagIds?: string[];
   ownerId?: string;
   hasValidEmail?: boolean;
   profileScore?: number;
   code?: string;
-  isActive?: boolean;
+  isOnline?: boolean;
+  lastSeenAt?: number;
+  sessionCount?: number;
   visitorContactInfo?: any;
   urlVisits?: object;
   deviceTokens?: string[];
@@ -490,13 +492,12 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     leadStatus: params.leadStatus || 'open',
     status: params.status || STATUSES.ACTIVE,
     lifecycleState: params.lifecycleState || 'lead',
-    messengerData: params.messengerData || {
-      lastSeenAt: faker.date.between(createdAt, new Date()),
-      isActive: params.isActive || false,
-      sessionCount: faker.random.number(),
-    },
+    lastSeenAt: faker.date.between(createdAt, new Date()),
+    isOnline: params.isOnline || false,
+    sessionCount: faker.random.number(),
     urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
+    trackedData: params.trackedData || {},
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
     hasValidEmail: params.hasValidEmail || false,
@@ -597,6 +598,7 @@ interface IConversationMessageFactoryInput {
   engageData?: any;
   formWidgetData?: any;
   kind?: string;
+  contentType?: string;
 }
 
 export const conversationMessageFactory = async (params: IConversationMessageFactoryInput) => {
@@ -614,7 +616,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
 
   return ConversationMessages.createMessage({
     content: params.content,
-    attachments: {},
+    attachments: [],
     mentionedUserIds: params.mentionedUserIds || [Random.id()],
     conversationId,
     internal: params.internal === undefined || params.internal === null ? true : params.internal,
@@ -623,6 +625,7 @@ export const conversationMessageFactory = async (params: IConversationMessageFac
     isCustomerRead: params.isCustomerRead,
     engageData: params.engageData || {},
     formWidgetData: params.formWidgetData || {},
+    contentType: params.contentType || MESSAGE_TYPES.TEXT,
   });
 };
 
@@ -894,6 +897,7 @@ interface IStageFactoryInput {
   type?: string;
   probability?: string;
   formId?: string;
+  status?: string;
   order?: number;
 }
 
@@ -910,6 +914,7 @@ export const stageFactory = async (params: IStageFactoryInput = {}) => {
     probability: params.probability || PROBABILITY.TEN,
     formId: params.formId,
     order: params.order,
+    status: params.status || BOARD_STATUSES.ACTIVE,
   });
 
   return stage.save();
@@ -964,6 +969,7 @@ export const dealFactory = async (params: IDealFactoryInput = {}) => {
 };
 
 interface ITaskFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   noCloseDate?: boolean;
@@ -989,7 +995,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
 
   const task = new Tasks({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
@@ -1005,6 +1011,7 @@ export const taskFactory = async (params: ITaskFactoryInput = {}) => {
 };
 
 interface ITicketFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   noCloseDate?: boolean;
@@ -1023,7 +1030,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
 
   const ticket = new Tickets({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     ...(!params.noCloseDate ? { closeDate: params.closeDate || new Date() } : {}),
     description: faker.random.word(),
@@ -1039,6 +1046,7 @@ export const ticketFactory = async (params: ITicketFactoryInput = {}) => {
 };
 
 interface IGrowthHackFactoryInput {
+  name?: string;
   stageId?: string;
   closeDate?: Date;
   customerIds?: string[];
@@ -1062,7 +1070,7 @@ export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) =>
 
   const growthHack = new GrowthHacks({
     ...params,
-    name: faker.random.word(),
+    name: params.name || faker.random.word(),
     stageId: params.stageId || stage._id,
     companyIds: params.companyIds || [faker.random.word()],
     customerIds: params.customerIds || [faker.random.word()],
