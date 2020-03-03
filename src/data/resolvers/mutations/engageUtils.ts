@@ -7,7 +7,12 @@ import {
   Segments,
   Users,
 } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES, METHODS } from '../../../db/models/definitions/constants';
+import {
+  CONVERSATION_STATUSES,
+  EMAIL_VALIDATION_STATUSES,
+  KIND_CHOICES,
+  METHODS,
+} from '../../../db/models/definitions/constants';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
@@ -123,7 +128,7 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
 
   if (engageMessage.method === METHODS.EMAIL) {
     const customerInfos = customers.map(customer => {
-      if (customer.hasValidEmail) {
+      if (customer.emailValidationStatus === EMAIL_VALIDATION_STATUSES.VALID) {
         return {
           _id: customer._id,
           name: Customers.getCustomerName(customer),

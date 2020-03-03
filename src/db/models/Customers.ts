@@ -1,7 +1,7 @@
 import { Model, model } from 'mongoose';
 import { validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
-import { STATUSES } from './definitions/constants';
+import { EMAIL_VALIDATION_STATUSES, STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
 
@@ -21,7 +21,7 @@ interface ICustomerFieldsInput {
 interface ICreateMessengerCustomerParams {
   integrationId?: string;
   email?: string;
-  hasValidEmail?: boolean;
+  emailValidationStatus?: string;
   phone?: string;
   code?: string;
   isUser?: boolean;
@@ -249,6 +249,8 @@ export const loadClass = () => {
         const oldCustomer = await Customers.getCustomer(_id);
 
         if (doc.primaryEmail !== oldCustomer.primaryEmail) {
+          doc.emailValidationStatus = EMAIL_VALIDATION_STATUSES.UNKNOWN;
+
           validateEmail(doc.primaryEmail);
         }
       }

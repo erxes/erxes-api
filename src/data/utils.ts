@@ -836,12 +836,7 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
 };
 
 export const validateEmail = (email: string) => {
-  const DEFAULT_EMAIL_VERIFICATION_SERVICE = getEnv({ name: 'DEFAULT_EMAIL_VERIFICATION_SERVICE' });
-
-  const data = {
-    type: DEFAULT_EMAIL_VERIFICATION_SERVICE || '',
-    email,
-  };
+  const data = { email };
 
   sendMessage('erxes-api:engages-notification', { action: 'verifyEmail', data });
 };

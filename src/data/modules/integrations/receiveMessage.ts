@@ -136,8 +136,7 @@ export const receiveIntegrationsNotification = async msg => {
 const MSG_QUEUE_ACTIONS = {
   EMAIL_VERIFY: 'emailVerify',
   SET_DONOT_DISTURB: 'setDoNotDisturb',
-  BULK: 'bulk',
-  ALL: ['emailVerify', 'setDoNotDisturb', 'bulk'],
+  ALL: ['emailVerify', 'setDoNotDisturb'],
 };
 
 /*
@@ -151,7 +150,7 @@ export const receiveEngagesNotification = async msg => {
       const bulkOps: Array<{
         updateOne: {
           filter: { primaryEmail: string };
-          update: { hasValidEmail: boolean };
+          update: { emailValidationStatus: string };
         };
       }> = [];
 
@@ -159,12 +158,10 @@ export const receiveEngagesNotification = async msg => {
         bulkOps.push({
           updateOne: {
             filter: { primaryEmail: email },
-            update: { hasValidEmail: status === 'valid' },
+            update: { emailValidationStatus: status },
           },
         });
       }
-
-      console.log('bulkOps: ', bulkOps);
 
       await Customers.bulkWrite(bulkOps);
 
@@ -172,11 +169,6 @@ export const receiveEngagesNotification = async msg => {
     }
     case MSG_QUEUE_ACTIONS.SET_DONOT_DISTURB: {
       await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
-
-      break;
-    }
-    case MSG_QUEUE_ACTIONS.BULK: {
-      console.log('Bulk status: ', data);
 
       break;
     }
