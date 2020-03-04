@@ -166,8 +166,9 @@ export const ACTIVITY_ACTIONS = {
   SEND: 'send',
   MOVED: 'moved',
   CONVERT: 'convert',
+  ASSIGNE: 'assignee',
 
-  ALL: ['create', 'update', 'delete', 'merge', 'send', 'moved', 'convert'],
+  ALL: ['create', 'update', 'delete', 'merge', 'send', 'moved', 'convert', 'assignee'],
 };
 
 export const ACTIVITY_PERFORMER_TYPES = {
@@ -346,6 +347,12 @@ export const STATUSES = {
   ACTIVE: 'Active',
   DELETED: 'Deleted',
   ALL: ['Active', 'Deleted'],
+};
+
+export const BOARD_STATUSES = {
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
+  ALL: ['active', 'archived'],
 };
 
 export const BOARD_TYPES = {

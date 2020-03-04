@@ -1,8 +1,9 @@
 import { Boards, Deals, Pipelines, Stages, Tasks, Tickets } from '../../../db/models';
-import { IConformityQueryParams } from '../../modules/conformities/types';
+import { BOARD_STATUSES } from '../../../db/models/definitions/constants';
 import { moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { paginate } from '../../utils';
+import { paginate, regexSearchText } from '../../utils';
+import { IConformityQueryParams } from './types';
 
 export interface IDate {
   month: number;
@@ -154,13 +155,17 @@ const boardQueries = {
   /**
    *  Stages list
    */
-  stages(_root, { pipelineId, isNotLost }: { pipelineId: string; isNotLost: boolean }) {
+  stages(_root, { pipelineId, isNotLost, isAll }: { pipelineId: string; isNotLost: boolean; isAll: boolean }) {
     const filter: any = {};
 
     filter.pipelineId = pipelineId;
 
     if (isNotLost) {
       filter.probability = { $ne: 'Lost' };
+    }
+
+    if (!isAll) {
+      filter.$or = [{ status: null }, { status: BOARD_STATUSES.ACTIVE }];
     }
 
     return Stages.find(filter).sort({ order: 1, createdAt: -1 });
@@ -171,6 +176,23 @@ const boardQueries = {
    */
   stageDetail(_root, { _id }: { _id: string }) {
     return Stages.findOne({ _id });
+  },
+
+  /**
+   *  Archived stages
+   */
+
+  archivedStages(
+    _root,
+    { pipelineId, search, ...listArgs }: { pipelineId: string; search?: string; page?: number; perPage?: number },
+  ) {
+    const filter: any = { pipelineId, status: BOARD_STATUSES.ARCHIVED };
+
+    if (search) {
+      Object.assign(filter, regexSearchText(search, 'name'));
+    }
+
+    return paginate(Stages.find(filter).sort({ createdAt: -1 }), listArgs);
   },
 
   /**

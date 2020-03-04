@@ -416,6 +416,8 @@ const conversationMutations = {
   },
 
   async conversationCreateVideoChatRoom(_root, { _id }, { dataSources, user }: IContext) {
+    let message;
+
     try {
       const doc = {
         conversationId: _id,
@@ -423,7 +425,7 @@ const conversationMutations = {
         contentType: MESSAGE_TYPES.VIDEO_CALL,
       };
 
-      const message = await ConversationMessages.addMessage(doc, user._id);
+      message = await ConversationMessages.addMessage(doc, user._id);
 
       return await dataSources.IntegrationsAPI.createDailyVideoChatRoom({
         erxesApiConversationId: _id,
@@ -431,6 +433,8 @@ const conversationMutations = {
       });
     } catch (e) {
       debugExternalApi(e.message);
+
+      await ConversationMessages.deleteOne({ _id: message._id });
 
       throw new Error(e.message);
     }

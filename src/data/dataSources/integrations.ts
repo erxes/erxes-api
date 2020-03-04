@@ -66,4 +66,7 @@ export default class IntegrationsAPI extends RESTDataSource {
   public async replyWhatsapp(params) {
     return this.post('/whatsapp/reply', params);
   }
+  public async updateConfigs(configsMap) {
+    return this.post('/update-configs', { configsMap });
+  }
 }

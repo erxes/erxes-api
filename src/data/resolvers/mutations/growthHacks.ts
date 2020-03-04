@@ -1,6 +1,6 @@
 import { ActivityLogs, GrowthHacks } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { MODULE_NAMES } from '../../constants';
@@ -90,6 +90,15 @@ const growthHackMutations = {
         oldGrowthHack.assignedUserIds || [],
         doc.assignedUserIds || [],
       );
+
+      const activityContent = { addedUserIds, removedUserIds };
+
+      await ActivityLogs.createAssigneLog({
+        contentId: _id,
+        userId: user._id,
+        contentType: 'growthHack',
+        content: activityContent,
+      });
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -211,6 +220,12 @@ const growthHackMutations = {
 
     return clone;
   },
+
+  async growthHacksArchive(_root, { stageId }: { stageId: string }) {
+    await GrowthHacks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    return 'ok';
+  },
 };
 
 checkPermission(growthHackMutations, 'growthHacksAdd', 'growthHacksAdd');
@@ -218,5 +233,6 @@ checkPermission(growthHackMutations, 'growthHacksEdit', 'growthHacksEdit');
 checkPermission(growthHackMutations, 'growthHacksUpdateOrder', 'growthHacksUpdateOrder');
 checkPermission(growthHackMutations, 'growthHacksRemove', 'growthHacksRemove');
 checkPermission(growthHackMutations, 'growthHacksWatch', 'growthHacksWatch');
+checkPermission(growthHackMutations, 'growthHacksArchive', 'growthHacksArchive');
 
 export default growthHackMutations;

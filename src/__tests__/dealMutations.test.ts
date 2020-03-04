@@ -25,7 +25,7 @@ import {
   Stages,
 } from '../db/models';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
-import { BOARD_TYPES } from '../db/models/definitions/constants';
+import { BOARD_STATUSES, BOARD_TYPES } from '../db/models/definitions/constants';
 import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
 import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
 import { IUserDocument } from '../db/models/definitions/users';
@@ -137,6 +137,29 @@ describe('Test deals mutations', () => {
     response = await graphqlRequest(mutation, 'dealsEdit', args);
 
     expect(response.assignedUserIds).toContain(user1._id);
+
+    // if assigned productsData
+    const user2 = await userFactory();
+    args.productsData.push({ productId: product2._id, assignUserId: user2._id });
+
+    response = await graphqlRequest(mutation, 'dealsEdit', args);
+
+    expect(response.assignedUserIds).toContain(user2._id);
+
+    // if assigned productsData unassign assignedUserIds
+    delete args.productsData;
+    try {
+      response = await graphqlRequest(mutation, 'dealsEdit', args);
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
+
+    // not products data and assigneduserIDs
+    args.productsData = [];
+    delete args.assignedUserIds;
+    response = await graphqlRequest(mutation, 'dealsEdit', args);
+
+    expect(response.assignedUserIds).toEqual([user1._id]);
   });
 
   test('Change deal', async () => {
@@ -302,5 +325,25 @@ describe('Test deals mutations', () => {
 
     expect(clonedDealCompanies.length).toBe(1);
     expect(clonedDealCustomers.length).toBe(1);
+  });
+
+  test('Test archive', async () => {
+    const mutation = `
+      mutation dealsArchive($stageId: String!) {
+        dealsArchive(stageId: $stageId)
+      }
+    `;
+
+    const dealStage = await stageFactory({ type: BOARD_TYPES.DEAL });
+
+    await dealFactory({ stageId: dealStage._id });
+    await dealFactory({ stageId: dealStage._id });
+    await dealFactory({ stageId: dealStage._id });
+
+    await graphqlRequest(mutation, 'dealsArchive', { stageId: dealStage._id });
+
+    const deals = await Deals.find({ stageId: dealStage._id, status: BOARD_STATUSES.ARCHIVED });
+
+    expect(deals.length).toBe(3);
   });
 });
