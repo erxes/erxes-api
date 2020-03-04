@@ -4,7 +4,6 @@ import * as jwt from 'jsonwebtoken';
 import { Model, model } from 'mongoose';
 import * as sha256 from 'sha256';
 import { Sessions, UsersGroups } from '.';
-import { USER_STATUSES } from '../../data/constants';
 import { IDetail, IEmailSignature, ILink, IUser, IUserDocument, userSchema } from './definitions/users';
 
 const SALT_WORK_FACTOR = 10;
@@ -20,6 +19,17 @@ interface IUpdateUser extends IEditProfile {
   password?: string;
   groupIds?: string[];
   brandIds?: string[];
+}
+
+interface ILoginParams {
+  email: string;
+  password: string;
+  deviceToken?: string;
+}
+
+interface ILoginRequestParams {
+  expiresAt: Date;
+  ipAddress?: string;
 }
 
 export interface IUserModel extends Model<IUserDocument> {
@@ -73,15 +83,7 @@ export interface IUserModel extends Model<IUserDocument> {
   forgotPassword(email: string): string;
   createTokens(_user: IUserDocument, secret: string): string[];
   refreshTokens(refreshToken: string): { token: string; refreshToken: string; user: IUserDocument };
-  login({
-    email,
-    password,
-    deviceToken,
-  }: {
-    email: string;
-    password?: string;
-    deviceToken?: string;
-  }): { token: string; refreshToken: string };
+  login(params: ILoginParams, requestParams: ILoginRequestParams): { token: string; refreshToken: string };
   logout(_user: IUserDocument): string;
 }
 
@@ -547,18 +549,10 @@ export const loadClass = () => {
       };
     }
 
-    /*
+    /**
      * Validates user credentials and generates tokens
      */
-    public static async login({
-      email,
-      password,
-      deviceToken,
-    }: {
-      email: string;
-      password: string;
-      deviceToken?: string;
-    }) {
+    public static async login({ email, password, deviceToken }: ILoginParams, requestParams: ILoginRequestParams) {
       const user = await Users.findOne({
         $or: [
           { email: { $regex: new RegExp(`^${email}$`, 'i') } },
@@ -595,10 +589,14 @@ export const loadClass = () => {
       // save login token
       await user.update({ $set: { loginToken: token } });
 
+      const { ipAddress, expiresAt } = requestParams;
+
       await Sessions.createSession({
         userId: user._id,
-        status: USER_STATUSES.LOGGED_IN,
         loginToken: token,
+        loginDate: new Date(),
+        expiresAt,
+        ipAddress,
       });
 
       return {
@@ -608,15 +606,17 @@ export const loadClass = () => {
     } // end login()
 
     public static async logout(user: IUserDocument) {
-      await Sessions.createSession({
-        loginToken: user.loginToken || 'no-token',
-        status: USER_STATUSES.LOGGED_OUT,
+      const session = await Sessions.findOne({
+        loginToken: user.loginToken,
         userId: user._id,
       });
 
-      await Users.update({ _id: user._id }, { $set: { loginToken: '' } });
+      if (session) {
+        await Users.update({ _id: user._id }, { $set: { loginToken: '' } });
+        await Sessions.update({ _id: session._id }, { $set: { logoutDate: new Date() } });
+      }
 
-      return USER_STATUSES.LOGGED_OUT;
+      return 'loggedOut';
     }
   }
 

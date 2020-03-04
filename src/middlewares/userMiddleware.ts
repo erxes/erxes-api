@@ -1,8 +1,8 @@
 import * as jwt from 'jsonwebtoken';
-import { USER_STATUSES } from '../data/constants';
+import { getIpAddress } from '../apolloClient';
 import { Sessions, Users } from '../db/models';
 
-/*
+/**
  * Finds user object by passed tokens
  * @param {Object} req - Request object
  * @param {Object} res - Response object
@@ -16,13 +16,21 @@ const userMiddleware = async (req, _res, next) => {
       // verify user token and retrieve stored user information
       const { user } = jwt.verify(token, Users.getSecret());
 
-      const loggedOut = await Sessions.findOne({
+      if (!user) {
+        return next();
+      }
+
+      const ipAddress = getIpAddress(req);
+
+      const lastLoginSession = await Sessions.findOne({
         userId: user._id,
         loginToken: token,
-        status: USER_STATUSES.LOGGED_OUT,
-      });
+        loginDate: { $exists: true },
+        logoutDate: { $exists: false },
+        expiresAt: { $gt: new Date() },
+      }).sort({ createdAt: -1 });
 
-      if (loggedOut) {
+      if (lastLoginSession && lastLoginSession.ipAddress !== ipAddress) {
         return next();
       }
 

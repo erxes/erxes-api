@@ -1,12 +1,14 @@
 import { Document, Schema } from 'mongoose';
-import { USER_STATUSES } from '../../../data/constants';
 import { field } from './utils';
 
 export interface ISession {
   createdAt?: Date;
   loginToken: string;
+  loginDate: Date;
+  logoutDate?: Date;
   userId: string;
-  status: string;
+  expiresAt?: Date;
+  ipAddress?: string;
 }
 
 export interface ISessionDocument extends Document, ISession {
@@ -14,8 +16,11 @@ export interface ISessionDocument extends Document, ISession {
 }
 
 export const sessionSchema = new Schema({
-  createdAt: field({ type: Date, default: new Date(), label: 'Created at', optional: true }),
+  createdAt: field({ type: Date, default: new Date(), label: 'Created at' }),
   userId: field({ type: String, label: 'User' }),
   loginToken: field({ type: String, label: 'Login token' }),
-  status: field({ type: String, enum: USER_STATUSES.ALL, label: 'Status' }),
+  loginDate: field({ type: Date, label: 'Login date', default: new Date() }),
+  logoutDate: field({ type: Date, label: 'Logout date' }),
+  expiresAt: field({ type: Date, label: 'Token expire date' }),
+  ipAddress: field({ type: String, label: 'Client IP address' }),
 });

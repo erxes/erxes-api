@@ -35,6 +35,21 @@ const generateDataSources = () => {
   };
 };
 
+/**
+ * Useful for user session & logging purposes
+ * @param req HTTP request
+ */
+export const getIpAddress = req => {
+  const connection = req.connection || {};
+
+  return (
+    req.headers['x-forwarded-for'] ||
+    connection.remoteAddress ||
+    (req.socket && req.socket.remoteAddress) ||
+    (connection.socket && connection.socket.remoteAddress)
+  );
+};
+
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
@@ -50,6 +65,7 @@ const apolloServer = new ApolloServer({
 
     const requestInfo = {
       secure: req.secure,
+      ipAddress: getIpAddress(req),
     };
 
     const user = req.user;

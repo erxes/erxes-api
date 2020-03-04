@@ -239,12 +239,6 @@ export const NOTIFICATION_MODULES = [
   },
 ];
 
-export const USER_STATUSES = {
-  LOGGED_IN: 'loggedIn',
-  LOGGED_OUT: 'loggedOut',
-  ALL: ['loggedIn', 'loggedOut'],
-};
-
 export const MODULE_NAMES = {
   BOARD: 'board',
   BOARD_DEAL: 'dealBoards',

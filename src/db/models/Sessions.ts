@@ -7,7 +7,17 @@ export interface ISessionModel extends Model<ISessionDocument> {
 
 export const loadClass = () => {
   class Session {
-    public static createSession(doc: ISession) {
+    public static async createSession(doc: ISession) {
+      const exists = await Sessions.findOne({
+        userId: doc.userId,
+        loginToken: doc.loginToken,
+        ipAddress: doc.ipAddress,
+      });
+
+      if (exists) {
+        return exists;
+      }
+
       return Sessions.create({ ...doc, createdAt: new Date() });
     }
   }

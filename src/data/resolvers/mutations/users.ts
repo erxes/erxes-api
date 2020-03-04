@@ -1,6 +1,5 @@
 import { Channels, Users } from '../../../db/models';
 import { IDetail, IEmailSignature, ILink, IUser } from '../../../db/models/definitions/users';
-import { USER_STATUSES } from '../../constants';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -34,13 +33,18 @@ const userMutations = {
    * Login
    */
   async login(_root, args: { email: string; password: string; deviceToken?: string }, { res, requestInfo }: IContext) {
-    const response = await Users.login(args);
+    const cookieOptions = authCookieOptions(requestInfo.secure);
+
+    const response = await Users.login(args, {
+      expiresAt: cookieOptions.expires,
+      ipAddress: requestInfo.ipAddress,
+    });
 
     const { token } = response;
 
-    res.cookie('auth-token', token, authCookieOptions(requestInfo.secure));
+    res.cookie('auth-token', token, cookieOptions);
 
-    return USER_STATUSES.LOGGED_IN;
+    return 'loggedIn';
   },
 
   async logout(_root, _args, { res, user }: IContext) {

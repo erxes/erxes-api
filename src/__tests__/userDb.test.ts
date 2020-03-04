@@ -511,28 +511,34 @@ describe('User db utils', () => {
     expect(user.resetPasswordExpires).toBeDefined();
   });
 
-  test('Login', async () => {
+  test('Test login()', async () => {
     expect.assertions(8);
+
+    const ipAddress = '127.0.0.1';
+    const requestParams = { ipAddress, expiresAt: new Date() };
 
     // invalid email ==============
     try {
-      await Users.login({ email: 'test@yahoo.com' });
+      await Users.login({ email: 'test@yahoo.com', password: 'pass' }, requestParams);
     } catch (e) {
       expect(e.message).toBe('Invalid login');
     }
 
     // invalid password ==============
     try {
-      await Users.login({ email: _user.email, password: 'admin' });
+      await Users.login({ email: _user.email, password: 'admin' }, requestParams);
     } catch (e) {
       expect(e.message).toBe('Invalid login');
     }
 
     // valid
-    let response = await Users.login({
-      email: _user.email.toUpperCase(),
-      password: 'pass',
-    });
+    let response = await Users.login(
+      {
+        email: _user.email.toUpperCase(),
+        password: 'pass',
+      },
+      requestParams,
+    );
 
     expect(response.token).toBeDefined();
     expect(response.refreshToken).toBeDefined();
@@ -545,21 +551,27 @@ describe('User db utils', () => {
     }
 
     // when device token
-    response = await Users.login({
-      email: (tokenUser.email || '').toUpperCase(),
-      password: 'pass',
-      deviceToken: 'web',
-    });
+    response = await Users.login(
+      {
+        email: (tokenUser.email || '').toUpperCase(),
+        password: 'pass',
+        deviceToken: 'web',
+      },
+      requestParams,
+    );
 
     expect(response.token).toBeDefined();
     expect(response.refreshToken).toBeDefined();
 
     // when adding same device token
-    response = await Users.login({
-      email: (tokenUser.email || '').toUpperCase(),
-      password: 'pass',
-      deviceToken: 'web',
-    });
+    response = await Users.login(
+      {
+        email: (tokenUser.email || '').toUpperCase(),
+        password: 'pass',
+        deviceToken: 'web',
+      },
+      requestParams,
+    );
 
     expect(response.token).toBeDefined();
     expect(response.refreshToken).toBeDefined();
