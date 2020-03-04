@@ -1,6 +1,7 @@
 import activityLogs from './activityLogs';
 import conversations from './conversations';
 import customers from './customers';
+import deals from './deals';
 import importHistory from './importHistory';
 import notifications from './notifications';
 import robot from './robot';
@@ -12,6 +13,7 @@ let subscriptions: any = {
   ...importHistory,
   ...notifications,
   ...robot,
+  ...deals,
 };
 
 const { NODE_ENV } = process.env;

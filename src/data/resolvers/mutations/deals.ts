@@ -4,6 +4,7 @@ import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -146,6 +147,12 @@ const dealMutations = {
       },
       user,
     );
+
+    graphqlPubsub.publish('dealsChanged', {
+      dealsChanged: {
+        _id: updatedDeal._id,
+      },
+    });
 
     return updatedDeal;
   },

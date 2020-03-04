@@ -269,6 +269,7 @@ export const subscriptions = `
     importHistoryChanged(_id: String!): ImportHistory
     notificationInserted(userId: String): Notification
     onboardingChanged(userId: String!): OnboardingNotification
+    dealsChanged(_id: String!): Deal
   }
 `;
 
