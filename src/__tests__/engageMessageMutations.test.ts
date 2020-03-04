@@ -692,7 +692,7 @@ describe('engage message mutation tests', () => {
     process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
 
     const mutation = `
-      mutation engagesUpdateConfigs(configsMap: JSON!) {
+      mutation engagesUpdateConfigs($configsMap: JSON!) {
         engagesUpdateConfigs(configsMap: $configsMap)
       }
     `;
@@ -700,7 +700,12 @@ describe('engage message mutation tests', () => {
     const dataSources = { EngagesAPI: new EngagesAPI() };
 
     try {
-      await graphqlRequest(mutation, 'engagesUpdateConfigs', {}, { dataSources });
+      await graphqlRequest(
+        mutation,
+        'engagesUpdateConfigs',
+        { configsMap: { accessKeyId: 'accessKeyId' } },
+        { dataSources },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Engages api is not running');
     }
