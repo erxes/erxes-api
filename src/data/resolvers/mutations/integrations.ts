@@ -114,6 +114,10 @@ const integrationMutations = {
       kind = 'twitter';
     }
 
+    if (kind.includes('smooch')) {
+      kind = 'smooch';
+    }
+
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
