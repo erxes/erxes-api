@@ -270,6 +270,8 @@ export const subscriptions = `
     notificationInserted(userId: String): Notification
     onboardingChanged(userId: String!): OnboardingNotification
     dealsChanged(_id: String!): Deal
+    checklistsChanged(contentType: String!, contentTypeId: String!): Checklist
+    checklistDetailChanged(_id: String!): Checklist
   }
 `;
 
