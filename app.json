@@ -44,6 +44,26 @@
     "RABBITMQ_HOST": {
       "description": "RABBITMQ_HOST",
       "value": "amqp://localhost"
+    },
+    "REDIS_HOST": {
+      "description": "REDIS_HOST",
+      "value": "REDIS_HOST"
+    },
+    "REDIS_PORT": {
+      "description": "REDIS_PORT",
+      "value": "28229"
+    },
+    "REDIS_PASSWORD": {
+      "description": "REDIS_PASSWORD",
+      "value": "REDIS_PASSWORD"
+    },
+    "PORT_CRONS": {
+      "description": "cron port",
+      "value": 3600
+    },
+    "PORT_WORKERS": {
+      "description": "worker port",
+      "value": 3700
     }
   },
   "addons": [
