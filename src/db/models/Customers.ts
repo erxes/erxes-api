@@ -6,10 +6,10 @@ import { customerSchema, ICustomer, ICustomerDocument } from './definitions/cust
 import { IUserDocument } from './definitions/users';
 
 interface IGetCustomerParams {
-  integrationId: string;
   email?: string;
   phone?: string;
   code?: string;
+  integrationId?: string;
   cachedCustomerId?: string;
 }
 
@@ -479,7 +479,7 @@ export const loadClass = () => {
       if (customer) {
         const ids = customer.relatedIntegrationIds;
 
-        if (ids && !ids.includes(integrationId)) {
+        if (integrationId && ids && !ids.includes(integrationId)) {
           ids.push(integrationId);
           await Customers.updateOne({ _id: customer._id }, { $set: { relatedIntegrationIds: ids } });
           customer = await Customers.findOne({ _id: customer._id });
