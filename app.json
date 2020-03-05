@@ -32,6 +32,10 @@
     "WIDGETS_DOMAIN": {
       "description": "Erxes Widget URL",
       "value": "https://erxes-widget.herokuapp.com"
+    },
+    "INTEGRATIONS_API_DOMAIN": {
+      "description": "Erxes Integrations API URL",
+      "value": "https://erxes-integration.herokuapp.com"
     }
   },
   "addons": [
