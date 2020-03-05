@@ -266,8 +266,8 @@ const conversationMutations = {
       requestName = 'replyTwitterDm';
     }
 
-    if (kind === KIND_CHOICES.SMOOCH_VIBER) {
-      requestName = 'replyViber';
+    if (kind.includes('smooch')) {
+      requestName = 'replySmooch';
     }
 
     await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
