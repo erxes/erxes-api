@@ -120,9 +120,10 @@ const widgetMutations = {
       formId: string;
       submissions: ISubmission[];
       browserInfo: any;
+      cachedCustomerId?: string;
     },
   ) {
-    const { integrationId, formId, submissions, browserInfo } = args;
+    const { integrationId, formId, submissions, browserInfo, cachedCustomerId } = args;
 
     const form = await Forms.findOne({ _id: formId });
 
@@ -162,7 +163,7 @@ const widgetMutations = {
     });
 
     // get or create customer
-    let customer = await Customers.getWidgetCustomer({ email, phone });
+    let customer = await Customers.getWidgetCustomer({ email, phone, cachedCustomerId });
 
     if (!customer) {
       customer = await Customers.createCustomer({

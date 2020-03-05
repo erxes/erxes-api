@@ -92,7 +92,7 @@ export default {
 
   async widgetsConversationDetail(_root, args: { _id: string; integrationId: string }) {
     const { _id, integrationId } = args;
-    const conversation = await Conversations.findOne({ _id });
+    const conversation = await Conversations.findOne({ _id, integrationId });
 
     if (!conversation) {
       return null;
