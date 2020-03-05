@@ -40,6 +40,10 @@
     "MONGO_URL": {
       "description": "MONGO_URL",
       "value": "MONGO_URL"
+    },
+    "RABBITMQ_HOST": {
+      "description": "RABBITMQ_HOST",
+      "value": "amqp://localhost"
     }
   },
   "addons": [
