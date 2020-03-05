@@ -163,7 +163,7 @@ const widgetMutations = {
     });
 
     // get or create customer
-    let customer = await Customers.getWidgetCustomer({ email, phone, cachedCustomerId });
+    let customer = await Customers.getWidgetCustomer({ integrationId, email, phone, cachedCustomerId });
 
     if (!customer) {
       customer = await Customers.createCustomer({
@@ -263,40 +263,25 @@ const widgetMutations = {
     }
 
     let customer = await Customers.getWidgetCustomer({
+      integrationId: integration._id,
       cachedCustomerId,
       email,
       phone,
       code,
     });
 
-    if (customer) {
-      // update prev customer
-      customer = await Customers.updateMessengerCustomer({
-        _id: customer._id,
-        doc: {
-          email,
-          phone,
-          code,
-          isUser,
-          deviceToken,
-        },
-        customData,
-      });
+    const doc = {
+      integrationId: integration._id,
+      email,
+      phone,
+      code,
+      isUser,
+      deviceToken,
+    };
 
-      // create new customer
-    } else {
-      customer = await Customers.createMessengerCustomer({
-        doc: {
-          integrationId: integration._id,
-          email,
-          phone,
-          code,
-          isUser,
-          deviceToken,
-        },
-        customData,
-      });
-    }
+    customer = customer
+      ? await Customers.updateMessengerCustomer({ _id: customer._id, doc, customData })
+      : await Customers.createMessengerCustomer({ doc, customData });
 
     // get or create company
     if (companyData) {

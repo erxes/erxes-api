@@ -6,6 +6,7 @@ import { customerSchema, ICustomer, ICustomerDocument } from './definitions/cust
 import { IUserDocument } from './definitions/users';
 
 interface IGetCustomerParams {
+  integrationId: string;
   email?: string;
   phone?: string;
   code?: string;
@@ -20,7 +21,7 @@ interface ICustomerFieldsInput {
 
 interface ICreateMessengerCustomerParams {
   doc: {
-    integrationId?: string;
+    integrationId: string;
     email?: string;
     hasValidEmail?: boolean;
     phone?: string;
@@ -37,6 +38,7 @@ interface ICreateMessengerCustomerParams {
 export interface IUpdateMessengerCustomerParams {
   _id: string;
   doc: {
+    integrationId: string;
     email?: string;
     phone?: string;
     code?: string;
@@ -223,6 +225,10 @@ export const loadClass = () => {
 
       if (doc.primaryEmail && isValid) {
         doc.hasValidEmail = true;
+      }
+
+      if (doc.integrationId) {
+        doc.relatedIntegrationIds = [doc.integrationId];
       }
 
       const customer = await Customers.create({
@@ -447,9 +453,7 @@ export const loadClass = () => {
     /*
      * Get widget customer
      */
-    public static async getWidgetCustomer(params: IGetCustomerParams) {
-      const { email, phone, code, cachedCustomerId } = params;
-
+    public static async getWidgetCustomer({ integrationId, email, phone, code, cachedCustomerId }: IGetCustomerParams) {
       let customer: ICustomerDocument | null = null;
 
       if (email) {
@@ -470,6 +474,16 @@ export const loadClass = () => {
 
       if (!customer && cachedCustomerId) {
         customer = await Customers.findOne({ _id: cachedCustomerId });
+      }
+
+      if (customer) {
+        const ids = customer.relatedIntegrationIds;
+
+        if (ids && !ids.includes(integrationId)) {
+          ids.push(integrationId);
+          await Customers.updateOne({ _id: customer._id }, { $set: { relatedIntegrationIds: ids } });
+          customer = await Customers.findOne({ _id: customer._id });
+        }
       }
 
       return customer;
