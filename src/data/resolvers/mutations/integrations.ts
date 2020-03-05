@@ -245,7 +245,7 @@ const integrationMutations = {
       });
     } catch (e) {
       debugExternalApi(e);
-      throw Error(e);
+      throw e;
     }
 
     const customerIds = await Customers.find({ primaryEmail: { $in: doc.to } }).distinct('_id');
