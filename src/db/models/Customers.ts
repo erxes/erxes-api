@@ -19,16 +19,19 @@ interface ICustomerFieldsInput {
 }
 
 interface ICreateMessengerCustomerParams {
-  integrationId?: string;
-  email?: string;
-  hasValidEmail?: boolean;
-  phone?: string;
-  code?: string;
-  isUser?: boolean;
-  firstName?: string;
-  lastName?: string;
-  description?: string;
-  deviceToken?: string;
+  doc: {
+    integrationId?: string;
+    email?: string;
+    hasValidEmail?: boolean;
+    phone?: string;
+    code?: string;
+    isUser?: boolean;
+    firstName?: string;
+    lastName?: string;
+    description?: string;
+    deviceToken?: string;
+  };
+  customData?: any;
 }
 
 export interface IUpdateMessengerCustomerParams {
@@ -72,7 +75,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
-  createMessengerCustomer(doc: ICreateMessengerCustomerParams): Promise<ICustomerDocument>;
+  createMessengerCustomer(param: ICreateMessengerCustomerParams): Promise<ICustomerDocument>;
   updateMessengerCustomer(param: IUpdateMessengerCustomerParams): Promise<ICustomerDocument>;
   updateSession(_id: string): Promise<ICustomerDocument>;
   updateLocation(_id: string, browserInfo: IBrowserInfo): Promise<ICustomerDocument>;
@@ -521,9 +524,10 @@ export const loadClass = () => {
     /*
      * Create a new messenger customer
      */
-    public static async createMessengerCustomer(doc: ICreateMessengerCustomerParams) {
+    public static async createMessengerCustomer({ doc, customData }: ICreateMessengerCustomerParams) {
       return this.createCustomer({
         ...this.fixListFields(doc),
+        trackedData: customData,
         lastSeenAt: new Date(),
         isOnline: true,
         sessionCount: 1,
@@ -533,9 +537,7 @@ export const loadClass = () => {
     /*
      * Update messenger customer
      */
-    public static async updateMessengerCustomer(param: IUpdateMessengerCustomerParams) {
-      const { _id, doc } = param;
-
+    public static async updateMessengerCustomer({ _id, doc, customData }: IUpdateMessengerCustomerParams) {
       const customer = await Customers.findOne({ _id });
 
       if (!customer) {
@@ -548,6 +550,7 @@ export const loadClass = () => {
 
       const modifier = {
         ...this.fixListFields(doc, customer),
+        trackedData: { ...(customer.trackedData || {}), ...(customData || {}) },
         modifiedAt: new Date(),
       };
 

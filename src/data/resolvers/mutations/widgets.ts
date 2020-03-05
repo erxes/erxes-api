@@ -286,12 +286,15 @@ const widgetMutations = {
       // create new customer
     } else {
       customer = await Customers.createMessengerCustomer({
-        integrationId: integration._id,
-        email,
-        phone,
-        code,
-        isUser,
-        deviceToken,
+        doc: {
+          integrationId: integration._id,
+          email,
+          phone,
+          code,
+          isUser,
+          deviceToken,
+        },
+        customData,
       });
     }
 
