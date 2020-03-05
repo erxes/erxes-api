@@ -11,7 +11,7 @@ import {
   Tickets,
   Users,
 } from '../../../db/models';
-import { NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_TYPES, NOTIFICATION_CONTENT_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDealDocument } from '../../../db/models/definitions/deals';
 import { IInternalNote } from '../../../db/models/definitions/internalNotes';
 import { ITaskDocument } from '../../../db/models/definitions/tasks';
@@ -43,6 +43,8 @@ const sendNotificationOfItems = async (
   });
 
   utils.sendNotification(notifDocItems);
+
+  console.log('activityLogsChanged');
 
   graphqlPubsub.publish('activityLogsChanged');
 };
@@ -182,6 +184,10 @@ const internalNoteMutations = {
       user,
     );
 
+    if (BOARD_TYPES.ALL.includes(updated.contentType)) {
+      graphqlPubsub.publish('activityLogsChanged');
+    }
+
     return updated;
   },
 
@@ -193,6 +199,10 @@ const internalNoteMutations = {
     const removed = await InternalNotes.removeInternalNote(_id);
 
     await putDeleteLog({ type: MODULE_NAMES.INTERNAL_NOTE, object: internalNote }, user);
+
+    if (BOARD_TYPES.ALL.includes(internalNote.contentType)) {
+      graphqlPubsub.publish('activityLogsChanged');
+    }
 
     return removed;
   },

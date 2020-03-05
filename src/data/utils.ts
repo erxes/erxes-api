@@ -75,8 +75,6 @@ const createAWS = async () => {
     throw new Error('AWS credentials are not configured');
   }
 
-  console.log(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_COMPATIBLE_SERVICE_ENDPOINT);
-
   const options: { accessKeyId: string; secretAccessKey: string; endpoint?: string; s3ForcePathStyle?: boolean } = {
     accessKeyId: AWS_ACCESS_KEY_ID,
     secretAccessKey: AWS_SECRET_ACCESS_KEY,

@@ -3,6 +3,7 @@ import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -115,6 +116,12 @@ const growthHackMutations = {
       },
       user,
     );
+
+    graphqlPubsub.publish('growthHacksChanged', {
+      growthHacksChanged: {
+        _id: updatedGrowthHack._id,
+      },
+    });
 
     return updatedGrowthHack;
   },

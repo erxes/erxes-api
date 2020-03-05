@@ -3,6 +3,7 @@ import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/model
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -118,6 +119,12 @@ const taskMutations = {
       },
       user,
     );
+
+    graphqlPubsub.publish('tasksChanged', {
+      tasksChanged: {
+        _id: updatedTask._id,
+      },
+    });
 
     return updatedTask;
   },

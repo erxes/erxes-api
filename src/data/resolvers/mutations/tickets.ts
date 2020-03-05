@@ -3,6 +3,7 @@ import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -120,6 +121,12 @@ const ticketMutations = {
       },
       user,
     );
+
+    graphqlPubsub.publish('ticketsChanged', {
+      ticketsChanged: {
+        _id: updatedTicket._id,
+      },
+    });
 
     return updatedTicket;
   },

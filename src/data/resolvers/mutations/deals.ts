@@ -120,7 +120,7 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     };
 
-    if (Object.entries(checkedAssignUserIds).length > 0) {
+    if (checkedAssignUserIds) {
       const { addedUserIds, removedUserIds } = checkedAssignUserIds;
 
       const activityContent = { addedUserIds, removedUserIds };
