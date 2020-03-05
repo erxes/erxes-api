@@ -67,6 +67,8 @@ export const KIND_CHOICES = {
   TWITTER_DM: 'twitter-dm',
   CHATFUEL: 'chatfuel',
   SMOOCH_VIBER: 'smooch-viber',
+  SMOOCH_LINE: 'smooch-line',
+  SMOOCH_TELEGRAM: 'smooch-telegram',
   ALL: [
     'messenger',
     'lead',
@@ -82,6 +84,8 @@ export const KIND_CHOICES = {
     'nylas-yahoo',
     'twitter-dm',
     'smooch-viber',
+    'smooch-line',
+    'smooch-telegram',
   ],
 };
 
@@ -100,6 +104,8 @@ export const INTEGRATION_NAMES_MAP = {
   'nylas-yahoo': 'Yahoo',
   'twitter-dm': 'Twitter dm',
   'smooch-viber': 'Viber',
+  'smooch-line': 'Line',
+  'smooch-telegram': 'Telegram',
 };
 
 // messenger data availability constants
