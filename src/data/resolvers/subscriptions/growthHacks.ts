@@ -14,4 +14,8 @@ export default {
       },
     ),
   },
+
+  growthHacksMoved: {
+    subscribe: () => graphqlPubsub.asyncIterator('growthHacksMoved'),
+  },
 };

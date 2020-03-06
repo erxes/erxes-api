@@ -44,8 +44,6 @@ const sendNotificationOfItems = async (
 
   utils.sendNotification(notifDocItems);
 
-  console.log('activityLogsChanged');
-
   graphqlPubsub.publish('activityLogsChanged');
 };
 

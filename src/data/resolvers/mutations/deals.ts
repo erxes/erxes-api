@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
@@ -151,6 +151,7 @@ const dealMutations = {
     graphqlPubsub.publish('dealsChanged', {
       dealsChanged: {
         _id: updatedDeal._id,
+        type: 'edited',
       },
     });
 
@@ -183,6 +184,11 @@ const dealMutations = {
       action,
       contentType: MODULE_NAMES.DEAL,
     });
+
+    // if move between stages
+    if (destinationStageId !== deal.stageId) {
+      graphqlPubsub.publish('dealsMoved');
+    }
 
     return deal;
   },

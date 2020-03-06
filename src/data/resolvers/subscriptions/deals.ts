@@ -14,4 +14,8 @@ export default {
       },
     ),
   },
+
+  dealsMoved: {
+    subscribe: () => graphqlPubsub.asyncIterator('dealsMoved'),
+  },
 };
