@@ -1,5 +1,4 @@
 import * as AWS from 'aws-sdk';
-import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -12,6 +11,7 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
@@ -244,7 +244,7 @@ const deleteFileGCS = async (fileName: string) => {
  * Read file from GCS, AWS
  */
 export const readFileRequest = async (key: string): Promise<any> => {
-  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_T`YPE', 'AWS');
+  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
   if (UPLOAD_SERVICE_TYPE === 'GCS') {
     const GCS_BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
@@ -642,31 +642,6 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
     })
     .catch(e => debugBase(e));
 
-/**
- * Validates email using MX record resolver
- * @param email as String
- */
-export const validateEmail = async email => {
-  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-
-  if (NODE_ENV === 'test') {
-    return true;
-  }
-
-  const emailValidator = new EmailValidator();
-  const { validDomain, validMailbox } = await emailValidator.verify(email);
-
-  if (!validDomain) {
-    return false;
-  }
-
-  if (!validMailbox && validMailbox === null) {
-    return false;
-  }
-
-  return true;
-};
-
 export const authCookieOptions = (secure: boolean) => {
   const oneDay = 1 * 24 * 3600 * 1000; // 1 day
 
@@ -790,7 +765,6 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
 
 export default {
   sendEmail,
-  validateEmail,
   sendNotification,
   sendMobileNotification,
   readFile,
@@ -859,6 +833,12 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   }
 
   return true;
+};
+
+export const validateEmail = (email: string) => {
+  const data = { email };
+
+  sendMessage('erxes-api:engages-notification', { action: 'verifyEmail', data });
 };
 
 export const getConfigs = async () => {

@@ -163,7 +163,7 @@ export const ACTIVITY_ACTIONS = {
   SEND: 'send',
   MOVED: 'moved',
   CONVERT: 'convert',
-  ASSIGNE: 'assignee',
+  ASSIGNEE: 'assignee',
 
   ALL: ['create', 'update', 'delete', 'merge', 'send', 'moved', 'convert', 'assignee'],
 };
@@ -362,8 +362,9 @@ export const BOARD_TYPES = {
 
 export const MESSAGE_TYPES = {
   VIDEO_CALL: 'videoCall',
+  VIDEO_CALL_REQUEST: 'videoCallRequest',
   TEXT: 'text',
-  ALL: ['videoCall', 'text'],
+  ALL: ['videoCall', 'videoCallRequest', 'text'],
 };
 
 // module constants
@@ -447,4 +448,14 @@ export const NOTIFICATION_CONTENT_TYPES = {
   CHANNEL: 'channel',
   CONVERSATION: 'conversation',
   ALL: ['task', 'deal', 'company', 'customer', 'ticket', 'channel', 'conversation'],
+};
+
+export const EMAIL_VALIDATION_STATUSES = {
+  VALID: 'valid',
+  INVALID: 'invalid',
+  ACCEPT_ALL_UNVERIFIABLE: 'accept_all_unverifiable',
+  UNKNOWN: 'unknown',
+  DISPOSABLE: 'disposable',
+  CATCHALL: 'catchall',
+  ALL: ['valid', 'invalid', 'accept_all_unverifiable', 'unknown', 'disposable', 'catchall'],
 };
