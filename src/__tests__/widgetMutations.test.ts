@@ -25,7 +25,7 @@ import {
   MessengerApps,
 } from '../db/models';
 import { IBrandDocument } from '../db/models/definitions/brands';
-import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
+import { CONVERSATION_STATUSES, MESSAGE_TYPES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IIntegrationDocument } from '../db/models/definitions/integrations';
 import './setup.ts';
@@ -192,6 +192,7 @@ describe('insertMessage()', () => {
     const message = await widgetMutations.widgetsInsertMessage(
       {},
       {
+        contentType: MESSAGE_TYPES.TEXT,
         integrationId: _integration._id,
         customerId: _customer._id,
         message: faker.lorem.sentence(),
@@ -228,6 +229,7 @@ describe('insertMessage()', () => {
     const message = await widgetMutations.widgetsInsertMessage(
       {},
       {
+        contentType: MESSAGE_TYPES.TEXT,
         integrationId: _integration._id,
         customerId: _customer._id,
         message: 'withConversationId',
