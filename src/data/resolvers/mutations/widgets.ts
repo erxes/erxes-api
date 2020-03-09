@@ -18,6 +18,7 @@ import { IBrowserInfo, IVisitorContactInfoParams } from '../../../db/models/Cust
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
 import { IIntegrationDocument, IMessengerDataMessagesItem } from '../../../db/models/definitions/integrations';
 import { IKnowledgebaseCredentials, ILeadCredentials } from '../../../db/models/definitions/messengerApps';
+import { debugExternalApi } from '../../../debuggers';
 import { graphqlPubsub } from '../../../pubsub';
 import { get, set } from '../../../redisClient';
 import { IContext } from '../../types';
@@ -304,7 +305,13 @@ const widgetMutations = {
       });
     }
 
-    const videoCallUsageStatus = await dataSources.IntegrationsAPI.fetchApi('/videoCall/usageStatus');
+    let videoCallUsageStatus = false;
+
+    try {
+      videoCallUsageStatus = await dataSources.IntegrationsAPI.fetchApi('/videoCall/usageStatus');
+    } catch (e) {
+      debugExternalApi(e.message);
+    }
 
     return {
       integrationId: integration._id,
