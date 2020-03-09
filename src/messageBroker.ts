@@ -1,8 +1,12 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import * as uuid from 'uuid';
-import { receiveIntegrationsNotification, receiveRpcMessage } from './data/modules/integrations/receiveMessage';
-import { Customers, RobotEntries } from './db/models';
+import {
+  receiveEngagesNotification,
+  receiveIntegrationsNotification,
+  receiveRpcMessage,
+} from './data/modules/integrations/receiveMessage';
+import { RobotEntries } from './db/models';
 import { debugBase } from './debuggers';
 import { graphqlPubsub } from './pubsub';
 
@@ -31,7 +35,7 @@ export const sendRPCMessage = async (message): Promise<any> => {
             if (res.status === 'success') {
               resolve(res.data);
             } else {
-              reject(res.errorMessage);
+              reject(new Error(res.errorMessage));
             }
 
             channel.deleteQueue(q.queue);
@@ -104,14 +108,12 @@ const initConsumer = async () => {
     }
   });
 
-  // listen for engage api ===========
-  await channel.assertQueue('engages-api:set-donot-disturb');
+  // listen for engage notification ===========
+  await channel.assertQueue('engagesNotification');
 
-  channel.consume('engages-api:set-donot-disturb', async msg => {
+  channel.consume('engagesNotification', async msg => {
     if (msg !== null) {
-      const data = JSON.parse(msg.content.toString());
-
-      await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+      await receiveEngagesNotification(JSON.parse(msg.content.toString()));
 
       channel.ack(msg);
     }
