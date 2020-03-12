@@ -32,9 +32,7 @@ export interface ICompany {
   phones?: string[];
 
   mergedIds?: string[];
-  leadStatus?: string;
   status?: string;
-  lifecycleState?: string;
   businessType?: string;
   description?: string;
   employees?: number;
@@ -119,26 +117,12 @@ export const companySchema = schemaWrapper(
 
     ownerId: field({ type: String, optional: true, label: 'Owner' }),
 
-    leadStatus: field({
-      type: String,
-      enum: COMPANY_LEAD_STATUS_TYPES,
-      optional: true,
-      label: 'Lead Status',
-    }),
-
     status: field({
       type: String,
       enum: STATUSES.ALL,
       default: STATUSES.ACTIVE,
       optional: true,
       label: 'Status',
-    }),
-
-    lifecycleState: field({
-      type: String,
-      enum: COMPANY_LIFECYCLE_STATE_TYPES,
-      optional: true,
-      label: 'Lifecycle State',
     }),
 
     businessType: field({

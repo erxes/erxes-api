@@ -31,7 +31,6 @@ export interface IListArgs extends IConformityQueryParams {
   form?: string;
   startDate?: string;
   endDate?: string;
-  lifecycleState?: string;
   leadStatus?: string;
   type?: string;
   integrationType?: string;
@@ -118,6 +117,7 @@ export class Builder extends CommonBuilder<IListArgs> {
     const selector = {
       ...this.context.commonQuerySelector,
       status: { $ne: STATUSES.DELETED },
+      state: this.params.type || 'customer',
       profileScore: { $gt: 0 },
       $or: [
         {

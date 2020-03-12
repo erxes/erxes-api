@@ -71,6 +71,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
   removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
+  changeState(_id: string, value: string): Promise<ICustomerDocument>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
@@ -191,6 +192,7 @@ export const loadClass = () => {
      */
     public static async createVisitor(): Promise<string> {
       const customer = await Customers.create({
+        state: 'visitor',
         createdAt: new Date(),
         modifiedAt: new Date(),
       });
@@ -310,6 +312,8 @@ export const loadClass = () => {
       }
 
       const nullValues = ['', null];
+
+      let hasContactInfo = false;
       let score = 0;
       let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
 
@@ -329,15 +333,19 @@ export const loadClass = () => {
       }
 
       if (!nullValues.includes(customer.primaryEmail || '')) {
+        hasContactInfo = true;
         score += 15;
       }
 
       if (!nullValues.includes(customer.primaryPhone || '')) {
+        hasContactInfo = true;
         score += 10;
       }
 
       if (customer.visitorContactInfo != null) {
+        hasContactInfo = true;
         score += 5;
+
         searchText = searchText.concat(
           ' ',
           customer.visitorContactInfo.email || '',
@@ -348,16 +356,24 @@ export const loadClass = () => {
 
       searchText = validSearchText([searchText]);
 
+      let state = customer.state || 'visitor';
+
+      if (hasContactInfo && state !== 'customer') {
+        state = 'lead';
+      }
+
+      const modifier = { $set: { profileScore: score, searchText, state } }
+
       if (!save) {
         return {
           updateOne: {
             filter: { _id: customerId },
-            update: { $set: { profileScore: score, searchText } },
+            update: modifier,
           },
         };
       }
 
-      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score, searchText } });
+      await Customers.updateOne({ _id: customerId }, modifier);
     }
     /**
      * Remove customers
@@ -562,11 +578,8 @@ export const loadClass = () => {
         throw new Error('Customer not found');
       }
 
-      if (customer.isUser) {
-        doc.isUser = true;
-      }
-
       const modifier = {
+        state: doc.isUser ? 'customer' : customer.state,
         ...this.fixListFields(doc, customer),
         trackedData: { ...(customer.trackedData || {}), ...(customData || {}) },
         modifiedAt: new Date(),
@@ -605,6 +618,20 @@ export const loadClass = () => {
       await Customers.findByIdAndUpdate(_id, query);
 
       // updated customer
+      return Customers.findOne({ _id });
+    }
+
+    /*
+     * Change state
+     */
+    public static async changeState(_id: string, value: string) {
+      await Customers.findByIdAndUpdate(
+        { _id },
+        {
+          $set: { state: value },
+        },
+      );
+
       return Customers.findOne({ _id });
     }
 

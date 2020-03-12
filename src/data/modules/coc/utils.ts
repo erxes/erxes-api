@@ -105,7 +105,6 @@ interface ICommonListArgs {
   ids?: string[];
   searchValue?: string;
   brand?: string;
-  lifecycleState?: string;
   leadStatus?: string;
   conformityMainType?: string;
   conformityMainTypeId?: string;
@@ -186,15 +185,6 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     });
   }
 
-  // filter by lifecycleState
-  public lifecycleStateFilter(lifecycleState: string): void {
-    this.positiveList.push({
-      term: {
-        lifecycleState,
-      },
-    });
-  }
-
   public async conformityFilter() {
     const { conformityMainType, conformityMainTypeId, conformityIsRelated, conformityIsSaved } = this.params;
 
@@ -253,11 +243,6 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     // filter by leadStatus
     if (this.params.leadStatus) {
       this.leadStatusFilter(this.params.leadStatus);
-    }
-
-    // filter by lifecycleState
-    if (this.params.lifecycleState) {
-      this.lifecycleStateFilter(this.params.lifecycleState);
     }
 
     // If there are ids and form params, returning ids filter only filter by ids
