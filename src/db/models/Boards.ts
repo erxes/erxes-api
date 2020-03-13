@@ -347,6 +347,7 @@ export const loadStageClass = () => {
           priority: card.priority,
           userId,
           description: card.description,
+          status: card.status,
         };
 
         await collection.create(itemDoc);
@@ -369,6 +370,7 @@ export const loadStageClass = () => {
         type: stage.type,
         formId: stage.formId,
         probability: stage.probability || PROBABILITY.TEN,
+        status: stage.status,
       });
 
       if (includeCards === true) {
