@@ -1,12 +1,14 @@
 node_modules
-settings.js
-server/settings.js
 dist
 static
 .DS_Store
-dump.rdb
 npm-debug.log*
 .env
 coverage
+dump.rdb
 *.un~
 *.swp
+*.swo
+.migrate
+
+oplog.timestamp
