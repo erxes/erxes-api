@@ -167,29 +167,13 @@ const boardMutations = {
     return Stages.updateOrder(orders);
   },
 
-  async stagesMove(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
-    const stage: IStageDocument | null = await Stages.findOne({ _id });
-
-    const movedStage = await Stages.moveStage({
+  stagesMove(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+    return Stages.moveStage({
       includeCards,
       stageId: _id,
       pipelineId,
       userId: user._id,
     });
-
-    if (stage && movedStage) {
-      await putUpdateLog(
-        {
-          type: `${stage.type}Stage`,
-          newData: { pipelineId },
-          description: `${movedStage.name} has been moved`,
-          object: stage,
-        },
-        user,
-      );
-    }
-
-    return movedStage;
   },
 
   stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
