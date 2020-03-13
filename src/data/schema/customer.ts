@@ -36,7 +36,6 @@ export const types = `
     phones: [String]
 
     phone: String
-    isUser: Boolean
     tagIds: [String]
     remoteAddress: String
     internalNotes: JSON
