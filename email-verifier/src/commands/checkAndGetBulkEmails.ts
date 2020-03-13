@@ -1,6 +1,5 @@
 import * as amqplib from 'amqplib';
 import { connect, disconnect } from '../connection';
-import { MSG_QUEUE_ACTIONS } from '../messageBroker';
 import { Emails } from '../models';
 import { sendRequest } from '../utils';
 
@@ -56,10 +55,10 @@ connect().then(async () => {
       }
     }
 
-    const args = { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: emails };
+    const args = { action: 'emailVerify', data: emails };
 
-    await channel.assertQueue('engagesNotification');
-    await channel.sendToQueue('engagesNotification', Buffer.from(JSON.stringify(args)));
+    await channel.assertQueue('emailVerifierNotification');
+    await channel.sendToQueue('emailVerifierNotification', Buffer.from(JSON.stringify(args)));
 
     console.log('Successfully get the following emails : \n', emails);
 
@@ -107,5 +106,5 @@ connect().then(async () => {
     }
   };
 
-  check();
+  await check();
 });

@@ -10,13 +10,6 @@ const { NODE_ENV, RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 let conn;
 let channel;
 
-export const MSG_QUEUE_ACTIONS = {
-  EMAIL_VERIFY: 'emailVerify',
-  SET_DONOT_DISTURB: 'setDoNotDisturb',
-  BULK: 'bulk',
-  ALL: ['emailVerify', 'setDoNotDisturb', 'bulk'],
-};
-
 export const initConsumer = async () => {
   try {
     conn = await amqplib.connect(RABBITMQ_HOST);

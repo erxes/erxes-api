@@ -1,5 +1,5 @@
 import * as EmailValidator from 'email-deep-validator';
-import { MSG_QUEUE_ACTIONS, sendMessage } from './messageBroker';
+import { sendMessage } from './messageBroker';
 import { EMAIL_VALIDATION_STATUSES, Emails } from './models';
 import { debugBase, sendRequest } from './utils';
 
@@ -10,7 +10,7 @@ const sendSingleMessage = async (doc: { email: string; status: string }, create?
     await Emails.createEmail(doc);
   }
 
-  return sendMessage('emailVerifierNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: [doc] });
+  return sendMessage('emailVerifierNotification', { action: 'emailVerify', data: [doc] });
 };
 
 const singleTrueMail = async (email: string) => {
@@ -41,9 +41,9 @@ const bulkTrueMail = async (unverifiedEmails: string[]) => {
       },
     });
 
-    sendMessage('emailVerifierBulkEmailNotification', { action: MSG_QUEUE_ACTIONS.BULK, data: result });
+    sendMessage('emailVerifierBulkEmailNotification', { action: 'bulk', data: result });
   } catch (e) {
-    sendMessage('emailVerifierBulkEmailNotification', { action: MSG_QUEUE_ACTIONS.BULK, data: e.message });
+    sendMessage('emailVerifierBulkEmailNotification', { action: 'bulk', data: e.message });
   }
 };
 
@@ -94,7 +94,7 @@ export const bulk = async (emails: string[]) => {
   }
 
   if (verifiedEmails.length > 0) {
-    sendMessage('emailVerifierNotification', { action: MSG_QUEUE_ACTIONS.EMAIL_VERIFY, data: verifiedEmails });
+    sendMessage('emailVerifierNotification', { action: 'emailVerify', data: verifiedEmails });
   }
 
   if (unverifiedEmails.length > 0) {
@@ -106,8 +106,8 @@ export const bulk = async (emails: string[]) => {
       }
     }
   } else {
-    sendMessage('emailVerifierBulkEmailNotification', {
-      action: MSG_QUEUE_ACTIONS.BULK,
+    sendMessage('emailVerifierBulkNotification', {
+      action: 'bulk',
       data: 'There are no emails to verify on the email verification system',
     });
   }
