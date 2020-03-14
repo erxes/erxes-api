@@ -1,6 +1,6 @@
 import { Customers } from './db/models';
 import { debugBase } from './debuggers';
-import { client, fetchElk } from './elasticsearch';
+import { client, fetchElk, getIndexPrefix } from './elasticsearch';
 
 interface ISaveEventArgs {
   type?: string;
@@ -39,6 +39,8 @@ export const saveEvent = async (args: ISaveEventArgs) => {
     searchQuery.bool.must.push(additionalQuery);
   }
 
+  const index = `${getIndexPrefix()}events`;
+
   try {
     let response = await fetchElk('search', 'events', {
       size: 1,
@@ -47,7 +49,7 @@ export const saveEvent = async (args: ISaveEventArgs) => {
 
     if (response.hits.total.value === 0) {
       response = await client.index({
-        index: 'events',
+        index,
         body: {
           type,
           name,
@@ -59,7 +61,7 @@ export const saveEvent = async (args: ISaveEventArgs) => {
       });
     } else {
       response = await client.updateByQuery({
-        index: 'events',
+        index,
         refresh: true,
         body: {
           script: {
