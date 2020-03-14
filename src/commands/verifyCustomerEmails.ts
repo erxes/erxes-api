@@ -18,8 +18,7 @@ const main = async () => {
         limit = parseInt(argv[2], 10);
       }
 
-      // const query = { primaryEmail: { $exists: true, $ne: null }, emailValidationStatus: { $exists: false } };
-      const query = { primaryEmail: { $in: ["mrbatamar@gmail.com", "batamar.b@nmtec.co"] } };
+      const query = { primaryEmail: { $exists: true, $ne: null }, emailValidationStatus: { $exists: false } };
 
       const customers = await Customers.find(query, { primaryEmail: 1 }).limit(limit);
 
@@ -59,8 +58,8 @@ const main = async () => {
 
 main()
   .then(() => {
-    console.log('success ...')
+    console.log('success ...');
   })
-  .catch((e) => {
+  .catch(e => {
     console.log(e.message);
-  })
+  });
