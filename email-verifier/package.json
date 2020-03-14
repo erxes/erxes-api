@@ -7,15 +7,7 @@
     "start": "node dist",
     "dev": "NODE_ENV=development DEBUG=erxes-email-verifier:* node_modules/.bin/ts-node-dev --experimental-worker --respawn src",
     "build": "tsc -p tsconfig.prod.json",
-    "precommit": "lint-staged",
-    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts",
-    "lint": "tslint 'src/**/*.ts'"
-  },
-  "lint-staged": {
-    "*.ts": [
-      "prettier --write",
-      "git add"
-    ]
+    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts"
   },
   "dependencies": {
     "amqplib": "^0.5.5",
@@ -36,12 +28,8 @@
     "@types/mongoose": "^5.2.1",
     "@types/node": "^10.12.18",
     "@types/q": "^1.5.0",
-    "lint-staged": "^3.6.0",
-    "prettier": "^1.13.7",
     "ts-node": "8.0.3",
     "ts-node-dev": "^1.0.0-pre.32",
-    "tslint": "^5.8.0",
-    "tslint-config-prettier": "^1.1.0",
     "tslint-config-standard": "^7.0.0",
     "typescript": "^3.7.2"
   }
