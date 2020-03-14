@@ -38,7 +38,7 @@ export interface IEngageMessageModel extends Model<IEngageMessageDocument> {
   engageMessageSetLive(_id: string): Promise<IEngageMessageDocument>;
   engageMessageSetPause(_id: string): Promise<IEngageMessageDocument>;
   removeEngageMessage(_id: string): void;
-  setCustomerIds(_id: string, customers: ICustomerDocument[]): Promise<IEngageMessageDocument>;
+  setCustomersCount(_id: string, type: string, count: number): Promise<IEngageMessageDocument>;
   changeCustomer(newCustomerId: string, customerIds: string[]): Promise<IEngageMessageDocument>;
   removeCustomersEngages(customerIds: string[]): Promise<{ n: number; ok: number }>;
 
@@ -134,10 +134,10 @@ export const loadClass = () => {
     }
 
     /**
-     * Save matched customer ids
+     * Save matched customers count
      */
-    public static async setCustomerIds(_id: string, customers: ICustomerDocument[]) {
-      await EngageMessages.updateOne({ _id }, { $set: { customerIds: customers.map(customer => customer._id) } });
+    public static async setCustomersCount(_id: string, type: string, count: number) {
+      await EngageMessages.updateOne({ _id }, { $set: { [type]: count } });
 
       return EngageMessages.findOne({ _id });
     }
