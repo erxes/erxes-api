@@ -146,6 +146,11 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
       engageMessageId: engageMessage._id,
     };
 
+    if (customerInfos.length === 0) {
+      await EngageMessages.deleteOne({ _id: engageMessage._id });
+      throw new Error('No customers found who have valid emails');
+    }
+
     await sendMessage('erxes-api:engages-notification', { action: 'sendEngage', data });
   }
 
