@@ -470,6 +470,7 @@ const widgetMutations = {
     try {
       await trackViewPageEvent({ customerId, attributes: { url: browserInfo.url } });
     } catch (e) {
+      /* istanbul ignore next */
       debugBase(`Error occurred during widgets save browser info ${e.message}`);
     }
 
