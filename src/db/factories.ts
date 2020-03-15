@@ -473,7 +473,6 @@ interface ICustomerFactoryInput {
   lastSeenAt?: number;
   sessionCount?: number;
   visitorContactInfo?: any;
-  urlVisits?: object;
   deviceTokens?: string[];
   mergedIds?: string[];
 }
@@ -498,7 +497,6 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     lastSeenAt: faker.date.between(createdAt, new Date()),
     isOnline: params.isOnline || false,
     sessionCount: faker.random.number(),
-    urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
     trackedData: params.trackedData || {},
     tagIds: params.tagIds || [Random.id()],
