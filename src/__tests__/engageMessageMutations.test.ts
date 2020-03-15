@@ -434,6 +434,12 @@ describe('engage message mutation tests', () => {
       throw new Error('User not found');
     }
 
+    try {
+      await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', { ..._doc, brandIds: ['_id'] });
+    } catch (e) {
+      expect(e[0].message).toBe('No customers found who have valid emails');
+    }
+
     const engageMessage = await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', _doc);
 
     const tags = engageMessage.getTags.map(tag => tag._id);
