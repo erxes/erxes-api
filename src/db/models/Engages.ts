@@ -1,5 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ConversationMessages, Conversations, Users } from '.';
+import { getNumberOfVisits } from '../../events';
 import { IBrowserInfo } from './Customers';
 import { IBrandDocument } from './definitions/brands';
 import { IEngageData, IMessageDocument } from './definitions/conversationMessages';
@@ -217,12 +218,12 @@ export const loadClass = () => {
         }
 
         // check for rules ===
-        const urlVisits = customer.urlVisits || {};
+        const numberOfVisits = await getNumberOfVisits(customer._id, browserInfo.url);
 
         const isPassedAllRules = await this.checkRules({
           rules: messenger.rules,
           browserInfo,
-          numberOfVisits: urlVisits[browserInfo.url] || 0,
+          numberOfVisits,
         });
 
         // if given visitor is matched with given condition then create

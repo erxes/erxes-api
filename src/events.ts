@@ -87,6 +87,31 @@ export const saveEvent = async (args: ISaveEventArgs) => {
   return { customerId };
 };
 
+export const getNumberOfVisits = async (customerId: string, url: string): Promise<number> => {
+  try {
+    const response = await fetchElk('search', 'events', {
+      query: {
+        bool: {
+          must: [{ term: { name: 'viewPage' } }, { term: { customerId } }, { term: { 'attributes.url.keyword': url } }],
+        },
+      },
+    });
+
+    const hits = response.hits.hits;
+
+    if (hits.length === 0) {
+      return 0;
+    }
+
+    const [firstHit] = hits;
+
+    return firstHit._source.count;
+  } catch (e) {
+    debugBase(`Error occured during getNumberOfVisits ${e.message}`);
+    return 0;
+  }
+};
+
 export const trackViewPageEvent = (args: { customerId: string; attributes: any }) => {
   const { attributes, customerId } = args;
 

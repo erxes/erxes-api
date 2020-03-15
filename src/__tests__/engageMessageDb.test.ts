@@ -167,7 +167,7 @@ describe('engage messages model tests', () => {
   });
 
   test('save matched customer ids', async () => {
-    const message = await EngageMessages.setCustomerIds(_message._id, [_customer, _customer2]);
+    const message = await EngageMessages.setCustomersCount(_message._id, 'totalCustomersCount', 2);
 
     if (!message || !message.customerIds) {
       throw new Error('Engage message not found');
