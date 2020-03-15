@@ -466,7 +466,6 @@ interface ICustomerFactoryInput {
   trackedData?: any;
   tagIds?: string[];
   ownerId?: string;
-  emailValidationStatus?: string;
   profileScore?: number;
   code?: string;
   isOnline?: boolean;
@@ -474,6 +473,7 @@ interface ICustomerFactoryInput {
   sessionCount?: number;
   visitorContactInfo?: any;
   deviceTokens?: string[];
+  emailValidationStatus?: string;
   mergedIds?: string[];
 }
 
