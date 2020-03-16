@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Stages, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
@@ -155,6 +155,17 @@ const taskMutations = {
       content,
       contentType: MODULE_NAMES.TASK,
     });
+
+    // if move between stages
+    if (destinationStageId !== task.stageId) {
+      const stage = await Stages.getStage(task.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          pipelineId: stage.pipelineId,
+        },
+      });
+    }
 
     return task;
   },

@@ -270,17 +270,11 @@ export const subscriptions = `
     notificationInserted(userId: String): Notification
     onboardingChanged(userId: String!): OnboardingNotification
     
+    pipelinesChanged(_id: String!): Pipeline
     dealsChanged(_id: String!): Deal
-    dealsMoved: Boolean
-    
     ticketsChanged(_id: String!): Ticket
-    ticketsMoved: Boolean
-    
     tasksChanged(_id: String!): Task
-    tasksMoved: Boolean
-    
     growthHacksChanged(_id: String!): GrowthHack
-    growthHacksMoved: Boolean
     
     checklistsChanged(contentType: String!, contentTypeId: String!): Checklist
     checklistDetailChanged(_id: String!): Checklist

@@ -6,6 +6,7 @@ import deals from './deals';
 import growthHacks from './growthHacks';
 import importHistory from './importHistory';
 import notifications from './notifications';
+import pipelines from './pipelines';
 import robot from './robot';
 import tasks from './tasks';
 import tickets from './tickets';
@@ -22,6 +23,7 @@ let subscriptions: any = {
   ...tickets,
   ...checklists,
   ...growthHacks,
+  ...pipelines,
 };
 
 const { NODE_ENV } = process.env;

@@ -1,4 +1,4 @@
-import { ActivityLogs, GrowthHacks } from '../../../db/models';
+import { ActivityLogs, GrowthHacks, Stages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -152,6 +152,17 @@ const growthHackMutations = {
       action,
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
+
+    // if move between stages
+    if (destinationStageId !== growthHack.stageId) {
+      const stage = await Stages.getStage(growthHack.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          pipelineId: stage.pipelineId,
+        },
+      });
+    }
 
     return growthHack;
   },
