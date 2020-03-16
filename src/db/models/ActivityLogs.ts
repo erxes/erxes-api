@@ -67,8 +67,11 @@ export const loadClass = () => {
       contentId: string;
       userId: string;
       contentType: string;
-      content: object;
+      content: any;
     }) {
+      if (!content.addedUserIds && !content.removedUserIds) {
+        return;
+      }
       return ActivityLogs.addActivityLog({
         contentType,
         contentId,
