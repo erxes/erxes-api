@@ -1,8 +1,12 @@
+import * as dotenv from 'dotenv';
 import * as elasticsearch from 'elasticsearch';
 import * as mongoUri from 'mongo-uri';
 import { debugBase } from './debuggers';
 
-const { NODE_ENV, MONGO_URL, ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
+// load environment variables
+dotenv.config();
+
+const { NODE_ENV, MONGO_URL, TEST_MONGO_URL, ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
 
 export const client = new elasticsearch.Client({
   hosts: [ELASTICSEARCH_URL],
@@ -13,7 +17,13 @@ export const getMappings = async (index: string) => {
 };
 
 export const getIndexPrefix = () => {
-  const uriObject = mongoUri.parse(MONGO_URL);
+  let mongoUrl = MONGO_URL;
+
+  if (NODE_ENV === 'test') {
+    mongoUrl = TEST_MONGO_URL;
+  }
+
+  const uriObject = mongoUri.parse(mongoUrl);
   const dbName = uriObject.database;
 
   return `${dbName}__`;
