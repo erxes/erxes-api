@@ -191,7 +191,7 @@ const dealMutations = {
 
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
-          pipelineId: stage.pipelineId,
+          _id: stage.pipelineId,
         },
       });
     }

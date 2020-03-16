@@ -1,4 +1,3 @@
-import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Stages, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
@@ -162,7 +161,7 @@ const taskMutations = {
 
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
-          pipelineId: stage.pipelineId,
+          _id: stage.pipelineId,
         },
       });
     }
