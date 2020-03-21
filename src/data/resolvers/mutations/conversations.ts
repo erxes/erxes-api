@@ -1,6 +1,6 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
+import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
 import {
   CONVERSATION_STATUSES,
@@ -320,6 +320,21 @@ const conversationMutations = {
 
     await sendNotifications({ user, conversations, type: NOTIFICATION_TYPES.CONVERSATION_ASSIGNEE_CHANGE });
 
+    // Add bot message and update conversation
+    let assignedUser = await Users.getUser(assignedUserId);
+
+    for (const conversation of conversations) {
+      let message = await ConversationMessages.addMessage({
+        conversationId: conversation._id,
+        content: `${assignedUser.details?.shortName || assignedUser.email} has been assigned to this conversation`,
+        fromBot: true,
+      });
+
+      graphqlPubsub.publish('conversationClientMessageInserted', {
+        conversationClientMessageInserted: message,
+      });
+    }
+
     return conversations;
   },
 
@@ -338,6 +353,23 @@ const conversationMutations = {
 
     // notify graphl subscription
     publishConversationsChanged(_ids, 'assigneeChanged');
+
+    // Add bot message and update conversation
+    for (const conversation of oldConversations) {
+      if (!conversation.assignedUserId) continue;
+
+      let unAssignedUser = await Users.getUser(conversation.assignedUserId);
+      let message = await ConversationMessages.addMessage({
+        conversationId: conversation._id,
+        content: `${unAssignedUser.details?.shortName ||
+          unAssignedUser.email} has been deassigned from this conversation`,
+        fromBot: true,
+      });
+
+      graphqlPubsub.publish('conversationClientMessageInserted', {
+        conversationClientMessageInserted: message,
+      });
+    }
 
     return updatedConversations;
   },
