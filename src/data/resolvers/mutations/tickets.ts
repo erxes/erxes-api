@@ -1,4 +1,4 @@
-import { ActivityLogs, Checklists, Conformities, Stages, Tickets } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, InternalNotes, Stages, Tickets } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
@@ -227,11 +227,12 @@ const ticketMutations = {
       contentType: MODULE_NAMES.TICKET,
     });
 
+    const removed = await ticket.remove();
+
     await Conformities.removeConformity({ mainType: MODULE_NAMES.TICKET, mainTypeId: ticket._id });
     await Checklists.removeChecklists(MODULE_NAMES.TICKET, ticket._id);
     await ActivityLogs.removeActivityLog(ticket._id);
-
-    const removed = await ticket.remove();
+    await InternalNotes.remove({ contentTypeId: _id });
 
     await putDeleteLog({ type: MODULE_NAMES.TICKET, object: ticket }, user);
 

@@ -1,4 +1,4 @@
-import { ActivityLogs, Customers } from '../../../db/models';
+import { ActivityLogs, Customers, InternalNotes } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { sendMessage } from '../../../messageBroker';
 import { MODULE_NAMES } from '../../constants';
@@ -78,6 +78,8 @@ const customerMutations = {
       await ActivityLogs.removeActivityLog(customer._id);
 
       await putDeleteLog({ type: MODULE_NAMES.CUSTOMER, object: customer }, user);
+
+      await InternalNotes.remove({ contentTypeId: customer._id });
 
       if (customer.mergedIds) {
         await sendMessage('erxes-api:integrations-notification', {

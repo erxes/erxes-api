@@ -1,4 +1,4 @@
-import { ActivityLogs, GrowthHacks, Stages } from '../../../db/models';
+import { ActivityLogs, GrowthHacks, InternalNotes, Stages } from '../../../db/models';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
@@ -227,13 +227,12 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
 
-    await ActivityLogs.removeActivityLog(growthHack._id);
-
     const removed = growthHack.remove();
 
-    await putDeleteLog({ type: MODULE_NAMES.GROWTH_HACK, object: growthHack }, user);
+    await ActivityLogs.removeActivityLog(_id);
+    await InternalNotes.remove({ contentTypeId: _id });
 
-    await ActivityLogs.removeActivityLog(growthHack._id);
+    await putDeleteLog({ type: MODULE_NAMES.GROWTH_HACK, object: growthHack }, user);
 
     return removed;
   },

@@ -1,4 +1,4 @@
-import { Companies } from '../../../db/models';
+import { Companies, InternalNotes } from '../../../db/models';
 import { ICompany } from '../../../db/models/definitions/companies';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
@@ -57,6 +57,7 @@ const companyMutations = {
     await Companies.removeCompanies(companyIds);
 
     for (const company of companies) {
+      await InternalNotes.remove({ contentTypeId: company._id });
       await putDeleteLog({ type: MODULE_NAMES.COMPANY, object: company }, user);
     }
 

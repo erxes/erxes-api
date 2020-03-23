@@ -1,4 +1,4 @@
-import { ProductCategories, Products } from '../../../db/models';
+import { InternalNotes, ProductCategories, Products } from '../../../db/models';
 import { IProduct, IProductCategory, IProductDocument } from '../../../db/models/definitions/deals';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
@@ -70,6 +70,8 @@ const productMutations = {
 
     for (const product of products) {
       await putDeleteLog({ type: MODULE_NAMES.PRODUCT, object: product }, user);
+
+      await InternalNotes.remove({ contentTypeId: product._id });
     }
 
     return productIds;

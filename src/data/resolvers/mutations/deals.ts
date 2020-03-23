@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Deals, InternalNotes, Stages } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
@@ -253,11 +253,12 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     });
 
-    await Conformities.removeConformity({ mainType: MODULE_NAMES.DEAL, mainTypeId: deal._id });
-    await Checklists.removeChecklists(MODULE_NAMES.DEAL, deal._id);
-    await ActivityLogs.removeActivityLog(deal._id);
-
     const removed = await deal.remove();
+
+    await Conformities.removeConformity({ mainType: MODULE_NAMES.DEAL, mainTypeId: _id });
+    await Checklists.removeChecklists(MODULE_NAMES.DEAL, _id);
+    await ActivityLogs.removeActivityLog(_id);
+    await InternalNotes.remove({ contentTypeId: _id });
 
     await putDeleteLog({ type: MODULE_NAMES.DEAL, object: deal }, user);
 
