@@ -33,11 +33,28 @@ interface ISubmission {
   validation?: string;
 }
 
-export const getMessengerData = async (integration: IIntegrationDocument) => {
+export const getMessengerData = async (
+  integration: IIntegrationDocument,
+  dataSources: {
+    EngagesAPI: any;
+    IntegrationsAPI: any;
+  },
+) => {
   let messagesByLanguage: IMessengerDataMessagesItem | null = null;
   let messengerData = integration.messengerData;
 
   if (messengerData) {
+    let showVideoCallRequest = messengerData.showVideoCallRequest;
+
+    try {
+      const videoCallUsageStatus = await dataSources.IntegrationsAPI.fetchApi('/videoCall/usageStatus');
+
+      showVideoCallRequest = showVideoCallRequest && videoCallUsageStatus;
+    } catch (e) {
+      debugExternalApi(e.message);
+    }
+
+    messengerData.showVideoCallRequest = showVideoCallRequest;
     messengerData = messengerData.toJSON();
 
     const languageCode = integration.languageCode || 'en';
@@ -306,19 +323,11 @@ const widgetMutations = {
       });
     }
 
-    let videoCallUsageStatus = false;
-
-    try {
-      videoCallUsageStatus = await dataSources.IntegrationsAPI.fetchApi('/videoCall/usageStatus');
-    } catch (e) {
-      debugExternalApi(e.message);
-    }
-
     return {
       integrationId: integration._id,
-      uiOptions: { ...(integration.uiOptions ? integration.uiOptions.toJSON() : {}), videoCallUsageStatus },
+      uiOptions: { ...(integration.uiOptions ? integration.uiOptions.toJSON() : {}) },
       languageCode: integration.languageCode,
-      messengerData: await getMessengerData(integration),
+      messengerData: await getMessengerData(integration, dataSources),
       customerId: customer._id,
       brand,
     };
