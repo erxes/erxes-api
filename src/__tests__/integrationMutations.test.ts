@@ -481,6 +481,16 @@ describe('mutations', () => {
     expect(response).toBe('success');
 
     spy.mockRestore();
+
+    const spy1 = jest.spyOn(messageBroker, 'sendRPCMessage');
+
+    spy1.mockImplementation(() => Promise.resolve({ erxesApiIds: [] }));
+
+    const secondResponse = await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
+
+    expect(secondResponse).toBe('success');
+
+    spy1.mockRestore();
   });
 
   test('Send mail', async () => {

@@ -810,7 +810,7 @@ export const regexSearchText = (searchValue: string, searchKey = 'searchText') =
 /**
  * Check user ids whether its added or removed from array of ids
  */
-export const checkUserIds = (oldUserIds: string[] = [], newUserIds: string[]) => {
+export const checkUserIds = (oldUserIds: string[] = [], newUserIds: string[] = []) => {
   const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
 
   const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
@@ -835,10 +835,36 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   return true;
 };
 
-export const validateEmail = (email: string) => {
+export const validateEmail = async (email: string, wait?: boolean) => {
   const data = { email };
 
-  sendMessage('erxes-api:engages-notification', { action: 'verifyEmail', data });
+  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
+
+  if (!EMAIL_VERIFIER_ENDPOINT) {
+    return sendMessage('erxes-api:email-verifier-notification', { action: 'emailVerify', data });
+  }
+
+  const requestOptions = {
+    url: `${EMAIL_VERIFIER_ENDPOINT}/verify-single`,
+    method: 'POST',
+    body: { email },
+  };
+
+  const callback = response =>
+    Customers.updateOne({ primaryEmail: email }, { $set: { emailValidationStatus: response.status } });
+
+  if (wait) {
+    const response = await sendRequest(requestOptions);
+    return callback(response);
+  }
+
+  sendRequest(requestOptions)
+    .then(async response => {
+      await callback(response);
+    })
+    .catch(e => {
+      debugExternalApi(`Error occurred during email verify ${e.message}`);
+    });
 };
 
 export const getConfigs = async () => {

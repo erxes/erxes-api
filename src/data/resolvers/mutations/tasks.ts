@@ -1,8 +1,8 @@
-import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Stages, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -119,6 +119,45 @@ const taskMutations = {
       user,
     );
 
+    if (oldTask.stageId === updatedTask.stageId) {
+      graphqlPubsub.publish('tasksChanged', {
+        tasksChanged: {
+          _id: updatedTask._id,
+        },
+      });
+
+      return updatedTask;
+    }
+
+    // if task moves between stages
+    const { content, action } = await itemsChange(user._id, oldTask, MODULE_NAMES.TASK, updatedTask.stageId);
+
+    await sendNotifications({
+      item: updatedTask,
+      user,
+      type: NOTIFICATION_TYPES.TASK_CHANGE,
+      content,
+      action,
+      contentType: MODULE_NAMES.TASK,
+    });
+
+    const updatedStage = await Stages.getStage(updatedTask.stageId);
+    const oldStage = await Stages.getStage(oldTask.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: updatedStage.pipelineId,
+      },
+    });
+
+    if (updatedStage.pipelineId !== oldStage.pipelineId) {
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: oldStage.pipelineId,
+        },
+      });
+    }
+
     return updatedTask;
   },
 
@@ -148,6 +187,17 @@ const taskMutations = {
       content,
       contentType: MODULE_NAMES.TASK,
     });
+
+    // if move between stages
+    if (destinationStageId !== task.stageId) {
+      const stage = await Stages.getStage(task.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+        },
+      });
+    }
 
     return task;
   },

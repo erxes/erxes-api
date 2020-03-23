@@ -1,6 +1,7 @@
+import * as getUuid from 'uuid-by-string';
 import { Customers } from './db/models';
 import { debugBase } from './debuggers';
-import { client, fetchElk } from './elasticsearch';
+import { client, fetchElk, getIndexPrefix } from './elasticsearch';
 
 interface ISaveEventArgs {
   type?: string;
@@ -39,16 +40,19 @@ export const saveEvent = async (args: ISaveEventArgs) => {
     searchQuery.bool.must.push(additionalQuery);
   }
 
-  try {
-    let response = await fetchElk('search', 'events', {
-      size: 1,
-      query: searchQuery,
-    });
+  const index = `${getIndexPrefix()}events`;
 
-    if (response.hits.total.value === 0) {
-      response = await client.index({
-        index: 'events',
-        body: {
+  try {
+    const response = await client.update({
+      index,
+      // generate unique id based on searchQuery
+      id: getUuid(JSON.stringify(searchQuery)),
+      body: {
+        script: {
+          source: 'ctx._source["count"] += 1',
+          lang: 'painless',
+        },
+        upsert: {
           type,
           name,
           customerId,
@@ -56,20 +60,8 @@ export const saveEvent = async (args: ISaveEventArgs) => {
           count: 1,
           attributes: attributes || {},
         },
-      });
-    } else {
-      response = await client.updateByQuery({
-        index: 'events',
-        refresh: true,
-        body: {
-          script: {
-            lang: 'painless',
-            source: 'ctx._source["count"] += 1',
-          },
-          query: searchQuery,
-        },
-      });
-    }
+      },
+    });
 
     debugBase(`Response ${JSON.stringify(response)}`);
   } catch (e) {
@@ -83,6 +75,31 @@ export const saveEvent = async (args: ISaveEventArgs) => {
   }
 
   return { customerId };
+};
+
+export const getNumberOfVisits = async (customerId: string, url: string): Promise<number> => {
+  try {
+    const response = await fetchElk('search', 'events', {
+      query: {
+        bool: {
+          must: [{ term: { name: 'viewPage' } }, { term: { customerId } }, { term: { 'attributes.url.keyword': url } }],
+        },
+      },
+    });
+
+    const hits = response.hits.hits;
+
+    if (hits.length === 0) {
+      return 0;
+    }
+
+    const [firstHit] = hits;
+
+    return firstHit._source.count;
+  } catch (e) {
+    debugBase(`Error occured during getNumberOfVisits ${e.message}`);
+    return 0;
+  }
 };
 
 export const trackViewPageEvent = (args: { customerId: string; attributes: any }) => {
