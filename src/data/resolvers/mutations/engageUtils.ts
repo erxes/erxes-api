@@ -7,7 +7,12 @@ import {
   Segments,
   Users,
 } from '../../../db/models';
-import { CONVERSATION_STATUSES, KIND_CHOICES, METHODS } from '../../../db/models/definitions/constants';
+import {
+  CONVERSATION_STATUSES,
+  EMAIL_VALIDATION_STATUSES,
+  KIND_CHOICES,
+  METHODS,
+} from '../../../db/models/definitions/constants';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { IEngageMessageDocument } from '../../../db/models/definitions/engages';
 import { IUserDocument } from '../../../db/models/definitions/users';
@@ -118,19 +123,19 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
 
   const customers = await findCustomers({ customerIds, segmentIds, tagIds, brandIds });
 
-  // save matched customer ids
-  EngageMessages.setCustomerIds(engageMessage._id, customers);
+  // save matched customers count
+  await EngageMessages.setCustomersCount(engageMessage._id, 'totalCustomersCount', customers.length);
 
   if (engageMessage.method === METHODS.EMAIL) {
-    const customerInfos = customers.map(customer => {
-      return {
+    const customerInfos = customers
+      .filter(customer => customer.emailValidationStatus === EMAIL_VALIDATION_STATUSES.VALID)
+      .map(customer => ({
         _id: customer._id,
         name: Customers.getCustomerName(customer),
         email: customer.primaryEmail,
-      };
-    });
+      }));
 
-    await sendMessage('erxes-api:send-engage', {
+    const data = {
       customers: customerInfos,
       email: engageMessage.email,
       user: {
@@ -139,7 +144,16 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
         position: user.details && user.details.position,
       },
       engageMessageId: engageMessage._id,
-    });
+    };
+
+    if (customerInfos.length === 0) {
+      await EngageMessages.deleteOne({ _id: engageMessage._id });
+      throw new Error('No customers found who have valid emails');
+    }
+
+    await EngageMessages.setCustomersCount(engageMessage._id, 'validCustomersCount', customerInfos.length);
+
+    await sendMessage('erxes-api:engages-notification', { action: 'sendEngage', data });
   }
 
   if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {

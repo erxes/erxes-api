@@ -27,9 +27,11 @@ export const queries = `
     labelIds: [String]
     sortField: String
     sortDirection: Int
+    userIds: [String]
     ${conformityQueryFields}
   ): [Ticket]
   archivedTickets(pipelineId: String!, search: String, page: Int, perPage: Int): [Ticket]
+  archivedTicketsCount(pipelineId: String!, search: String): Int
 `;
 
 const ticketMutationParams = `

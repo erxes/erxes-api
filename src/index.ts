@@ -93,11 +93,11 @@ app.post('/events-receive', async (req, res) => {
     const response =
       name === 'pageView'
         ? await trackViewPageEvent({ customerId, attributes })
-        : trackCustomEvent({ name, customerId, attributes });
+        : await trackCustomEvent({ name, customerId, attributes });
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
-    return res.json({});
+    return res.json({ status: 'success' });
   }
 });
 
@@ -374,7 +374,7 @@ if (NODE_ENV === 'production') {
   (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach(sig => {
     process.on(sig, () => {
       // Stops the server from accepting new connections and finishes existing connections.
-      httpServer.close(error => {
+      httpServer.close((error: Error | undefined) => {
         if (error) {
           console.error(error.message);
           process.exit(1);

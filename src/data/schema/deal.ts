@@ -48,6 +48,7 @@ const commonQueryParams = `
   priority: [String]
   sortField: String
   sortDirection: Int
+  userIds: [String]
   `;
 
 export const queries = `
@@ -60,6 +61,7 @@ export const queries = `
     ${conformityQueryFields}
     ): [Deal]
   archivedDeals(pipelineId: String!, search: String, page: Int, perPage: Int): [Deal]
+  archivedDealsCount(pipelineId: String!, search: String): Int
   dealsTotalAmounts(
     ${commonQueryParams}
     ${conformityQueryFields}

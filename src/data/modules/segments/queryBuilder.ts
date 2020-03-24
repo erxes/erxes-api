@@ -16,14 +16,6 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
   const propertyNegative: any[] = [];
 
   if (contentType === 'customer') {
-    propertyPositive.push({
-      range: {
-        profileScore: {
-          gt: 0,
-        },
-      },
-    });
-
     propertyNegative.push({
       term: {
         status: 'Deleted',
@@ -51,17 +43,15 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
     });
 
     idsByEvents = eventsResponse.hits.hits.map(hit => hit._source[idField]);
+
+    propertyPositive.push({
+      terms: {
+        _id: idsByEvents,
+      },
+    });
   }
 
   if (action === 'count') {
-    if (idsByEvents.length > 0) {
-      propertyPositive.push({
-        terms: {
-          _id: idsByEvents,
-        },
-      });
-    }
-
     return {
       positiveList: propertyPositive,
       negativeList: propertyNegative,

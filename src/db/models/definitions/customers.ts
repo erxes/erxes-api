@@ -1,7 +1,12 @@
 import { Document, Schema } from 'mongoose';
 
 import { ILink, linkSchema } from './common';
-import { CUSTOMER_LEAD_STATUS_TYPES, CUSTOMER_LIFECYCLE_STATE_TYPES, STATUSES } from './constants';
+import {
+  CUSTOMER_LEAD_STATUS_TYPES,
+  CUSTOMER_LIFECYCLE_STATE_TYPES,
+  EMAIL_VALIDATION_STATUSES,
+  STATUSES,
+} from './constants';
 
 import { field, schemaWrapper } from './utils';
 
@@ -47,9 +52,10 @@ export interface ICustomer {
   hasAuthority?: string;
   description?: string;
   doNotDisturb?: string;
-  hasValidEmail?: boolean;
+  emailValidationStatus?: string;
   links?: ILink;
   isUser?: boolean;
+  relatedIntegrationIds?: string[];
   integrationId?: string;
   tagIds?: string[];
   // TODO migrate after remove 1row
@@ -60,7 +66,6 @@ export interface ICustomer {
   trackedData?: any;
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
-  urlVisits?: any;
   deviceTokens?: string[];
   code?: string;
   isOnline?: boolean;
@@ -145,7 +150,12 @@ export const customerSchema = schemaWrapper(
 
     primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
     emails: field({ type: [String], optional: true, label: 'Emails' }),
-    hasValidEmail: field({ type: Boolean, optional: true, label: 'Has valid email' }),
+    emailValidationStatus: field({
+      type: String,
+      enum: EMAIL_VALIDATION_STATUSES.ALL,
+      default: EMAIL_VALIDATION_STATUSES.UNKNOWN,
+      label: 'Email validation status',
+    }),
 
     primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
     phones: field({ type: [String], optional: true, label: 'Phones' }),
@@ -189,6 +199,7 @@ export const customerSchema = schemaWrapper(
 
     isUser: field({ type: Boolean, label: 'Is user', optional: true }),
 
+    relatedIntegrationIds: field({ type: [String], optional: true }),
     integrationId: field({ type: String, optional: true, label: 'Integration' }),
     tagIds: field({ type: [String], optional: true, index: true, label: 'Tags' }),
 
@@ -207,7 +218,6 @@ export const customerSchema = schemaWrapper(
       optional: true,
       label: 'Visitor contact info',
     }),
-    urlVisits: Object,
 
     deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
     searchText: field({ type: String, optional: true, index: true }),

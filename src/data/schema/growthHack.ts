@@ -31,6 +31,7 @@ const commonQueryFields = `
   hackStage: [String]
   priority: [String]
   labelIds: [String]
+  userIds: [String]
 `;
 
 export const queries = `
@@ -53,6 +54,7 @@ export const queries = `
   ): JSON
 
   archivedGrowthHacks(pipelineId: String!, search: String, page: Int, perPage: Int): [GrowthHack]
+  archivedGrowthHacksCount(pipelineId: String!, search: String): Int
 `;
 
 const commonParams = `

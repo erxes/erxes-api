@@ -1,5 +1,4 @@
 import * as AWS from 'aws-sdk';
-import * as EmailValidator from 'email-deep-validator';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -12,6 +11,7 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
@@ -244,7 +244,7 @@ const deleteFileGCS = async (fileName: string) => {
  * Read file from GCS, AWS
  */
 export const readFileRequest = async (key: string): Promise<any> => {
-  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_T`YPE', 'AWS');
+  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
   if (UPLOAD_SERVICE_TYPE === 'GCS') {
     const GCS_BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
@@ -642,31 +642,6 @@ export const registerOnboardHistory = ({ type, user }: { type: string; user: IUs
     })
     .catch(e => debugBase(e));
 
-/**
- * Validates email using MX record resolver
- * @param email as String
- */
-export const validateEmail = async email => {
-  const NODE_ENV = getEnv({ name: 'NODE_ENV' });
-
-  if (NODE_ENV === 'test') {
-    return true;
-  }
-
-  const emailValidator = new EmailValidator();
-  const { validDomain, validMailbox } = await emailValidator.verify(email);
-
-  if (!validDomain) {
-    return false;
-  }
-
-  if (!validMailbox && validMailbox === null) {
-    return false;
-  }
-
-  return true;
-};
-
 export const authCookieOptions = (secure: boolean) => {
   const oneDay = 1 * 24 * 3600 * 1000; // 1 day
 
@@ -790,7 +765,6 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
 
 export default {
   sendEmail,
-  validateEmail,
   sendNotification,
   sendMobileNotification,
   readFile,
@@ -836,7 +810,7 @@ export const regexSearchText = (searchValue: string, searchKey = 'searchText') =
 /**
  * Check user ids whether its added or removed from array of ids
  */
-export const checkUserIds = (oldUserIds: string[] = [], newUserIds: string[]) => {
+export const checkUserIds = (oldUserIds: string[] = [], newUserIds: string[] = []) => {
   const removedUserIds = oldUserIds.filter(e => !newUserIds.includes(e));
 
   const addedUserIds = newUserIds.filter(e => !oldUserIds.includes(e));
@@ -859,6 +833,38 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   }
 
   return true;
+};
+
+export const validateEmail = async (email: string, wait?: boolean) => {
+  const data = { email };
+
+  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
+
+  if (!EMAIL_VERIFIER_ENDPOINT) {
+    return sendMessage('erxes-api:email-verifier-notification', { action: 'emailVerify', data });
+  }
+
+  const requestOptions = {
+    url: `${EMAIL_VERIFIER_ENDPOINT}/verify-single`,
+    method: 'POST',
+    body: { email },
+  };
+
+  const callback = response =>
+    Customers.updateOne({ primaryEmail: email }, { $set: { emailValidationStatus: response.status } });
+
+  if (wait) {
+    const response = await sendRequest(requestOptions);
+    return callback(response);
+  }
+
+  sendRequest(requestOptions)
+    .then(async response => {
+      await callback(response);
+    })
+    .catch(e => {
+      debugExternalApi(`Error occurred during email verify ${e.message}`);
+    });
 };
 
 export const getConfigs = async () => {

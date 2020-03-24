@@ -132,3 +132,41 @@ export const receiveIntegrationsNotification = async msg => {
     return sendSuccess({ status: 'ok' });
   }
 };
+
+/*
+ * Email verifier notification
+ */
+export const receiveEmailVerifierNotification = async msg => {
+  const { action, data } = msg;
+
+  if (action === 'emailVerify') {
+    const bulkOps: Array<{
+      updateOne: {
+        filter: { primaryEmail: string };
+        update: { emailValidationStatus: string };
+      };
+    }> = [];
+
+    for (const { email, status } of data) {
+      bulkOps.push({
+        updateOne: {
+          filter: { primaryEmail: email },
+          update: { emailValidationStatus: status },
+        },
+      });
+    }
+
+    await Customers.bulkWrite(bulkOps);
+  }
+};
+
+/*
+ * Engages notification
+ */
+export const receiveEngagesNotification = async msg => {
+  const { action, data } = msg;
+
+  if (action === 'setDoNotDisturb') {
+    await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+  }
+};

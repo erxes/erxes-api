@@ -16,12 +16,13 @@ export interface IListParams extends IConformityQueryParams {
   skip?: number;
   date?: IDate;
   search?: string;
-  customerIds?: [string];
-  companyIds?: [string];
-  assignedUserIds?: [string];
+  customerIds?: string[];
+  companyIds?: string[];
+  assignedUserIds?: string[];
   sortField?: string;
   sortDirection?: number;
-  labelIds?: [string];
+  labelIds?: string[];
+  userIds?: string[];
 }
 
 const boardQueries = {
@@ -193,6 +194,16 @@ const boardQueries = {
     }
 
     return paginate(Stages.find(filter).sort({ createdAt: -1 }), listArgs);
+  },
+
+  archivedStagesCount(_root, { pipelineId, search }: { pipelineId: string; search?: string }) {
+    const filter: any = { pipelineId, status: BOARD_STATUSES.ARCHIVED };
+
+    if (search) {
+      Object.assign(filter, regexSearchText(search, 'name'));
+    }
+
+    return Stages.countDocuments(filter);
   },
 
   /**

@@ -1,7 +1,7 @@
 import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
 import { Companies, Customers, Fields, FieldsGroups } from '../../../db/models';
 import { debugBase } from '../../../debuggers';
-import { getMappings } from '../../../elasticsearch';
+import { getIndexPrefix, getMappings } from '../../../elasticsearch';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -91,26 +91,27 @@ const fieldQueries = {
       }
     }
 
+    let mappingProperties: any = {};
+
     // extend fields list using tracked fields data
     try {
-      const index = contentType === 'customer' ? 'customers' : 'companies';
+      const index = `${getIndexPrefix()}${contentType === 'customer' ? 'customers' : 'companies'}`;
       const response = await getMappings(index);
-
-      const mappingProperties = response[index].mappings.properties;
-
-      if (mappingProperties.trackedData) {
-        const trackedDataFields = Object.keys(mappingProperties.trackedData.properties);
-
-        for (const trackedDataField of trackedDataFields) {
-          fields.push({
-            _id: Math.random(),
-            name: `trackedData.${trackedDataField}`,
-            label: trackedDataField,
-          });
-        }
-      }
+      mappingProperties = response[index].mappings.properties;
     } catch (e) {
-      debugBase(e.message);
+      debugBase(`Error occurred in fieldsCombinedByContentType ${e.message}`);
+    }
+
+    if (mappingProperties.trackedData) {
+      const trackedDataFields = Object.keys(mappingProperties.trackedData.properties || {});
+
+      for (const trackedDataField of trackedDataFields) {
+        fields.push({
+          _id: Math.random(),
+          name: `trackedData.${trackedDataField}`,
+          label: trackedDataField,
+        });
+      }
     }
 
     return fields;

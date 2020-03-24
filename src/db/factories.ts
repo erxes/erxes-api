@@ -53,6 +53,7 @@ import {
   BOARD_STATUSES,
   BOARD_TYPES,
   CONVERSATION_STATUSES,
+  EMAIL_VALIDATION_STATUSES,
   FORM_TYPES,
   MESSAGE_TYPES,
   NOTIFICATION_TYPES,
@@ -408,6 +409,7 @@ interface ICompanyFactoryInput {
   parentCompanyId?: string;
   ownerId?: string;
   mergedIds?: string[];
+  code?: string;
 }
 
 export const companyFactory = (params: ICompanyFactoryInput = {}) => {
@@ -430,6 +432,7 @@ export const companyFactory = (params: ICompanyFactoryInput = {}) => {
     parentCompanyId: params.parentCompanyId || faker.random.uuid().toString(),
     ownerId: params.ownerId || faker.random.uuid().toString(),
     mergedIds: params.mergedIds || [],
+    code: params.code || '',
   };
 
   const searchText = Companies.fillSearchText({ ...companyDoc });
@@ -463,15 +466,14 @@ interface ICustomerFactoryInput {
   trackedData?: any;
   tagIds?: string[];
   ownerId?: string;
-  hasValidEmail?: boolean;
   profileScore?: number;
   code?: string;
   isOnline?: boolean;
   lastSeenAt?: number;
   sessionCount?: number;
   visitorContactInfo?: any;
-  urlVisits?: object;
   deviceTokens?: string[];
+  emailValidationStatus?: string;
   mergedIds?: string[];
 }
 
@@ -495,12 +497,11 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     lastSeenAt: faker.date.between(createdAt, new Date()),
     isOnline: params.isOnline || false,
     sessionCount: faker.random.number(),
-    urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
     trackedData: params.trackedData || {},
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
-    hasValidEmail: params.hasValidEmail || false,
+    emailValidationStatus: params.emailValidationStatus || EMAIL_VALIDATION_STATUSES.UNKNOWN,
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,

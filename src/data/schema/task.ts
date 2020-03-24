@@ -5,7 +5,6 @@ export const types = `
     _id: String!
     companies: [Company]
     customers: [Customer]
-    createdUser: User
     ${commonTypes}
   }
 `;
@@ -26,9 +25,11 @@ export const queries = `
     labelIds: [String]
     sortField: String
     sortDirection: Int
+    userIds: [String]
     ${conformityQueryFields}
   ): [Task]
   archivedTasks(pipelineId: String!, search: String, page: Int, perPage: Int): [Task]
+  archivedTasksCount(pipelineId: String!, search: String): Int
 `;
 
 export const mutations = `
