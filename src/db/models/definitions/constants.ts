@@ -69,6 +69,7 @@ export const KIND_CHOICES = {
   SMOOCH_VIBER: 'smooch-viber',
   SMOOCH_LINE: 'smooch-line',
   SMOOCH_TELEGRAM: 'smooch-telegram',
+  SMOOCH_TWILIO: 'smooch-twilio',
   ALL: [
     'messenger',
     'lead',
@@ -86,6 +87,7 @@ export const KIND_CHOICES = {
     'smooch-viber',
     'smooch-line',
     'smooch-telegram',
+    'smooch-twilio',
   ],
 };
 
@@ -106,6 +108,7 @@ export const INTEGRATION_NAMES_MAP = {
   'smooch-viber': 'Viber',
   'smooch-line': 'Line',
   'smooch-telegram': 'Telegram',
+  'smooch-twilio': 'Twilio SMS',
 };
 
 // messenger data availability constants
