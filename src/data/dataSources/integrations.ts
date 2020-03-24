@@ -27,10 +27,6 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post(`/${kind}/create-integration`, params);
   }
 
-  public async createWhatsappInstance(params) {
-    return this.post(`/whatsapp/create-instance`, params);
-  }
-
   public async removeIntegration(params) {
     return this.post('/integrations/remove', params);
   }
