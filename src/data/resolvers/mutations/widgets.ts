@@ -33,28 +33,11 @@ interface ISubmission {
   validation?: string;
 }
 
-export const getMessengerData = async (
-  integration: IIntegrationDocument,
-  dataSources: {
-    EngagesAPI: any;
-    IntegrationsAPI: any;
-  },
-) => {
+export const getMessengerData = async (integration: IIntegrationDocument) => {
   let messagesByLanguage: IMessengerDataMessagesItem | null = null;
   let messengerData = integration.messengerData;
 
   if (messengerData) {
-    let showVideoCallRequest = messengerData.showVideoCallRequest;
-
-    try {
-      const videoCallUsageStatus = await dataSources.IntegrationsAPI.fetchApi('/videoCall/usageStatus');
-
-      showVideoCallRequest = showVideoCallRequest && videoCallUsageStatus;
-    } catch (e) {
-      debugExternalApi(e.message);
-    }
-
-    messengerData.showVideoCallRequest = showVideoCallRequest;
     messengerData = messengerData.toJSON();
 
     const languageCode = integration.languageCode || 'en';
@@ -263,7 +246,6 @@ const widgetMutations = {
       cachedCustomerId?: string;
       deviceToken?: string;
     },
-    { dataSources }: IContext,
   ) {
     const { brandCode, email, phone, code, isUser, companyData, data, cachedCustomerId, deviceToken } = args;
 
@@ -325,9 +307,9 @@ const widgetMutations = {
 
     return {
       integrationId: integration._id,
-      uiOptions: { ...(integration.uiOptions ? integration.uiOptions.toJSON() : {}) },
+      uiOptions: integration.uiOptions,
       languageCode: integration.languageCode,
-      messengerData: await getMessengerData(integration, dataSources),
+      messengerData: await getMessengerData(integration),
       customerId: customer._id,
       brand,
     };

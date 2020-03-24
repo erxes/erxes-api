@@ -165,6 +165,7 @@ describe('mutations', () => {
       requireAuth: false,
       showChat: false,
       showLauncher: false,
+      showVideoCallRequest: false,
       forceLogoutWhenResolve: false,
       onlineHours: [
         {
