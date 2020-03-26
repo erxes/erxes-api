@@ -270,6 +270,11 @@ const conversationMutations = {
       requestName = 'replySmooch';
     }
 
+    // send reply to whatsapp
+    if (kind === KIND_CHOICES.WHATSAPP) {
+      requestName = 'replyWhatsApp';
+    }
+
     await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
 
     const dbMessage = await ConversationMessages.getMessage(message._id);

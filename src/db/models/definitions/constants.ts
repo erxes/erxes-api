@@ -70,6 +70,7 @@ export const KIND_CHOICES = {
   SMOOCH_LINE: 'smooch-line',
   SMOOCH_TELEGRAM: 'smooch-telegram',
   SMOOCH_TWILIO: 'smooch-twilio',
+  WHATSAPP: 'whatsapp',
   ALL: [
     'messenger',
     'lead',
@@ -88,6 +89,7 @@ export const KIND_CHOICES = {
     'smooch-line',
     'smooch-telegram',
     'smooch-twilio',
+    'whatsapp',
   ],
 };
 
@@ -109,6 +111,7 @@ export const INTEGRATION_NAMES_MAP = {
   'smooch-line': 'Line',
   'smooch-telegram': 'Telegram',
   'smooch-twilio': 'Twilio SMS',
+  whatsapp: 'WhatsApp',
 };
 
 // messenger data availability constants
