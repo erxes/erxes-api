@@ -461,15 +461,14 @@ interface ICustomerFactoryInput {
   trackedData?: any;
   tagIds?: string[];
   ownerId?: string;
-  emailValidationStatus?: string;
   profileScore?: number;
   code?: string;
   isOnline?: boolean;
   lastSeenAt?: number;
   sessionCount?: number;
   visitorContactInfo?: any;
-  urlVisits?: object;
   deviceTokens?: string[];
+  emailValidationStatus?: string;
   mergedIds?: string[];
 }
 
@@ -492,7 +491,6 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     lastSeenAt: faker.date.between(createdAt, new Date()),
     isOnline: params.isOnline || false,
     sessionCount: faker.random.number(),
-    urlVisits: params.urlVisits,
     customFieldsData: params.customFieldsData || {},
     trackedData: params.trackedData || {},
     tagIds: params.tagIds || [Random.id()],

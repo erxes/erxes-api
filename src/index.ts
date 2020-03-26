@@ -93,11 +93,11 @@ app.post('/events-receive', async (req, res) => {
     const response =
       name === 'pageView'
         ? await trackViewPageEvent({ customerId, attributes })
-        : trackCustomEvent({ name, customerId, attributes });
+        : await trackCustomEvent({ name, customerId, attributes });
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
-    return res.json({});
+    return res.json({ status: 'success' });
   }
 });
 

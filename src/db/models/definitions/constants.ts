@@ -66,6 +66,7 @@ export const KIND_CHOICES = {
   CALLPRO: 'callpro',
   TWITTER_DM: 'twitter-dm',
   CHATFUEL: 'chatfuel',
+  WHATSAPP: 'whatsapp',
   ALL: [
     'messenger',
     'lead',
@@ -80,6 +81,7 @@ export const KIND_CHOICES = {
     'nylas-outlook',
     'nylas-yahoo',
     'twitter-dm',
+    'whatsapp',
   ],
 };
 
@@ -97,6 +99,7 @@ export const INTEGRATION_NAMES_MAP = {
   'nylas-outlook': 'Outook',
   'nylas-yahoo': 'Yahoo',
   'twitter-dm': 'Twitter dm',
+  whatsapp: 'WhatsApp',
 };
 
 // messenger data availability constants
@@ -457,5 +460,6 @@ export const EMAIL_VALIDATION_STATUSES = {
   UNKNOWN: 'unknown',
   DISPOSABLE: 'disposable',
   CATCHALL: 'catchall',
-  ALL: ['valid', 'invalid', 'accept_all_unverifiable', 'unknown', 'disposable', 'catchall'],
+  BAD_SYNTAX: 'badsyntax',
+  ALL: ['valid', 'invalid', 'accept_all_unverifiable', 'unknown', 'disposable', 'catchall', 'badsyntax'],
 };

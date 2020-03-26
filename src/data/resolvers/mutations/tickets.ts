@@ -1,8 +1,9 @@
-import { ActivityLogs, Checklists, Conformities, Tickets } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Stages, Tickets } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -121,6 +122,45 @@ const ticketMutations = {
       user,
     );
 
+    if (oldTicket.stageId === updatedTicket.stageId) {
+      graphqlPubsub.publish('ticketsChanged', {
+        ticketsChanged: {
+          _id: updatedTicket._id,
+        },
+      });
+
+      return updatedTicket;
+    }
+
+    // if ticket moves between stages
+    const { content, action } = await itemsChange(user._id, oldTicket, MODULE_NAMES.TICKET, updatedTicket.stageId);
+
+    await sendNotifications({
+      item: updatedTicket,
+      user,
+      type: NOTIFICATION_TYPES.TICKET_CHANGE,
+      content,
+      action,
+      contentType: MODULE_NAMES.TICKET,
+    });
+
+    const updatedStage = await Stages.getStage(updatedTicket.stageId);
+    const oldStage = await Stages.getStage(oldTicket.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: updatedStage.pipelineId,
+      },
+    });
+
+    if (updatedStage.pipelineId !== oldStage.pipelineId) {
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: oldStage.pipelineId,
+        },
+      });
+    }
+
     return updatedTicket;
   },
 
@@ -150,6 +190,17 @@ const ticketMutations = {
       content,
       contentType: MODULE_NAMES.TICKET,
     });
+
+    // if move between stages
+    if (destinationStageId !== ticket.stageId) {
+      const stage = await Stages.getStage(ticket.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+        },
+      });
+    }
 
     return ticket;
   },

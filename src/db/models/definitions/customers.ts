@@ -1,11 +1,7 @@
 import { Document, Schema } from 'mongoose';
 
 import { ILink, linkSchema } from './common';
-import {
-  CUSTOMER_LEAD_STATUS_TYPES,
-  EMAIL_VALIDATION_STATUSES,
-  STATUSES,
-} from './constants';
+import { CUSTOMER_LEAD_STATUS_TYPES, EMAIL_VALIDATION_STATUSES, STATUSES } from './constants';
 
 import { field, schemaWrapper } from './utils';
 
@@ -67,10 +63,6 @@ export interface ICustomer {
   trackedData?: any;
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
-
-  // TODO: remove urlVisits
-  urlVisits?: any;
-
   deviceTokens?: string[];
   code?: string;
   isOnline?: boolean;
@@ -216,8 +208,6 @@ export const customerSchema = schemaWrapper(
       optional: true,
       label: 'Visitor contact info',
     }),
-
-    urlVisits: Object,
 
     deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
     searchText: field({ type: String, optional: true, index: true }),
