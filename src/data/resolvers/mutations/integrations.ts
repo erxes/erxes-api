@@ -188,6 +188,7 @@ const integrationMutations = {
         'nylas-yahoo',
         'chatfuel',
         'twitter-dm',
+        'whatsapp',
       ].includes(integration.kind)
     ) {
       await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
@@ -204,10 +205,6 @@ const integrationMutations = {
   async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
     try {
       const { erxesApiIds } = await sendRPCMessage({ action: 'remove-account', data: { _id } });
-
-      if (erxesApiIds.length === 0) {
-        return 'success';
-      }
 
       for (const id of erxesApiIds) {
         await Integrations.removeIntegration(id);
