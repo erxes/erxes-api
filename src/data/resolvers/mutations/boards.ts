@@ -167,7 +167,11 @@ const boardMutations = {
     return Stages.updateOrder(orders);
   },
 
-  stagesMove(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+  async stagesMove(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+    const stage = await Stages.getStage(_id);
+
+    await checkPermission(stage.type, user, 'stagesEdit');
+
     return Stages.moveStage({
       includeCards,
       stageId: _id,
@@ -176,7 +180,11 @@ const boardMutations = {
     });
   },
 
-  stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+  async stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+    const stage = await Stages.getStage(_id);
+
+    await checkPermission(stage.type, user, 'stagesEdit');
+
     return Stages.copyStage({
       stageId: _id,
       pipelineId,
