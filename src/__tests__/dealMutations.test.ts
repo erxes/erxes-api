@@ -1,4 +1,19 @@
-import { graphqlRequest } from '../db/connection';
+import './setup.ts';
+
+import { BOARD_STATUSES, BOARD_TYPES } from '../db/models/definitions/constants';
+import {
+  Boards,
+  ChecklistItems,
+  Checklists,
+  Conformities,
+  Deals,
+  PipelineLabels,
+  Pipelines,
+  Products,
+  Stages,
+} from '../db/models';
+import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
+import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
 import {
   boardFactory,
   checklistFactory,
@@ -13,24 +28,10 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import {
-  Boards,
-  ChecklistItems,
-  Checklists,
-  Conformities,
-  Deals,
-  PipelineLabels,
-  Pipelines,
-  Products,
-  Stages,
-} from '../db/models';
-import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
-import { BOARD_STATUSES, BOARD_TYPES } from '../db/models/definitions/constants';
-import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
+
 import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
 import { IUserDocument } from '../db/models/definitions/users';
-
-import './setup.ts';
+import { graphqlRequest } from '../db/connection';
 
 describe('Test deals mutations', () => {
   let board: IBoardDocument;
