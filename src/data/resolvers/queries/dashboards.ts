@@ -1,16 +1,14 @@
-import { DashboardItems } from '../../../db/models';
+import { DashboardItems, Dashboards } from '../../../db/models';
 
 const dashBoardQueries = {
-  /**
-   * Brands list
-   */
+  dashboards() {
+    return Dashboards.find({});
+  },
+
   dashboardItems() {
     return DashboardItems.find({});
   },
 
-  /**
-   * Get one brand
-   */
   dashboardItem(_root, { _id }: { _id: string }) {
     return DashboardItems.findOne({ _id });
   },

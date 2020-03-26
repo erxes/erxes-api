@@ -1,12 +1,34 @@
 import { Model, model } from 'mongoose';
-import { dashboardItemSchema, IDashboardItemDocument, IDashboardItemInput } from './definitions/dashboard';
+import {
+  dashboardItemSchema,
+  dashboardSchema,
+  IDashboard,
+  IDashboardItemDocument,
+  IDashboardItemInput,
+} from './definitions/dashboard';
 
 export interface IDashboardItemModel extends Model<IDashboardItemDocument> {
   addDashboardItem(doc: IDashboardItemInput): Promise<IDashboardItemDocument>;
   removeDashboardItem(_id: string): void;
 }
 
-export const loadClass = () => {
+export const loadDashBoardClass = () => {
+  class Dashboard {
+    public static addDashboard(doc: IDashboard) {
+      return Dashboards.create(doc);
+    }
+
+    public static async removeDashboard(_id: string) {
+      await Dashboards.remove(_id);
+    }
+  }
+
+  dashboardSchema.loadClass(Dashboard);
+
+  return dashboardSchema;
+};
+
+export const loadDashboardItemClass = () => {
   class DashboardItem {
     public static addDashboardItem(doc: IDashboardItemInput) {
       return DashboardItems.create(doc);
@@ -22,9 +44,12 @@ export const loadClass = () => {
   return dashboardItemSchema;
 };
 
-loadClass();
+loadDashBoardClass();
+loadDashboardItemClass();
 
+// tslint:disable-next-line
+const Dashboards = model<IDashboardItemDocument, IDashboardItemModel>('dashboards', dashboardSchema);
 // tslint:disable-next-line
 const DashboardItems = model<IDashboardItemDocument, IDashboardItemModel>('dashboard_items', dashboardItemSchema);
 
-export { DashboardItems };
+export { DashboardItems, Dashboards };
