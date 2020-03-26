@@ -1,9 +1,10 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
+import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IOrderInput } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
+import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
@@ -119,7 +120,7 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     };
 
-    if (checkedAssignUserIds) {
+    if (Object.keys(checkedAssignUserIds).length > 0) {
       const { addedUserIds, removedUserIds } = checkedAssignUserIds;
 
       const activityContent = { addedUserIds, removedUserIds };
@@ -146,6 +147,45 @@ const dealMutations = {
       },
       user,
     );
+
+    if (oldDeal.stageId === updatedDeal.stageId) {
+      graphqlPubsub.publish('dealsChanged', {
+        dealsChanged: {
+          _id: updatedDeal._id,
+        },
+      });
+
+      return updatedDeal;
+    }
+
+    // if deal moves between stages
+    const { content, action } = await itemsChange(user._id, oldDeal, MODULE_NAMES.DEAL, updatedDeal.stageId);
+
+    await sendNotifications({
+      item: updatedDeal,
+      user,
+      type: NOTIFICATION_TYPES.DEAL_CHANGE,
+      content,
+      action,
+      contentType: MODULE_NAMES.DEAL,
+    });
+
+    const updatedStage = await Stages.getStage(updatedDeal.stageId);
+    const oldStage = await Stages.getStage(oldDeal.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: updatedStage.pipelineId,
+      },
+    });
+
+    if (updatedStage.pipelineId !== oldStage.pipelineId) {
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: oldStage.pipelineId,
+        },
+      });
+    }
 
     return updatedDeal;
   },
@@ -176,6 +216,17 @@ const dealMutations = {
       action,
       contentType: MODULE_NAMES.DEAL,
     });
+
+    // if move between stages
+    if (destinationStageId !== deal.stageId) {
+      const stage = await Stages.getStage(deal.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+        },
+      });
+    }
 
     return deal;
   },
