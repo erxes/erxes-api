@@ -9,6 +9,7 @@ import Conformities from './Conformities';
 import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
 import Customers from './Customers';
+import { DashboardItems } from './Dashboard';
 import Deals from './Deals';
 import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
@@ -82,4 +83,5 @@ export {
   PipelineLabels,
   Checklists,
   ChecklistItems,
+  DashboardItems,
 };
