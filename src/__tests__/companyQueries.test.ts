@@ -12,7 +12,6 @@ describe('companyQueries', () => {
     $tag: String
     $ids: [String]
     $searchValue: String
-    $leadStatus: String
     $brand: String
   `;
 
@@ -23,7 +22,6 @@ describe('companyQueries', () => {
     tag: $tag
     ids: $ids
     searchValue: $searchValue
-    leadStatus: $leadStatus
     brand: $brand
   `;
 
@@ -102,12 +100,6 @@ describe('companyQueries', () => {
     });
   });
 
-  test('Company count by leadStatus', async () => {
-    await graphqlRequest(qryCount, 'companyCounts', {
-      only: 'byLeadStatus',
-    });
-  });
-
   test('Company count by brand', async () => {
     const brand = await brandFactory({});
     await integrationFactory({ brandId: brand._id });
@@ -139,7 +131,6 @@ describe('companyQueries', () => {
           ownerId
           primaryPhone
           phones
-          leadStatus
           businessType
           description
           doNotDisturb
