@@ -71,19 +71,6 @@ export const countByLeadStatus = async (qb): Promise<ICountBy> => {
   return counts;
 };
 
-export const countByLifecycleStatus = async (qb): Promise<ICountBy> => {
-  const counts: ICountBy = {};
-
-  for (const type of COC_LIFECYCLE_STATE_TYPES) {
-    await qb.buildAllQueries();
-    qb.lifecycleStateFilter(type);
-
-    counts[type] = await qb.runQueries('count');
-  }
-
-  return counts;
-};
-
 export const countByIntegrationType = async (qb): Promise<ICountBy> => {
   const counts: ICountBy = {};
 

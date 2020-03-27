@@ -51,7 +51,6 @@ const companyQueries = {
       byTag: {},
       byBrand: {},
       byLeadStatus: {},
-      byLifecycleState: {},
     };
 
     const { only } = args;
@@ -71,10 +70,6 @@ const companyQueries = {
         break;
       case 'byLeadStatus':
         counts.byLeadStatus = await countByLeadStatus(qb);
-        break;
-
-      case 'byLifecycleState':
-        counts.byLifecycleState = await countByLifecycleStatus(qb);
         break;
     }
 

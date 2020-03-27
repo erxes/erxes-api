@@ -85,7 +85,6 @@ const customerQueries = {
       byTag: {},
       byForm: {},
       byLeadStatus: {},
-      byLifecycleState: {},
     };
 
     const qb = new BuildQuery(params, { commonQuerySelector, commonQuerySelectorElk });
@@ -109,10 +108,6 @@ const customerQueries = {
 
       case 'byLeadStatus':
         counts.byLeadStatus = await countByLeadStatus(qb);
-        break;
-
-      case 'byLifecycleState':
-        counts.byLifecycleState = await countByLifecycleStatus(qb);
         break;
 
       case 'byIntegrationType':

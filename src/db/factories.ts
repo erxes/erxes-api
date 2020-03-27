@@ -486,7 +486,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     primaryPhone: params.primaryPhone,
     emails: params.emails || [],
     phones: params.phones || [],
-    leadStatus: params.leadStatus || 'open',
+    leadStatus: params.leadStatus || 'new',
     status: params.status || STATUSES.ACTIVE,
     lastSeenAt: faker.date.between(createdAt, new Date()),
     isOnline: params.isOnline || false,
