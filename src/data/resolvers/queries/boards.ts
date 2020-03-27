@@ -80,9 +80,16 @@ const boardQueries = {
   pipelines(
     _root,
     { boardId, type, ...queryParams }: { boardId: string; type: string; page: number; perPage: number },
+    { user }: IContext,
   ) {
-    const query: any = {};
     const { page, perPage } = queryParams;
+    const query: any = {
+      $or: [{ visibility: 'public' }, { visibility: 'private', $or: [{ memberIds: user._id }, { userId: user._id }] }],
+    };
+
+    if (user.isOwner) {
+      delete query.$or;
+    }
 
     if (boardId) {
       query.boardId = boardId;
