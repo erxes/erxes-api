@@ -536,7 +536,6 @@ describe('Customers model tests', () => {
     expect(customer.primaryPhone).toBe(phone);
     expect(customer.phones).toContain(phone);
 
-    expect(customer.isUser).toBe(_customer.isUser);
     expect(customer.createdAt >= now).toBe(true);
 
     expect(customer.lastSeenAt).toBeDefined();
@@ -577,8 +576,6 @@ describe('Customers model tests', () => {
 
     expect(customer.primaryPhone).toBe(phone);
     expect(customer.phones).toContain(phone);
-
-    expect(customer.isUser).toBe(true);
   });
 
   test('getWidgetCustomer()', async () => {

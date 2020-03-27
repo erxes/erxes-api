@@ -28,7 +28,7 @@ export interface IVisitorContactDocument extends IVisitorContact, Document {}
 interface ILinkDocument extends ILink, Document {}
 
 export interface ICustomer {
-  state: 'visitor' | 'lead' | 'customer';
+  state?: 'visitor' | 'lead' | 'customer';
 
   scopeBrandIds?: string[];
   firstName?: string;

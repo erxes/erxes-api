@@ -102,6 +102,6 @@ checkPermission(customerMutations, 'customersAdd', 'customersAdd');
 checkPermission(customerMutations, 'customersEdit', 'customersEdit');
 checkPermission(customerMutations, 'customersMerge', 'customersMerge');
 checkPermission(customerMutations, 'customersRemove', 'customersRemove');
-checkPermission(customerMutations, 'customersChangeState', 'customersChangeState');
+checkPermission(customerMutations, 'customersChangeState', 'customersRemove');
 
 export default customerMutations;
