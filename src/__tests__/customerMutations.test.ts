@@ -216,4 +216,21 @@ describe('Customers mutations', () => {
 
     expect(customer.firstName).toBe(params.customerFields.firstName);
   });
+
+  test('Change state', async () => {
+    const mutation = `
+      mutation customersChangeState($_id: String!, $value: String!) {
+        customersChangeState(_id: $_id, value: $value) {
+          _id
+          state
+        }
+      }
+    `;
+
+    await graphqlRequest(mutation, 'customersChangeState', { _id: _customer._id, value: 'customer' }, context);
+
+    const updatedCustomer = await Customers.getCustomer(_customer._id);
+
+    expect(updatedCustomer.state).toBe('customer');
+  });
 });
