@@ -241,6 +241,10 @@ export const loadClass = () => {
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
 
+      if (doc.state) {
+        await Customers.updateOne({ _id: customer._id }, { $set: { state: doc.state } });
+      }
+
       await ActivityLogs.createCocLog({ coc: customer, contentType: 'customer' });
 
       return Customers.getCustomer(customer._id);
@@ -362,7 +366,7 @@ export const loadClass = () => {
         state = 'lead';
       }
 
-      const modifier = { $set: { profileScore: score, searchText, state } }
+      const modifier = { $set: { profileScore: score, searchText, state } };
 
       if (!save) {
         return {

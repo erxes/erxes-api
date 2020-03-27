@@ -123,7 +123,7 @@ const fields = `
 `;
 
 export const mutations = `
-  customersAdd(${fields}): Customer
+  customersAdd(state: String, ${fields}): Customer
   customersEdit(_id: String!, ${fields}): Customer
   customersMerge(customerIds: [String], customerFields: JSON): Customer
   customersRemove(customerIds: [String]): [String]
