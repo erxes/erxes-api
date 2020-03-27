@@ -1,5 +1,14 @@
 import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as dotenv from 'dotenv';
+import {
+  assignedUsersLoader,
+  companiesLoader,
+  customersLoader,
+  pipelineLabelsLoader,
+  pipelineLoader,
+  stageLoader,
+  userLoader,
+} from './data/dataLoaders/deal';
 import { EngagesAPI, IntegrationsAPI } from './data/dataSources';
 import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
@@ -35,6 +44,20 @@ const generateDataSources = () => {
   };
 };
 
+const dataLoaders = () => {
+  return {
+    dealLoaders: {
+      assignedUsersLoader: assignedUsersLoader(),
+      userLoader: userLoader(),
+      customersLoader: customersLoader(),
+      companiesLoader: companiesLoader(),
+      pipelineLabelsLoader: pipelineLabelsLoader(),
+      pipelineLoader: pipelineLoader(),
+      stageLoader: stageLoader(),
+    },
+  };
+};
+
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
@@ -44,6 +67,7 @@ const apolloServer = new ApolloServer({
   context: ({ req, res }) => {
     if (!req || NODE_ENV === 'test') {
       return {
+        loaders: dataLoaders(),
         dataSources: generateDataSources(),
       };
     }
@@ -56,6 +80,7 @@ const apolloServer = new ApolloServer({
 
     if (USE_BRAND_RESTRICTIONS !== 'true') {
       return {
+        loaders: dataLoaders(),
         brandIdSelector: {},
         userBrandIdsSelector: {},
         docModifier: doc => doc,
@@ -89,6 +114,7 @@ const apolloServer = new ApolloServer({
     }
 
     return {
+      loaders: dataLoaders(),
       brandIdSelector,
       docModifier: doc => ({ ...doc, scopeBrandIds }),
       commonQuerySelector,

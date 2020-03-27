@@ -1,38 +1,19 @@
-import {
-  Companies,
-  Conformities,
-  Customers,
-  Fields,
-  Notifications,
-  PipelineLabels,
-  Pipelines,
-  Products,
-  Stages,
-  Users,
-} from '../../db/models';
+import { Fields, Notifications, Products } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
 import { boardId } from './boardUtils';
 
 export default {
-  async companies(deal: IDealDocument) {
-    const companyIds = await Conformities.savedConformity({
-      mainType: 'deal',
-      mainTypeId: deal._id,
-      relTypes: ['company'],
-    });
+  async companies(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
 
-    return Companies.find({ _id: { $in: companyIds } });
+    return dealLoaders.companiesLoader.load(deal._id);
   },
 
-  async customers(deal: IDealDocument) {
-    const customerIds = await Conformities.savedConformity({
-      mainType: 'deal',
-      mainTypeId: deal._id,
-      relTypes: ['customer'],
-    });
+  async customers(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
 
-    return Customers.find({ _id: { $in: customerIds } });
+    return dealLoaders.customersLoader.load(deal._id);
   },
 
   async products(deal: IDealDocument) {
@@ -96,22 +77,26 @@ export default {
     return amountsMap;
   },
 
-  assignedUsers(deal: IDealDocument) {
-    return Users.find({ _id: { $in: deal.assignedUserIds } });
+  assignedUsers(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
+
+    return dealLoaders.assignedUsersLoader.load(deal.assignedUserIds || []);
   },
 
-  async pipeline(deal: IDealDocument) {
-    const stage = await Stages.getStage(deal.stageId);
+  async pipeline(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
 
-    return Pipelines.findOne({ _id: stage.pipelineId });
+    return dealLoaders.pipelineLoader.load(deal.stageId);
   },
 
   boardId(deal: IDealDocument) {
     return boardId(deal);
   },
 
-  stage(deal: IDealDocument) {
-    return Stages.getStage(deal.stageId);
+  stage(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
+
+    return dealLoaders.stageLoader.load(deal.stageId);
   },
 
   isWatched(deal: IDealDocument, _args, { user }: IContext) {
@@ -128,11 +113,15 @@ export default {
     return Notifications.checkIfRead(user._id, deal._id);
   },
 
-  labels(deal: IDealDocument) {
-    return PipelineLabels.find({ _id: { $in: deal.labelIds } });
+  labels(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
+
+    return dealLoaders.pipelineLabelsLoader.load(deal.labelIds || []);
   },
 
-  createdUser(deal: IDealDocument) {
-    return Users.findOne({ _id: deal.userId });
+  createdUser(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
+
+    return dealLoaders.userLoader.load(deal.userId || '');
   },
 };
