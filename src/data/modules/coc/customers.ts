@@ -43,6 +43,28 @@ export interface IListArgs extends IConformityQueryParams {
 export class Builder extends CommonBuilder<IListArgs> {
   constructor(params: IListArgs, context) {
     super('customers', params, context);
+
+    this.addStateFilter();
+  }
+
+  public addStateFilter() {
+    if (this.params.type) {
+      this.positiveList.push({
+        term: {
+          state: this.params.type,
+        },
+      });
+    }
+  }
+
+  public resetPositiveList() {
+    this.positiveList = [];
+
+    this.addStateFilter();
+
+    if (this.context.commonQuerySelectorElk) {
+      this.positiveList.push(this.context.commonQuerySelectorElk);
+    }
   }
 
   // filter by brand
