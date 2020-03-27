@@ -1,13 +1,7 @@
 import { Companies } from '../../../db/models';
 import { TAG_TYPES } from '../../../db/models/definitions/constants';
 import { Builder, IListArgs } from '../../modules/coc/companies';
-import {
-  countByBrand,
-  countByLeadStatus,
-  countByLifecycleStatus,
-  countBySegment,
-  countByTag,
-} from '../../modules/coc/utils';
+import { countByBrand, countBySegment, countByTag } from '../../modules/coc/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -67,9 +61,6 @@ const companyQueries = {
         break;
       case 'byBrand':
         counts.byBrand = await countByBrand(qb);
-        break;
-      case 'byLeadStatus':
-        counts.byLeadStatus = await countByLeadStatus(qb);
         break;
     }
 
