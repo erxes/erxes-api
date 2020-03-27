@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import { Brands, Conformities, Segments, Tags } from '../../../db/models';
 import { KIND_CHOICES } from '../../../db/models/definitions/constants';
 import { fetchElk } from '../../../elasticsearch';
-import { COC_LEAD_STATUS_TYPES, COC_LIFECYCLE_STATE_TYPES } from '../../constants';
+import { COC_LEAD_STATUS_TYPES } from '../../constants';
 import { fetchBySegments } from '../segments/queryBuilder';
 
 export interface ICountBy {

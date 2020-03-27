@@ -1,14 +1,7 @@
 import { Customers, Forms } from '../../../db/models';
 import { KIND_CHOICES, TAG_TYPES } from '../../../db/models/definitions/constants';
 import { Builder as BuildQuery, IListArgs } from '../../modules/coc/customers';
-import {
-  countByBrand,
-  countByLeadStatus,
-  countByLifecycleStatus,
-  countBySegment,
-  countByTag,
-  ICountBy,
-} from '../../modules/coc/utils';
+import { countByBrand, countByLeadStatus, countBySegment, countByTag, ICountBy } from '../../modules/coc/utils';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
