@@ -835,7 +835,7 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   return true;
 };
 
-export const validateEmail = (email: string) => {
+export const validateEmail = async (email: string, wait?: boolean) => {
   const data = { email };
 
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
@@ -844,16 +844,40 @@ export const validateEmail = (email: string) => {
     return sendMessage('erxes-api:email-verifier-notification', { action: 'emailVerify', data });
   }
 
-  sendRequest({
+  const requestOptions = {
     url: `${EMAIL_VERIFIER_ENDPOINT}/verify-single`,
     method: 'POST',
     body: { email },
-  })
-    .then(async ({ status }) => {
-      await Customers.updateOne({ primaryEmail: email }, { $set: { emailValidationStatus: status } });
+  };
+
+  const updateCustomer = status =>
+    Customers.updateOne({ primaryEmail: email }, { $set: { emailValidationStatus: status } });
+
+  const successCallback = response => updateCustomer(response.status);
+
+  const errorCallback = e => {
+    if (e.message === 'timeout exceeded') {
+      return updateCustomer('unverifiable');
+    }
+
+    debugExternalApi(`Error occurred during email verify ${e.message}`);
+  };
+
+  if (wait) {
+    try {
+      const response = await sendRequest(requestOptions);
+      return successCallback(response);
+    } catch (e) {
+      await errorCallback(e);
+    }
+  }
+
+  sendRequest(requestOptions)
+    .then(async response => {
+      await successCallback(response);
     })
-    .catch(e => {
-      debugExternalApi(`Error occurred during email verify ${e.message}`);
+    .catch(async e => {
+      await errorCallback(e);
     });
 };
 
