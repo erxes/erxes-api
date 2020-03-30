@@ -21,6 +21,8 @@ export const queries = `
 
 export const mutations = `
   dashboardAdd(name: String): Dashboard
+  dashboardEdit(_id: String!, name: String!): Dashboard
+  dashboardRemove(_id: String!): JSON
   createDashboardItem(dashboardId:String!, layout: String, vizState: String, name: String): DashboardItem
   updateDashboardItem(id: String!, dashboardId:String!, layout: String, vizState: String, name: String): DashboardItem
   deleteDashboardItem(id: String!): DashboardItem

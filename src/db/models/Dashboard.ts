@@ -3,10 +3,16 @@ import {
   dashboardItemSchema,
   dashboardSchema,
   IDashboard,
+  IDashboardDocument,
   IDashboardItemDocument,
   IDashboardItemInput,
 } from './definitions/dashboard';
 
+export interface IDashboardModel extends Model<IDashboardDocument> {
+  addDashboard(doc: IDashboard): Promise<IDashboardDocument>;
+  editDashboard(_id: string, fields: IDashboard): Promise<IDashboardDocument>;
+  removeDashboard(_id: string): void;
+}
 export interface IDashboardItemModel extends Model<IDashboardItemDocument> {
   addDashboardItem(doc: IDashboardItemInput): Promise<IDashboardItemDocument>;
   removeDashboardItem(_id: string): void;
@@ -18,8 +24,14 @@ export const loadDashBoardClass = () => {
       return Dashboards.create(doc);
     }
 
+    public static async editDashboard(_id: string, feilds: IDashboard) {
+      const updated = await Dashboards.updateOne({ _id }, { $set: feilds });
+
+      return updated;
+    }
+
     public static async removeDashboard(_id: string) {
-      await Dashboards.remove(_id);
+      return Dashboards.remove(_id);
     }
   }
 
@@ -48,7 +60,7 @@ loadDashBoardClass();
 loadDashboardItemClass();
 
 // tslint:disable-next-line
-const Dashboards = model<IDashboardItemDocument, IDashboardItemModel>('dashboards', dashboardSchema);
+const Dashboards = model<IDashboardDocument, IDashboardModel>('dashboards', dashboardSchema);
 // tslint:disable-next-line
 const DashboardItems = model<IDashboardItemDocument, IDashboardItemModel>('dashboard_items', dashboardItemSchema);
 
