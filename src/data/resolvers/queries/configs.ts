@@ -1,5 +1,5 @@
 import { Configs } from '../../../db/models';
-import { moduleRequireLogin } from '../../permissions/wrappers';
+import { moduleCheckPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { frontendEnv, getEnv, sendRequest } from '../../utils';
 
@@ -53,5 +53,7 @@ const configQueries = {
 };
 
 moduleRequireLogin(configQueries);
+
+moduleCheckPermission(configQueries, 'generalSettings', 'showGeneralSettings');
 
 export default configQueries;
