@@ -372,3 +372,15 @@ export const prepareBoardItemDoc = async (_id: string, type: string, userId: str
 
   return doc;
 };
+
+/**
+ * Used in stage move, copy mutations.
+ * Target pipeline type must be the same as stage type.
+ */
+export const verifyPipelineType = async (pipelineId: string, stageType: string) => {
+  const pipeline = await Pipelines.getPipeline(pipelineId);
+
+  if (pipeline.type !== stageType) {
+    throw new Error('Pipeline and stage type does not match');
+  }
+};

@@ -362,6 +362,28 @@ describe('Test boards mutations', () => {
     expect(result.name).toBe(`${stage.name}-copied`);
   });
 
+  test('Test stagesCopy() with wrong type', async () => {
+    const secondPipeline = await pipelineFactory({ type: BOARD_TYPES.TASK });
+
+    const params = {
+      _id: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+    };
+
+    const mutation = `
+      mutation stagesCopy(${stageCopyMoveParamDefs}) {
+        stagesCopy(${stageCopyMoveParams}) { name }
+      }
+    `;
+
+    try {
+      await graphqlRequest(mutation, 'stagesCopy', params, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Pipeline and stage type does not match');
+    }
+  });
+
   test('Edit stage', async () => {
     const mutation = `
       mutation stagesEdit($_id: String!, $type: String, $name: String) {

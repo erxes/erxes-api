@@ -2,7 +2,7 @@ import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { checkPermission } from '../boardUtils';
+import { checkPermission, verifyPipelineType } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -172,6 +172,8 @@ const boardMutations = {
 
     await checkPermission(stage.type, user, 'stagesEdit');
 
+    await verifyPipelineType(pipelineId, stage.type);
+
     return Stages.moveStage({
       includeCards,
       stageId: _id,
@@ -184,6 +186,8 @@ const boardMutations = {
     const stage = await Stages.getStage(_id);
 
     await checkPermission(stage.type, user, 'stagesEdit');
+
+    await verifyPipelineType(pipelineId, stage.type);
 
     return Stages.copyStage({
       stageId: _id,
