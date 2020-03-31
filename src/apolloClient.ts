@@ -2,6 +2,7 @@ import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as dotenv from 'dotenv';
 import {
   assignedUsersLoader,
+  boardIdLoader,
   companiesLoader,
   customersLoader,
   pipelineLabelsLoader,
@@ -54,6 +55,7 @@ const dataLoaders = () => {
       pipelineLabelsLoader: pipelineLabelsLoader(),
       pipelineLoader: pipelineLoader(),
       stageLoader: stageLoader(),
+      boardIdLoader: boardIdLoader(),
     },
   };
 };

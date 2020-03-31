@@ -14,7 +14,9 @@ const groupByIds = (listObject, ids: string[]) => {
 const batchLabels = async labelIds => {
   const pipelines: IPipeline[][] = [];
 
-  const labels = await PipelineLabels.find({ _id: { $in: _.flattenDeep(labelIds) } });
+  const flattenIds = _.flattenDeep(labelIds);
+
+  const labels = await PipelineLabels.find({ _id: { $in: flattenIds } });
 
   for (const ids of labelIds) {
     pipelines.push(groupByIds(labels, ids));
@@ -26,7 +28,9 @@ const batchLabels = async labelIds => {
 const batchAssignedUsers = async userIds => {
   const assignedUsers: IUser[][] = [];
 
-  const users = await Users.find({ _id: { $in: _.flattenDeep(userIds) } });
+  const flattenIds = _.flattenDeep(userIds);
+
+  const users = await Users.find({ _id: { $in: flattenIds } });
 
   for (const ids of userIds) {
     assignedUsers.push(groupByIds(users, ids));
@@ -49,7 +53,9 @@ const batchCompanies = async dealIds => {
     );
   }
 
-  const allCompanies = await Companies.find({ _id: { $in: _.flattenDeep(allCompanyIds) } });
+  const flattenIds = _.flattenDeep(allCompanyIds);
+
+  const allCompanies = await Companies.find({ _id: { $in: flattenIds } });
 
   for (const comapnyIds of allCompanyIds) {
     companies.push(groupByIds(allCompanies, comapnyIds));
@@ -72,7 +78,9 @@ const batchCustomers = async dealIds => {
     );
   }
 
-  const allCustomers = await Customers.find({ _id: { $in: _.flattenDeep(allCustomerIds) } });
+  const flattenIds = _.flattenDeep(allCustomerIds);
+
+  const allCustomers = await Customers.find({ _id: { $in: flattenIds } });
 
   for (const customerIds of allCustomerIds) {
     customers.push(groupByIds(allCustomers, customerIds));
@@ -114,16 +122,49 @@ const batchStage = async stageIds => {
   return stageIds.map(id => stageMap[id]);
 };
 
-const pipelineLabelsLoader = () => new DataLoader<string[], IPipelineLabel[]>(batchLabels as any);
-const pipelineLoader = () => new DataLoader<string, IPipeline[]>(batchPipelines);
+const batchBoardId = async stageIds => {
+  const boards = await Stages.aggregate([
+    {
+      $match: { _id: { $in: stageIds } },
+    },
+    {
+      $lookup: {
+        from: 'pipelines',
+        localField: 'pipelineId',
+        foreignField: '_id',
+        as: 'pipelines',
+      },
+    },
+    {
+      $unwind: '$pipelines',
+    },
+    {
+      $project: {
+        _id: '$pipelines.boardId',
+      },
+    },
+  ]);
 
-const assignedUsersLoader = () => new DataLoader<string[], IUser[]>(batchAssignedUsers);
-const userLoader = () => new DataLoader<string, IPipeline[]>(batchUsers);
+  const boardIds = boards.map(board => board._id);
 
-const customersLoader = () => new DataLoader<string, ICustomer[]>(batchCustomers);
-const companiesLoader = () => new DataLoader<string, ICustomer[]>(batchCompanies);
+  return boardIds;
+};
 
-const stageLoader = () => new DataLoader<string, IStage>(batchStage);
+const batchSchedule = {
+  batchScheduleFn: callback => setTimeout(callback, 90),
+};
+
+const pipelineLabelsLoader = () => new DataLoader<string[], IPipelineLabel[]>(batchLabels as any, batchSchedule);
+const pipelineLoader = () => new DataLoader<string, IPipeline[]>(batchPipelines, batchSchedule);
+
+const assignedUsersLoader = () => new DataLoader<string[], IUser[]>(batchAssignedUsers, batchSchedule);
+const userLoader = () => new DataLoader<string, IPipeline[]>(batchUsers, batchSchedule);
+
+const customersLoader = () => new DataLoader<string, ICustomer[]>(batchCustomers, batchSchedule);
+const companiesLoader = () => new DataLoader<string, ICustomer[]>(batchCompanies, batchSchedule);
+
+const stageLoader = () => new DataLoader<string, IStage>(batchStage, batchSchedule);
+const boardIdLoader = () => new DataLoader<string, string>(batchBoardId, batchSchedule);
 
 export {
   pipelineLabelsLoader,
@@ -133,4 +174,5 @@ export {
   customersLoader,
   companiesLoader,
   stageLoader,
+  boardIdLoader,
 };

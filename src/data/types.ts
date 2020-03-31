@@ -2,6 +2,7 @@ import * as express from 'express';
 import { IUserDocument } from '../db/models/definitions/users';
 import {
   assignedUsersLoader,
+  boardIdLoader,
   companiesLoader,
   customersLoader,
   pipelineLabelsLoader,
@@ -24,6 +25,7 @@ export interface IContext {
       customersLoader: ReturnType<typeof customersLoader>;
       companiesLoader: ReturnType<typeof companiesLoader>;
       stageLoader: ReturnType<typeof stageLoader>;
+      boardIdLoader: ReturnType<typeof boardIdLoader>;
     };
   };
   brandIdSelector: {};

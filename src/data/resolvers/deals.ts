@@ -1,7 +1,6 @@
 import { Fields, Notifications, Products } from '../../db/models';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { IContext } from '../types';
-import { boardId } from './boardUtils';
 
 export default {
   async companies(deal: IDealDocument, _args, { loaders }: IContext) {
@@ -89,8 +88,10 @@ export default {
     return dealLoaders.pipelineLoader.load(deal.stageId);
   },
 
-  boardId(deal: IDealDocument) {
-    return boardId(deal);
+  boardId(deal: IDealDocument, _args, { loaders }: IContext) {
+    const { dealLoaders } = loaders;
+
+    return dealLoaders.boardIdLoader.load(deal.stageId);
   },
 
   stage(deal: IDealDocument, _args, { loaders }: IContext) {
