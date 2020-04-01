@@ -40,12 +40,12 @@ const createOrUpdatePipelineStages = async (stages: IPipelineStage[], pipelineId
   let order = 0;
 
   const validStageIds: string[] = [];
-  const bulkOpsPrevEntry: Array<{
+  const bulkOpsPrevEntry: {
     updateOne: {
       filter: { _id: string };
       update: { $set: IStage };
     };
-  }> = [];
+  }[] = [];
   const prevItemIds = stages.map(stage => stage._id);
   // fetch stage from database
   const prevEntries = await Stages.find({ _id: { $in: prevItemIds } });

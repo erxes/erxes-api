@@ -58,7 +58,7 @@ const fieldQueries = {
    */
   async fieldsCombinedByContentType(_root, { contentType }: { contentType: string }) {
     let schema: any = Companies.schema;
-    let fields: Array<{ _id: number; name: string; label?: string }> = [];
+    let fields: { _id: number; name: string; label?: string }[] = [];
 
     if (contentType === FIELD_CONTENT_TYPES.CUSTOMER) {
       schema = Customers.schema;

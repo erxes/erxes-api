@@ -118,7 +118,7 @@ export default class Builder {
       );
     });
 
-    const nestedIntegrationIds: Array<{ integrationId: { $in: string[] } }> = [
+    const nestedIntegrationIds: { integrationId: { $in: string[] } }[] = [
       { integrationId: { $in: availIntegrationIds } },
     ];
 

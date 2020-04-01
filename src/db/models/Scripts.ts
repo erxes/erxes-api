@@ -9,7 +9,7 @@ export interface IScriptModel extends Model<IScriptDocument> {
   removeScript(_id: string): void;
 }
 
-type LeadMaps = Array<{ formCode?: string; brandCode?: string }>;
+type LeadMaps = { formCode?: string; brandCode?: string }[];
 
 export const loadClass = () => {
   class Script {

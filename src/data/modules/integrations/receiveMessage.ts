@@ -140,12 +140,12 @@ export const receiveEmailVerifierNotification = async msg => {
   const { action, data } = msg;
 
   if (action === 'emailVerify') {
-    const bulkOps: Array<{
+    const bulkOps: {
       updateOne: {
         filter: { primaryEmail: string };
         update: { emailValidationStatus: string };
       };
-    }> = [];
+    }[] = [];
 
     for (const { email, status } of data) {
       bulkOps.push({

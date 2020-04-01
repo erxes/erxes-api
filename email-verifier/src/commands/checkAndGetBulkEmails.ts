@@ -27,7 +27,7 @@ connect().then(async () => {
     });
 
     const rows = response.split('\n');
-    const emails: Array<{ email: string; status: string }> = [];
+    const emails: { email: string; status: string }[] = [];
 
     for (const row of rows) {
       const rowArray = row.split(',');

@@ -39,7 +39,7 @@ const boardQueries = {
   async boardCounts(_root, { type }: { type: string }, { commonQuerySelector }: IContext) {
     const boards = await Boards.find({ ...commonQuerySelector, type }).sort({ name: 1 });
 
-    const counts: Array<{ _id: string; name: string; count: number }> = [];
+    const counts: { _id: string; name: string; count: number }[] = [];
 
     let allCount = 0;
 

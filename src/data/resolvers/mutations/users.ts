@@ -162,7 +162,7 @@ const userMutations = {
   /*
    * Invites users to team members
    */
-  async usersInvite(_root, { entries }: { entries: Array<{ email: string; password: string; groupId: string }> }) {
+  async usersInvite(_root, { entries }: { entries: { email: string; password: string; groupId: string }[] }) {
     for (const entry of entries) {
       await Users.checkDuplication({ email: entry.email });
 

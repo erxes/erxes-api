@@ -150,7 +150,7 @@ export const loadClass = () => {
         status: 'open',
       });
 
-      const promises: Array<Promise<IMessageDocument>> = [];
+      const promises: Promise<IMessageDocument>[] = [];
 
       for (const conversationObj of customerConversations) {
         promises.push(

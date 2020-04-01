@@ -67,7 +67,7 @@ const integrationQueries = {
    * Get used integration types
    */
   async integrationsGetUsedTypes(_root, {}) {
-    const usedTypes: Array<{ _id: string; name: string }> = [];
+    const usedTypes: { _id: string; name: string }[] = [];
 
     for (const kind of KIND_CHOICES.ALL) {
       if ((await Integrations.findIntegrations({ kind }).countDocuments()) > 0) {

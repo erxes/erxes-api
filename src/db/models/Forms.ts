@@ -126,7 +126,7 @@ export const loadFormClass = () => {
 
     public static async validate(formId: string, submissions: ISubmission[]) {
       const fields = await Fields.find({ contentTypeId: formId });
-      const errors: Array<{ fieldId: string; code: string; text: string }> = [];
+      const errors: { fieldId: string; code: string; text: string }[] = [];
 
       for (const field of fields) {
         // find submission object by _id

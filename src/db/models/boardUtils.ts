@@ -11,12 +11,12 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
   }
 
   const ids: string[] = [];
-  const bulkOps: Array<{
+  const bulkOps: {
     updateOne: {
       filter: { _id: string };
       update: { stageId?: string; order: number };
     };
-  }> = [];
+  }[] = [];
 
   for (const { _id, order } of orders) {
     ids.push(_id);

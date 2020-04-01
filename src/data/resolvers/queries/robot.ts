@@ -155,7 +155,7 @@ const robotQueries = {
   },
 
   async onboardingGetAvailableFeatures(_root, _args, { user }: IContext) {
-    const results: Array<{ name: string; isComplete: boolean; settings?: string[]; showSettings?: boolean }> = [];
+    const results: { name: string; isComplete: boolean; settings?: string[]; showSettings?: boolean }[] = [];
     const actionsMap = await getUserAllowedActions(user);
 
     for (const feature of Object.keys(features)) {

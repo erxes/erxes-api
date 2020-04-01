@@ -11,7 +11,7 @@ export default {
   },
 
   getTrackedData(customer: ICustomerDocument) {
-    const results: Array<{ name: string; value: string }> = [];
+    const results: { name: string; value: string }[] = [];
 
     const trackedData = customer.trackedData || {};
 

@@ -138,7 +138,7 @@ export const getSummaryData = async ({
   dateFieldName?: string;
 }): Promise<any> => {
   const intervals = generateTimeIntervals(start, end);
-  const summaries: Array<{ title?: string; count?: number }> = [];
+  const summaries: { title?: string; count?: number }[] = [];
 
   // finds a respective message counts for different time intervals.
   for (const interval of intervals) {

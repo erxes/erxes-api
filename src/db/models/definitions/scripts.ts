@@ -6,7 +6,7 @@ export interface IScript {
   messengerId?: string;
   messengerBrandCode?: string;
   leadIds?: string[];
-  leadMaps?: Array<{ formCode: string; brandCode: string }>;
+  leadMaps?: { formCode: string; brandCode: string }[];
   kbTopicId?: string;
 }
 
