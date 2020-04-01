@@ -292,16 +292,11 @@ describe('integrationQueries', () => {
     }
     `;
 
-    const integration1 = await integrationFactory({ kind: 'smooch-line' });
-
-    console.log(integration1);
-
     const spy = jest.spyOn(messageBroker, 'sendRPCMessage');
 
     spy.mockImplementation(() => Promise.resolve('https://webhookurl'));
 
     const response = await graphqlRequest(query, 'integrationGetLineWebhookUrl', { _id: 'id' });
-    console.log(response);
 
     try {
       await graphqlRequest(query, 'integrationGetLineWebhookUrl', { _id: 'id' });
