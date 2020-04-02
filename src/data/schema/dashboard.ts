@@ -1,11 +1,11 @@
 export const types = `
   type Dashboard {
-    id: String!
+    _id: String!
     name: String
   }
 
   type DashboardItem {
-    id: String!
+    _id: String!
     dashboardId: String
     layout: String
     vizState: String
@@ -14,7 +14,8 @@ export const types = `
 `;
 
 export const queries = `
-  dashboards: [Dashboard]
+  dashboards(page: Int, perPage: Int): [Dashboard]
+  dashboardsTotalCount: Int
   dashboardItems: [DashboardItem]
   dashboardItem(id: String!): DashboardItem
 `;

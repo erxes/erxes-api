@@ -25,13 +25,13 @@ export const loadDashBoardClass = () => {
     }
 
     public static async editDashboard(_id: string, feilds: IDashboard) {
-      const updated = await Dashboards.updateOne({ _id }, { $set: feilds });
+      await Dashboards.updateOne({ _id }, { $set: feilds });
 
-      return updated;
+      return Dashboards.findOne({ _id });
     }
 
     public static async removeDashboard(_id: string) {
-      return Dashboards.remove(_id);
+      return Dashboards.remove({ _id });
     }
   }
 

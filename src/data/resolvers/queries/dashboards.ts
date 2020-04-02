@@ -1,8 +1,14 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
+import { IContext } from '../../types';
+import { paginate } from '../../utils';
 
 const dashBoardQueries = {
-  dashboards() {
-    return Dashboards.find({});
+  dashboards(_root, args: { page: number; perPage: number }, { commonQuerySelector }: IContext) {
+    return paginate(Dashboards.find(commonQuerySelector), args);
+  },
+
+  dashboardsTotalCount() {
+    return Dashboards.find({}).countDocuments();
   },
 
   dashboardItems() {

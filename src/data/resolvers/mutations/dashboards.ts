@@ -21,8 +21,8 @@ const dashboardsMutations = {
     return dashboard;
   },
 
-  async dashboardRemove(_root, doc: IDashboard) {
-    const removed = await Dashboards.create({ ...doc });
+  async dashboardRemove(_root, { _id }: { _id: string }) {
+    const removed = await Dashboards.removeDashboard(_id);
 
     return removed;
   },
