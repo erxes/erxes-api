@@ -201,6 +201,8 @@ app.get('/read-mail-attachment', async (req: any, res) => {
 
   const integrationPath = kind.includes('nylas') ? 'nylas' : kind;
 
+  req.headers.set('userId', req.user._id);
+
   res.redirect(
     `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}&contentType=${contentType}`,
   );
@@ -226,6 +228,8 @@ app.post('/delete-file', async (req: any, res) => {
 app.post('/upload-file', async (req: any, res, next) => {
   if (req.query.kind === 'nylas') {
     debugExternalApi(`Pipeing request to ${INTEGRATIONS_API_DOMAIN}`);
+
+    req.headers.set('userId', req.user._id);
 
     return req.pipe(
       request
@@ -273,6 +277,8 @@ app.get('/connect-integration', async (req: any, res, _next) => {
   }
 
   const { link, kind } = req.query;
+
+  req.headers.set('userId', req.user._id);
 
   return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}?kind=${kind}`);
 });
