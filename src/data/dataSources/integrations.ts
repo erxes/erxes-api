@@ -12,7 +12,11 @@ export default class IntegrationsAPI extends RESTDataSource {
   }
 
   public willSendRequest(request) {
-    request.headers.set('userId', this.context.user._id);
+    const { user } = this.context || {};
+
+    if (user) {
+      request.headers.set('userId', user._id);
+    }
   }
 
   public didEncounterError(e) {

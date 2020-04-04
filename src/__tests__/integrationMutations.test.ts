@@ -329,14 +329,14 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Error: Integrations api is not running');
+      expect(e[0].message).toBe('Error: User not authorized');
     }
 
     args.kind = 'facebook-post';
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Error: Integrations api is not running');
+      expect(e[0].message).toBe('Error: User not authorized');
     }
 
     args.kind = 'twitter-dm';
@@ -345,7 +345,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Error: Integrations api is not running');
+      expect(e[0].message).toBe('Error: User not authorized');
     }
 
     args.kind = 'smooch-viber';
@@ -354,7 +354,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationsCreateExternalIntegration', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Error: Integrations api is not running');
+      expect(e[0].message).toBe('Error: User not authorized');
     }
 
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'createIntegration');
@@ -391,7 +391,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationAddMailAccount', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Integrations api is not running');
+      expect(e[0].message).toBe('User not authorized');
     }
   });
 
@@ -433,7 +433,7 @@ describe('mutations', () => {
     try {
       await graphqlRequest(mutation, 'integrationAddImapAccount', args, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Integrations api is not running');
+      expect(e[0].message).toBe('User not authorized');
     }
   });
 
@@ -454,7 +454,7 @@ describe('mutations', () => {
         { dataSources },
       );
     } catch (e) {
-      expect(e[0].message).toBe('Integrations api is not running');
+      expect(e[0].message).toBe('User not authorized');
     }
   });
 
@@ -584,7 +584,7 @@ describe('mutations', () => {
         },
       );
     } catch (e) {
-      expect(e[0].message).toBe('Integrations api is not running');
+      expect(e[0].message).toBe('User not authorized');
     }
   });
 

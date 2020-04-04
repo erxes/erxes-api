@@ -260,7 +260,7 @@ describe('integrationQueries', () => {
     try {
       await graphqlRequest(qry, 'integrationsFetchApi', { path: '/', params: { type: 'facebook' } }, { dataSources });
     } catch (e) {
-      expect(e[0].message).toBe('Integrations api is not running');
+      expect(e[0].message).toBe('User not authorized');
     }
   });
 
