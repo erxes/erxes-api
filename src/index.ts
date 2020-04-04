@@ -31,6 +31,7 @@ import './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
 import { initRedis } from './redisClient';
+import init from './startup';
 
 initRedis();
 
@@ -201,10 +202,8 @@ app.get('/read-mail-attachment', async (req: any, res) => {
 
   const integrationPath = kind.includes('nylas') ? 'nylas' : kind;
 
-  req.headers.set('userId', req.user._id);
-
   res.redirect(
-    `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}&contentType=${contentType}`,
+    `${INTEGRATIONS_API_DOMAIN}/${integrationPath}/get-attachment?messageId=${messageId}&attachmentId=${attachmentId}&integrationId=${integrationId}&filename=${filename}&contentType=${contentType}&=userId${req.user._id}`,
   );
 });
 
@@ -229,7 +228,7 @@ app.post('/upload-file', async (req: any, res, next) => {
   if (req.query.kind === 'nylas') {
     debugExternalApi(`Pipeing request to ${INTEGRATIONS_API_DOMAIN}`);
 
-    req.headers.set('userId', req.user._id);
+    req.headers.userId = req.user_id;
 
     return req.pipe(
       request
@@ -278,9 +277,7 @@ app.get('/connect-integration', async (req: any, res, _next) => {
 
   const { link, kind } = req.query;
 
-  req.headers.set('userId', req.user._id);
-
-  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}?kind=${kind}`);
+  return res.redirect(`${INTEGRATIONS_API_DOMAIN}/${link}?kind=${kind}&userId=${req.user._id}`);
 });
 
 // file import
@@ -370,6 +367,8 @@ const PORT = getEnv({ name: 'PORT' });
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
+  init();
+
   debugInit(`GraphQL Server is now running on ${PORT}`);
 });
 
