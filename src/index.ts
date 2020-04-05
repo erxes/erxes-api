@@ -27,13 +27,11 @@ import {
 import { connect } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
-import './messageBroker';
+import { initConsumer } from './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
 import { initRedis } from './redisClient';
 import init from './startup';
-
-initRedis();
 
 // load environment variables
 dotenv.config();
@@ -64,9 +62,6 @@ fs.exists(path.join(__dirname, '..', '/google_cred.json'), exists => {
     });
   }
 });
-
-// connect to mongo database
-connect();
 
 const app = express();
 
@@ -367,7 +362,22 @@ const PORT = getEnv({ name: 'PORT' });
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
-  init();
+  // connect to mongo database
+  connect().then(async () => {
+    initConsumer().catch(e => {
+      debugBase(`Error ocurred during rabbitmq init ${e.message}`);
+    });
+
+    initRedis();
+
+    init()
+      .then(() => {
+        debugBase('Startup successfully started');
+      })
+      .catch(e => {
+        debugBase(`Error occured while starting init: ${e.message}`);
+      });
+  });
 
   debugInit(`GraphQL Server is now running on ${PORT}`);
 });
