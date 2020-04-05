@@ -31,4 +31,5 @@ export const queries = `
 
 export const mutations = `
   configsUpdate(configsMap: JSON!): JSON
+  generateTokenConfig(key: String): JSON
 `;
