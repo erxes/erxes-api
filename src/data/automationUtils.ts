@@ -1,22 +1,51 @@
+import { Configs } from '../db/models';
 import { IUserDocument } from '../db/models/definitions/users';
 import { sendRPCMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { IFinalLogParams } from './logUtils';
-import { getEnv } from './utils';
+import { getEnv, sendRequest } from './utils';
 
-const checkAutomation = async (kind: string, body: any, user: IUserDocument) => {
-  const data = {
-    ...body,
-    userId: user._id,
-    kind,
-  };
-
+const checkToken = async (apiKey: string, kind: string, body: any, user: IUserDocument) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
 
   if (NODE_ENV === 'test') {
     return;
   }
 
+  const data = {
+    apiKey,
+    ...body,
+    userId: user._id,
+    kind,
+  };
+
+  const apiTokensConfig = await Configs.getConfig('API_TOKENS');
+  for (const tokenKey of Object.keys(apiTokensConfig.value)) {
+    data.apiToken = apiTokensConfig[tokenKey];
+
+    switch (tokenKey) {
+      case 'exa':
+        checkAutomation(data, user);
+        break;
+
+      case 'n8n':
+        checkN8N(data, user);
+        break;
+    }
+  }
+};
+
+const checkN8N = async (data: any, user: IUserDocument) => {
+  const apiAutomationResponse = await sendRequest({
+    url: 'http://localhost:5678/webhook/1/erxes%20trigger/webhook',
+    method: 'POST',
+    body: { ...data, user },
+  });
+
+  console.log('apiAutomationResponse', apiAutomationResponse);
+};
+
+const checkAutomation = async (data: any, user: IUserDocument) => {
   const apiAutomationResponse = await sendRPCMessage(
     {
       action: 'get-response-check-automation',
@@ -97,6 +126,11 @@ export const automationHelper = async ({ params, user }: { params: IFinalLogPara
   automationKind = '';
   automationBody = {};
 
+  const apiKey = await Configs.getConfig('API_KEY');
+  if (!apiKey) {
+    return;
+  }
+
   switch (params.type) {
     case 'deal':
       await changeDeal(params);
@@ -122,6 +156,6 @@ export const automationHelper = async ({ params, user }: { params: IFinalLogPara
   }
 
   if (automationKind && Object.keys(automationBody).length > 0) {
-    await checkAutomation(automationKind, automationBody, user);
+    await checkToken(apiKey.value, automationKind, automationBody, user);
   }
 };
