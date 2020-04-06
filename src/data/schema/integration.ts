@@ -101,6 +101,7 @@ export const queries = `
   integrationDetail(_id: String!): Integration
   integrationsTotalCount: integrationsTotalCount
   integrationsFetchApi(path: String!, params: JSON!): JSON
+  integrationGetWhatsAppQrCode(_id: String!): String
 `;
 
 export const mutations = `
