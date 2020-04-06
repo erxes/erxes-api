@@ -1,7 +1,7 @@
 import { Configs } from '../../../db/models';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { registerOnboardHistory, resetConfigsCache } from '../../utils';
+import { makeRandomId, registerOnboardHistory, resetConfigsCache } from '../../utils';
 
 const configMutations = {
   /**
@@ -34,6 +34,30 @@ const configMutations = {
       }
     }
   },
+
+  async generateTokenConfig(_root, {key}: { key: string }) {
+    const apiKeyConfig = await Configs.findOne({ code: 'API_KEY' });
+
+    if ( !apiKeyConfig ) {
+      await Configs.create({
+        code: 'API_KEY',
+        value: makeRandomId({length: 25})
+      })
+    }
+
+    const tokenConfigs = await Configs.findOne({ code: 'API_TOKENS' });
+
+    const tokens = tokenConfigs?.value || {}
+
+    if (!Object.keys(tokens).includes(key)) {
+      tokens[key] = makeRandomId({length: 40});
+    }
+
+    await Configs.createOrUpdateConfig({
+      code: 'API_TOKENS',
+      value: tokens
+    });
+  }
 };
 
 moduleCheckPermission(configMutations, 'manageGeneralSettings');
