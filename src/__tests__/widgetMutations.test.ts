@@ -59,9 +59,6 @@ describe('messenger connect', () => {
       deviceTokens: ['111'],
     });
 
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
-    process.env.ENGAGES_API_DOMAIN = 'http://fake.erxes.io';
-
     const dataSources = { IntegrationsAPI: new IntegrationsAPI(), EngagesAPI: new EngagesAPI() };
     const user = await userFactory({});
 
@@ -187,7 +184,6 @@ describe('messenger connect', () => {
     expect(customer.createdAt < now).toBeTruthy();
 
     // must be updated
-    expect(customer.isUser).toBeTruthy();
     expect((customer.deviceTokens || []).length).toBe(2);
     expect(customer.deviceTokens).toContain('111');
     expect(customer.deviceTokens).toContain('222');
