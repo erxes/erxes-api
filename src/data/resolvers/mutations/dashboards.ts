@@ -27,13 +27,13 @@ const dashboardsMutations = {
     return removed;
   },
 
-  async createDashboardItem(_root, doc: IDashboardItemInput) {
+  async dashboardItemAdd(_root, doc: IDashboardItemInput) {
     const dashboardItem = await DashboardItems.create({ ...doc });
 
     return dashboardItem;
   },
 
-  async updateDashboardItem(_root, { _id, ...fields }: IDashboardItemEdit) {
+  async dashboardItemEdit(_root, { _id, ...fields }: IDashboardItemEdit) {
     const updated = await DashboardItems.update(_id, fields);
 
     return updated;

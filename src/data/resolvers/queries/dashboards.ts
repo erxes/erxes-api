@@ -11,11 +11,11 @@ const dashBoardQueries = {
     return Dashboards.find({}).countDocuments();
   },
 
-  dashboardItems() {
-    return DashboardItems.find({});
+  dashboardItems(_root, { dashboardId }: { dashboardId: string }) {
+    return DashboardItems.find({ dashboardId });
   },
 
-  dashboardItem(_root, { _id }: { _id: string }) {
+  dashboardItemDetail(_root, { _id }: { _id: string }) {
     return DashboardItems.findOne({ _id });
   },
 };
