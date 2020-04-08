@@ -1,2 +1,1 @@
-cronjob: node dist/cronJobs
-worker: node dist/workers
+elkSyncer: python main.py
