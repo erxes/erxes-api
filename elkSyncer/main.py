@@ -2,16 +2,20 @@
 
 import os
 import subprocess
+
+import pymongo
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
-import pymongo
 
 load_dotenv()
 
 MONGO_URL = os.getenv('MONGO_URL')
 ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL')
 
-client = Elasticsearch([ELASTICSEARCH_URL])
+client = Elasticsearch(
+    [ELASTICSEARCH_URL],
+    use_ssl=True
+)
 
 customer_mapping = {
     'state': {
