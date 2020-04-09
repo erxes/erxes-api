@@ -44,7 +44,7 @@ const configGooglePubsub = (): IGoogleOptions => {
 const createPubsubInstance = () => {
   let pubsub;
 
-  if (NODE_ENV === 'test' || NODE_ENV === 'command' || PROCESS_NAME === 'crons') {
+  if (NODE_ENV === 'test' || NODE_ENV === 'command' || PROCESS_NAME === 'crons' || PROCESS_NAME === 'workers') {
     pubsub = {
       asyncIterator: () => null,
       publish: () => null,
