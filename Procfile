@@ -1,1 +1,0 @@
-elkSyncer: cd elkSyncer && python main.py
