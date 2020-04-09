@@ -52,6 +52,22 @@
     "JWT_TOKEN_SECRET": {
       "description": "JWT TOKEN SECRET",
       "value": "replace it with your token"
+    },
+    "CRONS_API_DOMAIN": {
+      "description": "CRONS_API_DOMAIN",
+      "value": "replace it with your crons app url"
+    },
+    "WORKERS_API_DOMAIN": {
+      "description": "WORKERS_API_DOMAIN",
+      "value": "replace it with your workers app url"
+    },
+    "LOGS_API_DOMAIN": {
+      "description": "LOGS_API_DOMAIN",
+      "value": "replace it with your logs app url"
+    },
+    "ENGAGES_API_DOMAIN": {
+      "description": "ENGAGES_API_DOMAIN",
+      "value": "replace it with your email engages app url"
     }
   },
   "addons": [
