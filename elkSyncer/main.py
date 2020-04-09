@@ -12,10 +12,7 @@ load_dotenv()
 MONGO_URL = os.getenv('MONGO_URL')
 ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL')
 
-client = Elasticsearch(
-    [ELASTICSEARCH_URL],
-    use_ssl=True
-)
+client = Elasticsearch([ELASTICSEARCH_URL])
 
 customer_mapping = {
     'state': {
