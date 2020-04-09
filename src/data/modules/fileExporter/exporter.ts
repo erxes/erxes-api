@@ -3,7 +3,6 @@ import {
   Brands,
   Channels,
   ConversationMessages,
-  Customers,
   Deals,
   Fields,
   FormSubmissions,
@@ -12,7 +11,6 @@ import {
   Tickets,
   Users,
 } from '../../../db/models';
-import { IMessage, IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugBase } from '../../../debuggers';
 import { MODULE_NAMES } from '../../constants';
