@@ -37,7 +37,7 @@ const checkToken = async (apiKey: string, kind: string, body: any, user: IUserDo
 
 const checkN8N = async (data: any, user: IUserDocument) => {
   const apiAutomationResponse = await sendRequest({
-    url: 'http://localhost:5678/webhook/1/erxes%20trigger/webhook',
+    url: `http://localhost:5678/webhook-test/1/erxes%20trigger1/webhook`,
     method: 'POST',
     body: { ...data, user },
   });
