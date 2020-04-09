@@ -1,7 +1,7 @@
 import { Configs } from '../../../db/models';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { makeRandomId, registerOnboardHistory, resetConfigsCache } from '../../utils';
+import { initFirebase, makeRandomId, registerOnboardHistory, resetConfigsCache } from '../../utils';
 
 const configMutations = {
   /**
@@ -26,6 +26,10 @@ const configMutations = {
 
       const updatedConfig = await Configs.getConfig(code);
 
+      if (['GOOGLE_APPLICATION_CREDENTIALS_JSON'].includes(code)) {
+        initFirebase(configsMap[code]);
+      }
+
       if (
         ['dealUOM', 'dealCurrency'].includes(code) &&
         prevConfig.value.toString() !== updatedConfig.value.toString()
@@ -35,29 +39,29 @@ const configMutations = {
     }
   },
 
-  async generateTokenConfig(_root, {key}: { key: string }) {
+  async generateTokenConfig(_root, { key }: { key: string }) {
     const apiKeyConfig = await Configs.findOne({ code: 'API_KEY' });
 
-    if ( !apiKeyConfig ) {
+    if (!apiKeyConfig) {
       await Configs.create({
         code: 'API_KEY',
-        value: makeRandomId({length: 25})
-      })
+        value: makeRandomId({ length: 25 }),
+      });
     }
 
     const tokenConfigs = await Configs.findOne({ code: 'API_TOKENS' });
 
-    const tokens = tokenConfigs?.value || {}
+    const tokens = tokenConfigs?.value || {};
 
     if (!Object.keys(tokens).includes(key)) {
-      tokens[key] = makeRandomId({length: 40});
+      tokens[key] = makeRandomId({ length: 40 });
     }
 
     await Configs.createOrUpdateConfig({
       code: 'API_TOKENS',
-      value: tokens
+      value: tokens,
     });
-  }
+  },
 };
 
 moduleCheckPermission(configMutations, 'manageGeneralSettings');

@@ -15,6 +15,14 @@ import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
+export const initFirebase = (value: string): void => {
+  const serviceAccount = JSON.parse(value);
+
+  if (serviceAccount.private_key) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  }
+};
+
 /*
  * Check that given file is not harmful
  */
@@ -942,11 +950,11 @@ export const getSubServiceDomain = ({ name }: { name: string }): string => {
 };
 
 export const makeRandomId = ({ length }: { length: number }): string => {
-  let result           = '';
-  const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
-  for ( let i = 0; i < length; i++ ) {
-     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
-}
+};
