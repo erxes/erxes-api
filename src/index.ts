@@ -1,4 +1,3 @@
-import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -49,9 +48,9 @@ const INTEGRATIONS_API_DOMAIN = getSubServiceDomain({ name: 'INTEGRATIONS_API_DO
 const app = express();
 
 app.disable('x-powered-by');
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded());
 app.use(
-  bodyParser.json({
+  express.json({
     limit: '15mb',
   }),
 );
@@ -191,6 +190,8 @@ app.post('/delete-file', async (req: any, res) => {
   if (!req.user) {
     return res.end('foribidden');
   }
+
+  console.log('delete body: ', req.body);
 
   const status = await deleteFile(req.body.fileName);
 

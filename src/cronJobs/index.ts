@@ -1,4 +1,3 @@
-import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { connect } from '../db/connection';
@@ -24,8 +23,8 @@ app.get('/status', async (_req, res) => {
   res.end('ok');
 });
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded());
+app.use(express.json());
 
 app.post('/create-schedule', async (req, res, next) => {
   debugRequest(debugCrons, req);
