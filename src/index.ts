@@ -191,8 +191,6 @@ app.post('/delete-file', async (req: any, res) => {
     return res.end('foribidden');
   }
 
-  console.log('delete body: ', req.body);
-
   const status = await deleteFile(req.body.fileName);
 
   if (status === 'ok') {
