@@ -40,13 +40,13 @@ export const loadTicketClass = () => {
         }
       }
 
-      const lastVisibleTicket = await Tickets.find({
+      const lastVisibleTickets = await Tickets.find({
         stageId: doc.stageId, status: { $ne: BOARD_STATUSES.ARCHIVED }
-      }).sort({ order: -1 }).limit(1)[0]
+      }, {order: 1}).sort({ order: -1 }).limit(1)
 
       const ticket = await Tickets.create({
         ...doc,
-        order: lastVisibleTicket ? lastVisibleTicket.order + 1 : 1,
+        order: ((lastVisibleTickets ? lastVisibleTickets[0].order : 0) || 0) + 1,
         createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
