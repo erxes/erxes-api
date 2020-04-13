@@ -193,7 +193,7 @@ const taskMutations = {
 
     await putUpdateLog(
       {
-        type: MODULE_NAMES.DEAL,
+        type: MODULE_NAMES.TASK,
         object: task,
         newData: extendedDoc,
         updatedDocument: updatedTask,
