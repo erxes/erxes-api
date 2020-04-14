@@ -1,4 +1,4 @@
-import { Configs } from '../../../db/models';
+import { Configs, Users } from '../../../db/models';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { initFirebase, makeRandomId, registerOnboardHistory, resetConfigsCache } from '../../utils';
@@ -61,6 +61,40 @@ const configMutations = {
       code: 'API_TOKENS',
       value: tokens,
     });
+  },
+
+  async generateExpiredToken(
+    _root,
+    { apiKey, userName, password, tokenKey }: { apiKey: string; userName: string; password: string; tokenKey: string },
+  ) {
+    const apiKeyConfig = await Configs.getConfig('API_KEY');
+
+    if (apiKeyConfig.value !== apiKey) {
+      throw new Error('wront API_KEY');
+    }
+
+    const user = await Users.checkLoginAuth({ email: userName, password });
+
+    const tokenConfigs = await Configs.findOne({ code: 'API_TOKENS' });
+
+    const tokens = tokenConfigs?.value || {};
+
+    const tokenValue = {
+      token: makeRandomId({ length: 50 }),
+      expired: new Date(Date.now() + 259200000),
+      userId: user._id,
+    };
+    tokens[tokenKey] = tokenValue;
+
+    await Configs.createOrUpdateConfig({ code: 'API_TOKENS', value: tokens });
+
+    return {
+      apiKey,
+      userName,
+      tokenKey,
+      token: tokenValue.token,
+      expired: tokenValue.expired,
+    };
   },
 };
 
