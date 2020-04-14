@@ -120,7 +120,6 @@ export const sendNotifications = async ({
 interface INotifLinkParams {
   contentType: string;
   oldItem: any;
-  destinationStageId: string;
   pipelineId: string;
   pipeBoardId: string;
 }
@@ -129,11 +128,7 @@ interface INotifLinkParams {
  * When board items are moved between stages, old notification links are broken.
  */
 const fixNotificationLinks = async (params: INotifLinkParams) => {
-  const { contentType, oldItem, destinationStageId, pipelineId, pipeBoardId } = params;
-
-  if (oldItem.stageId !== destinationStageId) {
-    return;
-  }
+  const { contentType, oldItem, pipelineId, pipeBoardId } = params;
 
   const link = `/${contentType}/board?id=${pipeBoardId}&pipelineId=${pipelineId}&itemId=${oldItem._id}`;
 
@@ -169,7 +164,7 @@ export const itemsChange = async (userId: string, item: any, contentType: string
     ActivityLogs.createBoardItemMovementLog(item, contentType, userId, activityLogContent);
 
     await fixNotificationLinks({
-      contentType, oldItem: item, destinationStageId, pipelineId: pipeline._id, pipeBoardId: board._id
+      contentType, oldItem: item, pipelineId: pipeline._id, pipeBoardId: board._id
     });
   }
 
