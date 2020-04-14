@@ -5,12 +5,14 @@ import {
   ConversationMessages,
   Deals,
   Fields,
+  FormSubmissions,
   Permissions,
   Tasks,
   Tickets,
   Users,
 } from '../../../db/models';
 import { IUserDocument } from '../../../db/models/definitions/users';
+import { debugBase } from '../../../debuggers';
 import { MODULE_NAMES } from '../../constants';
 import { can } from '../../permissions/utils';
 import { createXlsFile, generateXlsx } from '../../utils';
@@ -47,21 +49,68 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
       const customerParams: ICustomerListArgs = query;
 
-      const qb = new CustomerBuildQuery(customerParams, {});
-      await qb.buildAllQueries();
-
-      const customerResponse = await qb.runQueries();
-
-      data = customerResponse.list;
-
       if (customerParams.form && customerParams.popupData) {
-        const formQuery = {
-          formWidgetData: { $exists: true },
-        };
+        debugBase('Start an query for popups export');
 
-        const conversationMessages = await ConversationMessages.find(formQuery, { formWidgetData: 1 });
+        const messages = await ConversationMessages.find(
+          { formWidgetData: { $exists: true, $ne: null }, customerId: { $exists: true } },
+          { formWidgetData: 1, customerId: 1, createdAt: 1 },
+        );
 
-        data = conversationMessages.map(message => message.formWidgetData);
+        const messagesMap: { [key: string]: any[] } = {};
+
+        for (const message of messages) {
+          const customerId = message.customerId || '';
+
+          if (!messagesMap[customerId]) {
+            messagesMap[customerId] = [];
+          }
+
+          messagesMap[customerId].push({
+            datas: message.formWidgetData,
+            createdInfo: {
+              _id: message._id,
+              type: 'input',
+              validation: 'date',
+              text: 'Created',
+              value: message.createdAt,
+            },
+          });
+        }
+
+        const uniqueCustomerIds = await FormSubmissions.find(
+          { formId: customerParams.form },
+          { customerId: 1, submittedAt: 1 },
+        )
+          .sort({
+            submittedAt: -1,
+          })
+          .distinct('customerId');
+
+        const formDatas: any[] = [];
+
+        for (const customerId of uniqueCustomerIds) {
+          const filteredMessages = messagesMap[customerId] || [];
+
+          for (const { datas, createdInfo } of filteredMessages) {
+            const formData: any[] = datas;
+
+            formData.push(createdInfo);
+
+            formDatas.push(formData);
+          }
+        }
+
+        debugBase('End an query for popups export');
+
+        data = formDatas;
+      } else {
+        const qb = new CustomerBuildQuery(customerParams, {});
+        await qb.buildAllQueries();
+
+        const customerResponse = await qb.runQueries();
+
+        data = customerResponse.list;
       }
 
       break;
@@ -152,22 +201,40 @@ const fillLeadHeaders = async (formId: string) => {
     headers.push({ name: field.text, label: field.text });
   }
 
+  headers.push({ name: 'Created', label: 'Created' });
+
   return headers;
 };
 
 const buildLeadFile = async (datas: any, formId: string, sheet: any, columnNames: string[], rowIndex: number) => {
+  debugBase(`Start building an excel file for popups export`);
+
   const headers: IColumnLabel[] = await fillLeadHeaders(formId);
+
+  const displayValue = item => {
+    if (!item) {
+      return '';
+    }
+
+    if (item.validation === 'date') {
+      return moment(item.value).format('YYYY/MM/DD HH:mm');
+    }
+
+    return item.value;
+  };
 
   for (const data of datas) {
     rowIndex++;
     // Iterating through basic info columns
     for (const column of headers) {
       const item = await data.find(obj => obj.text === column.name);
-      const cellValue = item ? item.value : '';
+      const cellValue = displayValue(item);
 
       addCell(column, cellValue, sheet, columnNames, rowIndex);
     }
   }
+
+  debugBase('End building an excel file for popups export');
 };
 
 export const buildFile = async (query: any, user: IUserDocument): Promise<{ name: string; response: string }> => {
