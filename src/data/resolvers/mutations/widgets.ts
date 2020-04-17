@@ -25,6 +25,7 @@ import { get, set } from '../../../redisClient';
 import { IContext } from '../../types';
 import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
+import { sendMsgToGolomt } from './golomtApi';
 
 interface ISubmission {
   _id: string;
@@ -400,7 +401,7 @@ const widgetMutations = {
     );
 
     // mark customer as active
-    await Customers.markCustomerAsActive(conversation.customerId);
+    const activeCustomer = await Customers.markCustomerAsActive(conversation.customerId);
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
@@ -442,6 +443,8 @@ const widgetMutations = {
       conversationId: conversation._id,
       receivers: conversationNotifReceivers(conversation, customerId),
     });
+
+    await sendMsgToGolomt(msg, activeCustomer, integrationId);
 
     return msg;
   },

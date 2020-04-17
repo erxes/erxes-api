@@ -128,6 +128,8 @@ import {
 
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
+import { mutations as golomtApiMutations } from './golomtApi';
+
 export const types = `
   scalar JSON
   scalar Date
@@ -253,6 +255,7 @@ export const mutations = `
     ${RobotMutations}
     ${PipelineLabelMutations}
     ${WidgetMutations}
+    ${golomtApiMutations}
   }
 `;
 
@@ -269,13 +272,13 @@ export const subscriptions = `
     importHistoryChanged(_id: String!): ImportHistory
     notificationInserted(userId: String): Notification
     onboardingChanged(userId: String!): OnboardingNotification
-    
+
     pipelinesChanged(_id: String!): Pipeline
     dealsChanged(_id: String!): Deal
     ticketsChanged(_id: String!): Ticket
     tasksChanged(_id: String!): Task
     growthHacksChanged(_id: String!): GrowthHack
-    
+
     checklistsChanged(contentType: String!, contentTypeId: String!): Checklist
     checklistDetailChanged(_id: String!): Checklist
   }

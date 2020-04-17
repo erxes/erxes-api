@@ -13,6 +13,7 @@ import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
 import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
+import golomtApiMutations from './data/resolvers/mutations/golomtApi';
 import {
   authCookieOptions,
   checkFile,
@@ -112,6 +113,26 @@ app.post('/events-update-customer-property', async (req, res) => {
   } catch (e) {
     debugBase(e.message);
     return res.json({});
+  }
+});
+
+app.post('/golomt-token-by-user', async (req, res) => {
+  try {
+    const response = await golomtApiMutations.generateExpiredToken(req.body);
+    return res.json(response);
+  } catch (e) {
+    debugBase(e.message);
+    return res.json({error: e.message});
+  }
+});
+
+app.post('/golomt-hook-message', async (req, res) => {
+  try {
+    const response = await golomtApiMutations.hookMessage(req.body);
+    return res.json(response);
+  } catch (e) {
+    debugBase(e.message);
+    return res.json({status: 'error', errMsg: e.message});
   }
 });
 

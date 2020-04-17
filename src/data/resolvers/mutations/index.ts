@@ -12,6 +12,7 @@ import emailTemplates from './emailTemplates';
 import engages from './engages';
 import { fieldMutations as fields, fieldsGroupsMutations as fieldsgroups } from './fields';
 import forms from './forms';
+import golomtApiMutations from './golomtApi';
 import growthHacks from './growthHacks';
 import importHistory from './importHistory';
 import integrations from './integrations';
@@ -70,4 +71,5 @@ export default {
   ...checklists,
   ...robot,
   ...widgets,
+  ...golomtApiMutations,
 };
