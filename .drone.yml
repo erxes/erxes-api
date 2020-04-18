@@ -33,6 +33,7 @@ pipeline:
         - master
         - develop
         - staging
+        - crons
       event:
         - push
 
@@ -96,6 +97,7 @@ pipeline:
         - master
         - develop
         - staging
+        - crons
       event:
         - push
 
