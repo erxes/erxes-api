@@ -5,16 +5,16 @@ import { sendRequest } from '../../utils';
 import { publishMessage } from './conversations';
 
 const signinGolomtApi = async () => {
-  const signinUrl = 'ChatApi/auth/signin';
+  const signinUrl = 'chatapi/auth/signin';
   const response = await sendRequest({
     url: `${process.env.GOLOMT_POST_URL}${signinUrl}`,
     method: 'POST',
     body: {
-      USERNAME: process.env.GOLOMT_API_USERNAME || 'erxes',
-      PASSWORD: process.env.GOLOMT_API_PASSWORD || 'erxes',
-      KEY: process.env.GOLOMT_API_KEY || ''
+      username: process.env.GOLOMT_API_USERNAME || '',
+      password: process.env.GOLOMT_API_PASSWORD || '',
+      key: process.env.GOLOMT_API_KEY || ''
     }
-  })
+  });
 
   await Configs.createOrUpdateConfig({ code: 'GOLOMT_ACCESS_TOKEN', value: response });
 
@@ -39,7 +39,7 @@ const checkAccessToken = async () => {
 }
 
 export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument, integrationId: string) => {
-  const writeMsgUrl = 'ChatApi/api/write';
+  const writeMsgUrl = 'chatapi/api/write';
 
   const integration = await Integrations.findOne({ _id: integrationId });
   const brand = await Brands.findOne({ _id: integration?.brandId || ''});
