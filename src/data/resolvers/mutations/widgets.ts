@@ -195,7 +195,7 @@ const widgetMutations = {
       submittedAt: new Date(),
     };
 
-    await FormSubmissions.createFormSubmission(doc);
+    FormSubmissions.createFormSubmission(doc);
 
     // create conversation
     const conversation = await Conversations.createConversation({
@@ -296,12 +296,15 @@ const widgetMutations = {
       : await Customers.createMessengerCustomer({ doc, customData });
 
     // get or create company
-    if (companyData) {
+    if (companyData && companyData.name) {
       let company = await Companies.findOne({
         $or: [{ names: { $in: [companyData.name] } }, { primaryName: companyData.name }],
       });
 
       if (!company) {
+        companyData.primaryName = companyData.name;
+        companyData.names = [companyData.name];
+
         company = await Companies.createCompany({ ...companyData, scopeBrandIds: [brand._id] });
       }
 

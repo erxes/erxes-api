@@ -166,7 +166,7 @@ describe('engage message mutation tests', () => {
     await ConversationMessages.deleteMany({});
   });
 
-  test('findCustomrs', async () => {
+  test('findCustomers', async () => {
     const segment = await segmentFactory({});
     const brand = await brandFactory({});
     await integrationFactory({ brandId: brand._id });
@@ -320,6 +320,7 @@ describe('engage message mutation tests', () => {
     process.env.AWS_ENDPOINT = '123';
     process.env.MAIL_PORT = '123';
     process.env.AWS_REGION = 'us-west-2';
+    process.env.ENGAGE_ADMINS = '[{"_id":"WkjhEfjJ4QW9EEW9F","name":"engageAdmin","email":"mrbatamar@gmail.com"}]';
 
     const emessage = await engageMessageFactory({
       method: 'email',
@@ -437,7 +438,11 @@ describe('engage message mutation tests', () => {
     }
 
     try {
-      await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', { ..._doc, brandIds: ['_id'] });
+      await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', {
+        ..._doc,
+        kind: 'manual',
+        brandIds: ['_id'],
+      });
     } catch (e) {
       expect(e[0].message).toBe('No customers found who have valid emails');
     }
