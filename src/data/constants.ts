@@ -278,6 +278,7 @@ export const MODULE_NAMES = {
   SEGMENT: 'segment',
   ENGAGE: 'engage',
   SCRIPT: 'script',
+  FIELD: 'field',
 };
 
 export const RABBITMQ_QUEUES = {
