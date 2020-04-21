@@ -1,9 +1,9 @@
 import { ImportHistory } from '../../../db/models';
-import { MODULE_NAMES } from '../../constants';
+import { sendMessage } from '../../../messageBroker';
+import { MODULE_NAMES, RABBITMQ_QUEUES } from '../../constants';
 import { putDeleteLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils from '../../utils';
 
 const importHistoryMutations = {
   /**
@@ -16,13 +16,9 @@ const importHistoryMutations = {
     await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
     try {
-      await utils.fetchWorkersApi({
-        path: '/import-remove',
-        method: 'POST',
-        body: {
-          contentType: importHistory.contentType,
-          importHistoryId: importHistory._id,
-        },
+      await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_REMOVE, {
+        contentType: importHistory.contentType,
+        importHistoryId: importHistory._id,
       });
     } catch (e) {
       throw new Error(e);
@@ -44,7 +40,7 @@ const importHistoryMutations = {
     }
 
     try {
-      await utils.fetchWorkersApi({ path: '/import-cancel', method: 'POST' });
+      await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_CANCEL, {});
     } catch (e) {
       throw new Error(e);
     }
