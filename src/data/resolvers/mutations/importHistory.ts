@@ -15,14 +15,10 @@ const importHistoryMutations = {
 
     await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
-    try {
-      await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_REMOVE, {
-        contentType: importHistory.contentType,
-        importHistoryId: importHistory._id,
-      });
-    } catch (e) {
-      throw new Error(e);
-    }
+    await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_REMOVE, {
+      contentType: importHistory.contentType,
+      importHistoryId: importHistory._id,
+    });
 
     await putDeleteLog({ type: MODULE_NAMES.IMPORT_HISTORY, object: importHistory }, user);
 
@@ -39,11 +35,7 @@ const importHistoryMutations = {
       throw new Error('History not found');
     }
 
-    try {
-      await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_CANCEL, {});
-    } catch (e) {
-      throw new Error(e);
-    }
+    await sendMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_CANCEL, {});
 
     return true;
   },
