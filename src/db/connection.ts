@@ -18,6 +18,7 @@ export const connectionOptions = {
   useCreateIndex: true,
   autoReconnect: true,
   useFindAndModify: false,
+  useUnifiedTopology: true,
 };
 
 mongoose.Promise = global.Promise;
