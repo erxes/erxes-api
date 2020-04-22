@@ -222,10 +222,7 @@ const integrationMutations = {
    */
   async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
     try {
-      const { erxesApiIds } = await sendRPCMessage({
-        action: 'remove-account',
-        data: { _id },
-      });
+      const { erxesApiIds } = await sendRPCMessage({ action: 'remove-account', data: { _id } });
 
       for (const id of erxesApiIds) {
         await Integrations.removeIntegration(id);

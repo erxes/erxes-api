@@ -100,8 +100,7 @@ export const clearIntervals = () => {
 
 const { MONGO_URL = '' } = process.env;
 
-export const connect = () =>
-  mongoose.connect(MONGO_URL, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
+export const connect = () => mongoose.connect(MONGO_URL, { useNewUrlParser: true, useCreateIndex: true });
 
 // xls file import, cancel, removal
 export const receiveImportRemove = async (content: any) => {
