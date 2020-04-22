@@ -89,7 +89,7 @@ interface IHookMessage {
 }
 
 const golomtApiMutations = {
-  async generateExpiredToken(
+  async generateExpiredToken(_root,
     { apiKey, userName, password, tokenKey }: { apiKey: string; userName: string; password: string; tokenKey: string },
   ) {
     const apiKeyConfig = process.env.GOLOMT_API_KEY;
@@ -104,11 +104,11 @@ const golomtApiMutations = {
 
     const tokenByUserId = golomtTokenConfig?.value || {};
 
-    const token = makeRandomId({ length: 50 });
+    const apiToken = makeRandomId({ length: 50 });
     const expired = new Date(Date.now() + 259200000);
 
     tokenByUserId[user._id] = {
-      token,
+      apiToken,
       expired,
       userId: user._id
     };
@@ -119,19 +119,19 @@ const golomtApiMutations = {
       apiKey,
       userName,
       tokenKey,
-      token,
+      apiToken,
       expired,
     };
   },
 
-  async hookMessage(doc: IHookMessage) {
+  async hookMessage(_root, doc: IHookMessage) {
     const { apiKey, apiToken } = doc;
     if (!apiKey || !apiToken) {
       throw new Error('has not apiKey or ApiToken');
     }
 
     if (apiKey !== (process.env.GOLOMT_API_KEY)) {
-      throw new Error('Wrong API KEY');
+      throw new Error('Wrong apiKey');
     }
 
     const configTokens = await Configs.findOne({code: 'GOLOMT_API_TOKENS'});
@@ -140,11 +140,11 @@ const golomtApiMutations = {
     const token  = tokenValue.find(item => item?.token === apiToken);
 
     if (!token){
-      throw new Error('api token not found');
+      throw new Error('apiToken not found');
     }
 
     if (token.expired < new Date(Date.now())) {
-      throw new Error('api token was expired');
+      throw new Error('apiToken was expired');
     }
 
     const message = doc.message;
