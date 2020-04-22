@@ -286,5 +286,4 @@ export const RABBITMQ_QUEUES = {
   RPC_API: 'rpc_queue:erxes-api',
   IMPORT_HISTORY_REMOVE: 'importHistoryRemove',
   IMPORT_HISTORY_CANCEL: 'importHistoryCancel',
-  IMPORT_HISTORY_ADD: 'importHistoryAdd',
 };

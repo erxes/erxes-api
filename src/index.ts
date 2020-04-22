@@ -11,7 +11,6 @@ import * as path from 'path';
 import * as request from 'request';
 import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
-import { RABBITMQ_QUEUES } from './data/constants';
 import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import {
@@ -295,7 +294,7 @@ app.post('/import-file', async (req: any, res) => {
       }
 
       try {
-        result = await sendRPCMessage(RABBITMQ_QUEUES.IMPORT_HISTORY_ADD, {
+        result = await sendRPCMessage({
           file: response.file,
           type: fields.type,
           scopeBrandIds,

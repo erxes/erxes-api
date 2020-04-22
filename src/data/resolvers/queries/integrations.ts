@@ -1,6 +1,5 @@
 import { Brands, Channels, Integrations, Tags } from '../../../db/models';
 import { INTEGRATION_NAMES_MAP, KIND_CHOICES, TAG_TYPES } from '../../../db/models/definitions/constants';
-import { RABBITMQ_QUEUES } from '../../constants';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 
 import { sendRPCMessage } from '../../../messageBroker';
@@ -151,7 +150,7 @@ const integrationQueries = {
   },
 
   async integrationGetLineWebhookUrl(_root, { _id }: { _id: string }) {
-    return sendRPCMessage(RABBITMQ_QUEUES.RPC_API, { action: 'line-webhook', data: { _id } });
+    return sendRPCMessage({ action: 'line-webhook', data: { _id } });
   },
 };
 

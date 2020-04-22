@@ -39,9 +39,9 @@ const init = async () => {
       }
     });
 
-    await channel.assertQueue(RABBITMQ_QUEUES.IMPORT_HISTORY_ADD);
+    await channel.assertQueue(RABBITMQ_QUEUES.RPC_API);
 
-    channel.consume(RABBITMQ_QUEUES.IMPORT_HISTORY_ADD, async msg => {
+    channel.consume(RABBITMQ_QUEUES.RPC_API, async msg => {
       if (msg !== null) {
         const content = msg.content.toString();
         const response: any = {};
