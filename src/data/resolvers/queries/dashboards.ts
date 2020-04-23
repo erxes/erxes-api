@@ -1,4 +1,5 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
+import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
@@ -19,5 +20,7 @@ const dashBoardQueries = {
     return DashboardItems.findOne({ _id });
   },
 };
+
+checkPermission(dashBoardQueries, 'dashboards', 'showDashboards', []);
 
 export default dashBoardQueries;

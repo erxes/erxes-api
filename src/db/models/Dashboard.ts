@@ -4,6 +4,7 @@ import {
   dashboardSchema,
   IDashboard,
   IDashboardDocument,
+  IDashboardItem,
   IDashboardItemDocument,
   IDashboardItemInput,
 } from './definitions/dashboard';
@@ -15,6 +16,7 @@ export interface IDashboardModel extends Model<IDashboardDocument> {
 }
 export interface IDashboardItemModel extends Model<IDashboardItemDocument> {
   addDashboardItem(doc: IDashboardItemInput): Promise<IDashboardItemDocument>;
+  editDashboardItem(_id: string, fields: IDashboardItem): Promise<IDashboardItemDocument>;
   removeDashboardItem(_id: string): void;
 }
 
@@ -44,6 +46,12 @@ export const loadDashboardItemClass = () => {
   class DashboardItem {
     public static addDashboardItem(doc: IDashboardItemInput) {
       return DashboardItems.create(doc);
+    }
+
+    public static async editDashboardItem(_id: string, feilds: IDashboard) {
+      await DashboardItems.updateOne({ _id }, { $set: feilds });
+
+      return DashboardItems.findOne({ _id });
     }
 
     public static async removeDashboardItem(_id: string) {

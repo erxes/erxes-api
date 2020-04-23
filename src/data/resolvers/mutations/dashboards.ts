@@ -1,5 +1,6 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
 import { IDashboard, IDashboardItemInput } from '../../../db/models/definitions/dashboard';
+import { checkPermission } from '../../permissions/wrappers';
 
 interface IDashboardEdit extends IDashboard {
   _id: string;
@@ -28,16 +29,29 @@ const dashboardsMutations = {
   },
 
   async dashboardItemAdd(_root, doc: IDashboardItemInput) {
-    const dashboardItem = await DashboardItems.create({ ...doc });
+    const dashboardItem = await DashboardItems.addDashboardItem({ ...doc });
 
     return dashboardItem;
   },
 
   async dashboardItemEdit(_root, { _id, ...fields }: IDashboardItemEdit) {
-    const updated = await DashboardItems.update(_id, fields);
+    const updated = await DashboardItems.editDashboardItem(_id, fields);
+
+    return updated;
+  },
+
+  async dashboardItemRemove(_root, { _id }: { _id: string }) {
+    const updated = await DashboardItems.remove(_id);
 
     return updated;
   },
 };
+
+checkPermission(dashboardsMutations, 'dashboardItemAdd', 'dashboardItemAdd');
+checkPermission(dashboardsMutations, 'dashboardItemEdit', 'dashboardItemEdit');
+checkPermission(dashboardsMutations, 'dashboardItemRemove', 'dashboardItemRemove');
+checkPermission(dashboardsMutations, 'dashboardAdd', 'dashboardAdd');
+checkPermission(dashboardsMutations, 'dashboardEdit', 'dashboardEdit');
+checkPermission(dashboardsMutations, 'dashboardRemove', 'dashboardRemove');
 
 export default dashboardsMutations;
