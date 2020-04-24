@@ -76,7 +76,6 @@ jobs:
       run: |
         yarn tsc
 
-    # TODO
     - name: Test
       run: |
         yarn test
@@ -87,16 +86,16 @@ jobs:
         MAIN_APP_DOMAIN: http://localhost:3000
 
     - name: Build
-      # if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
+      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
       run: |
         yarn build
 
     - name: Build docker image on push
-      # if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
+      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
       run: |
         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
         docker build -t erxes/erxes-api:${GITHUB_REF#refs/heads/} -f Dockerfile .
-      # docker push erxes/erxes-api:${GITHUB_REF#refs/heads/}
+        docker push erxes/erxes-api:${GITHUB_REF#refs/heads/}
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
