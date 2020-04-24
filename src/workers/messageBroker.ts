@@ -10,7 +10,7 @@ const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 let connection;
 let channel;
 
-const init = async () => {
+export const initConsumer = async () => {
   try {
     connection = await amqplib.connect(RABBITMQ_HOST);
     channel = await connection.createChannel();
@@ -65,5 +65,3 @@ const init = async () => {
     console.log(e.message);
   }
 };
-
-init();

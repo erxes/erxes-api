@@ -6,7 +6,7 @@ import { connect } from '../db/connection';
 import { debugWorkers } from '../debuggers';
 import userMiddleware from '../middlewares/userMiddleware';
 import { initRedis } from '../redisClient';
-import './messageBroker';
+import { initConsumer } from './messageBroker';
 import { init } from './startup';
 
 // load environment variables
@@ -40,6 +40,10 @@ app.use((error, _req, res, _next) => {
 const { PORT_WORKERS = 3700 } = process.env;
 
 app.listen(PORT_WORKERS, () => {
+  initConsumer().catch(e => {
+    debugWorkers(`Error ocurred during rabbitmq init ${e.message}`);
+  });
+
   init();
 
   debugWorkers(`Workers server is now running on ${PORT_WORKERS}`);
