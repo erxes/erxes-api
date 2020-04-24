@@ -1,4 +1,4 @@
-import { Configs, ConversationMessages, Customers, Users } from '../../../db/models';
+import { Configs, ConversationMessages, Conversations, Customers, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { sendRequest } from '../../utils';
@@ -77,11 +77,11 @@ interface IHookMessage {
   apiKey: string,
   apiToken: string,
   message: {
-    content?: string;
-    attachments?: any;
-    conversationId: string;
-    customerId?: string;
-    userId?: string;
+    content?: string,
+    attachments?: any,
+    conversationId: string,
+    customerId?: string,
+    userId?: string
   }
 }
 
@@ -133,8 +133,8 @@ const golomtApiMutations = {
 
     const configTokens = await Configs.findOne({code: 'GOLOMT_API_TOKENS'});
     const tokenByUserId = configTokens?.value || {};
-    const tokenValue: Array<{token: string, expired: Date, userId: string}> = Object.values(tokenByUserId) || [];
-    const token  = tokenValue.find(item => item?.token === apiToken);
+    const tokenValue: Array<{apiToken: string, expired: Date, userId: string}> = Object.values(tokenByUserId) || [];
+    const token  = tokenValue.find(item => item?.apiToken === apiToken);
 
     if (!token){
       throw new Error('apiToken not found');
@@ -145,11 +145,20 @@ const golomtApiMutations = {
     }
 
     const message = doc.message;
+
+    let customerId = message.customerId || '';
+    if (customerId) {
+      delete message[customerId]
+    } else {
+      const conversation = await Conversations.getConversation(message.conversationId);
+      customerId = conversation.customerId || '';
+    }
+
     message.userId = token.userId;
 
     const msgDocument = await ConversationMessages.createMessage(message);
 
-    await publishMessage(msgDocument, message.customerId);
+    await publishMessage(msgDocument, customerId);
 
     return {
       status: 'success'
