@@ -3,12 +3,6 @@ name: Logger CI
 on:
   push:
     branches:
-      - '**'
-    paths:
-      - 'logger/**'
-      - '.github/workflows/logger.yaml'
-  pull_request:
-    branches:
       - master
       - develop
     paths:
@@ -16,7 +10,7 @@ on:
       - '.github/workflows/logger.yaml'
 
 jobs:
-  docs:
+  logger:
     runs-on: ubuntu-18.04
 
     # name: Node ${{ matrix.node-version }}
@@ -50,11 +44,6 @@ jobs:
       run: |
         cd logger
         yarn install
-
-    - name: Lint
-      run: |
-        cd logger
-        yarn lint
 
     - name: Build
       if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )

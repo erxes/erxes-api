@@ -16,7 +16,7 @@ on:
       - '.github/workflows/engages.yaml'
 
 jobs:
-  docs:
+  engages:
     runs-on: ubuntu-18.04
 
     # name: Node ${{ matrix.node-version }}

@@ -10,7 +10,7 @@ on:
       - '.github/workflows/email-verifier.yaml'
 
 jobs:
-  widgets:
+  email-verifier:
     runs-on: ubuntu-18.04
 
     # name: Node ${{ matrix.node-version }}
