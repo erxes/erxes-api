@@ -1,4 +1,4 @@
-import { Brands, Configs, ConversationMessages, Customers, Integrations, Users } from '../../../db/models';
+import { Configs, ConversationMessages, Customers, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { sendRequest } from '../../utils';
@@ -6,6 +6,7 @@ import { publishMessage } from './conversations';
 
 const signinGolomtApi = async () => {
   const signinUrl = 'chatapi/auth/signin';
+
   const response = await sendRequest({
     url: `${process.env.GOLOMT_POST_URL}${signinUrl}`,
     method: 'POST',
@@ -28,29 +29,25 @@ const checkAccessToken = async () => {
 
   if (!token.value) { return signinGolomtApi(); }
 
-  if (!token.value.EXPIRES_IN) { return signinGolomtApi(); }
-  if (!token.value.ACCESS_TOKEN) { return signinGolomtApi(); }
+  if (!token.value.expires_in) { return signinGolomtApi(); }
+  if (!token.value.access_token) { return signinGolomtApi(); }
 
   const now = new Date(Date.now());
 
-  if (now > token.value.EXPIRES_IN) { return signinGolomtApi(); }
+  if (now > new Date(Date.parse(token.value.expires_in))) { return signinGolomtApi(); }
 
   return token.value;
 }
 
-export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument, integrationId: string) => {
+export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument) => {
   const writeMsgUrl = 'chatapi/api/write';
-
-  const integration = await Integrations.findOne({ _id: integrationId });
-  const brand = await Brands.findOne({ _id: integration?.brandId || ''});
 
   const tokenVal = await checkAccessToken();
 
   const body = {
-    "social_id": 'erxes-widget',
-    "social_type": brand?.code || '5',
+    "social_id": msg.conversationId,
+    "social_type": 5,
     "text": msg.content || '',
-    "conversationId": msg.conversationId,
     "user_name": await Customers.getCustomerName(customer),
     "user_psid": customer._id,
     "user_email": customer.primaryEmail || '',
@@ -61,8 +58,8 @@ export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomer
   await sendRequest({
     url: `${process.env.GOLOMT_POST_URL}${writeMsgUrl}`,
     method: 'POST',
-    headers: {'Authorization': tokenVal.ACCESS_TOKEN},
-    body
+    headers: { 'Authorization': `Bearer ${tokenVal.access_token}` },
+    body,
   });
 };
 
