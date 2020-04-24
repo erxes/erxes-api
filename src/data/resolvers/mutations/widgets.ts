@@ -185,7 +185,29 @@ const widgetMutations = {
       });
     }
 
-    await Customers.updateLocation(customer._id, browserInfo);
+    // update location info and missing fields
+    await Customers.findByIdAndUpdate(
+      { _id: customer._id },
+      {
+        $set: {
+          location: browserInfo,
+          firstName: customer.firstName ? customer.firstName : firstName,
+          lastName: customer.lastName ? customer.lastName : lastName,
+          ...(customer.primaryEmail
+            ? {}
+            : {
+                emails: [email],
+                primaryEmail: email,
+              }),
+          ...(customer.primaryPhone
+            ? {}
+            : {
+                phones: [phone],
+                primaryPhone: phone,
+              }),
+        },
+      },
+    );
 
     // Inserting customer id into submitted customer ids
     const doc = {
