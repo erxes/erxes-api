@@ -1,4 +1,3 @@
-import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -14,6 +13,7 @@ import apolloServer from './apolloClient';
 import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
 import {
+  authCookieOptions,
   checkFile,
   deleteFile,
   frontendEnv,
@@ -27,7 +27,7 @@ import {
 import { connect } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
-import { initConsumer } from './messageBroker';
+import { initConsumer, sendRPCMessage } from './messageBroker';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
 import { initRedis } from './redisClient';
@@ -49,9 +49,9 @@ const INTEGRATIONS_API_DOMAIN = getSubServiceDomain({ name: 'INTEGRATIONS_API_DO
 const app = express();
 
 app.disable('x-powered-by');
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded());
 app.use(
-  bodyParser.json({
+  express.json({
     limit: '15mb',
   }),
 );
@@ -63,6 +63,16 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.get('/set-frontend-cookies', async (req: any, res) => {
+  const envMaps = JSON.parse(req.query.envs || '{}');
+
+  for (const key of Object.keys(envMaps)) {
+    res.cookie(key, envMaps[key], authCookieOptions(req.secure));
+  }
+
+  return res.send('success');
+});
 
 app.get('/script-manager', widgetsMiddleware);
 
@@ -257,34 +267,44 @@ app.get('/connect-integration', async (req: any, res, _next) => {
 });
 
 // file import
-app.post('/import-file', async (req: any, res, next) => {
+app.post('/import-file', async (req: any, res) => {
   // require login
   if (!req.user) {
     return res.end('foribidden');
   }
 
-  const WORKERS_API_DOMAIN = getSubServiceDomain({ name: 'WORKERS_API_DOMAIN' });
-
-  debugExternalApi(`Pipeing request to ${WORKERS_API_DOMAIN}`);
-
   try {
-    const result = await req.pipe(
-      request
-        .post(`${WORKERS_API_DOMAIN}/import-file`)
-        .on('response', response => {
-          if (response.statusCode !== 200) {
-            return next(response.statusMessage);
-          }
+    const scopeBrandIds = JSON.parse(req.cookies.scopeBrandIds || '[]');
+    const form = new formidable.IncomingForm();
 
-          return response.pipe(res);
-        })
-        .on('error', e => {
-          debugExternalApi(`Error from pipe ${e.message}`);
-          next(e);
-        }),
-    );
+    form.parse(req, async (_err, fields: any, response) => {
+      let status = '';
+      let result;
 
-    return result;
+      try {
+        status = await checkFile(response.file);
+      } catch (e) {
+        return res.json({ status: e.message });
+      }
+
+      // if file is not ok then send error
+      if (status !== 'ok') {
+        return res.json(status);
+      }
+
+      try {
+        result = await sendRPCMessage({
+          file: response.file,
+          type: fields.type,
+          scopeBrandIds,
+          user: req.user,
+        });
+
+        return res.json(result);
+      } catch (e) {
+        return res.json(e.message);
+      }
+    });
   } catch (e) {
     return res.json({ status: 'error', message: e.message });
   }

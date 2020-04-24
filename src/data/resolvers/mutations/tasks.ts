@@ -7,7 +7,7 @@ import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds } from '../../utils';
+import { checkUserIds, registerOnboardHistory } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -103,6 +103,8 @@ const taskMutations = {
         content: activityContent,
       });
 
+      await registerOnboardHistory({ type: 'taskAssignUser', user });
+
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
     }
@@ -166,16 +168,19 @@ const taskMutations = {
    */
   async tasksChange(
     _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId: string },
+    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
     { user }: IContext,
   ) {
     const task = await Tasks.getTask(_id);
 
-    await Tasks.updateTask(_id, {
+    const extendedDoc = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-    });
+      order,
+    };
+
+    const updatedTask = await Tasks.updateTask(_id, extendedDoc);
 
     const { content, action } = await itemsChange(user._id, task, MODULE_NAMES.TASK, destinationStageId);
 
@@ -187,6 +192,16 @@ const taskMutations = {
       content,
       contentType: MODULE_NAMES.TASK,
     });
+
+    await putUpdateLog(
+      {
+        type: MODULE_NAMES.TASK,
+        object: task,
+        newData: extendedDoc,
+        updatedDocument: updatedTask,
+      },
+      user,
+    );
 
     // if move between stages
     if (destinationStageId !== task.stageId) {
