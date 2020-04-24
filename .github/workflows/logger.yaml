@@ -1,19 +1,19 @@
-name: Engages CI
+name: Logger CI
 
 on:
   push:
     branches:
       - '**'
     paths:
-      - 'engages-email-sender/**'
-      - '.github/workflows/engages.yaml'
+      - 'logger/**'
+      - '.github/workflows/logger.yaml'
   pull_request:
     branches:
       - master
       - develop
     paths:
-      - 'engages-email-sender/**'
-      - '.github/workflows/engages.yaml'
+      - 'logger/**'
+      - '.github/workflows/logger.yaml'
 
 jobs:
   docs:
@@ -40,35 +40,35 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ runner.os }}-yarn-engages-email-sender-${{ hashFiles('engages-email-sender/**/yarn.lock') }}
+        key: ${{ runner.os }}-yarn-logger-${{ hashFiles('logger/**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.os }}-yarn-engages-email-sender-${{ hashFiles('engages-email-sender/**/yarn.lock') }}
-          ${{ runner.os }}-yarn-engages-email-sender-
+          ${{ runner.os }}-yarn-logger-${{ hashFiles('logger/**/yarn.lock') }}
+          ${{ runner.os }}-yarn-logger-
           ${{ runner.os }}-yarn-
 
     - name: Install
       run: |
-        cd engages-email-sender
+        cd logger
         yarn install
 
-    - name: Tsc
+    - name: Lint
       run: |
-        cd engages-email-sender
-        yarn tsc
+        cd logger
+        yarn lint
 
     - name: Build
       if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
       run: |
-        cd engages-email-sender
+        cd logger
         yarn build
 
     - name: Build docker image on push
       if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' )
       run: |
-        cd engages-email-sender
+        cd logger
         docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_TOKEN
-        docker build -t erxes/erxes-engages-email-sender:${GITHUB_REF#refs/heads/} -f Dockerfile .
-        docker push erxes/erxes-engages-email-sender:${GITHUB_REF#refs/heads/}
+        docker build -t erxes/erxes-logger:${GITHUB_REF#refs/heads/} -f Dockerfile .
+        docker push erxes/erxes-logger:${GITHUB_REF#refs/heads/}
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
