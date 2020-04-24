@@ -278,4 +278,11 @@ export const MODULE_NAMES = {
   SEGMENT: 'segment',
   ENGAGE: 'engage',
   SCRIPT: 'script',
+  FIELD: 'field',
+};
+
+export const RABBITMQ_QUEUES = {
+  PUT_LOG: 'putLog',
+  RPC_API: 'rpc_queue:erxes-api',
+  WORKERS: 'workers',
 };
