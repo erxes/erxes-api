@@ -8,8 +8,6 @@ on:
     paths:
       - 'elkSyncer/**'
       - '.github/workflows/elk-syncer.yaml'
-    paths:
-      - 'elkSyncer/**'
 
 jobs:
   elkSyncer:
