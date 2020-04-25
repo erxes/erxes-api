@@ -59,11 +59,11 @@
     },
     "LOGS_API_DOMAIN": {
       "description": "LOGS_API_DOMAIN",
-      "value": "replace it with your logs app url"
+      "value": "https://LOGS_API_DOMAIN.herokuapp.com"
     },
     "ENGAGES_API_DOMAIN": {
       "description": "ENGAGES_API_DOMAIN",
-      "value": "replace it with your email engages app url"
+      "value": "https://ENGAGES_API_DOMAIN.herokuapp.com"
     }
   },
   "addons": [
