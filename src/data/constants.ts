@@ -283,7 +283,7 @@ export const MODULE_NAMES = {
 
 export const RABBITMQ_QUEUES = {
   PUT_LOG: 'putLog',
-  RPC_API: 'rpc_queue:erxes-api',
-  IMPORT_HISTORY_REMOVE: 'importHistoryRemove',
-  IMPORT_HISTORY_CANCEL: 'importHistoryCancel',
+  RPC_API_TO_INTEGRATIONS: 'rpc_queue:api_to_integrations',
+  RPC_API_TO_WORKERS: 'rpc_queue:api_to_workers',
+  WORKERS: 'workers',
 };
