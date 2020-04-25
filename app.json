@@ -21,6 +21,14 @@
       "description": "A port number that erxes api will be running on",
       "value": "3300"
     },
+    "PORT_CRONS": {
+      "description": "A port number that erxes api crons will be running on",
+      "value": "3600"
+    },
+    "PORT_WORKERS": {
+      "description": "A port number that erxes api workers will be running on",
+      "value": "3700"
+    },
     "MAIN_APP_DOMAIN": {
       "description": "Erxes URL",
       "value": "https://erxes.herokuapp.com"
@@ -48,14 +56,6 @@
     "JWT_TOKEN_SECRET": {
       "description": "JWT TOKEN SECRET",
       "value": "replace it with your token"
-    },
-    "CRONS_API_DOMAIN": {
-      "description": "CRONS_API_DOMAIN",
-      "value": "replace it with your crons app url"
-    },
-    "WORKERS_API_DOMAIN": {
-      "description": "WORKERS_API_DOMAIN",
-      "value": "replace it with your workers app url"
     },
     "LOGS_API_DOMAIN": {
       "description": "LOGS_API_DOMAIN",
