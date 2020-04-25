@@ -40,7 +40,7 @@ const checkAccessToken = async () => {
 }
 
 export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument) => {
-  const writeMsgUrl = 'chatapi/api/write';
+  const writeMsgUrl = 'chatapi/api/chat/write';
 
   const tokenVal = await checkAccessToken();
 
@@ -52,7 +52,7 @@ export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomer
     "user_psid": customer._id,
     "user_email": customer.primaryEmail || '',
     "user_phone": customer.primaryPhone || '',
-    "file_url": JSON.stringify(msg.attachments) || '[]',
+    "file_url": msg.attachments || [],
   };
 
   await sendRequest({
