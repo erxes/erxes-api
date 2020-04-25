@@ -125,7 +125,7 @@ describe('Test activity model', () => {
   });
 
   test('Activity create archive log', async () => {
-    const deal = await checklistFactory({ contentTypeId: '123' });
+    const deal = await dealFactory({});
     const activity = await ActivityLogs.createArchiveLog({
       item: deal,
       contentType: 'deal',
@@ -133,6 +133,6 @@ describe('Test activity model', () => {
       userId: '123',
     });
 
-    expect(activity.contentId).toEqual('123');
+    expect(activity.createdBy).toEqual('123');
   });
 });
