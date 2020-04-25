@@ -4,7 +4,6 @@ import { companyFactory, customerFactory, importHistoryFactory, productFactory }
 import { ImportHistory } from '../db/models';
 import * as workerUtils from '../workers/utils';
 
-import utils from '../data/utils';
 import './setup.ts';
 
 describe('Import history mutations', () => {
@@ -31,15 +30,17 @@ describe('Import history mutations', () => {
 
     const mock = sinon.stub(workerUtils, 'createWorkers').callsFake();
 
-    const fetchSpy = jest.spyOn(utils, 'fetchWorkersApi');
-    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+    try {
+      await graphqlRequest(mutation, 'importHistoriesRemove', { _id: history._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+      );
+    }
 
-    await graphqlRequest(mutation, 'importHistoriesRemove', { _id: history._id });
     await graphqlRequest(mutation, 'importHistoriesRemove', { _id: customerHistory._id });
     await graphqlRequest(mutation, 'importHistoriesRemove', { _id: companyHistory._id });
     await graphqlRequest(mutation, 'importHistoriesRemove', { _id: productHistory._id });
-
-    fetchSpy.mockRestore();
 
     const historyObj = await ImportHistory.getImportHistory(customerHistory._id);
 
@@ -74,16 +75,20 @@ describe('Import history mutations', () => {
         importHistoriesCancel(_id: $_id)
       }
     `;
+
     const importHistory = await importHistoryFactory({});
 
-    const fetchSpy = jest.spyOn(utils, 'fetchWorkersApi');
-    fetchSpy.mockImplementation(() => Promise.resolve('ok'));
+    try {
+      await graphqlRequest(mutation, 'importHistoriesCancel', { _id: importHistory._id });
+    } catch (e) {
+      expect(e[0].message).toBe(
+        'Error: Failed to connect workers api. Check WORKERS_API_DOMAIN env or workers api is not running',
+      );
+    }
 
     const response = await graphqlRequest(mutation, 'importHistoriesCancel', { _id: importHistory._id });
 
     expect(response).toBe(true);
-
-    fetchSpy.mockRestore();
 
     // if fakeId
     try {

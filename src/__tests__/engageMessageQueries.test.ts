@@ -1,3 +1,4 @@
+import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, engageMessageFactory, segmentFactory, tagsFactory, userFactory } from '../db/factories';
 import { Brands, EngageMessages, Segments, Tags, Users } from '../db/models';
@@ -35,6 +36,12 @@ describe('engageQueries', () => {
       engageMessageCounts(name: $name kind: $kind status: $status)
     }
   `;
+
+  let dataSources;
+
+  beforeEach(async () => {
+    dataSources = { EngagesAPI: new EngagesAPI() };
+  });
 
   afterEach(async () => {
     // Clearing test data
@@ -195,8 +202,6 @@ describe('engageQueries', () => {
       }
     `;
 
-    const dataSources = { EngagesAPI: new EngagesAPI() };
-
     let response = await graphqlRequest(qry, 'engageMessageDetail', { _id: engageMessage._id }, { dataSources });
 
     expect(response._id).toBe(engageMessage._id);
@@ -312,13 +317,13 @@ describe('engageQueries', () => {
       }
     `;
 
-    const dataSources = { EngagesAPI: new EngagesAPI() };
+    const mock = sinon.stub(dataSources.EngagesAPI, 'engagesGetVerifiedEmails').callsFake(() => {
+      return Promise.resolve([]);
+    });
 
-    try {
-      await graphqlRequest(qry, 'engageVerifiedEmails', {}, { dataSources });
-    } catch (e) {
-      expect(e[0].message).toBe('Engages api is not running');
-    }
+    await graphqlRequest(qry, 'engageVerifiedEmails', {}, { dataSources });
+
+    mock.restore();
   });
 
   test('configDetail', async () => {
@@ -327,8 +332,6 @@ describe('engageQueries', () => {
         engagesConfigDetail
       }
     `;
-
-    const dataSources = { EngagesAPI: new EngagesAPI() };
 
     try {
       await graphqlRequest(qry, 'engagesConfigDetail', {}, { dataSources });
