@@ -167,9 +167,7 @@ const boardMutations = {
   async stagesEdit(_root, { _id, ...doc }: IStageEdit, { user }: IContext) {
     await checkPermission(doc.type, user, 'stagesEdit');
 
-    const updated = await Stages.updateStage(_id, doc);
-
-    return updated;
+    return Stages.updateStage(_id, doc);
   },
 
   /**
