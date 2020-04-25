@@ -123,4 +123,16 @@ describe('Test activity model', () => {
 
     expect(activity.contentId).toEqual('123');
   });
+
+  test('Activity create archive log', async () => {
+    const deal = await checklistFactory({ contentTypeId: '123' });
+    const activity = await ActivityLogs.createArchiveLog({
+      item: deal,
+      contentType: 'deal',
+      action: 'archive',
+      userId: '123',
+    });
+
+    expect(activity.contentId).toEqual('123');
+  });
 });
