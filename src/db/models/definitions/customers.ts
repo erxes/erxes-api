@@ -1,7 +1,7 @@
 import { Document, Schema } from 'mongoose';
 
 import { ILink, linkSchema } from './common';
-import { CUSTOMER_LEAD_STATUS_TYPES, EMAIL_VALIDATION_STATUSES, STATUSES } from './constants';
+import { CUSTOMER_SELECT_OPTIONS } from './constants';
 
 import { field, schemaWrapper } from './utils';
 
@@ -106,6 +106,10 @@ export const visitorContactSchema = new Schema(
   { _id: false },
 );
 
+const getEnum = (fieldName: string): string[] => {
+  return CUSTOMER_SELECT_OPTIONS[fieldName].map(option => option.value);
+};
+
 export const customerSchema = schemaWrapper(
   new Schema({
     _id: field({ pkey: true }),
@@ -119,16 +123,24 @@ export const customerSchema = schemaWrapper(
     firstName: field({ type: String, label: 'First name', optional: true }),
     lastName: field({ type: String, label: 'Last name', optional: true }),
     birthDate: field({ type: Date, label: 'Date of birth', optional: true }),
-    sex: field({ type: Number, label: 'Sex', optional: true, default: 0 }),
+    sex: field({
+      type: Number,
+      label: 'Sex',
+      optional: true,
+      default: 0,
+      enum: getEnum('SEX'),
+      selectOptions: CUSTOMER_SELECT_OPTIONS.SEX,
+    }),
 
     primaryEmail: field({ type: String, label: 'Primary Email', optional: true, esType: 'email' }),
     emails: field({ type: [String], optional: true, label: 'Emails' }),
     emailValidationStatus: field({
       type: String,
-      enum: EMAIL_VALIDATION_STATUSES.ALL,
-      default: EMAIL_VALIDATION_STATUSES.UNKNOWN,
+      enum: getEnum('EMAIL_VALIDATION_STATUSES'),
+      default: 'unknown',
       label: 'Email validation status',
       esType: 'keyword',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.EMAIL_VALIDATION_STATUSES,
     }),
 
     primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
@@ -141,20 +153,22 @@ export const customerSchema = schemaWrapper(
 
     leadStatus: field({
       type: String,
-      enum: CUSTOMER_LEAD_STATUS_TYPES,
+      enum: getEnum('LEAD_STATUS_TYPES'),
       optional: true,
       label: 'Lead Status',
       esType: 'keyword',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.LEAD_STATUS_TYPES,
     }),
 
     status: field({
       type: String,
-      enum: STATUSES.ALL,
-      default: STATUSES.ACTIVE,
+      enum: getEnum('STATUSES'),
+      default: 'active',
       optional: true,
       label: 'Status',
       index: true,
       esType: 'keyword',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.STATUSES,
     }),
 
     hasAuthority: field({ type: String, optional: true, label: 'Has authority' }),
