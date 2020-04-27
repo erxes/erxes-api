@@ -127,6 +127,7 @@ export const customerSchema = schemaWrapper(
       type: Number,
       label: 'Sex',
       optional: true,
+      esType: 'keyword',
       default: 0,
       enum: getEnum('SEX'),
       selectOptions: CUSTOMER_SELECT_OPTIONS.SEX,
@@ -181,7 +182,7 @@ export const customerSchema = schemaWrapper(
     links: field({ type: linkSchema, default: {}, label: 'Links' }),
 
     relatedIntegrationIds: field({ type: [String], optional: true }),
-    integrationId: field({ type: String, optional: true, label: 'Integration' }),
+    integrationId: field({ type: String, optional: true, label: 'Integration', esType: 'keyword' }),
     tagIds: field({ type: [String], optional: true, index: true, label: 'Tags' }),
 
     // Merged customer ids

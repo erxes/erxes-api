@@ -233,18 +233,6 @@ export const CUSTOMER_LIFECYCLE_STATE_TYPES = [
   'other',
 ];
 
-export const COMPANY_LEAD_STATUS_TYPES = [
-  '',
-  'new',
-  'open',
-  'inProgress',
-  'openDeal',
-  'unqualified',
-  'attemptedToContact',
-  'connected',
-  'badTiming',
-];
-
 export const COMPANY_LIFECYCLE_STATE_TYPES = [
   '',
   'subscriber',
@@ -457,14 +445,12 @@ const STATUSES = [
 
 export const COMPANY_SELECT_OPTIONS = {
   BUSINESS_TYPES: [
-    { label: 'Analyst', value: 'analyst' },
-    { label: 'Competitor', value: 'competitor' },
-    { label: 'Customer', value: 'customer' },
-    { label: 'Integrator', value: 'integrator' },
-    { label: 'Investor', value: 'investor' },
-    { label: 'Partner', value: 'partner' },
+    { label: 'Competitor', value: 'Competitor' },
+    { label: 'Customer', value: 'Customer' },
+    { label: 'Investor', value: 'Investor' },
+    { label: 'Partner', value: 'Partner' },
     { label: 'Press', value: 'Press' },
-    { label: 'Prospect', value: 'prospect' },
+    { label: 'Prospect', value: 'Prospect' },
     { label: 'Reseller', value: 'Reseller' },
     { label: 'Other', value: 'Other' },
   ],
@@ -474,7 +460,7 @@ export const COMPANY_SELECT_OPTIONS = {
 export const CUSTOMER_SELECT_OPTIONS = {
   SEX: [
     { label: 'Male', value: 1 },
-    { label: 'Female', value: 0 },
+    { label: 'Female', value: 2 },
   ],
   EMAIL_VALIDATION_STATUSES: [
     { label: 'Valid', value: 'valid' },
@@ -487,9 +473,9 @@ export const CUSTOMER_SELECT_OPTIONS = {
   ],
   LEAD_STATUS_TYPES: [
     { label: 'New', value: 'new' },
-    { label: 'Contact', value: 'contact' },
-    { label: 'Working', value: 'working' },
-    { label: 'Open deal', value: 'openDeal' },
+    { label: 'Contacted', value: 'attemptedToContact' },
+    { label: 'Working', value: 'inProgress' },
+    { label: 'Bad Timing', value: 'badTiming' },
     { label: 'Unqualified', value: 'unqualified' },
   ],
   STATUSES,
