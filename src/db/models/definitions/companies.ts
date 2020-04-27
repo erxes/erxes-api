@@ -1,7 +1,7 @@
 import { Document, Schema } from 'mongoose';
 
 import { ILink, linkSchema } from './common';
-import { COMPANY_BUSINESS_TYPES, COMPANY_INDUSTRY_TYPES, COMPANY_SELECT_OPTIONS } from './constants';
+import { COMPANY_INDUSTRY_TYPES, COMPANY_SELECT_OPTIONS } from './constants';
 
 import { field, schemaWrapper } from './utils';
 

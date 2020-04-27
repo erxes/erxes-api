@@ -41,14 +41,16 @@ const generateFieldsFromSchema = async (queSchema: any, namePrefix: string) => {
     const path = paths[name];
 
     const label = path.options.label;
+    const type = path.instance;
     const selectOptions = name === 'integrationId' ? integrations || [] : path.options.selectOptions;
 
     // add to fields list
-    if (label) {
+    if (['String', 'Number', 'Date'].includes(type) && label) {
       queFields.push({
         _id: Math.random(),
         name: `${namePrefix}${name}`,
         label,
+        type: path.instance,
         selectOptions,
       });
     }

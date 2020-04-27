@@ -185,7 +185,7 @@ export const customerSchema = schemaWrapper(
     tagIds: field({ type: [String], optional: true, index: true, label: 'Tags' }),
 
     // Merged customer ids
-    mergedIds: field({ type: [String], optional: true, label: 'Merged customers' }),
+    mergedIds: field({ type: [String], optional: true }),
 
     trackedData: field({ type: Object, optional: true, label: 'Tracked Data' }),
     customFieldsData: field({ type: Object, optional: true, label: 'Custom fields data' }),
@@ -200,7 +200,7 @@ export const customerSchema = schemaWrapper(
       label: 'Visitor contact info',
     }),
 
-    deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
+    deviceTokens: field({ type: [String], default: [] }),
     searchText: field({ type: String, optional: true, index: true }),
     code: field({ type: String, label: 'Code', optional: true }),
 
