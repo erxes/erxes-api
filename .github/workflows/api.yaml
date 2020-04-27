@@ -77,15 +77,6 @@ jobs:
       run: |
         yarn tsc
 
-    - name: Test
-      run: |
-        yarn test
-      env:
-        MONGO_URL: mongodb://localhost/erxes
-        TEST_MONGO_URL: mongodb://localhost/test
-        JWT_TOKEN_SECRET: token
-        MAIN_APP_DOMAIN: http://localhost:3000
-
     - name: Build
       if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/golomt' )
       run: |
