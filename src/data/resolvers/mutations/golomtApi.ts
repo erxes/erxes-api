@@ -40,6 +40,10 @@ const checkAccessToken = async () => {
 }
 
 export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument) => {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   const writeMsgUrl = 'chatapi/api/chat/write';
 
   const tokenVal = await checkAccessToken();
