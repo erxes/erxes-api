@@ -119,7 +119,7 @@ app.post('/golomt-token-by-user', async (req, res) => {
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
-    return res.json({error: e.message});
+    return res.json({ error: e.message });
   }
 });
 
@@ -129,7 +129,7 @@ app.post('/golomt-hook-message', async (req, res) => {
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
-    return res.json({status: 'error', errMsg: e.message});
+    return res.json({ status: 'error', errMsg: e.message });
   }
 });
 
@@ -299,6 +299,8 @@ const PORT = getEnv({ name: 'PORT' });
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
+  debugBase(`Before db connect ...`);
+
   // connect to mongo database
   connect().then(async () => {
     initConsumer().catch(e => {
