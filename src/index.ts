@@ -11,7 +11,13 @@ import { filterXSS } from 'xss';
 import apolloServer from './apolloClient';
 import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
+
+console.log('mmmmmmmm');
+
 import golomtApiMutations from './data/resolvers/mutations/golomtApi';
+
+console.log('nnnnnnnnnnnn');
+
 import {
   authCookieOptions,
   deleteFile,
