@@ -61,10 +61,6 @@
       "description": "LOGS_API_DOMAIN",
       "value": "https://LOGS_API_DOMAIN.herokuapp.com"
     },
-    "ENGAGES_API_DOMAIN": {
-      "description": "ENGAGES_API_DOMAIN",
-      "value": "https://ENGAGES_API_DOMAIN.herokuapp.com"
-    },
     "INTEGRATIONS_API_DOMAIN": {
       "description": "INTEGRATIONS_API_DOMAIN",
       "value": "https://INTEGRATIONS_API_DOMAIN.herokuapp.com"
