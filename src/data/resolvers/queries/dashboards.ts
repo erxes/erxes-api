@@ -1,10 +1,11 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
-import { checkPermission } from '../../permissions/wrappers';
+// import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
 const dashBoardQueries = {
   dashboards(_root, args: { page: number; perPage: number }, { commonQuerySelector }: IContext) {
+    console.log('sdjkadjk');
     return paginate(Dashboards.find(commonQuerySelector), args);
   },
 
@@ -21,6 +22,6 @@ const dashBoardQueries = {
   },
 };
 
-checkPermission(dashBoardQueries, 'dashboards', 'showDashboards', []);
+// checkPermission(dashBoardQueries, 'dashboards', 'showDashboards', []);
 
 export default dashBoardQueries;
