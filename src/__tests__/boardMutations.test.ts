@@ -34,6 +34,9 @@ describe('Test boards mutations', () => {
     memberIds: $memberIds
   `;
 
+  const stageCopyMoveParamDefs = `$_id: String!, $pipelineId: String!, $includeCards: Boolean`;
+  const stageCopyMoveParams = `_id: $_id, pipelineId: $pipelineId, includeCards: $includeCards`;
+
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory();
@@ -317,6 +320,68 @@ describe('Test boards mutations', () => {
 
     expect(updatedStage.order).toBe(3);
     expect(updatedStageToOrder.order).toBe(9);
+  });
+
+  test('Test stagesMove()', async () => {
+    const secondPipeline = await pipelineFactory();
+
+    const params = {
+      _id: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+    };
+
+    const mutation = `
+      mutation stagesMove(${stageCopyMoveParamDefs}) {
+        stagesMove(${stageCopyMoveParams}) { pipelineId }
+      }
+    `;
+
+    const result = await graphqlRequest(mutation, 'stagesMove', params, context);
+
+    expect(result.pipelineId).toBe(params.pipelineId);
+  });
+
+  test('Test stagesCopy()', async () => {
+    const secondPipeline = await pipelineFactory();
+
+    const params = {
+      _id: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+    };
+
+    const mutation = `
+      mutation stagesCopy(${stageCopyMoveParamDefs}) {
+        stagesCopy(${stageCopyMoveParams}) { name }
+      }
+    `;
+
+    const result = await graphqlRequest(mutation, 'stagesCopy', params, context);
+
+    expect(result.name).toBe(`${stage.name}-copied`);
+  });
+
+  test('Test stagesCopy() with wrong type', async () => {
+    const secondPipeline = await pipelineFactory({ type: BOARD_TYPES.TASK });
+
+    const params = {
+      _id: stage._id,
+      pipelineId: secondPipeline._id,
+      includeCards: false,
+    };
+
+    const mutation = `
+      mutation stagesCopy(${stageCopyMoveParamDefs}) {
+        stagesCopy(${stageCopyMoveParams}) { name }
+      }
+    `;
+
+    try {
+      await graphqlRequest(mutation, 'stagesCopy', params, context);
+    } catch (e) {
+      expect(e[0].message).toBe('Pipeline and stage type does not match');
+    }
   });
 
   test('Edit stage', async () => {

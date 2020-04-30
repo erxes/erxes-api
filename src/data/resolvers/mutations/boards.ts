@@ -2,7 +2,7 @@ import { Boards, Pipelines, Stages } from '../../../db/models';
 import { IBoard, IOrderInput, IPipeline, IStage, IStageDocument } from '../../../db/models/definitions/boards';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { checkPermission } from '../boardUtils';
+import { checkPermission, verifyPipelineType } from '../boardUtils';
 
 interface IBoardsEdit extends IBoard {
   _id: string;
@@ -14,6 +14,12 @@ interface IPipelinesAdd extends IPipeline {
 
 interface IPipelinesEdit extends IPipelinesAdd {
   _id: string;
+}
+
+interface IStagesCopyMove {
+  _id: string;
+  pipelineId: string;
+  includeCards: boolean;
 }
 
 interface IStageEdit extends IStage {
@@ -161,6 +167,35 @@ const boardMutations = {
     return Stages.updateOrder(orders);
   },
 
+  async stagesMove(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+    const stage = await Stages.getStage(_id);
+
+    await checkPermission(stage.type, user, 'stagesEdit');
+
+    await verifyPipelineType(pipelineId, stage.type);
+
+    return Stages.moveStage({
+      includeCards,
+      stageId: _id,
+      pipelineId,
+      userId: user._id,
+    });
+  },
+
+  async stagesCopy(_root, { _id, includeCards, pipelineId }: IStagesCopyMove, { user }: IContext) {
+    const stage = await Stages.getStage(_id);
+
+    await checkPermission(stage.type, user, 'stagesEdit');
+
+    await verifyPipelineType(pipelineId, stage.type);
+
+    return Stages.copyStage({
+      stageId: _id,
+      pipelineId,
+      includeCards,
+      userId: user._id,
+    });
+  },
   /**
    * Edit stage
    */
