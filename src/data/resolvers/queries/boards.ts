@@ -150,7 +150,7 @@ const boardQueries = {
    *  Pipeline detail
    */
   pipelineDetail(_root, { _id }: { _id: string }) {
-    return Pipelines.findOne({ _id });
+    return Pipelines.findOne({ _id }).lean();
   },
 
   /**

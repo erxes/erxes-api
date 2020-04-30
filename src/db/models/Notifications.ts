@@ -35,7 +35,7 @@ export const loadNotificationClass = () => {
      * Check if user has read notification
      */
     public static async checkIfRead(userId, contentTypeId) {
-      const notification = await Notifications.findOne({ isRead: false, receiver: userId, contentTypeId });
+      const notification = await Notifications.findOne({ isRead: false, receiver: userId, contentTypeId }).lean();
 
       return notification ? false : true;
     }

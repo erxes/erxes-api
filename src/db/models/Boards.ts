@@ -175,7 +175,7 @@ export const loadPipelineClass = () => {
      * Get a pipeline
      */
     public static async getPipeline(_id: string) {
-      const pipeline = await Pipelines.findOne({ _id });
+      const pipeline = await Pipelines.findOne({ _id }).lean();
 
       if (!pipeline) {
         throw new Error('Pipeline not found');
