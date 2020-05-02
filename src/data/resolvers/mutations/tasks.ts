@@ -7,7 +7,7 @@ import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds } from '../../utils';
+import { checkUserIds, registerOnboardHistory } from '../../utils';
 import {
   copyChecklists,
   copyPipelineLabels,
@@ -91,6 +91,17 @@ const taskMutations = {
       contentType: MODULE_NAMES.TASK,
     };
 
+    if (doc.status && oldTask.status && oldTask.status !== doc.status) {
+      const activityAction = doc.status === 'active' ? 'activated' : 'archived';
+
+      await ActivityLogs.createArchiveLog({
+        item: updatedTask,
+        contentType: 'task',
+        action: activityAction,
+        userId: user._id,
+      });
+    }
+
     if (doc.assignedUserIds) {
       const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds, doc.assignedUserIds);
 
@@ -102,6 +113,8 @@ const taskMutations = {
         contentType: 'task',
         content: activityContent,
       });
+
+      await registerOnboardHistory({ type: 'taskAssignUser', user });
 
       notificationDoc.invitedUsers = addedUserIds;
       notificationDoc.removedUsers = removedUserIds;
@@ -123,6 +136,7 @@ const taskMutations = {
       graphqlPubsub.publish('tasksChanged', {
         tasksChanged: {
           _id: updatedTask._id,
+          name: updatedTask.name,
         },
       });
 
@@ -166,7 +180,7 @@ const taskMutations = {
    */
   async tasksChange(
     _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string, order: number },
+    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
     { user }: IContext,
   ) {
     const task = await Tasks.getTask(_id);
@@ -175,7 +189,7 @@ const taskMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order
+      order,
     };
 
     const updatedTask = await Tasks.updateTask(_id, extendedDoc);
@@ -281,8 +295,15 @@ const taskMutations = {
     return clone;
   },
 
-  async tasksArchive(_root, { stageId }: { stageId: string }) {
-    await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async tasksArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
+    const updatedTask = await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    await ActivityLogs.createArchiveLog({
+      item: updatedTask,
+      contentType: 'task',
+      action: 'archive',
+      userId: user._id,
+    });
 
     return 'ok';
   },

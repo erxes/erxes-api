@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
 import { validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
-import { EMAIL_VALIDATION_STATUSES, STATUSES } from './definitions/constants';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
 
@@ -91,7 +90,7 @@ export const loadClass = () => {
      * Checking if customer has duplicated unique properties
      */
     public static async checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string) {
-      const query: { status: {}; [key: string]: any } = { status: { $ne: STATUSES.DELETED } };
+      const query: { status: {}; [key: string]: any } = { status: { $ne: 'deleted' } };
       let previousEntry;
 
       // Adding exclude operator to the query
@@ -234,7 +233,7 @@ export const loadClass = () => {
         ...doc,
       });
 
-      if (doc.primaryEmail) {
+      if (doc.primaryEmail && !doc.emailValidationStatus) {
         validateEmail(doc.primaryEmail);
       }
 
@@ -264,7 +263,7 @@ export const loadClass = () => {
         const oldCustomer = await Customers.getCustomer(_id);
 
         if (doc.primaryEmail !== oldCustomer.primaryEmail) {
-          doc.emailValidationStatus = EMAIL_VALIDATION_STATUSES.UNKNOWN;
+          doc.emailValidationStatus = 'unknown';
 
           validateEmail(doc.primaryEmail);
         }
@@ -442,7 +441,7 @@ export const loadClass = () => {
           emails = [...emails, ...(customerObj.emails || [])];
           phones = [...phones, ...(customerObj.phones || [])];
 
-          await Customers.findByIdAndUpdate(customerId, { $set: { status: STATUSES.DELETED } });
+          await Customers.findByIdAndUpdate(customerId, { $set: { status: 'deleted' } });
         }
       }
 
@@ -516,10 +515,37 @@ export const loadClass = () => {
       return customer;
     }
 
-    public static fixListFields(doc: any, customer?: ICustomerDocument) {
+    public static customerFieldNames() {
+      const names: string[] = [];
+
+      customerSchema.eachPath(name => {
+        names.push(name);
+
+        const path = customerSchema.paths[name];
+
+        if (path.schema) {
+          path.schema.eachPath(subName => {
+            names.push(`${name}.${subName}`);
+          });
+        }
+      });
+
+      return names;
+    }
+
+    public static fixListFields(doc: any, customData = {}, customer?: ICustomerDocument) {
       let emails: string[] = [];
       let phones: string[] = [];
       let deviceTokens: string[] = [];
+
+      // extract basic fields from customData
+      for (const name of this.customerFieldNames()) {
+        if (customData[name]) {
+          doc[name] = customData[name];
+
+          delete customData[name];
+        }
+      }
 
       if (customer) {
         emails = customer.emails || [];
@@ -558,16 +584,16 @@ export const loadClass = () => {
       doc.emails = emails;
       doc.phones = phones;
       doc.deviceTokens = deviceTokens;
-
-      return doc;
     }
 
     /*
      * Create a new messenger customer
      */
     public static async createMessengerCustomer({ doc, customData }: ICreateMessengerCustomerParams) {
+      this.fixListFields(doc, customData);
+
       return this.createCustomer({
-        ...this.fixListFields(doc),
+        ...doc,
         trackedData: customData,
         lastSeenAt: new Date(),
         isOnline: true,
@@ -585,10 +611,12 @@ export const loadClass = () => {
         throw new Error('Customer not found');
       }
 
+      this.fixListFields(doc, customData, customer);
+
       const modifier = {
+        ...doc,
+        trackedData: customData,
         state: doc.isUser ? 'customer' : customer.state,
-        ...this.fixListFields(doc, customer),
-        trackedData: { ...(customer.trackedData || {}), ...(customData || {}) },
         modifiedAt: new Date(),
       };
 
@@ -616,7 +644,7 @@ export const loadClass = () => {
       // Preventing session count to increase on page every refresh
       // Close your web site tab and reopen it after 6 seconds then it will increase
       // session count by 1
-      if (customer.lastSeenAt && now.getTime() - customer.lastSeenAt > 6 * 1000) {
+      if (customer.lastSeenAt && now.getTime() - customer.lastSeenAt.getTime() > 6 * 1000) {
         // update session count
         query.$inc = { sessionCount: 1 };
       }

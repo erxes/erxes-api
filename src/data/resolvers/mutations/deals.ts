@@ -120,6 +120,17 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     };
 
+    if (doc.status && oldDeal.status && oldDeal.status !== doc.status) {
+      const activityAction = doc.status === 'active' ? 'activated' : 'archived';
+
+      await ActivityLogs.createArchiveLog({
+        item: updatedDeal,
+        contentType: 'deal',
+        action: activityAction,
+        userId: user._id,
+      });
+    }
+
     if (Object.keys(checkedAssignUserIds).length > 0) {
       const { addedUserIds, removedUserIds } = checkedAssignUserIds;
 
@@ -152,6 +163,7 @@ const dealMutations = {
       graphqlPubsub.publish('dealsChanged', {
         dealsChanged: {
           _id: updatedDeal._id,
+          name: updatedDeal.name,
         },
       });
 
@@ -195,7 +207,7 @@ const dealMutations = {
    */
   async dealsChange(
     _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string, order: number },
+    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
     { user }: IContext,
   ) {
     const deal = await Deals.getDeal(_id);
@@ -204,7 +216,7 @@ const dealMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order
+      order,
     };
 
     const updatedDeal = await Deals.updateDeal(_id, extendedDoc);
@@ -314,8 +326,15 @@ const dealMutations = {
     return clone;
   },
 
-  async dealsArchive(_root, { stageId }: { stageId: string }) {
-    await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async dealsArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
+    const updatedDeal = await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    await ActivityLogs.createArchiveLog({
+      item: updatedDeal,
+      contentType: 'deal',
+      action: 'archived',
+      userId: user._id,
+    });
 
     return 'ok';
   },

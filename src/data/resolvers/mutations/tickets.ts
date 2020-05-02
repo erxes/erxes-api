@@ -94,6 +94,17 @@ const ticketMutations = {
       contentType: MODULE_NAMES.TICKET,
     };
 
+    if (doc.status && oldTicket.status && oldTicket.status !== doc.status) {
+      const activityAction = doc.status === 'active' ? 'activated' : 'archived';
+
+      await ActivityLogs.createArchiveLog({
+        item: updatedTicket,
+        contentType: 'task',
+        action: activityAction,
+        userId: user._id,
+      });
+    }
+
     if (doc.assignedUserIds) {
       const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds, doc.assignedUserIds);
 
@@ -126,6 +137,7 @@ const ticketMutations = {
       graphqlPubsub.publish('ticketsChanged', {
         ticketsChanged: {
           _id: updatedTicket._id,
+          name: updatedTicket.name,
         },
       });
 
@@ -169,7 +181,7 @@ const ticketMutations = {
    */
   async ticketsChange(
     _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string, order: number },
+    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
     { user }: IContext,
   ) {
     const ticket = await Tickets.getTicket(_id);
@@ -178,7 +190,7 @@ const ticketMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order
+      order,
     };
 
     const updatedTicket = await Tickets.updateTicket(_id, extendedDoc);
@@ -199,10 +211,10 @@ const ticketMutations = {
         type: MODULE_NAMES.TICKET,
         object: ticket,
         newData: extendedDoc,
-        updatedDocument: updatedTicket
+        updatedDocument: updatedTicket,
       },
-      user
-    )
+      user,
+    );
 
     // if move between stages
     if (destinationStageId !== ticket.stageId) {
@@ -286,8 +298,15 @@ const ticketMutations = {
     return clone;
   },
 
-  async ticketsArchive(_root, { stageId }: { stageId: string }) {
-    await Tickets.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async ticketsArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
+    const updatedTicket = await Tickets.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    await ActivityLogs.createArchiveLog({
+      item: updatedTicket,
+      contentType: 'ticket',
+      action: 'archive',
+      userId: user._id,
+    });
 
     return 'ok';
   },
