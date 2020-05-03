@@ -80,9 +80,9 @@ jobs:
       run: |
         yarn tsc
 
-    - name: Test
-      run: |
-        yarn test
+    # - name: Test
+    #   run: |
+    #     yarn test
       env:
         MONGO_URL: mongodb://localhost/erxes
         TEST_MONGO_URL: mongodb://localhost/test
