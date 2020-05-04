@@ -10,12 +10,14 @@ export interface IDashboardItemInput {
   layout: string;
   vizState: string;
   name: string;
+  type: string;
 }
 export interface IDashboardItem {
   dashboardId: string;
   layout: string;
   vizState: string;
   name: string;
+  type: string;
 }
 
 export interface IDashboardDocument extends IDashboard, Document {
@@ -38,4 +40,5 @@ export const dashboardItemSchema = new Schema({
   layout: field({ type: String }),
   vizState: field({ type: String }),
   name: field({ type: String }),
+  type: field({ type: String }),
 });

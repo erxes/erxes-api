@@ -47,11 +47,6 @@ cube(`Customers`, {
       },
     },
 
-    donotdisturb: {
-      sql: `${CUBE}.\`doNotDisturb\``,
-      type: `string`,
-    },
-
     emailvalidationstatus: {
       sql: `${CUBE}.\`emailValidationStatus\``,
       type: `string`,
@@ -83,22 +78,6 @@ cube(`Customers`, {
       sql: `${CUBE}.\`location.country\``,
       type: `string`,
       title: `Location.country`,
-    },
-
-    messengerdataCustomdataUsername: {
-      sql: `${CUBE}.\`messengerData.customData.username\``,
-      type: `string`,
-      title: `Messengerdata.customdata.username`,
-    },
-
-    ownerid: {
-      sql: `${CUBE}.\`ownerId\``,
-      type: `string`,
-    },
-
-    primaryemail: {
-      sql: `${CUBE}.\`primaryEmail\``,
-      type: `string`,
     },
 
     state: {

@@ -10,6 +10,7 @@ export const types = `
     layout: String
     vizState: String
     name: String
+    type: String
   }
 `;
 
@@ -24,8 +25,8 @@ export const mutations = `
   dashboardAdd(name: String): Dashboard
   dashboardEdit(_id: String!, name: String!): Dashboard
   dashboardRemove(_id: String!): String
-  dashboardItemAdd(dashboardId: String, layout: String, vizState: String, name: String): DashboardItem
-  dashboardItemEdit(_id: String!, dashboardId:String, layout: String, vizState: String, name: String): DashboardItem
+  dashboardItemAdd(dashboardId: String, layout: String, vizState: String, name: String, type: String): DashboardItem
+  dashboardItemEdit(_id: String!, dashboardId:String, layout: String, vizState: String, name: String, type: String): DashboardItem
   dashboardItemRemove(_id: String!): String
   deleteDashboardItem(id: String!): DashboardItem
 `;
