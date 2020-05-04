@@ -80,11 +80,6 @@ cube(`Customers`, {
       title: `Location.country`,
     },
 
-    state: {
-      sql: `state`,
-      type: `string`,
-    },
-
     status: {
       sql: `status`,
       type: `string`,
