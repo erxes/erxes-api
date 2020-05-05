@@ -1,5 +1,3 @@
-console.log('111111111111111');
-
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -14,11 +12,7 @@ import apolloServer from './apolloClient';
 import { buildFile } from './data/modules/fileExporter/exporter';
 import insightExports from './data/modules/insights/insightExports';
 
-console.log('mmmmmmmm');
-
 import golomtApiMutations from './data/resolvers/mutations/golomtApi';
-
-console.log('nnnnnnnnnnnn');
 
 import {
   authCookieOptions,

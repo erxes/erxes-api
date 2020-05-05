@@ -19,12 +19,9 @@ on:
     branches:
       - master
       - develop
-<<<<<<< HEAD
       - golomt
-=======
       - crons
       - workers
->>>>>>> c5b4cb49237b44683378387a5e5927fd705b5f45
     paths:
       - '**'
       - '!.github/**'
