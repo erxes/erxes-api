@@ -1,4 +1,4 @@
-import { Configs, ConversationMessages, Conversations, Customers, Users } from '../../../db/models';
+import { Brands, Configs, ConversationMessages, Conversations, Customers, Integrations, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { sendRequest } from '../../utils';
@@ -39,7 +39,7 @@ const checkAccessToken = async () => {
   return token.value;
 }
 
-export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument) => {
+export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomerDocument, integrationId: string) => {
   if (process.env.NODE_ENV === 'test') {
     return;
   }
@@ -48,9 +48,13 @@ export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomer
 
   const tokenVal = await checkAccessToken();
 
+  const integration = await Integrations.findOne({_id: integrationId});
+  const brand = await Brands.findOne({_id: integration?.brandId});
+
   const body = {
     "social_id": msg.conversationId,
     "social_type": 5,
+    "social_brand": brand?.name || '',
     "text": msg.content || '',
     "user_name": await Customers.getCustomerName(customer),
     "user_psid": customer._id,

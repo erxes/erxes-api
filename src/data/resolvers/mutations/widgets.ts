@@ -475,7 +475,7 @@ const widgetMutations = {
       receivers: conversationNotifReceivers(conversation, customerId),
     });
 
-    await sendMsgToGolomt(msg, activeCustomer);
+    await sendMsgToGolomt(msg, activeCustomer, integrationId);
 
     return msg;
   },
