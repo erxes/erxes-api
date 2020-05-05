@@ -85,21 +85,12 @@ jobs:
         yarn tsc
 
     - name: Build
-<<<<<<< HEAD
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/golomt' )
-      run: |
-        yarn build
-
-    - name: Build docker image on push
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/golomt' )
-=======
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers')
+      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/golomt' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers')
       run: |
         yarn build
 
     - name: Build docker image [push]
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers')
->>>>>>> c5b4cb49237b44683378387a5e5927fd705b5f45
+      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/golomt' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers')
       run: |
         echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
         docker build -t erxes/erxes-api:${GITHUB_REF#refs/heads/} -f Dockerfile .
