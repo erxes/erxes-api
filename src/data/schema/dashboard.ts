@@ -18,7 +18,7 @@ export const queries = `
   dashboards(page: Int, perPage: Int): [Dashboard]
   dashboardsTotalCount: Int
   dashboardItems(dashboardId: String!): [DashboardItem]
-  dashboardItemDetail(id: String!): DashboardItem
+  dashboardItemDetail(_id: String!): DashboardItem
 `;
 
 export const mutations = `
