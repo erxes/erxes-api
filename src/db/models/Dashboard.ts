@@ -55,7 +55,7 @@ export const loadDashboardItemClass = () => {
     }
 
     public static async removeDashboardItem(_id: string) {
-      await DashboardItems.remove(_id);
+      await DashboardItems.remove({ _id });
     }
   }
 

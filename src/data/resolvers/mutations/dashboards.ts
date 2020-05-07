@@ -11,39 +11,27 @@ interface IDashboardItemEdit extends IDashboardItemInput {
 
 const dashboardsMutations = {
   async dashboardAdd(_root, doc: IDashboard) {
-    const dashboard = await Dashboards.create({ ...doc });
-
-    return dashboard;
+    return Dashboards.create({ ...doc });
   },
 
   async dashboardEdit(_root, { _id, ...fields }: IDashboardEdit) {
-    const dashboard = await Dashboards.editDashboard(_id, fields);
-
-    return dashboard;
+    return Dashboards.editDashboard(_id, fields);
   },
 
   async dashboardRemove(_root, { _id }: { _id: string }) {
-    const removed = await Dashboards.removeDashboard(_id);
-
-    return removed;
+    return Dashboards.removeDashboard(_id);
   },
 
   async dashboardItemAdd(_root, doc: IDashboardItemInput) {
-    const dashboardItem = await DashboardItems.addDashboardItem({ ...doc });
-
-    return dashboardItem;
+    return DashboardItems.addDashboardItem({ ...doc });
   },
 
   async dashboardItemEdit(_root, { _id, ...fields }: IDashboardItemEdit) {
-    const updated = await DashboardItems.editDashboardItem(_id, fields);
-
-    return updated;
+    return DashboardItems.editDashboardItem(_id, fields);
   },
 
   async dashboardItemRemove(_root, { _id }: { _id: string }) {
-    const updated = await DashboardItems.remove(_id);
-
-    return updated;
+    return DashboardItems.removeDashboardItem(_id);
   },
 };
 
