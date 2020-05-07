@@ -1,24 +1,37 @@
 cube(`Deals`, {
   sql: `SELECT * FROM erxes.deals`,
 
-  joins: {},
+  joins: {
+    DealsProductsdata: {
+      sql: `${CUBE}._id = ${DealsProductsdata}._id`,
+      relationship: `hasMany`,
+    },
+  },
 
   measures: {
     count: {
       type: `count`,
+      drillMembers: [initialstageid, name, stageid, createdat, closedate],
+    },
+
+    productsdataAmountSum: {
+      sql: `${productsdataAmount}`,
+      type: `sum`,
+      title: `Productsdata.amount`,
     },
   },
 
   dimensions: {
-    paymentsdataBankCurrency: {
-      sql: `${CUBE}.\`paymentsData.bank.currency\``,
+    _id: {
+      sql: `${CUBE}.\`_id\``,
       type: `string`,
-      title: `Paymentsdata.bank.currency`,
+      primaryKey: true,
     },
 
-    paymentsdata: {
-      sql: `${CUBE}.\`paymentsData\``,
-      type: `string`,
+    productsdataAmount: {
+      sql: `${DealsProductsdata.productsdataAmount}`,
+      type: `number`,
+      subQuery: true,
     },
 
     description: {
@@ -51,6 +64,17 @@ cube(`Deals`, {
       type: `string`,
     },
 
+    assignedUserIds: {
+      sql: `${CUBE}.\`assignedUserIds\``,
+      type: `string`,
+    },
+
+    productsData: {
+      sql: `${CUBE}.\`productsData\``,
+      type: `geo`,
+      title: `xaxaxa`,
+    },
+
     createdat: {
       sql: `${CUBE}.\`createdAt\``,
       type: `time`,
@@ -64,6 +88,11 @@ cube(`Deals`, {
     modifiedat: {
       sql: `${CUBE}.\`modifiedAt\``,
       type: `time`,
+    },
+
+    modifiedby: {
+      sql: `${CUBE}.\`modifiedBy\``,
+      type: `string`,
     },
   },
 });

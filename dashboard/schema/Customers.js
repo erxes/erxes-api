@@ -1,7 +1,3 @@
-const xxa = val => {
-  console.log(val);
-};
-
 cube(`Customers`, {
   sql: `SELECT * FROM erxes.customers`,
 
@@ -20,7 +16,7 @@ cube(`Customers`, {
 
   segments: {
     onlyRegisteredByIntegrations: {
-      sql: `${CUBE}.integrationId != '' or ${CUBE}.integrationId !='null'`,
+      sql: `${CUBE}.integrationId != '' or ${CUBE}.integrationId !=' '`,
     },
   },
 
@@ -72,12 +68,32 @@ cube(`Customers`, {
       sql: `${CUBE}.\`location.city\``,
       type: `string`,
       title: `Location.city`,
+      shown: false,
     },
 
     locationCountry: {
       sql: `${CUBE}.\`location.country\``,
       type: `string`,
       title: `Location.country`,
+      shown: false,
+    },
+
+    locationCountryCube: {
+      type: `string`,
+      title: `Location by country`,
+      case: {
+        when: [{ sql: `${locationCountry} != ''`, label: { sql: `${locationCountry}` } }],
+        else: { label: 'not registered' },
+      },
+    },
+
+    locationCityCube: {
+      type: `string`,
+      title: `Location by city`,
+      case: {
+        when: [{ sql: `${locationCity} != ''`, label: { sql: `${locationCity}` } }],
+        else: { label: 'not registered' },
+      },
     },
 
     status: {
