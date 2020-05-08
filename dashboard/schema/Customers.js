@@ -111,16 +111,4 @@ cube(`Customers`, {
       type: `time`,
     },
   },
-  preAggregations: {
-    count: {
-      type: `rollup`,
-      measureReferences: [Customers.count],
-      dimensionReferences: [status],
-      timeDimensionReference: count,
-      granularity: `day`,
-      refreshKey: {
-        every: `1 minute`,
-      },
-    },
-  },
 });

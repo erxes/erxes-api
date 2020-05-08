@@ -2,9 +2,9 @@ cube(`Deals`, {
   sql: `SELECT * FROM erxes.deals`,
 
   joins: {
-    DealsProductsdata: {
-      sql: `${CUBE}._id = ${DealsProductsdata}._id`,
-      relationship: `hasMany`,
+    Stages: {
+      sql: `${CUBE}.stageId = ${Stages}._id`,
+      relationship: `belongsTo`,
     },
   },
 
@@ -13,11 +13,17 @@ cube(`Deals`, {
       type: `count`,
       drillMembers: [initialstageid, name, stageid, createdat, closedate],
     },
+  },
 
-    productsdataAmountSum: {
-      sql: `${productsdataAmount}`,
-      type: `sum`,
-      title: `Productsdata.amount`,
+  segments: {
+    wonDeals: {
+      sql: `${CUBE.stageProbability} = 'Won'`,
+      title: `Won`,
+    },
+
+    lostDeals: {
+      sql: `${CUBE.stageProbability} = 'Lost'`,
+      title: `lost`,
     },
   },
 
@@ -28,20 +34,10 @@ cube(`Deals`, {
       primaryKey: true,
     },
 
-    productsdataAmount: {
-      sql: `${DealsProductsdata.productsdataAmount}`,
-      type: `number`,
-      subQuery: true,
-    },
-
-    description: {
-      sql: `description`,
-      type: `string`,
-    },
-
     initialstageid: {
       sql: `${CUBE}.\`initialStageId\``,
       type: `string`,
+      shown: false,
     },
 
     name: {
@@ -49,14 +45,28 @@ cube(`Deals`, {
       type: `string`,
     },
 
-    priority: {
-      sql: `priority`,
+    stageName: {
+      sql: `${Stages}.name`,
       type: `string`,
+      title: `Stage name`,
+    },
+
+    stageProbability: {
+      sql: `${Stages}.probability`,
+      type: `string`,
+      title: `Stage probability`,
+    },
+
+    pipelineName: {
+      sql: `${Stages.pipelineName}`,
+      type: `string`,
+      title: `Pipeline name`,
     },
 
     stageid: {
       sql: `${CUBE}.\`stageId\``,
       type: `string`,
+      shown: false,
     },
 
     status: {
@@ -64,35 +74,22 @@ cube(`Deals`, {
       type: `string`,
     },
 
-    assignedUserIds: {
-      sql: `${CUBE}.\`assignedUserIds\``,
-      type: `string`,
-    },
-
-    productsData: {
-      sql: `${CUBE}.\`productsData\``,
-      type: `geo`,
-      title: `xaxaxa`,
-    },
-
     createdat: {
       sql: `${CUBE}.\`createdAt\``,
       type: `time`,
+      title: 'Created date',
     },
 
     closedate: {
       sql: `${CUBE}.\`closeDate\``,
       type: `time`,
-    },
-
-    modifiedat: {
-      sql: `${CUBE}.\`modifiedAt\``,
-      type: `time`,
+      title: 'Closed date',
     },
 
     modifiedby: {
       sql: `${CUBE}.\`modifiedBy\``,
       type: `string`,
+      shown: false,
     },
   },
 });
