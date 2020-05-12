@@ -1,7 +1,7 @@
 import { ActivityLogs, Checklists, Conformities, Stages, Tasks } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
 import { IItemCommonFields as ITask } from '../../../db/models/definitions/boards';
-import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, BOARD_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
@@ -134,10 +134,8 @@ const taskMutations = {
 
     if (oldTask.stageId === updatedTask.stageId) {
       graphqlPubsub.publish('tasksChanged', {
-        tasksChanged: {
-          _id: updatedTask._id,
-          name: updatedTask.name,
-        },
+        tasksChanged: updatedTask,
+        user,
       });
 
       return updatedTask;
@@ -161,14 +159,18 @@ const taskMutations = {
     graphqlPubsub.publish('pipelinesChanged', {
       pipelinesChanged: {
         _id: updatedStage.pipelineId,
+        type: BOARD_TYPES.TASK,
       },
+      user,
     });
 
     if (updatedStage.pipelineId !== oldStage.pipelineId) {
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
           _id: oldStage.pipelineId,
+          type: BOARD_TYPES.TASK,
         },
+        user,
       });
     }
 
@@ -222,7 +224,9 @@ const taskMutations = {
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
           _id: stage.pipelineId,
+          type: BOARD_TYPES.TASK,
         },
+        user,
       });
     }
 
