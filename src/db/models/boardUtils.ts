@@ -5,7 +5,7 @@ import { ICompanyDocument } from './definitions/companies';
 import { BOARD_TYPES } from './definitions/constants';
 import { ICustomerDocument } from './definitions/customers';
 
-export const updateOrder = async (collection: any, orders: IOrderInput[], stageId?: string) => {
+export const updateOrder = async (collection: any, orders: IOrderInput[]) => {
   if (orders.length === 0) {
     return [];
   }
@@ -22,10 +22,6 @@ export const updateOrder = async (collection: any, orders: IOrderInput[], stageI
     ids.push(_id);
 
     const selector: { order: number; stageId?: string } = { order };
-
-    if (stageId) {
-      selector.stageId = stageId;
-    }
 
     bulkOps.push({
       updateOne: {
