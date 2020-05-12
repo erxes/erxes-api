@@ -14,14 +14,14 @@ export const updateOrder = async (collection: any, orders: IOrderInput[]) => {
   const bulkOps: Array<{
     updateOne: {
       filter: { _id: string };
-      update: { stageId?: string; order: number };
+      update: { order: number };
     };
   }> = [];
 
   for (const { _id, order } of orders) {
     ids.push(_id);
 
-    const selector: { order: number; stageId?: string } = { order };
+    const selector: { order: number } = { order };
 
     bulkOps.push({
       updateOne: {
