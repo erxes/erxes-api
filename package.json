@@ -19,7 +19,7 @@
     "start-workers": "node dist/workers",
     "dev": "DEBUG=erxes-api:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn --ignore-watch node_modules -- src",
     "dev-crons": "PROCESS_NAME=crons DEBUG=erxes-crons:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src/cronJobs",
-    "dev-workers": "PROCESS_NAME=workers DEBUG=erxes-workers:* NODE_ENV=development node_modules/.bin/ts-node-dev --experimental-worker --respawn src/workers",
+    "dev-workers": "PROCESS_NAME=workers DEBUG=erxes-workers:* NODE_ENV=development NODE_OPTIONS='--experimental-worker' node_modules/.bin/ts-node src/workers/index.ts",
     "build": "tsc -p tsconfig.prod.json && cp -rf src/private dist/ && yarn generateVersion",
     "lint": "tslint '../src/**/*.ts'",
     "format": "prettier --write '../src/**/*.ts'",
@@ -55,13 +55,13 @@
     "apollo-server-express": "^2.9.7",
     "aws-sdk": "^2.151.0",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.17.1",
+    "cookie": "^0.4.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
     "elasticsearch": "^16.6.0",
-    "express": "^4.15.2",
+    "express": "^4.17.1",
     "faker": "^4.1.0",
     "file-type": "^10.4.0",
     "firebase-admin": "^8.6.1",
@@ -103,10 +103,9 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "^1.1.0",
-    "@types/body-parser": "^1.17.0",
     "@types/cors": "^2.8.4",
     "@types/dotenv": "^4.0.3",
-    "@types/express": "^4.16.0",
+    "@types/express": "^4.17.6",
     "@types/formidable": "^1.0.31",
     "@types/google-cloud__pubsub": "^0.18.1",
     "@types/graphql": "^14.0.3",
@@ -136,6 +135,6 @@
   },
   "snyk": true,
   "engines": {
-    "node": "10.x.x"
+    "node": ">=10.x.x"
   }
 }
