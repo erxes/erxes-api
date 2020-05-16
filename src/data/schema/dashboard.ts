@@ -16,6 +16,7 @@ export const types = `
 
 export const queries = `
   dashboards(page: Int, perPage: Int): [Dashboard]
+  dashboardDetails(_id: String!): Dashboard
   dashboardsTotalCount: Int
   dashboardItems(dashboardId: String!): [DashboardItem]
   dashboardItemDetail(_id: String!): DashboardItem

@@ -8,6 +8,10 @@ const dashBoardQueries = {
     return paginate(Dashboards.find(commonQuerySelector), args);
   },
 
+  dashboardDetails(_root, { _id }: { _id: string }) {
+    return Dashboards.findOne({ _id });
+  },
+
   dashboardsTotalCount() {
     return Dashboards.find({}).countDocuments();
   },
