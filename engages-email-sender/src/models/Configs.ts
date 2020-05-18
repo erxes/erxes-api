@@ -16,8 +16,8 @@ export interface IConfigDocument extends IConfig, Document {
 }
 
 export const configsSchema = new Schema({
-  code: { type: String },
-  value: { type: String },
+  code: { type: String, label: 'Code', unique: true },
+  value: { type: String, label: 'Value' },
 });
 
 export interface IConfigModel extends Model<IConfigDocument> {
@@ -29,7 +29,7 @@ export interface IConfigModel extends Model<IConfigDocument> {
 
 export const loadClass = () => {
   class Config {
-    /*
+    /**
      * Get a Config
      */
     public static async getConfig(code: string) {
@@ -61,13 +61,9 @@ export const loadClass = () => {
      * Update configs
      */
     public static async updateConfigs(configsMap) {
-      const codes = Object.keys(configsMap);
+      const codes = Object.keys(configsMap).filter(item => item);
 
       for (const code of codes) {
-        if (!code) {
-          continue;
-        }
-
         const value = configsMap[code];
         const doc = { code, value };
 
@@ -75,7 +71,7 @@ export const loadClass = () => {
       }
     }
 
-    /*
+    /**
      * Get a Config
      */
     public static async getSESConfigs() {
