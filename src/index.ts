@@ -117,7 +117,9 @@ app.post('/events-update-customer-property', async (req, res) => {
 
 app.post('/golomt-token-by-user', async (req, res) => {
   try {
+    debugBase(`genereate Expired Token: ${JSON.stringify(req.body)}`);
     const response = await golomtApiMutations.generateExpiredToken(req, req.body);
+    debugBase(`return genereate Expired Token: ${JSON.stringify(response)}`);
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
@@ -127,7 +129,9 @@ app.post('/golomt-token-by-user', async (req, res) => {
 
 app.post('/golomt-hook-message', async (req, res) => {
   try {
+    debugBase(`Hook Message From GOLOMT: ${JSON.stringify(req.body)}`);
     const response = await golomtApiMutations.hookMessage(req, req.body);
+    debugBase(`response hook message: ${JSON.stringify(response)}`);
     return res.json(response);
   } catch (e) {
     debugBase(e.message);
