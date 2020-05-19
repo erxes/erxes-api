@@ -6,6 +6,7 @@ import {
   IDashboardDocument,
   IDashboardItem,
   IDashboardItemDocument,
+  IDashboardItemEdit,
   IDashboardItemInput,
 } from './definitions/dashboard';
 
@@ -16,7 +17,7 @@ export interface IDashboardModel extends Model<IDashboardDocument> {
 }
 export interface IDashboardItemModel extends Model<IDashboardItemDocument> {
   addDashboardItem(doc: IDashboardItemInput): Promise<IDashboardItemDocument>;
-  editDashboardItem(_id: string, fields: IDashboardItem): Promise<IDashboardItemDocument>;
+  editDashboardItem(_id: string, fields: IDashboardItemEdit): Promise<IDashboardItemDocument>;
   removeDashboardItem(_id: string): void;
 }
 
@@ -44,7 +45,7 @@ export const loadDashBoardClass = () => {
 
 export const loadDashboardItemClass = () => {
   class DashboardItem {
-    public static addDashboardItem(doc: IDashboardItemInput) {
+    public static addDashboardItem(doc: IDashboardItemEdit) {
       return DashboardItems.create(doc);
     }
 
