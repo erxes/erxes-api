@@ -4,7 +4,6 @@ import {
   dashboardSchema,
   IDashboard,
   IDashboardDocument,
-  IDashboardItem,
   IDashboardItemDocument,
   IDashboardItemEdit,
   IDashboardItemInput,
