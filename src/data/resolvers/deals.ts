@@ -62,10 +62,9 @@ export default {
 
       product.customFieldsData = customFields;
 
-      // Add product object to resulting list
       products.push({
-        ...data.toJSON(),
-        product: product.toJSON(),
+        ...(typeof data.toJSON === 'function' ? data.toJSON() : data),
+        product,
       });
     }
 
@@ -73,10 +72,10 @@ export default {
   },
 
   amount(deal: IDealDocument) {
-    const data = deal.productsData;
+    const productsData = deal.productsData || [];
     const amountsMap = {};
 
-    (data || []).forEach(product => {
+    productsData.forEach(product => {
       const type = product.currency;
 
       if (type) {
@@ -92,7 +91,7 @@ export default {
   },
 
   assignedUsers(deal: IDealDocument) {
-    return Users.find({ _id: { $in: deal.assignedUserIds } });
+    return Users.find({ _id: { $in: deal.assignedUserIds || [] } });
   },
 
   async pipeline(deal: IDealDocument) {
@@ -110,7 +109,7 @@ export default {
   },
 
   isWatched(deal: IDealDocument, _args, { user }: IContext) {
-    const watchedUserIds = deal.watchedUserIds;
+    const watchedUserIds = deal.watchedUserIds || [];
 
     if (watchedUserIds && watchedUserIds.includes(user._id)) {
       return true;
@@ -124,7 +123,7 @@ export default {
   },
 
   labels(deal: IDealDocument) {
-    return PipelineLabels.find({ _id: { $in: deal.labelIds } });
+    return PipelineLabels.find({ _id: { $in: deal.labelIds || [] } });
   },
 
   createdUser(deal: IDealDocument) {
