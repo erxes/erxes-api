@@ -3,9 +3,9 @@ import { INTEGRATION_NAMES_MAP, KIND_CHOICES, TAG_TYPES } from '../../../db/mode
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 
 import { sendRPCMessage } from '../../../messageBroker';
+import { RABBITMQ_QUEUES } from '../../constants';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
-
 /**
  * Common helper for integrations & integrationsTotalCount
  */
@@ -17,7 +17,9 @@ const generateFilterQuery = async ({ kind, channelId, brandId, searchValue, tag 
   }
 
   if (kind === 'mail') {
-    query.kind = { $in: ['gmail', 'nylas-gmail', 'nylas-imap', 'nylas-office365', 'nylas-outlook', 'nylas-yahoo'] };
+    query.kind = {
+      $in: ['gmail', 'nylas-gmail', 'nylas-imap', 'nylas-office365', 'nylas-outlook', 'nylas-yahoo', 'nylas-exchange'],
+    };
   }
 
   // filter integrations by channel
@@ -149,7 +151,11 @@ const integrationQueries = {
   },
 
   integrationGetWhatsAppQrCode(_root, { _id }: { _id: string }) {
-    return sendRPCMessage({ action: 'get-qrCode', data: { _id } });
+    return sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, { action: 'get-qrCode', data: { _id } });
+  },
+
+  async integrationGetLineWebhookUrl(_root, { _id }: { _id: string }) {
+    return sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, { action: 'line-webhook', data: { _id } });
   },
 };
 

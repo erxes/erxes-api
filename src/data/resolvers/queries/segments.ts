@@ -8,8 +8,8 @@ const segmentQueries = {
   /**
    * Segments list
    */
-  segments(_root, { contentType }: { contentType: string }, { commonQuerySelector }: IContext) {
-    return Segments.find({ ...commonQuerySelector, contentType }).sort({ name: 1 });
+  segments(_root, { contentTypes }: { contentTypes: string[] }, { commonQuerySelector }: IContext) {
+    return Segments.find({ ...commonQuerySelector, contentType: { $in: contentTypes } }).sort({ name: 1 });
   },
 
   /**
@@ -64,7 +64,7 @@ const segmentQueries = {
 
       return {
         name: bucket.key,
-        attributeNames: Object.keys(hit._source.attributes),
+        attributeNames: hit._source.attributes.map(attr => attr.field),
       };
     });
 
@@ -74,22 +74,29 @@ const segmentQueries = {
   /**
    * Preview count
    */
-  async segmentsPreviewCount(_root, { contentType, conditions }: { contentType: string; conditions }) {
+  async segmentsPreviewCount(
+    _root,
+    { contentType, conditions, subOf }: { contentType: string; conditions; subOf?: string },
+  ) {
     const { positiveList, negativeList } = await fetchBySegments(
-      { name: 'preview', color: '#fff', subOf: '', contentType, conditions },
+      { name: 'preview', color: '#fff', subOf: subOf || '', contentType, conditions },
       'count',
     );
 
-    const response = await fetchElk('count', contentType === 'customer' ? 'customers' : 'companies', {
-      query: {
-        bool: {
-          must: positiveList,
-          must_not: negativeList,
+    try {
+      const response = await fetchElk('count', contentType === 'company' ? 'companies' : 'customers', {
+        query: {
+          bool: {
+            must: positiveList,
+            must_not: negativeList,
+          },
         },
-      },
-    });
+      });
 
-    return response.count;
+      return response.count;
+    } catch (e) {
+      return 0;
+    }
   },
 };
 

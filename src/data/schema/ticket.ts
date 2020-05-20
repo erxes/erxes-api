@@ -41,8 +41,7 @@ const ticketMutationParams = `
 export const mutations = `
   ticketsAdd(name: String!, ${copyParams}, ${ticketMutationParams}, ${commonMutationParams}): Ticket
   ticketsEdit(_id: String!, name: String, ${ticketMutationParams}, ${commonMutationParams}): Ticket
-  ticketsChange( _id: String!, destinationStageId: String): Ticket
-  ticketsUpdateOrder(stageId: String!, orders: [OrderItem]): [Ticket]
+  ticketsChange( _id: String!, destinationStageId: String, order: Float): Ticket
   ticketsRemove(_id: String!): Ticket
   ticketsWatch(_id: String, isAdd: Boolean): Ticket
   ticketsCopy(_id: String!): Ticket

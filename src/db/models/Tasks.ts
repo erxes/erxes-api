@@ -1,14 +1,14 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
-import { IItemCommonFields as ITask, IOrderInput } from './definitions/boards';
+import { fillSearchTextItem, watchItem } from './boardUtils';
+import { IItemCommonFields as ITask } from './definitions/boards';
+import { BOARD_STATUSES } from './definitions/constants';
 import { ITaskDocument, taskSchema } from './definitions/tasks';
 
 export interface ITaskModel extends Model<ITaskDocument> {
   createTask(doc: ITask): Promise<ITaskDocument>;
   getTask(_id: string): Promise<ITaskDocument>;
   updateTask(_id: string, doc: ITask): Promise<ITaskDocument>;
-  updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITaskDocument[]>;
   watchTask(_id: string, isAdd: boolean, userId: string): void;
 }
 
@@ -39,13 +39,19 @@ export const loadTaskClass = () => {
         }
       }
 
-      const tasksCount = await Tasks.find({
-        stageId: doc.stageId,
-      }).countDocuments();
+      const lastVisibleTasks = await Tasks.find(
+        {
+          stageId: doc.stageId,
+          status: { $ne: BOARD_STATUSES.ARCHIVED },
+        },
+        { order: 1 },
+      )
+        .sort({ order: -1 })
+        .limit(1);
 
       const task = await Tasks.create({
         ...doc,
-        order: tasksCount,
+        order: ((lastVisibleTasks && lastVisibleTasks.length > 0 ? lastVisibleTasks[0].order : 0) || 0) + 1,
         createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
@@ -66,13 +72,6 @@ export const loadTaskClass = () => {
       await Tasks.updateOne({ _id }, { $set: doc, searchText });
 
       return Tasks.findOne({ _id });
-    }
-
-    /*
-     * Update given Tasks orders
-     */
-    public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      return updateOrder(Tasks, orders, stageId);
     }
 
     /**

@@ -35,8 +35,7 @@ export const queries = `
 export const mutations = `
   tasksAdd(name: String!, ${copyParams}, ${commonMutationParams}): Task
   tasksEdit(_id: String!, name: String, ${commonMutationParams}): Task
-  tasksChange( _id: String!, destinationStageId: String): Task
-  tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
+  tasksChange( _id: String!, destinationStageId: String, order: Float): Task
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task
   tasksCopy(_id: String!): Task
