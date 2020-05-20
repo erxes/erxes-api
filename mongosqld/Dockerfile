@@ -11,8 +11,4 @@ RUN echo $PATH
 RUN install -m755 bin/mongo* /usr/local/bin/
 EXPOSE 3307
 
-ENV MONGODB_HOST mongodb
-ENV MONGODB_PORT 27017
-ENV LISTEN_PORT 3307
-
-CMD ["mongosqld --mongo-uri mongodb://$MONGODB_HOST:$MONGODB_PORT/?connect=direct --addr 0.0.0.0:$LISTEN_PORT"]
+CMD ["mongosqld", "--mongo-uri", "mongodb://mongo:27017", "--addr", "0.0.0.0:3307"]
