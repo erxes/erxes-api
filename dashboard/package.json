@@ -6,6 +6,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
+    "@cubejs-backend/elasticsearch-driver": "^0.19.17",
     "@cubejs-backend/mongobi-driver": "^0.19.14",
     "@cubejs-backend/server": "^0.19.14"
   }

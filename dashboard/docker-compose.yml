@@ -1,0 +1,38 @@
+version: '3'
+services:
+  redis-db:
+    image: 'redis'
+    container_name: redis-db
+    networks:
+      - erxes-net
+  # elksyncer:
+  #   container_name: 'elksyncer'
+  #   build:
+  #     dockerfile: ./Dockerfile
+  #     context: ./erxes-api/elkSyncer
+  #     # env_file: ./erxes-api/elkSyncer/.env
+  #   depends_on:
+  #     - 'mongo'
+  #     - 'elasticsearch'
+  #   volumes:
+  #     - ./erxes-api/elkSyncer:/elkSyncer
+  #     # command: bash -c "./wait-for.sh -t 60 mongo:27017 && ./wait-for.sh -t 60 elasticsearch:9200 && python main.py"
+  #   tty: true
+  #   command: ['bash']
+  #   networks:
+  #     - erxes-net
+
+  erxes-dashboard:
+    build: .
+    env_file: .env
+    expose:
+      - '4000'
+    command: node index.js
+    ports:
+      - '4500:4500'
+    depends_on:
+      - redis-db
+
+networks:
+  erxes-net:
+    driver: bridge
