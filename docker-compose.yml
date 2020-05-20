@@ -1,0 +1,30 @@
+# Docker Engine version 17.04.0+
+version: '3.2'
+services:
+  mongo:
+    image: mongo:3.6
+    restart: always
+    networks:
+      - erxes
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_DATABASE: erxes
+  redis:
+    image: redis:3
+    restart: always
+    networks:
+      - erxes
+    ports:
+      - '6379:6379'
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+  rabbitmq:
+    image: rabbitmq:3
+    restart: always
+    networks:
+      - erxes
+    ports:
+      - '5672:5672'
+networks:
+  erxes:
