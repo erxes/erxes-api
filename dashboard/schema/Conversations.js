@@ -12,15 +12,7 @@ cube(`Conversations`, {
       relationship: `belongsTo`,
     },
     Users: {
-      sql: `${CUBE}.firstRespondedUserId = ${Users}._id`,
-      relationship: `belongsTo`,
-    },
-    Users: {
-      sql: `${CUBE}.assigneduserid = ${Users}._id`,
-      relationship: `belongsTo`,
-    },
-    Users: {
-      sql: `${CUBE}.closedUserId = ${Users}._id`,
+      sql: `${CUBE}.firstRespondedUserId = ${Users}._id or ${CUBE}.assigneduserid = ${Users}._id  or ${CUBE}.closedUserId = ${Users}._id`,
       relationship: `belongsTo`,
     },
   },
