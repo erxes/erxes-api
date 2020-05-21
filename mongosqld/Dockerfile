@@ -11,6 +11,5 @@ RUN echo $PATH
 RUN install -m755 bin/mongo* /usr/local/bin/
 EXPOSE 3307
 
-ARG MONGO='mongo'
 
-CMD ["mongosqld", "--mongo-uri", "mongodb://${MONGO}:27017", "--addr", "0.0.0.0:3307"]
+CMD ["mongosqld", "--mongo-uri","mongodb://mongo:27017","--addr", "0.0.0.0:3307"]
