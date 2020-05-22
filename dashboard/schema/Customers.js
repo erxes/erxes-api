@@ -18,6 +18,9 @@ cube(`Customers`, {
     onlyRegisteredByIntegrations: {
       sql: `${CUBE}.integrationId != '' or ${CUBE}.integrationId !=' '`,
     },
+    haveLeadSatus: {
+      sql: `${CUBE}.leadStatus != '' or ${CUBE}.leadStatus !=' '`,
+    },
   },
 
   dimensions: {
