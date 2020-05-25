@@ -19,7 +19,7 @@ cube(`Customers`, {
       sql: `${CUBE}.integrationId != '' or ${CUBE}.integrationId !=' '`,
     },
     haveLeadSatus: {
-      sql: `${CUBE}.leadStatus != '' or ${CUBE}.leadStatus !=' '`,
+      sql: `${CUBE}.leadStatus != '' or !${CUBE}.leadStatus`,
     },
   },
 

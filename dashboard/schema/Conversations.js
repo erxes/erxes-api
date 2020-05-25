@@ -32,17 +32,17 @@ cube(`Conversations`, {
       ],
     },
 
-    messagecount: {
-      sql: `${CUBE}.\`messageCount\``,
-      type: `sum`,
-      title: 'message count',
-    },
+    // messagecount: {
+    //   sql: `${CUBE}.\`messageCount\``,
+    //   type: `sum`,
+    //   title: 'message count',
+    // },
   },
 
   dimensions: {
     _id: {
       sql: `${CUBE}.\`_id\``,
-      type: `string`,
+      type: `string`, 
       primaryKey: true,
     },
     assigneduserid: {

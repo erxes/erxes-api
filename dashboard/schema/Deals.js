@@ -52,9 +52,11 @@ cube(`Deals`, {
     },
 
     stageProbability: {
-      sql: `${Stages}.probability`,
       type: `string`,
-      title: `Stage probability`,
+      case: {
+        when: [{ sql: `${Stages}.probability != ''`, label: { sql: `${Stages}.probability` } }],
+        else: {},
+      },
     },
 
     pipelineName: {
