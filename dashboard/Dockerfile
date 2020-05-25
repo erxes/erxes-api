@@ -3,6 +3,5 @@ WORKDIR /dashboard
 COPY yarn.lock package.json ./
 RUN yarn install
 EXPOSE 4300
-CMD ["yarn", "dev"]
-
+CMD ["index.js"]
 
