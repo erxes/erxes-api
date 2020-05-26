@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { Companies, Customers, ImportHistory, Products, Users } from '../db/models';
+import { Companies, Conformities, Customers, ImportHistory, Products, Tags, Users } from '../db/models';
 import { graphqlPubsub } from '../pubsub';
 import { connect } from './utils';
 
@@ -49,10 +49,9 @@ connect().then(async () => {
     // Collecting errors
     const errorMsgs: string[] = [];
 
-    // Customer or company object to import
-    const coc: any = {
+    const doc: any = {
       scopeBrandIds,
-      customFieldsData: {},
+      customFieldsData: [],
     };
 
     let colIndex = 0;
@@ -64,13 +63,16 @@ connect().then(async () => {
       switch (property.type) {
         case 'customProperty':
           {
-            coc.customFieldsData[property.id] = fieldValue[colIndex];
+            doc.customFieldsData.push({
+              field: property.id,
+              value: fieldValue[colIndex],
+            });
           }
           break;
 
         case 'customData':
           {
-            coc[property.name] = value.toString();
+            doc[property.name] = value.toString();
           }
           break;
 
@@ -80,20 +82,52 @@ connect().then(async () => {
 
             const owner = await Users.findOne({ email: userEmail }).lean();
 
-            coc[property.name] = owner ? owner._id : '';
+            doc[property.name] = owner ? owner._id : '';
+          }
+          break;
+
+        case 'companiesPrimaryNames':
+          {
+            doc.companiesPrimaryNames = (value || '').toString().split(',');
+          }
+          break;
+
+        case 'tag':
+          {
+            const tagName = value.toString();
+
+            const tag = await Tags.findOne({ name: new RegExp(`.*${tagName}.*`, 'i') }).lean();
+
+            doc[property.name] = tag ? [tag._id] : [];
           }
           break;
 
         case 'basic':
           {
-            coc[property.name] = value.toString();
+            doc[property.name] = value.toString();
+
+            if (property.name === 'primaryName' && value) {
+              doc.names = [value];
+            }
 
             if (property.name === 'primaryEmail' && value) {
-              coc.emails = [value];
+              doc.emails = [value];
             }
 
             if (property.name === 'primaryPhone' && value) {
-              coc.phones = [value];
+              doc.phones = [value];
+            }
+
+            if (property.name === 'phones' && value) {
+              doc.phones = value.toString().split(',');
+            }
+
+            if (property.name === 'emails' && value) {
+              doc.emails = value.toString().split(',');
+            }
+
+            if (property.name === 'names' && value) {
+              doc.names = value.toString().split(',');
             }
           }
           break;
@@ -102,10 +136,28 @@ connect().then(async () => {
       colIndex++;
     }
 
-    // Creating coc
-    await create(coc, user)
+    if (contentType === 'customer' && !doc.emailValidationStatus) {
+      doc.emailValidationStatus = 'unknown';
+    }
+
+    await create(doc, user)
       .then(async cocObj => {
+        if (doc.companiesPrimaryNames && doc.companiesPrimaryNames.length > 0) {
+          const companies = await Companies.find({ primaryName: { $in: doc.companiesPrimaryNames } }, { _id: 1 });
+          const companyIds = companies.map(company => company._id);
+
+          for (const _id of companyIds) {
+            await Conformities.addConformity({
+              mainType: 'customer',
+              mainTypeId: cocObj._id,
+              relType: 'company',
+              relTypeId: _id,
+            });
+          }
+        }
+
         await ImportHistory.updateOne({ _id: importHistoryId }, { $push: { ids: [cocObj._id] } });
+
         // Increasing success count
         inc.success++;
       })
@@ -115,13 +167,13 @@ connect().then(async () => {
 
         switch (e.message) {
           case 'Duplicated email':
-            errorMsgs.push(`Duplicated email ${coc.primaryEmail}`);
+            errorMsgs.push(`Duplicated email ${doc.primaryEmail}`);
             break;
           case 'Duplicated phone':
-            errorMsgs.push(`Duplicated phone ${coc.primaryPhone}`);
+            errorMsgs.push(`Duplicated phone ${doc.primaryPhone}`);
             break;
           case 'Duplicated name':
-            errorMsgs.push(`Duplicated name ${coc.primaryName}`);
+            errorMsgs.push(`Duplicated name ${doc.primaryName}`);
             break;
           default:
             errorMsgs.push(e.message);

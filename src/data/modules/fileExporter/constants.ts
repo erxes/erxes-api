@@ -44,6 +44,7 @@ export const CHANNEL_BASIC_INFOS = [
 export const PERMISSION_BASIC_INFOS = ['module', 'action', 'userId', 'groupId', 'requiredActions', 'allowed'];
 
 export const CUSTOMER_BASIC_INFOS = [
+  'state',
   'firstName',
   'lastName',
   'primaryEmail',
@@ -55,7 +56,6 @@ export const CUSTOMER_BASIC_INFOS = [
   'department',
   'leadStatus',
   'status',
-  'lifecycleState',
   'hasAuthority',
   'description',
   'doNotDisturb',
@@ -73,8 +73,6 @@ export const COMPANY_BASIC_INFOS = [
   'plan',
   'primaryEmail',
   'primaryPhone',
-  'leadStatus',
-  'lifecycleState',
   'businessType',
   'description',
   'doNotDisturb',

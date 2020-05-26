@@ -1,12 +1,7 @@
 import { Document, Schema } from 'mongoose';
 
-import { ILink, linkSchema } from './common';
-import {
-  CUSTOMER_LEAD_STATUS_TYPES,
-  CUSTOMER_LIFECYCLE_STATE_TYPES,
-  EMAIL_VALIDATION_STATUSES,
-  STATUSES,
-} from './constants';
+import { customFieldSchema, ICustomField, ILink, linkSchema } from './common';
+import { CUSTOMER_SELECT_OPTIONS } from './constants';
 
 import { field, schemaWrapper } from './utils';
 
@@ -33,6 +28,8 @@ export interface IVisitorContactDocument extends IVisitorContact, Document {}
 interface ILinkDocument extends ILink, Document {}
 
 export interface ICustomer {
+  state?: 'visitor' | 'lead' | 'customer';
+
   scopeBrandIds?: string[];
   firstName?: string;
   lastName?: string;
@@ -48,28 +45,28 @@ export interface ICustomer {
   position?: string;
   department?: string;
   leadStatus?: string;
-  lifecycleState?: string;
   hasAuthority?: string;
   description?: string;
   doNotDisturb?: string;
   emailValidationStatus?: string;
   links?: ILink;
-  isUser?: boolean;
   relatedIntegrationIds?: string[];
   integrationId?: string;
   tagIds?: string[];
+
   // TODO migrate after remove 1row
   companyIds?: string[];
+
   mergedIds?: string[];
   status?: string;
-  customFieldsData?: any;
-  trackedData?: any;
+  customFieldsData?: ICustomField[];
+  trackedData?: ICustomField[];
   location?: ILocation;
   visitorContactInfo?: IVisitorContact;
   deviceTokens?: string[];
   code?: string;
   isOnline?: boolean;
-  lastSeenAt?: number;
+  lastSeenAt?: Date;
   sessionCount?: number;
 }
 
@@ -89,14 +86,14 @@ export interface ICustomerDocument extends ICustomer, Document {
 /* location schema */
 export const locationSchema = new Schema(
   {
-    remoteAddress: field({ type: String, label: 'Remote address' }),
-    country: field({ type: String, label: 'Country' }),
-    countryCode: field({ type: String, label: 'Country code' }),
-    city: field({ type: String, label: 'City' }),
-    region: field({ type: String, label: 'Region' }),
-    hostname: field({ type: String, label: 'Host name' }),
-    language: field({ type: String, label: 'Language' }),
-    userAgent: field({ type: String, label: 'User agent' }),
+    remoteAddress: field({ type: String, label: 'Remote address', optional: true }),
+    country: field({ type: String, label: 'Country', optional: true }),
+    countryCode: field({ type: String, label: 'Country code', optional: true }),
+    city: field({ type: String, label: 'City', optional: true }),
+    region: field({ type: String, label: 'Region', optional: true }),
+    hostname: field({ type: String, label: 'Host name', optional: true }),
+    language: field({ type: String, label: 'Language', optional: true }),
+    userAgent: field({ type: String, label: 'User agent', optional: true }),
   },
   { _id: false },
 );
@@ -109,35 +106,22 @@ export const visitorContactSchema = new Schema(
   { _id: false },
 );
 
-/*
- * messenger schema
- */
-export const messengerSchema = new Schema(
-  {
-    lastSeenAt: field({
-      type: Date,
-      label: 'Last seen at',
-    }),
-    sessionCount: field({
-      type: Number,
-      label: 'Session count',
-    }),
-    isActive: field({
-      type: Boolean,
-      label: 'Is online',
-    }),
-    customData: field({
-      type: Object,
-      optional: true,
-      label: 'Custom data',
-    }),
-  },
-  { _id: false },
-);
+const getEnum = (fieldName: string): string[] => {
+  return CUSTOMER_SELECT_OPTIONS[fieldName].map(option => option.value);
+};
 
 export const customerSchema = schemaWrapper(
   new Schema({
     _id: field({ pkey: true }),
+
+    state: field({
+      type: String,
+      esType: 'keyword',
+      label: 'State',
+      default: 'visitor',
+      enum: getEnum('STATE'),
+      selectOptions: CUSTOMER_SELECT_OPTIONS.STATE,
+    }),
 
     createdAt: field({ type: Date, label: 'Created at' }),
     modifiedAt: field({ type: Date, label: 'Modified at' }),
@@ -146,15 +130,25 @@ export const customerSchema = schemaWrapper(
     firstName: field({ type: String, label: 'First name', optional: true }),
     lastName: field({ type: String, label: 'Last name', optional: true }),
     birthDate: field({ type: Date, label: 'Date of birth', optional: true }),
-    sex: field({ type: Number, label: 'Sex', optional: true, default: 0 }),
+    sex: field({
+      type: Number,
+      label: 'Sex',
+      optional: true,
+      esType: 'keyword',
+      default: 0,
+      enum: getEnum('SEX'),
+      selectOptions: CUSTOMER_SELECT_OPTIONS.SEX,
+    }),
 
-    primaryEmail: field({ type: String, label: 'Primary Email', optional: true }),
+    primaryEmail: field({ type: String, label: 'Primary Email', optional: true, esType: 'email' }),
     emails: field({ type: [String], optional: true, label: 'Emails' }),
     emailValidationStatus: field({
       type: String,
-      enum: EMAIL_VALIDATION_STATUSES.ALL,
-      default: EMAIL_VALIDATION_STATUSES.UNKNOWN,
+      enum: getEnum('EMAIL_VALIDATION_STATUSES'),
+      default: 'unknown',
       label: 'Email validation status',
+      esType: 'keyword',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.EMAIL_VALIDATION_STATUSES,
     }),
 
     primaryPhone: field({ type: String, label: 'Primary Phone', optional: true }),
@@ -162,52 +156,57 @@ export const customerSchema = schemaWrapper(
     profileScore: field({ type: Number, index: true, optional: true, label: 'Profile score' }),
 
     ownerId: field({ type: String, optional: true, label: 'Owner' }),
-    position: field({ type: String, optional: true, label: 'Position' }),
+    position: field({ type: String, optional: true, label: 'Position', esType: 'keyword' }),
     department: field({ type: String, optional: true, label: 'Department' }),
 
     leadStatus: field({
       type: String,
-      enum: CUSTOMER_LEAD_STATUS_TYPES,
+      enum: getEnum('LEAD_STATUS_TYPES'),
       optional: true,
       label: 'Lead Status',
+      esType: 'keyword',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.LEAD_STATUS_TYPES,
     }),
 
     status: field({
       type: String,
-      enum: STATUSES.ALL,
-      default: STATUSES.ACTIVE,
+      enum: getEnum('STATUSES'),
       optional: true,
       label: 'Status',
+      default: 'Active',
+      esType: 'keyword',
       index: true,
+      selectOptions: CUSTOMER_SELECT_OPTIONS.STATUSES,
     }),
 
-    lifecycleState: field({
+    hasAuthority: field({
       type: String,
-      enum: CUSTOMER_LIFECYCLE_STATE_TYPES,
       optional: true,
-      label: 'Lifecycle State',
+      default: 'No',
+      label: 'Has authority',
+      enum: getEnum('HAS_AUTHORITY'),
+      selectOptions: CUSTOMER_SELECT_OPTIONS.HAS_AUTHORITY,
     }),
-
-    hasAuthority: field({ type: String, optional: true, label: 'Has authority' }),
     description: field({ type: String, optional: true, label: 'Description' }),
     doNotDisturb: field({
       type: String,
       optional: true,
+      default: 'No',
+      enum: getEnum('DO_NOT_DISTURB'),
       label: 'Do not disturb',
+      selectOptions: CUSTOMER_SELECT_OPTIONS.DO_NOT_DISTURB,
     }),
     links: field({ type: linkSchema, default: {}, label: 'Links' }),
 
-    isUser: field({ type: Boolean, label: 'Is user', optional: true }),
-
     relatedIntegrationIds: field({ type: [String], optional: true }),
-    integrationId: field({ type: String, optional: true, label: 'Integration' }),
+    integrationId: field({ type: String, optional: true, label: 'Integration', esType: 'keyword' }),
     tagIds: field({ type: [String], optional: true, index: true, label: 'Tags' }),
 
     // Merged customer ids
-    mergedIds: field({ type: [String], optional: true, label: 'Merged customers' }),
+    mergedIds: field({ type: [String], optional: true }),
 
-    trackedData: field({ type: Object, optional: true, label: 'Tracked Data' }),
-    customFieldsData: field({ type: Object, optional: true, label: 'Custom fields data' }),
+    trackedData: field({ type: [customFieldSchema], optional: true, label: 'Tracked Data' }),
+    customFieldsData: field({ type: [customFieldSchema], optional: true, label: 'Custom fields data' }),
 
     location: field({ type: locationSchema, optional: true, label: 'Location' }),
 
@@ -219,11 +218,15 @@ export const customerSchema = schemaWrapper(
       label: 'Visitor contact info',
     }),
 
-    deviceTokens: field({ type: [String], default: [], label: 'Device tokens' }),
+    deviceTokens: field({ type: [String], default: [] }),
     searchText: field({ type: String, optional: true, index: true }),
     code: field({ type: String, label: 'Code', optional: true }),
 
-    isOnline: field({ type: Boolean, label: 'Is online', optional: true }),
+    isOnline: field({
+      type: Boolean,
+      label: 'Is online',
+      optional: true,
+    }),
     lastSeenAt: field({ type: Date, label: 'Last seen at', optional: true }),
     sessionCount: field({ type: Number, label: 'Session count', optional: true }),
   }),

@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import {
   brandFactory,
@@ -10,6 +11,7 @@ import {
   tagsFactory,
 } from '../db/factories';
 import { Customers, FormSubmissions, Segments, Tags } from '../db/models';
+import * as elk from '../elasticsearch';
 
 import './setup.ts';
 
@@ -24,7 +26,6 @@ describe('customerQueries', () => {
     $form: String,
     $startDate: String,
     $endDate: String,
-    $lifecycleState: String,
     $leadStatus: String
   `;
 
@@ -38,7 +39,6 @@ describe('customerQueries', () => {
     form: $form
     startDate: $startDate
     endDate: $endDate
-    lifecycleState: $lifecycleState
     leadStatus: $leadStatus
   `;
 
@@ -155,12 +155,6 @@ describe('customerQueries', () => {
     });
   });
 
-  test('Customer count by lifecycleState', async () => {
-    await graphqlRequest(qryCount, 'customerCounts', {
-      only: 'byLifecycleState',
-    });
-  });
-
   test('Customer count by IntegrationType', async () => {
     await integrationFactory({ kind: '' });
 
@@ -218,6 +212,12 @@ describe('customerQueries', () => {
   test('Customer detail', async () => {
     const customer = await customerFactory({ trackedData: { t1: 'v1' } }, true);
 
+    const mock = sinon.stub(elk, 'fetchElk').callsFake(() => {
+      return Promise.resolve({
+        hits: { hits: [{ _source: { count: 1, attributes: [{ url: '/test' }] } }] },
+      });
+    });
+
     const qry = `
       query customerDetail($_id: String!) {
         customerDetail(_id: $_id) {
@@ -231,19 +231,17 @@ describe('customerQueries', () => {
           emails
           primaryPhone
           phones
-          isUser
           tagIds
           remoteAddress
           internalNotes
           location
           visitorContactInfo
           customFieldsData
-          getTrackedData
+          trackedData
           ownerId
           position
           department
           leadStatus
-          lifecycleState
           hasAuthority
           description
           doNotDisturb
@@ -255,6 +253,7 @@ describe('customerQueries', () => {
             github
             website
           }
+          urlVisits
           conversations { _id }
           getTags { _id }
           owner { _id }
@@ -267,6 +266,8 @@ describe('customerQueries', () => {
     const response = await graphqlRequest(qry, 'customerDetail', {
       _id: customer._id,
     });
+
+    mock.restore();
 
     expect(response._id).toBe(customer._id);
   });

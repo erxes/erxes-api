@@ -1,6 +1,5 @@
 import * as _ from 'underscore';
 import { Companies, Conformities, Customers, Integrations } from '../../../db/models';
-import { STATUSES } from '../../../db/models/definitions/constants';
 import { IConformityQueryParams } from '../../resolvers/queries/types';
 import { CommonBuilder } from './utils';
 
@@ -24,8 +23,6 @@ export interface IListArgs extends IConformityQueryParams {
   tag?: string;
   ids?: string[];
   searchValue?: string;
-  lifecycleState?: string;
-  leadStatus?: string;
   brand?: string;
   sortField?: string;
   sortDirection?: number;
@@ -60,7 +57,7 @@ export class Builder extends CommonBuilder<IListArgs> {
   public async findAllMongo(limit: number) {
     const selector = {
       ...this.context.commonQuerySelector,
-      status: { $ne: STATUSES.DELETED },
+      status: { $ne: 'deleted' },
     };
 
     const companies = await Companies.find(selector)

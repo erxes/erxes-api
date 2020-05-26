@@ -1,5 +1,8 @@
 import * as _ from 'underscore';
 import { Segments } from '../../../db/models';
+import { companySchema } from '../../../db/models/definitions/companies';
+import { SEGMENT_DATE_OPERATORS, SEGMENT_NUMBER_OPERATORS } from '../../../db/models/definitions/constants';
+import { customerSchema } from '../../../db/models/definitions/customers';
 import { ICondition, ISegment } from '../../../db/models/definitions/segments';
 import { fetchElk } from '../../../elasticsearch';
 
@@ -9,13 +12,20 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
   }
 
   const { contentType } = segment;
-  const index = contentType === 'customer' ? 'customers' : 'companies';
-  const idField = contentType === 'customer' ? 'customerId' : 'companyId';
+  const index = contentType === 'company' ? 'companies' : 'customers';
+  const idField = contentType === 'company' ? 'companyId' : 'customerId';
+  const schema = contentType === 'company' ? companySchema : customerSchema;
+  const typesMap: { [key: string]: any } = {};
+
+  schema.eachPath(name => {
+    const path = schema.paths[name];
+    typesMap[name] = path.options.esType;
+  });
 
   const propertyPositive: any[] = [];
   const propertyNegative: any[] = [];
 
-  if (contentType === 'customer') {
+  if (contentType !== 'company') {
     propertyNegative.push({
       term: {
         status: 'Deleted',
@@ -26,7 +36,7 @@ export const fetchBySegments = async (segment: ISegment, action: 'search' | 'cou
   const eventPositive = [];
   const eventNegative = [];
 
-  await generateQueryBySegment({ segment, propertyPositive, propertyNegative, eventNegative, eventPositive });
+  await generateQueryBySegment({ segment, typesMap, propertyPositive, propertyNegative, eventNegative, eventPositive });
 
   let idsByEvents = [];
 
@@ -86,8 +96,9 @@ const generateQueryBySegment = async (args: {
   eventPositive;
   eventNegative;
   segment: ISegment;
+  typesMap: { [key: string]: any };
 }) => {
-  const { segment, propertyNegative, propertyPositive, eventNegative, eventPositive } = args;
+  const { segment, typesMap, propertyNegative, propertyPositive, eventNegative, eventPositive } = args;
 
   // Fetching parent segment
   const embeddedParentSegment = await Segments.findOne({ _id: segment.subOf });
@@ -111,8 +122,11 @@ const generateQueryBySegment = async (args: {
   }
 
   for (const condition of propertyConditions) {
+    const field = condition.propertyName || '';
+
     elkConvertConditionToQuery({
-      field: condition.propertyName || '',
+      field,
+      type: typesMap[field],
       operator: condition.propertyOperator || '',
       value: condition.propertyValue || '',
       positive: propertyPositive,
@@ -173,102 +187,218 @@ const generateQueryBySegment = async (args: {
   }
 };
 
-function elkConvertConditionToQuery(args: { field: string; operator: string; value: string; positive; negative }) {
-  const { field, operator, value, positive, negative } = args;
+const generateNestedQuery = (kind: string, field: string, operator: string, query: any) => {
+  const fieldKey = field.replace(`${kind}.`, '');
+
+  let fieldValue = 'value';
+
+  if (SEGMENT_NUMBER_OPERATORS.includes(operator)) {
+    fieldValue = 'numberValue';
+  }
+
+  if (SEGMENT_DATE_OPERATORS.includes(operator)) {
+    fieldValue = 'dateValue';
+  }
+
+  let updatedQuery = query;
+
+  updatedQuery = JSON.stringify(updatedQuery).replace(`${kind}.${fieldKey}`, `${kind}.${fieldValue}`);
+  updatedQuery = JSON.parse(updatedQuery);
+
+  return {
+    nested: {
+      path: kind,
+      query: {
+        bool: {
+          must: [
+            {
+              term: {
+                [`${kind}.field`]: fieldKey,
+              },
+            },
+            updatedQuery,
+          ],
+        },
+      },
+    },
+  };
+};
+
+function elkConvertConditionToQuery(args: {
+  field: string;
+  type?: any;
+  operator: string;
+  value: string;
+  positive;
+  negative;
+}) {
+  const { field, type, operator, value, positive, negative } = args;
 
   const fixedValue = value.toLocaleLowerCase();
 
+  let positiveQuery;
+  let negativeQuery;
+
   // equal
-  if (operator === 'e') {
-    positive.push({
-      term: {
-        [`${field}.keyword`]: value,
-      },
-    });
+  if (['e', 'numbere'].includes(operator)) {
+    if (['keyword', 'email'].includes(type) || operator === 'numbere') {
+      positiveQuery = {
+        term: { [field]: value },
+      };
+    } else {
+      positiveQuery = {
+        match_phrase: { [field]: value },
+      };
+    }
   }
 
   // does not equal
-  if (operator === 'dne') {
-    negative.push({
-      term: {
-        [`${field}.keyword`]: value,
-      },
-    });
+  if (['dne', 'numberdne'].includes(operator)) {
+    if (['keyword', 'email'].includes(type) || operator === 'numberdne') {
+      negativeQuery = {
+        term: { [field]: value },
+      };
+    } else {
+      negativeQuery = {
+        match_phrase: { [field]: value },
+      };
+    }
   }
 
   // contains
   if (operator === 'c') {
-    positive.push({
+    positiveQuery = {
       wildcard: {
         [field]: `*${fixedValue}*`,
       },
-    });
+    };
   }
 
   // does not contains
   if (operator === 'dnc') {
-    negative.push({
+    negativeQuery = {
       wildcard: {
         [field]: `*${fixedValue}*`,
       },
-    });
+    };
   }
 
   // greater than equal
-  if (operator === 'igt') {
-    positive.push({
+  if (['igt', 'numberigt', 'dateigt'].includes(operator)) {
+    positiveQuery = {
       range: {
         [field]: {
           gte: fixedValue,
         },
       },
-    });
+    };
   }
 
   // less then equal
-  if (operator === 'ilt') {
-    positive.push({
+  if (['ilt', 'numberilt', 'dateilt'].includes(operator)) {
+    positiveQuery = {
       range: {
         [field]: {
           lte: fixedValue,
         },
       },
-    });
+    };
   }
 
   // is true
   if (operator === 'it') {
-    positive.push({
+    positiveQuery = {
       term: {
         [field]: true,
       },
-    });
+    };
   }
 
-  // is true
+  // is false
   if (operator === 'if') {
-    positive.push({
+    positiveQuery = {
       term: {
         [field]: false,
       },
-    });
+    };
   }
 
   // is set
   if (operator === 'is') {
-    positive.push({
+    positiveQuery = {
       exists: {
         field,
       },
-    });
+    };
   }
 
   // is not set
   if (operator === 'ins') {
-    negative.push({
+    negativeQuery = {
       exists: {
         field,
       },
-    });
+    };
+  }
+
+  if (['woam', 'wobm', 'woad', 'wobd'].includes(operator)) {
+    let gte = '';
+    let lte = '';
+
+    // will occur after on following n-th minute
+    if (operator === 'woam') {
+      gte = `now-${fixedValue}m/m`;
+      lte = `now-${fixedValue}m/m`;
+    }
+
+    // will occur before on following n-th minute
+    if (operator === 'wobm') {
+      gte = `now+${fixedValue}m/m`;
+      lte = `now+${fixedValue}m/m`;
+    }
+
+    // will occur after on following n-th day
+    if (operator === 'woad') {
+      gte = `now-${fixedValue}d/d`;
+      lte = `now-${fixedValue}d/d`;
+    }
+
+    // will occur before on following n-th day
+    if (operator === 'wobd') {
+      gte = `now+${fixedValue}d/d`;
+      lte = `now+${fixedValue}d/d`;
+    }
+
+    positiveQuery = { range: { [field]: { gte, lte } } };
+  }
+
+  // date relative less than
+  if (operator === 'drlt') {
+    positiveQuery = { range: { [field]: { lte: fixedValue } } };
+  }
+
+  // date relative greater than
+  if (operator === 'drgt') {
+    positiveQuery = { range: { [field]: { gte: fixedValue } } };
+  }
+
+  for (const nestedType of ['customFieldsData', 'trackedData', 'attributes']) {
+    if (field.includes(nestedType)) {
+      if (positiveQuery) {
+        positiveQuery = generateNestedQuery(nestedType, field, operator, positiveQuery);
+      }
+
+      if (negativeQuery) {
+        negativeQuery = generateNestedQuery(nestedType, field, operator, negativeQuery);
+      }
+    }
+  }
+
+  if (positiveQuery) {
+    positive.push(positiveQuery);
+  }
+
+  if (negativeQuery) {
+    negative.push(negativeQuery);
   }
 }

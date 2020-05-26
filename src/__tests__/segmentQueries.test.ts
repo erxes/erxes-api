@@ -19,8 +19,8 @@ describe('segmentQueries', () => {
     await segmentFactory({ contentType: 'company' });
 
     const qry = `
-      query segments($contentType: String!) {
-        segments(contentType: $contentType) {
+      query segments($contentTypes: [String]!) {
+        segments(contentTypes: $contentTypes) {
           _id
         }
       }
@@ -28,14 +28,14 @@ describe('segmentQueries', () => {
 
     // customer segment ==================
     let response = await graphqlRequest(qry, 'segments', {
-      contentType: 'customer',
+      contentTypes: ['customer'],
     });
 
     expect(response.length).toBe(1);
 
     // company segment ==================
     response = await graphqlRequest(qry, 'segments', {
-      contentType: 'company',
+      contentTypes: ['company'],
     });
 
     expect(response.length).toBe(1);
@@ -105,7 +105,12 @@ describe('segmentQueries', () => {
                       {
                         _source: {
                           name: 'pageView',
-                          attributes: [],
+                          attributes: [
+                            {
+                              field: 'url',
+                              value: '/test',
+                            },
+                          ],
                         },
                       },
                     ],
@@ -137,6 +142,14 @@ describe('segmentQueries', () => {
         segmentsPreviewCount(contentType: $contentType, conditions: $conditions)
       }
     `;
+
+    const mock = sinon.stub(elk, 'fetchElk').callsFake(() => {
+      return Promise.reject('error');
+    });
+
+    await graphqlRequest(qry, 'segmentsPreviewCount', { contentType: 'customer', conditions: [] });
+
+    mock.restore();
 
     await graphqlRequest(qry, 'segmentsPreviewCount', { contentType: 'customer', conditions: [] });
   });

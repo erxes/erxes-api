@@ -1,7 +1,7 @@
 import { Model, model } from 'mongoose';
 import { validateEmail, validSearchText } from '../../data/utils';
 import { ActivityLogs, Conformities, Conversations, EngageMessages, Fields, InternalNotes } from './';
-import { EMAIL_VALIDATION_STATUSES, STATUSES } from './definitions/constants';
+import { ICustomField } from './definitions/common';
 import { customerSchema, ICustomer, ICustomerDocument } from './definitions/customers';
 import { IUserDocument } from './definitions/users';
 
@@ -71,6 +71,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   markCustomerAsActive(customerId: string): Promise<ICustomerDocument>;
   markCustomerAsNotActive(_id: string): Promise<ICustomerDocument>;
   removeCustomers(customerIds: string[]): Promise<{ n: number; ok: number }>;
+  changeState(_id: string, value: string): Promise<ICustomerDocument>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   updateProfileScore(customerId: string, save: boolean): never;
@@ -90,7 +91,7 @@ export const loadClass = () => {
      * Checking if customer has duplicated unique properties
      */
     public static async checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string) {
-      const query: { status: {}; [key: string]: any } = { status: { $ne: STATUSES.DELETED } };
+      const query: { status: {}; [key: string]: any } = { status: { $ne: 'deleted' } };
       let previousEntry;
 
       // Adding exclude operator to the query
@@ -191,6 +192,7 @@ export const loadClass = () => {
      */
     public static async createVisitor(): Promise<string> {
       const customer = await Customers.create({
+        state: 'visitor',
         createdAt: new Date(),
         modifiedAt: new Date(),
       });
@@ -220,7 +222,7 @@ export const loadClass = () => {
       }
 
       // clean custom field values
-      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+      doc.customFieldsData = await Fields.prepareCustomFieldsData(doc.customFieldsData);
 
       if (doc.integrationId) {
         doc.relatedIntegrationIds = [doc.integrationId];
@@ -232,12 +234,16 @@ export const loadClass = () => {
         ...doc,
       });
 
-      if (doc.primaryEmail) {
+      if (doc.primaryEmail && !doc.emailValidationStatus) {
         validateEmail(doc.primaryEmail);
       }
 
       // calculateProfileScore
       await Customers.updateProfileScore(customer._id, true);
+
+      if (doc.state) {
+        await Customers.updateOne({ _id: customer._id }, { $set: { state: doc.state } });
+      }
 
       await ActivityLogs.createCocLog({ coc: customer, contentType: 'customer' });
 
@@ -251,14 +257,16 @@ export const loadClass = () => {
       // Checking duplicated fields of customer
       await Customers.checkDuplication(doc, _id);
 
-      // clean custom field values
-      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+      if (doc.customFieldsData) {
+        // clean custom field values
+        doc.customFieldsData = await Fields.prepareCustomFieldsData(doc.customFieldsData);
+      }
 
       if (doc.primaryEmail) {
         const oldCustomer = await Customers.getCustomer(_id);
 
         if (doc.primaryEmail !== oldCustomer.primaryEmail) {
-          doc.emailValidationStatus = EMAIL_VALIDATION_STATUSES.UNKNOWN;
+          doc.emailValidationStatus = 'unknown';
 
           validateEmail(doc.primaryEmail);
         }
@@ -310,34 +318,43 @@ export const loadClass = () => {
       }
 
       const nullValues = ['', null];
+
+      let possibleLead = false;
       let score = 0;
       let searchText = (customer.emails || []).join(' ').concat(' ', (customer.phones || []).join(' '));
 
       if (!nullValues.includes(customer.firstName || '')) {
         score += 10;
+        possibleLead = true;
         searchText = searchText.concat(' ', customer.firstName || '');
       }
 
       if (!nullValues.includes(customer.lastName || '')) {
         score += 5;
+        possibleLead = true;
         searchText = searchText.concat(' ', customer.lastName || '');
       }
 
       if (!nullValues.includes(customer.code || '')) {
         score += 10;
+        possibleLead = true;
         searchText = searchText.concat(' ', customer.code || '');
       }
 
       if (!nullValues.includes(customer.primaryEmail || '')) {
+        possibleLead = true;
         score += 15;
       }
 
       if (!nullValues.includes(customer.primaryPhone || '')) {
+        possibleLead = true;
         score += 10;
       }
 
       if (customer.visitorContactInfo != null) {
+        possibleLead = true;
         score += 5;
+
         searchText = searchText.concat(
           ' ',
           customer.visitorContactInfo.email || '',
@@ -348,16 +365,24 @@ export const loadClass = () => {
 
       searchText = validSearchText([searchText]);
 
+      let state = customer.state || 'visitor';
+
+      if (possibleLead && state !== 'customer') {
+        state = 'lead';
+      }
+
+      const modifier = { $set: { profileScore: score, searchText, state } };
+
       if (!save) {
         return {
           updateOne: {
             filter: { _id: customerId },
-            update: { $set: { profileScore: score, searchText } },
+            update: modifier,
           },
         };
       }
 
-      await Customers.updateOne({ _id: customerId }, { $set: { profileScore: score, searchText } });
+      await Customers.updateOne({ _id: customerId }, modifier);
     }
     /**
      * Remove customers
@@ -384,7 +409,7 @@ export const loadClass = () => {
 
       let scopeBrandIds: string[] = [];
       let tagIds: string[] = [];
-      let customFieldsData = {};
+      let customFieldsData: ICustomField[] = [];
 
       let emails: string[] = [];
       let phones: string[] = [];
@@ -405,7 +430,7 @@ export const loadClass = () => {
           customerFields.integrationId = customerObj.integrationId;
 
           // merge custom fields data
-          customFieldsData = { ...customFieldsData, ...(customerObj.customFieldsData || {}) };
+          customFieldsData = [...customFieldsData, ...(customerObj.customFieldsData || [])];
 
           // Merging scopeBrandIds
           scopeBrandIds = [...scopeBrandIds, ...(customerObj.scopeBrandIds || [])];
@@ -419,7 +444,7 @@ export const loadClass = () => {
           emails = [...emails, ...(customerObj.emails || [])];
           phones = [...phones, ...(customerObj.phones || [])];
 
-          await Customers.findByIdAndUpdate(customerId, { $set: { status: STATUSES.DELETED } });
+          await Customers.findByIdAndUpdate(customerId, { $set: { status: 'deleted' } });
         }
       }
 
@@ -493,10 +518,37 @@ export const loadClass = () => {
       return customer;
     }
 
-    public static fixListFields(doc: any, customer?: ICustomerDocument) {
+    public static customerFieldNames() {
+      const names: string[] = [];
+
+      customerSchema.eachPath(name => {
+        names.push(name);
+
+        const path = customerSchema.paths[name];
+
+        if (path.schema) {
+          path.schema.eachPath(subName => {
+            names.push(`${name}.${subName}`);
+          });
+        }
+      });
+
+      return names;
+    }
+
+    public static fixListFields(doc: any, customData = {}, customer?: ICustomerDocument) {
       let emails: string[] = [];
       let phones: string[] = [];
       let deviceTokens: string[] = [];
+
+      // extract basic fields from customData
+      for (const name of this.customerFieldNames()) {
+        if (customData[name]) {
+          doc[name] = customData[name];
+
+          delete customData[name];
+        }
+      }
 
       if (customer) {
         emails = customer.emails || [];
@@ -535,17 +587,17 @@ export const loadClass = () => {
       doc.emails = emails;
       doc.phones = phones;
       doc.deviceTokens = deviceTokens;
-
-      return doc;
     }
 
     /*
      * Create a new messenger customer
      */
     public static async createMessengerCustomer({ doc, customData }: ICreateMessengerCustomerParams) {
+      this.fixListFields(doc, customData);
+
       return this.createCustomer({
-        ...this.fixListFields(doc),
-        trackedData: customData,
+        ...doc,
+        trackedData: Fields.generateTypedListFromMap(customData),
         lastSeenAt: new Date(),
         isOnline: true,
         sessionCount: 1,
@@ -562,13 +614,12 @@ export const loadClass = () => {
         throw new Error('Customer not found');
       }
 
-      if (customer.isUser) {
-        doc.isUser = true;
-      }
+      this.fixListFields(doc, customData, customer);
 
       const modifier = {
-        ...this.fixListFields(doc, customer),
-        trackedData: { ...(customer.trackedData || {}), ...(customData || {}) },
+        ...doc,
+        trackedData: Fields.generateTypedListFromMap(customData),
+        state: doc.isUser ? 'customer' : customer.state,
         modifiedAt: new Date(),
       };
 
@@ -596,7 +647,7 @@ export const loadClass = () => {
       // Preventing session count to increase on page every refresh
       // Close your web site tab and reopen it after 6 seconds then it will increase
       // session count by 1
-      if (customer.lastSeenAt && now.getTime() - customer.lastSeenAt > 6 * 1000) {
+      if (customer.lastSeenAt && now.getTime() - customer.lastSeenAt.getTime() > 6 * 1000) {
         // update session count
         query.$inc = { sessionCount: 1 };
       }
@@ -605,6 +656,20 @@ export const loadClass = () => {
       await Customers.findByIdAndUpdate(_id, query);
 
       // updated customer
+      return Customers.findOne({ _id });
+    }
+
+    /*
+     * Change state
+     */
+    public static async changeState(_id: string, value: string) {
+      await Customers.findByIdAndUpdate(
+        { _id },
+        {
+          $set: { state: value },
+        },
+      );
+
       return Customers.findOne({ _id });
     }
 

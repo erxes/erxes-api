@@ -2,9 +2,10 @@
 
 import os
 import subprocess
+
+import pymongo
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
-import pymongo
 
 load_dotenv()
 
@@ -13,7 +14,21 @@ ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL')
 
 client = Elasticsearch([ELASTICSEARCH_URL])
 
+nestedType = {
+    "type" : "nested",
+    "properties" : {
+        "field" : { "type" : "keyword"},
+        "value" : { "type" : "text" },
+        "stringValue" : { "type" : "text" },
+        "numberValue" : { "type" : "float" },
+        "dateValue" : { "type" : "date" }
+    }
+}
+
 customer_mapping = {
+    'state': {
+        'type': 'keyword',
+    },
     'primaryEmail': {
         'type': 'text',
         'analyzer': 'uax_url_email_analyzer',
@@ -51,6 +66,8 @@ customer_mapping = {
     'emailValidationStatus': {
         'type': 'keyword',
     },
+    "customFieldsData" : nestedType,
+    "trackedData" : nestedType,
 }
 
 company_mapping = {
@@ -85,6 +102,7 @@ company_mapping = {
     'businessType': {
         'type': 'keyword',
     },
+    "customFieldsData" : nestedType
 }
 
 event_mapping = {
@@ -97,6 +115,7 @@ event_mapping = {
     'customerId': {
         'type': 'keyword',
     },
+    "attributes" : nestedType
 }
 
 analysis = {

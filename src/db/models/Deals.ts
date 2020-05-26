@@ -1,14 +1,13 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
-import { IOrderInput } from './definitions/boards';
+import { fillSearchTextItem, watchItem } from './boardUtils';
+import { BOARD_STATUSES } from './definitions/constants';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
 
 export interface IDealModel extends Model<IDealDocument> {
   getDeal(_id: string): Promise<IDealDocument>;
   createDeal(doc: IDeal): Promise<IDealDocument>;
   updateDeal(_id: string, doc: IDeal): Promise<IDealDocument>;
-  updateOrder(stageId: string, orders: IOrderInput[]): Promise<IDealDocument[]>;
   watchDeal(_id: string, isAdd: boolean, userId: string): void;
 }
 
@@ -36,13 +35,19 @@ export const loadDealClass = () => {
         }
       }
 
-      const dealsCount = await Deals.find({
-        stageId: doc.stageId,
-      }).countDocuments();
+      const lastVisibleDeals = await Deals.find(
+        {
+          stageId: doc.stageId,
+          status: { $ne: BOARD_STATUSES.ARCHIVED },
+        },
+        { order: 1 },
+      )
+        .sort({ order: -1 })
+        .limit(1);
 
       const deal = await Deals.create({
         ...doc,
-        order: dealsCount,
+        order: ((lastVisibleDeals && lastVisibleDeals.length > 0 ? lastVisibleDeals[0].order : 0) || 0) + 1,
         createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
@@ -63,13 +68,6 @@ export const loadDealClass = () => {
       await Deals.updateOne({ _id }, { $set: doc, searchText });
 
       return Deals.findOne({ _id });
-    }
-
-    /*
-     * Update given deals orders
-     */
-    public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      return updateOrder(Deals, orders, stageId);
     }
 
     /**
