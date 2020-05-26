@@ -126,6 +126,7 @@ import {
   types as PipelineLabelTypes,
 } from './pipelineLabel';
 
+import { mutations as DashboardMutations, queries as DashboardQueries, types as DashboardTypes } from './dashboard';
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 import { mutations as golomtApiMutations } from './golomtApi';
@@ -173,6 +174,7 @@ export const types = `
   ${RobotTypes}
   ${PipelineLabelTypes}
   ${WidgetTypes}
+  ${DashboardTypes}
 `;
 
 export const queries = `
@@ -215,6 +217,7 @@ export const queries = `
     ${RobotQueries}
     ${PipelineLabelQueries}
     ${WidgetQueries}
+    ${DashboardQueries}
   }
 `;
 
@@ -256,6 +259,7 @@ export const mutations = `
     ${PipelineLabelMutations}
     ${WidgetMutations}
     ${golomtApiMutations}
+    ${DashboardMutations}
   }
 `;
 
