@@ -12,6 +12,7 @@ on:
       - '!email-verifier/**'
       - '!engages-email-sender/**'
       - '!logger/**'
+      - '!dashboard/**'
       - '!**.md'
     tags:
       - '*'
@@ -29,6 +30,7 @@ on:
       - '!email-verifier/**'
       - '!engages-email-sender/**'
       - '!logger/**'
+      - '!dashboard/**'
       - '!**.md'
 
 jobs:
