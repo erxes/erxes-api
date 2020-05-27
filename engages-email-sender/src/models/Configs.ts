@@ -61,9 +61,13 @@ export const loadClass = () => {
      * Update configs
      */
     public static async updateConfigs(configsMap) {
-      const codes = Object.keys(configsMap).filter(item => item);
+      const codes = Object.keys(configsMap);
 
       for (const code of codes) {
+        if (!code) {
+          continue;
+        }
+
         const value = configsMap[code];
         const doc = { code, value };
 
