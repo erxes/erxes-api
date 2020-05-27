@@ -1,0 +1,28 @@
+name: Mongo BI CI
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - '!dashboard/**'
+      - 'dashboard/mongosqld/**'
+      - '.github/workflows/mongosqld.yaml'
+
+jobs:
+  mongo-bi:
+    runs-on: ubuntu-18.04
+
+    # name: Node ${{ matrix.node-version }}
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Build docker image
+      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/apm' || github.ref == 'refs/heads/automations' || github.ref == 'refs/heads/actions-dashboard-api')
+      run: |
+        cd dashboard/mongosqld
+        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        docker build -t erxes/erxes-dashboard-mongosqld:2.13.4 -f Dockerfile .
+        docker push erxes/erxes-dashboard-mongosqld:2.13.4
