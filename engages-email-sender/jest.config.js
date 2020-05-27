@@ -15,7 +15,7 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   collectCoverage: true,
   coverageDirectory: 'src/__tests__/coverage/',
-  collectCoverageFrom: ['src/models/**', '!**/node_modules/**', '!**/vendor/**'],
+  collectCoverageFrom: ['src/**', '!**/node_modules/**', '!src/__tests__/**'],
   coverageThreshold: {
     global: {
       functions: 100,
