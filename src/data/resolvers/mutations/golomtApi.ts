@@ -1,25 +1,29 @@
 import { Brands, Configs, ConversationMessages, Conversations, Customers, Integrations, Users } from '../../../db/models';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
+import { debugBase } from '../../../debuggers';
 import { sendRequest } from '../../utils';
 import { publishMessage } from './conversations';
 
 const signinGolomtApi = async () => {
   const signinUrl = 'chatapi/auth/signin';
 
-  const response = await sendRequest({
-    url: `${process.env.GOLOMT_POST_URL}${signinUrl}`,
-    method: 'POST',
-    body: {
-      username: process.env.GOLOMT_API_USERNAME || '',
-      password: process.env.GOLOMT_API_PASSWORD || '',
-      key: process.env.GOLOMT_API_KEY || ''
-    }
-  });
+  try{
+    const response = await sendRequest({
+      url: `${process.env.GOLOMT_POST_URL}${signinUrl}`,
+      method: 'POST',
+      body: {
+        username: process.env.GOLOMT_API_USERNAME || '',
+        password: process.env.GOLOMT_API_PASSWORD || '',
+        key: process.env.GOLOMT_API_KEY || ''
+      }
+    });
 
-  await Configs.createOrUpdateConfig({ code: 'GOLOMT_ACCESS_TOKEN', value: response });
-
-  return response;
+    await Configs.createOrUpdateConfig({ code: 'GOLOMT_ACCESS_TOKEN', value: response });
+    return response;
+  } catch (e) {
+    return {status: 'error', message: e.message}
+  }
 }
 
 const checkAccessToken = async () => {
@@ -48,27 +52,37 @@ export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomer
 
   const tokenVal = await checkAccessToken();
 
-  const integration = await Integrations.findOne({_id: integrationId});
-  const brand = await Brands.findOne({_id: integration?.brandId});
+  if (tokenVal.status === 'error') {
+    debugBase(`dont singin to golomt, because: ${tokenVal.message}`);
+    return;
+  }
 
-  const body = {
-    "social_id": msg.conversationId,
-    "social_type": 5,
-    "social_brand": brand?.name || '',
-    "text": msg.content || '',
-    "user_name": await Customers.getCustomerName(customer),
-    "user_psid": customer._id,
-    "user_email": customer.primaryEmail || '',
-    "user_phone": customer.primaryPhone || '',
-    "file_url": msg.attachments || [],
-  };
+  try {
+    const integration = await Integrations.findOne({_id: integrationId});
+    const brand = await Brands.findOne({_id: integration?.brandId});
 
-  await sendRequest({
-    url: `${process.env.GOLOMT_POST_URL}${writeMsgUrl}`,
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${tokenVal.access_token}` },
-    body,
-  });
+    const body = {
+      "social_id": msg.conversationId,
+      "social_type": 5,
+      "social_brand": brand?.name || '',
+      "text": msg.content || '',
+      "user_name": await Customers.getCustomerName(customer),
+      "user_psid": customer._id,
+      "user_email": customer.primaryEmail || '',
+      "user_phone": customer.primaryPhone || '',
+      "file_url": msg.attachments || [],
+    };
+
+    await sendRequest({
+      url: `${process.env.GOLOMT_POST_URL}${writeMsgUrl}`,
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${tokenVal.access_token}` },
+      body,
+    });
+  } catch (e) {
+    debugBase(`dont send message to golomt, because: ${e.message}`);
+    return;
+  }
 };
 
 const makeRandomId = ({ length }: { length: number }): string => {
