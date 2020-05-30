@@ -7,4 +7,4 @@ RUN apt-get update \
  && rm mongodb-bi-linux-x86_64-ubuntu1804-v2.13.4.tgz \
  && rm -rf /var/lib/apt/lists/*
 COPY entrypoint.sh .
-ENTRYPOINT ["sh", "/mongobi/entrypoint.sh"]
+ENTRYPOINT ["/mongobi/entrypoint.sh"]
