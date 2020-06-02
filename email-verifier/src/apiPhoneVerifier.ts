@@ -30,8 +30,8 @@ const sendSingleMessage = async (
   return sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: [doc] });
 };
 
-const singleClearOut = async (phone: string, countryCode: string) => {
-  const body = { number: phone, country_code: countryCode };
+const singleClearOut = async (phone: string) => {
+  const body = { number: phone };
 
   try {
     const url = `${PHONE_VERIFIER_ENDPOINT}/validate`;
@@ -55,7 +55,7 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
   console.log(unverifiedPhones);
 };
 
-export const single = async (phone: string, countryCode?: string, isRest = false) => {
+export const single = async (phone: string, isRest = false) => {
   const phoneOnDb = await Phones.findOne({ phone });
 
   if (phoneOnDb) {
@@ -65,31 +65,21 @@ export const single = async (phone: string, countryCode?: string, isRest = false
         status: phoneOnDb.status,
         carrier: phoneOnDb.carrier,
         lineType: phoneOnDb.lineType,
-        internationalFormat: phoneOnDb.internationalFormat,
         localFormat: phoneOnDb.localFormat,
       },
       isRest,
     );
   }
 
-  if (!phone.includes('+') && !countryCode) {
-    try {
-      const location = await sendRequest({
-        url: 'https://geo.erxes.io',
-        method: 'GET',
-      });
-
-      countryCode = location.countryCode;
-    } catch (e) {
-      debugBase(`Error occured during trying to get location ${e.message}`);
-      throw e;
-    }
+  if (!phone.includes('+')) {
+    debugBase('Phone number must include country code for verification!');
+    throw new Error('Phone number must include country code for verification!');
   }
 
   let response: { status?: string; data?: any } = {};
 
   try {
-    response = await singleClearOut(phone, countryCode);
+    response = await singleClearOut(phone);
   } catch (_e) {
     return sendSingleMessage({ phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN }, isRest);
   }
