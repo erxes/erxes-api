@@ -480,6 +480,11 @@ export const CUSTOMER_SELECT_OPTIONS = {
     { label: 'Catch all', value: 'catchall' },
     { label: 'Bad syntax', value: 'badsyntax' },
   ],
+  PHONE_VALIDATION_STATUSES: [
+    { label: 'Valid', value: 'valid' },
+    { label: 'Invalid', value: 'invalid' },
+    { label: 'Unknown', value: 'unknown' },
+  ],
   LEAD_STATUS_TYPES: [
     { label: 'New', value: 'new' },
     { label: 'Contacted', value: 'attemptedToContact' },

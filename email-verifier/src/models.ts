@@ -21,6 +21,13 @@ export const EMAIL_VALIDATION_STATUSES = {
   ],
 };
 
+export const PHONE_VALIDATION_STATUSES = {
+  VALID: 'valid',
+  INVALID: 'invalid',
+  UNKNOWN: 'unknown',
+  ALL: ['valid', 'invalid', 'unknown'],
+};
+
 interface IEmail {
   email: string;
   status: string;
@@ -40,6 +47,31 @@ interface IEmailModel extends Model<IEmailDocument> {
   createEmail(doc: IEmail): Promise<IEmailDocument>;
 }
 
+interface IPhone {
+  phone: string;
+  status: string;
+  lineType?: string;
+  carrier?: string;
+  localFormat?: string;
+}
+
+interface IPhoneDocument extends IPhone, Document {
+  _id: string;
+}
+
+const phoneSchema = new Schema({
+  phone: { type: String, unique: true },
+  status: { type: String, enum: PHONE_VALIDATION_STATUSES.ALL },
+  lineType: { type: String, optional: true },
+  carrier: { type: String, optional: true },
+  localFormat: { type: String, optional: true },
+  created: { type: Date, default: Date.now() },
+});
+
+interface IPhoneModel extends Model<IPhoneDocument> {
+  createPhone(doc: IPhone): Promise<IPhoneDocument>;
+}
+
 export const loadClass = () => {
   class Email {
     public static createEmail(doc: IEmail) {
@@ -48,9 +80,20 @@ export const loadClass = () => {
   }
 
   emailSchema.loadClass(Email);
+
+  class Phone {
+    public static createPhone(doc: IPhone) {
+      return Phones.create(doc);
+    }
+  }
+
+  phoneSchema.loadClass(Phone);
 };
 
 loadClass();
 
 // tslint:disable-next-line
 export const Emails = model<IEmailDocument, IEmailModel>('emails', emailSchema);
+
+// tslint:disable-next-line:variable-name
+export const Phones = model<IPhoneDocument, IPhoneModel>('phones', phoneSchema);
