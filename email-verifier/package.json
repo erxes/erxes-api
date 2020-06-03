@@ -5,7 +5,8 @@
     "start": "node dist",
     "dev": "NODE_ENV=development DEBUG=erxes-email-verifier:* node_modules/.bin/ts-node-dev --experimental-worker --respawn src",
     "build": "tsc -p tsconfig.prod.json",
-    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts"
+    "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts",
+    "checkAndGetBulkPhones": "ts-node ./src/commands/checkAndGetBulkPhones.ts"
   },
   "dependencies": {
     "amqplib": "^0.5.5",
@@ -15,7 +16,9 @@
     "email-deep-validator": "^3.3.0",
     "express": "^4.16.4",
     "mongoose": "5.7.5",
+    "request-promise": "^4.2.5",
     "requestify": "^0.2.5",
+    "xlsx-populate": "^1.21.0",
     "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {

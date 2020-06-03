@@ -17,7 +17,7 @@ interface IRequestParams {
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: any };
-  form?: { [key: string]: string };
+  form?: { [key: string]: any };
 }
 
 /**
