@@ -1,6 +1,6 @@
 import { Document, Schema } from 'mongoose';
 import { IRule, ruleSchema } from './common';
-import { MESSENGER_KINDS, METHODS, SENT_AS_CHOICES } from './constants';
+import { ENGAGE_KINDS, MESSENGER_KINDS, METHODS, SENT_AS_CHOICES } from './constants';
 import { field, schemaWrapper } from './utils';
 
 export interface IScheduleDate {
@@ -47,6 +47,7 @@ export interface IEngageMessage {
   scheduleDate?: IScheduleDate;
   messenger?: IMessenger;
   lastRunAt?: Date;
+  smsContent?: string;
 
   totalCustomersCount?: number;
   validCustomersCount?: number;
@@ -103,7 +104,7 @@ export const messengerSchema = new Schema(
 export const engageMessageSchema = schemaWrapper(
   new Schema({
     _id: field({ pkey: true }),
-    kind: field({ type: String, label: 'Kind' }),
+    kind: field({ type: String, label: 'Kind', enum: ENGAGE_KINDS.ALL }),
     segmentId: field({ type: String, optional: true }), // TODO Remove
     segmentIds: field({
       type: [String],
@@ -137,5 +138,7 @@ export const engageMessageSchema = schemaWrapper(
 
     totalCustomersCount: field({ type: Number, optional: true }),
     validCustomersCount: field({ type: Number, optional: true }),
+
+    smsContent: field({ type: String, label: 'SMS content' }),
   }),
 );

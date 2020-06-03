@@ -22,6 +22,7 @@ export const types = `
 
     email: JSON
     messenger: JSON
+    smsContent: String
 
     scheduleDate: EngageScheduleDate
     segments: [Segment]
@@ -100,6 +101,7 @@ const commonParams = `
   email: EngageMessageEmail,
   scheduleDate: EngageScheduleDateInput,
   messenger: EngageMessageMessenger,
+  smsContent: String,
 `;
 
 export const mutations = `
