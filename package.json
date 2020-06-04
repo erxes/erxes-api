@@ -34,6 +34,7 @@
     "customCommand": "ts-node ./src/commands/customCommand.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
     "verifyCustomerEmails": "DEBUG=erxes-api:* ts-node ./src/commands/verifyCustomerEmails.ts",
+    "verifyCustomerPhones": "DEBUG=erxes-api:* ts-node ./src/commands/verifyCustomerPhones.ts",
     "runEsCommand": "ts-node ./src/commands/runEsCommand.ts",
     "migrate": "NODE_ENV=command migrate --migrations-dir='./dist/migrations' --store='./db-migrate-store.js' up",
     "release": "release-it"
@@ -83,6 +84,7 @@
     "oauth": "^0.9.15",
     "redis": "^2.8.0",
     "request": "^2.88.0",
+    "request-promise": "^4.2.5",
     "requestify": "^0.2.5",
     "sha256": "^0.2.0",
     "shelljs": "^0.8.3",
@@ -94,7 +96,7 @@
     "uuid": "^3.3.3",
     "uuid-by-string": "^3.0.2",
     "validator": "^9.0.0",
-    "xlsx-populate": "^1.20.1",
+    "xlsx-populate": "^1.21.0",
     "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {

@@ -130,6 +130,19 @@ export const initConsumer = async () => {
     }
   });
 
+  // listen for phone verifier notification ===========
+  await channel.assertQueue('phoneVerifierNotification');
+
+  channel.consume('phoneVerifierNotification', async msg => {
+    if (msg !== null) {
+      debugBase(`Received email verifier notification ${msg.content.toString()}`);
+
+      await receiveEmailVerifierNotification(JSON.parse(msg.content.toString()));
+
+      channel.ack(msg);
+    }
+  });
+
   // listen for engage notification ===========
   await channel.assertQueue('engagesNotification');
 

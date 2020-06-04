@@ -870,7 +870,7 @@ export const validatePhone = async (phone: string, wait?: boolean) => {
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
 
   if (!EMAIL_VERIFIER_ENDPOINT) {
-    return sendMessage('erxes-api:phone-verifier-notification', { action: 'phoneVerify', data });
+    return sendMessage('erxes-api:email-verifier-notification', { action: 'phoneVerify', data });
   }
 
   const requestOptions = {

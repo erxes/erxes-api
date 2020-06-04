@@ -1,15 +1,17 @@
-// import * as amqplib from 'amqplib';
+import * as amqplib from 'amqplib';
+import * as csv from 'csvtojson';
 import * as fs from 'fs';
-import * as request from 'request-promise';
-import * as xlsx from 'xlsx-populate';
+import * as http from 'http';
+import * as https from 'https';
 import { connect, disconnect } from '../connection';
 import { Phones } from '../models';
+import { sendRequest } from '../utils';
 
-console.log('Instruction: yarn checkAndGetBulkPhones taskId');
+console.log('Instruction: yarn checkAndGetBulkPhones list_id');
 
-// const { RABBITMQ_HOST = 'amqp://localhost', CLEAR_OUT_PHONE_API_KEY, PHONE_VERIFIER_ENDPOINT } = process.env;
-const { CLEAR_OUT_PHONE_API_KEY, PHONE_VERIFIER_ENDPOINT } = process.env;
-if (!CLEAR_OUT_PHONE_API_KEY || !PHONE_VERIFIER_ENDPOINT) {
+const { RABBITMQ_HOST = 'amqp://localhost', CLEAR_OUT_PHONE_API_KEY, CLEAR_OUT_PHONE_ENDPOINT } = process.env;
+
+if (!CLEAR_OUT_PHONE_API_KEY || !CLEAR_OUT_PHONE_ENDPOINT) {
   console.log('Please configure CLEAROUTPHONE API KEY & ENDPOINT');
 
   disconnect();
@@ -17,105 +19,139 @@ if (!CLEAR_OUT_PHONE_API_KEY || !PHONE_VERIFIER_ENDPOINT) {
 }
 
 connect().then(async () => {
-  // const getClearOutPhoneBulk = async (filePath:string) => {
-  //   const connection = await amqplib.connect(RABBITMQ_HOST);
-  //   console.log('connection:',connection.domain);
-  // //   const channel = await connection.createChannel();
+  const getClearOutPhoneBulk = async (listId: string) => {
+    const connection = await amqplib.connect(RABBITMQ_HOST);
 
-  // };
+    const channel = await connection.createChannel();
+
+    const url = `https://api.clearoutphone.io/v1/download/result`;
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+    };
+
+    try {
+      const response = await sendRequest({
+        url,
+        method: 'POST',
+        headers,
+        body: { list_id: listId },
+      });
+
+      try {
+        await downloadResult(response.data.url);
+        const jsonArray = await csv().fromFile('./verified.csv');
+        const phones: Array<{ phone: string; status: string }> = [];
+        for (const obj of jsonArray) {
+          const phone = obj['Phone Number'];
+          const status = obj['ClearoutPhone Validation Status'].toLowerCase();
+
+          phones.push({
+            phone,
+            status,
+          });
+
+          const found = await Phones.findOne({ phone });
+          if (!found) {
+            const doc = {
+              phone,
+              status,
+              created: new Date(),
+              lineType: obj['ClearoutPhone Line Type'],
+              carrier: obj['ClearoutPhone Carrier'],
+              internationalFormat: obj['ClearoutPhone International Format'],
+              localFormat: obj['ClearoutPhone Local Format'],
+            };
+            await Phones.create(doc);
+          }
+        }
+
+        const args = { action: 'phoneVerify', data: phones };
+
+        await channel.assertQueue('phoneVerifierNotification');
+        await channel.sendToQueue('phoneVerifierNotification', Buffer.from(JSON.stringify(args)));
+
+        console.log('Successfully get the following phones : \n', phones);
+      } catch (e) {
+        console.log('An error occured while downloading result ', e.message);
+      }
+    } catch (e) {
+      console.log('An error occured: ', e.message);
+    }
+
+    setTimeout(() => {
+      channel.connection.close();
+
+      disconnect();
+      process.exit();
+    }, 500);
+  };
+
+  const downloadResult = async (url: string) => {
+    const proto = !url.charAt(4).localeCompare('s') ? https : http;
+
+    return new Promise((resolve, reject) => {
+      const filePath = './verified.csv';
+      const file = fs.createWriteStream(filePath);
+      let fileInfo = null;
+
+      const request = proto.get(url, response => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+          return;
+        }
+
+        fileInfo = {
+          mime: response.headers['content-type'],
+          size: parseInt(response.headers['content-length'], 10),
+        };
+
+        response.pipe(file);
+      });
+
+      // The destination stream is ended by the time it's called
+      file.on('finish', () => resolve(fileInfo));
+
+      request.on('error', err => {
+        fs.unlink(filePath, () => reject(err));
+      });
+
+      file.on('error', err => {
+        fs.unlink(filePath, () => reject(err));
+      });
+
+      request.end();
+    });
+  };
 
   const check = async () => {
     const argv = process.argv;
 
     if (argv.length < 3) {
-      console.log('Please put taskId after yarn checkAndGetBulkEmails');
+      console.log('Please put listId after yarn checkAndGetBulkPhones');
 
       disconnect();
       process.exit();
     }
 
-    const unverifiedPhones: any[] = [];
-    const verifiedPhones: any[] = [];
+    const listId = argv[2];
+    const url = `${CLEAR_OUT_PHONE_ENDPOINT}/bulk/progress_status?list_id=${listId}`;
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+    };
+    const response = await sendRequest({
+      url,
+      method: 'GET',
+      headers,
+    });
 
-    try {
-      const workbook = await xlsx.fromFileAsync(
-        '/Users/soyombobat-erdene/backend/erxes_op/erxes-api/email-verifier/src/testContacts.xlsx',
-      );
-      const columnIndex = workbook.find('phone')[0]._columnNumber - 1;
-      const values = workbook
-        .sheet(0)
-        .usedRange()
-        .value();
-
-      // tslint:disable-next-line:no-shadowed-variable
-      for (const { index, value } of values.map((value: any, index: any) => ({ index, value }))) {
-        if (index !== 0) {
-          const phone = value[columnIndex];
-
-          const found = await Phones.findOne({ phone });
-
-          if (found) {
-            verifiedPhones.push({ phone: found.phone, status: found.status });
-          } else {
-            unverifiedPhones.push({ phone });
-          }
-        }
-      }
-
-      if (verifiedPhones.length > 0) {
-        console.log('Verified phones: ', verifiedPhones);
-      }
-
-      if (unverifiedPhones.length > 0) {
-        const workbookToWrite = await xlsx.fromBlankAsync();
-        workbookToWrite
-          .sheet(0)
-          .cell('A1')
-          .value('phone');
-        // tslint:disable-next-line:no-shadowed-variable
-        for (const { i, val } of unverifiedPhones.map((val: any, i: any) => ({ i, val }))) {
-          const cellNumber = 'A'.concat((i + 2).toString());
-          workbookToWrite
-            .sheet(0)
-            .cell(cellNumber)
-            .value(val.phone);
-        }
-        try {
-          await workbookToWrite.toFileAsync(
-            '/Users/soyombobat-erdene/backend/erxes_op/erxes-api/email-verifier/src/unverified.xlsx',
-          );
-          try {
-            const options = {
-              method: 'POST',
-              url: `${PHONE_VERIFIER_ENDPOINT}/bulk`,
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
-              },
-              formData: {
-                file: fs.createReadStream(
-                  '/Users/soyombobat-erdene/backend/erxes_op/erxes-api/email-verifier/src/unverified.xlsx',
-                ),
-              },
-            };
-            const rs = await request(options);
-            console.log('rs:', rs);
-          } catch (e) {
-            console.log(`Error occured during bulk phone validation ${e.message}`);
-          }
-        } catch (e) {
-          console.log('failed to create xlsl: ', e.message);
-        }
-      } else {
-        console.log('All phones verified');
-      }
-    } catch (e) {
-      console.log('file error:', e.message);
+    if (response.data.progress_status === 'completed') {
+      await getClearOutPhoneBulk(listId);
+    } else {
+      disconnect();
+      process.exit();
     }
-
-    const taskId = argv[2];
-
-    console.log(taskId);
   };
 
   await check();

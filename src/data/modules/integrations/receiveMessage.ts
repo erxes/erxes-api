@@ -157,6 +157,24 @@ export const receiveEmailVerifierNotification = async msg => {
     }
 
     await Customers.bulkWrite(bulkOps);
+  } else if (action === 'phoneVerify') {
+    const bulkOps: Array<{
+      updateOne: {
+        filter: { primaryPhone: string };
+        update: { phoneValidationStatus: string };
+      };
+    }> = [];
+
+    for (const { phone, status } of data) {
+      bulkOps.push({
+        updateOne: {
+          filter: { primaryPhone: phone },
+          update: { phoneValidationStatus: status },
+        },
+      });
+    }
+
+    await Customers.bulkWrite(bulkOps);
   }
 };
 
