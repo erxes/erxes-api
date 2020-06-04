@@ -205,19 +205,27 @@ const dealMutations = {
    */
   async dealsChange(
     _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
+    {
+      itemId,
+      destinationStageId,
+      destinationIndex,
+      destinationOrder,
+      sourceStageId,
+      sourceIndex,
+      updateOrderProccessId,
+    },
     { user }: IContext,
   ) {
-    const deal = await Deals.getDeal(_id);
+    const deal = await Deals.getDeal(itemId);
 
     const extendedDoc = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order,
+      destinationOrder,
     };
 
-    const updatedDeal = await Deals.updateDeal(_id, extendedDoc);
+    const updatedDeal = await Deals.updateDeal(itemId, extendedDoc);
 
     const { content, action } = await itemsChange(user._id, deal, MODULE_NAMES.DEAL, destinationStageId);
 
@@ -246,8 +254,17 @@ const dealMutations = {
 
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
+          userId: user._id,
           _id: stage.pipelineId,
-          type: BOARD_TYPES.DEAL,
+          itemId: deal._id,
+          action: 'orderUpdated',
+          data: {
+            destinationStageId,
+            destinationIndex,
+            oldStageId: sourceStageId,
+            oldIndex: sourceIndex,
+            updateOrderProccessId,
+          },
         },
       });
     }

@@ -50,6 +50,14 @@ export const types = `
     ${commonTypes}
   }
 
+  type PipelineChangeResponse {
+    userId: String
+    _id: String
+    itemId: String
+    action: String
+    data: JSON
+  }
+
   type ConvertTo {
     ticketUrl: String,
     dealUrl: String,
