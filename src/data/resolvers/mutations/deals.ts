@@ -249,7 +249,7 @@ const dealMutations = {
     );
 
     // if move between stages
-    if (destinationStageId !== deal.stageId) {
+    if (destinationStageId !== sourceStageId) {
       const stage = await Stages.getStage(deal.stageId);
 
       graphqlPubsub.publish('pipelinesChanged', {
