@@ -127,14 +127,6 @@ const growthHackMutations = {
       user,
     );
 
-    if (oldGrowthHack.stageId === updatedGrowthHack.stageId) {
-      graphqlPubsub.publish('growthHacksChanged', {
-        growthHacksChanged: updatedGrowthHack,
-      });
-
-      return updatedGrowthHack;
-    }
-
     // if growth hack moves between stages
     const { content, action } = await itemsChange(
       user._id,

@@ -132,14 +132,6 @@ const ticketMutations = {
       user,
     );
 
-    if (oldTicket.stageId === updatedTicket.stageId) {
-      graphqlPubsub.publish('ticketsChanged', {
-        ticketsChanged: updatedTicket,
-      });
-
-      return updatedTicket;
-    }
-
     // if ticket moves between stages
     const { content, action } = await itemsChange(user._id, oldTicket, MODULE_NAMES.TICKET, updatedTicket.stageId);
 

@@ -1,7 +1,7 @@
 import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
 import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
-import { BOARD_STATUSES, BOARD_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
@@ -158,14 +158,6 @@ const dealMutations = {
       user,
     );
 
-    if (oldDeal.stageId === updatedDeal.stageId) {
-      graphqlPubsub.publish('dealsChanged', {
-        dealsChanged: updatedDeal,
-      });
-
-      return updatedDeal;
-    }
-
     // if deal moves between stages
     const { content, action } = await itemsChange(user._id, oldDeal, MODULE_NAMES.DEAL, updatedDeal.stageId);
 
@@ -177,25 +169,6 @@ const dealMutations = {
       action,
       contentType: MODULE_NAMES.DEAL,
     });
-
-    const updatedStage = await Stages.getStage(updatedDeal.stageId);
-    const oldStage = await Stages.getStage(oldDeal.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: updatedStage.pipelineId,
-        type: BOARD_TYPES.DEAL,
-      },
-    });
-
-    if (updatedStage.pipelineId !== oldStage.pipelineId) {
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: oldStage.pipelineId,
-          type: BOARD_TYPES.DEAL,
-        },
-      });
-    }
 
     return updatedDeal;
   },
