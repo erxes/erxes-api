@@ -195,7 +195,7 @@ const dealMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      destinationOrder,
+      order: destinationOrder,
     };
 
     const updatedDeal = await Deals.updateDeal(itemId, extendedDoc);
