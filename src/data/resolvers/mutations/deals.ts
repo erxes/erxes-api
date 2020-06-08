@@ -221,26 +221,25 @@ const dealMutations = {
       user,
     );
 
-    // if move between stages
-    if (destinationStageId !== sourceStageId) {
-      const stage = await Stages.getStage(deal.stageId);
+    // order notification
+    const stage = await Stages.getStage(deal.stageId);
 
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          userId: user._id,
-          _id: stage.pipelineId,
-          itemId: deal._id,
-          action: 'orderUpdated',
-          data: {
-            destinationStageId,
-            destinationIndex,
-            oldStageId: sourceStageId,
-            oldIndex: sourceIndex,
-            updateOrderProccessId,
-          },
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        userId: user._id,
+        _id: stage.pipelineId,
+        itemId: deal._id,
+        action: 'orderUpdated',
+        data: {
+          item: deal,
+          destinationStageId,
+          destinationIndex,
+          oldStageId: sourceStageId,
+          oldIndex: sourceIndex,
+          updateOrderProccessId,
         },
-      });
-    }
+      },
+    });
 
     return deal;
   },
