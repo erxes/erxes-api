@@ -484,6 +484,8 @@ export const CUSTOMER_SELECT_OPTIONS = {
     { label: 'Valid', value: 'valid' },
     { label: 'Invalid', value: 'invalid' },
     { label: 'Unknown', value: 'unknown' },
+    { label: 'Can receive sms', value: 'receives_sms' },
+    { label: 'Unverifiable', value: 'unverifiable' },
   ],
   LEAD_STATUS_TYPES: [
     { label: 'New', value: 'new' },

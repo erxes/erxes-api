@@ -25,7 +25,9 @@ export const PHONE_VALIDATION_STATUSES = {
   VALID: 'valid',
   INVALID: 'invalid',
   UNKNOWN: 'unknown',
-  ALL: ['valid', 'invalid', 'unknown'],
+  RECEIVES_SMS: 'receives_sms',
+  UNVERIFIABLE: 'unverifiable',
+  ALL: ['valid', 'invalid', 'unknown', 'receives_sms', 'unverifiable'],
 };
 
 interface IEmail {
@@ -53,6 +55,7 @@ interface IPhone {
   lineType?: string;
   carrier?: string;
   localFormat?: string;
+  internationalFormat?: string;
 }
 
 interface IPhoneDocument extends IPhone, Document {
@@ -65,6 +68,7 @@ const phoneSchema = new Schema({
   lineType: { type: String, optional: true },
   carrier: { type: String, optional: true },
   localFormat: { type: String, optional: true },
+  internationalFormat: { type: String, optional: true },
   created: { type: Date, default: Date.now() },
 });
 

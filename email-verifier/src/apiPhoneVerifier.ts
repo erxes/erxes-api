@@ -1,8 +1,15 @@
+import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as request from 'request-promise';
+import * as xlsx from 'xlsx-populate';
 import { sendMessage } from './messageBroker';
 import { PHONE_VALIDATION_STATUSES, Phones } from './models';
-import { debugBase, sendRequest } from './utils';
+import { debugBase, getEnv, sendRequest } from './utils';
 
-const { CLEAR_OUT_PHONE_API_KEY, PHONE_VERIFIER_ENDPOINT } = process.env;
+dotenv.config();
+
+const CLEAR_OUT_PHONE_API_KEY = getEnv({ name: 'CLEAR_OUT_PHONE_API_KEY' });
+const CLEAR_OUT_PHONE_ENDPOINT = getEnv({ name: 'CLEAR_OUT_PHONE_ENDPOINT' });
 
 const sendSingleMessage = async (
   doc: {
@@ -17,8 +24,8 @@ const sendSingleMessage = async (
   create?: boolean,
 ) => {
   if (create) {
-    if (doc.internationalFormat) {
-      doc.phone = doc.internationalFormat;
+    if (doc.lineType === 'mobile') {
+      doc.status = PHONE_VALIDATION_STATUSES.RECEIVES_SMS;
     }
     await Phones.createPhone(doc);
   }
@@ -34,7 +41,7 @@ const singleClearOut = async (phone: string) => {
   const body = { number: phone };
 
   try {
-    const url = `${PHONE_VERIFIER_ENDPOINT}/validate`;
+    const url = `${CLEAR_OUT_PHONE_ENDPOINT}/validate`;
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
@@ -52,7 +59,46 @@ const singleClearOut = async (phone: string) => {
 };
 
 const bulkClearOut = async (unverifiedPhones: string[]) => {
-  console.log(unverifiedPhones);
+  const workbook = await xlsx.fromBlankAsync();
+  workbook
+    .sheet(0)
+    .cell('A1')
+    .value('phone');
+
+  // tslint:disable-next-line:no-shadowed-variable
+  for (const { i, val } of unverifiedPhones.map((val: any, i: any) => ({ i, val }))) {
+    const cellNumber = 'A'.concat((i + 2).toString());
+    workbook
+      .sheet(0)
+      .cell(cellNumber)
+      .value(val.phone);
+  }
+
+  try {
+    await workbook.toFileAsync('./unverified.xlsx');
+    try {
+      const options = {
+        method: 'POST',
+        url: `${CLEAR_OUT_PHONE_ENDPOINT}/bulk`,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+        },
+        formData: {
+          file: fs.createReadStream('./unverified.xlsx'),
+        },
+      };
+      const result = await request(options);
+
+      sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: result });
+    } catch (e) {
+      debugBase(`Error occured during bulk phone validation ${e.message}`);
+      sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
+    }
+  } catch (e) {
+    debugBase(`Failed to create xlsl ${e.message}`);
+    sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
+  }
 };
 
 export const single = async (phone: string, isRest = false) => {
@@ -99,8 +145,6 @@ export const single = async (phone: string, isRest = false) => {
       true,
     );
   }
-
-  // if status is not success
 
   return sendSingleMessage({ phone, status: PHONE_VALIDATION_STATUSES.INVALID }, isRest);
 };
