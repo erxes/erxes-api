@@ -17,7 +17,7 @@ interface IRequestParams {
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: any };
-  form?: { [key: string]: any };
+  form?: { [key: string]: string };
 }
 
 /**
@@ -38,7 +38,7 @@ export const sendRequest = async (
   try {
     const response = await requestify.request(url, {
       method,
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       form,
       body,
       params,
