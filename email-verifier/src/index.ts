@@ -33,10 +33,10 @@ app.post('/verify-single', async (req, res, next) => {
 app.post('/verify-singlePhone', async (req, res, next) => {
   debugRequest(debugBase, req);
 
-  const { phone, countryCode } = req.body;
+  const { phone } = req.body;
 
   try {
-    const result = await singlePhone(phone, countryCode, true);
+    const result = await singlePhone(phone, true);
 
     return res.json({ result });
   } catch (e) {
