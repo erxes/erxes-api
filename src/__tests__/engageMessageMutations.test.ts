@@ -99,7 +99,7 @@ describe('engage message mutation tests', () => {
     });
 
     _message = await engageMessageFactory({
-      kind: 'auto',
+      kind: MESSAGE_KINDS.AUTO,
       userId: _user._id,
       messenger: {
         content: 'content',
@@ -112,7 +112,7 @@ describe('engage message mutation tests', () => {
 
     _doc = {
       title: 'Message test',
-      kind: 'chat',
+      kind: MESSAGE_KINDS.AUTO,
       method: 'email',
       fromUserId: _user._id,
       isDraft: true,
@@ -138,7 +138,7 @@ describe('engage message mutation tests', () => {
         rules: [
           {
             _id: _message._id,
-            kind: 'manual',
+            kind: MESSAGE_KINDS.MANUAL,
             text: faker.random.word(),
             condition: faker.random.word(),
             value: faker.random.word(),
@@ -440,7 +440,7 @@ describe('engage message mutation tests', () => {
     try {
       await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', {
         ..._doc,
-        kind: 'manual',
+        kind: MESSAGE_KINDS.MANUAL,
         brandIds: ['_id'],
       });
     } catch (e) {
@@ -546,7 +546,7 @@ describe('engage message mutation tests', () => {
       }
     `;
 
-    _message = await engageMessageFactory({ kind: 'post' });
+    _message = await engageMessageFactory({ kind: MESSAGE_KINDS.AUTO });
 
     await graphqlRequest(mutation, 'engageMessageRemove', { _id: _message._id });
 
