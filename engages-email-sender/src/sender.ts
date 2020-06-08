@@ -1,12 +1,13 @@
 import * as dotenv from 'dotenv';
 import * as Random from 'meteor-random';
+import * as Telnyx from 'telnyx';
 import { debugEngages } from './debuggers';
 import { Logs, Stats } from './models';
 import { createTransporter, getConfigs, getEnv, replaceKeys } from './utils';
 
 dotenv.config();
 
-export const start = async data => {
+export const start = async (data: any) => {
   const { user, email, engageMessageId, customers } = data;
   const { content, subject, attachments } = email;
 
@@ -103,4 +104,40 @@ export const start = async data => {
   }
 
   return true;
+};
+
+export const sendSms = async (data: any) => {
+  const { customers, engageMessageId, smsContent } = data;
+  const configs = await getConfigs();
+  const { telnyxApiKey, telnyxPhone } = configs;
+
+  if (!(telnyxApiKey && telnyxPhone)) {
+    throw new Error('Telnyx API key & phone numbers are missing');
+  }
+
+  await Logs.createLog(engageMessageId, 'regular', `Preparing to send SMS to ${customers.length} customers`);
+
+  const telnyx = new Telnyx(telnyxApiKey);
+
+  for (const customer of customers) {
+    await new Promise(resolve => {
+      setTimeout(resolve, 1000);
+    });
+
+    await telnyx.messages.create(
+      {
+        from: telnyxPhone,
+        to: customer.phone,
+        text: smsContent,
+      },
+      async (err, res) => {
+        if (!err) {
+          await Logs.createLog(engageMessageId, 'success', `Sent sms to ${customer.phone}`);
+        }
+        if (!res) {
+          await Logs.createLog(engageMessageId, 'failure', `${err.message}`);
+        }
+      },
+    );
+  }
 };
