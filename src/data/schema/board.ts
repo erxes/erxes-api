@@ -51,9 +51,8 @@ export const types = `
   }
 
   type PipelineChangeResponse {
-    userId: String
     _id: String
-    itemId: String
+    proccessId: String
     action: String
     data: JSON
   }

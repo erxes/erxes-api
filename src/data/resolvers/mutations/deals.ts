@@ -27,7 +27,7 @@ const dealMutations = {
   /**
    * Creates a new deal
    */
-  async dealsAdd(_root, doc: IDeal, { user, docModifier }: IContext) {
+  async dealsAdd(_root, doc: IDeal & { proccessId: string }, { user, docModifier }: IContext) {
     doc.initialStageId = doc.stageId;
     doc.watchedUserIds = [user._id];
 
@@ -56,6 +56,23 @@ const dealMutations = {
       },
       user,
     );
+
+    const stage = await Stages.getStage(deal.stageId);
+    const index = await Deals.find({ stageId: stage._id }).countDocuments();
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId: doc.proccessId,
+        itemId: deal._id,
+        action: 'itemAdd',
+        data: {
+          item: deal,
+          destinationStageId: stage._id,
+          destinationIndex: index,
+        },
+      },
+    });
 
     return deal;
   },
@@ -178,15 +195,7 @@ const dealMutations = {
    */
   async dealsChange(
     _root,
-    {
-      itemId,
-      destinationStageId,
-      destinationIndex,
-      destinationOrder,
-      sourceStageId,
-      sourceIndex,
-      updateOrderProccessId,
-    },
+    { proccessId, itemId, destinationStageId, destinationIndex, destinationOrder, sourceStageId, sourceIndex },
     { user }: IContext,
   ) {
     const deal = await Deals.getDeal(itemId);
@@ -226,9 +235,8 @@ const dealMutations = {
 
     graphqlPubsub.publish('pipelinesChanged', {
       pipelinesChanged: {
-        userId: user._id,
         _id: stage.pipelineId,
-        itemId: deal._id,
+        proccessId,
         action: 'orderUpdated',
         data: {
           item: deal,
@@ -236,7 +244,6 @@ const dealMutations = {
           destinationIndex,
           oldStageId: sourceStageId,
           oldIndex: sourceIndex,
-          updateOrderProccessId,
         },
       },
     });

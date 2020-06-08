@@ -63,6 +63,7 @@ export const commonMutationParams = `
   priority: String,
   status: String,
   sourceConversationId: String,
+  proccessId: String
 `;
 
 export const copyParams = `companyIds: [String], customerIds: [String], labelIds: [String]`;
