@@ -1,6 +1,6 @@
 import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
-import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
+import { getCompanies, getCustomers, getNewOrder } from '../../../db/models/boardUtils';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { graphqlPubsub } from '../../../pubsub';
@@ -80,7 +80,7 @@ const dealMutations = {
   /**
    * Edits a deal
    */
-  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
+  async dealsEdit(_root, { _id, proccessId, ...doc }: IDealsEdit & { proccessId: string }, { user }: IContext) {
     const oldDeal = await Deals.getDeal(_id);
     let checkedAssignUserIds: { addedUserIds?: string[]; removedUserIds?: string[] } = {};
 
@@ -145,6 +145,21 @@ const dealMutations = {
         action: activityAction,
         userId: user._id,
       });
+
+      // order notification
+      const stage = await Stages.getStage(updatedDeal.stageId);
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+          proccessId,
+          action: 'itemRemove',
+          data: {
+            item: updatedDeal,
+            oldStageId: updatedDeal.stageId,
+          },
+        },
+      });
     }
 
     if (Object.keys(checkedAssignUserIds).length > 0) {
@@ -195,7 +210,7 @@ const dealMutations = {
    */
   async dealsChange(
     _root,
-    { proccessId, itemId, destinationStageId, destinationIndex, destinationOrder, sourceStageId, sourceIndex },
+    { proccessId, itemId, aboveItemId, destinationStageId, destinationIndex, sourceStageId, sourceIndex },
     { user }: IContext,
   ) {
     const deal = await Deals.getDeal(itemId);
@@ -204,7 +219,7 @@ const dealMutations = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order: destinationOrder,
+      order: await getNewOrder({ collection: Deals, stageId: destinationStageId, aboveItemId }),
     };
 
     const updatedDeal = await Deals.updateDeal(itemId, extendedDoc);
