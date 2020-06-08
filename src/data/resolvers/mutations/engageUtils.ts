@@ -15,6 +15,12 @@ import { sendMessage } from '../../../messageBroker';
 import { MESSAGE_KINDS } from '../../constants';
 import { fetchBySegments } from '../../modules/segments/queryBuilder';
 
+interface IEngageParams {
+  engageMessage: IEngageMessageDocument;
+  customers: ICustomerDocument[];
+  user: IUserDocument;
+}
+
 /**
  * Find customers
  */
@@ -92,78 +98,29 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
   await EngageMessages.setCustomersCount(engageMessage._id, 'totalCustomersCount', customers.length);
 
   if (engageMessage.method === METHODS.EMAIL) {
-    const engageMessageId = engageMessage._id;
+    await sendData({ engageMessage, customers, user }, 'sendEngage');
+  }
 
-    await sendQueueMessage({
-      action: 'writeLog',
-      data: {
-        engageMessageId,
-        msg: `Run at ${new Date()}`,
-      },
-    });
-
-    const customerInfos = customers.map(customer => ({
-      _id: customer._id,
-      name: Customers.getCustomerName(customer),
-      email: customer.primaryEmail,
-      emailValidationStatus: customer.emailValidationStatus,
-    }));
-
-    const data = {
-      email: engageMessage.email,
-      customers: customerInfos,
-      user: {
-        email: user.email,
-        name: user.details && user.details.fullName,
-        position: user.details && user.details.position,
-      },
-      engageMessageId,
-    };
-
-    if (engageMessage.kind === MESSAGE_KINDS.MANUAL && customerInfos.length === 0) {
-      await EngageMessages.deleteOne({ _id: engageMessage._id });
-      throw new Error('No customers found');
-    }
-
-    await sendQueueMessage({
-      action: 'writeLog',
-      data: {
-        engageMessageId,
-        msg: `Matched ${customerInfos.length} customers`,
-      },
-    });
-
-    await EngageMessages.setCustomersCount(engageMessage._id, 'validCustomersCount', customerInfos.length);
-
-    if (data.customers.length > 0) {
-      if (process.env.ENGAGE_ADMINS) {
-        data.customers = [...customerInfos, ...JSON.parse(process.env.ENGAGE_ADMINS)];
-      }
-
-      await sendQueueMessage({ action: 'sendEngage', data });
-    }
+  if (engageMessage.method === METHODS.SMS) {
+    await sendData({ engageMessage, customers, user }, 'sendEngageSms');
   }
 
   if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
-    await sendViaMessenger(engageMessage, customers, user);
+    await sendViaMessenger({ engageMessage, customers, user });
   }
 };
 
 /**
  * Send via messenger
  */
-const sendViaMessenger = async (
-  message: IEngageMessageDocument,
-  customers: ICustomerDocument[],
-  user: IUserDocument,
-) => {
-  const { fromUserId } = message;
+const sendViaMessenger = async ({ customers, engageMessage, user }: IEngageParams) => {
+  const { fromUserId, messenger, _id } = engageMessage;
 
-  if (!message.messenger) {
+  if (!messenger) {
     return;
   }
 
-  const { brandId, content } = message.messenger;
+  const { brandId, content } = messenger;
 
   // find integration
   const integration = await Integrations.findOne({
@@ -192,14 +149,69 @@ const sendViaMessenger = async (
     await ConversationMessages.createMessage({
       engageData: {
         engageKind: 'auto',
-        messageId: message._id,
+        messageId: _id,
         fromUserId,
-        ...message.messenger.toJSON(),
+        ...messenger.toJSON(),
       },
       conversationId: conversation._id,
       userId: fromUserId,
       customerId: customer._id,
       content: replacedContent,
     });
+  }
+};
+
+const sendData = async ({ engageMessage, customers, user }: IEngageParams, action: string) => {
+  const { _id, email, kind } = engageMessage;
+
+  await sendQueueMessage({
+    action: 'writeLog',
+    data: {
+      engageMessageId: _id,
+      msg: `Run at ${new Date()}`,
+    },
+  });
+
+  const customerInfo = customers.map(customer => ({
+    _id: customer._id,
+    name: Customers.getCustomerName(customer),
+    email: customer.primaryEmail,
+    emailValidationStatus: customer.emailValidationStatus,
+    phone: customer.primaryPhone,
+  }));
+
+  const data = {
+    email,
+    customers: customerInfo,
+    user: {
+      email: user.email,
+      name: user.details && user.details.fullName,
+      position: user.details && user.details.position,
+    },
+    engageMessageId: _id,
+    smsContent: engageMessage.smsContent,
+  };
+
+  if (kind === MESSAGE_KINDS.MANUAL && data.customers.length === 0) {
+    await EngageMessages.deleteOne({ _id });
+    throw new Error('No customers found');
+  }
+
+  await sendQueueMessage({
+    action: 'writeLog',
+    data: {
+      engageMessageId: _id,
+      msg: `Matched ${data.customers.length} customers`,
+    },
+  });
+
+  await EngageMessages.setCustomersCount(_id, 'validCustomersCount', customerInfo.length);
+
+  if (data.customers.length > 0) {
+    if (process.env.ENGAGE_ADMINS) {
+      data.customers = [...customerInfo, ...JSON.parse(process.env.ENGAGE_ADMINS)];
+    }
+
+    await sendQueueMessage({ action, data });
   }
 };
