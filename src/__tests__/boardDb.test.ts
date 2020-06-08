@@ -7,7 +7,8 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Boards, Forms, Pipelines, Stages } from '../db/models';
+import { Boards, Deals, Forms, Pipelines, Stages } from '../db/models';
+import { getNewOrder } from '../db/models/boardUtils';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IUserDocument } from '../db/models/definitions/users';
 
@@ -371,4 +372,16 @@ describe('Test board model', () => {
 
     expect(response.length).toBe(0);
   });
+
+  test('itemOrder test', async() => {
+    let prevItemId = '';
+    const newStage = await stageFactory();
+    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(100);
+
+    await dealFactory({stageId: newStage._id, order: 100});
+    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(99);
+
+    prevItemId = (await dealFactory({stageId: newStage._id, order: 99}))._id;
+    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(99.9);
+  })
 });
