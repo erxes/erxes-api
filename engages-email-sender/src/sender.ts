@@ -107,9 +107,11 @@ export const start = async (data: any) => {
 };
 
 export const sendSms = async (data: any) => {
-  const { customers, engageMessageId, smsContent } = data;
+  const { customers, engageMessageId, shortMessage } = data;
   const configs = await getConfigs();
-  const { telnyxApiKey, telnyxPhone } = configs;
+
+  const { telnyxApiKey, telnyxPhone, telnyxProfileId } = configs;
+  const { from, content } = shortMessage;
 
   if (!(telnyxApiKey && telnyxPhone)) {
     throw new Error('Telnyx API key & phone numbers are missing');
@@ -124,20 +126,26 @@ export const sendSms = async (data: any) => {
       setTimeout(resolve, 1000);
     });
 
-    await telnyx.messages.create(
-      {
-        from: telnyxPhone,
-        to: customer.phone,
-        text: smsContent,
-      },
-      async (err, res) => {
-        if (!err) {
-          await Logs.createLog(engageMessageId, 'success', `Sent sms to ${customer.phone}`);
-        }
-        if (!res) {
-          await Logs.createLog(engageMessageId, 'failure', `${err.message}`);
-        }
-      },
-    );
+    const msg = {
+      from: telnyxPhone,
+      to: customer.phone,
+      text: content,
+      messaging_profile_id: '',
+    };
+
+    // telnyx sets from text properly when making international sms
+    if (telnyxProfileId) {
+      msg.messaging_profile_id = telnyxProfileId;
+      msg.from = from;
+    }
+
+    await telnyx.messages.create(msg, async (err, res) => {
+      if (!err) {
+        await Logs.createLog(engageMessageId, 'success', `Sent sms to ${customer.phone}`);
+      }
+      if (!res) {
+        await Logs.createLog(engageMessageId, 'failure', `${err.message}`);
+      }
+    });
   }
 };
