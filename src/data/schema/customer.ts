@@ -52,7 +52,7 @@ export const types = `
     doNotDisturb: String
     code: String
     emailValidationStatus: String
-    phoneValidationStatis: String
+    phoneValidationStatus: String
     
     isOnline: Boolean
     lastSeenAt: Date

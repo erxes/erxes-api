@@ -49,7 +49,7 @@ export interface ICustomer {
   description?: string;
   doNotDisturb?: string;
   emailValidationStatus?: string;
-  phoneValidationStatis?: string;
+  phoneValidationStatus?: string;
   links?: ILink;
   relatedIntegrationIds?: string[];
   integrationId?: string;

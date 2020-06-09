@@ -239,7 +239,7 @@ export const loadClass = () => {
         validateEmail(doc.primaryEmail);
       }
 
-      if (doc.primaryPhone && !doc.phoneValidationStatis) {
+      if (doc.primaryPhone && !doc.phoneValidationStatus) {
         validatePhone(doc.primaryPhone);
       }
 
@@ -281,7 +281,7 @@ export const loadClass = () => {
         const oldCustomer = await Customers.getCustomer(_id);
 
         if (doc.primaryPhone !== oldCustomer.primaryPhone) {
-          doc.phoneValidationStatis = 'unknown';
+          doc.phoneValidationStatus = 'unknown';
 
           validatePhone(doc.primaryPhone);
         }

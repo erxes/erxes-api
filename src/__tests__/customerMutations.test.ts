@@ -12,8 +12,10 @@ const args = {
   firstName: faker.name.findName(),
   lastName: faker.name.findName(),
   primaryEmail: faker.internet.email(),
+  emailValidationStatus: 'valid',
   emails: [faker.internet.email()],
   primaryPhone: faker.phone.phoneNumber(),
+  phoneValidationStatus: 'valid',
   phones: [faker.internet.email()],
   ownerId: faker.random.word(),
   position: faker.random.word(),
@@ -36,8 +38,10 @@ const checkCustomer = src => {
   expect(src.firstName).toBe(args.firstName);
   expect(src.lastName).toBe(args.lastName);
   expect(src.primaryEmail).toBe(args.primaryEmail);
+  expect(src.emailValidationStatus).toBe(args.emailValidationStatus);
   expect(src.emails).toEqual(expect.arrayContaining(args.emails));
   expect(src.primaryPhone).toBe(args.primaryPhone);
+  expect(src.phoneValidationStatus).toBe(args.phoneValidationStatus);
   expect(src.phones).toEqual(expect.arrayContaining(args.phones));
   expect(src.ownerId).toBe(args.ownerId);
   expect(src.position).toBe(args.position);
@@ -59,8 +63,10 @@ describe('Customers mutations', () => {
     $firstName: String
     $lastName: String
     $primaryEmail: String
+    $emailValidationStatus: String
     $emails: [String]
     $primaryPhone: String
+    $phoneValidationStatus: String
     $phones: [String]
     $ownerId: String
     $position: String
@@ -77,8 +83,10 @@ describe('Customers mutations', () => {
     firstName: $firstName
     lastName: $lastName
     primaryEmail: $primaryEmail
+    emailValidationStatus: $emailValidationStatus
     emails: $emails
     primaryPhone: $primaryPhone
+    phoneValidationStatus: $phoneValidationStatus
     phones: $phones
     ownerId: $ownerId
     position: $position
@@ -115,8 +123,10 @@ describe('Customers mutations', () => {
           firstName
           lastName
           primaryEmail
+          emailValidationStatus
           emails
           primaryPhone
+          phoneValidationStatus
           phones
           ownerId
           position
@@ -152,8 +162,10 @@ describe('Customers mutations', () => {
           firstName
           lastName
           primaryEmail
+          emailValidationStatus
           emails
           primaryPhone
+          phoneValidationStatus
           phones
           ownerId
           position
