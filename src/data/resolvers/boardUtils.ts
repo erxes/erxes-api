@@ -9,7 +9,7 @@ import {
   Pipelines,
   Stages,
 } from '../../db/models';
-import { getCollection } from '../../db/models/boardUtils';
+import { getCollection, getNewOrder } from '../../db/models/boardUtils';
 import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
@@ -385,6 +385,7 @@ export const prepareBoardItemDoc = async (_id: string, type: string, userId: str
     description: item.description,
     priority: item.priority,
     labelIds: item.labelIds,
+    order: await getNewOrder({ collection, stageId: item.stageId, aboveItemId: item._id }),
 
     attachments: (item.attachments || []).map(a => ({
       url: a.url,

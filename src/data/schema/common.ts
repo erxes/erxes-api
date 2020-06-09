@@ -52,7 +52,8 @@ export const commonTypes = `
 `;
 
 export const commonMutationParams = `
-  proccessId: String
+  proccessId: String,
+  aboveItemId: String,
   stageId: String,
   assignedUserIds: [String],
   attachments: [AttachmentInput],

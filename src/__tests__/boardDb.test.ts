@@ -374,14 +374,14 @@ describe('Test board model', () => {
   });
 
   test('itemOrder test', async() => {
-    let prevItemId = '';
+    let aboveItemId = '';
     const newStage = await stageFactory();
-    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(100);
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBe(100);
 
     await dealFactory({stageId: newStage._id, order: 100});
-    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(99);
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBe(99);
 
-    prevItemId = (await dealFactory({stageId: newStage._id, order: 99}))._id;
-    expect(await getNewOrder({ prevItemId, stageId: newStage._id, collection: Deals })).toBe(99.9);
+    aboveItemId = (await dealFactory({stageId: newStage._id, order: 99}))._id;
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBe(99.9);
   })
 });

@@ -27,7 +27,7 @@ const dealMutations = {
   /**
    * Creates a new deal
    */
-  async dealsAdd(_root, doc: IDeal & { proccessId: string }, { user, docModifier }: IContext) {
+  async dealsAdd(_root, doc: IDeal & { proccessId: string, aboveItemId: string }, { user, docModifier }: IContext) {
     doc.initialStageId = doc.stageId;
     doc.watchedUserIds = [user._id];
 
@@ -35,7 +35,9 @@ const dealMutations = {
       ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
+      order: await getNewOrder({ collection: Deals, stageId: doc.stageId, aboveItemId: doc.aboveItemId }),
     };
+    console.log(extendedDoc)
 
     const deal = await Deals.createDeal(extendedDoc);
 
@@ -58,13 +60,12 @@ const dealMutations = {
     );
 
     const stage = await Stages.getStage(deal.stageId);
-    const index = await Deals.find({ stageId: stage._id }).countDocuments();
+    const index = await Deals.find({ stageId: stage._id, status: { $ne: BOARD_STATUSES.ARCHIVED } }).countDocuments();
 
     graphqlPubsub.publish('pipelinesChanged', {
       pipelinesChanged: {
         _id: stage.pipelineId,
         proccessId: doc.proccessId,
-        itemId: deal._id,
         action: 'itemAdd',
         data: {
           item: deal,
@@ -299,7 +300,7 @@ const dealMutations = {
     return Deals.watchDeal(_id, isAdd, user._id);
   },
 
-  async dealsCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+  async dealsCopy(_root, { _id, proccessId }: { _id: string, proccessId: string }, { user }: IContext) {
     const deal = await Deals.getDeal(_id);
 
     const doc = await prepareBoardItemDoc(_id, 'deal', user._id);
@@ -324,6 +325,24 @@ const dealMutations = {
       contentTypeId: deal._id,
       targetContentId: clone._id,
       user,
+    });
+
+    const stage = await Stages.getStage(clone.stageId);
+    const index = await Deals.find({
+      stageId: stage._id, order: { $lt: clone.order }, status: { $ne: BOARD_STATUSES.ARCHIVED }
+    }).countDocuments();
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemAdd',
+        data: {
+          item: clone,
+          destinationStageId: stage._id,
+          destinationIndex: index,
+        },
+      },
     });
 
     return clone;
