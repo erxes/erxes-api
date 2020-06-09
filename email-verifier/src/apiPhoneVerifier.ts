@@ -155,7 +155,7 @@ export const validateBulkPhones = async (phones: string[]) => {
 
   const tmp = await verifiedPhones.map(verified => verified.phone);
 
-  const unverifiedPhones = await phones.filter(phone => !tmp.includes(phone));
+  const unverifiedPhones = phones.filter(phone => !tmp.includes(phone));
 
   if (verifiedPhones.length > 0) {
     sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: verifiedPhones });
