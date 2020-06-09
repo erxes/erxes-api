@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { filterXSS } from 'xss';
 import { single } from './api';
-import { single as singlePhone } from './apiPhoneVerifier';
+import { validateSinglePhone } from './apiPhoneVerifier';
 import { connect } from './connection';
 import { initConsumer } from './messageBroker';
 import { debugBase, debugRequest } from './utils';
@@ -36,7 +36,7 @@ app.post('/verify-singlePhone', async (req, res, next) => {
   const { phone } = req.body;
 
   try {
-    const result = await singlePhone(phone, true);
+    const result = await validateSinglePhone(phone, true);
 
     return res.json({ result });
   } catch (e) {
