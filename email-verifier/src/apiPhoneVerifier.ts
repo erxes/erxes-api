@@ -65,8 +65,7 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
     .cell('A1')
     .value('phone');
 
-  // tslint:disable-next-line:no-shadowed-variable
-  for (const { i, val } of unverifiedPhones.map((val: any, i: any) => ({ i, val }))) {
+  for (const { i, val } of unverifiedPhones.map(() => ({ i, val }))) {
     const cellNumber = 'A'.concat((i + 2).toString());
     workbook
       .sheet(0)
@@ -101,7 +100,7 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
   }
 };
 
-export const single = async (phone: string, isRest = false) => {
+export const validateSinglePhone = async (phone: string, isRest = false) => {
   const phoneOnDb = await Phones.findOne({ phone });
 
   if (phoneOnDb) {
@@ -149,19 +148,14 @@ export const single = async (phone: string, isRest = false) => {
   return sendSingleMessage({ phone, status: PHONE_VALIDATION_STATUSES.INVALID }, isRest);
 };
 
-export const bulk = async (phones: string[]) => {
-  const unverifiedPhones: any[] = [];
-  const verifiedPhones: any[] = [];
+export const validateBulkPhones = async (phones: string[]) => {
+  const phonesOnDb = await Phones.find({ phone: { $in: phones } });
 
-  for (const phone of phones) {
-    const found = await Phones.findOne({ phone });
+  const verifiedPhones = await phonesOnDb.map(found => ({ phone: found.phone, status: found.status }));
 
-    if (found) {
-      verifiedPhones.push({ phone: found.phone, status: found.status });
-    } else {
-      unverifiedPhones.push({ phone });
-    }
-  }
+  const tmp = await verifiedPhones.map(verified => verified.phone);
+
+  const unverifiedPhones = await phones.filter(phone => !tmp.includes(phone));
 
   if (verifiedPhones.length > 0) {
     sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: verifiedPhones });
