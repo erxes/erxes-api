@@ -30,6 +30,11 @@ export interface IMessenger {
 
 interface IMessengerDocument extends IMessenger, Document {}
 
+interface IShortMessage {
+  from: string;
+  content: string;
+}
+
 export interface IEngageMessage {
   kind?: string;
   segmentIds?: string[];
@@ -47,7 +52,7 @@ export interface IEngageMessage {
   scheduleDate?: IScheduleDate;
   messenger?: IMessenger;
   lastRunAt?: Date;
-  smsContent?: string;
+  shortMessage?: IShortMessage;
 
   totalCustomersCount?: number;
   validCustomersCount?: number;
@@ -101,6 +106,11 @@ export const messengerSchema = new Schema(
   { _id: false },
 );
 
+export const smsSchema = new Schema({
+  from: field({ type: String, label: 'From text' }),
+  content: field({ type: String, label: 'SMS content' }),
+});
+
 export const engageMessageSchema = schemaWrapper(
   new Schema({
     _id: field({ pkey: true }),
@@ -139,6 +149,6 @@ export const engageMessageSchema = schemaWrapper(
     totalCustomersCount: field({ type: Number, optional: true }),
     validCustomersCount: field({ type: Number, optional: true }),
 
-    smsContent: field({ type: String, label: 'SMS content' }),
+    shortMessage: field({ type: smsSchema, label: 'Short message' }),
   }),
 );

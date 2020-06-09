@@ -162,7 +162,7 @@ const sendViaMessenger = async ({ customers, engageMessage, user }: IEngageParam
 };
 
 const sendData = async ({ engageMessage, customers, user }: IEngageParams, action: string) => {
-  const { _id, email, kind } = engageMessage;
+  const { _id, email, kind, shortMessage } = engageMessage;
 
   await sendQueueMessage({
     action: 'writeLog',
@@ -189,7 +189,7 @@ const sendData = async ({ engageMessage, customers, user }: IEngageParams, actio
       position: user.details && user.details.position,
     },
     engageMessageId: _id,
-    smsContent: engageMessage.smsContent,
+    shortMessage,
   };
 
   if (kind === MESSAGE_KINDS.MANUAL && data.customers.length === 0) {
