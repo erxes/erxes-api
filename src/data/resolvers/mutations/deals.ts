@@ -69,7 +69,7 @@ const dealMutations = {
         data: {
           item: deal,
           destinationStageId: stage._id,
-          destinationIndex: index,
+          destinationIndex: index - 1,
         },
       },
     });
