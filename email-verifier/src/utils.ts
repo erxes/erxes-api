@@ -23,10 +23,7 @@ interface IRequestParams {
 /**
  * Sends post request to specific url
  */
-export const sendRequest = async (
-  { url, method, form, body, params, headers }: IRequestParams,
-  errorMessage?: string,
-) => {
+export const sendRequest = async ({ url, method, form, body, params }: IRequestParams, errorMessage?: string) => {
   debugBase(`
     Sending request to
     url: ${url}
