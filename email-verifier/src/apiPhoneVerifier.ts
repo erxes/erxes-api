@@ -37,20 +37,16 @@ const sendSingleMessage = async (
   return sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: [doc] });
 };
 
-const singleClearOut = async (phone: string) => {
-  const body = { number: phone };
-
+const singleClearOut = async (phone: string): Promise<any> => {
   try {
-    const url = `${CLEAR_OUT_PHONE_ENDPOINT}/validate`;
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
-    };
-    return await sendRequest({
-      url,
+    return sendRequest({
+      url: `${CLEAR_OUT_PHONE_ENDPOINT}/validate`,
       method: 'POST',
-      headers,
-      body,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+      },
+      body: { phone },
     });
   } catch (e) {
     debugBase(`Error occured during single phone validation ${e.message}`);
@@ -60,6 +56,7 @@ const singleClearOut = async (phone: string) => {
 
 const bulkClearOut = async (unverifiedPhones: string[]) => {
   const workbook = await xlsx.fromBlankAsync();
+
   workbook
     .sheet(0)
     .cell('A1')
@@ -67,6 +64,7 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
 
   for (const { i, val } of unverifiedPhones.map(() => ({ i, val }))) {
     const cellNumber = 'A'.concat((i + 2).toString());
+
     workbook
       .sheet(0)
       .cell(cellNumber)
@@ -75,8 +73,9 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
 
   try {
     await workbook.toFileAsync('./unverified.xlsx');
+
     try {
-      const options = {
+      const result = await request({
         method: 'POST',
         url: `${CLEAR_OUT_PHONE_ENDPOINT}/bulk`,
         headers: {
@@ -86,22 +85,23 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
         formData: {
           file: fs.createReadStream('./unverified.xlsx'),
         },
-      };
-      const result = await request(options);
+      });
 
-      sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: result });
+      return sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: result });
     } catch (e) {
       debugBase(`Error occured during bulk phone validation ${e.message}`);
       sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
+      throw e;
     }
   } catch (e) {
     debugBase(`Failed to create xlsl ${e.message}`);
     sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
+    throw e;
   }
 };
 
 export const validateSinglePhone = async (phone: string, isRest = false) => {
-  const phoneOnDb = await Phones.findOne({ phone });
+  const phoneOnDb = await Phones.findOne({ phone }).lean();
 
   if (phoneOnDb) {
     return sendSingleMessage(
@@ -131,6 +131,7 @@ export const validateSinglePhone = async (phone: string, isRest = false) => {
 
   if (response.status === 'success') {
     const data = response.data;
+
     return sendSingleMessage(
       {
         phone,
@@ -151,22 +152,25 @@ export const validateSinglePhone = async (phone: string, isRest = false) => {
 export const validateBulkPhones = async (phones: string[]) => {
   const phonesOnDb = await Phones.find({ phone: { $in: phones } });
 
-  const verifiedPhones = await phonesOnDb.map(found => ({ phone: found.phone, status: found.status }));
+  const phonesMap: Array<{ phone: string; status: string }> = phonesOnDb.map(({ phone, status }) => ({
+    phone,
+    status,
+  }));
 
-  const tmp = await verifiedPhones.map(verified => verified.phone);
+  const verifiedPhones = phonesMap.map(verified => verified.phone);
 
-  const unverifiedPhones = await phones.filter(phone => !tmp.includes(phone));
+  const unverifiedPhones: string[] = await phones.filter(phone => !verifiedPhones.includes(phone));
 
   if (verifiedPhones.length > 0) {
-    sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: verifiedPhones });
+    sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: phonesMap });
   }
 
   if (unverifiedPhones.length > 0) {
-    await bulkClearOut(unverifiedPhones);
-  } else {
-    sendMessage('phoneVerifierBulkNotification', {
-      action: 'bulk',
-      data: 'There are no phones to verify on the phone verification system',
-    });
+    return bulkClearOut(unverifiedPhones);
   }
+
+  return sendMessage('phoneVerifierBulkNotification', {
+    action: 'bulk',
+    data: 'There are no phones to verify on the phone verification system',
+  });
 };
