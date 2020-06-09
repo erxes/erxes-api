@@ -115,6 +115,18 @@ export const addToArray = (setKey: string, setMember: string) => {
   });
 };
 
+export const getArray = (key: string) => {
+  return new Promise((resolve, reject) => {
+    client.smembers(key, (error, reply) => {
+      if (error) {
+        return reject(error);
+      }
+
+      resolve(reply);
+    });
+  });
+};
+
 /*
  * Remove a value from a set or do nothing if it is not present
  */

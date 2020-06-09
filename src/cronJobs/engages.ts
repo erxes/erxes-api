@@ -2,6 +2,7 @@ import * as schedule from 'node-schedule';
 import { send } from '../data/resolvers/mutations/engageUtils';
 import { EngageMessages } from '../db/models';
 import { debugCrons } from '../debuggers';
+import { emitter, generateJobId, shouldKillProcess, storeJobs } from '../process';
 
 const findMessages = (selector = {}) => {
   return EngageMessages.find({
@@ -11,23 +12,44 @@ const findMessages = (selector = {}) => {
   });
 };
 
+const waitForMe = minute => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, minute * 10 * 1000);
+  });
+};
+
 const runJobs = async messages => {
   for (const message of messages) {
     await send(message);
   }
+
+  await waitForMe(7);
 };
 
 // every minute at 1sec
 schedule.scheduleJob('1 * * * * *', async () => {
+  if (shouldKillProcess) {
+    debugCrons('Kill process signal received storing jobs...');
+    return storeJobs(new Date());
+  }
+
+  const id = generateJobId();
+
+  emitter.emit('start', { id, name: '10:10', status: 'pending' });
+
+  debugCrons('Checking every hour jobs ....');
+
   const messages = await findMessages({ 'scheduleDate.type': 'minute' });
 
   await runJobs(messages);
+
+  emitter.emit('end', { id, status: 'done' });
 });
 
 // every hour at 10min:10sec
 schedule.scheduleJob('10 10 * * * *', async () => {
-  debugCrons('Checking every hour jobs ....');
-
   const messages = await findMessages({ 'scheduleDate.type': 'hour' });
 
   debugCrons(`Found every hour  messages ${messages.length}`);

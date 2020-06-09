@@ -1,9 +1,11 @@
 import * as dotenv from 'dotenv';
 import * as express from 'express';
+import * as http from 'http';
 import { connect } from '../db/connection';
 import { debugCrons } from '../debuggers';
 
 import { initRabbitMQ } from '../messageBroker';
+import { checkStatusAndShutdown, killProcess, resumeJobs } from '../process';
 import { initRedis } from '../redisClient';
 import './activityLogs';
 import './conversations';
@@ -24,12 +26,27 @@ app.get('/status', async (_req, res) => {
 
 const { PORT_CRONS = 3600 } = process.env;
 
-app.listen(PORT_CRONS, () => {
+const server = http.createServer(app);
+
+server.listen(PORT_CRONS, () => {
   // connect to mongo database
   connect().then(async () => {
     initRabbitMQ();
     initRedis();
+
+    resumeJobs();
+  });
+  debugCrons(`Cron Server is now running on ${PORT_CRONS}`);
+});
+
+process.on('SIGINT', () => {
+  debugCrons('Kill signal received');
+
+  killProcess(true);
+
+  server.close(() => {
+    debugCrons('Server shutdown...');
   });
 
-  debugCrons(`Cron Server is now running on ${PORT_CRONS}`);
+  setInterval(checkStatusAndShutdown, 1000);
 });
