@@ -275,10 +275,6 @@ export const subscriptions = `
     onboardingChanged(userId: String!): OnboardingNotification
     
     pipelinesChanged(_id: String!): PipelineChangeResponse
-    dealsChanged(_id: String!): Deal
-    ticketsChanged(_id: String!): Ticket
-    tasksChanged(_id: String!): Task
-    growthHacksChanged(_id: String!): GrowthHack
     
     checklistsChanged(contentType: String!, contentTypeId: String!): Checklist
     checklistDetailChanged(_id: String!): Checklist

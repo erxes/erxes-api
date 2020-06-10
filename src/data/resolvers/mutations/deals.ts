@@ -135,6 +135,8 @@ const dealMutations = {
       contentType: MODULE_NAMES.DEAL,
     };
 
+    const stage = await Stages.getStage(updatedDeal.stageId);
+
     if (doc.status && oldDeal.status && oldDeal.status !== doc.status) {
       const activityAction = doc.status === 'active' ? 'activated' : 'archived';
 
@@ -146,8 +148,6 @@ const dealMutations = {
       });
 
       // order notification
-      const stage = await Stages.getStage(updatedDeal.stageId);
-
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
           _id: stage.pipelineId,
@@ -199,6 +199,17 @@ const dealMutations = {
       content,
       action,
       contentType: MODULE_NAMES.DEAL,
+    });
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemUpdate',
+        data: {
+          item: updatedDeal,
+        },
+      },
     });
 
     return updatedDeal;
