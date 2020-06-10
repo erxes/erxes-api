@@ -71,7 +71,7 @@ export const queries = `
 export const mutations = `
   dealsAdd(name: String!, ${copyParams}, ${dealMutationParams}, ${commonMutationParams}): Deal
   dealsEdit(_id: String!, name: String, ${dealMutationParams}, ${commonMutationParams}): Deal
-  dealsChange(itemId: String!, aboveItemId: String, destinationStageId: String!, destinationIndex: Float, sourceStageId: String, sourceIndex: Float, proccessId: String): Deal
+  dealsChange(itemId: String!, aboveItemId: String, destinationStageId: String!, sourceStageId: String, proccessId: String): Deal
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal
   dealsCopy(_id: String!, proccessId: String): Deal
