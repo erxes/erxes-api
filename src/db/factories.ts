@@ -504,6 +504,7 @@ interface ICustomerFactoryInput {
   visitorContactInfo?: any;
   deviceTokens?: string[];
   emailValidationStatus?: string;
+  phoneValidationStatus?: string;
   mergedIds?: string[];
   relatedIntegrationIds?: string[];
 }
@@ -532,6 +533,7 @@ export const customerFactory = async (params: ICustomerFactoryInput = {}, useMod
     tagIds: params.tagIds || [Random.id()],
     ownerId: params.ownerId || Random.id(),
     emailValidationStatus: params.emailValidationStatus || 'unknown',
+    phoneValidationStatus: params.phoneValidationStatus || 'unknown',
     profileScore: params.profileScore || 0,
     code: await getUniqueValue(Customers, 'code', params.code),
     visitorContactInfo: params.visitorContactInfo,
