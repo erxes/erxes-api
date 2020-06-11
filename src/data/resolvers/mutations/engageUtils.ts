@@ -72,7 +72,10 @@ export const findCustomers = async ({
     customerQuery = { _id: { $in: customerIdsBySegments } };
   }
 
-  return Customers.find({ $or: [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }], ...customerQuery });
+  return Customers.find({
+    $or: [{ doNotDisturb: 'No' }, { doNotDisturb: { $exists: false } }],
+    ...customerQuery,
+  });
 };
 
 const sendQueueMessage = args => {
@@ -102,7 +105,9 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
   }
 
   if (engageMessage.method === METHODS.SMS) {
-    await sendData({ engageMessage, customers, user }, 'sendEngageSms');
+    const customersWithValidPhone = customers.filter(customer => customer.phoneValidationStatus === 'valid');
+
+    await sendData({ engageMessage, customers: customersWithValidPhone, user }, 'sendEngageSms');
   }
 
   if (engageMessage.method === METHODS.MESSENGER && engageMessage.kind !== MESSAGE_KINDS.VISITOR_AUTO) {
