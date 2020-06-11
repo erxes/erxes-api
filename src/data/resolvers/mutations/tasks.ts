@@ -332,14 +332,32 @@ const taskMutations = {
     return clone;
   },
 
-  async tasksArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
-    const updatedTask = await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async tasksArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
+    const tasks = await Tasks.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
 
-    await ActivityLogs.createArchiveLog({
-      item: updatedTask,
-      contentType: 'task',
-      action: 'archive',
-      userId: user._id,
+    await Tasks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    for (const task of tasks) {
+      await ActivityLogs.createArchiveLog({
+        item: task,
+        contentType: 'task',
+        action: 'archive',
+        userId: user._id,
+      });
+    }
+
+    // order notification
+    const stage = await Stages.getStage(stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemsRemove',
+        data: {
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return 'ok';

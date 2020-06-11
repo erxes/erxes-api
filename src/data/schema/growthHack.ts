@@ -81,5 +81,5 @@ export const mutations = `
   growthHacksWatch(_id: String, isAdd: Boolean): GrowthHack
   growthHacksVote(_id: String!, isVote: Boolean): GrowthHack
   growthHacksCopy(_id: String!, proccessId: String): GrowthHack
-  growthHacksArchive(stageId: String!): String
+  growthHacksArchive(stageId: String!, proccessId: String): String
 `;

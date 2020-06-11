@@ -363,14 +363,32 @@ const dealMutations = {
     return clone;
   },
 
-  async dealsArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
-    const updatedDeal = await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async dealsArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
+    const deals = await Deals.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
 
-    await ActivityLogs.createArchiveLog({
-      item: updatedDeal,
-      contentType: 'deal',
-      action: 'archived',
-      userId: user._id,
+    await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    for (const deal of deals) {
+      await ActivityLogs.createArchiveLog({
+        item: deal,
+        contentType: 'deal',
+        action: 'archived',
+        userId: user._id,
+      });
+    }
+
+    // order notification
+    const stage = await Stages.getStage(stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemsRemove',
+        data: {
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return 'ok';

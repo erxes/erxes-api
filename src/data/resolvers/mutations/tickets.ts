@@ -336,14 +336,32 @@ const ticketMutations = {
     return clone;
   },
 
-  async ticketsArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
-    const updatedTicket = await Tickets.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async ticketsArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
+    const tickets = await Tickets.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
 
-    await ActivityLogs.createArchiveLog({
-      item: updatedTicket,
-      contentType: 'ticket',
-      action: 'archive',
-      userId: user._id,
+    await Tickets.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    for (const ticket of tickets) {
+      await ActivityLogs.createArchiveLog({
+        item: ticket,
+        contentType: 'ticket',
+        action: 'archive',
+        userId: user._id,
+      });
+    }
+
+    // order notification
+    const stage = await Stages.getStage(stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemsRemove',
+        data: {
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return 'ok';

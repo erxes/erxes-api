@@ -341,14 +341,32 @@ const growthHackMutations = {
     return clone;
   },
 
-  async growthHacksArchive(_root, { stageId }: { stageId: string }, { user }: IContext) {
-    const updatedGrowthHack = await GrowthHacks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+  async growthHacksArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
+    const growthHacks = await GrowthHacks.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
 
-    await ActivityLogs.createArchiveLog({
-      item: updatedGrowthHack,
-      contentType: 'growthHack',
-      action: 'archived',
-      userId: user._id,
+    await GrowthHacks.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
+
+    for ( const growthHack of growthHacks) {
+      await ActivityLogs.createArchiveLog({
+        item: growthHack,
+        contentType: 'growthHack',
+        action: 'archived',
+        userId: user._id,
+      });
+    }
+
+    // order notification
+    const stage = await Stages.getStage(stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemsRemove',
+        data: {
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return 'ok';
