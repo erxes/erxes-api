@@ -2,7 +2,7 @@ import { Companies, Conformities, Customers, Deals, GrowthHacks, Tasks, Tickets 
 import { validSearchText } from '../../data/utils';
 import { IItemCommonFields, IOrderInput } from './definitions/boards';
 import { ICompanyDocument } from './definitions/companies';
-import { BOARD_TYPES } from './definitions/constants';
+import { BOARD_STATUSES, BOARD_TYPES } from './definitions/constants';
 import { ICustomerDocument } from './definitions/customers';
 
 interface ISetOrderParam {
@@ -15,17 +15,23 @@ const round = (num: number, fixed: number = 0) => {
   return parseFloat(num.toFixed(fixed));
 };
 
+const randomBetween = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
+}
+
 export const getNewOrder = async ({ collection, stageId, aboveItemId }: ISetOrderParam) => {
-  const prevItem = await collection.findOne({ _id: aboveItemId });
+  const aboveItem = await collection.findOne({ _id: aboveItemId });
 
-  const aboveOrder = prevItem?.order || 0;
+  const aboveOrder = aboveItem?.order || 0;
 
-  const nextItems = await collection
-    .find({ stageId, order: { $gt: aboveOrder } })
+  const belowItems = await collection
+    .find({ stageId, order: { $gt: aboveOrder },  status: { $ne: BOARD_STATUSES.ARCHIVED }  })
     .sort({ order: 1 })
     .limit(1);
 
-  const belowOrder = nextItems[0]?.order;
+  const belowOrder = belowItems[0]?.order;
+
+  console.log('utils', aboveOrder, belowOrder)
 
   // empty stage
   if (!aboveOrder && !belowOrder) {
@@ -37,27 +43,13 @@ export const getNewOrder = async ({ collection, stageId, aboveItemId }: ISetOrde
     return round(aboveOrder) + 10;
   }
 
-  const splitAfter = belowOrder.toString().split('.');
-  const fraction = '0.'.concat(splitAfter[1] || '0');
-
   // begin of stage
   if (!aboveOrder) {
-    const afterLen = fraction.length;
-    const afterDotLen = fraction === '0.0' ? 1 : 0;
-    const diffIs1Len = belowOrder.toString().substr(-1) === '1' ? 1 : 0;
-
-    return round(belowOrder - 0.1 ** (afterLen - 2 - afterDotLen + diffIs1Len), afterLen + diffIs1Len);
+    return randomBetween(0, belowOrder)
   }
 
   // between items on stage
-  const prevFraction = '0.'.concat(aboveOrder.toString().split('.')[1] || '0');
-  const diffLen = prevFraction.length > fraction.length ? prevFraction.length : fraction.length;
-
-  const diff = round(belowOrder - aboveOrder, diffLen);
-  const dotLen = fraction === '0.0' && prevFraction === '0.0' ? 1 : 0;
-  const is1Len = diff.toString().substr(-1) === '1' ? 1 : 0;
-
-  return round(belowOrder - 0.1 ** (diffLen - 2 - dotLen + is1Len), diffLen + is1Len);
+  return randomBetween(aboveOrder, belowOrder);
 };
 
 export const updateOrder = async (collection: any, orders: IOrderInput[]) => {
