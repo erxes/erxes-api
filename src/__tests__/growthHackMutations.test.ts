@@ -41,6 +41,22 @@ describe('Test growthHacks mutations', () => {
     status: $status
   `;
 
+  const commonDragParamDefs = `
+    $itemId: String!,
+    $aboveItemId: String,
+    $destinationStageId: String!,
+    $sourceStageId: String,
+    $proccessId: String
+  `;
+
+  const commonDragParams = `
+    itemId: $itemId,
+    aboveItemId: $aboveItemId,
+    destinationStageId: $destinationStageId,
+    sourceStageId: $sourceStageId,
+    proccessId: $proccessId
+  `;
+
   beforeEach(async () => {
     // Creating test data
     board = await boardFactory({ type: BOARD_TYPES.GROWTH_HACK });
@@ -123,44 +139,54 @@ describe('Test growthHacks mutations', () => {
 
   test('Change growthHack', async () => {
     const args = {
-      _id: growthHack._id,
+      proccessId: Math.random().toString(),
+      itemId: growthHack._id,
+      aboveItemId: '',
       destinationStageId: growthHack.stageId,
+      sourceStageId: growthHack.stageId
     };
 
     const mutation = `
-      mutation growthHacksChange($_id: String!, $destinationStageId: String!) {
-        growthHacksChange(_id: $_id, destinationStageId: $destinationStageId) {
-          _id,
+      mutation growthHacksChange(${commonDragParamDefs}) {
+        growthHacksChange(${commonDragParams}) {
+          _id
+          name
           stageId
+          order
         }
       }
     `;
 
     const updatedGrowthHack = await graphqlRequest(mutation, 'growthHacksChange', args, context);
 
-    expect(updatedGrowthHack._id).toEqual(args._id);
+    expect(updatedGrowthHack._id).toEqual(args.itemId);
   });
 
   test('Change growthHack if move to another stage', async () => {
     const anotherStage = await stageFactory({ pipelineId: pipeline._id });
 
     const args = {
-      _id: growthHack._id,
-      destinationStageId: anotherStage._id,
+      proccessId: Math.random().toString(),
+      itemId: growthHack._id,
+      aboveItemId: '',
+      destinationStageId: growthHack.stageId,
+      sourceStageId: growthHack.stageId
     };
 
     const mutation = `
-      mutation growthHacksChange($_id: String!, $destinationStageId: String!) {
-        growthHacksChange(_id: $_id, destinationStageId: $destinationStageId) {
-          _id,
+      mutation growthHacksChange(${commonDragParamDefs}) {
+        growthHacksChange(${commonDragParams}) {
+          _id
+          name
           stageId
+          order
         }
       }
     `;
 
     const updatedGH = await graphqlRequest(mutation, 'growthHacksChange', args);
 
-    expect(updatedGH._id).toEqual(args._id);
+    expect(updatedGH._id).toEqual(args.itemId);
   });
 
   test('Update growthHack move to pipeline stage', async () => {
