@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { fillSearchTextItem, watchItem } from './boardUtils';
-import { BOARD_STATUSES } from './definitions/constants';
 import { growthHackSchema, IGrowthHack, IGrowthHackDocument } from './definitions/growthHacks';
 
 export interface IGrowthHackModel extends Model<IGrowthHackDocument> {
