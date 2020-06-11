@@ -108,7 +108,7 @@ describe('Test growthHacks mutations', () => {
   test('Update growthHack', async () => {
     const stage2 = await stageFactory();
 
-    const args: any = {
+    let args: any = {
       _id: growthHack._id,
       name: 'changed-name',
       stageId: stage2._id,
@@ -135,6 +135,16 @@ describe('Test growthHacks mutations', () => {
     updatedGrowthHack = await graphqlRequest(mutation, 'growthHacksEdit', args, context);
 
     expect(updatedGrowthHack.assignedUserIds.length).toBe(args.assignedUserIds.length);
+
+    args = {
+      _id: growthHack._id,
+      name: 'changed-name',
+      stageId: stage2._id,
+      status: 'active',
+    }
+
+    updatedGrowthHack = await graphqlRequest(mutation, 'growthHacksEdit', args, context);
+    expect(updatedGrowthHack.stageId).toBe(args.stageId);
   });
 
   test('Change growthHack', async () => {
