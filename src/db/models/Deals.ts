@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { fillSearchTextItem, watchItem } from './boardUtils';
-import { BOARD_STATUSES } from './definitions/constants';
 import { dealSchema, IDeal, IDealDocument } from './definitions/deals';
 
 export interface IDealModel extends Model<IDealDocument> {

@@ -148,15 +148,48 @@ const dealMutations = {
       });
 
       // order notification
+      let publishAction = 'itemRemove';
+      let publishData = {
+        item: updatedDeal,
+        aboveItemId: '',
+        destinationStageId: '',
+        oldStageId: stage._id
+      };
+
+      if (activityAction === 'activated'){
+        publishAction = 'itemAdd';
+
+        const aboveItems = await Deals.find({
+          stageId: updatedDeal.stageId,
+          status: { $ne: BOARD_STATUSES.ARCHIVED },
+          order: { $lt: updatedDeal.order } }
+        ).sort({ order: -1 }).limit(1)
+
+        const aboveItemId = aboveItems[0]?._id || '';
+
+        // maybe, recovered order includes to oldOrders
+        await Deals.updateOne({
+          _id: updatedDeal._id
+        }, {
+          order: await getNewOrder({
+            collection: Deals, stageId: updatedDeal.stageId, aboveItemId
+          })
+        });
+
+        publishData = {
+          item: updatedDeal,
+          aboveItemId,
+          destinationStageId: updatedDeal.stageId,
+          oldStageId: ''
+        };
+      }
+
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
           _id: stage.pipelineId,
           proccessId,
-          action: 'itemRemove',
-          data: {
-            item: updatedDeal,
-            oldStageId: updatedDeal.stageId,
-          },
+          action: publishAction,
+          data: publishData,
         },
       });
     }
