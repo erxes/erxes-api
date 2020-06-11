@@ -11,12 +11,28 @@ interface ISetOrderParam {
   aboveItemId?: string;
 }
 
-const round = (num: number, fixed: number = 0) => {
-  return parseFloat(num.toFixed(fixed));
-};
-
 const randomBetween = (min: number, max: number) => {
   return Math.random() * (max - min) + min;
+}
+
+const orderHeler = (aboveOrder, belowOrder) => {
+  // empty stage
+  if (!aboveOrder && !belowOrder) {
+    return 100;
+  }
+
+  // end of stage
+  if (!belowOrder) {
+    return aboveOrder + 10;
+  }
+
+  // begin of stage
+  if (!aboveOrder) {
+    return randomBetween(0, belowOrder)
+  }
+
+  // between items on stage
+  return randomBetween(aboveOrder, belowOrder);
 }
 
 export const getNewOrder = async ({ collection, stageId, aboveItemId }: ISetOrderParam) => {
@@ -31,25 +47,41 @@ export const getNewOrder = async ({ collection, stageId, aboveItemId }: ISetOrde
 
   const belowOrder = belowItems[0]?.order;
 
-  console.log('utils', aboveOrder, belowOrder)
+  const order = orderHeler(aboveOrder, belowOrder)
 
-  // empty stage
-  if (!aboveOrder && !belowOrder) {
-    return 100;
+  // if duplicated order, then in stages items bulkUpdate 100, 110, 120, 130
+  if ([aboveOrder, belowOrder].includes(order)) {
+    const bulkOps: Array<{
+      updateOne: {
+        filter: { _id: string };
+        update: { order: number }
+      }
+    }> = []
+
+    let ord = 100;
+
+    const allItems = await collection.find({
+      stageId,
+      status: {$ne: BOARD_STATUSES.ARCHIVED }
+    }, {_id: 1, order: 1})
+      .sort({order: 1});
+
+    for (const item of allItems ) {
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: item._id },
+          update: { order: ord },
+        },
+      });
+
+      ord = ord + 10;
+    }
+
+    await collection.bulkWrite(bulkOps);
+    return getNewOrder({collection, stageId, aboveItemId})
   }
 
-  // end of stage
-  if (!belowOrder) {
-    return round(aboveOrder) + 10;
-  }
-
-  // begin of stage
-  if (!aboveOrder) {
-    return randomBetween(0, belowOrder)
-  }
-
-  // between items on stage
-  return randomBetween(aboveOrder, belowOrder);
+  return order
 };
 
 export const updateOrder = async (collection: any, orders: IOrderInput[]) => {
