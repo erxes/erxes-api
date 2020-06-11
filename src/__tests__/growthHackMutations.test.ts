@@ -169,7 +169,7 @@ describe('Test growthHacks mutations', () => {
       proccessId: Math.random().toString(),
       itemId: growthHack._id,
       aboveItemId: '',
-      destinationStageId: growthHack.stageId,
+      destinationStageId: anotherStage._id,
       sourceStageId: growthHack.stageId
     };
 
