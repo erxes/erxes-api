@@ -1,7 +1,6 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { fillSearchTextItem, watchItem } from './boardUtils';
-import { BOARD_STATUSES } from './definitions/constants';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
 
 export interface ITicketModel extends Model<ITicketDocument> {
@@ -38,19 +37,8 @@ export const loadTicketClass = () => {
         }
       }
 
-      const lastVisibleTickets = await Tickets.find(
-        {
-          stageId: doc.stageId,
-          status: { $ne: BOARD_STATUSES.ARCHIVED },
-        },
-        { order: 1 },
-      )
-        .sort({ order: -1 })
-        .limit(1);
-
       const ticket = await Tickets.create({
         ...doc,
-        order: ((lastVisibleTickets && lastVisibleTickets.length > 0 ? lastVisibleTickets[0].order : 0) || 0) + 1,
         createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),

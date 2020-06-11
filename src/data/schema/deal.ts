@@ -1,4 +1,4 @@
-import { commonMutationParams, commonTypes, conformityQueryFields, copyParams } from './common';
+import { commonDragParams, commonMutationParams, commonTypes, conformityQueryFields, copyParams } from './common';
 
 export const types = `
   type Deal {
@@ -71,7 +71,7 @@ export const queries = `
 export const mutations = `
   dealsAdd(name: String!, ${copyParams}, ${dealMutationParams}, ${commonMutationParams}): Deal
   dealsEdit(_id: String!, name: String, ${dealMutationParams}, ${commonMutationParams}): Deal
-  dealsChange(itemId: String!, aboveItemId: String, destinationStageId: String!, sourceStageId: String, proccessId: String): Deal
+  dealsChange(${commonDragParams}): Deal
   dealsRemove(_id: String!): Deal
   dealsWatch(_id: String, isAdd: Boolean): Deal
   dealsCopy(_id: String!, proccessId: String): Deal

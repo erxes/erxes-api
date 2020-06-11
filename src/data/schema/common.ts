@@ -67,4 +67,12 @@ export const commonMutationParams = `
   sourceConversationId: String,
 `;
 
+export const commonDragParams = `
+  itemId: String!,
+  aboveItemId: String,
+  destinationStageId: String!,
+  sourceStageId: String,
+  proccessId: String
+`;
+
 export const copyParams = `companyIds: [String], customerIds: [String], labelIds: [String]`;

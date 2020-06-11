@@ -1,6 +1,7 @@
 import * as _ from 'underscore';
 import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
 import { getCompanies, getCustomers, getNewOrder } from '../../../db/models/boardUtils';
+import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { graphqlPubsub } from '../../../pubsub';
@@ -15,6 +16,7 @@ import {
   createConformity,
   IBoardNotificationParams,
   itemsChange,
+  itemStatusChange,
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
@@ -148,48 +150,16 @@ const dealMutations = {
       });
 
       // order notification
-      let publishAction = 'itemRemove';
-      let publishData = {
-        item: updatedDeal,
-        aboveItemId: '',
-        destinationStageId: '',
-        oldStageId: stage._id
-      };
-
-      if (activityAction === 'activated'){
-        publishAction = 'itemAdd';
-
-        const aboveItems = await Deals.find({
-          stageId: updatedDeal.stageId,
-          status: { $ne: BOARD_STATUSES.ARCHIVED },
-          order: { $lt: updatedDeal.order } }
-        ).sort({ order: -1 }).limit(1)
-
-        const aboveItemId = aboveItems[0]?._id || '';
-
-        // maybe, recovered order includes to oldOrders
-        await Deals.updateOne({
-          _id: updatedDeal._id
-        }, {
-          order: await getNewOrder({
-            collection: Deals, stageId: updatedDeal.stageId, aboveItemId
-          })
-        });
-
-        publishData = {
-          item: updatedDeal,
-          aboveItemId,
-          destinationStageId: updatedDeal.stageId,
-          oldStageId: ''
-        };
-      }
+      const { publishAction, data } = await itemStatusChange({
+        type: 'deal', item: updatedDeal, status: activityAction
+      });
 
       graphqlPubsub.publish('pipelinesChanged', {
         pipelinesChanged: {
           _id: stage.pipelineId,
           proccessId,
           action: publishAction,
-          data: publishData,
+          data,
         },
       });
     }
@@ -246,7 +216,7 @@ const dealMutations = {
       pipelinesChanged: {
         _id: stage.pipelineId,
         proccessId,
-        action: 'itemUpdate',
+        action: 'orderUpdated',
         data: {
           item: updatedDeal,
         },
@@ -259,7 +229,9 @@ const dealMutations = {
   /**
    * Change deal
    */
-  async dealsChange(_root, { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId }, { user }: IContext) {
+  async dealsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
+    const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
+
     const deal = await Deals.getDeal(itemId);
 
     const extendedDoc = {
@@ -372,6 +344,7 @@ const dealMutations = {
       user,
     });
 
+    // order notification
     const stage = await Stages.getStage(clone.stageId);
 
     graphqlPubsub.publish('pipelinesChanged', {

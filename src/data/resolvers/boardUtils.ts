@@ -10,7 +10,7 @@ import {
   Stages,
 } from '../../db/models';
 import { getCollection, getNewOrder } from '../../db/models/boardUtils';
-import { NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../db/models/definitions/constants';
 import { IDealDocument } from '../../db/models/definitions/deals';
 import { ITaskDocument } from '../../db/models/definitions/tasks';
 import { ITicketDocument } from '../../db/models/definitions/tickets';
@@ -398,4 +398,47 @@ export const prepareBoardItemDoc = async (_id: string, type: string, userId: str
   delete doc._id;
 
   return doc;
+};
+
+export const itemStatusChange = async ({ type, item, status }: { type: string, item: any, status: string }) => {
+  if (status === 'archived') {
+    return {
+      publishAction: 'itemRemove',
+      data: {
+        item,
+        aboveItemId: '',
+        destinationStageId: '',
+        oldStageId: item.stageId
+      }
+    };
+  }
+
+  const collection = getCollection(type)
+
+  const aboveItems = await collection.find({
+    stageId: item.stageId,
+    status: { $ne: BOARD_STATUSES.ARCHIVED },
+    order: { $lt: item.order } }
+  ).sort({ order: -1 }).limit(1)
+
+  const aboveItemId = aboveItems[0]?._id || '';
+
+  // maybe, recovered order includes to oldOrders
+  await collection.updateOne({
+    _id: item._id
+  }, {
+    order: await getNewOrder({
+      collection, stageId: item.stageId, aboveItemId
+    })
+  });
+
+  return {
+    publishAction: 'itemAdd',
+    data: {
+      item,
+      aboveItemId,
+      destinationStageId: item.stageId,
+      oldStageId: ''
+    }
+  }
 };

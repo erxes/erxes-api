@@ -1,5 +1,7 @@
 import { ActivityLogs, GrowthHacks, Stages } from '../../../db/models';
-import { BOARD_STATUSES, BOARD_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { getNewOrder } from '../../../db/models/boardUtils';
+import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IGrowthHack } from '../../../db/models/definitions/growthHacks';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { graphqlPubsub } from '../../../pubsub';
@@ -12,6 +14,7 @@ import {
   copyChecklists,
   IBoardNotificationParams,
   itemsChange,
+  itemStatusChange,
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
@@ -24,7 +27,7 @@ const growthHackMutations = {
   /**
    * Create new growth hack
    */
-  async growthHacksAdd(_root, doc: IGrowthHack, { user, docModifier }: IContext) {
+  async growthHacksAdd(_root, doc: IGrowthHack & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
     doc.initialStageId = doc.stageId;
     doc.watchedUserIds = [user._id];
 
@@ -32,6 +35,7 @@ const growthHackMutations = {
       ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
+      order: await getNewOrder({ collection: GrowthHacks, stageId: doc.stageId, aboveItemId: doc.aboveItemId }),
     };
 
     const growthHack = await GrowthHacks.createGrowthHack(extendedDoc);
@@ -59,13 +63,28 @@ const growthHackMutations = {
       user,
     );
 
+    const stage = await Stages.getStage(growthHack.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId: doc.proccessId,
+        action: 'itemAdd',
+        data: {
+          item: growthHack,
+          aboveItemId: doc.aboveItemId,
+          destinationStageId: stage._id,
+        },
+      },
+    });
+
     return growthHack;
   },
 
   /**
    * Edit a growth hack
    */
-  async growthHacksEdit(_root, { _id, ...doc }: IGrowthHacksEdit, { user }) {
+  async growthHacksEdit(_root, { _id, proccessId, ...doc }: IGrowthHacksEdit & { proccessId: string }, { user }) {
     const oldGrowthHack = await GrowthHacks.getGrowthHack(_id);
 
     const extendedDoc = {
@@ -85,6 +104,8 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     };
 
+    const stage = await Stages.getStage(updatedGrowthHack.stageId);
+
     if (doc.status && oldGrowthHack.status && oldGrowthHack.status !== doc.status) {
       const activityAction = doc.status === 'active' ? 'activated' : 'archived';
 
@@ -93,6 +114,20 @@ const growthHackMutations = {
         contentType: 'growthHack',
         action: activityAction,
         userId: user._id,
+      });
+
+      // order notification
+      const { publishAction, data } = await itemStatusChange({
+        type: 'task', item: updatedGrowthHack, status: activityAction
+      });
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+          proccessId,
+          action: publishAction,
+          data,
+        },
       });
     }
 
@@ -152,24 +187,16 @@ const growthHackMutations = {
       contentType: MODULE_NAMES.GROWTH_HACK,
     });
 
-    const updatedStage = await Stages.getStage(updatedGrowthHack.stageId);
-    const oldStage = await Stages.getStage(oldGrowthHack.stageId);
-
     graphqlPubsub.publish('pipelinesChanged', {
       pipelinesChanged: {
-        _id: updatedStage.pipelineId,
-        type: BOARD_TYPES.GROWTH_HACK,
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'orderUpdated',
+        data: {
+          item: updatedGrowthHack,
+        },
       },
     });
-
-    if (updatedStage.pipelineId !== oldStage.pipelineId) {
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: oldStage.pipelineId,
-          type: BOARD_TYPES.GROWTH_HACK,
-        },
-      });
-    }
 
     return updatedGrowthHack;
   },
@@ -177,21 +204,19 @@ const growthHackMutations = {
   /**
    * Change a growth hack
    */
-  async growthHacksChange(
-    _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
-    { user }: { user: IUserDocument },
-  ) {
-    const growthHack = await GrowthHacks.getGrowthHack(_id);
+  async growthHacksChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
+    const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
+
+    const growthHack = await GrowthHacks.getGrowthHack(itemId);
 
     const extendedDoc = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order,
+      order: await getNewOrder({ collection: GrowthHacks, stageId: destinationStageId, aboveItemId }),
     };
 
-    const updatedGrowthHack = await GrowthHacks.updateGrowthHack(_id, extendedDoc);
+    const updatedGrowthHack = await GrowthHacks.updateGrowthHack(itemId, extendedDoc);
 
     const { content, action } = await itemsChange(user._id, growthHack, MODULE_NAMES.GROWTH_HACK, destinationStageId);
 
@@ -214,17 +239,23 @@ const growthHackMutations = {
       user,
     );
 
-    // if move between stages
-    if (destinationStageId !== growthHack.stageId) {
-      const stage = await Stages.getStage(growthHack.stageId);
+    // order notification
+    const stage = await Stages.getStage(growthHack.stageId);
 
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: stage.pipelineId,
-          type: BOARD_TYPES.GROWTH_HACK,
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'orderUpdated',
+        data: {
+          item: growthHack,
+          aboveItemId,
+          destinationStageId,
+          oldStageId: sourceStageId,
         },
-      });
-    }
+      },
+    });
+
 
     return growthHack;
   },
@@ -269,7 +300,7 @@ const growthHackMutations = {
     return GrowthHacks.voteGrowthHack(_id, isVote, user._id);
   },
 
-  async growthHacksCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+  async growthHacksCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
     const growthHack = await GrowthHacks.getGrowthHack(_id);
 
     const doc = await prepareBoardItemDoc(_id, 'growthHack', user._id);
@@ -289,6 +320,22 @@ const growthHackMutations = {
       contentTypeId: growthHack._id,
       targetContentId: clone._id,
       user,
+    });
+
+    // order notification
+    const stage = await Stages.getStage(clone.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemAdd',
+        data: {
+          item: clone,
+          aboveItemId: _id,
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return clone;

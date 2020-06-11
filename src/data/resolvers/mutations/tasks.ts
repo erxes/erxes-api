@@ -1,7 +1,7 @@
 import { ActivityLogs, Checklists, Conformities, Stages, Tasks } from '../../../db/models';
-import { getCompanies, getCustomers } from '../../../db/models/boardUtils';
-import { IItemCommonFields as ITask } from '../../../db/models/definitions/boards';
-import { BOARD_STATUSES, BOARD_TYPES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { getCompanies, getCustomers, getNewOrder } from '../../../db/models/boardUtils';
+import { IItemCommonFields as ITask, IItemDragCommonFields } from '../../../db/models/definitions/boards';
+import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { graphqlPubsub } from '../../../pubsub';
 import { MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
@@ -14,6 +14,7 @@ import {
   createConformity,
   IBoardNotificationParams,
   itemsChange,
+  itemStatusChange,
   prepareBoardItemDoc,
   sendNotifications,
 } from '../boardUtils';
@@ -26,13 +27,14 @@ const taskMutations = {
   /**
    * Creates a new task
    */
-  async tasksAdd(_root, doc: ITask, { user, docModifier }: IContext) {
+  async tasksAdd(_root, doc: ITask & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
     doc.watchedUserIds = [user._id];
 
     const extendedDoc = {
       ...docModifier(doc),
       modifiedBy: user._id,
       userId: user._id,
+      order: await getNewOrder({ collection: Tasks, stageId: doc.stageId, aboveItemId: doc.aboveItemId }),
     };
 
     const task = await Tasks.createTask(extendedDoc);
@@ -62,13 +64,28 @@ const taskMutations = {
       user,
     );
 
+    const stage = await Stages.getStage(task.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId: doc.proccessId,
+        action: 'itemAdd',
+        data: {
+          item: task,
+          aboveItemId: doc.aboveItemId,
+          destinationStageId: stage._id,
+        },
+      },
+    });
+
     return task;
   },
 
   /**
    * Edit task
    */
-  async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
+  async tasksEdit(_root, { _id, proccessId, ...doc }: ITasksEdit & { proccessId: string }, { user }: IContext) {
     const oldTask = await Tasks.getTask(_id);
 
     const extendedDoc = {
@@ -91,6 +108,8 @@ const taskMutations = {
       contentType: MODULE_NAMES.TASK,
     };
 
+    const stage = await Stages.getStage(updatedTask.stageId);
+
     if (doc.status && oldTask.status && oldTask.status !== doc.status) {
       const activityAction = doc.status === 'active' ? 'activated' : 'archived';
 
@@ -99,6 +118,20 @@ const taskMutations = {
         contentType: 'task',
         action: activityAction,
         userId: user._id,
+      });
+
+      // order notification
+      const { publishAction, data } = await itemStatusChange({
+        type: 'task', item: updatedTask, status: activityAction
+      });
+
+      graphqlPubsub.publish('pipelinesChanged', {
+        pipelinesChanged: {
+          _id: stage.pipelineId,
+          proccessId,
+          action: publishAction,
+          data,
+        },
       });
     }
 
@@ -152,24 +185,16 @@ const taskMutations = {
       contentType: MODULE_NAMES.TASK,
     });
 
-    const updatedStage = await Stages.getStage(updatedTask.stageId);
-    const oldStage = await Stages.getStage(oldTask.stageId);
-
     graphqlPubsub.publish('pipelinesChanged', {
       pipelinesChanged: {
-        _id: updatedStage.pipelineId,
-        type: BOARD_TYPES.TASK,
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'orderUpdated',
+        data: {
+          item: updatedTask,
+        },
       },
     });
-
-    if (updatedStage.pipelineId !== oldStage.pipelineId) {
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: oldStage.pipelineId,
-          type: BOARD_TYPES.TASK,
-        },
-      });
-    }
 
     return updatedTask;
   },
@@ -177,21 +202,19 @@ const taskMutations = {
   /**
    * Change task
    */
-  async tasksChange(
-    _root,
-    { _id, destinationStageId, order }: { _id: string; destinationStageId: string; order: number },
-    { user }: IContext,
-  ) {
-    const task = await Tasks.getTask(_id);
+  async tasksChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
+    const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
+
+    const task = await Tasks.getTask(itemId);
 
     const extendedDoc = {
       modifiedAt: new Date(),
       modifiedBy: user._id,
       stageId: destinationStageId,
-      order,
+      order: await getNewOrder({ collection: Tasks, stageId: destinationStageId, aboveItemId }),
     };
 
-    const updatedTask = await Tasks.updateTask(_id, extendedDoc);
+    const updatedTask = await Tasks.updateTask(itemId, extendedDoc);
 
     const { content, action } = await itemsChange(user._id, task, MODULE_NAMES.TASK, destinationStageId);
 
@@ -214,17 +237,22 @@ const taskMutations = {
       user,
     );
 
-    // if move between stages
-    if (destinationStageId !== task.stageId) {
-      const stage = await Stages.getStage(task.stageId);
+    // order notification
+    const stage = await Stages.getStage(task.stageId);
 
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: stage.pipelineId,
-          type: BOARD_TYPES.TASK,
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'orderUpdated',
+        data: {
+          item: task,
+          aboveItemId,
+          destinationStageId,
+          oldStageId: sourceStageId,
         },
-      });
-    }
+      },
+    });
 
     return task;
   },
@@ -262,7 +290,7 @@ const taskMutations = {
     return Tasks.watchTask(_id, isAdd, user._id);
   },
 
-  async tasksCopy(_root, { _id }: { _id: string }, { user }: IContext) {
+  async tasksCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
     const task = await Tasks.getTask(_id);
 
     const doc = await prepareBoardItemDoc(_id, 'task', user._id);
@@ -283,6 +311,22 @@ const taskMutations = {
       contentTypeId: task._id,
       targetContentId: clone._id,
       user,
+    });
+
+    // order notification
+    const stage = await Stages.getStage(clone.stageId);
+
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemAdd',
+        data: {
+          item: clone,
+          aboveItemId: _id,
+          destinationStageId: stage._id,
+        },
+      },
     });
 
     return clone;
