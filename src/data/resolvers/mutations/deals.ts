@@ -222,6 +222,14 @@ const dealMutations = {
       user,
     );
 
+    if (oldDeal.stageId === updatedDeal.stageId) {
+      graphqlPubsub.publish('dealsChanged', {
+        dealsChanged: updatedDeal,
+      });
+
+      return updatedDeal;
+    }
+
     // if deal moves between stages
     const { content, action } = await itemsChange(user._id, oldDeal, MODULE_NAMES.DEAL, updatedDeal.stageId);
 

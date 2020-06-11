@@ -132,6 +132,14 @@ const taskMutations = {
       user,
     );
 
+    if (oldTask.stageId === updatedTask.stageId) {
+      graphqlPubsub.publish('tasksChanged', {
+        tasksChanged: updatedTask,
+      });
+
+      return updatedTask;
+    }
+
     // if task moves between stages
     const { content, action } = await itemsChange(user._id, oldTask, MODULE_NAMES.TASK, updatedTask.stageId);
 
