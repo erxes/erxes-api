@@ -387,7 +387,9 @@ export interface IEmailParams {
   toEmails?: string[];
   fromEmail?: string;
   title?: string;
-  template?: { name?: string; data?: any; isCustom?: boolean };
+  customHtml?: string;
+  customHtmlData?: any;
+  template?: { name?: string; data?: any };
   modifier?: (data: any, email: string) => void;
 }
 
@@ -395,7 +397,7 @@ export interface IEmailParams {
  * Send email
  */
 export const sendEmail = async (params: IEmailParams) => {
-  const { toEmails = [], fromEmail, title, template = {}, modifier } = params;
+  const { toEmails = [], fromEmail, title, customHtml, customHtmlData, template = {}, modifier } = params;
 
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
@@ -417,7 +419,7 @@ export const sendEmail = async (params: IEmailParams) => {
     return debugEmail(e.message);
   }
 
-  const { isCustom, data = {}, name } = template;
+  const { data = {}, name } = template;
 
   // for unsubscribe url
   data.domain = MAIN_APP_DOMAIN;
@@ -430,8 +432,8 @@ export const sendEmail = async (params: IEmailParams) => {
     // generate email content by given template
     let html = await applyTemplate(data, name || 'base');
 
-    if (!isCustom) {
-      html = await applyTemplate({ content: html }, 'base');
+    if (customHtml) {
+      html = Handlebars.compile(customHtml)(customHtmlData || {});
     }
 
     const mailOptions = {
@@ -844,6 +846,52 @@ export const validateEmail = async (email: string, wait?: boolean) => {
     }
 
     debugExternalApi(`Error occurred during email verify ${e.message}`);
+  };
+
+  if (wait) {
+    try {
+      const response = await sendRequest(requestOptions);
+      return successCallback(response);
+    } catch (e) {
+      await errorCallback(e);
+    }
+  }
+
+  sendRequest(requestOptions)
+    .then(async response => {
+      await successCallback(response);
+    })
+    .catch(async e => {
+      await errorCallback(e);
+    });
+};
+
+export const validatePhone = async (phone: string, wait?: boolean) => {
+  const data = { phone };
+
+  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
+
+  if (!EMAIL_VERIFIER_ENDPOINT) {
+    return sendMessage('erxes-api:phone-verifier-notification', { action: 'phoneVerify', data });
+  }
+
+  const requestOptions = {
+    url: `${EMAIL_VERIFIER_ENDPOINT}/verify-singlePhone`,
+    method: 'POST',
+    body: { phone },
+  };
+
+  const updateCustomer = status =>
+    Customers.updateOne({ primaryPhone: phone }, { $set: { phoneValidationStatus: status } });
+
+  const successCallback = response => updateCustomer(response.result.status);
+
+  const errorCallback = e => {
+    if (e.message === 'timeout exceeded') {
+      return updateCustomer('unverifiable');
+    }
+
+    debugExternalApi(`Error occurred during phone verify ${e.message}`);
   };
 
   if (wait) {
