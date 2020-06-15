@@ -195,7 +195,7 @@ export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: an
   );
 
   if (oldItem.stageId === updatedItem.stageId) {
-    const typeString = `${type}Changed`;
+    const typeString = `itemsDetailChanged`;
 
     graphqlPubsub.publish([typeString], {
       [typeString]: updatedItem,

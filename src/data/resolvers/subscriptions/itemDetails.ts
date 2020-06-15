@@ -3,14 +3,14 @@ import { graphqlPubsub } from '../../../pubsub';
 
 export default {
   /*
-   * Listen for task updates
+   * Listen for deal updates
    */
-  tasksChanged: {
+  itemsDetailChanged: {
     subscribe: withFilter(
-      () => graphqlPubsub.asyncIterator('tasksChanged'),
+      () => graphqlPubsub.asyncIterator('itemsDetailChanged'),
       // filter by _id
       (payload, variables) => {
-        return payload.tasksChanged._id === variables._id;
+        return payload.itemsDetailChanged._id === variables._id;
       },
     ),
   },
