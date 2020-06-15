@@ -169,6 +169,16 @@ export const getCollection = (type: string) => {
   return collection;
 };
 
+export const getItem = async (type: string, _id: string) => {
+  const item = await getCollection(type).findOne({ _id });
+
+  if (!item) {
+    throw new Error(`${type} not found`);
+  }
+
+  return item
+}
+
 export const getCompanies = async (mainType: string, mainTypeId: string): Promise<ICompanyDocument[]> => {
   const conformities = await Conformities.find({ mainType, mainTypeId, relType: 'company' });
 

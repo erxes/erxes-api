@@ -1,5 +1,5 @@
 import { ActivityLogs, Boards, Checklists, Conformities, Notifications, Pipelines, Stages } from "../../../db/models";
-import { getCollection, getCompanies, getCustomers, getNewOrder } from "../../../db/models/boardUtils";
+import { getCollection, getCompanies, getCustomers, getItem, getNewOrder } from "../../../db/models/boardUtils";
 import { IItemCommonFields, IItemDragCommonFields } from "../../../db/models/definitions/boards";
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from "../../../db/models/definitions/constants";
 import { IDeal, IDealDocument } from "../../../db/models/definitions/deals";
@@ -274,12 +274,8 @@ export const itemMover = async (
 export const itemsChange = async (doc: IItemDragCommonFields, type: string, user: IUserDocument, modelUpdate: any) => {
   const collection = getCollection(type);
   const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
-  console.log(collection, type)
-  const item = await collection.findOne({ _id: itemId });
 
-  if (!item) {
-    throw new Error(`${type} not found`);
-  }
+  const item = await getItem(type,  itemId );
 
   const extendedDoc = {
     modifiedAt: new Date(),
@@ -332,12 +328,7 @@ export const itemsChange = async (doc: IItemDragCommonFields, type: string, user
 }
 
 export const itemsRemove = async (_id: string, type: string, user: IUserDocument) => {
-  const collection = getCollection(type);
-  const item = await collection.findOne({_id});
-
-  if (!item) {
-    throw new Error(`${type} not found`);
-  }
+  const item = await getItem(type,  _id );
 
   await sendNotifications({
     item,
@@ -367,12 +358,7 @@ export const itemsCopy = async (
   extraDocParam: string[],
   modelCreate: any
 ) => {
-  const collection = getCollection(type)
-  const item = await collection.findOne({_id });
-
-  if (!item) {
-    throw new Error(`${type} not found`);
-  }
+  const item = await getItem(type,  _id );
 
   const doc = await prepareBoardItemDoc(_id, type, user._id);
 
