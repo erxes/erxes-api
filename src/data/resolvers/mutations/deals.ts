@@ -1,25 +1,11 @@
 import * as _ from 'underscore';
-import { ActivityLogs, Checklists, Conformities, Deals, Stages } from '../../../db/models';
-import { getCompanies, getCustomers, getNewOrder } from '../../../db/models/boardUtils';
+import { Deals } from '../../../db/models';
 import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
-import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { IDeal } from '../../../db/models/definitions/deals';
-import { graphqlPubsub } from '../../../pubsub';
-import { MODULE_NAMES } from '../../constants';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { checkUserIds } from '../../utils';
-import {
-  copyChecklists,
-  copyPipelineLabels,
-  createConformity,
-  IBoardNotificationParams,
-  itemsChange,
-  itemStatusChange,
-  prepareBoardItemDoc,
-  sendNotifications,
-} from '../boardUtils';
+import { itemsAdd, itemsArchive, itemsChange, itemsCopy, itemsEdit, itemsRemove } from './boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -30,52 +16,7 @@ const dealMutations = {
    * Creates a new deal
    */
   async dealsAdd(_root, doc: IDeal & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
-    doc.initialStageId = doc.stageId;
-    doc.watchedUserIds = [user._id];
-
-    const extendedDoc = {
-      ...docModifier(doc),
-      modifiedBy: user._id,
-      userId: user._id,
-      order: await getNewOrder({ collection: Deals, stageId: doc.stageId, aboveItemId: doc.aboveItemId }),
-    };
-
-    const deal = await Deals.createDeal(extendedDoc);
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_ADD,
-      action: 'invited you to the deal',
-      content: `'${deal.name}'.`,
-      contentType: MODULE_NAMES.DEAL,
-    });
-
-    await putCreateLog(
-      {
-        type: MODULE_NAMES.DEAL,
-        newData: extendedDoc,
-        object: deal,
-      },
-      user,
-    );
-
-    const stage = await Stages.getStage(deal.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId: doc.proccessId,
-        action: 'itemAdd',
-        data: {
-          item: deal,
-          aboveItemId: doc.aboveItemId,
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-    return deal;
+    return itemsAdd(doc, 'deal', user, docModifier, Deals.createDeal);
   },
 
   /**
@@ -83,10 +24,9 @@ const dealMutations = {
    */
   async dealsEdit(_root, { _id, proccessId, ...doc }: IDealsEdit & { proccessId: string }, { user }: IContext) {
     const oldDeal = await Deals.getDeal(_id);
-    let checkedAssignUserIds: { addedUserIds?: string[]; removedUserIds?: string[] } = {};
 
     if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
+      const { removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
       const oldAssignedUserPdata = (oldDeal.productsData || [])
         .filter(pdata => pdata.assignUserId)
         .map(pdata => pdata.assignUserId || '');
@@ -95,17 +35,17 @@ const dealMutations = {
       if (cantRemoveUserIds.length > 0) {
         throw new Error('Cannot remove the team member, it is assigned in the product / service section');
       }
-
-      checkedAssignUserIds = { addedUserIds, removedUserIds };
     }
 
     if (doc.productsData) {
       const assignedUsersPdata = doc.productsData
         .filter(pdata => pdata.assignUserId)
         .map(pdata => pdata.assignUserId || '');
+
       const oldAssignedUserPdata = (oldDeal.productsData || [])
         .filter(pdata => pdata.assignUserId)
         .map(pdata => pdata.assignUserId || '');
+
       const { addedUserIds, removedUserIds } = checkUserIds(oldAssignedUserPdata, assignedUsersPdata);
 
       if (addedUserIds.length > 0 || removedUserIds.length > 0) {
@@ -113,201 +53,24 @@ const dealMutations = {
         assignedUserIds = [...new Set(assignedUserIds.concat(addedUserIds))];
         assignedUserIds = assignedUserIds.filter(userId => !removedUserIds.includes(userId));
         doc.assignedUserIds = assignedUserIds;
-
-        checkedAssignUserIds = checkUserIds(oldDeal.assignedUserIds, assignedUserIds);
       }
     }
 
-    const extendedDoc = {
-      ...doc,
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-    };
-
-    const updatedDeal = await Deals.updateDeal(_id, extendedDoc);
-
-    await copyPipelineLabels({ item: oldDeal, doc, user });
-
-    const notificationDoc: IBoardNotificationParams = {
-      item: updatedDeal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_EDIT,
-      action: `has updated deal`,
-      content: `${updatedDeal.name}`,
-      contentType: MODULE_NAMES.DEAL,
-    };
-
-    const stage = await Stages.getStage(updatedDeal.stageId);
-
-    if (doc.status && oldDeal.status && oldDeal.status !== doc.status) {
-      const activityAction = doc.status === 'active' ? 'activated' : 'archived';
-
-      await ActivityLogs.createArchiveLog({
-        item: updatedDeal,
-        contentType: 'deal',
-        action: activityAction,
-        userId: user._id,
-      });
-
-      // order notification
-      const { publishAction, data } = await itemStatusChange({
-        type: 'deal', item: updatedDeal, status: activityAction
-      });
-
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: stage.pipelineId,
-          proccessId,
-          action: publishAction,
-          data,
-        },
-      });
-    }
-
-    if (Object.keys(checkedAssignUserIds).length > 0) {
-      const { addedUserIds, removedUserIds } = checkedAssignUserIds;
-
-      const activityContent = { addedUserIds, removedUserIds };
-
-      await ActivityLogs.createAssigneLog({
-        contentId: _id,
-        userId: user._id,
-        contentType: 'deal',
-        content: activityContent,
-      });
-
-      notificationDoc.invitedUsers = addedUserIds;
-      notificationDoc.removedUsers = removedUserIds;
-    }
-
-    await sendNotifications(notificationDoc);
-
-    await putUpdateLog(
-      {
-        type: MODULE_NAMES.DEAL,
-        object: oldDeal,
-        newData: extendedDoc,
-        updatedDocument: updatedDeal,
-      },
-      user,
-    );
-
-    if (oldDeal.stageId === updatedDeal.stageId) {
-      graphqlPubsub.publish('dealsChanged', {
-        dealsChanged: updatedDeal,
-      });
-
-      return updatedDeal;
-    }
-
-    // if deal moves between stages
-    const { content, action } = await itemsChange(user._id, oldDeal, MODULE_NAMES.DEAL, updatedDeal.stageId);
-
-    await sendNotifications({
-      item: updatedDeal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_CHANGE,
-      content,
-      action,
-      contentType: MODULE_NAMES.DEAL,
-    });
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'orderUpdated',
-        data: {
-          item: updatedDeal,
-        },
-      },
-    });
-
-    return updatedDeal;
+    return itemsEdit(_id, 'deal', oldDeal, doc, proccessId, user, Deals.updateDeal);
   },
 
   /**
    * Change deal
    */
   async dealsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
-    const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
-
-    const deal = await Deals.getDeal(itemId);
-
-    const extendedDoc = {
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-      stageId: destinationStageId,
-      order: await getNewOrder({ collection: Deals, stageId: destinationStageId, aboveItemId }),
-    };
-
-    const updatedDeal = await Deals.updateDeal(itemId, extendedDoc);
-
-    const { content, action } = await itemsChange(user._id, deal, MODULE_NAMES.DEAL, destinationStageId);
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_CHANGE,
-      content,
-      action,
-      contentType: MODULE_NAMES.DEAL,
-    });
-
-    await putUpdateLog(
-      {
-        type: MODULE_NAMES.DEAL,
-        object: deal,
-        newData: extendedDoc,
-        updatedDocument: updatedDeal,
-      },
-      user,
-    );
-
-    // order notification
-    const stage = await Stages.getStage(deal.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'orderUpdated',
-        data: {
-          item: deal,
-          aboveItemId,
-          destinationStageId,
-          oldStageId: sourceStageId,
-        },
-      },
-    });
-
-    return deal;
+    return itemsChange(doc, 'deal', user, Deals.updateDeal);
   },
 
   /**
    * Remove deal
    */
   async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const deal = await Deals.getDeal(_id);
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_DELETE,
-      action: `deleted deal:`,
-      content: `'${deal.name}'`,
-      contentType: MODULE_NAMES.DEAL,
-    });
-
-    await Conformities.removeConformity({ mainType: MODULE_NAMES.DEAL, mainTypeId: deal._id });
-    await Checklists.removeChecklists(MODULE_NAMES.DEAL, deal._id);
-    await ActivityLogs.removeActivityLog(deal._id);
-
-    const removed = await deal.remove();
-
-    await putDeleteLog({ type: MODULE_NAMES.DEAL, object: deal }, user);
-
-    return removed;
+    return itemsRemove(_id, 'deal', user);
   },
 
   /**
@@ -318,80 +81,11 @@ const dealMutations = {
   },
 
   async dealsCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
-    const deal = await Deals.getDeal(_id);
-
-    const doc = await prepareBoardItemDoc(_id, 'deal', user._id);
-
-    doc.productsData = deal.productsData;
-    doc.paymentsData = deal.paymentsData;
-
-    const clone = await Deals.createDeal(doc);
-
-    const companies = await getCompanies('deal', _id);
-    const customers = await getCustomers('deal', _id);
-
-    await createConformity({
-      mainType: 'deal',
-      mainTypeId: clone._id,
-      customerIds: customers.map(c => c._id),
-      companyIds: companies.map(c => c._id),
-    });
-
-    await copyChecklists({
-      contentType: 'deal',
-      contentTypeId: deal._id,
-      targetContentId: clone._id,
-      user,
-    });
-
-    // order notification
-    const stage = await Stages.getStage(clone.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'itemAdd',
-        data: {
-          item: clone,
-          aboveItemId: _id,
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-    return clone;
+    return itemsCopy(_id, proccessId, 'deal', user, ['productsData', 'paymentsData'], Deals.createDeal);
   },
 
   async dealsArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
-    const deals = await Deals.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
-
-    await Deals.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
-
-    for (const deal of deals) {
-      await ActivityLogs.createArchiveLog({
-        item: deal,
-        contentType: 'deal',
-        action: 'archived',
-        userId: user._id,
-      });
-    }
-
-    // order notification
-    const stage = await Stages.getStage(stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'itemsRemove',
-        data: {
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-    return 'ok';
+    return itemsArchive(stageId, 'deal', proccessId, user);
   },
 };
 

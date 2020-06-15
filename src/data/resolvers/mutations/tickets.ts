@@ -1,24 +1,9 @@
-import { ActivityLogs, Checklists, Conformities, Stages, Tickets } from '../../../db/models';
-import { getCompanies, getCustomers, getNewOrder } from '../../../db/models/boardUtils';
+import { Tickets } from '../../../db/models';
 import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
-import { BOARD_STATUSES, NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
 import { ITicket } from '../../../db/models/definitions/tickets';
-import { graphqlPubsub } from '../../../pubsub';
-import { MODULE_NAMES } from '../../constants';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds } from '../../utils';
-import {
-  copyChecklists,
-  copyPipelineLabels,
-  createConformity,
-  IBoardNotificationParams,
-  itemsChange,
-  itemStatusChange,
-  prepareBoardItemDoc,
-  sendNotifications,
-} from '../boardUtils';
+import { itemsAdd, itemsArchive, itemsChange, itemsCopy, itemsEdit, itemsRemove } from './boardUtils';
 
 interface ITicketsEdit extends ITicket {
   _id: string;
@@ -29,64 +14,7 @@ const ticketMutations = {
    * Create new ticket
    */
   async ticketsAdd(_root, doc: ITicket & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
-    doc.watchedUserIds = [user._id];
-
-    const extendedDoc = {
-      ...docModifier(doc),
-      modifiedBy: user._id,
-      userId: user._id,
-      order: await getNewOrder({ collection: Tickets, stageId: doc.stageId, aboveItemId: doc.aboveItemId }),
-    };
-
-    const ticket = await Tickets.createTicket(extendedDoc);
-
-    await createConformity({
-      mainType: MODULE_NAMES.TICKET,
-      mainTypeId: ticket._id,
-      customerIds: doc.customerIds,
-      companyIds: doc.companyIds,
-    });
-
-    await sendNotifications({
-      item: ticket,
-      user,
-      type: NOTIFICATION_TYPES.TICKET_ADD,
-      action: `invited you to the`,
-      content: `'${ticket.name}'.`,
-      contentType: MODULE_NAMES.TICKET,
-    });
-
-    await putCreateLog(
-      {
-        type: MODULE_NAMES.TICKET,
-        newData: {
-          ...extendedDoc,
-          order: ticket.order,
-          createdAt: ticket.createdAt,
-          modifiedAt: ticket.modifiedAt,
-        },
-        object: ticket,
-      },
-      user,
-    );
-
-    const stage = await Stages.getStage(ticket.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId: doc.proccessId,
-        action: 'itemAdd',
-        data: {
-          item: ticket,
-          aboveItemId: doc.aboveItemId,
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-
-    return ticket;
+    return itemsAdd(doc, 'ticket', user, docModifier, Tickets.createTicket)
   },
 
   /**
@@ -95,194 +23,21 @@ const ticketMutations = {
   async ticketsEdit(_root, { _id, proccessId, ...doc }: ITicketsEdit & { proccessId: string }, { user }: IContext) {
     const oldTicket = await Tickets.getTicket(_id);
 
-    const extendedDoc = {
-      ...doc,
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-    };
-
-    const updatedTicket = await Tickets.updateTicket(_id, extendedDoc);
-
-    await copyPipelineLabels({ item: oldTicket, doc, user });
-
-    const notificationDoc: IBoardNotificationParams = {
-      item: updatedTicket,
-      user,
-      type: NOTIFICATION_TYPES.TICKET_EDIT,
-      contentType: MODULE_NAMES.TICKET,
-    };
-
-    const stage = await Stages.getStage(updatedTicket.stageId);
-
-    if (doc.status && oldTicket.status && oldTicket.status !== doc.status) {
-      const activityAction = doc.status === 'active' ? 'activated' : 'archived';
-
-      await ActivityLogs.createArchiveLog({
-        item: updatedTicket,
-        contentType: 'task',
-        action: activityAction,
-        userId: user._id,
-      });
-
-      // order notification
-      const { publishAction, data } = await itemStatusChange({
-        type: 'task', item: updatedTicket, status: activityAction
-      });
-
-      graphqlPubsub.publish('pipelinesChanged', {
-        pipelinesChanged: {
-          _id: stage.pipelineId,
-          proccessId,
-          action: publishAction,
-          data,
-        },
-      });
-    }
-
-    if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldTicket.assignedUserIds, doc.assignedUserIds);
-
-      const activityContent = { addedUserIds, removedUserIds };
-
-      await ActivityLogs.createAssigneLog({
-        contentId: _id,
-        userId: user._id,
-        contentType: 'ticket',
-        content: activityContent,
-      });
-
-      notificationDoc.invitedUsers = addedUserIds;
-      notificationDoc.removedUsers = removedUserIds;
-    }
-
-    await sendNotifications(notificationDoc);
-
-    await putUpdateLog(
-      {
-        type: MODULE_NAMES.TICKET,
-        object: oldTicket,
-        newData: extendedDoc,
-        updatedDocument: updatedTicket,
-      },
-      user,
-    );
-
-    if (oldTicket.stageId === updatedTicket.stageId) {
-      graphqlPubsub.publish('ticketsChanged', {
-        ticketsChanged: updatedTicket,
-      });
-
-      return updatedTicket;
-    }
-
-    // if ticket moves between stages
-    const { content, action } = await itemsChange(user._id, oldTicket, MODULE_NAMES.TICKET, updatedTicket.stageId);
-
-    await sendNotifications({
-      item: updatedTicket,
-      user,
-      type: NOTIFICATION_TYPES.TICKET_CHANGE,
-      content,
-      action,
-      contentType: MODULE_NAMES.TICKET,
-    });
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'orderUpdated',
-        data: {
-          item: updatedTicket,
-        },
-      },
-    });
-
-    return updatedTicket;
+    return itemsEdit(_id, 'ticket', oldTicket, doc, proccessId, user, Tickets.updateTicket);
   },
 
   /**
    * Change ticket
    */
   async ticketsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
-    const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc
-
-    const ticket = await Tickets.getTicket(itemId);
-
-    const extendedDoc = {
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-      stageId: destinationStageId,
-      order: await getNewOrder({ collection: Tickets, stageId: destinationStageId, aboveItemId }),
-    };
-
-    const updatedTicket = await Tickets.updateTicket(itemId, extendedDoc);
-
-    const { content, action } = await itemsChange(user._id, ticket, MODULE_NAMES.TICKET, destinationStageId);
-
-    await sendNotifications({
-      item: ticket,
-      user,
-      type: NOTIFICATION_TYPES.TICKET_CHANGE,
-      action,
-      content,
-      contentType: MODULE_NAMES.TICKET,
-    });
-
-    await putUpdateLog(
-      {
-        type: MODULE_NAMES.TICKET,
-        object: ticket,
-        newData: extendedDoc,
-        updatedDocument: updatedTicket,
-      },
-      user,
-    );
-
-    // order notification
-    const stage = await Stages.getStage(ticket.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'orderUpdated',
-        data: {
-          item: ticket,
-          aboveItemId,
-          destinationStageId,
-          oldStageId: sourceStageId,
-        },
-      },
-    });
-
-    return ticket;
+    return itemsChange(doc, 'ticket', user, Tickets.updateTicket);
   },
 
   /**
    * Remove ticket
    */
   async ticketsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const ticket = await Tickets.getTicket(_id);
-
-    await sendNotifications({
-      item: ticket,
-      user,
-      type: NOTIFICATION_TYPES.TICKET_DELETE,
-      action: `deleted ticket:`,
-      content: `'${ticket.name}'`,
-      contentType: MODULE_NAMES.TICKET,
-    });
-
-    await Conformities.removeConformity({ mainType: MODULE_NAMES.TICKET, mainTypeId: ticket._id });
-    await Checklists.removeChecklists(MODULE_NAMES.TICKET, ticket._id);
-    await ActivityLogs.removeActivityLog(ticket._id);
-
-    const removed = await ticket.remove();
-
-    await putDeleteLog({ type: MODULE_NAMES.TICKET, object: ticket }, user);
-
-    return removed;
+    return itemsRemove(_id, 'ticket', user);
   },
 
   /**
@@ -293,78 +48,11 @@ const ticketMutations = {
   },
 
   async ticketsCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
-    const ticket = await Tickets.getTicket(_id);
-
-    const doc = await prepareBoardItemDoc(_id, 'ticket', user._id);
-
-    doc.source = ticket.source;
-
-    const clone = await Tickets.createTicket(doc);
-
-    const companies = await getCompanies('ticket', _id);
-    const customers = await getCustomers('ticket', _id);
-
-    await createConformity({
-      mainType: 'ticket',
-      mainTypeId: clone._id,
-      customerIds: customers.map(c => c._id),
-      companyIds: companies.map(c => c._id),
-    });
-    await copyChecklists({
-      contentType: 'ticket',
-      contentTypeId: ticket._id,
-      targetContentId: clone._id,
-      user,
-    });
-
-    // order notification
-    const stage = await Stages.getStage(clone.stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'itemAdd',
-        data: {
-          item: clone,
-          aboveItemId: _id,
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-    return clone;
+    return itemsCopy(_id, proccessId, 'ticket', user, ['source'], Tickets.createTicket);
   },
 
   async ticketsArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
-    const tickets = await Tickets.find({stageId, status: {$ne: BOARD_STATUSES.ARCHIVED}});
-
-    await Tickets.updateMany({ stageId }, { $set: { status: BOARD_STATUSES.ARCHIVED } });
-
-    for (const ticket of tickets) {
-      await ActivityLogs.createArchiveLog({
-        item: ticket,
-        contentType: 'ticket',
-        action: 'archive',
-        userId: user._id,
-      });
-    }
-
-    // order notification
-    const stage = await Stages.getStage(stageId);
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: 'itemsRemove',
-        data: {
-          destinationStageId: stage._id,
-        },
-      },
-    });
-
-    return 'ok';
+    return itemsArchive(stageId, 'ticket', proccessId, user);
   },
 };
 
