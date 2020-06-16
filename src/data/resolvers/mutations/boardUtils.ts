@@ -1,6 +1,7 @@
+import resolvers from "..";
 import { ActivityLogs, Boards, Checklists, Conformities, Notifications, Pipelines, Stages } from "../../../db/models";
 import { getCollection, getCompanies, getCustomers, getItem, getNewOrder } from "../../../db/models/boardUtils";
-import { IItemCommonFields, IItemDragCommonFields } from "../../../db/models/definitions/boards";
+import { IItemCommonFields, IItemDragCommonFields, IStageDocument } from "../../../db/models/definitions/boards";
 import { BOARD_STATUSES, NOTIFICATION_TYPES } from "../../../db/models/definitions/constants";
 import { IDeal, IDealDocument } from "../../../db/models/definitions/deals";
 import { IGrowthHack, IGrowthHackDocument } from "../../../db/models/definitions/growthHacks";
@@ -11,6 +12,42 @@ import { graphqlPubsub } from "../../../pubsub";
 import { putCreateLog, putDeleteLog, putUpdateLog } from "../../logUtils";
 import { checkUserIds } from "../../utils";
 import { copyChecklists, copyPipelineLabels, createConformity, IBoardNotificationParams, prepareBoardItemDoc, sendNotifications } from "../boardUtils";
+
+const itemResolver = async (type: string, item: IItemCommonFields) => {
+  let resolverType = '';
+
+  switch( type ) {
+    case 'deal':
+      resolverType = 'Deal'
+      break;
+
+    case 'task':
+      resolverType = 'Task'
+      break;
+
+    case 'ticket':
+      resolverType = 'Ticket'
+      break;
+
+    case 'grothHack':
+      resolverType = 'GrowthHack'
+      break;
+
+    default:
+      return {};
+  }
+
+  const additionInfo = {};
+  const resolver = resolvers[resolverType]
+
+  for (const subResolver of Object.keys(resolver)) {
+    try{
+      additionInfo[subResolver] = await resolver[subResolver](item)
+    } catch (unused) { continue }
+  }
+
+  return additionInfo;
+}
 
 export const itemsAdd = async (
   doc: (IDeal | IItemCommonFields | ITicket | IGrowthHack) & { proccessId: string; aboveItemId: string },
@@ -76,17 +113,19 @@ export const itemsAdd = async (
   return item;
 }
 
-export const itemStatusChange = async ({ type, item, status }: { type: string, item: any, status: string }) => {
+export const changeItemStatus = async ({ type, item, status, proccessId, stage }: { type: string, item: any, status: string, proccessId: string, stage: IStageDocument }) => {
   if (status === 'archived') {
-    return {
-      publishAction: 'itemRemove',
-      data: {
-        item,
-        aboveItemId: '',
-        destinationStageId: '',
-        oldStageId: item.stageId
-      }
-    };
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: stage.pipelineId,
+        proccessId,
+        action: 'itemRemove',
+        data: {
+          item,
+          oldStageId: item.stageId
+        },
+      },
+    });
   }
 
   const collection = getCollection(type)
@@ -108,15 +147,18 @@ export const itemStatusChange = async ({ type, item, status }: { type: string, i
     })
   });
 
-  return {
-    publishAction: 'itemAdd',
-    data: {
-      item,
-      aboveItemId,
-      destinationStageId: item.stageId,
-      oldStageId: ''
-    }
-  }
+  graphqlPubsub.publish('pipelinesChanged', {
+    pipelinesChanged: {
+      _id: stage.pipelineId,
+      proccessId,
+      action: 'itemAdd',
+      data: {
+        item: { ...item._doc, ...(await itemResolver(type, item))},
+        aboveItemId,
+        destinationStageId: item.stageId,
+      },
+    },
+  });
 };
 
 export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: any, proccessId: string, user: IUserDocument, modelUpate) => {
@@ -152,18 +194,7 @@ export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: an
     });
 
     // order notification
-    const { publishAction, data } = await itemStatusChange({
-      type, item: updatedItem, status: activityAction
-    });
-
-    graphqlPubsub.publish('pipelinesChanged', {
-      pipelinesChanged: {
-        _id: stage.pipelineId,
-        proccessId,
-        action: publishAction,
-        data,
-      },
-    });
+    await changeItemStatus({ type, item: updatedItem, status: activityAction, proccessId, stage });
   }
 
   if (doc.assignedUserIds && doc.assignedUserIds.length > 0) {
@@ -222,7 +253,7 @@ export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: an
       proccessId,
       action: 'orderUpdated',
       data: {
-        item: updatedItem,
+        item: { ...updatedItem._doc, ...(await itemResolver(type, updatedItem))},
       },
     },
   });
@@ -316,7 +347,7 @@ export const itemsChange = async (doc: IItemDragCommonFields, type: string, user
       proccessId,
       action: 'orderUpdated',
       data: {
-        item,
+        item: { ...item._doc, ...(await itemResolver(type, item))},
         aboveItemId,
         destinationStageId,
         oldStageId: sourceStageId,
@@ -394,7 +425,7 @@ export const itemsCopy = async (
       proccessId,
       action: 'itemAdd',
       data: {
-        item: clone,
+        item: { ...clone._doc, ...(await itemResolver(type, clone))},
         aboveItemId: _id,
         destinationStageId: stage._id,
       },
