@@ -1,5 +1,17 @@
 import * as mongoose from 'mongoose';
-import { Companies, Conformities, Customers, ImportHistory, Products, Tags, Users } from '../db/models';
+import {
+  Companies,
+  Conformities,
+  Customers,
+  Deals,
+  ImportHistory,
+  Products,
+  Stages,
+  Tags,
+  Tasks,
+  Tickets,
+  Users,
+} from '../db/models';
 import { graphqlPubsub } from '../pubsub';
 import { connect } from './utils';
 
@@ -23,14 +35,35 @@ connect().then(async () => {
   const { user, scopeBrandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
 
   let percentage = '0';
-  let create: any = Customers.createCustomer;
+  let create: any = null;
 
-  if (contentType === 'company') {
-    create = Companies.createCompany;
+  const isBoardItem = (): boolean => contentType === 'deal' || contentType === 'task' || contentType === 'ticket';
+
+  switch (contentType) {
+    case 'company':
+      create = Companies.createCompany;
+      break;
+    case 'customer':
+      create = Customers.createCustomer;
+      break;
+    case 'product':
+      create = Products.createProduct;
+      break;
+    case 'deal':
+      create = Deals.createDeal;
+      break;
+    case 'task':
+      create = Tasks.createTask;
+      break;
+    case 'ticket':
+      create = Tickets.createTicket;
+      break;
+    default:
+      break;
   }
 
-  if (contentType === 'product') {
-    create = Products.createProduct;
+  if (!create) {
+    throw new Error(`Unsupported content type "${contentType}"`);
   }
 
   // Iterating field values
@@ -92,6 +125,19 @@ connect().then(async () => {
           }
           break;
 
+        case 'customersPrimaryEmails':
+          doc.customersPrimaryEmails = (value || '').toString().split(',');
+          break;
+
+        case 'stageName':
+          const stage = await Stages.findOne({ name: (value || '').toString() });
+
+          if (stage && isBoardItem()) {
+            doc[property.name] = stage._id;
+          }
+
+          break;
+
         case 'tag':
           {
             const tagName = value.toString();
@@ -140,17 +186,36 @@ connect().then(async () => {
       doc.emailValidationStatus = 'unknown';
     }
 
+    // set board item created user
+    if (isBoardItem()) {
+      doc.userId = user._id;
+    }
+
     await create(doc, user)
       .then(async cocObj => {
-        if (doc.companiesPrimaryNames && doc.companiesPrimaryNames.length > 0) {
+        if (doc.companiesPrimaryNames && doc.companiesPrimaryNames.length > 0 && contentType !== 'company') {
           const companies = await Companies.find({ primaryName: { $in: doc.companiesPrimaryNames } }, { _id: 1 });
           const companyIds = companies.map(company => company._id);
 
           for (const _id of companyIds) {
             await Conformities.addConformity({
-              mainType: 'customer',
+              mainType: contentType,
               mainTypeId: cocObj._id,
               relType: 'company',
+              relTypeId: _id,
+            });
+          }
+        }
+
+        if (doc.customersPrimaryEmails && doc.customersPrimaryEmails.length > 0 && contentType !== 'customer') {
+          const customers = await Customers.find({ primaryEmail: { $in: doc.customersPrimaryEmails } }, { _id: 1 });
+          const companyIds = customers.map(company => company._id);
+
+          for (const _id of companyIds) {
+            await Conformities.addConformity({
+              mainType: contentType,
+              mainTypeId: cocObj._id,
+              relType: 'customer',
               relTypeId: _id,
             });
           }
