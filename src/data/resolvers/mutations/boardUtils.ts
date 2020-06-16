@@ -126,6 +126,8 @@ export const changeItemStatus = async ({ type, item, status, proccessId, stage }
         },
       },
     });
+
+    return;
   }
 
   const collection = getCollection(type)
