@@ -18,32 +18,29 @@ const itemResolver = async (type: string, item: IItemCommonFields) => {
 
   switch( type ) {
     case 'deal':
-      resolverType = 'Deal'
+      resolverType = 'Deal';
       break;
 
     case 'task':
-      resolverType = 'Task'
+      resolverType = 'Task';
       break;
 
     case 'ticket':
-      resolverType = 'Ticket'
+      resolverType = 'Ticket';
       break;
 
-    case 'grothHack':
-      resolverType = 'GrowthHack'
+    case 'growthHack':
+      resolverType = 'GrowthHack';
       break;
-
-    default:
-      return {};
   }
 
   const additionInfo = {};
-  const resolver = resolvers[resolverType]
+  const resolver = resolvers[resolverType] || {};
 
   for (const subResolver of Object.keys(resolver)) {
     try{
-      additionInfo[subResolver] = await resolver[subResolver](item)
-    } catch (unused) { continue }
+      additionInfo[subResolver] = await resolver[subResolver](item);
+    } catch (unused) { continue };
   }
 
   return additionInfo;
