@@ -58,6 +58,8 @@ export const queries = `
 `;
 
 const commonParams = `
+  proccessId: String,
+  aboveItemId: String,
   name: String,
   stageId: String,
   assignedUserIds: [String],
