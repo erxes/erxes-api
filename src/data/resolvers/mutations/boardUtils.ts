@@ -264,7 +264,7 @@ export const itemMover = async (
   contentType: string,
   destinationStageId: string
 ) => {
-  const oldStageId = item ? item.stageId : '';
+  const oldStageId = item.stageId;
 
   let action = `changed order of your ${contentType}:`;
   let content = `'${item.name}'`;
