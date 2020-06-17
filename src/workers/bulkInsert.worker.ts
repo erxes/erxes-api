@@ -1,10 +1,12 @@
 import * as mongoose from 'mongoose';
 import {
+  Boards,
   Companies,
   Conformities,
   Customers,
   Deals,
   ImportHistory,
+  Pipelines,
   Products,
   Stages,
   Tags,
@@ -87,11 +89,14 @@ connect().then(async () => {
       customFieldsData: [],
     };
 
-    let colIndex = 0;
+    let colIndex: number = 0;
+    let boardName: string = '';
+    let pipelineName: string = '';
+    let stageName: string = '';
 
     // Iterating through detailed properties
     for (const property of properties) {
-      const value = fieldValue[colIndex] || '';
+      const value = (fieldValue[colIndex] || '').toString();
 
       switch (property.type) {
         case 'customProperty':
@@ -105,13 +110,13 @@ connect().then(async () => {
 
         case 'customData':
           {
-            doc[property.name] = value.toString();
+            doc[property.name] = value;
           }
           break;
 
         case 'ownerEmail':
           {
-            const userEmail = value.toString();
+            const userEmail = value;
 
             const owner = await Users.findOne({ email: userEmail }).lean();
 
@@ -121,26 +126,29 @@ connect().then(async () => {
 
         case 'companiesPrimaryNames':
           {
-            doc.companiesPrimaryNames = (value || '').toString().split(',');
+            doc.companiesPrimaryNames = value.split(',');
           }
           break;
 
         case 'customersPrimaryEmails':
-          doc.customersPrimaryEmails = (value || '').toString().split(',');
+          doc.customersPrimaryEmails = value.split(',');
+          break;
+
+        case 'boardName':
+          boardName = value;
+          break;
+
+        case 'pipelineName':
+          pipelineName = value;
           break;
 
         case 'stageName':
-          const stage = await Stages.findOne({ name: (value || '').toString() });
-
-          if (stage && isBoardItem()) {
-            doc[property.name] = stage._id;
-          }
-
+          stageName = value;
           break;
 
         case 'tag':
           {
-            const tagName = value.toString();
+            const tagName = value;
 
             const tag = await Tags.findOne({ name: new RegExp(`.*${tagName}.*`, 'i') }).lean();
 
@@ -150,7 +158,7 @@ connect().then(async () => {
 
         case 'basic':
           {
-            doc[property.name] = value.toString();
+            doc[property.name] = value;
 
             if (property.name === 'primaryName' && value) {
               doc.names = [value];
@@ -165,22 +173,26 @@ connect().then(async () => {
             }
 
             if (property.name === 'phones' && value) {
-              doc.phones = value.toString().split(',');
+              doc.phones = value.split(',');
             }
 
             if (property.name === 'emails' && value) {
-              doc.emails = value.toString().split(',');
+              doc.emails = value.split(',');
             }
 
             if (property.name === 'names' && value) {
-              doc.names = value.toString().split(',');
+              doc.names = value.split(',');
+            }
+
+            if (property.name === 'isComplete') {
+              doc.isComplete = Boolean(value);
             }
           }
           break;
-      }
+      } // end property.type switch
 
       colIndex++;
-    }
+    } // end properties for loop
 
     if (contentType === 'customer' && !doc.emailValidationStatus) {
       doc.emailValidationStatus = 'unknown';
@@ -189,6 +201,14 @@ connect().then(async () => {
     // set board item created user
     if (isBoardItem()) {
       doc.userId = user._id;
+
+      if (boardName && pipelineName && stageName) {
+        const board = await Boards.findOne({ name: boardName, type: contentType });
+        const pipeline = await Pipelines.findOne({ boardId: board && board._id, name: pipelineName });
+        const stage = await Stages.findOne({ pipelineId: pipeline && pipeline._id, name: stageName });
+
+        doc.stageId = stage && stage._id;
+      }
     }
 
     await create(doc, user)
@@ -209,9 +229,9 @@ connect().then(async () => {
 
         if (doc.customersPrimaryEmails && doc.customersPrimaryEmails.length > 0 && contentType !== 'customer') {
           const customers = await Customers.find({ primaryEmail: { $in: doc.customersPrimaryEmails } }, { _id: 1 });
-          const companyIds = customers.map(company => company._id);
+          const customerIds = customers.map(customer => customer._id);
 
-          for (const _id of companyIds) {
+          for (const _id of customerIds) {
             await Conformities.addConformity({
               mainType: contentType,
               mainTypeId: cocObj._id,

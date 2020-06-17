@@ -72,6 +72,16 @@ export const checkFieldNames = async (type: string, fields: string[]) => {
       property.type = 'tag';
     }
 
+    if (fieldName === 'boardName') {
+      property.name = 'boardId';
+      property.type = 'boardName';
+    }
+
+    if (fieldName === 'pipelineName') {
+      property.name = 'pipelineId';
+      property.type = 'pipelineName';
+    }
+
     if (fieldName === 'stageName') {
       property.name = 'stageId';
       property.type = 'stageName';
