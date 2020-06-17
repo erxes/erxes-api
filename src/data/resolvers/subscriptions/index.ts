@@ -3,7 +3,6 @@ import checklists from './checklists';
 import conversations from './conversations';
 import customers from './customers';
 import importHistory from './importHistory';
-import itemDetails from './itemDetails';
 import notifications from './notifications';
 import pipelines from './pipelines';
 import robot from './robot';
@@ -15,7 +14,6 @@ let subscriptions: any = {
   ...importHistory,
   ...notifications,
   ...robot,
-  ...itemDetails,
   ...checklists,
   ...pipelines,
 };

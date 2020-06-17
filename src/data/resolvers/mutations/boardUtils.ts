@@ -224,13 +224,22 @@ export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: an
     user,
   );
 
-  if (oldItem.stageId === updatedItem.stageId) {
-    const typeString = `itemsDetailChanged`;
+  const pipelinesChangedIds = [updatedItem._id, stage.pipelineId];
 
-    graphqlPubsub.publish([typeString], {
-      [typeString]: updatedItem,
+  for (const pipelinesChangedId of pipelinesChangedIds){
+    graphqlPubsub.publish('pipelinesChanged', {
+      pipelinesChanged: {
+        _id: pipelinesChangedId,
+        proccessId,
+        action: 'itemUpdate',
+        data: {
+          item: { ...updatedItem._doc, ...(await itemResolver(type, updatedItem))},
+        },
+      },
     });
+  }
 
+  if (oldItem.stageId === updatedItem.stageId) {
     return updatedItem;
   }
 
@@ -244,17 +253,6 @@ export const itemsEdit = async (_id: string, type: string, oldItem: any, doc: an
     content,
     action,
     contentType: type,
-  });
-
-  graphqlPubsub.publish('pipelinesChanged', {
-    pipelinesChanged: {
-      _id: stage.pipelineId,
-      proccessId,
-      action: 'orderUpdated',
-      data: {
-        item: { ...updatedItem._doc, ...(await itemResolver(type, updatedItem))},
-      },
-    },
   });
 
   return updatedItem;

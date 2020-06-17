@@ -275,7 +275,6 @@ export const subscriptions = `
     onboardingChanged(userId: String!): OnboardingNotification
 
     pipelinesChanged(_id: String!): PipelineChangeResponse
-    itemsDetailChanged(_id: String!): Deal
 
     checklistsChanged(contentType: String!, contentTypeId: String!): Checklist
     checklistDetailChanged(_id: String!): Checklist
