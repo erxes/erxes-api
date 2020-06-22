@@ -600,8 +600,6 @@ export const sendRequest = async (
       params,
     });
 
-    debugBase(`request post has responded`)
-
     const responseBody = response.getBody();
 
     debugExternalApi(`

@@ -9,7 +9,6 @@ const signinGolomtApi = async () => {
   const signinUrl = 'chatapi/auth/signin';
 
   try{
-    debugBase(`before, sendRequest`)
     const response = await sendRequest({
       url: `${process.env.GOLOMT_POST_URL}${signinUrl}`,
       method: 'POST',
@@ -20,11 +19,7 @@ const signinGolomtApi = async () => {
       }
     });
 
-    debugBase(`get response ${JSON.stringify(response)}`);
-
     await Configs.createOrUpdateConfig({ code: 'GOLOMT_ACCESS_TOKEN', value: response });
-
-    debugBase(`to save token`)
     return response;
   } catch (e) {
     return {status: 'error', message: e.message}
@@ -32,37 +27,30 @@ const signinGolomtApi = async () => {
 }
 
 const checkAccessToken = async () => {
-  debugBase('at checkAccessToken');
   const token = await Configs.findOne({code: 'GOLOMT_ACCESS_TOKEN'});
-  debugBase(`saved token: ${JSON.stringify(token)}`)
+
   if (!token) {
-    debugBase(`hasnt token`)
     return signinGolomtApi();
   }
 
   if (!token.value) {
-    debugBase(`hasnt token.value`)
     return signinGolomtApi();
   }
 
   if (!token.value.expires_in) {
-    debugBase(`hasnt token.value.expires_in`)
     return signinGolomtApi();
   }
 
   if (!token.value.access_token) {
-    debugBase(`hasnt token.value.access_token`)
     return signinGolomtApi();
   }
 
   const now = new Date(Date.now());
 
   if (now > new Date(Date.parse(token.value.expires_in))) {
-    debugBase(`token.value.expires in expired`)
     return signinGolomtApi();
   }
 
-  debugBase(`has correct old token.value`);
   return token.value;
 }
 
@@ -73,11 +61,7 @@ export const sendMsgToGolomt = async (msg: IMessageDocument, customer: ICustomer
 
   const writeMsgUrl = 'chatapi/api/chat/write';
 
-  debugBase(`at sendMgsToGolomt`);
-
   const tokenVal = await checkAccessToken();
-
-  debugBase(`after get tokenValue ${JSON.stringify(tokenVal)}`);
 
   if (tokenVal.status === 'error') {
     debugBase(`dont signin to golomt, because: ${tokenVal.message}`);
