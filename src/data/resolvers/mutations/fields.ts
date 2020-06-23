@@ -1,9 +1,10 @@
 import { Fields, FieldsGroups } from '../../../db/models';
 import { IField, IFieldGroup } from '../../../db/models/definitions/fields';
 import { IOrderInput } from '../../../db/models/Fields';
+import { MODULE_NAMES } from '../../constants';
+import { putCreateLog } from '../../logUtils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog } from '../../utils';
 
 interface IFieldsEdit extends IField {
   _id: string;
@@ -22,10 +23,9 @@ const fieldMutations = {
 
     await putCreateLog(
       {
-        type: `${args.contentType}Field`,
-        newData: JSON.stringify(args),
+        type: MODULE_NAMES.FIELD,
+        newData: args,
         object: field,
-        description: `${field.text} has been created`,
       },
       user,
     );

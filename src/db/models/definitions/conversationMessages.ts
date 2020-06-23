@@ -1,4 +1,5 @@
 import { Document, Schema } from 'mongoose';
+import { MESSAGE_TYPES } from './constants';
 import { field } from './utils';
 
 interface IEngageDataRules {
@@ -38,6 +39,7 @@ export interface IMessage {
   formWidgetData?: any;
   messengerAppData?: any;
   engageData?: IEngageData;
+  contentType?: string;
 }
 
 export interface IMessageDocument extends IMessage, Document {
@@ -68,6 +70,7 @@ const engageDataRuleSchema = new Schema(
 
 const engageDataSchema = new Schema(
   {
+    engageKind: field({ type: String }),
     messageId: field({ type: String }),
     brandId: field({ type: String }),
     content: field({ type: String }),
@@ -94,4 +97,9 @@ export const messageSchema = new Schema({
   formWidgetData: field({ type: Object }),
   messengerAppData: field({ type: Object }),
   engageData: field({ type: engageDataSchema }),
+  contentType: field({
+    type: String,
+    enum: MESSAGE_TYPES.ALL,
+    default: MESSAGE_TYPES.TEXT,
+  }),
 });

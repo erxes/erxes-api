@@ -25,13 +25,11 @@ export const conformityQueryFields = `
 
 export const commonTypes = `
   name: String!
-  order: Int
+  order: Float
   createdAt: Date
   hasNotified: Boolean
   assignedUserIds: [String]
-  assignedUsers: [User]
   labelIds: [String]
-  labels: [PipelineLabel]
   closeDate: Date
   description: String
   modifiedAt: Date
@@ -40,9 +38,41 @@ export const commonTypes = `
   isComplete: Boolean,
   isWatched: Boolean,
   stageId: String
-  stage: Stage
-  pipeline: Pipeline
   boardId: String
   priority: String
+  status: String
   attachments: [Attachment]
+  userId: String
+
+  assignedUsers: [User]
+  stage: Stage
+  labels: [PipelineLabel]
+  pipeline: Pipeline
+  createdUser: User
 `;
+
+export const commonMutationParams = `
+  proccessId: String,
+  aboveItemId: String,
+  stageId: String,
+  assignedUserIds: [String],
+  attachments: [AttachmentInput],
+  closeDate: Date,
+  description: String,
+  order: Int,
+  reminderMinute: Int,
+  isComplete: Boolean,
+  priority: String,
+  status: String,
+  sourceConversationId: String,
+`;
+
+export const commonDragParams = `
+  itemId: String!,
+  aboveItemId: String,
+  destinationStageId: String!,
+  sourceStageId: String,
+  proccessId: String
+`;
+
+export const copyParams = `companyIds: [String], customerIds: [String], labelIds: [String]`;

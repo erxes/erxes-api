@@ -1,7 +1,10 @@
+import * as _ from 'underscore';
 import { PipelineTemplates } from '../../../db/models';
 import { IPipelineTemplate, IPipelineTemplateStage } from '../../../db/models/definitions/pipelineTemplates';
+import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { registerOnboardHistory } from '../../utils';
 import { checkPermission } from '../boardUtils';
 
 interface IPipelineTemplatesEdit extends IPipelineTemplate {
@@ -23,9 +26,8 @@ const pipelineTemplateMutations = {
 
     await putCreateLog(
       {
-        type: 'pipelineTemplate',
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been created`,
+        type: MODULE_NAMES.PIPELINE_TEMPLATE,
+        newData: { ...doc, stages: pipelineTemplate.stages },
         object: pipelineTemplate,
       },
       user,
@@ -41,15 +43,14 @@ const pipelineTemplateMutations = {
     await checkPermission(doc.type, user, 'templatesEdit');
 
     const pipelineTemplate = await PipelineTemplates.getPipelineTemplate(_id);
-
     const updated = await PipelineTemplates.updatePipelineTemplate(_id, doc, stages);
 
     await putUpdateLog(
       {
-        type: 'pipelineTemplate',
-        newData: JSON.stringify(doc),
-        description: `${doc.name} has been edited`,
+        type: MODULE_NAMES.PIPELINE_TEMPLATE,
+        newData: { ...doc, stages: updated.stages },
         object: pipelineTemplate,
+        updatedDocument: updated,
       },
       user,
     );
@@ -65,6 +66,8 @@ const pipelineTemplateMutations = {
 
     await checkPermission(pipelineTemplate.type, user, 'templatesDuplicate');
 
+    await registerOnboardHistory({ type: `${pipelineTemplate.type}TemplatesDuplicate`, user });
+
     return PipelineTemplates.duplicatePipelineTemplate(_id);
   },
 
@@ -78,14 +81,7 @@ const pipelineTemplateMutations = {
 
     const removed = await PipelineTemplates.removePipelineTemplate(_id);
 
-    await putDeleteLog(
-      {
-        type: 'pipelineTemplate',
-        object: pipelineTemplate,
-        description: `${pipelineTemplate.name} has been removed`,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.PIPELINE_TEMPLATE, object: pipelineTemplate }, user);
 
     return removed;
   },

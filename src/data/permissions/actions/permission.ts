@@ -127,6 +127,53 @@ export const moduleObjects = {
       },
     ],
   },
+  dashboards: {
+    name: 'dashboards',
+    description: 'Dashboards',
+    actions: [
+      {
+        name: 'dashboardsAll',
+        description: 'All',
+        use: [
+          'showDashboards',
+          'dashboardAdd',
+          'dashboardEdit',
+          'dashboardRemove',
+          'dashboardItemAdd',
+          'dashboardItemEdit',
+          'dashboardItemRemove',
+        ],
+      },
+      {
+        name: 'dashboardAdd',
+        description: 'Add dashboard',
+      },
+      {
+        name: 'dashboardEdit',
+        description: 'Edit dashboard',
+      },
+      {
+        name: 'dashboardRemove',
+        description: 'Remove dashboard',
+      },
+      {
+        name: 'dashboardItemAdd',
+        description: 'Add dashboard item',
+      },
+      {
+        name: 'dashboardItemEdit',
+        description: 'Edit dashboard item',
+      },
+      {
+        name: 'dashboardItemRemove',
+        description: 'Remove dashboard item',
+      },
+      {
+        name: 'showDashboards',
+        description: 'Show dashboards',
+      },
+    ],
+  },
   deals: {
     name: 'deals',
     description: 'Deals',
@@ -151,8 +198,8 @@ export const moduleObjects = {
           'dealsAdd',
           'dealsEdit',
           'dealsRemove',
-          'dealsUpdateOrder',
           'dealsWatch',
+          'dealsArchive',
           'exportDeals',
         ],
       },
@@ -213,16 +260,16 @@ export const moduleObjects = {
         description: 'Edit deal',
       },
       {
-        name: 'dealsUpdateOrder',
-        description: 'Update deal order',
-      },
-      {
         name: 'dealsRemove',
         description: 'Remove deal',
       },
       {
         name: 'dealsWatch',
         description: 'Watch deal',
+      },
+      {
+        name: 'dealsArchive',
+        description: 'Archive all deals in a specific stage',
       },
       {
         name: 'exportDeals',
@@ -254,8 +301,8 @@ export const moduleObjects = {
           'ticketsAdd',
           'ticketsEdit',
           'ticketsRemove',
-          'ticketsUpdateOrder',
           'ticketsWatch',
+          'ticketsArchive',
           'exportTickets',
         ],
       },
@@ -316,16 +363,16 @@ export const moduleObjects = {
         description: 'Edit ticket',
       },
       {
-        name: 'ticketsUpdateOrder',
-        description: 'Update ticket order',
-      },
-      {
         name: 'ticketsRemove',
         description: 'Remove ticket',
       },
       {
         name: 'ticketsWatch',
         description: 'Watch ticket',
+      },
+      {
+        name: 'ticketsArchive',
+        description: 'Archive all tickets in a specific stage',
       },
       {
         name: 'exportTickets',
@@ -357,8 +404,8 @@ export const moduleObjects = {
           'growthHacksAdd',
           'growthHacksEdit',
           'growthHacksRemove',
-          'growthHacksUpdateOrder',
           'growthHacksWatch',
+          'growthHacksArchive',
           'growthHackTemplatesAdd',
           'growthHackTemplatesEdit',
           'growthHackTemplatesRemove',
@@ -423,16 +470,16 @@ export const moduleObjects = {
         description: 'Edit growth hacking',
       },
       {
-        name: 'growthHacksUpdateOrder',
-        description: 'Update growth hacking order',
-      },
-      {
         name: 'growthHacksRemove',
         description: 'Remove growth hacking',
       },
       {
         name: 'growthHacksWatch',
         description: 'Watch growth hacking',
+      },
+      {
+        name: 'growthHacksArchive',
+        description: 'Archive all growth hacks in a specific stage',
       },
       {
         name: 'growthHackTemplatesAdd',
@@ -480,8 +527,8 @@ export const moduleObjects = {
           'tasksAdd',
           'tasksEdit',
           'tasksRemove',
-          'tasksUpdateOrder',
           'tasksWatch',
+          'tasksArchive',
           'exportTasks',
         ],
       },
@@ -542,16 +589,16 @@ export const moduleObjects = {
         description: 'Edit task',
       },
       {
-        name: 'tasksUpdateOrder',
-        description: 'Update task order',
-      },
-      {
         name: 'tasksRemove',
         description: 'Remove task',
       },
       {
         name: 'tasksWatch',
         description: 'Watch task',
+      },
+      {
+        name: 'tasksArchive',
+        description: 'Archive all tasks in a specific stage',
       },
       {
         name: 'exportTasks',

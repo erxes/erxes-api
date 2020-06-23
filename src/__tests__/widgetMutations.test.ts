@@ -1,6 +1,7 @@
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
 import widgetMutations, { getMessengerData } from '../data/resolvers/mutations/widgets';
+import { graphqlRequest } from '../db/connection';
 import {
   brandFactory,
   conversationFactory,
@@ -25,7 +26,7 @@ import {
   MessengerApps,
 } from '../db/models';
 import { IBrandDocument } from '../db/models/definitions/brands';
-import { CONVERSATION_STATUSES } from '../db/models/definitions/constants';
+import { CONVERSATION_STATUSES, MESSAGE_TYPES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IIntegrationDocument } from '../db/models/definitions/integrations';
 import './setup.ts';
@@ -131,7 +132,7 @@ describe('messenger connect', () => {
     expect((customer.deviceTokens || []).length).toBe(1);
     expect(customer.deviceTokens).toContain('111');
     expect(customer.createdAt >= now).toBeTruthy();
-    expect((customer.messengerData || { sessionCount: 0 }).sessionCount).toBe(1);
+    expect(customer.sessionCount).toBe(1);
   });
 
   test('updates existing customer', async () => {
@@ -144,11 +145,6 @@ describe('messenger connect', () => {
         email: _customer.primaryEmail,
         isUser: true,
         deviceToken: '222',
-        // customData
-        data: {
-          plan: 1,
-          first_name: 'name',
-        },
       },
     );
 
@@ -165,20 +161,9 @@ describe('messenger connect', () => {
     expect(customer.createdAt < now).toBeTruthy();
 
     // must be updated
-    expect(customer.firstName).toBe('name');
-    expect(customer.isUser).toBeTruthy();
     expect((customer.deviceTokens || []).length).toBe(2);
     expect(customer.deviceTokens).toContain('111');
     expect(customer.deviceTokens).toContain('222');
-
-    if (!customer.messengerData) {
-      throw new Error('messengerData is null');
-    }
-    if (!customer.messengerData.customData) {
-      throw new Error('customData is null');
-    }
-
-    expect(customer.messengerData.customData.plan).toBe(1);
   });
 });
 
@@ -207,6 +192,7 @@ describe('insertMessage()', () => {
     const message = await widgetMutations.widgetsInsertMessage(
       {},
       {
+        contentType: MESSAGE_TYPES.TEXT,
         integrationId: _integration._id,
         customerId: _customer._id,
         message: faker.lorem.sentence(),
@@ -233,11 +219,8 @@ describe('insertMessage()', () => {
     if (!customer) {
       throw new Error('customer is not found');
     }
-    if (!customer.messengerData) {
-      throw new Error('messengerData is null');
-    }
 
-    expect(customer.messengerData.isActive).toBeTruthy();
+    expect(customer.isOnline).toBeTruthy();
   });
 
   test('with conversationId', async () => {
@@ -246,6 +229,7 @@ describe('insertMessage()', () => {
     const message = await widgetMutations.widgetsInsertMessage(
       {},
       {
+        contentType: MESSAGE_TYPES.TEXT,
         integrationId: _integration._id,
         customerId: _customer._id,
         message: 'withConversationId',
@@ -632,5 +616,30 @@ describe('lead', () => {
     expect(formData[3].value).toBe('88998833');
     expect(formData[4].value).toBe('radio2');
     expect(formData[5].value).toBe('check1, check2');
+  });
+
+  test('widgetsSendEmail', async () => {
+    const emailParams = {
+      toEmails: ['test-mail@gmail.com'],
+      fromEmail: 'admin@erxes.io',
+      title: 'Thank you for submitting.',
+      content: 'We have received your request',
+    };
+
+    const spyEmail = jest.spyOn(widgetMutations, 'widgetsSendEmail');
+
+    const mutation = `
+      mutation widgetsSendEmail($toEmails: [String], $fromEmail: String, $title: String, $content: String) {
+        widgetsSendEmail(toEmails: $toEmails, fromEmail: $fromEmail, title: $title, content: $content)
+      }
+    `;
+
+    spyEmail.mockImplementation(() => Promise.resolve());
+
+    const response = await graphqlRequest(mutation, 'widgetsSendEmail', emailParams);
+
+    expect(response).toBe(null);
+
+    spyEmail.mockRestore();
   });
 });

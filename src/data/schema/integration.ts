@@ -76,6 +76,7 @@ export const types = `
     showChat: Boolean
     showLauncher: Boolean
     forceLogoutWhenResolve: Boolean
+    showVideoCallRequest: Boolean
   }
 
   input MessengerUiOptions {
@@ -97,7 +98,7 @@ export const queries = `
   ): [Integration]
 
   integrationsGetUsedTypes: [integrationsGetUsedTypes]
-
+  integrationGetLineWebhookUrl(_id: String!): String
   integrationDetail(_id: String!): Integration
   integrationsTotalCount: integrationsTotalCount
   integrationsFetchApi(path: String!, params: JSON!): JSON
@@ -172,19 +173,5 @@ export const mutations = `
     attachments: [JSON]
   ): JSON
 
-  integrationAddImapAccount(
-    email: String!
-    password: String!
-    imapHost: String!
-    imapPort: Int!
-    smtpHost: String!
-    smtpPort: Int!
-    kind: String!
-  ): JSON
-
-  integrationAddMailAccount(
-    email: String!
-    password: String!
-    kind: String!
-  ): JSON
+  integrationsUpdateConfigs(configsMap: JSON!): JSON
 `;

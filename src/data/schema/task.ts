@@ -1,11 +1,10 @@
-import { commonTypes, conformityQueryFields } from './common';
+import { commonDragParams, commonMutationParams, commonTypes, conformityQueryFields, copyParams } from './common';
 
 export const types = `
   type Task {
     _id: String!
     companies: [Company]
     customers: [Customer]
-    createdUser: User
     ${commonTypes}
   }
 `;
@@ -26,30 +25,19 @@ export const queries = `
     labelIds: [String]
     sortField: String
     sortDirection: Int
+    userIds: [String]
     ${conformityQueryFields}
   ): [Task]
+  archivedTasks(pipelineId: String!, search: String, page: Int, perPage: Int): [Task]
+  archivedTasksCount(pipelineId: String!, search: String): Int
 `;
-
-const commonParams = `
-  stageId: String,
-  assignedUserIds: [String],
-  attachments: [AttachmentInput],
-  closeDate: Date,
-  description: String,
-  order: Int,
-  priority: String,
-  reminderMinute: Int,
-  isComplete: Boolean,
-  sourceConversationId: String,
-`;
-
-const copyParams = `customerIds: [String], companyIds: [String], labelIds: [String]`;
 
 export const mutations = `
-  tasksAdd(name: String!, ${copyParams}, ${commonParams}): Task
-  tasksEdit(_id: String!, name: String, ${commonParams}): Task
-  tasksChange( _id: String!, destinationStageId: String): Task
-  tasksUpdateOrder(stageId: String!, orders: [OrderItem]): [Task]
+  tasksAdd(name: String!, ${copyParams}, ${commonMutationParams}): Task
+  tasksEdit(_id: String!, name: String, ${commonMutationParams}): Task
+  tasksChange(${commonDragParams}): Task
   tasksRemove(_id: String!): Task
   tasksWatch(_id: String, isAdd: Boolean): Task
+  tasksCopy(_id: String!, proccessId: String): Task
+  tasksArchive(stageId: String!, proccessId: String): String
 `;

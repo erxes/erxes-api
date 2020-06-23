@@ -111,6 +111,22 @@ describe('activityLogQueries', () => {
     expect(response.length).toBe(3);
   });
 
+  test('Activity log content type checklist & checklist', async () => {
+    const contentId = faker.random.uuid();
+
+    await activityLogFactory({ contentId, contentType: 'checklist' });
+    await activityLogFactory({ contentId, contentType: 'checklistitem' });
+
+    const args1 = { contentId, contentType: 'checklist' };
+    const args2 = { contentId, contentType: 'checklistitem' };
+
+    const response1 = await graphqlRequest(qryActivityLogs, 'activityLogs', args1);
+    const response2 = await graphqlRequest(qryActivityLogs, 'activityLogs', args2);
+
+    expect(response1.length).toBe(2);
+    expect(response2.length).toBe(2);
+  });
+
   test('Activity log with all activity types', async () => {
     const customer = await customerFactory({});
     await conformityFactory({
@@ -123,8 +139,6 @@ describe('activityLogQueries', () => {
     await conversationFactory({ customerId: customer._id });
     await internalNoteFactory({ contentTypeId: customer._id });
     await engageMessageFactory({ customerIds: [customer._id], method: 'email' });
-
-    process.env.INTEGRATIONS_API_DOMAIN = 'http://fake.erxes.io';
 
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
@@ -281,5 +295,24 @@ describe('activityLogQueries', () => {
 
       expect(response.length).toBe(2);
     }
+  });
+
+  test('Activity log action assignee', async () => {
+    const deal1 = await dealFactory();
+
+    const doc = {
+      contentId: deal1._id,
+      contentType: 'deal',
+      action: 'assignee',
+      content: [],
+    };
+
+    await activityLogFactory(doc);
+
+    const args = { contentId: deal1._id, contentType: 'deal' };
+
+    const response = await graphqlRequest(qryActivityLogs, 'activityLogs', args);
+
+    expect(response.length).toBe(1);
   });
 });

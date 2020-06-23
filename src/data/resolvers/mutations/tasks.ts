@@ -1,16 +1,9 @@
-import { ActivityLogs, Checklists, Conformities, Tasks } from '../../../db/models';
-import { IItemCommonFields as ITask, IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import { Tasks } from '../../../db/models';
+import { IItemCommonFields as ITask, IItemDragCommonFields } from '../../../db/models/definitions/boards';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog } from '../../utils';
-import {
-  copyPipelineLabels,
-  createConformity,
-  IBoardNotificationParams,
-  itemsChange,
-  sendNotifications,
-} from '../boardUtils';
+import { registerOnboardHistory } from '../../utils';
+import { itemsAdd, itemsArchive, itemsChange, itemsCopy, itemsEdit, itemsRemove } from './boardUtils';
 
 interface ITasksEdit extends ITask {
   _id: string;
@@ -18,76 +11,23 @@ interface ITasksEdit extends ITask {
 
 const taskMutations = {
   /**
-   * Create new task
+   * Creates a new task
    */
-  async tasksAdd(_root, doc: ITask, { user, docModifier }: IContext) {
-    doc.watchedUserIds = [user._id];
-
-    const task = await Tasks.createTask({
-      ...docModifier(doc),
-      modifiedBy: user._id,
-      userId: user._id,
-    });
-
-    await createConformity({
-      mainType: 'task',
-      mainTypeId: task._id,
-      companyIds: doc.companyIds,
-      customerIds: doc.customerIds,
-    });
-
-    await sendNotifications({
-      item: task,
-      user,
-      type: NOTIFICATION_TYPES.TASK_ADD,
-      action: `invited you to the`,
-      content: `'${task.name}'.`,
-      contentType: 'task',
-    });
-
-    await putCreateLog(
-      {
-        type: 'task',
-        newData: JSON.stringify(doc),
-        object: task,
-        description: `${task.name} has been created`,
-      },
-      user,
-    );
-
-    return task;
+  async tasksAdd(_root, doc: ITask & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
+    return itemsAdd(doc, 'deal', user, docModifier, Tasks.createTask);
   },
 
   /**
    * Edit task
    */
-  async tasksEdit(_root, { _id, ...doc }: ITasksEdit, { user }: IContext) {
+  async tasksEdit(_root, { _id, proccessId, ...doc }: ITasksEdit & { proccessId: string }, { user }: IContext) {
     const oldTask = await Tasks.getTask(_id);
 
-    const updatedTask = await Tasks.updateTask(_id, {
-      ...doc,
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-    });
+    const updatedTask = await itemsEdit(_id, 'task', oldTask, doc, proccessId, user, Tasks.updateTask);
 
-    // labels should be copied to newly moved pipeline
-    await copyPipelineLabels({ item: oldTask, doc, user });
-
-    const notificationDoc: IBoardNotificationParams = {
-      item: updatedTask,
-      user,
-      type: NOTIFICATION_TYPES.TASK_EDIT,
-      contentType: 'task',
-    };
-
-    if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldTask.assignedUserIds, doc.assignedUserIds);
-
-      notificationDoc.invitedUsers = addedUserIds;
-      notificationDoc.removedUsers = removedUserIds;
+    if (updatedTask.assignedUserIds) {
+      await registerOnboardHistory({ type: 'taskAssignUser', user });
     }
-
-    await sendNotifications(notificationDoc);
 
     return updatedTask;
   },
@@ -95,60 +35,15 @@ const taskMutations = {
   /**
    * Change task
    */
-  async tasksChange(
-    _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId: string },
-    { user }: IContext,
-  ) {
-    const task = await Tasks.getTask(_id);
-
-    await Tasks.updateTask(_id, {
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-      stageId: destinationStageId,
-    });
-
-    const { content, action } = await itemsChange(user._id, task, 'task', destinationStageId);
-
-    await sendNotifications({
-      item: task,
-      user,
-      type: NOTIFICATION_TYPES.TASK_CHANGE,
-      action,
-      content,
-      contentType: 'task',
-    });
-
-    return task;
-  },
-
-  /**
-   * Update task orders (not sendNotifaction, ordered card to change)
-   */
-  tasksUpdateOrder(_root, { stageId, orders }: { stageId: string; orders: IOrderInput[] }) {
-    return Tasks.updateOrder(stageId, orders);
+  async tasksChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
+    return itemsChange(doc, 'task', user, Tasks.updateTask);
   },
 
   /**
    * Remove task
    */
   async tasksRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const task = await Tasks.getTask(_id);
-
-    await sendNotifications({
-      item: task,
-      user,
-      type: NOTIFICATION_TYPES.TASK_DELETE,
-      action: `deleted task:`,
-      content: `'${task.name}'`,
-      contentType: 'task',
-    });
-
-    await Conformities.removeConformity({ mainType: 'task', mainTypeId: task._id });
-    await Checklists.removeChecklists('task', task._id);
-    await ActivityLogs.removeActivityLog(task._id);
-
-    return task.remove();
+    return itemsRemove(_id, 'task', user);
   },
 
   /**
@@ -157,12 +52,20 @@ const taskMutations = {
   async tasksWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Tasks.watchTask(_id, isAdd, user._id);
   },
+
+  async tasksCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
+    return itemsCopy(_id, proccessId, 'task', user, [], Tasks.createTask);
+  },
+
+  async tasksArchive(_root, { stageId, proccessId }: { stageId: string; proccessId: string }, { user }: IContext) {
+    return itemsArchive(stageId, 'task', proccessId, user);
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
 checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
-checkPermission(taskMutations, 'tasksUpdateOrder', 'tasksUpdateOrder');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
 checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
+checkPermission(taskMutations, 'tasksArchive', 'tasksArchive');
 
 export default taskMutations;

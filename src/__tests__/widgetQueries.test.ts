@@ -74,6 +74,12 @@ describe('widgetQueries', () => {
     expect(response).toBe(null);
 
     response = await graphqlRequest(qry, 'widgetsConversationDetail', {
+      _id: '_id',
+      integrationId: conversation.integrationId,
+    });
+    expect(response).not.toBeNull();
+
+    response = await graphqlRequest(qry, 'widgetsConversationDetail', {
       _id: conversation._id,
       integrationId: conversation.integrationId,
     });
@@ -206,6 +212,23 @@ describe('widgetQueries', () => {
     const response = await graphqlRequest(qry, 'widgetsMessages', { conversationId: conv._id });
 
     expect(response.length).toBe(1);
+  });
+
+  test('widgetsKnowledgeBaseTopicDetail', async () => {
+    const user = await userFactory({});
+    const topic = await knowledgeBaseTopicFactory({ userId: user._id });
+
+    const qry = `
+      query widgetsKnowledgeBaseTopicDetail($_id: String!) {
+        widgetsKnowledgeBaseTopicDetail(_id: $_id) {
+          _id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest(qry, 'widgetsKnowledgeBaseTopicDetail', { _id: topic._id });
+
+    expect(response._id).toBe(topic._id);
   });
 
   test('widgetsKnowledgeBaseArticles', async () => {

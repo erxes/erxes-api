@@ -1,4 +1,5 @@
 import * as faker from 'faker';
+import * as sinon from 'sinon';
 import { graphqlRequest } from '../db/connection';
 import {
   brandFactory,
@@ -9,6 +10,7 @@ import {
   usersGroupFactory,
 } from '../db/factories';
 import { Companies, Customers, Fields, FieldsGroups } from '../db/models';
+import * as elk from '../elasticsearch';
 
 import { KIND_CHOICES } from '../db/models/definitions/constants';
 import './setup.ts';
@@ -73,6 +75,39 @@ describe('fieldQueries', () => {
   });
 
   test('Fields combined by content type', async () => {
+    const mock = sinon.stub(elk, 'fetchElk').callsFake(() => {
+      return Promise.resolve({
+        aggregations: {
+          trackedDataKeys: {
+            fieldKeys: {
+              buckets: [
+                {
+                  key: 'pageView',
+                  hits: {
+                    hits: {
+                      hits: [
+                        {
+                          _source: {
+                            name: 'pageView',
+                            attributes: [
+                              {
+                                field: 'url',
+                                value: '/test',
+                              },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      });
+    });
+
     // Creating test data
     const visibleGroup = await usersGroupFactory({ isVisible: true });
     const invisibleGroup = await usersGroupFactory({ isVisible: false });
@@ -83,8 +118,8 @@ describe('fieldQueries', () => {
     await fieldFactory({ contentType: 'customer', groupId: invisibleGroup._id });
 
     const qry = `
-      query fieldsCombinedByContentType($contentType: String!, $source: String) {
-        fieldsCombinedByContentType(contentType: $contentType, source: $source)
+      query fieldsCombinedByContentType($contentType: String!) {
+        fieldsCombinedByContentType(contentType: $contentType)
       }
     `;
 
@@ -111,26 +146,17 @@ describe('fieldQueries', () => {
     const integration3 = await integrationFactory({ brandId: brand._id, kind: KIND_CHOICES.MESSENGER });
 
     await customerFactory({ integrationId: integration._id });
-    await customerFactory({ integrationId: integration1._id, messengerData: {} });
+    await customerFactory({ integrationId: integration1._id });
     await customerFactory({
       integrationId: integration2._id,
-      messengerData: { customData: {} },
     });
     await customerFactory({
       integrationId: integration3._id,
-      messengerData: { customData: { data1: 'Data 1', data2: 'Data 2' } },
     });
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
       contentType: 'customer',
-      source: 'fromSegments',
     });
-
-    const data1 = responses.find(response => response.name === 'messengerData.customData.data1');
-    const data2 = responses.find(response => response.name === 'messengerData.customData.data2');
-
-    expect(data1).toBeDefined();
-    expect(data2).toBeDefined();
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', { contentType: 'customer' });
 
@@ -144,6 +170,8 @@ describe('fieldQueries', () => {
 
     expect(responseFields.firstName).toBe(customerFields.firstName);
     expect(responseFields.lastName).toBe(customerFields.lastName);
+
+    mock.restore();
   });
 
   test('Fields default columns config', async () => {
@@ -160,11 +188,11 @@ describe('fieldQueries', () => {
       contentType: 'customer',
     });
 
-    expect(responses.length).toBe(4);
-    expect(responses[0].name).toBe('firstName');
-    expect(responses[1].name).toBe('lastName');
-    expect(responses[2].name).toBe('primaryEmail');
-    expect(responses[3].name).toBe('primaryPhone');
+    expect(responses.length).toBe(7);
+    expect(responses[0].name).toBe('location.country');
+    expect(responses[1].name).toBe('firstName');
+    expect(responses[2].name).toBe('lastName');
+    expect(responses[3].name).toBe('primaryEmail');
 
     // get company default config
     responses = await graphqlRequest(qry, 'fieldsDefaultColumnsConfig', {

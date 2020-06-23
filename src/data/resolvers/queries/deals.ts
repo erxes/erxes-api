@@ -2,7 +2,14 @@ import { Deals } from '../../../db/models';
 import { checkPermission, moduleRequireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { IListParams } from './boards';
-import { checkItemPermByUser, generateDealCommonFilters, generateSort } from './boardUtils';
+import {
+  archivedItems,
+  archivedItemsCount,
+  checkItemPermByUser,
+  generateDealCommonFilters,
+  generateSort,
+  IArchiveArgs,
+} from './boardUtils';
 
 interface IDealListParams extends IListParams {
   productIds?: [string];
@@ -20,6 +27,17 @@ const dealQueries = {
       .sort(sort)
       .skip(args.skip || 0)
       .limit(10);
+  },
+
+  /**
+   * Archived list
+   */
+  archivedDeals(_root, args: IArchiveArgs) {
+    return archivedItems(args, Deals);
+  },
+
+  archivedDealsCount(_root, args: IArchiveArgs) {
+    return archivedItemsCount(args, Deals);
   },
 
   /**
@@ -73,7 +91,11 @@ const dealQueries = {
           amount: '$productsData.amount',
           currency: '$productsData.currency',
           type: '$stageProbability.probability',
+          tickUsed: '$productsData.tickUsed',
         },
+      },
+      {
+        $match: { tickUsed: true },
       },
       {
         $group: {

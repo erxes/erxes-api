@@ -19,12 +19,15 @@ export const types = `
 
   type Customer {
     _id: String!
+    state: String
     createdAt: Date
     modifiedAt: Date
     avatar: String
     integrationId: String
     firstName: String
     lastName: String
+    birthDate: Date
+    sex: Int
 
     email: String
     primaryEmail: String
@@ -33,30 +36,33 @@ export const types = `
     phones: [String]
 
     phone: String
-    isUser: Boolean
     tagIds: [String]
     remoteAddress: String
     internalNotes: JSON
     location: JSON
     visitorContactInfo: JSON
     customFieldsData: JSON
-    messengerData: JSON
+    trackedData: JSON
     ownerId: String
     position: String
     department: String
     leadStatus: String
-    lifecycleState: String
     hasAuthority: String
     description: String
     doNotDisturb: String
     code: String
+    emailValidationStatus: String
+    phoneValidationStatus: String
+    
+    isOnline: Boolean
+    lastSeenAt: Date
+    sessionCount: Int
+    urlVisits: [JSON]
 
     integration: Integration
     links: CustomerLinks
     companies: [Company]
     conversations: [Conversation]
-    getIntegrationData: JSON
-    getMessengerCustomData: JSON
     getTags: [Tag]
     owner: User
   }
@@ -80,19 +86,19 @@ const queryParams = `
   form: String
   startDate: String
   endDate: String
-  lifecycleState: String
   leadStatus: String
   sortField: String
   sortDirection: Int
+  sex:Int
+  birthDate: Date
   ${conformityQueryFields}
 `;
 
 export const queries = `
   customersMain(${queryParams}): CustomersListResponse
   customers(${queryParams}): [Customer]
-  customerCounts(${queryParams}, byFakeSegment: JSON, only: String): JSON
+  customerCounts(${queryParams}, only: String): JSON
   customerDetail(_id: String!): Customer
-  customerListForSegmentPreview(segment: JSON, limit: Int): [Customer]
 `;
 
 const fields = `
@@ -107,18 +113,20 @@ const fields = `
   position: String
   department: String
   leadStatus: String
-  lifecycleState:  String
   hasAuthority: String
   description: String
   doNotDisturb: String
   links: JSON
   customFieldsData: JSON
   code: String
+  sex: Int
+  birthDate: Date
 `;
 
 export const mutations = `
-  customersAdd(${fields}): Customer
+  customersAdd(state: String, ${fields}): Customer
   customersEdit(_id: String!, ${fields}): Customer
   customersMerge(customerIds: [String], customerFields: JSON): Customer
   customersRemove(customerIds: [String]): [String]
+  customersChangeState(_id: String!, value: String!): Customer
 `;

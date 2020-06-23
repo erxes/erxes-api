@@ -42,7 +42,7 @@ export const loadProductClass = () => {
         doc.categoryId = category._id;
       }
 
-      doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData || {});
+      doc.customFieldsData = await Fields.prepareCustomFieldsData(doc.customFieldsData);
 
       return Products.create(doc);
     }
@@ -53,7 +53,7 @@ export const loadProductClass = () => {
     public static async updateProduct(_id: string, doc: IProduct) {
       if (doc.customFieldsData) {
         // clean custom field values
-        doc.customFieldsData = await Fields.cleanMulti(doc.customFieldsData);
+        doc.customFieldsData = await Fields.prepareCustomFieldsData(doc.customFieldsData);
       }
 
       await Products.updateOne({ _id }, { $set: doc });
@@ -90,7 +90,7 @@ export const loadProductClass = () => {
 export interface IProductCategoryModel extends Model<IProductCategoryDocument> {
   getProductCatogery(selector: any): Promise<IProductCategoryDocument>;
   createProductCategory(doc: IProductCategory): Promise<IProductCategoryDocument>;
-  updateProductCategory(_id: string, doc: IProduct): Promise<IProductCategoryDocument>;
+  updateProductCategory(_id: string, doc: IProductCategory): Promise<IProductCategoryDocument>;
   removeProductCategory(_id: string): void;
 }
 

@@ -1,9 +1,68 @@
+import * as _ from 'underscore';
 import { Permissions, Users, UsersGroups } from '../../../db/models';
-import { IPermissionParams, IUserGroup } from '../../../db/models/definitions/permissions';
+import { IPermissionParams, IUserGroup, IUserGroupDocument } from '../../../db/models/definitions/permissions';
+import { IUserDocument } from '../../../db/models/definitions/users';
+import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { moduleCheckPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+
+interface IParams {
+  memberIds?: string[];
+  oldUsers: IUserDocument[];
+  group: IUserGroupDocument;
+  currentUser: IUserDocument;
+}
+
+const writeUserLog = async (params: IParams) => {
+  const { memberIds = [], oldUsers = [], group, currentUser } = params;
+
+  for (const oldUser of oldUsers) {
+    const exists = memberIds.find(id => id === oldUser._id);
+
+    if (!exists) {
+      const groupIds = oldUser.groupIds ? oldUser.groupIds.filter(item => item !== group._id) : [];
+      // user has been removed from the group
+      await putUpdateLog(
+        {
+          type: MODULE_NAMES.USER,
+          object: { _id: oldUser._id, groupIds: oldUser.groupIds },
+          newData: { groupIds },
+          description: `User "${oldUser.email}" has been removed from group "${group.name}"`,
+          updatedDocument: { groupIds },
+        },
+        currentUser,
+      );
+    }
+  } // end oldUser loop
+
+  for (const memberId of memberIds) {
+    const exists = oldUsers.find(usr => usr._id === memberId);
+
+    // user has been added to the group
+    if (!exists) {
+      // already updated user row
+      const addedUser = await Users.findOne({ _id: memberId });
+
+      if (addedUser) {
+        // previous data was like this
+        const groupIds = (addedUser.groupIds || []).filter(groupId => groupId !== group._id);
+
+        await putUpdateLog(
+          {
+            type: MODULE_NAMES.USER,
+            object: { _id: memberId, groupIds },
+            newData: { groupIds: addedUser.groupIds },
+            description: `User "${addedUser.email}" has been added to group ${group.name}`,
+            updatedDocument: { groupIds: addedUser.groupIds },
+          },
+          currentUser,
+        );
+      }
+    }
+  } // end new user loop
+};
 
 const permissionMutations = {
   /**
@@ -18,32 +77,17 @@ const permissionMutations = {
     const result = await Permissions.createPermission(doc);
 
     for (const perm of result) {
-      let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
-
-      if (perm.groupId) {
-        const group = await UsersGroups.getGroup(perm.groupId);
-
-        description = `${description} user group "${group.name}" `;
-      }
-
-      if (perm.userId) {
-        const permUser = await Users.getUser(perm.userId);
-
-        description = `${description} user "${permUser.email}" has been created`;
-      }
-
       await putCreateLog(
         {
-          type: 'permission',
+          type: MODULE_NAMES.PERMISSION,
           object: perm,
-          newData: JSON.stringify(perm),
-          description,
+          newData: perm,
         },
         user,
       );
-    } // end for loop
+    }
 
-    resetPermissionsCache();
+    await resetPermissionsCache();
 
     return result;
   },
@@ -58,33 +102,10 @@ const permissionMutations = {
     const result = await Permissions.removePermission(ids);
 
     for (const perm of permissions) {
-      let description = `Permission of module "${perm.module}", action "${perm.action}" assigned to `;
+      await putDeleteLog({ type: MODULE_NAMES.PERMISSION, object: perm }, user);
+    }
 
-      // prepare user group related description
-      if (perm.groupId) {
-        const group = await UsersGroups.getGroup(perm.groupId);
-
-        description = `${description} user group "${group.name}" has been removed`;
-      }
-
-      // prepare user related description
-      if (perm.userId) {
-        const permUser = await Users.getUser(perm.userId);
-
-        description = `${description} user "${permUser.email}" has been removed`;
-      }
-
-      await putDeleteLog(
-        {
-          type: 'permission',
-          object: perm,
-          description,
-        },
-        user,
-      );
-    } // end for loop
-
-    resetPermissionsCache();
+    await resetPermissionsCache();
 
     return result;
   },
@@ -98,21 +119,39 @@ const usersGroupMutations = {
    * @return {Promise} newly created group object
    */
   async usersGroupsAdd(_root, { memberIds, ...doc }: IUserGroup & { memberIds?: string[] }, { user }: IContext) {
-    const result = await UsersGroups.createGroup(doc, memberIds);
+    // users before updating
+    const oldUsers = await Users.find({ _id: { $in: memberIds || [] } });
+
+    const group = await UsersGroups.createGroup(doc, memberIds);
 
     await putCreateLog(
       {
-        type: 'userGroup',
-        object: result,
-        newData: JSON.stringify(doc),
-        description: `${result.name} has been created`,
+        type: MODULE_NAMES.USER_GROUP,
+        object: group,
+        newData: doc,
+        description: `"${group.name}" has been created`,
       },
       user,
     );
 
-    resetPermissionsCache();
+    for (const oldUser of oldUsers) {
+      const updatedDocument = { groupIds: [...(oldUser.groupIds || []), group._id] };
 
-    return result;
+      await putUpdateLog(
+        {
+          type: MODULE_NAMES.USER,
+          object: oldUser,
+          newData: updatedDocument,
+          description: `User "${oldUser.email}" has been added to group ${group.name}`,
+          updatedDocument,
+        },
+        user,
+      );
+    }
+
+    await resetPermissionsCache();
+
+    return group;
   },
 
   /**
@@ -127,19 +166,30 @@ const usersGroupMutations = {
     { user }: IContext,
   ) {
     const group = await UsersGroups.getGroup(_id);
+    const oldUsers = await Users.find({ groupIds: { $in: [_id] } });
     const result = await UsersGroups.updateGroup(_id, doc, memberIds);
 
-    await putUpdateLog(
-      {
-        type: 'userGroup',
-        object: group,
-        newData: JSON.stringify(doc),
-        description: `${group.name} has been edited`,
-      },
-      user,
-    );
+    // don't write unnecessary log when nothing is changed
+    if (group.name !== doc.name) {
+      await putUpdateLog(
+        {
+          type: MODULE_NAMES.USER_GROUP,
+          object: group,
+          newData: doc,
+          description: `"${group.name}" has been edited`,
+        },
+        user,
+      );
+    }
 
-    resetPermissionsCache();
+    await writeUserLog({
+      currentUser: user,
+      memberIds,
+      oldUsers,
+      group,
+    });
+
+    await resetPermissionsCache();
 
     return result;
   },
@@ -151,20 +201,54 @@ const usersGroupMutations = {
    */
   async usersGroupsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const group = await UsersGroups.getGroup(_id);
+    const members = await Users.find({ groupIds: { $in: [group._id] } });
     const result = await UsersGroups.removeGroup(_id);
 
     await putDeleteLog(
       {
-        type: 'userGroup',
+        type: MODULE_NAMES.USER_GROUP,
         object: group,
-        description: `${group.name} has been removed`,
+        description: `"${group.name}" has been removed`,
       },
       user,
     );
 
-    resetPermissionsCache();
+    for (const member of members) {
+      const groupIds = member.groupIds ? member.groupIds.filter(id => id !== group._id) : [];
+
+      await putUpdateLog(
+        {
+          type: MODULE_NAMES.USER,
+          object: { _id: member._id, groupIds: member.groupIds },
+          newData: { groupIds },
+          updatedDocument: { groupIds },
+          description: `User ${member.email} has been removed from group ${group.name}`,
+        },
+        user,
+      );
+    }
+
+    await resetPermissionsCache();
 
     return result;
+  },
+
+  async usersGroupsCopy(_root, { _id, memberIds }: { _id: string; memberIds: string[] }, { user }: IContext) {
+    const group = await UsersGroups.getGroup(_id);
+
+    const clone = await UsersGroups.copyGroup(group._id, memberIds);
+
+    await putCreateLog(
+      {
+        type: 'userGroup',
+        object: clone,
+        newData: { name: clone.name, description: clone.description },
+        description: `"${group.name}" has been copied`,
+      },
+      user,
+    );
+
+    return clone;
   },
 };
 

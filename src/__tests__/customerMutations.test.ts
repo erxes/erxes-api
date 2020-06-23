@@ -1,7 +1,7 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
-import { customerFactory, userFactory } from '../db/factories';
-import { Customers, Users } from '../db/models';
+import { customerFactory, integrationFactory, userFactory } from '../db/factories';
+import { Brands, Customers, Integrations, Users } from '../db/models';
 
 import './setup.ts';
 
@@ -18,11 +18,10 @@ const args = {
   ownerId: faker.random.word(),
   position: faker.random.word(),
   department: faker.random.word(),
-  leadStatus: 'open',
-  lifecycleState: 'lead',
-  hasAuthority: faker.random.word(),
+  leadStatus: 'new',
+  hasAuthority: 'No',
   description: faker.random.word(),
-  doNotDisturb: faker.random.word(),
+  doNotDisturb: 'Yes',
   links: {
     linkedIn: 'linkedIn',
     twitter: 'twitter',
@@ -31,13 +30,30 @@ const args = {
     github: 'github',
     website: 'website',
   },
-  customFieldsData: {},
+};
+
+const checkCustomer = src => {
+  expect(src.firstName).toBe(args.firstName);
+  expect(src.lastName).toBe(args.lastName);
+  expect(src.primaryEmail).toBe(args.primaryEmail);
+  expect(src.emails).toEqual(expect.arrayContaining(args.emails));
+  expect(src.primaryPhone).toBe(args.primaryPhone);
+  expect(src.phones).toEqual(expect.arrayContaining(args.phones));
+  expect(src.ownerId).toBe(args.ownerId);
+  expect(src.position).toBe(args.position);
+  expect(src.department).toBe(args.department);
+  expect(src.leadStatus).toBe(args.leadStatus);
+  expect(src.hasAuthority).toBe(args.hasAuthority);
+  expect(src.description).toBe(args.description);
+  expect(src.doNotDisturb).toBe(args.doNotDisturb);
+  expect(src.links).toEqual(args.links);
 };
 
 describe('Customers mutations', () => {
   let _user;
   let _customer;
   let context;
+  let integration;
 
   const commonParamDefs = `
     $firstName: String
@@ -50,7 +66,6 @@ describe('Customers mutations', () => {
     $position: String
     $department: String
     $leadStatus: String
-    $lifecycleState:  String
     $hasAuthority: String
     $description: String
     $doNotDisturb: String
@@ -69,7 +84,6 @@ describe('Customers mutations', () => {
     position: $position
     department: $department
     leadStatus: $leadStatus
-    lifecycleState: $lifecycleState
     hasAuthority: $hasAuthority
     description: $description
     doNotDisturb: $doNotDisturb
@@ -79,8 +93,9 @@ describe('Customers mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
+    integration = await integrationFactory();
     _user = await userFactory({});
-    _customer = await customerFactory({});
+    _customer = await customerFactory({ integrationId: integration._id });
 
     context = { user: _user };
   });
@@ -89,6 +104,8 @@ describe('Customers mutations', () => {
     // Clearing test data
     await Users.deleteMany({});
     await Customers.deleteMany({});
+    await Brands.deleteMany({});
+    await Integrations.deleteMany({});
   });
 
   test('Add customer', async () => {
@@ -105,7 +122,6 @@ describe('Customers mutations', () => {
           position
           department
           leadStatus
-          lifecycleState
           hasAuthority
           description
           doNotDisturb
@@ -124,22 +140,10 @@ describe('Customers mutations', () => {
 
     const customer = await graphqlRequest(mutation, 'customersAdd', args, context);
 
-    expect(customer.firstName).toBe(args.firstName);
-    expect(customer.lastName).toBe(args.lastName);
-    expect(customer.primaryEmail).toBe(args.primaryEmail);
-    expect(customer.emails).toEqual(expect.arrayContaining(args.emails));
-    expect(customer.primaryPhone).toBe(args.primaryPhone);
-    expect(customer.phones).toEqual(expect.arrayContaining(args.phones));
-    expect(customer.ownerId).toBe(args.ownerId);
-    expect(customer.position).toBe(args.position);
-    expect(customer.department).toBe(args.department);
-    expect(customer.leadStatus).toBe(args.leadStatus);
-    expect(customer.lifecycleState).toBe(args.lifecycleState);
-    expect(customer.hasAuthority).toBe(args.hasAuthority);
-    expect(customer.description).toBe(args.description);
-    expect(customer.doNotDisturb).toBe(args.doNotDisturb);
-    expect(customer.links).toEqual(args.links);
-    expect(customer.customFieldsData).toEqual(null);
+    checkCustomer(customer);
+    expect(customer.emailValidationStatus).toBe(undefined);
+    expect(customer.phoneValidationStatus).toBe(undefined);
+    expect(customer.customFieldsData.length).toEqual(0);
   });
 
   test('Edit customer', async () => {
@@ -157,7 +161,6 @@ describe('Customers mutations', () => {
           position
           department
           leadStatus
-          lifecycleState
           hasAuthority
           description
           doNotDisturb
@@ -177,22 +180,11 @@ describe('Customers mutations', () => {
     const customer = await graphqlRequest(mutation, 'customersEdit', { _id: _customer._id, ...args }, context);
 
     expect(customer._id).toBe(_customer._id);
-    expect(customer.firstName).toBe(args.firstName);
-    expect(customer.lastName).toBe(args.lastName);
-    expect(customer.primaryEmail).toBe(args.primaryEmail);
-    expect(customer.emails).toEqual(expect.arrayContaining(args.emails));
-    expect(customer.primaryPhone).toBe(args.primaryPhone);
-    expect(customer.phones).toEqual(expect.arrayContaining(args.phones));
-    expect(customer.ownerId).toBe(args.ownerId);
-    expect(customer.position).toBe(args.position);
-    expect(customer.department).toBe(args.department);
-    expect(customer.leadStatus).toBe(args.leadStatus);
-    expect(customer.lifecycleState).toBe(args.lifecycleState);
-    expect(customer.hasAuthority).toBe(args.hasAuthority);
-    expect(customer.description).toBe(args.description);
-    expect(customer.doNotDisturb).toBe(args.doNotDisturb);
-    expect(customer.links).toEqual(args.links);
-    expect(customer.customFieldsData).toEqual({});
+    expect(customer.emailValidationStatus).toBe(undefined);
+    expect(customer.phoneValidationStatus).toBe(undefined);
+
+    checkCustomer(customer);
+    expect(customer.customFieldsData.length).toEqual(0);
   });
 
   test('Remove customer', async () => {
@@ -226,5 +218,22 @@ describe('Customers mutations', () => {
     const customer = await graphqlRequest(mutation, 'customersMerge', params, context);
 
     expect(customer.firstName).toBe(params.customerFields.firstName);
+  });
+
+  test('Change state', async () => {
+    const mutation = `
+      mutation customersChangeState($_id: String!, $value: String!) {
+        customersChangeState(_id: $_id, value: $value) {
+          _id
+          state
+        }
+      }
+    `;
+
+    await graphqlRequest(mutation, 'customersChangeState', { _id: _customer._id, value: 'customer' }, context);
+
+    const updatedCustomer = await Customers.getCustomer(_customer._id);
+
+    expect(updatedCustomer.state).toBe('customer');
   });
 });

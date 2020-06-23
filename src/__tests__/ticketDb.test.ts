@@ -92,19 +92,6 @@ describe('Test Tickets model', () => {
     expect(updatedTicket.closeDate).toEqual(ticket.closeDate);
   });
 
-  test('Update ticket orders', async () => {
-    const dealToOrder = await ticketFactory({});
-
-    const [updatedTicket, updatedDealToOrder] = await Tickets.updateOrder(stage._id, [
-      { _id: ticket._id, order: 9 },
-      { _id: dealToOrder._id, order: 3 },
-    ]);
-
-    expect(updatedTicket.stageId).toBe(stage._id);
-    expect(updatedTicket.order).toBe(3);
-    expect(updatedDealToOrder.order).toBe(9);
-  });
-
   test('Watch ticket', async () => {
     await Tickets.watchTicket(ticket._id, true, user._id);
 
@@ -118,5 +105,13 @@ describe('Test Tickets model', () => {
     const unwatchedTicket = await Tickets.getTicket(ticket._id);
 
     expect(unwatchedTicket.watchedUserIds).not.toContain(user._id);
+  });
+
+  test('Test removeTickets()', async () => {
+    await Tickets.removeTickets([ticket._id]);
+
+    const removed = await Tickets.findOne({ _id: ticket._id });
+
+    expect(removed).toBe(null);
   });
 });

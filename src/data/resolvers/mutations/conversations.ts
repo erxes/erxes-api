@@ -3,14 +3,13 @@ import * as _ from 'underscore';
 import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
 import {
-  CONVERSATION_STATUSES,
   KIND_CHOICES,
+  MESSAGE_TYPES,
   NOTIFICATION_CONTENT_TYPES,
   NOTIFICATION_TYPES,
 } from '../../../db/models/definitions/constants';
 import { IMessageDocument } from '../../../db/models/definitions/conversationMessages';
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
-import { IMessengerData } from '../../../db/models/definitions/integrations';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import { sendMessage } from '../../../messageBroker';
@@ -47,6 +46,16 @@ const sendConversationToIntegrations = (
   action?: string,
 ) => {
   if (type === 'facebook') {
+    const regex = new RegExp('<img[^>]* src="([^"]*)"', 'g');
+
+    const images: string[] = (doc.content.match(regex) || []).map(m => m.replace(regex, '$1'));
+
+    const attachments = doc.attachments as any[];
+
+    images.forEach(img => {
+      attachments.push({ type: 'image', url: img });
+    });
+
     return sendMessage('erxes-api:integrations-notification', {
       action,
       type,
@@ -54,6 +63,7 @@ const sendConversationToIntegrations = (
         integrationId,
         conversationId,
         content: strip(doc.content),
+        attachments: doc.attachments || [],
       }),
     });
   }
@@ -264,6 +274,15 @@ const conversationMutations = {
       requestName = 'replyTwitterDm';
     }
 
+    if (kind.includes('smooch')) {
+      requestName = 'replySmooch';
+    }
+
+    // send reply to whatsapp
+    if (kind === KIND_CHOICES.WHATSAPP) {
+      requestName = 'replyWhatsApp';
+    }
+
     await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
 
     const dbMessage = await ConversationMessages.getMessage(message._id);
@@ -344,42 +363,10 @@ const conversationMutations = {
    * Change conversation status
    */
   async conversationsChangeStatus(_root, { _ids, status }: { _ids: string[]; status: string }, { user }: IContext) {
-    const { conversations } = await Conversations.checkExistanceConversations(_ids);
-
     await Conversations.changeStatusConversation(_ids, status, user._id);
 
     // notify graphl subscription
     publishConversationsChanged(_ids, status);
-
-    for (const conversation of conversations) {
-      if (status === CONVERSATION_STATUSES.CLOSED) {
-        const customer = await Customers.getCustomer(conversation.customerId);
-        const integration = await Integrations.getIntegration(conversation.integrationId);
-
-        const messengerData: IMessengerData = integration.messengerData || {};
-        const notifyCustomer = messengerData.notifyCustomer || false;
-
-        if (notifyCustomer && customer.primaryEmail) {
-          // send email to customer
-          utils.sendEmail({
-            toEmails: [customer.primaryEmail],
-            title: 'Conversation detail',
-            template: {
-              name: 'conversationDetail',
-              data: {
-                conversationDetail: {
-                  title: 'Conversation detail',
-                  messages: await ConversationMessages.find({
-                    conversationId: conversation._id,
-                  }),
-                  date: new Date(),
-                },
-              },
-            },
-          });
-        }
-      }
-    }
 
     const updatedConversations = await Conversations.find({ _id: { $in: _ids } });
 
@@ -397,6 +384,48 @@ const conversationMutations = {
    */
   async conversationMarkAsRead(_root, { _id }: { _id: string }, { user }: IContext) {
     return Conversations.markAsReadConversation(_id, user._id);
+  },
+
+  async conversationDeleteVideoChatRoom(_root, { name }, { dataSources }: IContext) {
+    try {
+      return await dataSources.IntegrationsAPI.deleteDailyVideoChatRoom(name);
+    } catch (e) {
+      debugExternalApi(e.message);
+
+      throw new Error(e.message);
+    }
+  },
+
+  async conversationCreateVideoChatRoom(_root, { _id }, { dataSources, user }: IContext) {
+    let message;
+
+    try {
+      const doc = {
+        conversationId: _id,
+        internal: false,
+        contentType: MESSAGE_TYPES.VIDEO_CALL,
+      };
+
+      message = await ConversationMessages.addMessage(doc, user._id);
+
+      const videoCallData = await dataSources.IntegrationsAPI.createDailyVideoChatRoom({
+        erxesApiConversationId: _id,
+        erxesApiMessageId: message._id,
+      });
+
+      message.videoCallData = videoCallData;
+
+      // publish new message to conversation detail
+      publishMessage(message);
+
+      return videoCallData;
+    } catch (e) {
+      debugExternalApi(e.message);
+
+      await ConversationMessages.deleteOne({ _id: message._id });
+
+      throw new Error(e.message);
+    }
   },
 };
 

@@ -1,15 +1,15 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
-import { fillSearchTextItem, updateOrder, watchItem } from './boardUtils';
-import { IOrderInput } from './definitions/boards';
+import { destroyBoardItemRelations, fillSearchTextItem, watchItem } from './boardUtils';
+import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { ITicket, ITicketDocument, ticketSchema } from './definitions/tickets';
 
 export interface ITicketModel extends Model<ITicketDocument> {
   createTicket(doc: ITicket): Promise<ITicketDocument>;
   getTicket(_id: string): Promise<ITicketDocument>;
   updateTicket(_id: string, doc: ITicket): Promise<ITicketDocument>;
-  updateOrder(stageId: string, orders: IOrderInput[]): Promise<ITicketDocument[]>;
   watchTicket(_id: string, isAdd: boolean, userId: string): void;
+  removeTickets(_ids: string[]): Promise<{ n: number; ok: number }>;
 }
 
 export const loadTicketClass = () => {
@@ -39,13 +39,8 @@ export const loadTicketClass = () => {
         }
       }
 
-      const ticketsCount = await Tickets.find({
-        stageId: doc.stageId,
-      }).countDocuments();
-
       const ticket = await Tickets.create({
         ...doc,
-        order: ticketsCount,
         createdAt: new Date(),
         modifiedAt: new Date(),
         searchText: fillSearchTextItem(doc),
@@ -68,18 +63,20 @@ export const loadTicketClass = () => {
       return Tickets.findOne({ _id });
     }
 
-    /*
-     * Update given tickets orders
-     */
-    public static async updateOrder(stageId: string, orders: IOrderInput[]) {
-      return updateOrder(Tickets, orders, stageId);
-    }
-
     /**
      * Watch ticket
      */
     public static async watchTicket(_id: string, isAdd: boolean, userId: string) {
       return watchItem(Tickets, _id, isAdd, userId);
+    }
+
+    public static async removeTickets(_ids: string[]) {
+      // completely remove all related things
+      for (const _id of _ids) {
+        await destroyBoardItemRelations(_id, ACTIVITY_CONTENT_TYPES.TICKET);
+      }
+
+      return Tickets.deleteMany({ _id: { $in: _ids } });
     }
   }
 

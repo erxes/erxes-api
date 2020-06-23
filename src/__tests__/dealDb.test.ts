@@ -8,6 +8,7 @@ import {
   userFactory,
 } from '../db/factories';
 import { Boards, Deals, Pipelines, Stages } from '../db/models';
+import { getItem } from '../db/models/boardUtils';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IDealDocument } from '../db/models/definitions/deals';
 import { IPipelineLabelDocument } from '../db/models/definitions/pipelineLabels';
@@ -63,6 +64,18 @@ describe('Test deals model', () => {
     expect(response).toBeDefined();
   });
 
+  test('Get item on deal', async () => {
+    try {
+      await getItem('deal', 'fakeId');
+    } catch (e) {
+      expect(e.message).toBe('deal not found');
+    }
+
+    const response = await getItem('deal', deal._id);
+
+    expect(response).toBeDefined();
+  });
+
   test('Create deal', async () => {
     const args = {
       stageId: deal.stageId,
@@ -108,25 +121,6 @@ describe('Test deals model', () => {
     expect(updatedDeal.closeDate).toEqual(deal.closeDate);
   });
 
-  test('Update deal orders', async () => {
-    const dealToOrder = await dealFactory({});
-
-    const [updatedDeal, updatedDealToOrder] = await Deals.updateOrder(stage._id, [
-      { _id: deal._id, order: 9 },
-      { _id: dealToOrder._id, order: 3 },
-    ]);
-
-    expect(updatedDeal.stageId).toBe(stage._id);
-    expect(updatedDeal.order).toBe(3);
-    expect(updatedDealToOrder.order).toBe(9);
-  });
-
-  test('Update deal orders when orders length is zero', async () => {
-    const response = await Deals.updateOrder(stage._id, []);
-
-    expect(response.length).toBe(0);
-  });
-
   test('Watch deal', async () => {
     await Deals.watchDeal(deal._id, true, user._id);
 
@@ -140,5 +134,13 @@ describe('Test deals model', () => {
     const unwatchedDeal = await Deals.getDeal(deal._id);
 
     expect(unwatchedDeal.watchedUserIds).not.toContain(user._id);
+  });
+
+  test('Test removeDeals()', async () => {
+    await Deals.removeDeals([deal._id]);
+
+    const removed = await Deals.findOne({ _id: deal._id });
+
+    expect(removed).toBe(null);
   });
 });

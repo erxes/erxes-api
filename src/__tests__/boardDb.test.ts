@@ -7,7 +7,8 @@ import {
   stageFactory,
   userFactory,
 } from '../db/factories';
-import { Boards, Forms, Pipelines, Stages } from '../db/models';
+import { Boards, Deals, Forms, Pipelines, Stages } from '../db/models';
+import { getNewOrder } from '../db/models/boardUtils';
 import { IBoardDocument, IPipelineDocument, IStageDocument } from '../db/models/definitions/boards';
 import { IUserDocument } from '../db/models/definitions/users';
 
@@ -96,16 +97,6 @@ describe('Test board model', () => {
       await Boards.removeBoard(fakeBoardId);
     } catch (e) {
       expect(e.message).toEqual('Board not found');
-    }
-  });
-
-  test("Can't remove a board", async () => {
-    expect.assertions(1);
-
-    try {
-      await Boards.removeBoard(board._id);
-    } catch (e) {
-      expect(e.message).toEqual('There is a stage that has a item');
     }
   });
 
@@ -262,7 +253,17 @@ describe('Test board model', () => {
     const removePipeline = await pipelineFactory();
     const removedStage = await stageFactory({ pipelineId: removePipeline._id });
 
-    const isDeleted = await Pipelines.removePipeline(removePipeline.id);
+    const isDeleted = await Pipelines.removePipeline(removePipeline.id, true);
+
+    expect(isDeleted).toBeTruthy();
+    expect(await Stages.findOne({ _id: removedStage._id })).toBeNull();
+  });
+
+  test('Remove pipeline with stage items', async () => {
+    const removePipeline = await pipelineFactory();
+    const removedStage = await stageFactory({ pipelineId: removePipeline._id });
+
+    const isDeleted = await Pipelines.removePipeline(removePipeline.id, false);
 
     expect(isDeleted).toBeTruthy();
     expect(await Stages.findOne({ _id: removedStage._id })).toBeNull();
@@ -277,16 +278,6 @@ describe('Test board model', () => {
       await Pipelines.removePipeline(fakePipelineId);
     } catch (e) {
       expect(e.message).toEqual('Pipeline not found');
-    }
-  });
-
-  test("Can't remove a pipeline", async () => {
-    expect.assertions(1);
-
-    try {
-      await Pipelines.removePipeline(pipeline._id);
-    } catch (e) {
-      expect(e.message).toEqual('There is a stage that has a item');
     }
   });
 
@@ -334,7 +325,8 @@ describe('Test board model', () => {
   });
 
   test('Remove stage', async () => {
-    const isDeleted = await Stages.removeStage(stage._id);
+    const stageNoItem = await stageFactory();
+    const isDeleted = await Stages.removeStage(stageNoItem._id);
 
     expect(isDeleted).toBeTruthy();
   });
@@ -373,5 +365,32 @@ describe('Test board model', () => {
 
     expect(updatedStage.order).toBe(5);
     expect(updatedStageToOrder.order).toBe(9);
+  });
+
+  test('Update stage orders when orders length is zero', async () => {
+    const response = await Stages.updateOrder([]);
+
+    expect(response.length).toBe(0);
+  });
+
+  test('itemOrder test', async () => {
+    let aboveItemId = '';
+    const newStage = await stageFactory();
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBe(100);
+
+    const firstDeal = await dealFactory({ stageId: newStage._id, order: 100 });
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeGreaterThan(0);
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeLessThan(100);
+
+    aboveItemId = (await dealFactory({ stageId: newStage._id, order: 99 }))._id;
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeGreaterThan(99);
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeLessThan(100);
+
+    expect(await getNewOrder({ aboveItemId: firstDeal._id, stageId: newStage._id, collection: Deals })).toBe(110);
+
+    // duplicated then recall getNewOrder
+    aboveItemId = (await dealFactory({ stageId: newStage._id, order: 99.99999999999999 }))._id;
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeGreaterThan(110);
+    expect(await getNewOrder({ aboveItemId, stageId: newStage._id, collection: Deals })).toBeLessThan(120);
   });
 });

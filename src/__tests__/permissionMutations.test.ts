@@ -18,6 +18,16 @@ describe('Test permissions mutations', () => {
     module: 'module name',
   };
 
+  const permissionFields = `
+    _id
+    module
+    action
+    userId
+    groupId
+    requiredActions
+    allowed
+  `;
+
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({ isOwner: true });
@@ -96,13 +106,7 @@ describe('Test permissions mutations', () => {
           groupIds: $groupIds
           allowed: $allowed
         ) {
-          _id
-          module
-          action
-          userId
-          groupId
-          requiredActions
-          allowed
+          ${permissionFields}
         }
       }
     `;
@@ -157,6 +161,9 @@ describe('Test permissions mutations', () => {
   });
 
   test('Update group', async () => {
+    await userFactory({ groupIds: [_group._id] });
+    await userFactory({ groupIds: [_group._id] });
+
     const user1 = await userFactory({});
     const user2 = await userFactory({});
 
@@ -197,8 +204,25 @@ describe('Test permissions mutations', () => {
       }
     `;
 
+    await userFactory({ groupIds: [_group._id] });
+    await userFactory({ groupIds: [_group._id] });
+
     await graphqlRequest(mutation, 'usersGroupsRemove', { _id: _group._id }, context);
 
     expect(await UsersGroups.findOne({ _id: _group._id })).toBe(null);
+  });
+
+  test('Test usersGroupsCopy()', async () => {
+    const mutation = `
+      mutation usersGroupsCopy($_id: String!) {
+        usersGroupsCopy(_id: $_id) {
+          _id
+        }
+      }
+    `;
+
+    const clone = await graphqlRequest(mutation, 'usersGroupsCopy', { _id: _group._id }, context);
+
+    expect(clone._id).toBeDefined();
   });
 });

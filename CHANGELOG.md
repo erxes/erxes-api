@@ -1,3 +1,143 @@
+## [0.14.3](https://github.com/erxes/erxes-api/compare/0.14.2...0.14.3) (2020-06-17)
+
+
+### Bug Fixes
+
+* **initial-script:** wrapped connection string in double quote ([8fe761e](https://github.com/erxes/erxes-api/commit/8fe761e5d94db58123f7425d04fadd77564d04f6))
+
+## [0.14.2](https://github.com/erxes/erxes-api/compare/0.14.1...0.14.2) (2020-06-17)
+
+
+### Bug Fixes
+
+* **commands:** passed uri option to loadInitialData command ([d2296e0](https://github.com/erxes/erxes-api/commit/d2296e02b54b88a92c04d87d28fc41c6bcefd31c))
+
+## [0.14.1](https://github.com/erxes/erxes-api/compare/0.14.0...0.14.1) (2020-05-19)
+
+
+### Bug Fixes
+
+* **emails:** sending empty auth info ([a0fcc5f](https://github.com/erxes/erxes-api/commit/a0fcc5fd1dd967af562ba8d5f606178e635041cc)), closes [#777](https://github.com/erxes/erxes-api/issues/777)
+* **emailTemplate:** revert change in email template query ([f19b35e](https://github.com/erxes/erxes-api/commit/f19b35e1e4960a91096de342151a40081e4fa618))
+* **engages:** added unverifed emails limit config ([5312fae](https://github.com/erxes/erxes-api/commit/5312fae15cd2f3febbfbeaf00538f0c612022a9c)), closes [erxes/erxes#1931](https://github.com/erxes/erxes/issues/1931)
+* **test:** change random string to enum in factory ([535c803](https://github.com/erxes/erxes-api/commit/535c8036cdec9fbac8f9e828f0be6f30512879d4))
+
+
+### Performance Improvements
+
+* **customer:** added uriVisits field on schema ([c1e39ce](https://github.com/erxes/erxes-api/commit/c1e39ce7d257f6da351b0fc97001cb19288c41db)), closes [#776](https://github.com/erxes/erxes-api/issues/776)
+* **customers:** flatten customFieldsData, trackedData fields ([934970b](https://github.com/erxes/erxes-api/commit/934970b6160f1a849ead3b23923c6b3ff2871462)), closes [#774](https://github.com/erxes/erxes-api/issues/774)
+* **docker:** upgrade dockerfile nodejs version ([5e7ea88](https://github.com/erxes/erxes-api/commit/5e7ea88b66eec6b9f936ec61ff01f5b1796b0d2d)), closes [erxes/erxes#1993](https://github.com/erxes/erxes/issues/1993)
+* **node:** update package.json for node v12 ([15e498a](https://github.com/erxes/erxes-api/commit/15e498ab0efbb1704100ba227d4007f51fd5cbb4))
+* **schema:** add select options to enum fields  ([4af015b](https://github.com/erxes/erxes-api/commit/4af015b513d5ee349b167928678758043d71b4fc))
+* **schema:** add select options to some field in customer erxes/erxes[#1959](https://github.com/erxes/erxes-api/issues/1959) ([2720987](https://github.com/erxes/erxes-api/commit/2720987c028ded43bd541ac0e221e72434fa6b7a))
+* **stage:** count archived cards ([3700afa](https://github.com/erxes/erxes-api/commit/3700afaa20912286e12d442ebb0047d398abb081)), closes [#778](https://github.com/erxes/erxes-api/issues/778)
+
+# [0.14.0](https://github.com/erxes/erxes-api/compare/0.13.0...0.14.0) (2020-04-25)
+
+
+### Bug Fixes
+
+* add nylas-exchange type in mail integrations ([4863734](https://github.com/erxes/erxes-api/commit/4863734b5d8e8c17bb5706f3a4fec625b0de3781))
+* add userId in upload-file and mail-attachment ([7e86c2d](https://github.com/erxes/erxes-api/commit/7e86c2dc5bd2e934097123ec89da07086539d2ba))
+* send userId for middleware in integration ([4be0628](https://github.com/erxes/erxes-api/commit/4be062874665bb4cad0932666dfd9c147abfbfcb)), closes [#751](https://github.com/erxes/erxes-api/issues/751)
+* **popups:** resetting stats when update ([0d71b70](https://github.com/erxes/erxes-api/commit/0d71b704c763e8cfd3309e16b6b1148b518010ab)), closes [#763](https://github.com/erxes/erxes-api/issues/763)
+
+
+### Features
+
+* add nylas exchange provider ([6394f3e](https://github.com/erxes/erxes-api/commit/6394f3ee2c54df47d167ae675b1871bc7659441c))
+* **messenger:** tracking all possible customer fields ([1b82095](https://github.com/erxes/erxes-api/commit/1b820952cd938615eb4de4ebf5b8c418a501d179)), closes [#764](https://github.com/erxes/erxes-api/issues/764)
+
+
+### Performance Improvements
+
+* **engage:** refactor cronjobs ([176e3ca](https://github.com/erxes/erxes-api/commit/176e3ca305482f21d521dde71399968d8129d0fe)), closes [erxes/erxes#1940](https://github.com/erxes/erxes/issues/1940)
+* **env:** remove DOMAIN variable ([7da2d8c](https://github.com/erxes/erxes-api/commit/7da2d8cc92d7d70aeca9234f168ae1c3803dca49)), closes [#747](https://github.com/erxes/erxes-api/issues/747)
+* **env:** using rabbitmq instead of WORKERS_API_DOMAIN ([5ee39d8](https://github.com/erxes/erxes-api/commit/5ee39d8001291e2b4c39d23700936aedff3813e2)), closes [#767](https://github.com/erxes/erxes-api/issues/767)
+
+
+### BREAKING CHANGES
+
+* **env:** rabbitmq env is required in workers service.
+
+# [1.0.0](https://github.com/erxes/erxes-api/compare/0.13.0...1.0.0) (2020-04-25)
+
+
+### Bug Fixes
+
+* add nylas-exchange type in mail integrations ([4863734](https://github.com/erxes/erxes-api/commit/4863734b5d8e8c17bb5706f3a4fec625b0de3781))
+* add userId in upload-file and mail-attachment ([7e86c2d](https://github.com/erxes/erxes-api/commit/7e86c2dc5bd2e934097123ec89da07086539d2ba))
+* send userId for middleware in integration ([4be0628](https://github.com/erxes/erxes-api/commit/4be062874665bb4cad0932666dfd9c147abfbfcb)), closes [#751](https://github.com/erxes/erxes-api/issues/751)
+* **popups:** resetting stats when update ([0d71b70](https://github.com/erxes/erxes-api/commit/0d71b704c763e8cfd3309e16b6b1148b518010ab)), closes [#763](https://github.com/erxes/erxes-api/issues/763)
+
+
+### Features
+
+* add nylas exchange provider ([6394f3e](https://github.com/erxes/erxes-api/commit/6394f3ee2c54df47d167ae675b1871bc7659441c))
+* **messenger:** tracking all possible customer fields ([1b82095](https://github.com/erxes/erxes-api/commit/1b820952cd938615eb4de4ebf5b8c418a501d179)), closes [#764](https://github.com/erxes/erxes-api/issues/764)
+
+
+### Performance Improvements
+
+* **engage:** refactor cronjobs ([176e3ca](https://github.com/erxes/erxes-api/commit/176e3ca305482f21d521dde71399968d8129d0fe)), closes [erxes/erxes#1940](https://github.com/erxes/erxes/issues/1940)
+* **env:** remove DOMAIN variable ([7da2d8c](https://github.com/erxes/erxes-api/commit/7da2d8cc92d7d70aeca9234f168ae1c3803dca49)), closes [#747](https://github.com/erxes/erxes-api/issues/747)
+* **env:** using rabbitmq instead of WORKERS_API_DOMAIN ([5ee39d8](https://github.com/erxes/erxes-api/commit/5ee39d8001291e2b4c39d23700936aedff3813e2)), closes [#767](https://github.com/erxes/erxes-api/issues/767)
+
+
+### BREAKING CHANGES
+
+* **env:** rabbitmq env is required in workers service.
+
+# [0.13.0](https://github.com/erxes/erxes-api/compare/0.12.5...0.13.0) (2020-03-17)
+
+
+### Bug Fixes
+
+* **activity-log:**  checked empty content ([ce3daea](https://github.com/erxes/erxes-api/commit/ce3daeac23631dceb745ec4be20127b46097f7c9))
+* **conversation:** counting left, joined messages in messsageCount field ([9f8201d](https://github.com/erxes/erxes-api/commit/9f8201d9e4e57e07a5b07ea030e929139bd76ddd)), closes [#694](https://github.com/erxes/erxes-api/issues/694)
+* **importHistory:** cannot remove contacts if there are too many contacts ([be6ee64](https://github.com/erxes/erxes-api/commit/be6ee64d0602b230b0230de12ce3686a287729fd)), closes [erxes/erxes#1681](https://github.com/erxes/erxes/issues/1681)
+* remove account only when there is no integration ([1e33a60](https://github.com/erxes/erxes-api/commit/1e33a60256d2d2ee10534803e57dea7172383281))
+
+
+### Features
+
+* **board:** add archive functionality ([49e09f7](https://github.com/erxes/erxes-api/commit/49e09f7eb23dde1c5c0211b9b20240d52feecca3)), closes [erxes/erxes#1625](https://github.com/erxes/erxes/issues/1625)
+* **email-verification:** added email verification service ([d509e99](https://github.com/erxes/erxes-api/commit/d509e999f04b961ef38e0eb9c98cf64cdf656d3d)), closes [#1662](https://github.com/erxes/erxes-api/issues/1662)
+* **users:** filter by brand ([9dca98e](https://github.com/erxes/erxes-api/commit/9dca98e9e4ff369fea01c2a3272b534a077396d3)), closes [#681](https://github.com/erxes/erxes-api/issues/681)
+* **videoCall:** add video call integration using daily.co ([bb25bf9](https://github.com/erxes/erxes-api/commit/bb25bf96e70df43b0ee572f4b1e9eef6d490980d)), closes [erxes/erxes#1638](https://github.com/erxes/erxes/issues/1638)
+
+
+### Performance Improvements
+
+* **customer:** export pop-ups data for customer list when filtering by pop ups ([9fb2574](https://github.com/erxes/erxes-api/commit/9fb25749c0c75b35b5968aa29acbd05bc084a787)), closes [erxes/erxes#1674](https://github.com/erxes/erxes/issues/1674)
+* **merge-repos:** merged logger & engage-mail-sender repos ([6d2d8dd](https://github.com/erxes/erxes-api/commit/6d2d8dd85510f475d13ad49ea986fa4d9d89f276)), closes [#736](https://github.com/erxes/erxes-api/issues/736)
+
+## [0.12.5](https://github.com/erxes/erxes-api/compare/0.12.4...0.12.5) (2020-03-06)
+
+
+### Bug Fixes
+
+* **account:** remove account ([#725](https://github.com/erxes/erxes-api/issues/725)) ([fb477c3](https://github.com/erxes/erxes-api/commit/fb477c33277f74fe09e28d786e310bc72168ab80))
+
+## [0.12.4](https://github.com/erxes/erxes-api/compare/0.12.3...0.12.4) (2020-03-06)
+
+## [0.12.3](https://github.com/erxes/erxes-api/compare/0.12.2...0.12.3) (2020-01-28)
+
+## [0.12.2](https://github.com/erxes/erxes-api/compare/0.12.1...0.12.2) (2020-01-28)
+
+
+### Bug Fixes
+
+* **jwt:** checked JWT_TOKEN_SECRET config on startup ([30daf11](https://github.com/erxes/erxes-api/commit/30daf11))
+
+## [0.12.1](https://github.com/erxes/erxes-api/compare/0.12.0...0.12.1) (2020-01-28)
+
+
+### Bug Fixes
+
+* **user:** jwt token secret issue ([76f2474](https://github.com/erxes/erxes-api/commit/76f2474)), closes [#704](https://github.com/erxes/erxes-api/issues/704)
+
 # [0.12.0](https://github.com/erxes/erxes-api/compare/0.11.2...0.12.0) (2020-01-08)
 
 

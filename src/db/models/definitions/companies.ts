@@ -1,23 +1,9 @@
 import { Document, Schema } from 'mongoose';
 
-import {
-  COMPANY_BUSINESS_TYPES,
-  COMPANY_INDUSTRY_TYPES,
-  COMPANY_LEAD_STATUS_TYPES,
-  COMPANY_LIFECYCLE_STATE_TYPES,
-  STATUSES,
-} from './constants';
+import { customFieldSchema, ICustomField, ILink, linkSchema } from './common';
+import { COMPANY_INDUSTRY_TYPES, COMPANY_SELECT_OPTIONS } from './constants';
 
 import { field, schemaWrapper } from './utils';
-
-export interface ILink {
-  linkedIn?: string;
-  twitter?: string;
-  facebook?: string;
-  github?: string;
-  youtube?: string;
-  website?: string;
-}
 
 interface ILinkDocument extends ILink, Document {}
 
@@ -40,17 +26,16 @@ export interface ICompany {
   phones?: string[];
 
   mergedIds?: string[];
-  leadStatus?: string;
   status?: string;
-  lifecycleState?: string;
   businessType?: string;
   description?: string;
   employees?: number;
   doNotDisturb?: string;
   links?: ILink;
   tagIds?: string[];
-  customFieldsData?: any;
+  customFieldsData?: ICustomField[];
   website?: string;
+  code?: string;
 }
 
 export interface ICompanyDocument extends ICompany, Document {
@@ -62,17 +47,9 @@ export interface ICompanyDocument extends ICompany, Document {
   searchText: string;
 }
 
-const linkSchema = new Schema(
-  {
-    linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
-    twitter: field({ type: String, optional: true, label: 'Twitter' }),
-    facebook: field({ type: String, optional: true, label: 'Facebook' }),
-    github: field({ type: String, optional: true, label: 'Github' }),
-    youtube: field({ type: String, optional: true, label: 'Youtube' }),
-    website: field({ type: String, optional: true, label: 'Website' }),
-  },
-  { _id: false },
-);
+const getEnum = (fieldName: string): string[] => {
+  return COMPANY_SELECT_OPTIONS[fieldName].map(option => option.value);
+};
 
 export const companySchema = schemaWrapper(
   new Schema({
@@ -110,6 +87,7 @@ export const companySchema = schemaWrapper(
       enum: COMPANY_INDUSTRY_TYPES,
       label: 'Industry',
       optional: true,
+      esType: 'keyword',
     }),
 
     website: field({
@@ -130,7 +108,7 @@ export const companySchema = schemaWrapper(
       label: 'Parent Company',
     }),
 
-    primaryEmail: field({ type: String, optional: true, label: 'Primary email' }),
+    primaryEmail: field({ type: String, optional: true, label: 'Primary email', esType: 'email' }),
     emails: field({ type: [String], optional: true, label: 'Emails' }),
 
     primaryPhone: field({ type: String, optional: true, label: 'Primary phone' }),
@@ -138,33 +116,23 @@ export const companySchema = schemaWrapper(
 
     ownerId: field({ type: String, optional: true, label: 'Owner' }),
 
-    leadStatus: field({
-      type: String,
-      enum: COMPANY_LEAD_STATUS_TYPES,
-      optional: true,
-      label: 'Lead Status',
-    }),
-
     status: field({
       type: String,
-      enum: STATUSES.ALL,
-      default: STATUSES.ACTIVE,
+      enum: getEnum('STATUSES'),
+      default: 'Active',
       optional: true,
       label: 'Status',
-    }),
-
-    lifecycleState: field({
-      type: String,
-      enum: COMPANY_LIFECYCLE_STATE_TYPES,
-      optional: true,
-      label: 'Lifecycle State',
+      esType: 'keyword',
+      selectOptions: COMPANY_SELECT_OPTIONS.STATUSES,
     }),
 
     businessType: field({
       type: String,
-      enum: COMPANY_BUSINESS_TYPES,
+      enum: getEnum('BUSINESS_TYPES'),
       optional: true,
       label: 'Business Type',
+      esType: 'keyword',
+      selectOptions: COMPANY_SELECT_OPTIONS.BUSINESS_TYPES,
     }),
 
     description: field({ type: String, optional: true, label: 'Description' }),
@@ -172,7 +140,10 @@ export const companySchema = schemaWrapper(
     doNotDisturb: field({
       type: String,
       optional: true,
+      default: 'No',
+      enum: getEnum('DO_NOT_DISTURB'),
       label: 'Do not disturb',
+      selectOptions: COMPANY_SELECT_OPTIONS.DO_NOT_DISTURB,
     }),
     links: field({ type: linkSchema, default: {}, label: 'Links' }),
 
@@ -185,10 +156,8 @@ export const companySchema = schemaWrapper(
     // Merged company ids
     mergedIds: field({ type: [String], optional: true, label: 'Merged companies' }),
 
-    customFieldsData: field({
-      type: Object,
-      label: 'Custom fields',
-    }),
+    customFieldsData: field({ type: [customFieldSchema], optional: true, label: 'Custom fields data' }),
     searchText: field({ type: String, optional: true, index: true }),
+    code: field({ type: String, label: 'Code', optional: true }),
   }),
 );

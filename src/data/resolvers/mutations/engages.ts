@@ -1,14 +1,25 @@
+import * as _ from 'underscore';
 import { EngageMessages } from '../../../db/models';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
-import { MESSAGE_KINDS } from '../../constants';
+import { MODULE_NAMES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { registerOnboardHistory } from '../../utils';
 import { send } from './engageUtils';
 
 interface IEngageMessageEdit extends IEngageMessage {
   _id: string;
 }
+
+/**
+ * These fields contain too much data & it's inappropriate
+ * to save such data in each log row
+ */
+const emptyCustomers = {
+  customerIds: [],
+  messengerReceivedCustomerIds: [],
+};
 
 const engageMutations = {
   /**
@@ -21,10 +32,15 @@ const engageMutations = {
 
     await putCreateLog(
       {
-        type: 'engage',
-        newData: JSON.stringify(doc),
-        object: engageMessage,
-        description: `${engageMessage.title} has been created`,
+        type: MODULE_NAMES.ENGAGE,
+        newData: {
+          ...doc,
+          ...emptyCustomers,
+        },
+        object: {
+          ...engageMessage.toObject(),
+          ...emptyCustomers,
+        },
       },
       user,
     );
@@ -39,18 +55,12 @@ const engageMutations = {
     const engageMessage = await EngageMessages.getEngageMessage(_id);
     const updated = await EngageMessages.updateEngageMessage(_id, doc);
 
-    try {
-      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id, update: 'true' } });
-    } catch (e) {
-      throw new Error(e);
-    }
-
     await putUpdateLog(
       {
-        type: 'engage',
-        object: engageMessage,
-        newData: JSON.stringify(updated),
-        description: `${engageMessage.title} has been edited`,
+        type: MODULE_NAMES.ENGAGE,
+        object: { ...engageMessage.toObject(), ...emptyCustomers },
+        newData: { ...updated.toObject(), ...emptyCustomers },
+        updatedDocument: updated,
       },
       user,
     );
@@ -64,19 +74,12 @@ const engageMutations = {
   async engageMessageRemove(_root, { _id }: { _id: string }, { user }: IContext) {
     const engageMessage = await EngageMessages.getEngageMessage(_id);
 
-    try {
-      await utils.fetchCronsApi({ path: '/update-or-remove-schedule', method: 'POST', body: { _id } });
-    } catch (e) {
-      throw new Error(e);
-    }
-
     const removed = await EngageMessages.removeEngageMessage(_id);
 
     await putDeleteLog(
       {
-        type: 'engage',
-        object: engageMessage,
-        description: `${engageMessage.title} has been removed`,
+        type: MODULE_NAMES.ENGAGE,
+        object: { ...engageMessage.toObject(), ...emptyCustomers },
       },
       user,
     );
@@ -87,24 +90,8 @@ const engageMutations = {
   /**
    * Engage message set live
    */
-  async engageMessageSetLive(_root, { _id }: { _id: string }) {
-    const engageMessage = await EngageMessages.engageMessageSetLive(_id);
-
-    const { kind } = engageMessage;
-
-    if (kind !== MESSAGE_KINDS.MANUAL) {
-      try {
-        await utils.fetchCronsApi({
-          path: '/create-schedule',
-          method: 'POST',
-          body: { message: JSON.stringify(engageMessage) },
-        });
-      } catch (e) {
-        throw new Error(e);
-      }
-    }
-
-    return engageMessage;
+  engageMessageSetLive(_root, { _id }: { _id: string }) {
+    return EngageMessages.engageMessageSetLive(_id);
   },
 
   /**
@@ -121,14 +108,16 @@ const engageMutations = {
     return EngageMessages.engageMessageSetLive(_id);
   },
 
-  engagesConfigSave(_root, args, { dataSources }: IContext) {
-    return dataSources.EngagesAPI.engagesConfigSave(args);
+  engagesUpdateConfigs(_root, configsMap, { dataSources }: IContext) {
+    return dataSources.EngagesAPI.engagesUpdateConfigs(configsMap);
   },
 
   /**
    * Engage message verify email
    */
-  engageMessageVerifyEmail(_root, { email }: { email: string }, { dataSources }: IContext) {
+  async engageMessageVerifyEmail(_root, { email }: { email: string }, { dataSources, user }: IContext) {
+    await registerOnboardHistory({ type: 'engageVerifyEmail', user });
+
     return dataSources.EngagesAPI.engagesVerifyEmail({ email });
   },
 
@@ -139,7 +128,9 @@ const engageMutations = {
     return dataSources.EngagesAPI.engagesRemoveVerifiedEmail({ email });
   },
 
-  engageMessageSendTestEmail(_root, args, { dataSources }: IContext) {
+  async engageMessageSendTestEmail(_root, args, { dataSources, user }: IContext) {
+    await registerOnboardHistory({ type: 'engageSendTestEmail', user });
+
     return dataSources.EngagesAPI.engagesSendTestEmail(args);
   },
 };

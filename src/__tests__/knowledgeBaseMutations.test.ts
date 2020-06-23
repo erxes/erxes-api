@@ -1,12 +1,14 @@
 import * as faker from 'faker';
 import { graphqlRequest } from '../db/connection';
 import { Brands, KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics, Users } from '../db/models';
+import { PUBLISH_STATUSES } from '../db/models/definitions/constants';
 
 import {
   brandFactory,
   knowledgeBaseArticleFactory,
   knowledgeBaseCategoryFactory,
   knowledgeBaseTopicFactory,
+  userFactory,
 } from '../db/factories';
 
 import './setup.ts';
@@ -30,7 +32,7 @@ const categoryArgs = {
 const articleArgs = {
   title: faker.random.word(),
   summary: faker.random.word(),
-  status: 'draft',
+  status: PUBLISH_STATUSES.DRAFT,
   content: faker.random.word(),
 };
 
@@ -42,9 +44,9 @@ describe('mutations', () => {
 
   beforeEach(async () => {
     // Creating test data
-    _knowledgeBaseTopic = await knowledgeBaseTopicFactory({});
-    _knowledgeBaseCategory = await knowledgeBaseCategoryFactory({});
-    _knowledgeBaseArticle = await knowledgeBaseArticleFactory({});
+    _knowledgeBaseArticle = await knowledgeBaseArticleFactory({ status: PUBLISH_STATUSES.PUBLISH });
+    _knowledgeBaseCategory = await knowledgeBaseCategoryFactory({ articleIds: [_knowledgeBaseArticle._id] });
+    _knowledgeBaseTopic = await knowledgeBaseTopicFactory({ categoryIds: [_knowledgeBaseCategory._id] });
     _brand = await brandFactory({});
   });
 
@@ -300,7 +302,8 @@ describe('mutations', () => {
   });
 
   test('Remove knowledge base article', async () => {
-    const _id = _knowledgeBaseArticle._id;
+    const user = await userFactory();
+    const article = await knowledgeBaseArticleFactory({ modifiedBy: user._id });
 
     const mutation = `
       mutation knowledgeBaseArticlesRemove($_id: String!) {
@@ -308,8 +311,8 @@ describe('mutations', () => {
       }
     `;
 
-    await graphqlRequest(mutation, 'knowledgeBaseArticlesRemove', { _id });
+    await graphqlRequest(mutation, 'knowledgeBaseArticlesRemove', { _id: article._id });
 
-    expect(await KnowledgeBaseArticles.findOne({ _id })).toBe(null);
+    expect(await KnowledgeBaseArticles.findOne({ _id: article._id })).toBe(null);
   });
 });

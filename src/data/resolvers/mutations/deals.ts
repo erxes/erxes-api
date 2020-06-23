@@ -1,17 +1,11 @@
-import { ActivityLogs, Checklists, Conformities, Deals } from '../../../db/models';
-import { IOrderInput } from '../../../db/models/definitions/boards';
-import { NOTIFICATION_TYPES } from '../../../db/models/definitions/constants';
+import * as _ from 'underscore';
+import { Deals } from '../../../db/models';
+import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { checkUserIds, putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
-import {
-  copyPipelineLabels,
-  createConformity,
-  IBoardNotificationParams,
-  itemsChange,
-  sendNotifications,
-} from '../boardUtils';
+import { checkUserIds } from '../../utils';
+import { itemsAdd, itemsArchive, itemsChange, itemsCopy, itemsEdit, itemsRemove } from './boardUtils';
 
 interface IDealsEdit extends IDeal {
   _id: string;
@@ -19,158 +13,64 @@ interface IDealsEdit extends IDeal {
 
 const dealMutations = {
   /**
-   * Create new deal
+   * Creates a new deal
    */
-  async dealsAdd(_root, doc: IDeal, { user, docModifier }: IContext) {
-    doc.initialStageId = doc.stageId;
-    doc.watchedUserIds = [user._id];
-
-    const deal = await Deals.createDeal({
-      ...docModifier(doc),
-      modifiedBy: user._id,
-      userId: user._id,
-    });
-
-    await createConformity({
-      mainType: 'deal',
-      mainTypeId: deal._id,
-      customerIds: doc.customerIds,
-      companyIds: doc.companyIds,
-    });
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_ADD,
-      action: 'invited you to the deal',
-      content: `'${deal.name}'.`,
-      contentType: 'deal',
-    });
-
-    await putCreateLog(
-      {
-        type: 'deal',
-        newData: JSON.stringify(doc),
-        object: deal,
-        description: `${deal.name} has been created`,
-      },
-      user,
-    );
-
-    return deal;
+  async dealsAdd(_root, doc: IDeal & { proccessId: string; aboveItemId: string }, { user, docModifier }: IContext) {
+    return itemsAdd(doc, 'deal', user, docModifier, Deals.createDeal);
   },
 
   /**
-   * Edit deal
+   * Edits a deal
    */
-  async dealsEdit(_root, { _id, ...doc }: IDealsEdit, { user }: IContext) {
+  async dealsEdit(_root, { _id, proccessId, ...doc }: IDealsEdit & { proccessId: string }, { user }: IContext) {
     const oldDeal = await Deals.getDeal(_id);
 
-    const updatedDeal = await Deals.updateDeal(_id, {
-      ...doc,
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-    });
-
-    await copyPipelineLabels({ item: oldDeal, doc, user });
-
-    const notificationDoc: IBoardNotificationParams = {
-      item: updatedDeal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_EDIT,
-      action: `has updated deal`,
-      content: `${updatedDeal.name}`,
-      contentType: 'deal',
-    };
-
     if (doc.assignedUserIds) {
-      const { addedUserIds, removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
+      const { removedUserIds } = checkUserIds(oldDeal.assignedUserIds, doc.assignedUserIds);
+      const oldAssignedUserPdata = (oldDeal.productsData || [])
+        .filter(pdata => pdata.assignUserId)
+        .map(pdata => pdata.assignUserId || '');
+      const cantRemoveUserIds = removedUserIds.filter(userId => oldAssignedUserPdata.includes(userId));
 
-      notificationDoc.invitedUsers = addedUserIds;
-      notificationDoc.removedUsers = removedUserIds;
+      if (cantRemoveUserIds.length > 0) {
+        throw new Error('Cannot remove the team member, it is assigned in the product / service section');
+      }
     }
 
-    await sendNotifications(notificationDoc);
+    if (doc.productsData) {
+      const assignedUsersPdata = doc.productsData
+        .filter(pdata => pdata.assignUserId)
+        .map(pdata => pdata.assignUserId || '');
 
-    await putUpdateLog(
-      {
-        type: 'deal',
-        object: updatedDeal,
-        newData: JSON.stringify(doc),
-        description: `${updatedDeal.name} has been edited`,
-      },
-      user,
-    );
+      const oldAssignedUserPdata = (oldDeal.productsData || [])
+        .filter(pdata => pdata.assignUserId)
+        .map(pdata => pdata.assignUserId || '');
 
-    return updatedDeal;
+      const { addedUserIds, removedUserIds } = checkUserIds(oldAssignedUserPdata, assignedUsersPdata);
+
+      if (addedUserIds.length > 0 || removedUserIds.length > 0) {
+        let assignedUserIds = doc.assignedUserIds || oldDeal.assignedUserIds || [];
+        assignedUserIds = [...new Set(assignedUserIds.concat(addedUserIds))];
+        assignedUserIds = assignedUserIds.filter(userId => !removedUserIds.includes(userId));
+        doc.assignedUserIds = assignedUserIds;
+      }
+    }
+
+    return itemsEdit(_id, 'deal', oldDeal, doc, proccessId, user, Deals.updateDeal);
   },
 
   /**
    * Change deal
    */
-  async dealsChange(
-    _root,
-    { _id, destinationStageId }: { _id: string; destinationStageId: string },
-    { user }: IContext,
-  ) {
-    const deal = await Deals.getDeal(_id);
-
-    await Deals.updateDeal(_id, {
-      modifiedAt: new Date(),
-      modifiedBy: user._id,
-      stageId: destinationStageId,
-    });
-
-    const { content, action } = await itemsChange(user._id, deal, 'deal', destinationStageId);
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_CHANGE,
-      content,
-      action,
-      contentType: 'deal',
-    });
-
-    return deal;
-  },
-
-  /**
-   * Update deal orders (not sendNotifaction, ordered card to change)
-   */
-  dealsUpdateOrder(_root, { stageId, orders }: { stageId: string; orders: IOrderInput[] }) {
-    return Deals.updateOrder(stageId, orders);
+  async dealsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
+    return itemsChange(doc, 'deal', user, Deals.updateDeal);
   },
 
   /**
    * Remove deal
    */
   async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
-    const deal = await Deals.getDeal(_id);
-
-    await sendNotifications({
-      item: deal,
-      user,
-      type: NOTIFICATION_TYPES.DEAL_DELETE,
-      action: `deleted deal:`,
-      content: `'${deal.name}'`,
-      contentType: 'deal',
-    });
-
-    await putDeleteLog(
-      {
-        type: 'deal',
-        object: deal,
-        description: `${deal.name} has been removed`,
-      },
-      user,
-    );
-
-    await Conformities.removeConformity({ mainType: 'deal', mainTypeId: deal._id });
-    await Checklists.removeChecklists('deal', deal._id);
-    await ActivityLogs.removeActivityLog(deal._id);
-
-    return deal.remove();
+    return itemsRemove(_id, 'deal', user);
   },
 
   /**
@@ -179,12 +79,20 @@ const dealMutations = {
   async dealsWatch(_root, { _id, isAdd }: { _id: string; isAdd: boolean }, { user }: IContext) {
     return Deals.watchDeal(_id, isAdd, user._id);
   },
+
+  async dealsCopy(_root, { _id, proccessId }: { _id: string; proccessId: string }, { user }: IContext) {
+    return itemsCopy(_id, proccessId, 'deal', user, ['productsData', 'paymentsData'], Deals.createDeal);
+  },
+
+  async dealsArchive(_root, { stageId, proccessId }: { stageId: string; proccessId: string }, { user }: IContext) {
+    return itemsArchive(stageId, 'deal', proccessId, user);
+  },
 };
 
 checkPermission(dealMutations, 'dealsAdd', 'dealsAdd');
 checkPermission(dealMutations, 'dealsEdit', 'dealsEdit');
-checkPermission(dealMutations, 'dealsUpdateOrder', 'dealsUpdateOrder');
 checkPermission(dealMutations, 'dealsRemove', 'dealsRemove');
 checkPermission(dealMutations, 'dealsWatch', 'dealsWatch');
+checkPermission(dealMutations, 'dealsArchive', 'dealsArchive');
 
 export default dealMutations;

@@ -9,7 +9,7 @@ import {
 } from '../db/factories';
 import { Companies, Conformities, Customers, Deals, InternalNotes } from '../db/models';
 import { ICompany, ICompanyDocument } from '../db/models/definitions/companies';
-import { ACTIVITY_CONTENT_TYPES, STATUSES } from '../db/models/definitions/constants';
+import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 
 import './setup.ts';
 
@@ -48,6 +48,7 @@ describe('Companies model tests', () => {
     _company = await companyFactory({
       primaryName: 'companyname',
       names: ['companyname', 'companyname1'],
+      code: 'code',
     });
   });
 
@@ -69,7 +70,7 @@ describe('Companies model tests', () => {
   });
 
   test('Create company', async () => {
-    expect.assertions(4);
+    expect.assertions(5);
 
     // check duplication ==============
     try {
@@ -82,6 +83,12 @@ describe('Companies model tests', () => {
       await Companies.createCompany({ primaryName: 'companyname1' });
     } catch (e) {
       expect(e.message).toBe('Duplicated name');
+    }
+
+    try {
+      await Companies.createCompany({ code: 'code' });
+    } catch (e) {
+      expect(e.message).toBe('Duplicated code');
     }
 
     let companyObj = await Companies.createCompany({}, await userFactory());
@@ -109,7 +116,7 @@ describe('Companies model tests', () => {
     try {
       await Companies.createCompany({
         primaryName: 'name',
-        customFieldsData: { [field._id]: 'invalid number' },
+        customFieldsData: [{ field: field._id, value: 'invalid number' }],
       });
     } catch (e) {
       expect(e.message).toBe(`${field.text}: Invalid number`);
@@ -150,7 +157,7 @@ describe('Companies model tests', () => {
     try {
       await Companies.updateCompany(_company._id, {
         primaryName: 'name',
-        customFieldsData: { [field._id]: 'invalid number' },
+        customFieldsData: [{ field: field._id, value: 'invalid number' }],
       });
     } catch (e) {
       expect(e.message).toBe(`${field.text}: Invalid number`);
@@ -288,7 +295,7 @@ describe('Companies model tests', () => {
     // Checking old company datas deleted
     const oldCompany = (await Companies.findOne({ _id: companyIds[0] })) || { status: '' };
 
-    expect(oldCompany.status).toBe(STATUSES.DELETED);
+    expect(oldCompany.status).toBe('deleted');
     expect(updatedCompany.tagIds).toEqual(expect.arrayContaining(mergedTagIds));
 
     let internalNote = await InternalNotes.find({

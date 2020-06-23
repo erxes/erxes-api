@@ -122,8 +122,7 @@ describe('Conversation db', () => {
     expect(updatedConversation.messageCount).toBe(2);
 
     expect(messageObj.content).toBe(_conversationMessage.content);
-    expect(messageObj.attachments.length).toBe(1);
-    expect(messageObj.attachments[0].toJSON()).toEqual(_conversationMessage.attachments[0].toJSON());
+    expect(messageObj.attachments.length).toBe(0);
     expect(messageObj.mentionedUserIds[0]).toBe(_conversationMessage.mentionedUserIds[0]);
 
     expect(messageObj.conversationId).toBe(_conversation._id);
@@ -313,6 +312,8 @@ describe('Conversation db', () => {
   });
 
   test('Conversation message', async () => {
+    await conversationMessageFactory({ conversationId: _conversation._id, internal: false });
+
     // non answered messages =========
     const nonAnweredMessage = await ConversationMessages.getNonAsnweredMessage(_conversation._id);
 
@@ -326,7 +327,7 @@ describe('Conversation db', () => {
 
     const adminMessages = await ConversationMessages.getAdminMessages(_conversation._id);
 
-    expect(adminMessages.length).toBe(1);
+    expect(adminMessages.length).toBe(2);
 
     // mark sent as read messages ==================
     await ConversationMessages.updateMany(

@@ -1,4 +1,4 @@
-import { commonTypes } from './common';
+import { commonDragParams, commonTypes } from './common';
 
 export const types = `
   type GrowthHack {
@@ -31,6 +31,7 @@ const commonQueryFields = `
   hackStage: [String]
   priority: [String]
   labelIds: [String]
+  userIds: [String]
 `;
 
 export const queries = `
@@ -51,14 +52,20 @@ export const queries = `
     assignedUserIds: [String]
     closeDateType: String
   ): JSON
+
+  archivedGrowthHacks(pipelineId: String!, search: String, page: Int, perPage: Int): [GrowthHack]
+  archivedGrowthHacksCount(pipelineId: String!, search: String): Int
 `;
 
 const commonParams = `
+  proccessId: String,
+  aboveItemId: String,
   name: String,
   stageId: String,
   assignedUserIds: [String],
   attachments: [AttachmentInput],
   closeDate: Date,
+  status: String,
   description: String,
   hackStages: [String],
   priority: String,
@@ -71,9 +78,10 @@ const commonParams = `
 export const mutations = `
   growthHacksAdd(${commonParams}, labelIds: [String]): GrowthHack
   growthHacksEdit(_id: String!, ${commonParams}): GrowthHack
-  growthHacksChange( _id: String!, destinationStageId: String!): GrowthHack
-  growthHacksUpdateOrder(stageId: String!, orders: [OrderItem]): [GrowthHack]
+  growthHacksChange(${commonDragParams}): GrowthHack
   growthHacksRemove(_id: String!): GrowthHack
   growthHacksWatch(_id: String, isAdd: Boolean): GrowthHack
   growthHacksVote(_id: String!, isVote: Boolean): GrowthHack
+  growthHacksCopy(_id: String!, proccessId: String): GrowthHack
+  growthHacksArchive(stageId: String!, proccessId: String): String
 `;

@@ -3,9 +3,11 @@ import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/def
 import { IExternalIntegrationParams } from '../../../db/models/Integrations';
 import { debugExternalApi } from '../../../debuggers';
 import { sendRPCMessage } from '../../../messageBroker';
+import { MODULE_NAMES, RABBITMQ_QUEUES } from '../../constants';
+import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import { putCreateLog, putDeleteLog, putUpdateLog } from '../../utils';
+import { registerOnboardHistory } from '../../utils';
 
 interface IEditIntegration extends IIntegration {
   _id: string;
@@ -13,26 +15,27 @@ interface IEditIntegration extends IIntegration {
 
 const integrationMutations = {
   /**
-   * Create a new messenger integration
+   * Creates a new messenger integration
    */
   async integrationsCreateMessengerIntegration(_root, doc: IIntegration, { user }: IContext) {
     const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
     await putCreateLog(
       {
-        type: 'messengerIntegration',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.INTEGRATION,
+        newData: { ...doc, createdUserId: user._id, isActive: true },
         object: integration,
-        description: `${integration.name} has been created`,
       },
       user,
     );
+
+    await registerOnboardHistory({ type: 'messengerIntegrationCreate', user });
 
     return integration;
   },
 
   /**
-   * Update messenger integration
+   * Updates a messenger integration
    */
   async integrationsEditMessengerIntegration(_root, { _id, ...fields }: IEditIntegration, { user }: IContext) {
     const integration = await Integrations.getIntegration(_id);
@@ -40,10 +43,10 @@ const integrationMutations = {
 
     await putUpdateLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: integration,
-        newData: JSON.stringify(fields),
-        description: `${integration.name} has been edited`,
+        newData: fields,
+        updatedDocument: updated,
       },
       user,
     );
@@ -73,13 +76,14 @@ const integrationMutations = {
 
     await putCreateLog(
       {
-        type: 'leadIntegration',
-        newData: JSON.stringify(doc),
+        type: MODULE_NAMES.INTEGRATION,
+        newData: { ...doc, createdUserId: user._id, isActive: true },
         object: integration,
-        description: `${integration.name} has been created`,
       },
       user,
     );
+
+    await registerOnboardHistory({ type: 'leadIntegrationCreate', user });
 
     return integration;
   },
@@ -115,6 +119,10 @@ const integrationMutations = {
       kind = 'twitter';
     }
 
+    if (kind.includes('smooch')) {
+      kind = 'smooch';
+    }
+
     try {
       await dataSources.IntegrationsAPI.createIntegration(kind, {
         accountId: doc.accountId,
@@ -125,10 +133,9 @@ const integrationMutations = {
 
       await putCreateLog(
         {
-          type: `${kind}Integration`,
-          newData: JSON.stringify(doc),
+          type: MODULE_NAMES.INTEGRATION,
+          newData: { ...doc, createdUserId: user._id, isActive: true },
           object: integration,
-          description: `${integration.name} has been created`,
         },
         user,
       );
@@ -142,15 +149,14 @@ const integrationMutations = {
 
   async integrationsEditCommonFields(_root, { _id, name, brandId }, { user }) {
     const integration = await Integrations.getIntegration(_id);
-
     const updated = Integrations.updateBasicInfo(_id, { name, brandId });
 
     await putUpdateLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: { name: integration.name, brandId: integration.brandId },
-        newData: JSON.stringify({ name, brandId }),
-        description: `${integration.name} has been edited`,
+        newData: { name, brandId },
+        updatedDocument: updated,
       },
       user,
     );
@@ -159,21 +165,7 @@ const integrationMutations = {
   },
 
   /**
-   * Create IMAP account
-   */
-  integrationAddImapAccount(_root, data, { dataSources }) {
-    return dataSources.IntegrationsAPI.createAccount(data);
-  },
-
-  /**
-   * Create Yahoo, Outlook account
-   */
-  integrationAddMailAccount(_root, data, { dataSources }) {
-    return dataSources.IntegrationsAPI.createAccount(data);
-  },
-
-  /**
-   * Delete an integration
+   * Deletes an integration
    */
   async integrationsRemove(_root, { _id }: { _id: string }, { user, dataSources }: IContext) {
     const integration = await Integrations.getIntegration(_id);
@@ -188,22 +180,21 @@ const integrationMutations = {
         'nylas-imap',
         'nylas-office365',
         'nylas-outlook',
+        'nylas-exchange',
         'nylas-yahoo',
         'chatfuel',
         'twitter-dm',
+        'smooch-viber',
+        'smooch-telegram',
+        'smooch-line',
+        'smooch-twilio',
+        'whatsapp',
       ].includes(integration.kind)
     ) {
       await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
     }
 
-    await putDeleteLog(
-      {
-        type: 'integration',
-        object: integration,
-        description: `${integration.name} has been removed`,
-      },
-      user,
-    );
+    await putDeleteLog({ type: MODULE_NAMES.INTEGRATION, object: integration }, user);
 
     return Integrations.removeIntegration(_id);
   },
@@ -212,13 +203,21 @@ const integrationMutations = {
    * Delete an account
    */
   async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
-    const { erxesApiIds } = await sendRPCMessage({ action: 'remove-account', data: { _id } });
+    try {
+      const { erxesApiIds } = await sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, {
+        action: 'remove-account',
+        data: { _id },
+      });
 
-    for (const id of erxesApiIds) {
-      await Integrations.removeIntegration(id);
+      for (const id of erxesApiIds) {
+        await Integrations.removeIntegration(id);
+      }
+
+      return 'success';
+    } catch (e) {
+      debugExternalApi(e);
+      throw e;
     }
-
-    return 'success';
   },
 
   /**
@@ -240,7 +239,7 @@ const integrationMutations = {
       });
     } catch (e) {
       debugExternalApi(e);
-      throw new Error(e);
+      throw e;
     }
 
     const customerIds = await Customers.find({ primaryEmail: { $in: doc.to } }).distinct('_id');
@@ -256,19 +255,25 @@ const integrationMutations = {
 
   async integrationsArchive(_root, { _id }: { _id: string }, { user }: IContext) {
     const integration = await Integrations.getIntegration(_id);
-    await Integrations.updateOne({ _id }, { $set: { isActive: false } });
+
+    const updated = await Integrations.updateOne({ _id }, { $set: { isActive: false } });
 
     await putUpdateLog(
       {
-        type: 'integration',
+        type: MODULE_NAMES.INTEGRATION,
         object: integration,
-        newData: JSON.stringify({ isActive: false }),
-        description: `Integration "${integration.name}" has been archived.`,
+        newData: { isActive: false },
+        description: `"${integration.name}" has been archived.`,
+        updatedDocument: updated,
       },
       user,
     );
 
     return Integrations.findOne({ _id });
+  },
+
+  async integrationsUpdateConfigs(_root, { configsMap }, { dataSources }: IContext) {
+    return dataSources.IntegrationsAPI.updateConfigs(configsMap);
   },
 };
 
@@ -288,5 +293,6 @@ checkPermission(integrationMutations, 'integrationsEditLeadIntegration', 'integr
 checkPermission(integrationMutations, 'integrationsRemove', 'integrationsRemove');
 checkPermission(integrationMutations, 'integrationsArchive', 'integrationsArchive');
 checkPermission(integrationMutations, 'integrationsEditCommonFields', 'integrationsEdit');
+checkPermission(integrationMutations, 'integrationsUpdateConfigs', 'integrationsEdit');
 
 export default integrationMutations;

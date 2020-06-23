@@ -1,14 +1,22 @@
 import { HTTPCache, RESTDataSource } from 'apollo-datasource-rest';
-import { getEnv } from '../utils';
+import { getSubServiceDomain } from '../utils';
 
 export default class IntegrationsAPI extends RESTDataSource {
   constructor() {
     super();
 
-    const INTEGRATIONS_API_DOMAIN = getEnv({ name: 'INTEGRATIONS_API_DOMAIN' });
+    const INTEGRATIONS_API_DOMAIN = getSubServiceDomain({ name: 'INTEGRATIONS_API_DOMAIN' });
 
     this.baseURL = INTEGRATIONS_API_DOMAIN;
     this.httpCache = new HTTPCache();
+  }
+
+  public willSendRequest(request) {
+    const { user } = this.context || {};
+
+    if (user) {
+      request.headers.set('userId', user._id);
+    }
   }
 
   public didEncounterError(e) {
@@ -31,10 +39,6 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post('/integrations/remove', params);
   }
 
-  public async createAccount(params) {
-    return this.post('/nylas/auth/callback', params);
-  }
-
   public async removeAccount(params) {
     return this.post('/accounts/remove', params);
   }
@@ -47,11 +51,31 @@ export default class IntegrationsAPI extends RESTDataSource {
     return this.post(`/${kind}/send`, params);
   }
 
+  public async deleteDailyVideoChatRoom(name) {
+    return this.delete(`/daily/rooms/${name}`);
+  }
+
+  public async createDailyVideoChatRoom(params) {
+    return this.post('/daily/room', params);
+  }
+
   public async fetchApi(path, params) {
     return this.get(path, params);
   }
 
   public async replyTwitterDm(params) {
     return this.post('/twitter/reply', params);
+  }
+
+  public async replySmooch(params) {
+    return this.post('/smooch/reply', params);
+  }
+
+  public async replyWhatsApp(params) {
+    return this.post('/whatsapp/reply', params);
+  }
+
+  public async updateConfigs(configsMap) {
+    return this.post('/update-configs', { configsMap });
   }
 }

@@ -7,6 +7,15 @@ export interface IRule {
   value: string;
 }
 
+export interface ILink {
+  linkedIn?: string;
+  twitter?: string;
+  facebook?: string;
+  github?: string;
+  youtube?: string;
+  website?: string;
+}
+
 export interface IRuleDocument extends IRule, Document {
   _id: string;
 }
@@ -17,17 +26,48 @@ const ruleSchema = new Schema(
     _id: field({ type: String }),
 
     // browserLanguage, currentUrl, etc ...
-    kind: field({ type: String }),
+    kind: field({ type: String, label: 'Kind' }),
 
     // Browser language, Current url etc ...
-    text: field({ type: String }),
+    text: field({ type: String, label: 'Text' }),
 
     // is, isNot, startsWith
-    condition: field({ type: String }),
+    condition: field({ type: String, label: 'Condition' }),
 
-    value: field({ type: String }),
+    value: field({ type: String, label: 'Value' }),
   },
   { _id: false },
 );
 
-export { ruleSchema };
+const linkSchema = new Schema(
+  {
+    linkedIn: field({ type: String, optional: true, label: 'LinkedIn' }),
+    twitter: field({ type: String, optional: true, label: 'Twitter' }),
+    facebook: field({ type: String, optional: true, label: 'Facebook' }),
+    github: field({ type: String, optional: true, label: 'Github' }),
+    youtube: field({ type: String, optional: true, label: 'Youtube' }),
+    website: field({ type: String, optional: true, label: 'Website' }),
+  },
+  { _id: false },
+);
+
+const customFieldSchema = new Schema(
+  {
+    field: field({ type: String }),
+    value: field({ type: Schema.Types.Mixed }),
+    stringValue: field({ type: String, optional: true }),
+    numberValue: field({ type: Number, optional: true }),
+    dateValue: field({ type: Date, optional: true }),
+  },
+  { _id: false },
+);
+
+export interface ICustomField {
+  field: string;
+  value: any;
+  stringValue?: string;
+  numberValue?: number;
+  dateValue?: Date;
+}
+
+export { linkSchema, ruleSchema, customFieldSchema };
