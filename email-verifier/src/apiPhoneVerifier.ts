@@ -40,13 +40,13 @@ const sendSingleMessage = async (
 const singleClearOut = async (phone: string): Promise<any> => {
   try {
     return sendRequest({
-      url: `${CLEAR_OUT_PHONE_ENDPOINT}/validate`,
+      url: `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/validate`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
       },
-      body: { phone },
+      body: { number: phone },
     });
   } catch (e) {
     debugBase(`Error occured during single phone validation ${e.message}`);
@@ -62,14 +62,15 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
     .cell('A1')
     .value('phone');
 
-  for (const { i, val } of unverifiedPhones.map(() => ({ i, val }))) {
-    const cellNumber = 'A'.concat((i + 2).toString());
+  unverifiedPhones.map((value, index) => {
+    const cellNumber = 'A'.concat((index + 2).toString());
 
     workbook
       .sheet(0)
       .cell(cellNumber)
-      .value(val.phone);
-  }
+      .value(value);
+    return value;
+  });
 
   try {
     await workbook.toFileAsync('./unverified.xlsx');
@@ -77,7 +78,7 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
     try {
       const result = await request({
         method: 'POST',
-        url: `${CLEAR_OUT_PHONE_ENDPOINT}/bulk`,
+        url: `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/bulk`,
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
@@ -87,7 +88,9 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
         },
       });
 
-      return sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: result });
+      console.log('restult: ', result.data);
+
+      await getStatus(result.data);
     } catch (e) {
       debugBase(`Error occured during bulk phone validation ${e.message}`);
       sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
@@ -100,7 +103,28 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
   }
 };
 
+const getStatus = async (listId: string) => {
+  const url = `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/bulk/progress_status
+  ?list_id=${listId}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+  };
+  const response = await sendRequest({
+    url,
+    method: 'GET',
+    headers,
+  });
+
+  if (response.data.progress_status === 'completed') {
+    // await getClearOutPhoneBulk(listId);
+  } else {
+    debugBase(`Bulk validation with list id: ${listId} is not finished`);
+  }
+};
+
 export const validateSinglePhone = async (phone: string, isRest = false) => {
+  console.log('p: ', phone);
   const phoneOnDb = await Phones.findOne({ phone }).lean();
 
   if (phoneOnDb) {
@@ -125,7 +149,8 @@ export const validateSinglePhone = async (phone: string, isRest = false) => {
 
   try {
     response = await singleClearOut(phone);
-  } catch (_e) {
+  } catch (e) {
+    console.log(e.message);
     return sendSingleMessage({ phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN }, isRest);
   }
 
@@ -162,7 +187,7 @@ export const validateBulkPhones = async (phones: string[]) => {
   const unverifiedPhones: string[] = phones.filter(phone => !verifiedPhones.includes(phone));
 
   if (verifiedPhones.length > 0) {
-    sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: phonesMap });
+    sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: verifiedPhones });
   }
 
   if (unverifiedPhones.length > 0) {

@@ -100,6 +100,32 @@ const customerMutations = {
 
     return customerIds;
   },
+
+  async customersVerify(_root, { type }: { type: string }, { user }: IContext) {
+    if (type === 'email') {
+      const customers = await Customers.find({
+        primaryEmail: { $exists: true, $ne: null },
+        emailValidationStatus: { $exists: false },
+      });
+      const emails = customers.map(customer => customer.primaryEmail);
+
+      await sendMessage('erxes-api:email-verifier-notification', {
+        type: 'emailVerify',
+        data: { emails },
+      });
+    } else {
+      const customers = await Customers.find({
+        primaryPhone: { $exists: true, $ne: null },
+        phoneValidationStatus: 'unknown',
+      });
+      const phones = customers.map(customer => customer.primaryPhone);
+
+      await sendMessage('erxes-api:email-verifier-notification', {
+        type: 'phoneVerify',
+        data: { phones },
+      });
+    }
+  },
 };
 
 checkPermission(customerMutations, 'customersAdd', 'customersAdd');

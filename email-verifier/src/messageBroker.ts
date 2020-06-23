@@ -1,6 +1,7 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { bulk, single } from './api';
+import { validateBulkPhones, validateSinglePhone } from './apiPhoneVerifier';
 import { debugBase } from './utils';
 
 dotenv.config();
@@ -27,6 +28,9 @@ export const initConsumer = async () => {
         if (action === 'emailVerify') {
           const { emails, email } = data;
           email ? single(email) : bulk(emails);
+        } else {
+          const { phones, phone } = data;
+          phone ? validateSinglePhone(phone) : validateBulkPhones(phones);
         }
 
         channel.ack(msg);

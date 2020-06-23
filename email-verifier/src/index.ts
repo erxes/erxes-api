@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { filterXSS } from 'xss';
 import { single } from './api';
-import { validateSinglePhone } from './apiPhoneVerifier';
+import { validateBulkPhones, validateSinglePhone } from './apiPhoneVerifier';
 import { connect } from './connection';
 import { initConsumer } from './messageBroker';
 import { debugBase, debugRequest } from './utils';
