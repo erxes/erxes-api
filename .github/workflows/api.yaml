@@ -52,6 +52,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: |
         git fetch --no-tags --depth=1 origin develop
+      # git fetch --no-tags --depth=1 origin ${{ github.event.pull_request.base.ref }}
       # git checkout ${{ github.event.pull_request.head.sha }}
 
     - name: Use Node.js 12.16.x
@@ -88,31 +89,32 @@ jobs:
         yarn tsc
 
     - name: run test:changedsince
-      run: node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage --changedSince=origin/develop --coverage
+      # run: node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage --changedSince=develop --coverage
+      run: yarn test:staged
       env:
         MONGO_URL: mongodb://localhost/erxes
         TEST_MONGO_URL: mongodb://localhost/test
         JWT_TOKEN_SECRET: token
         MAIN_APP_DOMAIN: http://localhost:3000
 
-    - name: Build
-      run: |
-        yarn build
+    # - name: Build
+    #   run: |
+    #     yarn build
 
-    - name: Build docker image [push]
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/tags/')
-      env:
-        BASE_IMAGE: erxes/erxes-api:base-12.16.3-slim
-      run: |
-        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        DOCKER_BUILDKIT=1 docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t erxes/erxes-api:${GITHUB_REF#refs/heads/} -f api.Dockerfile .
-        docker push erxes/erxes-api:${GITHUB_REF#refs/heads/}
+    # - name: Build docker image [push]
+    #   if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/tags/')
+    #   env:
+    #     BASE_IMAGE: erxes/erxes-api:base-12.16.3-slim
+    #   run: |
+    #     echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+    #     DOCKER_BUILDKIT=1 docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t erxes/erxes-api:${GITHUB_REF#refs/heads/} -f api.Dockerfile .
+    #     docker push erxes/erxes-api:${GITHUB_REF#refs/heads/}
 
-    - name: Build docker image [tag]
-      if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      env:
-        BASE_IMAGE: erxes/erxes-api:base-12.16.3-slim
-      run: |
-        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        DOCKER_BUILDKIT=1 docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t erxes/erxes-api:${GITHUB_REF#refs/tags/} -f api.Dockerfile .
-        docker push erxes/erxes-api:${GITHUB_REF#refs/tags/}
+    # - name: Build docker image [tag]
+    #   if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    #   env:
+    #     BASE_IMAGE: erxes/erxes-api:base-12.16.3-slim
+    #   run: |
+    #     echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+    #     DOCKER_BUILDKIT=1 docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t erxes/erxes-api:${GITHUB_REF#refs/tags/} -f api.Dockerfile .
+    #     docker push erxes/erxes-api:${GITHUB_REF#refs/tags/}
