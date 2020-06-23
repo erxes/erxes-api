@@ -94,7 +94,6 @@ jobs:
         MAIN_APP_DOMAIN: http://localhost:3000
 
     - name: Build
-      if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/tags/')
       run: |
         yarn build
 
