@@ -25,7 +25,7 @@
     "format": "prettier --write '../src/**/*.ts'",
     "precommit": "lint-staged",
     "test": "node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage",
-    "test:staged": "node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage --findRelatedTests",
+    "test:staged": "node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage --listTests --env=node --findRelatedTests",
     "generateVersion": "ts-node ./src/commands/generateVersion.ts",
     "loadInitialData": "ts-node ./src/commands/loadInitialData.ts",
     "loadPermission": "ts-node ./src/commands/loadPermissionData.ts",
