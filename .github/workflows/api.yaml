@@ -88,7 +88,7 @@ jobs:
         yarn tsc
 
     - name: run test:changedsince
-      run: jest --changedSince=origin/develop --coverage
+      run: node --expose-gc --max_old_space_size=4000 ./node_modules/.bin/jest --forceExit --silent --logHeapUsage --changedSince=origin/develop --coverage
       env:
         MONGO_URL: mongodb://localhost/erxes
         TEST_MONGO_URL: mongodb://localhost/test
