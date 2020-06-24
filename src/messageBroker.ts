@@ -169,16 +169,16 @@ export const initConsumer = async () => {
 export const rabbitMQStatus = async () => {
   return new Promise((resolve, reject) => {
     // tslint:disable-next-line:no-submodule-imports
-    import('amqplib/callback_api').then(amqp => {
-      amqp
-        .connect(RABBITMQ_HOST, error => {
+    import('amqplib/callback_api')
+      .then(amqp => {
+        amqp.connect(RABBITMQ_HOST, error => {
           if (error) {
             return reject(error);
           }
 
           return resolve('ok');
-        })
-        .catch(e => reject(e));
-    });
+        });
+      })
+      .catch(e => reject(e));
   });
 };
