@@ -11,7 +11,7 @@ export const start = async (data: any) => {
   const { user, email, engageMessageId, customers } = data;
   const { content, subject, attachments } = email;
 
-  await Stats.create({ engageMessageId });
+  await Stats.findOneAndUpdate({ engageMessageId }, { engageMessageId }, { upsert: true });
 
   const transporter = await createTransporter();
 
