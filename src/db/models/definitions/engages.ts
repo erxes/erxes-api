@@ -106,10 +106,13 @@ export const messengerSchema = new Schema(
   { _id: false },
 );
 
-export const smsSchema = new Schema({
-  from: field({ type: String, label: 'From text' }),
-  content: field({ type: String, label: 'SMS content' }),
-});
+export const smsSchema = new Schema(
+  {
+    from: field({ type: String, label: 'From text' }),
+    content: field({ type: String, label: 'SMS content' }),
+  },
+  { _id: false },
+);
 
 export const engageMessageSchema = schemaWrapper(
   new Schema({
