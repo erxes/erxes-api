@@ -161,6 +161,7 @@ const sendData = async (
           position: user.details && user.details.position,
         },
         engageMessageId,
+        shortMessage: engageMessage.shortMessage || {},
       };
 
       const chunks = chunkArray(customerInfos, 3000);
