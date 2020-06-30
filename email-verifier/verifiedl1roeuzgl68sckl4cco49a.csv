@@ -1,0 +1,27 @@
+Phone Number,ClearoutPhone Validation Status,ClearoutPhone Line Type,ClearoutPhone Carrier,ClearoutPhone Location,ClearoutPhone Country Name,ClearoutPhone Country Timezone,ClearoutPhone Country Code,ClearoutPhone International Format,ClearoutPhone Local Format,ClearoutPhone E164 Format,ClearoutPhone Can Be Internationally Dialled,ClearoutPhone Verified At (UTC),ClearoutPhone Time Taken (ms)
++97699391924,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9939 1924,9939 1924,+97699391924,yes,2020-06-30T12:29:37+00:00,26
+99491924,Invalid,,,,,,,,,,,2020-06-30T12:29:37+00:00,26
++97699143760,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9914 3760,9914 3760,+97699143760,yes,2020-06-30T12:29:37+00:00,26
++97699654456,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9965 4456,9965 4456,+97699654456,yes,2020-06-30T12:29:37+00:00,26
++97699783256,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9978 3256,9978 3256,+97699783256,yes,2020-06-30T12:29:37+00:00,26
++97699342267,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9934 2267,9934 2267,+97699342267,yes,2020-06-30T12:29:37+00:00,26
++97695204289,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9520 4289,9520 4289,+97695204289,yes,2020-06-30T12:29:37+00:00,27
++976123124124,Valid,fixed_line,,Nalaikh,Mongolia,Asia/Ulaanbaatar,MN,+976 123 124124,0123 124124,+976123124124,yes,2020-06-30T12:29:37+00:00,26
++97694012314,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9401 2314,9401 2314,+97694012314,yes,2020-06-30T12:29:37+00:00,25
++97677052007,Valid,voip,,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 7705 2007,7705 2007,+97677052007,yes,2020-06-30T12:29:37+00:00,26
++97688602007,Valid,mobile,Unitel,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 8860 2007,8860 2007,+97688602007,yes,2020-06-30T12:29:37+00:00,26
+89030669,Invalid,,,,,,,,,,,2020-06-30T12:29:37+00:00,26
++97670007000,Valid,fixed_line,,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 7000 7000,7000 7000,+97670007000,yes,2020-06-30T12:29:37+00:00,26
++97675555555,Valid,voip,,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 7555 5555,7555 5555,+97675555555,yes,2020-06-30T12:29:37+00:00,26
++97699671478,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9967 1478,9967 1478,+97699671478,yes,2020-06-30T12:29:37+00:00,27
++97691919191,Valid,mobile,Skytel,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9191 9191,9191 9191,+97691919191,yes,2020-06-30T12:29:37+00:00,26
++976 99100193,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9910 0193,9910 0193,+97699100193,yes,2020-06-30T12:29:37+00:00,72
++97699636389,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9963 6389,9963 6389,+97699636389,yes,2020-06-30T12:29:38+00:00,26
++976 95204289,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9520 4289,9520 4289,+97695204289,yes,2020-06-30T12:29:38+00:00,26
++976 11459595,Valid,fixed_line,,Ulaanbaatar,Mongolia,Asia/Ulaanbaatar,MN,+976 11 45 9595,011 45 9595,+97611459595,yes,2020-06-30T12:29:38+00:00,26
++976 77052007,Valid,voip,,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 7705 2007,7705 2007,+97677052007,yes,2020-06-30T12:29:38+00:00,26
++976 77751515,Valid,voip,,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 7775 1515,7775 1515,+97677751515,yes,2020-06-30T12:29:38+00:00,26
++976 94391924,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9439 1924,9439 1924,+97694391924,yes,2020-06-30T12:29:38+00:00,26
++976 88682007,Valid,mobile,Unitel,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 8868 2007,8868 2007,+97688682007,yes,2020-06-30T12:29:38+00:00,26
++976 99646477,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9964 6477,9964 6477,+97699646477,yes,2020-06-30T12:29:38+00:00,26
++976 99391925,Valid,mobile,Mobicom,Mongolia,Mongolia,Asia/Ulaanbaatar,MN,+976 9939 1925,9939 1925,+97699391925,yes,2020-06-30T12:29:38+00:00,27

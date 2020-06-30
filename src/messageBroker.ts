@@ -5,6 +5,7 @@ import {
   receiveEmailVerifierNotification,
   receiveEngagesNotification,
   receiveIntegrationsNotification,
+  receivePhoneVerifierNotification,
   receiveRpcMessage,
 } from './data/modules/integrations/receiveMessage';
 import { RobotEntries } from './db/models';
@@ -125,6 +126,19 @@ export const initConsumer = async () => {
       debugBase(`Received email verifier notification ${msg.content.toString()}`);
 
       await receiveEmailVerifierNotification(JSON.parse(msg.content.toString()));
+
+      channel.ack(msg);
+    }
+  });
+
+  // listen for phone verifier notification ===========
+  await channel.assertQueue('phoneVerifierNotification');
+
+  channel.consume('phoneVerifierNotification', async msg => {
+    if (msg !== null) {
+      debugBase(`Received phone verifier notification ${msg.content.toString()}`);
+
+      await receivePhoneVerifierNotification(JSON.parse(msg.content.toString()));
 
       channel.ack(msg);
     }

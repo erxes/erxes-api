@@ -161,6 +161,33 @@ export const receiveEmailVerifierNotification = async msg => {
 };
 
 /*
+ * Phone verifier notification
+ */
+export const receivePhoneVerifierNotification = async msg => {
+  const { action, data } = msg;
+
+  if (action === 'phoneVerify') {
+    const bulkOps: Array<{
+      updateOne: {
+        filter: { primaryPhone: string };
+        update: { phoneValidationStatus: string };
+      };
+    }> = [];
+
+    for (const { phone, status } of data) {
+      bulkOps.push({
+        updateOne: {
+          filter: { primaryPhone: phone },
+          update: { phoneValidationStatus: status },
+        },
+      });
+    }
+
+    await Customers.bulkWrite(bulkOps);
+  }
+};
+
+/*
  * Engages notification
  */
 export const receiveEngagesNotification = async msg => {

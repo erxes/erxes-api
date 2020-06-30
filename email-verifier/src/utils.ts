@@ -1,7 +1,11 @@
 import * as debug from 'debug';
+import * as fs from 'fs';
+import * as http from 'http';
+import * as https from 'https';
 import * as requestify from 'requestify';
 
 export const debugBase = debug('erxes-email-verifier:base');
+export const debugCrons = debug('erxes-email-verifier:crons');
 
 export const debugRequest = (debugInstance, req) =>
   debugInstance(`
@@ -17,7 +21,7 @@ interface IRequestParams {
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
   body?: { [key: string]: any };
-  form?: { [key: string]: string };
+  form?: { [key: string]: any };
 }
 
 /**
@@ -33,6 +37,8 @@ export const sendRequest = async (
     method: ${method}
     body: ${JSON.stringify(body)}
     params: ${JSON.stringify(params)}
+    headers: ${JSON.stringify(headers)}
+    form: ${JSON.stringify(form)}
   `);
 
   try {
@@ -60,6 +66,45 @@ export const sendRequest = async (
       throw new Error(message);
     }
   }
+};
+
+export const downloadResult = async (url: string, fileName: string) => {
+  const proto = !url.charAt(4).localeCompare('s') ? https : http;
+
+  console.log('downloadResult = ', fileName);
+
+  return new Promise((resolve, reject) => {
+    const filePath = `./verified${fileName}.csv`;
+    const file = fs.createWriteStream(filePath);
+    let fileInfo = null;
+
+    const request = proto.get(url, response => {
+      if (response.statusCode !== 200) {
+        reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+        return;
+      }
+
+      fileInfo = {
+        mime: response.headers['content-type'],
+        size: parseInt(response.headers['content-length'], 10),
+      };
+
+      response.pipe(file);
+    });
+
+    // The destination stream is ended by the time it's called
+    file.on('finish', () => resolve(fileInfo));
+
+    request.on('error', err => {
+      fs.unlink(filePath, () => reject(err));
+    });
+
+    file.on('error', err => {
+      fs.unlink(filePath, () => reject(err));
+    });
+
+    request.end();
+  });
 };
 
 export const getEnv = ({ name, defaultValue }: { name: string; defaultValue?: string }): string => {

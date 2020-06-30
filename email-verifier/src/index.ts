@@ -3,11 +3,11 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { filterXSS } from 'xss';
 import { single } from './api';
-import { validateBulkPhones, validateSinglePhone } from './apiPhoneVerifier';
+import { validateSinglePhone } from './apiPhoneVerifier';
 import { connect } from './connection';
 import { initConsumer } from './messageBroker';
+import { initRedis } from './redisClient';
 import { debugBase, debugRequest } from './utils';
-
 // load environment variables
 dotenv.config();
 
@@ -57,6 +57,6 @@ const { PORT } = process.env;
 app.listen(PORT, async () => {
   await initConsumer();
   await connect();
-
+  initRedis();
   debugBase(`Email verifier server is running on port ${PORT}`);
 });

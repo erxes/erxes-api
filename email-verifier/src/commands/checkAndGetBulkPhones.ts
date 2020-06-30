@@ -9,10 +9,10 @@ import { sendRequest } from '../utils';
 
 console.log('Instruction: yarn checkAndGetBulkPhones list_id');
 
-const { RABBITMQ_HOST = 'amqp://localhost', CLEAR_OUT_PHONE_API_KEY, CLEAR_OUT_PHONE_ENDPOINT } = process.env;
+const { RABBITMQ_HOST = 'amqp://localhost', CLEAR_OUT_PHONE_API_KEY } = process.env;
 
-if (!CLEAR_OUT_PHONE_API_KEY || !CLEAR_OUT_PHONE_ENDPOINT) {
-  console.log('Please configure CLEAROUTPHONE API KEY & ENDPOINT');
+if (!CLEAR_OUT_PHONE_API_KEY) {
+  console.log('Please configure CLEAROUTPHONE API KEY');
 
   disconnect();
   process.exit();
@@ -24,7 +24,7 @@ connect().then(async () => {
 
     const channel = await connection.createChannel();
 
-    const url = `https://api.clearoutphone.io/v1/download/result`;
+    const url = 'https://api.clearoutphone.io/v1/download/result';
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
@@ -135,7 +135,7 @@ connect().then(async () => {
     }
 
     const listId = argv[2];
-    const url = `${CLEAR_OUT_PHONE_ENDPOINT}/bulk/progress_status?list_id=${listId}`;
+    const url = `https://api.clearoutphone.io/bulk/progress_status?list_id=${listId}`;
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,

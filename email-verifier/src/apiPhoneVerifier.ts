@@ -1,15 +1,15 @@
+import * as csv from 'csv-writer';
+import * as csvtojson from 'csvtojson';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as request from 'request-promise';
-import * as xlsx from 'xlsx-populate';
 import { sendMessage } from './messageBroker';
 import { PHONE_VALIDATION_STATUSES, Phones } from './models';
-import { debugBase, getEnv, sendRequest } from './utils';
-
+import { getArray, setArray } from './redisClient';
+import { debugBase, downloadResult, getEnv, sendRequest } from './utils';
 dotenv.config();
 
 const CLEAR_OUT_PHONE_API_KEY = getEnv({ name: 'CLEAR_OUT_PHONE_API_KEY' });
-const CLEAR_OUT_PHONE_ENDPOINT = getEnv({ name: 'CLEAR_OUT_PHONE_ENDPOINT' });
 
 const sendSingleMessage = async (
   doc: {
@@ -40,7 +40,7 @@ const sendSingleMessage = async (
 const singleClearOut = async (phone: string): Promise<any> => {
   try {
     return sendRequest({
-      url: `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/validate`,
+      url: 'https://api.clearoutphone.io/v1/phonenumber/validate',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,76 +55,80 @@ const singleClearOut = async (phone: string): Promise<any> => {
 };
 
 const bulkClearOut = async (unverifiedPhones: string[]) => {
-  const workbook = await xlsx.fromBlankAsync();
+  for (let index = 0; index < unverifiedPhones.length; index += 1000) {
+    const junk = unverifiedPhones.slice(index, index + 1000);
 
-  workbook
-    .sheet(0)
-    .cell('A1')
-    .value('phone');
+    const fileName =
+      Math.random()
+        .toString(36)
+        .substring(2, 15) +
+      Math.random()
+        .toString(36)
+        .substring(2, 15);
 
-  unverifiedPhones.map((value, index) => {
-    const cellNumber = 'A'.concat((index + 2).toString());
+    const csvWriter = csv.createObjectCsvWriter({
+      path: `./${fileName}.csv`,
+      header: [{ id: 'number', title: 'Phone' }],
+    });
 
-    workbook
-      .sheet(0)
-      .cell(cellNumber)
-      .value(value);
-    return value;
-  });
-
-  try {
-    await workbook.toFileAsync('./unverified.xlsx');
+    await csvWriter.writeRecords(junk.map(phone => ({ number: phone })));
 
     try {
       const result = await request({
         method: 'POST',
-        url: `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/bulk`,
+        url: 'https://api.clearoutphone.io/v1/phonenumber/bulk',
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
         },
         formData: {
-          file: fs.createReadStream('./unverified.xlsx'),
+          file: fs.createReadStream(`./${fileName}.csv`),
         },
       });
 
-      console.log('restult: ', result.data);
+      const { data, error } = JSON.parse(result);
 
-      await getStatus(result.data);
+      if (data) {
+        try {
+          const listIds = await getArray('erxes_phone_verifier_list_ids');
+
+          listIds.push({ listId: data.list_id, fileName });
+
+          setArray('erxes_phone_verifier_list_ids', listIds);
+        } catch (err) {
+          throw err;
+        }
+      } else if (error) {
+        sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: error.message });
+        throw new Error(error.message);
+      }
     } catch (e) {
       debugBase(`Error occured during bulk phone validation ${e.message}`);
       sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
       throw e;
     }
+  }
+};
+
+export const getStatus = async (listId: string) => {
+  const url = `https://api.clearoutphone.io/v1/phonenumber/bulk/progress_status?list_id=${listId}`;
+  try {
+    const result = await request({
+      method: 'GET',
+      url,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+      },
+    });
+
+    return JSON.parse(result);
   } catch (e) {
-    debugBase(`Failed to create xlsl ${e.message}`);
-    sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
     throw e;
   }
 };
 
-const getStatus = async (listId: string) => {
-  const url = `${CLEAR_OUT_PHONE_ENDPOINT}/v1/phonenumber/bulk/progress_status
-  ?list_id=${listId}`;
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
-  };
-  const response = await sendRequest({
-    url,
-    method: 'GET',
-    headers,
-  });
-
-  if (response.data.progress_status === 'completed') {
-    // await getClearOutPhoneBulk(listId);
-  } else {
-    debugBase(`Bulk validation with list id: ${listId} is not finished`);
-  }
-};
-
 export const validateSinglePhone = async (phone: string, isRest = false) => {
-  console.log('p: ', phone);
   const phoneOnDb = await Phones.findOne({ phone }).lean();
 
   if (phoneOnDb) {
@@ -150,7 +154,6 @@ export const validateSinglePhone = async (phone: string, isRest = false) => {
   try {
     response = await singleClearOut(phone);
   } catch (e) {
-    console.log(e.message);
     return sendSingleMessage({ phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN }, isRest);
   }
 
@@ -182,9 +185,9 @@ export const validateBulkPhones = async (phones: string[]) => {
     status,
   }));
 
-  const verifiedPhones = phonesMap.map(verified => verified.phone);
+  const verifiedPhones = phonesMap.map(verified => ({ phone: verified.phone, status: verified.status }));
 
-  const unverifiedPhones: string[] = phones.filter(phone => !verifiedPhones.includes(phone));
+  const unverifiedPhones: string[] = phones.filter(phone => !verifiedPhones.some(p => p.phone === phone));
 
   if (verifiedPhones.length > 0) {
     sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: verifiedPhones });
@@ -198,4 +201,58 @@ export const validateBulkPhones = async (phones: string[]) => {
     action: 'bulk',
     data: 'There are no phones to verify on the phone verification system',
   });
+};
+
+export const downloadAndUpdate = async (listId: string, fileName: string) => {
+  const url = 'https://api.clearoutphone.io/v1/download/result';
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+  };
+
+  try {
+    const response = await sendRequest({
+      url,
+      method: 'POST',
+      headers,
+      body: { list_id: listId },
+    });
+
+    try {
+      await downloadResult(response.data.url, fileName);
+
+      const jsonArray = await csvtojson().fromFile(`./verified${fileName}.csv`);
+      const phones: Array<{ phone: string; status: string }> = [];
+
+      for (const obj of jsonArray) {
+        const phone = obj['Phone Number'];
+        const status = obj['ClearoutPhone Validation Status'].toLowerCase();
+
+        phones.push({
+          phone,
+          status,
+        });
+
+        const found = await Phones.findOne({ phone });
+        if (!found) {
+          const doc = {
+            phone,
+            status,
+            created: new Date(),
+            lineType: obj['ClearoutPhone Line Type'],
+            carrier: obj['ClearoutPhone Carrier'],
+            internationalFormat: obj['ClearoutPhone International Format'],
+            localFormat: obj['ClearoutPhone Local Format'],
+          };
+          await Phones.create(doc);
+        }
+      }
+      console.log(phones);
+      sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: phones });
+    } catch (e) {
+      throw e;
+    }
+  } catch (e) {
+    throw e;
+  }
 };
