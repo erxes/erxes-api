@@ -113,7 +113,8 @@ export const sendFile = async (fileName: string) => {
       throw new Error(error.message);
     }
   } catch (e) {
-    return e;
+    // request may fail
+    throw e;
   }
 };
 
