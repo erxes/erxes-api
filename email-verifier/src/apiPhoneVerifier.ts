@@ -1,12 +1,11 @@
 import * as csv from 'csv-writer';
-import * as csvtojson from 'csvtojson';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as request from 'request-promise';
 import { sendMessage } from './messageBroker';
 import { PHONE_VALIDATION_STATUSES, Phones } from './models';
 import { getArray, setArray } from './redisClient';
-import { debugBase, downloadResult, getEnv, sendRequest } from './utils';
+import { debugBase, getEnv, sendRequest } from './utils';
 dotenv.config();
 
 const CLEAR_OUT_PHONE_API_KEY = getEnv({ name: 'CLEAR_OUT_PHONE_API_KEY' });
@@ -74,39 +73,47 @@ const bulkClearOut = async (unverifiedPhones: string[]) => {
     await csvWriter.writeRecords(junk.map(phone => ({ number: phone })));
 
     try {
-      const result = await request({
-        method: 'POST',
-        url: 'https://api.clearoutphone.io/v1/phonenumber/bulk',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
-        },
-        formData: {
-          file: fs.createReadStream(`./${fileName}.csv`),
-        },
+      await new Promise(resolve => {
+        setTimeout(resolve, 1000);
       });
 
-      const { data, error } = JSON.parse(result);
-
-      if (data) {
-        try {
-          const listIds = await getArray('erxes_phone_verifier_list_ids');
-
-          listIds.push({ listId: data.list_id, fileName });
-
-          setArray('erxes_phone_verifier_list_ids', listIds);
-        } catch (err) {
-          throw err;
-        }
-      } else if (error) {
-        sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: error.message });
-        throw new Error(error.message);
-      }
+      await sendFile(fileName);
     } catch (e) {
       debugBase(`Error occured during bulk phone validation ${e.message}`);
       sendMessage('phoneVerifierBulkPhoneNotification', { action: 'bulk', data: e.message });
-      throw e;
     }
+  }
+};
+
+export const sendFile = async (fileName: string) => {
+  try {
+    const result = await request({
+      method: 'POST',
+      url: 'https://api.clearoutphone.io/v1/phonenumber/bulk',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer:${CLEAR_OUT_PHONE_API_KEY}`,
+      },
+      formData: {
+        file: fs.createReadStream(`./${fileName}.csv`),
+      },
+    });
+
+    const { data, error } = JSON.parse(result);
+
+    if (data) {
+      const listIds = await getArray('erxes_phone_verifier_list_ids');
+
+      listIds.push(data.list_id);
+
+      setArray('erxes_phone_verifier_list_ids', listIds);
+
+      await fs.unlinkSync(`./${fileName}.csv`);
+    } else if (error) {
+      throw new Error(error.message);
+    }
+  } catch (e) {
+    throw e;
   }
 };
 
@@ -203,7 +210,7 @@ export const validateBulkPhones = async (phones: string[]) => {
   });
 };
 
-export const downloadAndUpdate = async (listId: string, fileName: string) => {
+export const getBulkResult = async (listId: string) => {
   const url = 'https://api.clearoutphone.io/v1/download/result';
   const headers = {
     'Content-Type': 'application/json',
@@ -219,35 +226,50 @@ export const downloadAndUpdate = async (listId: string, fileName: string) => {
     });
 
     try {
-      await downloadResult(response.data.url, fileName);
+      const resp = await sendRequest({
+        url: response.data.url,
+        method: 'GET',
+      });
 
-      const jsonArray = await csvtojson().fromFile(`./verified${fileName}.csv`);
+      const rows = resp.split('\n');
       const phones: Array<{ phone: string; status: string }> = [];
 
-      for (const obj of jsonArray) {
-        const phone = obj['Phone Number'];
-        const status = obj['ClearoutPhone Validation Status'].toLowerCase();
+      for (const [index, row] of rows.entries()) {
+        if (index !== 0) {
+          const rowArray = row.split(',');
 
-        phones.push({
-          phone,
-          status,
-        });
+          if (rowArray.length > 12) {
+            const phone = rowArray[0];
+            const status = rowArray[1].toLowerCase();
+            const lineType = rowArray[2];
+            const carrier = rowArray[3];
+            const internationalFormat = rowArray[8];
+            const localFormat = rowArray[9];
 
-        const found = await Phones.findOne({ phone });
-        if (!found) {
-          const doc = {
-            phone,
-            status,
-            created: new Date(),
-            lineType: obj['ClearoutPhone Line Type'],
-            carrier: obj['ClearoutPhone Carrier'],
-            internationalFormat: obj['ClearoutPhone International Format'],
-            localFormat: obj['ClearoutPhone Local Format'],
-          };
-          await Phones.create(doc);
+            phones.push({
+              phone,
+              status,
+            });
+
+            const found = await Phones.findOne({ phone });
+
+            if (!found) {
+              const doc = {
+                phone,
+                status,
+                created: new Date(),
+                lineType,
+                carrier,
+                internationalFormat,
+                localFormat,
+              };
+
+              await Phones.create(doc);
+            }
+          }
         }
       }
-      console.log(phones);
+
       sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: phones });
     } catch (e) {
       throw e;

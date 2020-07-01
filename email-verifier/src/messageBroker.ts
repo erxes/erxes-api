@@ -28,7 +28,7 @@ export const initConsumer = async () => {
         if (action === 'emailVerify') {
           const { emails, email } = data;
           email ? single(email) : bulk(emails);
-        } else {
+        } else if (action === 'phoneVerify') {
           const { phones, phone } = data;
           phone ? validateSinglePhone(phone) : validateBulkPhones(phones);
         }

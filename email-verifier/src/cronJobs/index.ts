@@ -1,11 +1,10 @@
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 import { connect } from '../connection';
-import { debugCrons } from '../utils';
-
 import { initConsumer } from '../messageBroker';
 import { initRedis } from '../redisClient';
-import './phoneVerifier';
+import { debugCrons } from '../utils';
+import './verifier';
 
 // load environment variables
 dotenv.config();

@@ -13,7 +13,6 @@
     "amqplib": "^0.5.5",
     "body-parser": "^1.19.0",
     "csv-writer": "^1.6.0",
-    "csvtojson": "^2.0.10",
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
     "email-deep-validator": "^3.3.0",
@@ -23,7 +22,6 @@
     "redis": "^3.0.2",
     "request-promise": "^4.2.5",
     "requestify": "^0.2.5",
-    "xlsx-populate": "^1.21.0",
     "xss": "^1.0.6"
   },
   "peerOptionalDependencies": {

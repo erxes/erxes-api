@@ -101,30 +101,39 @@ const customerMutations = {
     return customerIds;
   },
 
-  async customersVerify(_root, { type }: { type: string }, { user }: IContext) {
-    if (type === 'email') {
-      const customers = await Customers.find({
-        primaryEmail: { $exists: true, $ne: null },
-        emailValidationStatus: { $exists: false },
-      });
-      const emails = customers.map(customer => customer.primaryEmail);
+  async customersVerify(_root, { verificationType }: { verificationType: string }) {
+    // stream hine
+    if (verificationType === 'email') {
+      const primaryEmails = await Customers.find(
+        {
+          primaryEmail: { $exists: true, $ne: null },
+          emailValidationStatus: 'unknown',
+        },
+        { primaryEmail: 1, _id: 0 },
+      );
 
-      await sendMessage('erxes-api:email-verifier-notification', {
-        type: 'emailVerify',
+      const emails = primaryEmails.map(email => email.primaryEmail);
+
+      sendMessage('erxes-api:email-verifier-notification', {
+        action: 'emailVerify',
         data: { emails },
       });
-    } else {
-      const customers = await Customers.find({
+    }
+
+    const primaryPhones = await Customers.find(
+      {
         primaryPhone: { $exists: true, $ne: null },
         phoneValidationStatus: 'unknown',
-      });
-      const phones = customers.map(customer => customer.primaryPhone);
+      },
+      { primaryPhone: 1, _id: 0 },
+    );
 
-      await sendMessage('erxes-api:email-verifier-notification', {
-        type: 'phoneVerify',
-        data: { phones },
-      });
-    }
+    const phones = primaryPhones.map(phone => phone.primaryPhone);
+
+    await sendMessage('erxes-api:email-verifier-notification', {
+      action: 'phoneVerify',
+      data: { phones },
+    });
   },
 };
 
