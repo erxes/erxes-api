@@ -285,6 +285,52 @@ app.post(`/service/engage/tracker`, async (req, res, next) => {
   );
 });
 
+// relay telnyx sms web hook
+app.post(`/telnyx/webhook`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
+
+  const url = `${ENGAGES_API_DOMAIN}/telnyx/webhook`;
+
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+});
+
+// relay telnyx sms web hook fail over url
+app.post(`/telnyx/webhook-failover`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
+
+  const url = `${ENGAGES_API_DOMAIN}/telnyx/webhook-failover`;
+
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+});
+
 // Error handling middleware
 app.use((error, _req, res, _next) => {
   console.error(error.stack);

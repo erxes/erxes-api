@@ -113,11 +113,7 @@ export const sendSms = async (data: any) => {
 
   const { telnyxApiKey, telnyxPhone, telnyxProfileId } = configs;
 
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
-
-  if (!DOMAIN) {
-    throw new Error('DOMAIN env variable is not configured');
-  }
+  const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
 
   if (!(telnyxApiKey && telnyxPhone)) {
     throw new Error('Telnyx API key & phone numbers are missing');
@@ -137,8 +133,8 @@ export const sendSms = async (data: any) => {
       to: customer.phone,
       text: shortMessage.content,
       messaging_profile_id: '',
-      webhook_url: `${DOMAIN}/telnyx/webhook`,
-      webhook_failover_url: `${DOMAIN}/telnyx/webhook-failover`,
+      webhook_url: `${MAIN_API_DOMAIN}/telnyx/webhook`,
+      webhook_failover_url: `${MAIN_API_DOMAIN}/telnyx/webhook-failover`,
     };
 
     // telnyx sets from text properly when making international sms
