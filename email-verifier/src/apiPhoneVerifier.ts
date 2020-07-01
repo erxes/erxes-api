@@ -132,6 +132,7 @@ export const getStatus = async (listId: string) => {
 
     return JSON.parse(result);
   } catch (e) {
+    // request may fail
     throw e;
   }
 };
@@ -273,9 +274,11 @@ export const getBulkResult = async (listId: string) => {
 
       sendMessage('phoneVerifierNotification', { action: 'phoneVerify', data: phones });
     } catch (e) {
+      // request may fail
       throw e;
     }
   } catch (e) {
+    // request may fail
     throw e;
   }
 };
