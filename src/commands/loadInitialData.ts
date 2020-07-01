@@ -1,53 +1,47 @@
+import * as dotenv from 'dotenv';
 import * as shelljs from 'shelljs';
-// import { getEnv } from '../data/utils';
-import { connect, disconnect } from '../db/connection';
+import { getEnv } from '../data/utils';
+import { connect } from '../db/connection';
 import { Users } from '../db/models';
 
-const main = async () => {
-  // const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+dotenv.config();
 
-  const result = await shelljs.exec(`mongorestore --db erxes ./src/initialData/common`, { silent: true });
+const main = async () => {
+  const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+
+  const connection = await connect();
+
+  const dbName = connection.connection.db.databaseName;
+  console.log(`drop and create database: ${dbName}`)
+
+  await connection.connection.dropDatabase();
+
+  const result = await shelljs.exec(`mongorestore --uri "${MONGO_URL}" --db ${dbName} ./src/initialData/common`, {
+    silent: true,
+  });
   const output = result.stderr + result.stdout;
 
   console.log(output);
 
-  connect()
-    .then(async () => {
-      const generator = require('generate-password');
-      const newPwd = generator.generate({
-        length: 10,
-        numbers: true,
-        lowercase: true,
-        uppercase: true,
-      });
+  console.log(`success, imported initial data to: ${dbName}`)
 
-      const pwdHash = await Users.generatePassword(newPwd);
+  const generator = require('generate-password');
+  const newPwd = generator.generate({
+    length: 10,
+    numbers: true,
+    lowercase: true,
+    uppercase: true,
+  });
 
-      // find user
-      const user = await Users.findOne({ username: 'admin' });
+  const pwdHash = await Users.generatePassword(newPwd);
 
-      if (!user) {
-        throw new Error('Invalid username');
-      }
+  await shelljs.exec(`mongo "${MONGO_URL}" --eval 'db.users.update({}, { $set: {password: "${pwdHash}" } })'`, {
+    silent: true,
+  });
 
-      // save new password
-      await Users.findByIdAndUpdate(
-        { _id: user._id },
-        {
-          password: pwdHash,
-        },
-      );
+  console.log('\x1b[32m%s\x1b[0m', 'Your new password: ' + newPwd);
 
-      console.log('\x1b[32m%s\x1b[0m', 'Your new password: ' + newPwd);
-    })
-
-    .then(() => {
-      return disconnect();
-    })
-
-    .then(() => {
-      process.exit();
-    });
+  process.exit();
 };
 
 main();
