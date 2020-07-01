@@ -1,3 +1,4 @@
+import { Transform } from 'stream';
 import { ActivityLogs, Customers } from '../../../db/models';
 import { ICustomer } from '../../../db/models/definitions/customers';
 import { sendMessage } from '../../../messageBroker';
@@ -104,35 +105,79 @@ const customerMutations = {
   async customersVerify(_root, { verificationType }: { verificationType: string }) {
     // stream hine
     if (verificationType === 'email') {
-      const primaryEmails = await Customers.find(
+      const emails: Array<{}> = [];
+
+      const customerTransformerStream = new Transform({
+        objectMode: true,
+
+        transform(customer, _encoding, callback) {
+          emails.push(customer.primaryEmail);
+
+          callback();
+        },
+      });
+
+      const customersStream = (Customers.find(
         {
           primaryEmail: { $exists: true, $ne: null },
           emailValidationStatus: 'unknown',
         },
         { primaryEmail: 1, _id: 0 },
-      );
+      ) as any).stream();
 
-      const emails = primaryEmails.map(email => email.primaryEmail);
+      return new Promise((resolve, reject) => {
+        const pipe = customersStream.pipe(customerTransformerStream);
 
-      sendMessage('erxes-api:email-verifier-notification', {
-        action: 'emailVerify',
-        data: { emails },
+        pipe.on('finish', async () => {
+          try {
+            sendMessage('erxes-api:email-verifier-notification', {
+              action: 'emailVerify',
+              data: { emails },
+            });
+          } catch (e) {
+            return reject(e);
+          }
+
+          resolve('done');
+        });
       });
     }
 
-    const primaryPhones = await Customers.find(
+    const phones: Array<{}> = [];
+
+    const customerTransformerStream = new Transform({
+      objectMode: true,
+
+      transform(customer, _encoding, callback) {
+        phones.push(customer.primaryPhone);
+
+        callback();
+      },
+    });
+
+    const customersStream = (Customers.find(
       {
         primaryPhone: { $exists: true, $ne: null },
         phoneValidationStatus: 'unknown',
       },
       { primaryPhone: 1, _id: 0 },
-    );
+    ) as any).stream();
 
-    const phones = primaryPhones.map(phone => phone.primaryPhone);
+    return new Promise((resolve, reject) => {
+      const pipe = customersStream.pipe(customerTransformerStream);
 
-    await sendMessage('erxes-api:email-verifier-notification', {
-      action: 'phoneVerify',
-      data: { phones },
+      pipe.on('finish', async () => {
+        try {
+          sendMessage('erxes-api:email-verifier-notification', {
+            action: 'phoneVerify',
+            data: { phones },
+          });
+        } catch (e) {
+          return reject(e);
+        }
+
+        resolve('done');
+      });
     });
   },
 };

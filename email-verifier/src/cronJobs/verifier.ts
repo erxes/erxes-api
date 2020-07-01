@@ -1,6 +1,6 @@
 import * as schedule from 'node-schedule';
 import { checkTask, getTrueMailBulk } from '../api';
-import { getBulkResult, getStatus, sendFile } from '../apiPhoneVerifier';
+import { getBulkResult, getStatus } from '../apiPhoneVerifier';
 import { getArray, setArray } from '../redisClient';
 import { debugCrons } from '../utils';
 

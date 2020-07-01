@@ -174,16 +174,17 @@ export const receivePhoneVerifierNotification = async msg => {
       };
     }> = [];
 
-    for (const { phone, status } of data) {
-      bulkOps.push({
-        updateOne: {
-          filter: { primaryPhone: phone },
-          update: { phoneValidationStatus: status },
-        },
-      });
+    if (data.length > 0) {
+      for (const { phone, status } of data) {
+        bulkOps.push({
+          updateOne: {
+            filter: { primaryPhone: phone },
+            update: { phoneValidationStatus: status },
+          },
+        });
+      }
+      await Customers.bulkWrite(bulkOps);
     }
-
-    await Customers.bulkWrite(bulkOps);
   }
 };
 
