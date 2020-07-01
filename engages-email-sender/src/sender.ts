@@ -151,6 +151,8 @@ export const sendSms = async (data: any) => {
       if (res && res.data && res.data.to) {
         const receiver = res.data.to.find(item => item.phone_number === msg.to);
 
+        await Logs.createLog(engageMessageId, 'success', `Message successfully sent to "${msg.to}"`);
+
         await SmsResponses.createResponse({
           engageMessageId,
           status: receiver && receiver.status,
