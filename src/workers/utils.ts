@@ -10,6 +10,7 @@ import ImportHistories from '../db/models/ImportHistory';
 import { debugImport } from '../debuggers';
 
 const { MONGO_URL = '' } = process.env;
+
 export const connect = () => mongoose.connect(MONGO_URL, { useNewUrlParser: true, useCreateIndex: true });
 
 dotenv.config();
@@ -134,6 +135,8 @@ export const receiveImportCancel = () => {
 
 const readXlsFile = async (fileName: string): Promise<{ fieldNames: string[]; datas: any[] }> => {
   return new Promise(async (resolve, reject) => {
+    let rowCount = 0;
+
     const usedSheets: any[] = [];
 
     const xlsxReader = XlsxStreamReader();
@@ -149,8 +152,13 @@ const readXlsFile = async (fileName: string): Promise<{ fieldNames: string[]; da
         }
 
         workSheetReader.on('row', row => {
+          if (rowCount > 1) {
+            return reject(new Error('Reached the limit'));
+          }
+
           if (row.values.length > 0) {
             usedSheets.push(row.values);
+            rowCount++;
           }
         });
 
