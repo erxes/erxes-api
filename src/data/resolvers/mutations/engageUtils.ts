@@ -100,16 +100,16 @@ export const send = async (engageMessage: IEngageMessageDocument) => {
   }
 
   if (engageMessage.method === METHODS.EMAIL) {
-    return sendData({ engageMessage, customersSelector, user }, 'sendEngage');
+    return sendEmailOrSms({ engageMessage, customersSelector, user }, 'sendEngage');
   }
 
   if (engageMessage.method === METHODS.SMS) {
-    return sendData({ engageMessage, customersSelector, user }, 'sendEngageSms');
+    return sendEmailOrSms({ engageMessage, customersSelector, user }, 'sendEngageSms');
   }
 };
 
 // Prepares queue data to engages-email-sender
-const sendData = async (
+const sendEmailOrSms = async (
   { engageMessage, customersSelector, user }: IEngageParams,
   action: 'sendEngage' | 'sendEngageSms',
 ) => {
