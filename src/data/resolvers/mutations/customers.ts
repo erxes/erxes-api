@@ -103,11 +103,10 @@ const customerMutations = {
   },
 
   async customersVerify(_root, { verificationType }: { verificationType: string }) {
-    // stream hine
     if (verificationType === 'email') {
       const emails: Array<{}> = [];
 
-      const customerTransformerStream = new Transform({
+      const customerTransformerToEmailStream = new Transform({
         objectMode: true,
 
         transform(customer, _encoding, callback) {
@@ -117,7 +116,7 @@ const customerMutations = {
         },
       });
 
-      const customersStream = (Customers.find(
+      const customersEmailStream = (Customers.find(
         {
           primaryEmail: { $exists: true, $ne: null },
           emailValidationStatus: 'unknown',
@@ -126,7 +125,7 @@ const customerMutations = {
       ) as any).stream();
 
       return new Promise((resolve, reject) => {
-        const pipe = customersStream.pipe(customerTransformerStream);
+        const pipe = customersEmailStream.pipe(customerTransformerToEmailStream);
 
         pipe.on('finish', async () => {
           try {
