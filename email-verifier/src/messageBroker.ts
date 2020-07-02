@@ -1,6 +1,7 @@
 import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { bulk, single } from './api';
+import { validateBulkPhones, validateSinglePhone } from './apiPhoneVerifier';
 import { debugBase } from './utils';
 
 dotenv.config();
@@ -34,6 +35,32 @@ export const initConsumer = async () => {
     });
   } catch (e) {
     debugBase(e.message);
+  }
+
+  try {
+    conn = await amqplib.connect(RABBITMQ_HOST);
+    channel = await conn.createChannel();
+
+    // listen for erxes api ===========
+    await channel.assertQueue('erxes-api:phone-verifier-notification');
+
+    channel.consume('erxes-api:phone-verifier-notification', async msg => {
+      if (msg !== null) {
+        const { action, data } = JSON.parse(msg.content.toString());
+
+        debugBase(`Receiving queue data from erxes-api`, action, data);
+
+        if (action === 'phoneVerify') {
+          const { phones, phone } = data;
+          phone ? validateSinglePhone(phone) : validateBulkPhones(phones);
+        }
+
+        channel.ack(msg);
+      }
+    });
+  } catch (e) {
+    debugBase(e.message);
+    // throw e;
   }
 };
 
