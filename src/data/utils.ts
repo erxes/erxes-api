@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as requestify from 'requestify';
+import { Transform } from 'stream';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Configs, Customers, Notifications, Users } from '../db/models';
@@ -910,6 +911,84 @@ export const validatePhone = async (phone: string, wait?: boolean) => {
     .catch(async e => {
       await errorCallback(e);
     });
+};
+
+export const bulk = async (verificationType: string) => {
+  if (verificationType === 'email') {
+    const emails: Array<{}> = [];
+
+    const customerTransformerToEmailStream = new Transform({
+      objectMode: true,
+
+      transform(customer, _encoding, callback) {
+        emails.push(customer.primaryEmail);
+
+        callback();
+      },
+    });
+
+    const customersEmailStream = (Customers.find(
+      {
+        primaryEmail: { $exists: true, $ne: null },
+        emailValidationStatus: 'unknown',
+      },
+      { primaryEmail: 1, _id: 0 },
+    ) as any).stream();
+
+    return new Promise((resolve, reject) => {
+      const pipe = customersEmailStream.pipe(customerTransformerToEmailStream);
+
+      pipe.on('finish', async () => {
+        try {
+          sendMessage('erxes-api:email-verifier-notification', {
+            action: 'emailVerify',
+            data: { emails },
+          });
+        } catch (e) {
+          return reject(e);
+        }
+
+        resolve('done');
+      });
+    });
+  }
+
+  const phones: Array<{}> = [];
+
+  const customerTransformerStream = new Transform({
+    objectMode: true,
+
+    transform(customer, _encoding, callback) {
+      phones.push(customer.primaryPhone);
+
+      callback();
+    },
+  });
+
+  const customersStream = (Customers.find(
+    {
+      primaryPhone: { $exists: true, $ne: null },
+      phoneValidationStatus: 'unknown',
+    },
+    { primaryPhone: 1, _id: 0 },
+  ) as any).stream();
+
+  return new Promise((resolve, reject) => {
+    const pipe = customersStream.pipe(customerTransformerStream);
+
+    pipe.on('finish', async () => {
+      try {
+        sendMessage('erxes-api:email-verifier-notification', {
+          action: 'phoneVerify',
+          data: { phones },
+        });
+      } catch (e) {
+        return reject(e);
+      }
+
+      resolve('done');
+    });
+  });
 };
 
 export const getConfigs = async () => {
