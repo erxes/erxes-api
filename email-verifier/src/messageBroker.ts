@@ -33,15 +33,7 @@ export const initConsumer = async () => {
         channel.ack(msg);
       }
     });
-  } catch (e) {
-    debugBase(e.message);
-  }
 
-  try {
-    conn = await amqplib.connect(RABBITMQ_HOST);
-    channel = await conn.createChannel();
-
-    // listen for erxes api ===========
     await channel.assertQueue('erxes-api:phone-verifier-notification');
 
     channel.consume('erxes-api:phone-verifier-notification', async msg => {
@@ -60,7 +52,6 @@ export const initConsumer = async () => {
     });
   } catch (e) {
     debugBase(e.message);
-    // throw e;
   }
 };
 
