@@ -981,7 +981,7 @@ export const bulk = async (verificationType: string) => {
 
     pipe.on('finish', async () => {
       try {
-        sendMessage('erxes-api:email-verifier-notification', {
+        sendMessage('erxes-api:phone-verifier-notification', {
           action: 'phoneVerify',
           data: { phones },
         });
