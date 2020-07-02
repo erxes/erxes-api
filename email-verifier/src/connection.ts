@@ -33,6 +33,21 @@ export const connect = async (URL?: string, options?) => {
   });
 };
 
+/**
+ * Health check status
+ */
+export const mongoStatus = () => {
+  return new Promise((resolve, reject) => {
+    mongoose.connection.db.admin().ping((err, result) => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve(result);
+    });
+  });
+};
+
 export function disconnect() {
   return mongoose.connection.close();
 }

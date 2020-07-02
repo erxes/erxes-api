@@ -82,3 +82,19 @@ export const getArray = async (key: string): Promise<any> => {
 export const setArray = (key: string, value: any[]) => {
   client.set(key, JSON.stringify(value));
 };
+
+/**
+ * Health check status
+ * retryStrategy - get response immediately
+ */
+export const redisStatus = () => {
+  return new Promise((resolve, reject) => {
+    client.ping((error, result) => {
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve(result);
+    });
+  });
+};
