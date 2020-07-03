@@ -3,9 +3,7 @@
   "private": true,
   "scripts": {
     "start": "node dist",
-    "start-crons": "node dist/cronJobs",
     "dev": "NODE_ENV=development DEBUG=erxes-email-verifier:* node_modules/.bin/ts-node-dev --experimental-worker --respawn src",
-    "dev-crons": "PROCESS_NAME=crons DEBUG=erxes-crons:* NODE_ENV=development node_modules/.bin/ts-node-dev --respawn src/cronJobs",
     "build": "tsc -p tsconfig.prod.json",
     "checkAndGetBulkEmails": "ts-node ./src/commands/checkAndGetBulkEmails.ts"
   },

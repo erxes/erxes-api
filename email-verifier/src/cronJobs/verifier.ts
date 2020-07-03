@@ -11,16 +11,18 @@ schedule.scheduleJob('1 * * * * *', async () => {
     return;
   }
 
-  for (const listId of listIds) {
+  for (const { listId, hostname } of listIds) {
     debugCrons(`Getting validation progress status with list_id: ${listId}`);
 
     const { status, data } = await getStatus(listId);
 
     if (status === 'success' && data.progress_status === 'completed') {
-      await getBulkResult(listId);
+      await getBulkResult(listId, hostname).catch(e => {
+        debugCrons(`Failed to get phone list. Error: ${e.message}`);
+      });
       debugCrons(`Process is finished with list_id: ${listId}`);
       listIds = listIds.filter(item => {
-        return item !== listId;
+        return item.listId !== listId;
       });
 
       setArray('erxes_phone_verifier_list_ids', listIds);
@@ -35,14 +37,16 @@ schedule.scheduleJob('2 * * * * *', async () => {
     return;
   }
 
-  for (const taskId of taskIds) {
+  for (const { taskId, hostname } of taskIds) {
     const result = await checkTask(taskId);
 
     if (result.status === 'finished') {
-      await getTrueMailBulk(taskId);
+      await getTrueMailBulk(taskId, hostname).catch(e => {
+        debugCrons(`Failed to get email list. Error: ${e.message}`);
+      });
 
       taskIds = taskIds.filter(item => {
-        return item !== taskId;
+        return item.taskId !== taskId;
       });
 
       setArray('erxes_email_verifier_task_ids', taskIds);

@@ -576,7 +576,7 @@ interface IRequestParams {
   method?: string;
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
-  body?: { [key: string]: string };
+  body?: { [key: string]: any };
   form?: { [key: string]: string };
 }
 
@@ -825,13 +825,7 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
 };
 
 export const validateEmail = async (email: string, wait?: boolean) => {
-  const data = { email };
-
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
-
-  if (!EMAIL_VERIFIER_ENDPOINT) {
-    return sendMessage('erxes-api:email-verifier-notification', { action: 'emailVerify', data });
-  }
 
   const requestOptions = {
     url: `${EMAIL_VERIFIER_ENDPOINT}/verify-single`,
@@ -871,13 +865,7 @@ export const validateEmail = async (email: string, wait?: boolean) => {
 };
 
 export const validatePhone = async (phone: string, wait?: boolean) => {
-  const data = { phone };
-
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
-
-  if (!EMAIL_VERIFIER_ENDPOINT) {
-    return sendMessage('erxes-api:phone-verifier-notification', { action: 'phoneVerify', data });
-  }
 
   const requestOptions = {
     url: `${EMAIL_VERIFIER_ENDPOINT}/verify-singlePhone`,
@@ -888,14 +876,14 @@ export const validatePhone = async (phone: string, wait?: boolean) => {
   const updateCustomer = status =>
     Customers.updateOne({ primaryPhone: phone }, { $set: { phoneValidationStatus: status } });
 
-  const successCallback = response => updateCustomer(response.result.status);
+  const successCallback = response => updateCustomer(response.status);
 
   const errorCallback = e => {
     if (e.message === 'timeout exceeded') {
       return updateCustomer('unverifiable');
     }
 
-    debugExternalApi(`Error occurred during phone verify ${e.message}`);
+    debugExternalApi(`Error occurred during phone verification. Error: ${e.message}`);
   };
 
   if (wait) {
@@ -916,7 +904,9 @@ export const validatePhone = async (phone: string, wait?: boolean) => {
     });
 };
 
-export const bulk = async (verificationType: string) => {
+export const validateBulk = async (verificationType: string, hostname: string) => {
+  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
+
   if (verificationType === 'email') {
     const emails: Array<{}> = [];
 
@@ -943,10 +933,25 @@ export const bulk = async (verificationType: string) => {
 
       pipe.on('finish', async () => {
         try {
-          sendMessage('erxes-api:email-verifier-notification', {
-            action: 'emailVerify',
-            data: { emails },
-          });
+          const chunks = chunkArray(emails, 1000);
+
+          for (const chunk of chunks) {
+            const requestOptions = {
+              url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkEmails`,
+              method: 'POST',
+              body: { emails: chunk, hostname },
+            };
+
+            try {
+              const result = await sendRequest(requestOptions);
+
+              if (result.emails) {
+                await updateContacts('email', result.emails);
+              }
+            } catch (e) {
+              throw e;
+            }
+          }
         } catch (e) {
           return reject(e);
         }
@@ -981,10 +986,24 @@ export const bulk = async (verificationType: string) => {
 
     pipe.on('finish', async () => {
       try {
-        sendMessage('erxes-api:phone-verifier-notification', {
-          action: 'phoneVerify',
-          data: { phones },
-        });
+        const chunks = chunkArray(phones, 1000);
+
+        for (const chunk of chunks) {
+          const requestOptions = {
+            url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkPhones`,
+            method: 'POST',
+            body: { phones: chunk, hostname },
+          };
+          try {
+            const result = await sendRequest(requestOptions);
+
+            if (result.phones) {
+              await updateContacts('phone', result.phones);
+            }
+          } catch (e) {
+            throw e;
+          }
+        }
       } catch (e) {
         return reject(e);
       }
@@ -992,6 +1011,44 @@ export const bulk = async (verificationType: string) => {
       resolve('done');
     });
   });
+};
+
+export const updateContacts = async (type: string, data: []) => {
+  if (type === 'email') {
+    const bulkOps: Array<{
+      updateOne: {
+        filter: { primaryEmail: string };
+        update: { emailValidationStatus: string };
+      };
+    }> = [];
+
+    for (const { email, status } of data) {
+      bulkOps.push({
+        updateOne: {
+          filter: { primaryEmail: email },
+          update: { emailValidationStatus: status },
+        },
+      });
+    }
+    await Customers.bulkWrite(bulkOps);
+  }
+
+  const phoneBulkOps: Array<{
+    updateOne: {
+      filter: { primaryPhone: string };
+      update: { phoneValidationStatus: string };
+    };
+  }> = [];
+
+  for (const { phone, status } of data) {
+    phoneBulkOps.push({
+      updateOne: {
+        filter: { primaryPhone: phone },
+        update: { phoneValidationStatus: status },
+      },
+    });
+  }
+  await Customers.bulkWrite(phoneBulkOps);
 };
 
 export const getConfigs = async () => {
