@@ -938,12 +938,13 @@ export const validateBulk = async (verificationType: string, hostname: string) =
             body: { emails, hostname },
           };
 
-          try {
-            sendRequest(requestOptions);
-          } catch (e) {
-            // request may fail
-            throw e;
-          }
+          sendRequest(requestOptions)
+            .then(res => {
+              debugBase(`Response: ${res}`);
+            })
+            .catch(error => {
+              throw error;
+            });
         } catch (e) {
           return reject(e);
         }
@@ -983,12 +984,14 @@ export const validateBulk = async (verificationType: string, hostname: string) =
           method: 'POST',
           body: { phones, hostname },
         };
-        try {
-          await sendRequest(requestOptions);
-        } catch (e) {
-          // request may fail
-          throw e;
-        }
+
+        sendRequest(requestOptions)
+          .then(res => {
+            debugBase(`Response: ${res}`);
+          })
+          .catch(error => {
+            throw error;
+          });
       } catch (e) {
         return reject(e);
       }
