@@ -12,7 +12,6 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
-import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
@@ -926,31 +925,23 @@ export const validateBulk = async (verificationType: string, hostname: string) =
         emailValidationStatus: 'unknown',
       },
       { primaryEmail: 1, _id: 0 },
-    ) as any).stream();
+    ).limit(1000) as any).stream();
 
     return new Promise((resolve, reject) => {
       const pipe = customersEmailStream.pipe(customerTransformerToEmailStream);
 
       pipe.on('finish', async () => {
         try {
-          const chunks = chunkArray(emails, 1000);
+          const requestOptions = {
+            url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkEmails`,
+            method: 'POST',
+            body: { emails, hostname },
+          };
 
-          for (const chunk of chunks) {
-            const requestOptions = {
-              url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkEmails`,
-              method: 'POST',
-              body: { emails: chunk, hostname },
-            };
-
-            try {
-              const result = await sendRequest(requestOptions);
-
-              if (result.emails) {
-                await updateContacts('email', result.emails);
-              }
-            } catch (e) {
-              throw e;
-            }
+          try {
+            sendRequest(requestOptions);
+          } catch (e) {
+            throw e;
           }
         } catch (e) {
           return reject(e);
@@ -979,30 +970,22 @@ export const validateBulk = async (verificationType: string, hostname: string) =
       phoneValidationStatus: 'unknown',
     },
     { primaryPhone: 1, _id: 0 },
-  ) as any).stream();
+  ).limit(1000) as any).stream();
 
   return new Promise((resolve, reject) => {
     const pipe = customersStream.pipe(customerTransformerStream);
 
     pipe.on('finish', async () => {
       try {
-        const chunks = chunkArray(phones, 1000);
-
-        for (const chunk of chunks) {
-          const requestOptions = {
-            url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkPhones`,
-            method: 'POST',
-            body: { phones: chunk, hostname },
-          };
-          try {
-            const result = await sendRequest(requestOptions);
-
-            if (result.phones) {
-              await updateContacts('phone', result.phones);
-            }
-          } catch (e) {
-            throw e;
-          }
+        const requestOptions = {
+          url: `${EMAIL_VERIFIER_ENDPOINT}/verify-bulkPhones`,
+          method: 'POST',
+          body: { phones, hostname },
+        };
+        try {
+          await sendRequest(requestOptions);
+        } catch (e) {
+          throw e;
         }
       } catch (e) {
         return reject(e);
