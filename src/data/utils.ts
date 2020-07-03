@@ -941,6 +941,7 @@ export const validateBulk = async (verificationType: string, hostname: string) =
           try {
             sendRequest(requestOptions);
           } catch (e) {
+            // request may fail
             throw e;
           }
         } catch (e) {
@@ -985,6 +986,7 @@ export const validateBulk = async (verificationType: string, hostname: string) =
         try {
           await sendRequest(requestOptions);
         } catch (e) {
+          // request may fail
           throw e;
         }
       } catch (e) {

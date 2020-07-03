@@ -181,6 +181,7 @@ export const validateBulkPhones = async (phones: string[], hostname: string) => 
         },
       });
     } catch (e) {
+      // request may fail
       throw e;
     }
   }
@@ -189,6 +190,7 @@ export const validateBulkPhones = async (phones: string[], hostname: string) => 
     try {
       await bulkClearOut(unverifiedPhones, hostname);
     } catch (e) {
+      // request may fail
       throw e;
     }
   }

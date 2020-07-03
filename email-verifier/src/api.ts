@@ -48,6 +48,7 @@ const bulkTrueMail = async (unverifiedEmails: string[], hostname: string) => {
       throw new Error(error.message);
     }
   } catch (e) {
+    // request may fail
     throw e;
   }
 };
@@ -72,6 +73,7 @@ export const single = async (email: string) => {
     try {
       response = await singleTrueMail(email);
     } catch (e) {
+      // request may fail
       throw e;
     }
   }
@@ -109,6 +111,7 @@ export const bulk = async (emails: string[], hostname: string) => {
         },
       });
     } catch (e) {
+      // request may fail
       throw e;
     }
   }
