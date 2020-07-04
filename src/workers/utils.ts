@@ -237,3 +237,12 @@ export const receiveImportXls = async (content: any) => {
 
   return { id: importHistory.id };
 };
+
+export const generateUid = () => {
+  return (
+    '_' +
+    Math.random()
+      .toString(36)
+      .substr(2, 9)
+  );
+};
