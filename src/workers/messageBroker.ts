@@ -39,7 +39,7 @@ export const initConsumer = async () => {
       if (msg !== null) {
         const activeWorkers = await getArray('active_workers');
 
-        if (activeWorkers.length > 1) {
+        if (activeWorkers.length > 3) {
           return;
         }
 
