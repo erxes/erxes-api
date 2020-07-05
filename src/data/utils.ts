@@ -11,7 +11,7 @@ import * as xlsxPopulate from 'xlsx-populate';
 import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
-import { debugBase, debugEmail, debugExternalApi, debugWorkers } from '../debuggers';
+import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
@@ -1124,16 +1124,14 @@ export const chunkArray = (myArray, chunkSize: number) => {
 /**
  * Create s3 stream for excel file
  */
-export const s3Stream = async (key: string): Promise<any> => {
+export const s3Stream = async (key: string, errorCallback: (error: any) => void): Promise<any> => {
   const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
   const s3 = await createAWS();
 
   const stream = s3.getObject({ Bucket: AWS_BUCKET, Key: key }).createReadStream();
 
-  stream.on('error', (error: any) => {
-    debugWorkers('Error occurred in S3 Stream', error.code);
-  });
+  stream.on('error', errorCallback);
 
   return stream;
 };

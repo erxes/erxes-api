@@ -37,10 +37,17 @@ export const initConsumer = async () => {
 
     channel.consume(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, async msg => {
       if (msg !== null) {
+        const response = { status: 'success', data: {}, errorMessage: '' };
+
         const activeWorkers = await getArray('active_workers');
 
         if (activeWorkers.length > 3) {
-          return;
+          response.status = 'error';
+          response.errorMessage = 'Please white for a while';
+
+          return channel.sendToQueue(msg.properties.replyTo, Buffer.from(JSON.stringify(response)), {
+            correlationId: msg.properties.correlationId,
+          });
         }
 
         const uid = generateUid();
@@ -50,8 +57,6 @@ export const initConsumer = async () => {
         debugWorkers(`Received rpc queue message ${msg.content.toString()}`);
 
         const content = JSON.parse(msg.content.toString());
-
-        const response = { status: 'success', data: {}, errorMessage: '' };
 
         try {
           response.data =
