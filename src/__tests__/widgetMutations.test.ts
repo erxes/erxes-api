@@ -81,6 +81,10 @@ describe('messenger connect', () => {
   });
 
   test('returns proper integrationId', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     await messengerAppFactory({
       kind: 'knowledgebase',
       name: 'kb',
@@ -108,9 +112,13 @@ describe('messenger connect', () => {
     expect(brand.code).toBe(_brand.code);
     expect(messengerData.formCode).toBe('formCode');
     expect(messengerData.knowledgeBaseTopicId).toBe('topicId');
+    mock.restore();
   });
 
   test('creates new customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     const email = 'newCustomer@gmail.com';
     const now = new Date();
 
@@ -135,9 +143,14 @@ describe('messenger connect', () => {
     expect(customer.deviceTokens).toContain('111');
     expect(customer.createdAt >= now).toBeTruthy();
     expect(customer.sessionCount).toBe(1);
+    mock.restore();
   });
 
   test('updates existing customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     const now = new Date();
 
     const { customerId } = await widgetMutations.widgetsMessengerConnect(
@@ -166,6 +179,7 @@ describe('messenger connect', () => {
     expect((customer.deviceTokens || []).length).toBe(2);
     expect(customer.deviceTokens).toContain('111');
     expect(customer.deviceTokens).toContain('222');
+    mock.restore();
   });
 });
 
