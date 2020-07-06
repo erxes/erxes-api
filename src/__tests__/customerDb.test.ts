@@ -321,6 +321,9 @@ describe('Customers model tests', () => {
   });
 
   test('Merge customers: without emails or phones', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     const visitor1 = await customerFactory({});
     const visitor2 = await customerFactory({});
 
@@ -333,9 +336,13 @@ describe('Customers model tests', () => {
 
     expect(merged.emails).toContain('merged@gmail.com');
     expect(merged.phones).toContain('+2555225');
+    mock.restore();
   });
 
   test('Merge customers: without primaryEmail and primaryPhone', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     const visitor1 = await customerFactory({});
     const visitor2 = await customerFactory({});
 
@@ -345,9 +352,14 @@ describe('Customers model tests', () => {
 
     expect(merged.emails).toHaveLength(0);
     expect(merged.phones).toHaveLength(0);
+    mock.restore();
   });
 
   test('Merge customers', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     expect.assertions(19);
 
     const integration = await integrationFactory({});
@@ -512,6 +524,7 @@ describe('Customers model tests', () => {
     });
 
     expect(deals).toHaveLength(1);
+    mock.restore();
   });
 
   test('Update profile score', async () => {
@@ -533,6 +546,9 @@ describe('Customers model tests', () => {
   });
 
   test('createMessengerCustomer() must return a new customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     const now = new Date();
 
     const email = 'uniqueEmail@gmail.com';
@@ -569,9 +585,14 @@ describe('Customers model tests', () => {
     expect(customer.sessionCount).toBe(1);
 
     expect(customer.firstName).toBe('firstName');
+    mock.restore();
   });
 
   test('updateMessengerCustomer()', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     const integration = await integrationFactory();
 
     try {
@@ -604,6 +625,7 @@ describe('Customers model tests', () => {
 
     expect(customer.primaryPhone).toBe(phone);
     expect(customer.phones).toContain(phone);
+    mock.restore();
   });
 
   test('getWidgetCustomer()', async () => {
