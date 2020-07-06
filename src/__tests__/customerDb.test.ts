@@ -21,7 +21,7 @@ import {
 import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 
 import * as sinon from 'sinon';
-import * as utils from '../data/verifierUtils';
+import * as utils from '../data/utils';
 import { ICustomer, ICustomerDocument } from '../db/models/definitions/customers';
 import './setup.ts';
 
@@ -93,7 +93,7 @@ describe('Customers model tests', () => {
   test('Create customer', async () => {
     // check duplication ===============
 
-    const mock = sinon.stub(utils, 'validateSingle').callsFake(() => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
       return Promise.resolve('success');
     });
     try {
