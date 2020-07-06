@@ -96,6 +96,7 @@ describe('Customers model tests', () => {
     const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
       return Promise.resolve('success');
     });
+
     try {
       await Customers.createCustomer({ primaryEmail: 'email@gmail.com' });
     } catch (e) {
@@ -109,13 +110,13 @@ describe('Customers model tests', () => {
     }
 
     try {
-      await Customers.createCustomer({ primaryPhone: '99922210' });
+      await Customers.createCustomer({ primaryPhone: '+99922210' });
     } catch (e) {
       expect(e.message).toBe('Duplicated phone');
     }
 
     try {
-      await Customers.createCustomer({ primaryPhone: '99922211' });
+      await Customers.createCustomer({ primaryPhone: '+99922211' });
     } catch (e) {
       expect(e.message).toBe('Duplicated phone');
     }
@@ -132,7 +133,7 @@ describe('Customers model tests', () => {
       emails: ['dombo@yahoo.com'],
       firstName: 'firstName',
       lastName: 'lastName',
-      primaryPhone: '12312132',
+      primaryPhone: '+12312132',
       phones: ['12312132'],
       code: 'code1234',
       state: 'lead',
@@ -168,14 +169,18 @@ describe('Customers model tests', () => {
   });
 
   test('Create customer: searchText', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     const doc = {
       primaryEmail: 'dombo@yahoo.com',
-      primaryPhone: '12312132',
+      primaryPhone: '+12312132',
     };
 
     const customerObj = await Customers.createCustomer(doc);
 
-    expect(customerObj.searchText).toEqual('dombo@yahoo.com 12312132');
+    expect(customerObj.searchText).toEqual('dombo@yahoo.com +12312132');
+    mock.restore();
   });
 
   test('Create customer: with customer fields validation error', async () => {
@@ -210,7 +215,7 @@ describe('Customers model tests', () => {
       firstName: 'Dombo',
       primaryEmail: 'dombo@yahoo.com',
       emails: ['dombo@yahoo.com'],
-      primaryPhone: '242442200',
+      primaryPhone: '+242442200',
       phones: ['242442200'],
     };
 
@@ -317,11 +322,11 @@ describe('Customers model tests', () => {
 
     const merged = await Customers.mergeCustomers(customerIds, {
       primaryEmail: 'merged@gmail.com',
-      primaryPhone: '2555225',
+      primaryPhone: '+2555225',
     });
 
     expect(merged.emails).toContain('merged@gmail.com');
-    expect(merged.phones).toContain('2555225');
+    expect(merged.phones).toContain('+2555225');
   });
 
   test('Merge customers: without primaryEmail and primaryPhone', async () => {
@@ -424,7 +429,7 @@ describe('Customers model tests', () => {
       firstName: 'Test first name',
       lastName: 'Test last name',
       primaryEmail: 'Test email',
-      primaryPhone: 'Test phone',
+      primaryPhone: '+12049124',
       messengerData: {
         sessionCount: 6,
       },
@@ -525,7 +530,7 @@ describe('Customers model tests', () => {
     const now = new Date();
 
     const email = 'uniqueEmail@gmail.com';
-    const phone = '422999';
+    const phone = '+422999';
 
     const customer = await Customers.createMessengerCustomer({
       doc: {
@@ -570,7 +575,7 @@ describe('Customers model tests', () => {
     }
 
     const email = 'uniqueEmail@gmail.com';
-    const phone = '422999';
+    const phone = '+422999';
     const deviceToken = 'token';
 
     _customer.isUser = true;
