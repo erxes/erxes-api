@@ -209,7 +209,7 @@ describe('Customers model tests', () => {
 
     // test duplication
     try {
-      await Customers.updateCustomer(_customer._id, doc);
+      await Customers.updateCustomer(_customer._id, doc, 'localhost');
     } catch (e) {
       expect(e.message).toBe('Duplicated email');
     }
@@ -217,14 +217,14 @@ describe('Customers model tests', () => {
     // remove previous duplicated entry
     await Customers.deleteOne({ _id: previousCustomer._id });
 
-    let customerObj = await Customers.updateCustomer(_customer._id, doc);
+    let customerObj = await Customers.updateCustomer(_customer._id, doc, 'localhost');
 
     expect(customerObj.modifiedAt).toBeDefined();
     expect(customerObj.firstName).toBe(doc.firstName);
     expect(customerObj.primaryEmail).toBe(doc.primaryEmail);
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
 
-    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' });
+    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' }, 'localhost');
 
     expect(customerObj.primaryEmail).toBe('');
   });
@@ -254,11 +254,15 @@ describe('Customers model tests', () => {
     }
 
     try {
-      await Customers.updateCustomer(_customer._id, {
-        primaryEmail: 'email',
-        emails: ['dombo@yahoo.com'],
-        customFieldsData: [{ field: field._id, value: 'invalid number' }],
-      });
+      await Customers.updateCustomer(
+        _customer._id,
+        {
+          primaryEmail: 'email',
+          emails: ['dombo@yahoo.com'],
+          customFieldsData: [{ field: field._id, value: 'invalid number' }],
+        },
+        'localhost',
+      );
     } catch (e) {
       expect(e.message).toBe(`${field.text}: Invalid number`);
     }
