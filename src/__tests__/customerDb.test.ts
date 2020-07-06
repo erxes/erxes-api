@@ -32,8 +32,8 @@ describe('Customers model tests', () => {
     _customer = await customerFactory({
       primaryEmail: 'email@gmail.com',
       emails: ['email@gmail.com', 'otheremail@gmail.com'],
-      primaryPhone: '99922210',
-      phones: ['99922210', '99922211'],
+      primaryPhone: '+99922210',
+      phones: ['+99922210', '+99922211'],
       code: 'code',
     });
   });
@@ -93,10 +93,6 @@ describe('Customers model tests', () => {
   test('Create customer', async () => {
     // check duplication ===============
 
-    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
-      return Promise.resolve('success');
-    });
-
     try {
       await Customers.createCustomer({ primaryEmail: 'email@gmail.com' });
     } catch (e) {
@@ -138,6 +134,10 @@ describe('Customers model tests', () => {
       code: 'code1234',
       state: 'lead',
     };
+
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
 
     let customerObj = await Customers.createCustomer(doc);
 
