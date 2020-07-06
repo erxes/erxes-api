@@ -20,6 +20,8 @@ import {
 } from '../db/models';
 import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 
+import * as sinon from 'sinon';
+import * as utils from '../data/verifierUtils';
 import { ICustomer, ICustomerDocument } from '../db/models/definitions/customers';
 import './setup.ts';
 
@@ -90,6 +92,10 @@ describe('Customers model tests', () => {
 
   test('Create customer', async () => {
     // check duplication ===============
+
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
     try {
       await Customers.createCustomer({ primaryEmail: 'email@gmail.com' });
     } catch (e) {
@@ -152,6 +158,7 @@ describe('Customers model tests', () => {
     );
 
     expect(customerObj).toBeDefined();
+    mock.restore();
   });
 
   test('Create visitor', async () => {
