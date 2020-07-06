@@ -204,6 +204,10 @@ describe('Customers model tests', () => {
   });
 
   test('Update customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     expect.assertions(6);
 
     const previousCustomer = await customerFactory({
@@ -239,6 +243,8 @@ describe('Customers model tests', () => {
     customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' }, 'localhost');
 
     expect(customerObj.primaryEmail).toBe('');
+
+    mock.restore();
   });
 
   test('Mark customer as inactive', async () => {
