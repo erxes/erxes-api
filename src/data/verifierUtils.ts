@@ -4,7 +4,7 @@ import { IValidationResponse, IVisitorContact } from '../db/models/definitions/c
 import { debugBase, debugExternalApi } from '../debuggers';
 import { getEnv, sendRequest } from './utils';
 
-export const validateSingle = async (contact: IVisitorContact, hostname: string) => {
+export const validateSingle = async (contact: IVisitorContact, hostname?: string) => {
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
 
   const { email, phone } = contact;
