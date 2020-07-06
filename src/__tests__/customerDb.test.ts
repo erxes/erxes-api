@@ -93,7 +93,7 @@ describe('Customers model tests', () => {
   test('Create customer', async () => {
     // check duplication ===============
 
-    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+    const mock = sinon.stub(utils, 'validateSingle').callsFake(() => {
       return Promise.resolve('success');
     });
     try {
