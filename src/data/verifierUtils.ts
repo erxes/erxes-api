@@ -1,11 +1,13 @@
 import { Transform } from 'stream';
 import { Customers } from '../db/models';
-import { IValidationResponse } from '../db/models/definitions/customers';
+import { IValidationResponse, IVisitorContact } from '../db/models/definitions/customers';
 import { debugBase, debugExternalApi } from '../debuggers';
 import { getEnv, sendRequest } from './utils';
 
-export const validateSingle = async ({ email, phone }, hostname: string) => {
+export const validateSingle = async (contact: IVisitorContact, hostname: string) => {
   const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
+
+  const { email, phone } = contact;
 
   let body = {};
 
