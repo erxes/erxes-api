@@ -26,7 +26,7 @@ const savePhone = async (doc: {
 
 const singleClearOut = async (phone: string): Promise<any> => {
   try {
-    return sendRequest({
+    const response = await sendRequest({
       url: 'https://api.clearoutphone.io/v1/phonenumber/validate',
       method: 'POST',
       headers: {
@@ -35,6 +35,12 @@ const singleClearOut = async (phone: string): Promise<any> => {
       },
       body: { number: phone },
     });
+
+    if (typeof response === 'string') {
+      return JSON.parse(response);
+    }
+
+    return response;
   } catch (e) {
     debugBase(`Error occured during single phone validation ${e.message}`);
     throw e;
@@ -83,7 +89,16 @@ export const sendFile = async (fileName: string, hostname: string) => {
       },
     });
 
-    const { data, error } = JSON.parse(result);
+    let data;
+    let error;
+
+    if (typeof result === 'string') {
+      data = JSON.parse(result).data;
+      error = JSON.parse(result).error;
+    } else {
+      data = result.data;
+      error = result.error;
+    }
 
     if (data) {
       const listIds = await getArray('erxes_phone_verifier_list_ids');
@@ -114,18 +129,30 @@ export const getStatus = async (listId: string) => {
       },
     });
 
-    return JSON.parse(result);
+    if (typeof result === 'string') {
+      return JSON.parse(result);
+    }
+
+    return result;
   } catch (e) {
     // request may fail
     throw e;
   }
 };
 
-export const validateSinglePhone = async (phone: string) => {
+export const validateSinglePhone = async (phone: string, hostname: string) => {
   const phoneOnDb = await Phones.findOne({ phone }).lean();
 
   if (phoneOnDb) {
-    return { phone, status: phoneOnDb.status };
+    debugBase(`This phone number is already verified`);
+
+    return sendRequest({
+      url: `${hostname}/verifier/webhook`,
+      method: 'POST',
+      body: {
+        phone: { phone, status: phoneOnDb.status },
+      },
+    });
   }
 
   if (!phone.includes('+')) {
@@ -136,7 +163,9 @@ export const validateSinglePhone = async (phone: string) => {
   let response: { status?: string; data?: any } = {};
 
   try {
+    debugBase(`Phone number is not found on verifier DB. Sending request to clearoutphone`);
     response = await singleClearOut(phone);
+    debugBase(`Received single phone validation status`);
   } catch (e) {
     return { phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN };
   }
@@ -151,10 +180,26 @@ export const validateSinglePhone = async (phone: string) => {
       internationalFormat: data.internationalFormat,
       localFormat: data.localFormat,
     });
-    return { phone, status: data.status };
-  }
 
-  return { phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN };
+    debugBase(`Sending single phone validation status to erxes-api`);
+
+    await sendRequest({
+      url: `${hostname}/verifier/webhook`,
+      method: 'POST',
+      body: {
+        phone: { phone, status: data.status },
+      },
+    });
+  } else {
+    // if status is not success
+    await sendRequest({
+      url: `${hostname}/verifier/webhook`,
+      method: 'POST',
+      body: {
+        phone: { phone, status: PHONE_VALIDATION_STATUSES.UNKNOWN },
+      },
+    });
+  }
 };
 
 export const validateBulkPhones = async (phones: string[], hostname: string) => {
@@ -167,12 +212,12 @@ export const validateBulkPhones = async (phones: string[], hostname: string) => 
 
   const verifiedPhones = phonesMap.map(verified => ({ phone: verified.phone, status: verified.status }));
 
-  const unverifiedPhones: string[] = phones.filter(
-    phone => !verifiedPhones.some(p => p.phone === phone) || phone.includes('+'),
-  );
+  const unverifiedPhones: string[] = phones.filter(phone => !verifiedPhones.some(p => p.phone === phone));
 
   if (verifiedPhones.length > 0) {
     try {
+      debugBase(`Sending already verified phones to erxes-api`);
+
       await sendRequest({
         url: `${hostname}/verifier/webhook`,
         method: 'POST',
@@ -188,6 +233,7 @@ export const validateBulkPhones = async (phones: string[], hostname: string) => 
 
   if (unverifiedPhones.length > 0) {
     try {
+      debugBase(`Sending  unverified phones to clearoutphone`);
       await bulkClearOut(unverifiedPhones, hostname);
     } catch (e) {
       // request may fail
@@ -204,6 +250,7 @@ export const getBulkResult = async (listId: string, hostname: string) => {
   };
 
   try {
+    debugBase(`Downloading bulk phone validation result`);
     const response = await sendRequest({
       url,
       method: 'POST',
@@ -259,6 +306,8 @@ export const getBulkResult = async (listId: string, hostname: string) => {
           }
         }
       }
+
+      debugBase(`Sending bulk phone validation result to erxes-api`);
 
       await sendRequest({
         url: `${hostname}/verifier/webhook`,
