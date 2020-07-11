@@ -27,10 +27,6 @@ router.get('/smsStats/:engageMessageId', async (req, res) => {
 
   const smsStats = await prepareSmsStats(engageMessageId);
 
-  if (!smsStats) {
-    return res.json({});
-  }
-
   return res.json(smsStats);
 });
 

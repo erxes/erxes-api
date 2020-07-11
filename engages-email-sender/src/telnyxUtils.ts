@@ -17,7 +17,7 @@ export const saveTelnyxHookData = async (data: any) => {
         statuses.push({ date: new Date(), status: receiver.status });
 
         await SmsRequests.updateRequest(initialRequest._id, {
-          status: receiver && receiver.status,
+          status: receiver.status,
           responseData: JSON.stringify(data.payload),
           statusUpdates: statuses,
         });
