@@ -21,6 +21,7 @@ import {
   readFileRequest,
   registerOnboardHistory,
 } from './data/utils';
+import { updateContactsValidationStatus, updateContactValidationStatus } from './data/verifierUtils';
 import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
@@ -299,6 +300,23 @@ app.post(`/telnyx/webhook-failover`, async (req, res, next) => {
   const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
 
   return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/webhook-failover`);
+});
+
+// verifier web hook
+app.post(`/verifier/webhook`, async (req, res) => {
+  const { emails, phones, email, phone } = req.body;
+
+  if (email) {
+    await updateContactValidationStatus(email);
+  } else if (emails) {
+    await updateContactsValidationStatus('email', emails);
+  } else if (phone) {
+    await updateContactValidationStatus(phone);
+  } else if (phones) {
+    await updateContactsValidationStatus('phone', phones);
+  }
+
+  return res.send('success');
 });
 
 // Error handling middleware
