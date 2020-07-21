@@ -45,6 +45,12 @@ const integrationMutations = {
     const integration = await Integrations.getIntegration(_id);
     const updated = await Integrations.updateMessengerIntegration(_id, fields);
 
+    await Channels.updateMany({ integrationIds: integration._id }, { $pull: { integrationIds: integration._id } });
+
+    if (fields.channelIds) {
+      await Channels.updateMany({ _id: { $in: fields.channelIds } }, { $push: { integrationIds: integration._id } });
+    }
+
     await putUpdateLog(
       {
         type: MODULE_NAMES.INTEGRATION,
