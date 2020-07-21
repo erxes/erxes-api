@@ -33,14 +33,15 @@ import {
   readFileRequest,
   registerOnboardHistory,
 } from './data/utils';
-import { connect } from './db/connection';
+import { updateContactsValidationStatus, updateContactValidationStatus } from './data/verifierUtils';
+import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
-import { initConsumer } from './messageBroker';
+import { initConsumer, rabbitMQStatus } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
-import { initRedis } from './redisClient';
+import { initRedis, redisStatus } from './redisClient';
 import init from './startup';
 
 const { JWT_TOKEN_SECRET } = process.env;
@@ -48,6 +49,24 @@ const { JWT_TOKEN_SECRET } = process.env;
 if (!JWT_TOKEN_SECRET) {
   throw new Error('Please configure JWT_TOKEN_SECRET environment variable.');
 }
+
+const pipeRequest = (req: any, res: any, next: any, url: string) => {
+  return req.pipe(
+    request
+      .post(url)
+      .on('response', response => {
+        if (response.statusCode !== 200) {
+          return next(response.statusMessage);
+        }
+
+        return response.pipe(res);
+      })
+      .on('error', e => {
+        debugExternalApi(`Error from pipe ${e.message}`);
+        next(e);
+      }),
+  );
+};
 
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 const WIDGETS_DOMAIN = getSubServiceDomain({ name: 'WIDGETS_DOMAIN' });
@@ -135,7 +154,28 @@ app.get('/download-template', async (req: any, res) => {
 });
 
 // for health check
-app.get('/status', async (_req, res) => {
+app.get('/status', async (_req, res, next) => {
+  try {
+    await mongoStatus();
+  } catch (e) {
+    debugBase('MongoDB is not running');
+    return next(e);
+  }
+
+  try {
+    await redisStatus();
+  } catch (e) {
+    debugBase('Redis is not running');
+    return next(e);
+  }
+
+  try {
+    await rabbitMQStatus();
+  } catch (e) {
+    debugBase('RabbitMQ is not running');
+    return next(e);
+  }
+
   res.end('ok');
 });
 
@@ -254,23 +294,38 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 app.post(`/service/engage/tracker`, async (req, res, next) => {
   const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
 
-  const url = `${ENGAGES_API_DOMAIN}/service/engage/tracker`;
+  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/service/engage/tracker`);
+});
 
-  return req.pipe(
-    request
-      .post(url)
-      .on('response', response => {
-        if (response.statusCode !== 200) {
-          return next(response.statusMessage);
-        }
+// relay telnyx sms web hook
+app.post(`/telnyx/webhook`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
 
-        return response.pipe(res);
-      })
-      .on('error', e => {
-        debugExternalApi(`Error from pipe ${e.message}`);
-        next(e);
-      }),
-  );
+  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/webhook`);
+});
+
+// relay telnyx sms web hook fail over url
+app.post(`/telnyx/webhook-failover`, async (req, res, next) => {
+  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
+
+  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/webhook-failover`);
+});
+
+// verifier web hook
+app.post(`/verifier/webhook`, async (req, res) => {
+  const { emails, phones, email, phone } = req.body;
+
+  if (email) {
+    await updateContactValidationStatus(email);
+  } else if (emails) {
+    await updateContactsValidationStatus('email', emails);
+  } else if (phone) {
+    await updateContactValidationStatus(phone);
+  } else if (phones) {
+    await updateContactsValidationStatus('phone', phones);
+  }
+
+  return res.send('success');
 });
 
 // Error handling middleware

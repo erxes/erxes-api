@@ -1,8 +1,9 @@
 import * as faker from 'faker';
+import * as sinon from 'sinon';
+import * as utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { customerFactory, integrationFactory, userFactory } from '../db/factories';
 import { Brands, Customers, Integrations, Users } from '../db/models';
-
 import './setup.ts';
 
 /*
@@ -109,6 +110,10 @@ describe('Customers mutations', () => {
   });
 
   test('Add customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     const mutation = `
       mutation customersAdd(${commonParamDefs}){
         customersAdd(${commonParams}) {
@@ -125,14 +130,7 @@ describe('Customers mutations', () => {
           hasAuthority
           description
           doNotDisturb
-          links {
-            linkedIn
-            twitter
-            facebook
-            youtube
-            github
-            website
-          }
+          links
           customFieldsData
         }
       }
@@ -144,9 +142,15 @@ describe('Customers mutations', () => {
     expect(customer.emailValidationStatus).toBe(undefined);
     expect(customer.phoneValidationStatus).toBe(undefined);
     expect(customer.customFieldsData.length).toEqual(0);
+
+    mock.restore();
   });
 
   test('Edit customer', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     const mutation = `
       mutation customersEdit($_id: String! ${commonParamDefs}){
         customersEdit(_id: $_id ${commonParams}) {
@@ -164,14 +168,7 @@ describe('Customers mutations', () => {
           hasAuthority
           description
           doNotDisturb
-          links {
-            linkedIn
-            twitter
-            facebook
-            youtube
-            github
-            website
-          }
+          links
           customFieldsData
         }
       }
@@ -185,6 +182,7 @@ describe('Customers mutations', () => {
 
     checkCustomer(customer);
     expect(customer.customFieldsData.length).toEqual(0);
+    mock.restore();
   });
 
   test('Remove customer', async () => {
@@ -235,5 +233,21 @@ describe('Customers mutations', () => {
     const updatedCustomer = await Customers.getCustomer(_customer._id);
 
     expect(updatedCustomer.state).toBe('customer');
+  });
+
+  test('Verify emails', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
+    const mutation = `
+      mutation customersVerify($verificationType: String!) {
+        customersVerify(verificationType: $verificationType)
+      }
+    `;
+
+    await graphqlRequest(mutation, 'customersVerify', { verificationType: 'email' }, context);
+
+    mock.restore();
   });
 });
