@@ -21,7 +21,7 @@ const integrationMutations = {
     const integration = await Integrations.createMessengerIntegration(doc, user._id);
 
     if (doc.channelIds) {
-      await Channels.updateMany({ _id: { $in: doc.channelIds } }, { $pull: { integrationIds: integration._id } });
+      await Channels.updateMany({ _id: { $in: doc.channelIds } }, { $push: { integrationIds: integration._id } });
     }
 
     await putCreateLog(
@@ -110,7 +110,7 @@ const integrationMutations = {
     const integration = await Integrations.createExternalIntegration(doc, user._id);
 
     if (doc.channelIds) {
-      await Channels.updateMany({ _id: { $in: doc.channelIds } }, { $pull: { integrationIds: integration._id } });
+      await Channels.updateMany({ _id: { $in: doc.channelIds } }, { $push: { integrationIds: integration._id } });
     }
 
     let kind = doc.kind;
