@@ -164,6 +164,10 @@ const sendEmailOrSms = async (
         shortMessage: engageMessage.shortMessage || {},
       };
 
+      const customerIds = customerInfos.map(c => c._id);
+
+      await EngageMessages.setCustomerIds(engageMessage._id, customerIds);
+
       const chunks = chunkArray(customerInfos, 3000);
 
       for (const chunk of chunks) {

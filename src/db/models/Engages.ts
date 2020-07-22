@@ -35,6 +35,7 @@ export interface IEngageMessageModel extends Model<IEngageMessageDocument> {
   createEngageMessage(doc: IEngageMessage): Promise<IEngageMessageDocument>;
 
   updateEngageMessage(_id: string, doc: IEngageMessage): Promise<IEngageMessageDocument>;
+  setCustomerIds(_id: string, customerIds: string[]): Promise<IEngageMessageDocument>;
 
   engageMessageSetLive(_id: string): Promise<IEngageMessageDocument>;
   engageMessageSetPause(_id: string): Promise<IEngageMessageDocument>;
@@ -96,6 +97,16 @@ export const loadClass = () => {
       }
 
       await EngageMessages.updateOne({ _id }, { $set: doc });
+
+      return EngageMessages.findOne({ _id });
+    }
+
+    /**
+     * set engage message customerIds
+     */
+
+    public static async setCustomerIds(_id: string, customerIds: string[]) {
+      await EngageMessages.updateOne({ _id }, { $set: { customerIds } });
 
       return EngageMessages.findOne({ _id });
     }

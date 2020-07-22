@@ -99,6 +99,11 @@ const activityLogQueries = {
       collectItems(await EmailDeliveries.find({ customerId: contentId }), 'email');
     };
 
+    const collectEngageSms = async () => {
+      collectItems(await EngageMessages.find({ customerIds: contentId, method: 'sms' }), 'engage-sms');
+      collectItems(await EmailDeliveries.find({ customerId: contentId }), 'sms');
+    };
+
     const collectTasks = async () => {
       if (contentType !== 'task') {
         collectItems(
@@ -127,12 +132,17 @@ const activityLogQueries = {
         await collectEngageMessages();
         break;
 
+      case 'sms':
+        await collectEngageSms();
+        break;
+
       default:
         await collectConversations();
         await collectActivityLogs();
         await collectInternalNotes();
         await collectEngageMessages();
         await collectTasks();
+        await collectEngageSms();
 
         break;
     }
