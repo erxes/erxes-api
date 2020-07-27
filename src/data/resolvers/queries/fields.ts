@@ -1,4 +1,4 @@
-import { FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
+import { EXTEND_FIELDS, FIELD_CONTENT_TYPES, FIELDS_GROUPS_CONTENT_TYPES } from '../../../data/constants';
 import { Companies, Customers, Fields, FieldsGroups, Integrations, Products } from '../../../db/models';
 import { fetchElk } from '../../../elasticsearch';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
@@ -80,6 +80,7 @@ const fieldQueries = {
     { contentType, excludedNames }: { contentType: string; excludedNames?: string[] },
   ) {
     let schema: any;
+    let extendFields: Array<{ name: string; label?: string }> = [];
     let fields: Array<{ _id: number; name: string; label?: string }> = [];
 
     switch (contentType) {
@@ -89,6 +90,8 @@ const fieldQueries = {
 
       case FIELD_CONTENT_TYPES.PRODUCT:
         schema = Products.schema;
+        extendFields = EXTEND_FIELDS.PRODUCT;
+
         break;
 
       case FIELD_CONTENT_TYPES.CUSTOMER:
@@ -102,8 +105,6 @@ const fieldQueries = {
 
     // generate list using customer or company schema
     fields = [...fields, ...(await generateFieldsFromSchema(schema, ''))];
-
-    console.log(fields);
 
     for (const name of Object.keys(schema.paths)) {
       const path = schema.paths[name];
@@ -129,6 +130,13 @@ const fieldQueries = {
           label: customField.text,
         });
       }
+    }
+
+    for (const extendFeild of extendFields) {
+      fields.push({
+        _id: Math.random(),
+        ...extendFeild,
+      });
     }
 
     if (contentType === 'company' || contentType === 'customer') {
@@ -184,6 +192,14 @@ const fieldQueries = {
         { name: 'plan', label: 'Plan', order: 5 },
         { name: 'lastSeenAt', label: 'Last seen at', order: 6 },
         { name: 'sessionCount', label: 'Session count', order: 7 },
+      ];
+    }
+
+    if (contentType === FIELD_CONTENT_TYPES.PRODUCT) {
+      return [
+        { name: 'categoryCode', label: 'Category Code', order: 0 },
+        { name: 'code', label: 'Code', order: 1 },
+        { name: 'name', label: 'Name', order: 1 },
       ];
     }
 
