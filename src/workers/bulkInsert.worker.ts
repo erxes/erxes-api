@@ -41,18 +41,22 @@ connect().then(async () => {
 
   let percentage = '0';
   let create: any = null;
+  let update: any = null;
 
   const isBoardItem = (): boolean => contentType === 'deal' || contentType === 'task' || contentType === 'ticket';
 
   switch (contentType) {
     case 'company':
       create = Companies.createCompany;
+      update = Companies.updateOne;
       break;
     case 'customer':
       create = Customers.createCustomer;
+      update = Customers.updateOne;
       break;
     case 'product':
       create = Products.createProduct;
+      update = Products.updateProduct;
       break;
     case 'deal':
       create = Deals.createDeal;
@@ -259,7 +263,6 @@ connect().then(async () => {
 
         switch (e.message) {
           case 'Duplicated email':
-            errorMsgs.push(`Duplicated email ${doc.primaryEmail}`);
             break;
           case 'Duplicated phone':
             errorMsgs.push(`Duplicated phone ${doc.primaryPhone}`);
