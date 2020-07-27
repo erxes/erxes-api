@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { async } from 'q';
 import {
   Boards,
   Companies,
@@ -257,12 +258,13 @@ connect().then(async () => {
         // Increasing success count
         inc.success++;
       })
-      .catch((e: Error) => {
+      .catch(async (e: Error) => {
         inc.failed++;
         // Increasing failed count and pushing into error message
 
         switch (e.message) {
           case 'Duplicated email':
+            await update({ primaryEmail: doc.email }, { $set: { ...doc, modifiedAt: new Date() } });
             break;
           case 'Duplicated phone':
             errorMsgs.push(`Duplicated phone ${doc.primaryPhone}`);
