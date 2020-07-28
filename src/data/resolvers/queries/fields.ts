@@ -97,10 +97,6 @@ const fieldQueries = {
       case FIELD_CONTENT_TYPES.CUSTOMER:
         schema = Customers.schema;
         break;
-
-      default:
-        schema = Customers.schema;
-        break;
     }
 
     // generate list using customer or company schema
