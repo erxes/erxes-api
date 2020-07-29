@@ -88,6 +88,7 @@ describe('conversationQueries', () => {
         messageCount
         number
         tagIds
+        productBoardLink
         videoCallData {
           url
           name
@@ -133,7 +134,6 @@ describe('conversationQueries', () => {
           postId
         }
         callProAudio
-        productBoardLink
       }
     }
   `;
@@ -977,7 +977,7 @@ describe('conversationQueries', () => {
     );
 
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
-    spy.mockImplementation(() => Promise.resolve([]));
+    spy.mockImplementation(() => Promise.resolve(''));
 
     const response = await graphqlRequest(
       qryConversationDetail,
@@ -993,7 +993,7 @@ describe('conversationQueries', () => {
 
   test('Conversation detail product board', async () => {
     const messengerConversation = await conversationFactory();
-
+    console.log('response = ', messengerConversation);
     await conversationMessageFactory({
       conversationId: messengerConversation._id,
       contentType: MESSAGE_TYPES.VIDEO_CALL,
@@ -1007,7 +1007,7 @@ describe('conversationQueries', () => {
     );
 
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
-    spy.mockImplementation(() => Promise.resolve([]));
+    spy.mockImplementation(() => Promise.resolve(''));
 
     const response = await graphqlRequest(
       qryConversationDetail,
