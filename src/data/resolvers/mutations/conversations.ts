@@ -445,8 +445,6 @@ const conversationMutations = {
         user,
       });
 
-      await Conversations.updateOne({ _id }, { $set: { productBoardLink } });
-
       return productBoardLink;
     } catch (e) {
       debugExternalApi(e.message);

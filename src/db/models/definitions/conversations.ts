@@ -25,8 +25,6 @@ export interface IConversation {
 
   firstRespondedUserId?: string;
   firstRespondedDate?: Date;
-
-  productBoardLink?: string;
 }
 
 // Conversation schema
@@ -72,6 +70,4 @@ export const conversationSchema = new Schema({
 
   firstRespondedUserId: field({ type: String }),
   firstRespondedDate: field({ type: Date }),
-
-  productBoardLink: field({ type: String, optional: true }),
 });
