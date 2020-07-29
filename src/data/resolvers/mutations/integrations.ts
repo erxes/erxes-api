@@ -1,3 +1,4 @@
+import * as telemetry from 'erxes-telemetry';
 import { Channels, Customers, EmailDeliveries, Integrations } from '../../../db/models';
 import { IIntegration, IMessengerData, IUiOptions } from '../../../db/models/definitions/integrations';
 import { IExternalIntegrationParams } from '../../../db/models/Integrations';
@@ -37,6 +38,8 @@ const integrationMutations = {
       },
       user,
     );
+
+    telemetry.trackCli('integration_created', { type: 'messenger' });
 
     await registerOnboardHistory({ type: 'messengerIntegrationCreate', user });
 
@@ -98,6 +101,8 @@ const integrationMutations = {
       user,
     );
 
+    telemetry.trackCli('integration_created', { type: 'lead' });
+
     await registerOnboardHistory({ type: 'leadIntegrationCreate', user });
 
     return integration;
@@ -150,6 +155,8 @@ const integrationMutations = {
         data: data ? JSON.stringify(data) : '',
       });
 
+      telemetry.trackCli('integration_created', { type: kind });
+
       await putCreateLog(
         {
           type: MODULE_NAMES.INTEGRATION,
@@ -166,9 +173,15 @@ const integrationMutations = {
     return integration;
   },
 
-  async integrationsEditCommonFields(_root, { _id, name, brandId }, { user }) {
+  async integrationsEditCommonFields(_root, { _id, name, brandId, channelIds }, { user }) {
     const integration = await Integrations.getIntegration(_id);
     const updated = Integrations.updateBasicInfo(_id, { name, brandId });
+
+    await Channels.updateMany({ integrationIds: integration._id }, { $pull: { integrationIds: integration._id } });
+
+    if (channelIds) {
+      await Channels.updateMany({ _id: { $in: channelIds } }, { $push: { integrationIds: integration._id } });
+    }
 
     await putUpdateLog(
       {
