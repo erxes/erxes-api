@@ -1,6 +1,7 @@
 import activityLogs from './activityLogs';
 import boards from './boards';
 import brands from './brands';
+import cars from './cars';
 import channels from './channels';
 import checklists from './checklists';
 import companies from './companies';
@@ -55,6 +56,7 @@ export default {
   ...internalNotes,
   ...customers,
   ...companies,
+  ...cars,
   ...segments,
   ...conversations,
   ...insights,

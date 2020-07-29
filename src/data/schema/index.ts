@@ -6,6 +6,8 @@ import { mutations as UserMutations, queries as UserQueries, types as UserTypes 
 
 import { mutations as CompanyMutations, queries as CompanyQueries, types as CompanyTypes } from './company';
 
+import { mutations as CarMutations, queries as CarQueries, types as CarTypes } from './car';
+
 import { mutations as ChannelMutations, queries as ChannelQueries, types as ChannelTypes } from './channel';
 
 import { mutations as BrandMutations, queries as BrandQueries, types as BrandTypes } from './brand';
@@ -137,6 +139,7 @@ export const types = `
   ${InternalNoteTypes}
   ${ActivityLogTypes}
   ${CompanyTypes}
+  ${CarTypes}
   ${ChannelTypes}
   ${BrandTypes}
   ${IntegrationTypes}
@@ -192,6 +195,7 @@ export const queries = `
     ${TagQueries}
     ${InternalNoteQueries}
     ${CompanyQueries}
+    ${CarQueries}
     ${CustomerQueries}
     ${SegmentQueries}
     ${ConversationQueries}
@@ -223,6 +227,7 @@ export const mutations = `
   type Mutation {
     ${UserMutations}
     ${CompanyMutations}
+    ${CarMutations}
     ${ConversationMutations}
     ${EngageMutations}
     ${TagMutations}

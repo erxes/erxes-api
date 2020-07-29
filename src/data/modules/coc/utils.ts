@@ -110,9 +110,9 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
   public positiveList: any[];
   public negativeList: any[];
 
-  private contentType: 'customers' | 'companies';
+  private contentType: 'customers' | 'companies' | 'cars';
 
-  constructor(contentType: 'customers' | 'companies', params: IListArgs, context) {
+  constructor(contentType: 'customers' | 'companies' | 'cars', params: IListArgs, context) {
     this.contentType = contentType;
     this.context = context;
     this.params = params;

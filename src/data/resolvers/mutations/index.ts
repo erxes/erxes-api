@@ -1,5 +1,6 @@
 import boards from './boards';
 import brands from './brands';
+import cars from './cars';
 import channels from './channels';
 import checklists from './checklists';
 import companies from './companies';
@@ -45,6 +46,7 @@ export default {
   ...customers,
   ...segments,
   ...companies,
+  ...cars,
   ...fields,
   ...emailTemplates,
   ...responseTemplates,

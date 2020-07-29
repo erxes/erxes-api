@@ -1,6 +1,7 @@
 import ActivityLogs from './ActivityLogs';
 import { Boards, Pipelines, Stages } from './Boards';
 import Brands from './Brands';
+import Cars from './Cars';
 import Channels from './Channels';
 import { ChecklistItems, Checklists } from './Checklists';
 import Companies from './Companies';
@@ -85,4 +86,5 @@ export {
   ChecklistItems,
   DashboardItems,
   Dashboards,
+  Cars
 };

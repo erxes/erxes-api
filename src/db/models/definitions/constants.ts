@@ -135,6 +135,7 @@ export const MESSENGER_DATA_AVAILABILITY = {
 export const ACTIVITY_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
+  CAR: 'car',
   USER: 'user',
   DEAL: 'deal',
   TICKET: 'ticket',
@@ -142,7 +143,7 @@ export const ACTIVITY_CONTENT_TYPES = {
   PRODUCT: 'product',
   GROWTH_HACK: 'growthHack',
 
-  ALL: ['customer', 'company', 'user', 'deal', 'ticket', 'task', 'product', 'growthHack'],
+  ALL: ['customer', 'company', 'car', 'user', 'deal', 'ticket', 'task', 'product', 'growthHack'],
 };
 
 export const PUBLISH_STATUSES = {
@@ -463,7 +464,7 @@ export const NOTIFICATION_CONTENT_TYPES = {
   ALL: ['task', 'deal', 'company', 'customer', 'ticket', 'channel', 'conversation'],
 };
 
-const STATUSES = [
+export const STATUSES = [
   { label: 'Active', value: 'Active' },
   { label: 'Deleted', value: 'Deleted' },
 ];
@@ -606,6 +607,63 @@ export const DEFAULT_CONSTANT_VALUES = {
   sex_choices: DEFAULT_SEX_CHOICES,
   company_industry_types: DEFAULT_COMPANY_INDUSTRY_TYPES.map(v => ({ label: v, value: v })),
   social_links: DEFAULT_SOCIAL_LINKS,
+};
+
+export const CAR_SELECT_OPTIONS = {
+  BUSINESS_TYPES: [
+    { label: 'Competitor', value: 'Competitor' },
+    { label: 'Customer', value: 'Customer' },
+    { label: 'Investor', value: 'Investor' },
+    { label: 'Partner', value: 'Partner' },
+    { label: 'Press', value: 'Press' },
+    { label: 'Prospect', value: 'Prospect' },
+    { label: 'Reseller', value: 'Reseller' },
+    { label: 'Other', value: 'Other' },
+    { label: 'Unknown', value: '' },
+  ],
+  STATUSES,
+  DO_NOT_DISTURB: [
+    { label: 'Yes', value: 'Yes' },
+    { label: 'No', value: 'No' },
+    { label: 'Unknown', value: '' },
+  ],
+  BRANDS: [
+    { label: 'Toyota', value: 'Toyota'},
+    { label: 'Nissan', value: 'Nissan'},
+    { label: 'Honda', value: 'Honda'},
+    { label: 'Hyundai', value: 'Hyundai'},
+    { label: 'Subaru', value: 'Subaru'},
+    { label: 'Mazda', value: 'Mazda'},
+    { label: 'Lexus', value: 'Lexus'},
+    { label: 'BMW', value: 'BMW'},
+    { label: 'Tesla', value: 'Tesla'},
+    { label: 'Ford', value: 'Ford'},
+    { label: 'Ford', value: 'Ford'},
+  ],
+  BODY_TYPES: [
+    { label: 'Sedan', value: 'Sedan'},
+    { label: 'SUV', value: 'SUV'},
+    { label: 'Compact', value: 'Compact'},
+    { label: 'Wagon', value: 'Wagon'},
+    { label: 'Coupe', value: 'Coupe'},
+    { label: 'Van', value: 'Van'},
+    { label: 'Hatchback', value: 'Hatchback'},
+    { label: 'Pickup', value: 'Pickup'},
+    { label: 'Sport Coupe', value: 'Sport Coupe'},
+  ],
+  FUEL_TYPES: [
+    { label: 'Hybrid', value: 'Hybrid'},
+    { label: 'Petrol', value: 'Petrol'},
+    { label: 'Diesel', value: 'Diesel'},
+    { label: 'FlexiFuel', value: 'FlexiFuel'},
+    { label: 'Electric', value: 'Electric'}
+  ],
+  GEARBOX: [
+    { label: 'Automatic', value: 'Automatic'},
+    { label: 'Manual', value: 'Manual'},
+    { label: 'CVT', value: 'CVT'},
+    { label: 'Semi-automatic', value: 'Semi-automatic'},
+  ]
 };
 
 export const SEGMENT_STRING_OPERATORS = ['e', 'dne', 'c', 'dnc'];

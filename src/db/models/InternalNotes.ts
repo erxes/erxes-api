@@ -18,8 +18,10 @@ export interface IInternalNoteModel extends Model<IInternalNoteDocument> {
 
   removeCustomersInternalNotes(customerIds: string[]): Promise<{ n: number; ok: number }>;
   removeCompaniesInternalNotes(companyIds: string[]): void;
+  removeCarsInternalNotes(companyIds: string[]): void;
 
   changeCompany(newCompanyId: string, oldCompanyIds: string[]): Promise<IInternalNoteDocument[]>;
+  changeCar(newCarId: string, oldarIds: string[]): Promise<IInternalNoteDocument[]>;
 }
 
 export const loadClass = () => {
@@ -116,6 +118,17 @@ export const loadClass = () => {
     }
 
     /**
+     * Remove cars' internal notes
+     */
+    public static async removeCarsInternalNotes(carIds: string[]) {
+      // Removing every internal notes of company
+      return InternalNotes.deleteMany({
+        contentType: ACTIVITY_CONTENT_TYPES.CAR,
+        contentTypeId: { $in: carIds },
+      });
+    }
+
+    /**
      * Transfers companies' internal notes to another company
      */
     public static async changeCompany(newCompanyId: string, oldCompanyIds: string[]) {
@@ -132,6 +145,26 @@ export const loadClass = () => {
       return InternalNotes.find({
         contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
         contentTypeId: newCompanyId,
+      });
+    }
+
+    /**
+     * Transfers companies' internal notes to another company
+     */
+    public static async changeCar(newCarId: string, oldCarIds: string[]) {
+      // Updating every internal notes of company
+      await InternalNotes.updateMany(
+        {
+          contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
+          contentTypeId: { $in: oldCarIds || [] },
+        },
+        { contentTypeId: newCarId },
+      );
+
+      // Returning updated list of internal notes of new company
+      return InternalNotes.find({
+        contentType: ACTIVITY_CONTENT_TYPES.COMPANY,
+        contentTypeId: newCarId,
       });
     }
   }
