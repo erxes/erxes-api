@@ -133,6 +133,7 @@ describe('conversationQueries', () => {
           postId
         }
         callProAudio
+        productBoardLink
       }
     }
   `;
@@ -986,6 +987,36 @@ describe('conversationQueries', () => {
     );
 
     expect(response.videoCallData).not.toBeNull();
+
+    spy.mockRestore();
+  });
+
+  test('Conversation detail product board', async () => {
+    const messengerConversation = await conversationFactory();
+
+    await conversationMessageFactory({
+      conversationId: messengerConversation._id,
+      contentType: MESSAGE_TYPES.VIDEO_CALL,
+    });
+
+    await graphqlRequest(
+      qryConversationDetail,
+      'conversationDetail',
+      { _id: messengerConversation._id },
+      { user, dataSources },
+    );
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
+    spy.mockImplementation(() => Promise.resolve([]));
+
+    const response = await graphqlRequest(
+      qryConversationDetail,
+      'conversationDetail',
+      { _id: messengerConversation._id },
+      { user, dataSources },
+    );
+
+    expect(response.productBoardLink).not.toBeNull();
 
     spy.mockRestore();
   });
