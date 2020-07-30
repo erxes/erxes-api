@@ -42,6 +42,16 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
       data = companyResponse.list;
 
       break;
+
+    case 'lead':
+      const leadParams: ICustomerListArgs = query;
+      const qb = new CustomerBuildQuery(leadParams, {});
+      await qb.buildAllQueries();
+
+      const customerResponse = await qb.runQueries();
+
+      data = customerResponse.list;
+      break;
     case MODULE_NAMES.CUSTOMER:
       if (!(await can('exportCustomers', user))) {
         throw new Error('Permission denied');
