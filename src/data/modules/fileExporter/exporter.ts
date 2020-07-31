@@ -45,10 +45,10 @@ const prepareData = async (query: any, user: IUserDocument): Promise<any[]> => {
 
     case 'lead':
       const leadParams: ICustomerListArgs = query;
-      const leadQb = new CustomerBuildQuery(leadParams, {});
-      await leadQb.buildAllQueries();
+      const leadQp = new CustomerBuildQuery(leadParams, {});
+      await leadQp.buildAllQueries();
 
-      const leadResponse = await leadQb.runQueries();
+      const leadResponse = await leadQp.runQueries();
 
       data = leadResponse.list;
       break;
