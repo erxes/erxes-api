@@ -35,6 +35,7 @@ import {
   MessengerApps,
   NotificationConfigurations,
   Notifications,
+  OnboardingHistories,
   Permissions,
   PipelineLabels,
   Pipelines,
@@ -1364,3 +1365,15 @@ export function engageDataFactory(params: IMessageEngageDataParams) {
     sentAs: params.sentAs || 'post',
   };
 }
+
+interface IOnboardHistoryParams {
+  userId: string;
+  isCompleted?: boolean;
+  completedSteps?: string[];
+}
+
+export const onboardHistoryFactory = async (params: IOnboardHistoryParams) => {
+  const onboard = new OnboardingHistories(params);
+
+  return onboard.save();
+};
