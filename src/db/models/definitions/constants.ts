@@ -628,6 +628,7 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Unknown', value: '' },
   ],
   BRANDS: [
+    { label: 'Unknown', value: ''},
     { label: 'Toyota', value: 'Toyota'},
     { label: 'Nissan', value: 'Nissan'},
     { label: 'Honda', value: 'Honda'},
@@ -641,6 +642,7 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Ford', value: 'Ford'},
   ],
   BODY_TYPES: [
+    { label: 'Unknown', value: ''},
     { label: 'Sedan', value: 'Sedan'},
     { label: 'SUV', value: 'SUV'},
     { label: 'Compact', value: 'Compact'},
@@ -652,6 +654,7 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Sport Coupe', value: 'Sport Coupe'},
   ],
   FUEL_TYPES: [
+    { label: 'Unknown', value: ''},
     { label: 'Hybrid', value: 'Hybrid'},
     { label: 'Petrol', value: 'Petrol'},
     { label: 'Diesel', value: 'Diesel'},
@@ -659,6 +662,7 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Electric', value: 'Electric'}
   ],
   GEARBOX: [
+    { label: 'Unknown', value: ''},
     { label: 'Automatic', value: 'Automatic'},
     { label: 'Manual', value: 'Manual'},
     { label: 'CVT', value: 'CVT'},

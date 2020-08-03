@@ -35,7 +35,8 @@ export const FIELD_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
   PRODUCT: 'product',
-  ALL: ['form', 'customer', 'company', 'product'],
+  CAR: 'car',
+  ALL: ['form', 'customer', 'company', 'product', 'car'],
 };
 
 export const EXTEND_FIELDS = {

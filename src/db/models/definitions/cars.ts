@@ -26,8 +26,8 @@ export interface ICar {
   series?: string;
   gearBox?: string;
 
-  vintageYear?: Date;
-  importDate?: Date;
+  vintageYear?: number;
+  importYear?: number;
 }
 
 export interface ICarDocument extends ICar, Document {
@@ -57,7 +57,7 @@ export const carSchema = schemaWrapper(
     brand: field({
       type: String,
       enum: getEnum('BRANDS'),
-      default: 'Toyota',
+      default: '',
       optional: true,
       label: 'Brand',
       esType: 'keyword',
@@ -67,7 +67,7 @@ export const carSchema = schemaWrapper(
     bodyType: field({
       type: String,
       enum: getEnum('BODY_TYPES'),
-      default: 'Sedan',
+      default: '',
       optional: true,
       label: 'Brand',
       esType: 'keyword',
@@ -77,7 +77,7 @@ export const carSchema = schemaWrapper(
     fuelType: field({
       type: String,
       enum: getEnum('FUEL_TYPES'),
-      default: 'Sedan',
+      default: '',
       optional: true,
       label: 'Brand',
       esType: 'keyword',
@@ -87,9 +87,9 @@ export const carSchema = schemaWrapper(
     gearBox: field({
       type: String,
       enum: getEnum('FUEL_TYPES'),
-      default: 'Sedan',
+      default: '',
       optional: true,
-      label: 'Brand',
+      label: 'Gear box',
       esType: 'keyword',
       selectOptions: CAR_SELECT_OPTIONS.BODY_TYPES
     }),

@@ -6,37 +6,32 @@ export const types = `
 
     createdAt: Date
     modifiedAt: Date
-    avatar: String
-
-    size: Int
-    website: String
-    industry: String
-    plan: String
-    parentCarId: String
     ownerId: String
     mergedIds: [String]
-
-    names: [String]
-    primaryName: String
-    emails: [String]
-    primaryEmail: String
-    phones: [String]
-    primaryPhone: String
-
-    businessType: String
     description: String
     doNotDisturb: String
-    links: JSON
     owner: User
-    parentCar: Car
-
     tagIds: [String]
 
     customFieldsData: JSON
 
     customers: [Customer]
+    companies: [Company]
     getTags: [Tag]
-    code: String
+
+    plateNumber: String
+    vinNumber: String
+    colorCode: String
+
+    manufactureBrand: String
+    bodyType: String
+    fuelType: String
+    modelsName: String
+    series: String
+    gearBox: String
+
+    vintageYear: Int
+    importYear: Int
   }
 
   type CarsListResponse {
@@ -66,32 +61,25 @@ export const queries = `
 `;
 
 const commonFields = `
-  avatar: String,
-
-  primaryName: String,
-  names: [String]
-
-  primaryPhone: String,
-  phones: [String],
-
-  primaryEmail: String,
-  emails: [String],
-
-  size: Int,
-  website: String,
-  industry: String,
-
-  parentCarId: String,
-  email: String,
   ownerId: String,
-  businessType: String,
-  description: String,
-  doNotDisturb: String,
-  links: JSON,
+  description: String
+  doNotDisturb: String
+  plateNumber: String
+  vinNumber: String
+  colorCode: String
+
+  manufactureBrand: String
+  bodyType: String
+  fuelType: String
+  modelsName: String
+  series: String
+  gearBox: String
+
+  vintageYear: Int
+  importYear: Int
 
   tagIds: [String]
   customFieldsData: JSON
-  code: String
 `;
 
 export const mutations = `

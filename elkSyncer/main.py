@@ -105,6 +105,55 @@ company_mapping = {
     "customFieldsData" : nestedType
 }
 
+car_mapping = {
+    'plateNumber': {
+        'type': 'text',
+    },
+    'scopeBrandIds': {
+        'type': 'keyword',
+    },
+    'ownerId': {
+        'type': 'keyword',
+    },
+    'tagIds': {
+        'type': 'keyword',
+    },
+    'mergedIds': {
+        'type': 'keyword',
+    },
+    'status': {
+        'type': 'keyword',
+    },
+    'vinNumber': {
+        'type': 'text',
+    },
+    'manufactureBrand': {
+        'type': 'text',
+    },
+    'bodyType': {
+        'type': 'text',
+    },
+    'fuelType': {
+        'type': 'text',
+    },
+    'modelsName': {
+        'type': 'text',
+    },
+    'series': {
+        'type': 'text',
+    },
+    'gearBox': {
+        'type': 'text',
+    },
+    'vintageYear': {
+        'type': 'float',
+    },
+    'importYear': {
+        'type': 'float',
+    },
+    "customFieldsData" : nestedType
+}
+
 event_mapping = {
     'type': {
         'type': 'keyword',
@@ -158,6 +207,7 @@ db_name = pymongo.uri_parser.parse_uri(MONGO_URL)['database']
 put_mappings('%s__customers' % db_name, customer_mapping)
 put_mappings('%s__companies' % db_name, company_mapping)
 put_mappings('%s__events' % db_name, event_mapping)
+put_mappings('%s__cars' % db_name, car_mapping)
 
 command = 'mongo-connector -m "%s"  -c mongo-connector-config.json --target-url %s' % (MONGO_URL, ELASTICSEARCH_URL)
 
