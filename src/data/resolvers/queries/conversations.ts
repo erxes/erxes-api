@@ -93,6 +93,7 @@ const conversationQueries = {
     // initiate query builder
     const qb = new QueryBuilder(params, {
       _id: user._id,
+      isOwner: user.isOwner,
       starredConversationIds: user.starredConversationIds,
     });
 
