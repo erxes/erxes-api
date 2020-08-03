@@ -36,6 +36,7 @@ export const types = `
   type MessengerSupportersResponse {
     supporters: [User]
     isOnline: Boolean
+    serverTime: String
   }
 
   input FieldValueInput {

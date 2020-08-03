@@ -150,6 +150,7 @@ export default {
       return {
         supporters: [],
         isOnline: false,
+        serverTime: new Date(),
       };
     }
 
@@ -158,6 +159,7 @@ export default {
     return {
       supporters: await Users.find({ _id: { $in: messengerData.supporterIds || [] } }),
       isOnline: await isMessengerOnline(integration),
+      serverTime: new Date(),
     };
   },
 
