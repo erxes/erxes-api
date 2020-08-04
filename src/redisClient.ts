@@ -5,8 +5,8 @@ import * as redis from 'redis';
 dotenv.config();
 
 const {
-  REDIS_HOST = 'localhost',
-  REDIS_PORT = 6379,
+  REDIS_HOST,
+  REDIS_PORT,
   REDIS_PASSWORD,
   NODE_ENV,
 }: {

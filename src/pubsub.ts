@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { PubSub } from 'graphql-subscriptions';
 import * as Redis from 'ioredis';
 import { redisOptions } from './redisClient';
 
@@ -20,15 +21,19 @@ const createPubsubInstance = () => {
     return pubsub;
   }
 
-  return new RedisPubSub({
-    connectionListener: error => {
-      if (error) {
-        console.error(error);
-      }
-    },
-    publisher: new Redis(redisOptions),
-    subscriber: new Redis(redisOptions),
-  });
+  if (redisOptions.host) {
+    return new RedisPubSub({
+      connectionListener: error => {
+        if (error) {
+          console.error(error);
+        }
+      },
+      publisher: new Redis(redisOptions),
+      subscriber: new Redis(redisOptions),
+    });
+  }
+
+  return new PubSub();
 };
 
 export const graphqlPubsub = createPubsubInstance();
