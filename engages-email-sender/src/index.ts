@@ -5,7 +5,6 @@ import { filterXSS } from 'xss';
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
 import telnyx from './api/telnyx';
-import { initRedis } from './redisClient';
 
 // load environment variables
 dotenv.config();
@@ -54,8 +53,6 @@ app.listen(PORT, () => {
     initConsumer().catch(e => {
       debugBase(`Error ocurred during rabbitmq init ${e.message}`);
     });
-
-    initRedis();
   });
 
   debugInit(`Engages server is running on port ${PORT}`);
