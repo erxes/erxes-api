@@ -12,8 +12,8 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import { get, set } from '../inmemoryStorage';
 import { graphqlPubsub } from '../pubsub';
-import { get, set } from '../redisClient';
 
 const uploadsFolderPath = path.join(__dirname, '../private/uploads');
 

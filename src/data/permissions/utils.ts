@@ -1,6 +1,6 @@
 import { Permissions, Users } from '../../db/models';
 import { IUserDocument } from '../../db/models/definitions/users';
-import { get, set } from '../../redisClient';
+import { get, set } from '../../inmemoryStorage';
 
 export interface IModuleMap {
   name: string;
@@ -100,7 +100,7 @@ interface IActionMap {
 const getKey = (user: IUserDocument) => `user_permissions_${user._id}`;
 
 /*
- * Get given users permission map from redis or database
+ * Get given users permission map from inmemory storage or database
  */
 export const getUserActionsMap = async (user: IUserDocument): Promise<IActionMap> => {
   const key = getKey(user);

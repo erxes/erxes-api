@@ -7,8 +7,8 @@ import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
 import { frontendEnv } from './data/utils';
 import { Conversations, Customers, Users } from './db/models';
+import { addToArray, get, inArray, removeFromArray, set } from './inmemoryStorage';
 import { graphqlPubsub } from './pubsub';
-import { addToArray, get, inArray, removeFromArray, set } from './redisClient';
 
 // load environment variables
 dotenv.config();
@@ -126,7 +126,7 @@ const apolloServer = new ApolloServer({
 
           const customerId = webSocket.messengerData.customerId;
 
-          // get status from redis
+          // get status from inmemory storage
           const inConnectedClients = await inArray('connectedClients', customerId);
           const inClients = await inArray('clients', customerId);
 
@@ -185,7 +185,7 @@ const apolloServer = new ApolloServer({
         await removeFromArray('connectedClients', customerId);
 
         setTimeout(async () => {
-          // get status from redis
+          // get status from inmemory storage
           const inNewConnectedClients = await inArray('connectedClients', customerId);
           const customerLastStatus = await get(`customer_last_status_${customerId}`);
 

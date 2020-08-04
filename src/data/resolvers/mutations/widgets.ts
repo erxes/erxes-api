@@ -20,8 +20,8 @@ import { IIntegrationDocument, IMessengerDataMessagesItem } from '../../../db/mo
 import { IKnowledgebaseCredentials, ILeadCredentials } from '../../../db/models/definitions/messengerApps';
 import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
+import { get, set } from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { get, set } from '../../../redisClient';
 import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 

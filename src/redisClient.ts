@@ -36,10 +36,12 @@ export const redisOptions = {
 let client;
 
 export const initRedis = (callback?: (client) => void) => {
-  client = redis.createClient(redisOptions);
+  if (redisOptions.host) {
+    client = redis.createClient(redisOptions);
 
-  if (callback) {
-    callback(client);
+    if (callback) {
+      callback(client);
+    }
   }
 };
 

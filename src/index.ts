@@ -31,7 +31,7 @@ import { initConsumer, rabbitMQStatus } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
-import { initRedis, redisStatus } from './redisClient';
+import { initRedis } from './redisClient';
 import init from './startup';
 
 // load environment variables
@@ -152,13 +152,6 @@ app.get('/status', async (_req, res, next) => {
     await mongoStatus();
   } catch (e) {
     debugBase('MongoDB is not running');
-    return next(e);
-  }
-
-  try {
-    await redisStatus();
-  } catch (e) {
-    debugBase('Redis is not running');
     return next(e);
   }
 
