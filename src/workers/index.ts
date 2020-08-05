@@ -5,13 +5,10 @@ import { filterXSS } from 'xss';
 import { connect } from '../db/connection';
 import { debugWorkers } from '../debuggers';
 import userMiddleware from '../middlewares/userMiddleware';
-import { initRedis } from '../redisClient';
 import { initConsumer } from './messageBroker';
 
 // load environment variables
 dotenv.config();
-
-initRedis();
 
 // connect to mongo database
 connect();
