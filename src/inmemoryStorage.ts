@@ -37,8 +37,9 @@ export const redisOptions = {
 let client;
 
 if (redisOptions.host) {
-  client = redis.createClient(redisOptions);
-  redisClient.init(client);
+  client = redisClient;
+
+  redisClient.init(redis.createClient(redisOptions));
 } else {
   client = memoryClient;
 }
