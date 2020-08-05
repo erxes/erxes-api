@@ -3,8 +3,8 @@ import * as express from 'express';
 import { connect } from '../db/connection';
 import { debugCrons } from '../debuggers';
 
+import '../inmemoryStorage';
 import { initRabbitMQ } from '../messageBroker';
-import { initRedis } from '../redisClient';
 import './activityLogs';
 import './conversations';
 import './deals';
@@ -28,7 +28,6 @@ app.listen(PORT_CRONS, () => {
   // connect to mongo database
   connect().then(async () => {
     initRabbitMQ();
-    initRedis();
   });
 
   debugCrons(`Cron Server is now running on ${PORT_CRONS}`);

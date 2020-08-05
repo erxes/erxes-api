@@ -27,11 +27,11 @@ import { updateContactsValidationStatus, updateContactValidationStatus } from '.
 import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
+import './inmemoryStorage';
 import { initConsumer, rabbitMQStatus } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
-import { initRedis } from './redisClient';
 import init from './startup';
 
 // load environment variables
@@ -347,8 +347,6 @@ httpServer.listen(PORT, () => {
     initConsumer().catch(e => {
       debugBase(`Error ocurred during rabbitmq init ${e.message}`);
     });
-
-    initRedis();
 
     init()
       .then(() => {

@@ -127,7 +127,7 @@ export const receiveIntegrationsNotification = async msg => {
   const { action } = msg;
 
   if (action === 'external-integration-entry-added') {
-    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted');
+    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted', {});
 
     return sendSuccess({ status: 'ok' });
   }
