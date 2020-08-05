@@ -2,8 +2,7 @@ import * as amqplib from 'amqplib';
 import * as dotenv from 'dotenv';
 import { RABBITMQ_QUEUES } from '../data/constants';
 import { debugWorkers } from '../debuggers';
-import { addToArray, getArray, removeFromArray } from '../redisClient';
-import { generateUid, receiveImportCancel, receiveImportCreate, receiveImportRemove } from './utils';
+import { receiveImportCancel, receiveImportCreate, receiveImportRemove } from './utils';
 
 dotenv.config();
 
@@ -39,21 +38,6 @@ export const initConsumer = async () => {
       if (msg !== null) {
         const response = { status: 'success', data: {}, errorMessage: '' };
 
-        const activeWorkers = await getArray('active_workers');
-
-        if (activeWorkers.length > 3) {
-          response.status = 'error';
-          response.errorMessage = 'Please white for a while';
-
-          return channel.sendToQueue(msg.properties.replyTo, Buffer.from(JSON.stringify(response)), {
-            correlationId: msg.properties.correlationId,
-          });
-        }
-
-        const uid = generateUid();
-
-        await addToArray('active_workers', uid);
-
         debugWorkers(`Received rpc queue message ${msg.content.toString()}`);
 
         const content = JSON.parse(msg.content.toString());
@@ -65,8 +49,6 @@ export const initConsumer = async () => {
           response.status = 'error';
           response.errorMessage = e.message;
         }
-
-        await removeFromArray('active_workers', uid);
 
         channel.sendToQueue(msg.properties.replyTo, Buffer.from(JSON.stringify(response)), {
           correlationId: msg.properties.correlationId,
