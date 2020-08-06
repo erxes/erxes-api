@@ -77,7 +77,7 @@ export const generateCustomerSelector = async ({
 };
 
 const sendQueueMessage = (args: any) => {
-  return messageBroker.sendMessage('erxes-api:engages-notification', args);
+  return messageBroker().sendMessage('erxes-api:engages-notification', args);
 };
 
 export const send = async (engageMessage: IEngageMessageDocument) => {

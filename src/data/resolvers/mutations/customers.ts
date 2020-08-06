@@ -81,7 +81,7 @@ const customerMutations = {
 
     await Customers.removeCustomers(customerIds);
 
-    await messageBroker.sendMessage('erxes-api:integrations-notification', {
+    await messageBroker().sendMessage('erxes-api:integrations-notification', {
       type: 'removeCustomers',
       customerIds,
     });
@@ -92,7 +92,7 @@ const customerMutations = {
       await putDeleteLog({ type: MODULE_NAMES.CUSTOMER, object: customer }, user);
 
       if (customer.mergedIds) {
-        await messageBroker.sendMessage('erxes-api:integrations-notification', {
+        await messageBroker().sendMessage('erxes-api:integrations-notification', {
           type: 'removeCustomers',
           customerIds: customer.mergedIds,
         });

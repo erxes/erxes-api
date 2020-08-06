@@ -292,7 +292,7 @@ describe('integrationQueries', () => {
     }
     `;
 
-    const spy = jest.spyOn(messageBroker, 'sendRPCMessage');
+    const spy = jest.spyOn(messageBroker(), 'sendRPCMessage');
 
     spy.mockImplementation(() => Promise.resolve('https://webhookurl'));
 
@@ -308,7 +308,7 @@ describe('integrationQueries', () => {
 
     spy.mockRestore();
 
-    const spy1 = jest.spyOn(messageBroker, 'sendRPCMessage');
+    const spy1 = jest.spyOn(messageBroker(), 'sendRPCMessage');
 
     spy1.mockImplementation(() => Promise.resolve('https://webhookurl'));
 

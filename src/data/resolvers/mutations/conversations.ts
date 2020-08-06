@@ -56,7 +56,7 @@ const sendConversationToIntegrations = (
       attachments.push({ type: 'image', url: img });
     });
 
-    return messageBroker.sendMessage('erxes-api:integrations-notification', {
+    return messageBroker().sendMessage('erxes-api:integrations-notification', {
       action,
       type,
       payload: JSON.stringify({

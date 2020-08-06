@@ -236,7 +236,7 @@ const integrationMutations = {
    */
   async integrationsRemoveAccount(_root, { _id }: { _id: string }) {
     try {
-      const { erxesApiIds } = await messageBroker.sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, {
+      const { erxesApiIds } = await messageBroker().sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, {
         action: 'remove-account',
         data: { _id },
       });

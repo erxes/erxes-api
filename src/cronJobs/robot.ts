@@ -14,7 +14,7 @@ const checkOnboarding = async () => {
       continue;
     }
 
-    messageBroker.sendMessage('callPublish', {
+    messageBroker().sendMessage('callPublish', {
       name: 'onboardingChanged',
       data: {
         onboardingChanged: {

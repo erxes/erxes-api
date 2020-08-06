@@ -15,7 +15,7 @@ const importHistoryMutations = {
 
     await ImportHistory.updateOne({ _id: importHistory._id }, { $set: { status: 'Removing' } });
 
-    const response = await messageBroker.sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
+    const response = await messageBroker().sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
       action: 'removeImport',
       contentType: importHistory.contentType,
       importHistoryId: importHistory._id,
@@ -34,7 +34,7 @@ const importHistoryMutations = {
    * Cancel uploading process
    */
   async importHistoriesCancel(_root) {
-    await messageBroker.sendMessage(RABBITMQ_QUEUES.WORKERS, {
+    await messageBroker().sendMessage(RABBITMQ_QUEUES.WORKERS, {
       type: 'cancelImport',
     });
 

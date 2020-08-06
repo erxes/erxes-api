@@ -1311,7 +1311,7 @@ export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) 
 
 const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
   try {
-    return messageBroker.sendMessage(RABBITMQ_QUEUES.PUT_LOG, {
+    return messageBroker().sendMessage(RABBITMQ_QUEUES.PUT_LOG, {
       ...params,
       createdBy: user._id,
       unicode: user.username || user.email || user._id,

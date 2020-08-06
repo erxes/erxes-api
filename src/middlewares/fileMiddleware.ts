@@ -39,7 +39,7 @@ export const importer = async (req: any, res, next) => {
           fileType = 'csv';
         }
 
-        const result = await messageBroker.sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
+        const result = await messageBroker().sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
           action: 'createImport',
           type: fields.type,
           fileType,

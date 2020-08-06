@@ -153,7 +153,7 @@ const integrationQueries = {
   },
 
   async integrationGetLineWebhookUrl(_root, { _id }: { _id: string }) {
-    return messageBroker.sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, {
+    return messageBroker().sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_INTEGRATIONS, {
       action: 'line-webhook',
       data: { _id },
     });

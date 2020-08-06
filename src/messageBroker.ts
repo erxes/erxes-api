@@ -14,7 +14,12 @@ dotenv.config();
 let client;
 
 export const initBroker = async () => {
-  client = await init({ name: 'api', RABBITMQ_HOST: process.env.RABBITMQ_HOST });
+  client = await init({
+    name: 'api',
+    RABBITMQ_HOST: process.env.RABBITMQ_HOST,
+    hasSubscriber: true,
+    hasRequester: true,
+  });
 
   const { consumeQueue, consumeRPCQueue } = client;
 
@@ -43,4 +48,6 @@ export const initBroker = async () => {
   });
 };
 
-export default client;
+export default function() {
+  return client;
+}
