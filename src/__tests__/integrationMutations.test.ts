@@ -1,7 +1,7 @@
 import './setup.ts';
 
 import * as faker from 'faker';
-import * as messageBroker from '../messageBroker';
+import messageBroker from '../messageBroker';
 
 import {
   brandFactory,

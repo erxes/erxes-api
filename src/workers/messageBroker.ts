@@ -1,4 +1,5 @@
 import * as amqplib from 'amqplib';
+import * as cote from 'cote';
 import * as dotenv from 'dotenv';
 import { RABBITMQ_QUEUES } from '../data/constants';
 import { debugWorkers } from '../debuggers';
@@ -8,10 +9,21 @@ dotenv.config();
 
 const { RABBITMQ_HOST = 'amqp://localhost' } = process.env;
 
+let responder;
 let connection;
 let channel;
 
 export const initConsumer = async () => {
+  responder = new cote.Responder({
+    name: 'workersResponder',
+  });
+
+  responder.on('rpc_queue:api_to_workers', async (req, cb) => {
+    const response = await receiveImportRemove(JSON.parse(req.message));
+
+    cb(null, response);
+  });
+
   try {
     connection = await amqplib.connect(RABBITMQ_HOST);
     channel = await connection.createChannel();

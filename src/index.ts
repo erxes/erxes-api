@@ -28,7 +28,7 @@ import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
 import './inmemoryStorage';
-import { initConsumer, rabbitMQStatus } from './messageBroker';
+import { initBroker } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
@@ -152,13 +152,6 @@ app.get('/status', async (_req, res, next) => {
     await mongoStatus();
   } catch (e) {
     debugBase('MongoDB is not running');
-    return next(e);
-  }
-
-  try {
-    await rabbitMQStatus();
-  } catch (e) {
-    debugBase('RabbitMQ is not running');
     return next(e);
   }
 
@@ -344,7 +337,7 @@ apolloServer.installSubscriptionHandlers(httpServer);
 httpServer.listen(PORT, () => {
   // connect to mongo database
   connect().then(async () => {
-    initConsumer().catch(e => {
+    initBroker().catch(e => {
       debugBase(`Error ocurred during rabbitmq init ${e.message}`);
     });
 

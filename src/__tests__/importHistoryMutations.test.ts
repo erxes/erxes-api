@@ -1,7 +1,7 @@
 import { graphqlRequest } from '../db/connection';
 import { customerFactory, importHistoryFactory } from '../db/factories';
 import { ImportHistory } from '../db/models';
-import * as messageBroker from '../messageBroker';
+import messageBroker from '../messageBroker';
 
 import './setup.ts';
 

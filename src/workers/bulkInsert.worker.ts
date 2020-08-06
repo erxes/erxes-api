@@ -14,7 +14,7 @@ import {
   Tickets,
   Users,
 } from '../db/models';
-import { initRabbitMQ } from '../messageBroker';
+import { initBroker } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { clearEmptyValues, connect, updateDuplicatedValue } from './utils';
 
@@ -35,7 +35,7 @@ connect().then(async () => {
     return;
   }
 
-  await initRabbitMQ();
+  await initBroker();
 
   const { user, scopeBrandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
 

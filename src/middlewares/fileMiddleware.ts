@@ -6,7 +6,7 @@ import { RABBITMQ_QUEUES } from '../data/constants';
 import { can } from '../data/permissions/utils';
 import { checkFile, frontendEnv, getSubServiceDomain, uploadFile, uploadFileAWS } from '../data/utils';
 import { debugExternalApi } from '../debuggers';
-import { sendRPCMessage } from '../messageBroker';
+import messageBroker from '../messageBroker';
 
 export const importer = async (req: any, res, next) => {
   if (!(await can('importXlsFile', req.user))) {
@@ -39,7 +39,7 @@ export const importer = async (req: any, res, next) => {
           fileType = 'csv';
         }
 
-        const result = await sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
+        const result = await messageBroker.sendRPCMessage(RABBITMQ_QUEUES.RPC_API_TO_WORKERS, {
           action: 'createImport',
           type: fields.type,
           fileType,
