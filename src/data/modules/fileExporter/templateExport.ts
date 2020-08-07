@@ -1,7 +1,20 @@
+import * as json2csv from 'json2csv';
 import { createXlsFile, generateXlsx } from '../../utils';
 
 export const templateExport = async (args: any) => {
-  const { configs, contentType } = args;
+  const { configs, type, importType } = args;
+
+  if (importType === 'csv') {
+    const { Parser } = json2csv;
+
+    const parser = new Parser({ fields: configs });
+    const csv = parser.parse('');
+
+    return {
+      name: `${type}-import-template`,
+      response: csv,
+    };
+  }
 
   const { workbook, sheet } = await createXlsFile();
 
@@ -17,7 +30,7 @@ export const templateExport = async (args: any) => {
   }
 
   return {
-    name: `${contentType}-import-template`,
+    name: `${type}-import-template`,
     response: await generateXlsx(workbook),
   };
 };
