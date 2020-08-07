@@ -432,8 +432,8 @@ const conversationMutations = {
     const conversation = await Conversations.findOne({ _id })
       .select('customerId userId tagIds, integrationId')
       .lean();
-    const tags = await Tags.find({ _id: { $in: conversation?.tagIds } }).select('name');
-    const customer = await Customers.findOne({ _id: conversation?.customerId });
+    const tags = await Tags.find({ _id: { $in: conversation.tagIds } }).select('name');
+    const customer = await Customers.findOne({ _id: conversation.customerId });
     const messages = await ConversationMessages.find({ conversationId: _id }).sort({
       createdAt: 1,
     });
