@@ -17,8 +17,6 @@ export const initBroker = async () => {
   client = await init({
     name: 'api',
     RABBITMQ_HOST: process.env.RABBITMQ_HOST,
-    hasSubscriber: true,
-    hasRequester: true,
   });
 
   const { consumeQueue, consumeRPCQueue } = client;

@@ -5,7 +5,7 @@ import { filterXSS } from 'xss';
 import { connect } from '../db/connection';
 import { debugWorkers } from '../debuggers';
 import userMiddleware from '../middlewares/userMiddleware';
-import { initConsumer } from './messageBroker';
+import { initBroker } from './messageBroker';
 
 // load environment variables
 dotenv.config();
@@ -36,7 +36,7 @@ app.use((error, _req, res, _next) => {
 const { PORT_WORKERS = 3700 } = process.env;
 
 app.listen(PORT_WORKERS, () => {
-  initConsumer().catch(e => {
+  initBroker().catch(e => {
     debugWorkers(`Error ocurred during rabbitmq init ${e.message}`);
   });
 

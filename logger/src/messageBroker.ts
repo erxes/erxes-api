@@ -7,12 +7,12 @@ dotenv.config();
 let client;
 
 export const initBroker = async () => {
-  client = await init({ name: 'logger', RABBITMQ_HOST: process.env.RABBITMQ_HOST, hasSubscriber: true });
+  client = await init({ name: 'logger', RABBITMQ_HOST: process.env.RABBITMQ_HOST });
 
   const { consumeQueue } = client;
 
   consumeQueue('putLog', async data => {
-    await receivePutLogCommand(JSON.parse(data));
+    await receivePutLogCommand(data);
   });
 };
 

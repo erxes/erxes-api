@@ -49,7 +49,7 @@ connect()
         },
       });
 
-      // await ImportHistory.deleteOne({ _id: importHistoryId });
+      await ImportHistory.deleteOne({ _id: importHistoryId });
     }
 
     mongoose.connection.close();

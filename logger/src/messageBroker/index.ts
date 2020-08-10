@@ -4,9 +4,6 @@ import * as rabbitmqClient from './rabbitmq';
 interface IOptions {
   name: string;
   RABBITMQ_HOST?: string;
-  hasPublisher?: boolean;
-  hasRequester?: boolean;
-  hasSubscriber?: boolean;
 }
 
 const init = async (options: IOptions) => {
