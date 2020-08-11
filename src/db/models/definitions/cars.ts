@@ -19,11 +19,9 @@ export interface ICar {
   vinNumber?: string;
   colorCode?: string;
 
-  manufactureBrand?: string;
+  categoryId?: string;
   bodyType?: string;
   fuelType?: string;
-  modelsName?: string;
-  series?: string;
   gearBox?: string;
 
   vintageYear?: number;
@@ -37,6 +35,20 @@ export interface ICarDocument extends ICar, Document {
   modifiedAt: Date;
   searchText: string;
 }
+
+export interface ICarCategory {
+  code: string;
+  name: string;
+  order: string;
+  description?: string;
+  parentId?: string;
+}
+
+export interface ICarCategoryDocument extends ICarCategory, Document {
+  _id: string;
+  createdAt: Date;
+}
+
 
 const getEnum = (fieldName: string): string[] => {
   return CAR_SELECT_OPTIONS[fieldName].map(option => option.value);
@@ -54,15 +66,7 @@ export const carSchema = schemaWrapper(
     vinNumber: field({ type: String, label: 'VIN number', optional: true }),
     colorCode: field({ type: String, label: 'Color code' }),
 
-    brand: field({
-      type: String,
-      enum: getEnum('BRANDS'),
-      default: '',
-      optional: true,
-      label: 'Brand',
-      esType: 'keyword',
-      selectOptions: CAR_SELECT_OPTIONS.BRANDS
-    }),
+    categoryId: field({ type: String, label: 'Category' }),
 
     bodyType: field({
       type: String,
@@ -86,16 +90,13 @@ export const carSchema = schemaWrapper(
 
     gearBox: field({
       type: String,
-      enum: getEnum('FUEL_TYPES'),
+      enum: getEnum('GEARBOX'),
       default: '',
       optional: true,
       label: 'Gear box',
       esType: 'keyword',
       selectOptions: CAR_SELECT_OPTIONS.BODY_TYPES
     }),
-
-    modelsName: field({ type: String, label: 'Models name', optional: true }),
-    series: field({ type: String, label: 'Series', optional: true }),
 
     vintageYear: field({ type: Number, label: 'Vintage year', default: 2020 }),
     importYear: field({ type: Number, label: 'Imported year', default: 2020 }),
@@ -132,5 +133,21 @@ export const carSchema = schemaWrapper(
 
     customFieldsData: field({ type: [customFieldSchema], optional: true, label: 'Custom fields data' }),
     searchText: field({ type: String, optional: true, index: true }),
+  }),
+);
+
+export const carCategorySchema = schemaWrapper(
+  new Schema({
+    _id: field({ pkey: true }),
+    name: field({ type: String, label: 'Name' }),
+    code: field({ type: String, unique: true, label: 'Code' }),
+    order: field({ type: String, label: 'Order' }),
+    parentId: field({ type: String, optional: true, label: 'Parent' }),
+    description: field({ type: String, optional: true, label: 'Description' }),
+    createdAt: field({
+      type: Date,
+      default: new Date(),
+      label: 'Created at',
+    }),
   }),
 );

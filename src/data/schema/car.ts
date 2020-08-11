@@ -1,6 +1,18 @@
 import { conformityQueryFields } from './common';
 
 export const types = `
+  type CarCategory {
+    _id: String!
+    name: String
+    description: String
+    parentId: String
+    code: String!
+    order: String!
+
+    isRoot: Boolean
+    carCount: Int
+  }
+
   type Car {
     _id: String!
 
@@ -22,16 +34,15 @@ export const types = `
     plateNumber: String
     vinNumber: String
     colorCode: String
+    categoryId: String
 
-    manufactureBrand: String
+    category: CarCategory
     bodyType: String
     fuelType: String
-    modelsName: String
-    series: String
     gearBox: String
 
-    vintageYear: Int
-    importYear: Int
+    vintageYear: Float
+    importYear: Float
   }
 
   type CarsListResponse {
@@ -58,6 +69,9 @@ export const queries = `
   cars(${queryParams}): [Car]
   carCounts(${queryParams}, only: String): JSON
   carDetail(_id: String!): Car
+  carCategories(parentId: String, searchValue: String): [CarCategory]
+  carCategoriesTotalCount: Int
+  carCategoryDetail(_id: String): CarCategory
 `;
 
 const commonFields = `
@@ -68,18 +82,23 @@ const commonFields = `
   vinNumber: String
   colorCode: String
 
-  manufactureBrand: String
+  categoryId: String
   bodyType: String
   fuelType: String
-  modelsName: String
-  series: String
   gearBox: String
 
-  vintageYear: Int
-  importYear: Int
+  vintageYear: Float
+  importYear: Float
 
   tagIds: [String]
   customFieldsData: JSON
+`;
+
+const carCategoryParams = `
+  name: String!,
+  code: String!,
+  description: String,
+  parentId: String,
 `;
 
 export const mutations = `
@@ -87,4 +106,7 @@ export const mutations = `
   carsEdit(_id: String!, ${commonFields}): Car
   carsRemove(carIds: [String]): [String]
   carsMerge(carIds: [String], carFields: JSON) : Car
+  carCategoriesAdd(${carCategoryParams}): CarCategory
+  carCategoriesEdit(_id: String!, ${carCategoryParams}): CarCategory
+  carCategoriesRemove(_id: String!): JSON
 `;

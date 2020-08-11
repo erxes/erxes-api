@@ -203,11 +203,9 @@ const fieldQueries = {
       return [
         { name: 'plateNumber', label: 'Plate Number', order: 0 },
         { name: 'vinNumber', label: 'VIN number', order: 1 },
-        { name: 'manufactureBrand', label: 'Brand', order: 2 },
+        { name: 'categoryName', label: 'Category', order: 2 },
         { name: 'bodyType', label: 'bodyType', order: 3 },
         { name: 'fuelType', label: 'fuelType', order: 4 },
-        { name: 'modelsName', label: 'modelsName', order: 5 },
-        { name: 'series', label: 'series', order: 6 },
         { name: 'gearBox', label: 'gearBox', order: 7 },
         { name: 'vintageYear', label: 'vintageYear', order: 8 },
         { name: 'importYear', label: 'importYear', order: 9 }

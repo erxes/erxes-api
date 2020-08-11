@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { Brands, Conformities, Segments, Tags } from '../../../db/models';
+import { Brands, CarCategories, Conformities, Segments, Tags } from '../../../db/models';
 import { KIND_CHOICES } from '../../../db/models/definitions/constants';
 import { debugBase } from '../../../debuggers';
 import { fetchElk } from '../../../elasticsearch';
@@ -46,6 +46,22 @@ export const countByBrand = async (qb): Promise<ICountBy> => {
 
   return counts;
 };
+
+export const countByCategory = async (qb): Promise<ICountBy> => {
+  const counts: ICountBy = {};
+
+  // Count customers by brand
+  const categories = await CarCategories.find({});
+
+  for (const category of categories) {
+    await qb.buildAllQueries();
+    await qb.categoryFilter(category._id);
+
+    counts[category._id] = await qb.runQueries('count');
+  }
+
+  return counts;
+}
 
 export const countByTag = async (type: string, qb): Promise<ICountBy> => {
   const counts: ICountBy = {};

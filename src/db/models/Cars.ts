@@ -1,7 +1,7 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs, Conformities, Fields, InternalNotes } from '.';
 import { validSearchText } from '../../data/utils';
-import { carSchema, ICar, ICarDocument } from './definitions/cars';
+import { carCategorySchema, carSchema, ICar, ICarCategory, ICarCategoryDocument, ICarDocument } from './definitions/cars';
 import { ICustomField } from './definitions/common';
 import { IUserDocument } from './definitions/users';
 
@@ -29,6 +29,14 @@ export interface ICarModel extends Model<ICarDocument> {
   mergeCars(carIds: string[], carFields: ICar): Promise<ICarDocument>;
 
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
+}
+
+
+export interface ICarCategoryModel extends Model<ICarCategoryDocument> {
+  getCarCatogery(selector: any): Promise<ICarCategoryDocument>;
+  createCarCategory(doc: ICarCategory): Promise<ICarCategoryDocument>;
+  updateCarCategory(_id: string, doc: ICarCategory): Promise<ICarCategoryDocument>;
+  removeCarCategory(_id: string): void;
 }
 
 export const loadClass = () => {
@@ -78,17 +86,15 @@ export const loadClass = () => {
 
     public static fillSearchText(doc: ICar) {
       return validSearchText([
-        doc.modelsName || '',
         doc.plateNumber || '',
         doc.vinNumber || '',
         doc.description || '',
-        doc.series || '',
-        doc.manufactureBrand || ''
+        doc.categoryId || ''
       ]);
     }
 
     public static getCarName(car: ICar) {
-      return car.plateNumber || car.vinNumber || car.modelsName || car.series || car.manufactureBrand || 'Unknown';
+      return car.plateNumber || car.vinNumber || 'Unknown';
     }
 
     /**
@@ -229,9 +235,107 @@ export const loadClass = () => {
   return carSchema;
 };
 
+export const loadCarCategoryClass = () => {
+  class CarCategory {
+    /**
+     *
+     * Get Car Cagegory
+     */
+
+    public static async getCarCatogery(selector: any) {
+      const carCategory = await CarCategories.findOne(selector);
+
+      if (!carCategory) {
+        throw new Error('Car & service category not found');
+      }
+
+      return carCategory;
+    }
+
+    /**
+     * Create a car categorys
+     */
+    public static async createCarCategory(doc: ICarCategory) {
+      const parentCategory = await CarCategories.findOne({ _id: doc.parentId }).lean();
+
+      // Generatingg order
+      doc.order = await this.generateOrder(parentCategory, doc);
+
+      return CarCategories.create(doc);
+    }
+
+    /**
+     * Update Car category
+     */
+    public static async updateCarCategory(_id: string, doc: ICarCategory) {
+      const parentCategory = await CarCategories.findOne({ _id: doc.parentId }).lean();
+
+      if (parentCategory && parentCategory.parentId === _id) {
+        throw new Error('Cannot change category');
+      }
+
+      // Generatingg  order
+      doc.order = await this.generateOrder(parentCategory, doc);
+
+      const carCategory = await CarCategories.getCarCatogery({ _id });
+
+      const childCategories = await CarCategories.find({
+        $and: [{ order: { $regex: new RegExp(carCategory.order, 'i') } }, { _id: { $ne: _id } }],
+      });
+
+      await CarCategories.updateOne({ _id }, { $set: doc });
+
+      // updating child categories order
+      childCategories.forEach(async category => {
+        let order = category.order;
+
+        order = order.replace(carCategory.order, doc.order);
+
+        await CarCategories.updateOne({ _id: category._id }, { $set: { order } });
+      });
+
+      return CarCategories.findOne({ _id });
+    }
+
+    /**
+     * Remove Car category
+     */
+    public static async removeCarCategory(_id: string) {
+      await CarCategories.getCarCatogery({ _id });
+
+      let count = await Cars.countDocuments({ categoryId: _id });
+      count += await CarCategories.countDocuments({ parentId: _id });
+
+      if (count > 0) {
+        throw new Error("Can't remove a car category");
+      }
+
+      return CarCategories.deleteOne({ _id });
+    }
+
+    /**
+     * Generating order
+     */
+    public static async generateOrder(parentCategory: ICarCategory, doc: ICarCategory) {
+      const order = parentCategory ? `${parentCategory.order}/${doc.name}${doc.code}` : `${doc.name}${doc.code}`;
+
+      return order;
+    }
+  }
+
+  carCategorySchema.loadClass(CarCategory);
+
+  return carCategorySchema;
+};
+
 loadClass();
+loadCarCategoryClass();
 
 // tslint:disable-next-line
-const Cars = model<ICarDocument, ICarModel>('cars', carSchema);
+export const Cars = model<ICarDocument, ICarModel>('cars', carSchema);
 
-export default Cars;
+// tslint:disable-next-line
+export const CarCategories = model<ICarCategoryDocument, ICarCategoryModel>(
+  'car_categories',
+  carCategorySchema,
+);

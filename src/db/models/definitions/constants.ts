@@ -12,7 +12,8 @@ export const TAG_TYPES = {
   COMPANY: 'company',
   INTEGRATION: 'integration',
   PRODUCT: 'product',
-  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration', 'product'],
+  CAR: 'car',
+  ALL: ['conversation', 'customer', 'engageMessage', 'company', 'integration', 'product', 'car'],
 };
 
 export const MESSENGER_KINDS = {
@@ -227,7 +228,8 @@ export const FIELDS_GROUPS_CONTENT_TYPES = {
   CUSTOMER: 'customer',
   COMPANY: 'company',
   PRODUCT: 'product',
-  ALL: ['customer', 'company', 'product'],
+  CAR: 'car',
+  ALL: ['customer', 'company', 'product', 'car'],
 };
 
 export const CUSTOMER_LIFECYCLE_STATE_TYPES = [
@@ -603,12 +605,6 @@ export const CUSTOMER_SELECT_OPTIONS = {
   ],
 };
 
-export const DEFAULT_CONSTANT_VALUES = {
-  sex_choices: DEFAULT_SEX_CHOICES,
-  company_industry_types: DEFAULT_COMPANY_INDUSTRY_TYPES.map(v => ({ label: v, value: v })),
-  social_links: DEFAULT_SOCIAL_LINKS,
-};
-
 export const CAR_SELECT_OPTIONS = {
   BUSINESS_TYPES: [
     { label: 'Competitor', value: 'Competitor' },
@@ -627,20 +623,6 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'No', value: 'No' },
     { label: 'Unknown', value: '' },
   ],
-  BRANDS: [
-    { label: 'Unknown', value: ''},
-    { label: 'Toyota', value: 'Toyota'},
-    { label: 'Nissan', value: 'Nissan'},
-    { label: 'Honda', value: 'Honda'},
-    { label: 'Hyundai', value: 'Hyundai'},
-    { label: 'Subaru', value: 'Subaru'},
-    { label: 'Mazda', value: 'Mazda'},
-    { label: 'Lexus', value: 'Lexus'},
-    { label: 'BMW', value: 'BMW'},
-    { label: 'Tesla', value: 'Tesla'},
-    { label: 'Ford', value: 'Ford'},
-    { label: 'Ford', value: 'Ford'},
-  ],
   BODY_TYPES: [
     { label: 'Unknown', value: ''},
     { label: 'Sedan', value: 'Sedan'},
@@ -651,7 +633,7 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Van', value: 'Van'},
     { label: 'Hatchback', value: 'Hatchback'},
     { label: 'Pickup', value: 'Pickup'},
-    { label: 'Sport Coupe', value: 'Sport Coupe'},
+    { label: 'Sport Coupe', value: 'SportCoupe'},
   ],
   FUEL_TYPES: [
     { label: 'Unknown', value: ''},
@@ -666,8 +648,17 @@ export const CAR_SELECT_OPTIONS = {
     { label: 'Automatic', value: 'Automatic'},
     { label: 'Manual', value: 'Manual'},
     { label: 'CVT', value: 'CVT'},
-    { label: 'Semi-automatic', value: 'Semi-automatic'},
+    { label: 'Semi automatic', value: 'SemiAutomatic'},
   ]
+};
+
+export const DEFAULT_CONSTANT_VALUES = {
+  sex_choices: DEFAULT_SEX_CHOICES,
+  company_industry_types: DEFAULT_COMPANY_INDUSTRY_TYPES.map(v => ({ label: v, value: v })),
+  social_links: DEFAULT_SOCIAL_LINKS,
+  car_body_types: CAR_SELECT_OPTIONS.BODY_TYPES,
+  car_fuel_types: CAR_SELECT_OPTIONS.FUEL_TYPES,
+  car_gear_boxs: CAR_SELECT_OPTIONS.GEARBOX,
 };
 
 export const SEGMENT_STRING_OPERATORS = ['e', 'dne', 'c', 'dnc'];

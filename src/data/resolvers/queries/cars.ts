@@ -1,7 +1,7 @@
-import { Cars } from '../../../db/models';
+import { CarCategories, Cars } from '../../../db/models';
 import { TAG_TYPES } from '../../../db/models/definitions/constants';
 import { Builder, IListArgs } from '../../modules/coc/cars';
-import { countByBrand, countBySegment, countByTag } from '../../modules/coc/utils';
+import { countByBrand, countByCategory, countBySegment, countByTag } from '../../modules/coc/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
@@ -45,6 +45,7 @@ const carQueries = {
       byTag: {},
       byBrand: {},
       byLeadStatus: {},
+      byCategory: {},
     };
 
     const { only } = args;
@@ -53,7 +54,7 @@ const carQueries = {
 
     switch (only) {
       case 'byTag':
-        counts.byTag = await countByTag(TAG_TYPES.COMPANY, qb);
+        counts.byTag = await countByTag(TAG_TYPES.CAR, qb);
         break;
 
       case 'bySegment':
@@ -61,6 +62,10 @@ const carQueries = {
         break;
       case 'byBrand':
         counts.byBrand = await countByBrand(qb);
+        break;
+
+      case 'byCategory':
+        counts.byCategory = await countByCategory(qb);
         break;
     }
 
@@ -72,6 +77,32 @@ const carQueries = {
    */
   carDetail(_root, { _id }: { _id: string }) {
     return Cars.findOne({ _id });
+  },
+
+  carCategories(
+    _root,
+    { parentId, searchValue }: { parentId: string; searchValue: string },
+    { commonQuerySelector }: IContext,
+  ) {
+    const filter: any = commonQuerySelector;
+
+    if (parentId) {
+      filter.parentId = parentId;
+    }
+
+    if (searchValue) {
+      filter.name = new RegExp(`.*${searchValue}.*`, 'i');
+    }
+
+    return CarCategories.find(filter).sort({ order: 1 });
+  },
+
+  carCategoriesTotalCount(_root) {
+    return CarCategories.find().countDocuments();
+  },
+
+  carCategoryDetail(_root, { _id }: { _id: string }) {
+    return CarCategories.findOne({ _id });
   },
 };
 

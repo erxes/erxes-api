@@ -1,7 +1,11 @@
-import { Conformities, Customers, Tags, Users } from '../../db/models';
+import { CarCategories, Conformities, Customers, Tags, Users } from '../../db/models';
 import { ICarDocument } from '../../db/models/definitions/cars';
 
 export default {
+  category(car: ICarDocument) {
+    return CarCategories.findOne({ _id: car.categoryId });
+  },
+
   async customers(company: ICarDocument) {
     const customerIds = await Conformities.savedConformity({
       mainType: 'company',

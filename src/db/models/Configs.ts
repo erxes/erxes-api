@@ -1,6 +1,6 @@
 import { Model, model } from 'mongoose';
 import { configSchema, IConfig, IConfigDocument } from './definitions/configs';
-import { COMPANY_INDUSTRY_TYPES, CUSTOMER_SELECT_OPTIONS, SOCIAL_LINKS } from './definitions/constants';
+import { CAR_SELECT_OPTIONS, COMPANY_INDUSTRY_TYPES, CUSTOMER_SELECT_OPTIONS, SOCIAL_LINKS } from './definitions/constants';
 
 export interface IConfigModel extends Model<IConfigDocument> {
   getConfig(code: string): Promise<IConfigDocument>;
@@ -43,6 +43,9 @@ export const loadClass = () => {
         sex_choices: CUSTOMER_SELECT_OPTIONS.SEX,
         company_industry_types: COMPANY_INDUSTRY_TYPES.map(v => ({ label: v, value: v })),
         social_links: SOCIAL_LINKS,
+        car_body_types: CAR_SELECT_OPTIONS.BODY_TYPES,
+        car_fuel_types: CAR_SELECT_OPTIONS.FUEL_TYPES,
+        car_gear_boxs: CAR_SELECT_OPTIONS.GEARBOX
       };
     }
   }

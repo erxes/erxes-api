@@ -26,6 +26,7 @@ export interface IListArgs extends IConformityQueryParams {
   brand?: string;
   sortField?: string;
   sortDirection?: number;
+  categoryId?: string;
 }
 
 export class Builder extends CommonBuilder<IListArgs> {

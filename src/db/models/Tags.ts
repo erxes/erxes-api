@@ -1,6 +1,7 @@
 import { Model, model } from 'mongoose';
 import * as _ from 'underscore';
 import { Companies, Conversations, Customers, EngageMessages, Integrations, Products } from '.';
+import { Cars } from './Cars';
 import { ITag, ITagDocument, tagSchema } from './definitions/tags';
 
 interface ITagObjectParams {
@@ -175,6 +176,9 @@ export const loadClass = () => {
           break;
         case 'product':
           collection = Products;
+          break;
+        case 'car':
+          collection = Cars;
           break;
       }
 
