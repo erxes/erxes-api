@@ -127,16 +127,13 @@ car_mapping = {
     'vinNumber': {
         'type': 'text',
     },
-    'manufactureBrand': {
+    'categoryId': {
         'type': 'text',
     },
     'bodyType': {
         'type': 'text',
     },
     'fuelType': {
-        'type': 'text',
-    },
-    'modelsName': {
         'type': 'text',
     },
     'series': {

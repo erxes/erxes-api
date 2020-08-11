@@ -14,6 +14,9 @@
     },
     "erxes*.companies": {
       "rename": "erxes*__companies._doc"
+    },
+    "erxes*.cars": {
+      "rename": "erxes*__cars._doc"
     }
   },
   "docManagers": [
