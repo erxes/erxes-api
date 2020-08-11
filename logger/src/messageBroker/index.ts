@@ -8,7 +8,7 @@ interface IOptions {
 
 const init = async (options: IOptions) => {
   if (options.RABBITMQ_HOST) {
-    rabbitmqClient.init(options.RABBITMQ_HOST);
+    await rabbitmqClient.init(options.RABBITMQ_HOST);
 
     return rabbitmqClient;
   } else {

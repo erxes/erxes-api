@@ -31,7 +31,11 @@ export const sendRPCMessage = async (queueName: string, message: any): Promise<a
     message: JSON.stringify(message),
   });
 
-  return response;
+  if (response.status === 'success') {
+    return response.data;
+  } else {
+    throw new Error(response.errorMessage);
+  }
 };
 
 export const consumeRPCQueue = async (queueName, callback) => {
