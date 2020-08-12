@@ -1,3 +1,5 @@
+import './inmemoryStorage';
+
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -27,7 +29,6 @@ import { updateContactsValidationStatus, updateContactValidationStatus } from '.
 import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
-import './inmemoryStorage';
 import { initBroker } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';

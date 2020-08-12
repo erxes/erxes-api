@@ -1,14 +1,16 @@
 import * as dotenv from 'dotenv';
+import { redisOptions } from 'erxes-inmemory-storage';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { PubSub } from 'graphql-subscriptions';
 import * as Redis from 'ioredis';
-import { redisOptions } from './inmemoryStorage';
 
 // load environment variables
 dotenv.config();
 
+const { REDIS_HOST }: { REDIS_HOST?: string } = process.env;
+
 const createPubsubInstance = () => {
-  if (redisOptions.host) {
+  if (REDIS_HOST) {
     return new RedisPubSub({
       connectionListener: error => {
         if (error) {

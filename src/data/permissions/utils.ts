@@ -1,6 +1,6 @@
+import { client as memoryStorage } from 'erxes-inmemory-storage';
 import { Permissions, Users } from '../../db/models';
 import { IUserDocument } from '../../db/models/definitions/users';
-import memoryStorage from '../../inmemoryStorage';
 
 export interface IModuleMap {
   name: string;

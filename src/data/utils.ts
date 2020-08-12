@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk';
+import { client as memoryStorage } from 'erxes-inmemory-storage';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -12,7 +13,6 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
-import memoryStorage from '../inmemoryStorage';
 import { graphqlPubsub } from '../pubsub';
 
 const uploadsFolderPath = path.join(__dirname, '../private/uploads');
