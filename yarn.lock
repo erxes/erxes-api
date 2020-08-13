@@ -157,6 +157,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.11.2":
+  version "7.11.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.11.2.tgz#f549c13c754cc40b87644b9fa9f09a6a95fe0736"
+  integrity sha512-TeWkU52so0mPtDcaCTxNBI/IHiz0pZgr8VEFqXFtZWpYD08ZB6FaSwVAS8MKRQAP3bYKiVjwysOJgMFY28o6Tw==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/template@^7.4.0", "@babel/template@^7.8.3", "@babel/template@^7.8.6":
   version "7.8.6"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.8.6.tgz#86b22af15f828dfb086474f964dcc3e39c43ce2b"
@@ -3709,11 +3716,12 @@ error-ex@^1.2.0, error-ex@^1.3.1:
   dependencies:
     is-arrayish "^0.2.1"
 
-erxes-inmemory-storage@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/erxes-inmemory-storage/-/erxes-inmemory-storage-1.0.8.tgz#4ece30d0c19c96bed815278102c88324d2dae226"
-  integrity sha512-Nev9bgTNvOumFYIYuz+RBMhDq49O0kQN6olG7nfJlufrxnMu2RkvwfucsXPlVDqxrcNHQiZ+GPQKjVp1taV79Q==
+erxes-inmemory-storage@^1.0.14:
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/erxes-inmemory-storage/-/erxes-inmemory-storage-1.0.14.tgz#d442178f724bb8f9e81ea4bc984f8066cb02f785"
+  integrity sha512-M9RmF6JaCMrzk4RmJVYp1lSyGhz6/QFUZku8gnfvjvnglGaqBWMuAtW6ebL2m2tP4EHoAGSW0Xo5MBSUPWrnvQ==
   dependencies:
+    "@babel/runtime" "^7.11.2"
     redis "^3.0.2"
 
 erxes-telemetry@^1.0.3:
