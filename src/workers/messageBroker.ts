@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
+import messageBroker from 'erxes-message-broker';
 import { RABBITMQ_QUEUES } from '../data/constants';
-import init from '../messageBroker/index';
 import { receiveImportCancel, receiveImportCreate, receiveImportRemove } from './utils';
 
 dotenv.config();
@@ -8,7 +8,7 @@ dotenv.config();
 let client;
 
 export const initBroker = async () => {
-  client = await init({
+  client = await messageBroker({
     name: 'workers',
     RABBITMQ_HOST: process.env.RABBITMQ_HOST,
   });

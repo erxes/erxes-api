@@ -11,7 +11,7 @@ dotenv.config();
 
 import { connect } from './connection';
 import { debugBase, debugInit } from './debuggers';
-import { initConsumer } from './messageQueue';
+import messageBroker, { initBroker } from './messageBroker';
 import { trackEngages } from './trackers/engageTracker';
 
 const app = express();
@@ -50,7 +50,7 @@ const { PORT } = process.env;
 app.listen(PORT, () => {
   // connect to mongo database
   connect().then(async () => {
-    initConsumer().catch(e => {
+    initBroker().catch(e => {
       debugBase(`Error ocurred during rabbitmq init ${e.message}`);
     });
   });

@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import messageBroker from 'erxes-message-broker';
 import {
   receiveEngagesNotification,
   receiveIntegrationsNotification,
@@ -6,7 +7,6 @@ import {
 } from './data/modules/integrations/receiveMessage';
 import { RobotEntries } from './db/models';
 import { debugBase } from './debuggers';
-import init from './messageBroker/index';
 import { graphqlPubsub } from './pubsub';
 
 dotenv.config();
@@ -14,7 +14,7 @@ dotenv.config();
 let client;
 
 export const initBroker = async () => {
-  client = await init({
+  client = await messageBroker({
     name: 'api',
     RABBITMQ_HOST: process.env.RABBITMQ_HOST,
   });

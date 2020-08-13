@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import init from './messageBroker/index';
+import messageBroker from 'erxes-message-broker';
 import { receivePutLogCommand } from './utils';
 
 dotenv.config();
@@ -7,7 +7,7 @@ dotenv.config();
 let client;
 
 export const initBroker = async () => {
-  client = await init({ name: 'logger', RABBITMQ_HOST: process.env.RABBITMQ_HOST });
+  client = await messageBroker({ name: 'logger', RABBITMQ_HOST: process.env.RABBITMQ_HOST });
 
   const { consumeQueue } = client;
 
