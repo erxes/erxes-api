@@ -22,6 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import { graphqlPubsub } from '../../../pubsub';
 import { get, set } from '../../../redisClient';
+import { IContext } from '../../types';
 import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 import { sendMsgToGolomt } from './golomtApi';
@@ -273,8 +274,11 @@ const widgetMutations = {
       cachedCustomerId?: string;
       deviceToken?: string;
     },
+    { requestInfo }: IContext,
   ) {
     const { brandCode, email, phone, code, isUser, companyData, data, cachedCustomerId, deviceToken } = args;
+
+    console.log('requestInfo: ', requestInfo);
 
     const customData = data;
 
@@ -311,7 +315,7 @@ const widgetMutations = {
 
     customer = customer
       ? await Customers.updateMessengerCustomer({ _id: customer._id, doc, customData })
-      : await Customers.createMessengerCustomer({ doc, customData });
+      : await Customers.createMessengerCustomer({ doc, customData, hostname: requestInfo.hostname });
 
     // get or create company
     if (companyData && companyData.name) {
