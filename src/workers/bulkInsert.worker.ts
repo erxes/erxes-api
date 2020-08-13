@@ -14,8 +14,9 @@ import {
   Tickets,
   Users,
 } from '../db/models';
+import { initRabbitMQ } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
-import { connect } from './utils';
+import { clearEmptyValues, connect, updateDuplicatedValue } from './utils';
 
 // tslint:disable-next-line
 const { parentPort, workerData } = require('worker_threads');
@@ -34,22 +35,32 @@ connect().then(async () => {
     return;
   }
 
+  await initRabbitMQ();
+
   const { user, scopeBrandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
 
   let percentage = '0';
   let create: any = null;
+  let model: any = null;
 
   const isBoardItem = (): boolean => contentType === 'deal' || contentType === 'task' || contentType === 'ticket';
 
   switch (contentType) {
     case 'company':
       create = Companies.createCompany;
+      model = Companies;
       break;
     case 'customer':
       create = Customers.createCustomer;
+      model = Customers;
+      break;
+    case 'lead':
+      create = Customers.createCustomer;
+      model = Customers;
       break;
     case 'product':
       create = Products.createProduct;
+      model = Products;
       break;
     case 'deal':
       create = Deals.createDeal;
@@ -97,6 +108,13 @@ connect().then(async () => {
     // Iterating through detailed properties
     for (const property of properties) {
       const value = (fieldValue[colIndex] || '').toString();
+
+      if (contentType === 'customer') {
+        doc.state = 'customer';
+      }
+      if (contentType === 'lead') {
+        doc.state = 'lead';
+      }
 
       switch (property.type) {
         case 'customProperty':
@@ -194,8 +212,12 @@ connect().then(async () => {
       colIndex++;
     } // end properties for loop
 
-    if (contentType === 'customer' && !doc.emailValidationStatus) {
+    if ((contentType === 'customer' || contentType === 'lead') && !doc.emailValidationStatus) {
       doc.emailValidationStatus = 'unknown';
+    }
+
+    if ((contentType === 'customer' || contentType === 'lead') && !doc.phoneValidationStatus) {
+      doc.phoneValidationStatus = 'unknown';
     }
 
     // set board item created user
@@ -219,7 +241,7 @@ connect().then(async () => {
 
           for (const _id of companyIds) {
             await Conformities.addConformity({
-              mainType: contentType,
+              mainType: contentType === 'lead' ? 'customer' : contentType,
               mainTypeId: cocObj._id,
               relType: 'company',
               relTypeId: _id,
@@ -233,7 +255,7 @@ connect().then(async () => {
 
           for (const _id of customerIds) {
             await Conformities.addConformity({
-              mainType: contentType,
+              mainType: contentType === 'lead' ? 'customer' : contentType,
               mainTypeId: cocObj._id,
               relType: 'customer',
               relTypeId: _id,
@@ -246,21 +268,26 @@ connect().then(async () => {
         // Increasing success count
         inc.success++;
       })
-      .catch((e: Error) => {
-        inc.failed++;
+      .catch(async (e: Error) => {
+        const updatedDoc = clearEmptyValues(doc);
+
         // Increasing failed count and pushing into error message
 
         switch (e.message) {
           case 'Duplicated email':
-            errorMsgs.push(`Duplicated email ${doc.primaryEmail}`);
+            inc.success++;
+            await updateDuplicatedValue(model, 'primaryEmail', updatedDoc);
             break;
           case 'Duplicated phone':
-            errorMsgs.push(`Duplicated phone ${doc.primaryPhone}`);
+            inc.success++;
+            await updateDuplicatedValue(model, 'primaryPhone', updatedDoc);
             break;
           case 'Duplicated name':
-            errorMsgs.push(`Duplicated name ${doc.primaryName}`);
+            inc.success++;
+            await updateDuplicatedValue(model, 'primaryName', updatedDoc);
             break;
           default:
+            inc.failed++;
             errorMsgs.push(e.message);
             break;
         }

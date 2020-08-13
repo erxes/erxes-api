@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as path from 'path';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
@@ -11,15 +12,24 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
-import { sendMessage } from '../messageBroker';
 import { graphqlPubsub } from '../pubsub';
 import { get, set } from '../redisClient';
 
-export const initFirebase = (value: string): void => {
-  const serviceAccount = JSON.parse(value);
+export const uploadsFolderPath = path.join(__dirname, '../private/uploads');
 
-  if (serviceAccount.private_key) {
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+export const initFirebase = (code: string): void => {
+  if (code.length === 0) {
+    return;
+  }
+
+  const codeString = code.trim();
+
+  if (codeString[0] === '{' && codeString[codeString.length - 1] === '}') {
+    const serviceAccount = JSON.parse(codeString);
+
+    if (serviceAccount.private_key) {
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    }
   }
 };
 
@@ -44,8 +54,24 @@ export const checkFile = async (file, source?: string) => {
   // determine file type using magic numbers
   const ft = fileType(buffer);
 
+  const unsupportedMimeTypes = ['text/csv', 'image/svg+xml', 'text/plain', 'application/vnd.ms-excel'];
+
+  const oldMsOfficeDocs = ['application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint'];
+
+  // allow csv, svg to be uploaded
+  if (!ft && unsupportedMimeTypes.includes(file.type)) {
+    return 'ok';
+  }
+
   if (!ft) {
     return 'Invalid file type';
+  }
+
+  const { mime } = ft;
+
+  // allow old ms office docs to be uploaded
+  if (mime === 'application/x-msi' && oldMsOfficeDocs.includes(file.type)) {
+    return 'ok';
   }
 
   const defaultMimeTypes = [
@@ -59,8 +85,6 @@ export const checkFile = async (file, source?: string) => {
   ];
 
   const UPLOAD_FILE_TYPES = await getConfig(source === 'widgets' ? 'WIDGETS_UPLOAD_FILE_TYPES' : 'UPLOAD_FILE_TYPES');
-
-  const { mime } = ft;
 
   if (!((UPLOAD_FILE_TYPES && UPLOAD_FILE_TYPES.split(',')) || defaultMimeTypes).includes(mime)) {
     return 'Invalid configured file type';
@@ -124,8 +148,11 @@ const createGCS = async () => {
 /*
  * Save binary data to amazon s3
  */
-export const uploadFileAWS = async (file: { name: string; path: string; type: string }): Promise<string> => {
-  const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC', 'true');
+export const uploadFileAWS = async (
+  file: { name: string; path: string; type: string },
+  forcePrivate: boolean = false,
+): Promise<string> => {
+  const IS_PUBLIC = forcePrivate ? false : await getConfig('FILE_SYSTEM_PUBLIC', 'true');
   const AWS_PREFIX = await getConfig('AWS_PREFIX');
   const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
@@ -164,7 +191,7 @@ export const uploadFileAWS = async (file: { name: string; path: string; type: st
 /*
  * Delete file from amazon s3
  */
-const deleteFileAWS = async (fileName: string) => {
+export const deleteFileAWS = async (fileName: string) => {
   const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
   const params = { Bucket: AWS_BUCKET, Key: fileName };
@@ -179,6 +206,31 @@ const deleteFileAWS = async (fileName: string) => {
       }
 
       return resolve('ok');
+    });
+  });
+};
+
+/*
+ * Save file to local disk
+ */
+export const uploadFileLocal = async (file: { name: string; path: string; type: string }): Promise<string> => {
+  const oldPath = file.path;
+
+  if (!fs.existsSync(uploadsFolderPath)) {
+    fs.mkdirSync(uploadsFolderPath);
+  }
+
+  const fileName = `${Math.random()}${file.name.replace(/ /g, '')}`;
+  const newPath = `${uploadsFolderPath}/${fileName}`;
+  const rawData = fs.readFileSync(oldPath);
+
+  return new Promise((resolve, reject) => {
+    fs.writeFile(newPath, rawData, err => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve(fileName);
     });
   });
 };
@@ -225,6 +277,18 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
   return IS_PUBLIC === 'true' ? metadata.mediaLink : name;
 };
 
+const deleteFileLocal = async (fileName: string) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(`${uploadsFolderPath}/${fileName}`, error => {
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve('deleted');
+    });
+  });
+};
+
 const deleteFileGCS = async (fileName: string) => {
   const BUCKET = await getConfig('GOOGLE_CLOUD_STORAGE_BUCKET');
 
@@ -268,24 +332,38 @@ export const readFileRequest = async (key: string): Promise<any> => {
     return contents;
   }
 
-  const AWS_BUCKET = await getConfig('AWS_BUCKET');
-  const s3 = await createAWS();
+  if (UPLOAD_SERVICE_TYPE === 'AWS') {
+    const AWS_BUCKET = await getConfig('AWS_BUCKET');
+    const s3 = await createAWS();
 
-  return new Promise((resolve, reject) => {
-    s3.getObject(
-      {
-        Bucket: AWS_BUCKET,
-        Key: key,
-      },
-      (error, response) => {
+    return new Promise((resolve, reject) => {
+      s3.getObject(
+        {
+          Bucket: AWS_BUCKET,
+          Key: key,
+        },
+        (error, response) => {
+          if (error) {
+            return reject(error);
+          }
+
+          return resolve(response.Body);
+        },
+      );
+    });
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    return new Promise((resolve, reject) => {
+      fs.readFile(`${uploadsFolderPath}/${key}`, (error, response) => {
         if (error) {
           return reject(error);
         }
 
-        return resolve(response.Body);
-      },
-    );
-  });
+        return resolve(response);
+      });
+    });
+  }
 };
 
 /*
@@ -295,7 +373,19 @@ export const uploadFile = async (apiUrl: string, file, fromEditor = false): Prom
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
   const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
-  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+  let nameOrLink = '';
+
+  if (UPLOAD_SERVICE_TYPE === 'AWS') {
+    nameOrLink = await uploadFileAWS(file);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'GCS') {
+    nameOrLink = await uploadFileGCS(file);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    nameOrLink = await uploadFileLocal(file);
+  }
 
   if (fromEditor) {
     const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
@@ -317,7 +407,13 @@ export const deleteFile = async (fileName: string): Promise<any> => {
     return deleteFileAWS(fileName);
   }
 
-  return deleteFileGCS(fileName);
+  if (UPLOAD_SERVICE_TYPE === 'GCS') {
+    return deleteFileGCS(fileName);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    return deleteFileLocal(fileName);
+  }
 };
 
 /**
@@ -572,7 +668,7 @@ interface IRequestParams {
   method?: string;
   headers?: { [key: string]: string };
   params?: { [key: string]: string };
-  body?: { [key: string]: string | number };
+  body?: { [key: string]: any };
   form?: { [key: string]: string };
 }
 
@@ -820,98 +916,6 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
   return true;
 };
 
-export const validateEmail = async (email: string, wait?: boolean) => {
-  const data = { email };
-
-  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
-
-  if (!EMAIL_VERIFIER_ENDPOINT) {
-    return sendMessage('erxes-api:email-verifier-notification', { action: 'emailVerify', data });
-  }
-
-  const requestOptions = {
-    url: `${EMAIL_VERIFIER_ENDPOINT}/verify-single`,
-    method: 'POST',
-    body: { email },
-  };
-
-  const updateCustomer = status =>
-    Customers.updateOne({ primaryEmail: email }, { $set: { emailValidationStatus: status } });
-
-  const successCallback = response => updateCustomer(response.status);
-
-  const errorCallback = e => {
-    if (e.message === 'timeout exceeded') {
-      return updateCustomer('unverifiable');
-    }
-
-    debugExternalApi(`Error occurred during email verify ${e.message}`);
-  };
-
-  if (wait) {
-    try {
-      const response = await sendRequest(requestOptions);
-      return successCallback(response);
-    } catch (e) {
-      await errorCallback(e);
-    }
-  }
-
-  sendRequest(requestOptions)
-    .then(async response => {
-      await successCallback(response);
-    })
-    .catch(async e => {
-      await errorCallback(e);
-    });
-};
-
-export const validatePhone = async (phone: string, wait?: boolean) => {
-  const data = { phone };
-
-  const EMAIL_VERIFIER_ENDPOINT = getEnv({ name: 'EMAIL_VERIFIER_ENDPOINT', defaultValue: '' });
-
-  if (!EMAIL_VERIFIER_ENDPOINT) {
-    return sendMessage('erxes-api:phone-verifier-notification', { action: 'phoneVerify', data });
-  }
-
-  const requestOptions = {
-    url: `${EMAIL_VERIFIER_ENDPOINT}/verify-singlePhone`,
-    method: 'POST',
-    body: { phone },
-  };
-
-  const updateCustomer = status =>
-    Customers.updateOne({ primaryPhone: phone }, { $set: { phoneValidationStatus: status } });
-
-  const successCallback = response => updateCustomer(response.result.status);
-
-  const errorCallback = e => {
-    if (e.message === 'timeout exceeded') {
-      return updateCustomer('unverifiable');
-    }
-
-    debugExternalApi(`Error occurred during phone verify ${e.message}`);
-  };
-
-  if (wait) {
-    try {
-      const response = await sendRequest(requestOptions);
-      return successCallback(response);
-    } catch (e) {
-      await errorCallback(e);
-    }
-  }
-
-  sendRequest(requestOptions)
-    .then(async response => {
-      await successCallback(response);
-    })
-    .catch(async e => {
-      await errorCallback(e);
-    });
-};
-
 export const getConfigs = async () => {
   const configsCache = await get('configs_erxes_api');
 
@@ -966,6 +970,7 @@ export const getSubServiceDomain = ({ name }: { name: string }): string => {
     INTEGRATIONS_API_DOMAIN: `${MAIN_APP_DOMAIN}/integrations`,
     LOGS_API_DOMAIN: `${MAIN_APP_DOMAIN}/logs`,
     ENGAGES_API_DOMAIN: `${MAIN_APP_DOMAIN}/engages`,
+    VERIFIER_API_DOMAIN: `${MAIN_APP_DOMAIN}/verifier`,
   };
 
   const domain = getEnv({ name });
@@ -975,4 +980,35 @@ export const getSubServiceDomain = ({ name }: { name: string }): string => {
   }
 
   return defaultMappings[name];
+};
+
+export const chunkArray = (myArray, chunkSize: number) => {
+  let index = 0;
+
+  const arrayLength = myArray.length;
+  const tempArray: any[] = [];
+
+  for (index = 0; index < arrayLength; index += chunkSize) {
+    const myChunk = myArray.slice(index, index + chunkSize);
+
+    // Do something if you want with the group
+    tempArray.push(myChunk);
+  }
+
+  return tempArray;
+};
+
+/**
+ * Create s3 stream for excel file
+ */
+export const s3Stream = async (key: string, errorCallback: (error: any) => void): Promise<any> => {
+  const AWS_BUCKET = await getConfig('AWS_BUCKET');
+
+  const s3 = await createAWS();
+
+  const stream = s3.getObject({ Bucket: AWS_BUCKET, Key: key }).createReadStream();
+
+  stream.on('error', errorCallback);
+
+  return stream;
 };
