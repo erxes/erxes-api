@@ -1,13 +1,13 @@
 import { ApolloServer, PlaygroundConfig } from 'apollo-server-express';
 import * as cookie from 'cookie';
 import * as dotenv from 'dotenv';
-import { client as memoryStorage } from 'erxes-inmemory-storage';
 import * as jwt from 'jsonwebtoken';
 import { EngagesAPI, IntegrationsAPI } from './data/dataSources';
 import resolvers from './data/resolvers';
 import typeDefs from './data/schema';
 import { frontendEnv } from './data/utils';
 import { Conversations, Customers, Users } from './db/models';
+import memoryStorage from './inmemoryStorage';
 import { graphqlPubsub } from './pubsub';
 
 // load environment variables
@@ -127,18 +127,18 @@ const apolloServer = new ApolloServer({
           const customerId = webSocket.messengerData.customerId;
 
           // get status from inmemory storage
-          const inConnectedClients = await memoryStorage.inArray('connectedClients', customerId);
-          const inClients = await memoryStorage.inArray('clients', customerId);
+          const inConnectedClients = await memoryStorage().inArray('connectedClients', customerId);
+          const inClients = await memoryStorage().inArray('clients', customerId);
 
           if (!inConnectedClients) {
-            await memoryStorage.addToArray('connectedClients', customerId);
+            await memoryStorage().addToArray('connectedClients', customerId);
           }
 
           // Waited for 1 minute to reconnect in disconnect hook and disconnect hook
           // removed this customer from connected clients list. So it means this customer
           // is back online
           if (!inClients) {
-            await memoryStorage.addToArray('clients', customerId);
+            await memoryStorage().addToArray('clients', customerId);
 
             // mark as online
             await Customers.markCustomerAsActive(customerId);
@@ -182,24 +182,24 @@ const apolloServer = new ApolloServer({
         // If client refreshes his browser, It will trigger disconnect, connect hooks.
         // So to determine this issue. We are marking as disconnected here and waiting
         // for 1 minute to reconnect.
-        await memoryStorage.removeFromArray('connectedClients', customerId);
+        await memoryStorage().removeFromArray('connectedClients', customerId);
 
         setTimeout(async () => {
           // get status from inmemory storage
-          const inNewConnectedClients = await memoryStorage.inArray('connectedClients', customerId);
-          const customerLastStatus = await memoryStorage.get(`customer_last_status_${customerId}`);
+          const inNewConnectedClients = await memoryStorage().inArray('connectedClients', customerId);
+          const customerLastStatus = await memoryStorage().get(`customer_last_status_${customerId}`);
 
           if (inNewConnectedClients) {
             return;
           }
 
-          await memoryStorage.removeFromArray('clients', customerId);
+          await memoryStorage().removeFromArray('clients', customerId);
 
           // mark as offline
           await Customers.markCustomerAsNotActive(customerId);
 
           if (customerLastStatus !== 'left') {
-            memoryStorage.set(`customer_last_status_${customerId}`, 'left');
+            memoryStorage().set(`customer_last_status_${customerId}`, 'left');
 
             // customer has left + time
             const conversationMessages = await Conversations.changeCustomerStatus('left', customerId, integrationId);

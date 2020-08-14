@@ -1,5 +1,4 @@
 import * as AWS from 'aws-sdk';
-import { client as memoryStorage } from 'erxes-inmemory-storage';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -13,6 +12,7 @@ import { Configs, Customers, Notifications, Users } from '../db/models';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import memoryStorage from '../inmemoryStorage';
 import { graphqlPubsub } from '../pubsub';
 
 const uploadsFolderPath = path.join(__dirname, '../private/uploads');
@@ -909,7 +909,7 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
 };
 
 export const getConfigs = async () => {
-  const configsCache = await memoryStorage.get('configs_erxes_api');
+  const configsCache = await memoryStorage().get('configs_erxes_api');
 
   if (configsCache && configsCache !== '{}') {
     return JSON.parse(configsCache);
@@ -922,7 +922,7 @@ export const getConfigs = async () => {
     configsMap[config.code] = config.value;
   }
 
-  memoryStorage.set('configs_erxes_api', JSON.stringify(configsMap));
+  memoryStorage().set('configs_erxes_api', JSON.stringify(configsMap));
 
   return configsMap;
 };
@@ -938,7 +938,7 @@ export const getConfig = async (code, defaultValue?) => {
 };
 
 export const resetConfigsCache = () => {
-  memoryStorage.set('configs_erxes_api', '');
+  memoryStorage().set('configs_erxes_api', '');
 };
 
 export const frontendEnv = ({ name, req, requestInfo }: { name: string; req?: any; requestInfo?: any }): string => {

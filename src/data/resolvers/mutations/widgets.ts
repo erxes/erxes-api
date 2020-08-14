@@ -1,4 +1,3 @@
-import { client as memoryStorage } from 'erxes-inmemory-storage';
 import * as strip from 'strip';
 import {
   Brands,
@@ -21,6 +20,7 @@ import { IIntegrationDocument, IMessengerDataMessagesItem } from '../../../db/mo
 import { IKnowledgebaseCredentials, ILeadCredentials } from '../../../db/models/definitions/messengerApps';
 import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
+import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
 import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
@@ -427,10 +427,10 @@ const widgetMutations = {
       conversationClientTypingStatusChanged: { conversationId, text: '' },
     });
 
-    const customerLastStatus = await memoryStorage.get(`customer_last_status_${customerId}`, 'left');
+    const customerLastStatus = await memoryStorage().get(`customer_last_status_${customerId}`, 'left');
 
     if (customerLastStatus === 'left') {
-      memoryStorage.set(`customer_last_status_${customerId}`, 'joined');
+      memoryStorage().set(`customer_last_status_${customerId}`, 'joined');
 
       // customer has joined + time
       const conversationMessages = await Conversations.changeCustomerStatus(
