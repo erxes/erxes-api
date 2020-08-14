@@ -2,6 +2,7 @@ import * as telemetry from 'erxes-telemetry';
 import { Channels, Users } from '../../../db/models';
 import { ILink } from '../../../db/models/definitions/common';
 import { IDetail, IEmailSignature, IUser } from '../../../db/models/definitions/users';
+import { get, set } from '../../../redisClient';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -41,6 +42,23 @@ const userMutations = {
     res.cookie('auth-token', token, authCookieOptions(requestInfo.secure));
 
     telemetry.trackCli('logged_in');
+
+    const currentDate = new Date();
+    const machineId = telemetry.getMachineId();
+
+    const previousData = await get(machineId);
+
+    if (previousData) {
+      const old = new Date(previousData);
+
+      if (old.getMinutes() !== currentDate.getMinutes()) {
+        set(machineId, currentDate);
+        telemetry.trackCli('last_login', { updatedAt: currentDate });
+      }
+    } else {
+      set(machineId, currentDate);
+      telemetry.trackCli('last_login', { updatedAt: currentDate });
+    }
 
     return 'loggedIn';
   },
