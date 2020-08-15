@@ -51,7 +51,7 @@ const userMutations = {
     if (previousData) {
       const old = new Date(previousData);
 
-      if (old.getMinutes() !== currentDate.getMinutes()) {
+      if (old.getDay() !== currentDate.getDay()) {
         set(machineId, currentDate);
         telemetry.trackCli('last_login', { updatedAt: currentDate });
       }
