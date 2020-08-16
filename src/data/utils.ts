@@ -371,21 +371,19 @@ export const readFileRequest = async (key: string): Promise<any> => {
  */
 export const uploadFile = async (apiUrl: string, file, fromEditor = false): Promise<any> => {
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
-  const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
+  // const UPLOAD_SERVICE_TYPE = 'local';
 
   let nameOrLink = '';
 
-  if (UPLOAD_SERVICE_TYPE === 'AWS') {
-    nameOrLink = await uploadFileAWS(file);
-  }
+  // if (UPLOAD_SERVICE_TYPE === 'AWS') {
+  //   nameOrLink = await uploadFileAWS(file);
+  // }
 
-  if (UPLOAD_SERVICE_TYPE === 'GCS') {
-    nameOrLink = await uploadFileGCS(file);
-  }
+  // if (UPLOAD_SERVICE_TYPE === 'GCS') {
+  //   nameOrLink = await uploadFileGCS(file);
+  // }
 
-  if (UPLOAD_SERVICE_TYPE === 'local') {
-    nameOrLink = await uploadFileLocal(file);
-  }
+  nameOrLink = await uploadFileLocal(file);
 
   if (fromEditor) {
     const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
@@ -1002,13 +1000,17 @@ export const chunkArray = (myArray, chunkSize: number) => {
  * Create s3 stream for excel file
  */
 export const s3Stream = async (key: string, errorCallback: (error: any) => void): Promise<any> => {
-  const AWS_BUCKET = await getConfig('AWS_BUCKET');
+  try {
+    const AWS_BUCKET = await getConfig('AWS_BUCKET');
 
-  const s3 = await createAWS();
+    const s3 = await createAWS();
 
-  const stream = s3.getObject({ Bucket: AWS_BUCKET, Key: key }).createReadStream();
+    const stream = s3.getObject({ Bucket: AWS_BUCKET, Key: key }).createReadStream();
 
-  stream.on('error', errorCallback);
+    stream.on('error', errorCallback);
 
-  return stream;
+    return stream;
+  } catch (e) {
+    throw e;
+  }
 };
