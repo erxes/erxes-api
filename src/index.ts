@@ -341,7 +341,7 @@ httpServer.listen(PORT, () => {
   // connect to mongo database
   connect().then(async () => {
     initBroker().catch(e => {
-      debugBase(`Error ocurred during message broker init ${e.message}`);
+      debugBase(`Error ocurred during broker init ${e.message}`);
     });
 
     initRedis();
