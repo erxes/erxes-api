@@ -11,7 +11,7 @@ dotenv.config();
 
 import { connect } from './connection';
 import { debugBase, debugInit } from './debuggers';
-import messageBroker, { initBroker } from './messageBroker';
+import { initBroker } from './messageBroker';
 import { trackEngages } from './trackers/engageTracker';
 
 const app = express();

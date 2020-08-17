@@ -166,7 +166,7 @@ export const updateConfigs = async (configsMap): Promise<void> => {
   }
 };
 
-export const getConfigs = async () => {
+export const getConfigs = async (): Promise<any> => {
   const configsMap = {};
   const configs = await Configs.find({});
 
