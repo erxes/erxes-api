@@ -51,7 +51,7 @@ app.listen(PORT, () => {
   // connect to mongo database
   connect().then(async () => {
     initBroker().catch(e => {
-      debugBase(`Error ocurred during rabbitmq init ${e.message}`);
+      debugBase(`Error ocurred during message broker init ${e.message}`);
     });
   });
 

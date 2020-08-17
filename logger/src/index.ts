@@ -102,7 +102,7 @@ const { PORT } = process.env;
 
 app.listen(PORT, () => {
   initBroker().catch(e => {
-    debugBase(`Error ocurred during rabbitmq init ${e.message}`);
+    debugBase(`Error ocurred during message broker init ${e.message}`);
   });
 
   debugInit(`Logger server is running on port ${PORT}`);

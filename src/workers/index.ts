@@ -40,7 +40,7 @@ app.listen(PORT_WORKERS, () => {
   initRedis();
 
   initBroker().catch(e => {
-    debugWorkers(`Error ocurred during rabbitmq init ${e.message}`);
+    debugWorkers(`Error ocurred during message broker init ${e.message}`);
   });
 
   debugWorkers(`Workers server is now running on ${PORT_WORKERS}`);
