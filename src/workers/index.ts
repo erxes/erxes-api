@@ -4,7 +4,7 @@ import * as express from 'express';
 import { filterXSS } from 'xss';
 import { connect } from '../db/connection';
 import { debugWorkers } from '../debuggers';
-import { initRedis } from '../inmemoryStorage';
+import { initMemoryStorage } from '../inmemoryStorage';
 import userMiddleware from '../middlewares/userMiddleware';
 import { initBroker } from './messageBroker';
 
@@ -37,7 +37,7 @@ app.use((error, _req, res, _next) => {
 const { PORT_WORKERS = 3700 } = process.env;
 
 app.listen(PORT_WORKERS, () => {
-  initRedis();
+  initMemoryStorage();
 
   initBroker().catch(e => {
     debugWorkers(`Error ocurred during message broker init ${e.message}`);

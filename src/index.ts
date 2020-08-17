@@ -28,7 +28,7 @@ import { updateContactsValidationStatus, updateContactValidationStatus } from '.
 import { connect, mongoStatus } from './db/connection';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
-import { initRedis } from './inmemoryStorage';
+import { initMemoryStorage } from './inmemoryStorage';
 import { initBroker } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
@@ -344,7 +344,7 @@ httpServer.listen(PORT, () => {
       debugBase(`Error ocurred during broker init ${e.message}`);
     });
 
-    initRedis();
+    initMemoryStorage();
 
     init()
       .then(() => {

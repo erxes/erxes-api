@@ -3,7 +3,7 @@ import * as express from 'express';
 import { connect } from '../db/connection';
 import { debugCrons } from '../debuggers';
 
-import { initRedis } from '../inmemoryStorage';
+import { initMemoryStorage } from '../inmemoryStorage';
 import { initBroker } from '../messageBroker';
 import './activityLogs';
 import './conversations';
@@ -27,8 +27,11 @@ const { PORT_CRONS = 3600 } = process.env;
 app.listen(PORT_CRONS, () => {
   // connect to mongo database
   connect().then(async () => {
-    initRedis();
-    initBroker();
+    initMemoryStorage();
+
+    initBroker().catch(e => {
+      debugCrons(`Error ocurred during broker init ${e.message}`);
+    });
   });
 
   debugCrons(`Cron Server is now running on ${PORT_CRONS}`);
