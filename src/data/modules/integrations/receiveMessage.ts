@@ -118,6 +118,11 @@ export const receiveRpcMessage = async msg => {
     const configs = await getConfigs();
     return sendSuccess({ configs });
   }
+
+  if (action === 'getUserIds') {
+    const users = await Users.find({}, { _id: 1 });
+    return sendSuccess({ userIds: users.map(user => user._id) });
+  }
 };
 
 /*
