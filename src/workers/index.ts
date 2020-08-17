@@ -4,8 +4,8 @@ import * as express from 'express';
 import { filterXSS } from 'xss';
 import { connect } from '../db/connection';
 import { debugWorkers } from '../debuggers';
+import { initRedis } from '../inmemoryStorage';
 import userMiddleware from '../middlewares/userMiddleware';
-import { initRedis } from './inmemoryStorage';
 import { initBroker } from './messageBroker';
 
 // load environment variables
