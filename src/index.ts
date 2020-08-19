@@ -26,6 +26,7 @@ import {
 } from './data/utils';
 import { updateContactsValidationStatus, updateContactValidationStatus } from './data/verifierUtils';
 import { connect, mongoStatus } from './db/connection';
+import initWatchers from './db/watchers';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
 import { initConsumer, rabbitMQStatus } from './messageBroker';
@@ -346,9 +347,10 @@ app.use((error, _req, res, _next) => {
 // Wrap the Express server
 const httpServer = createServer(app);
 
-// subscriptions server
 const PORT = getEnv({ name: 'PORT' });
+const ELK_SYNCER = getEnv({ name: 'ELK_SYNCER', defaultValue: 'true' });
 
+// subscriptions server
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
@@ -359,6 +361,10 @@ httpServer.listen(PORT, () => {
     });
 
     initRedis();
+
+    if (ELK_SYNCER === 'false') {
+      initWatchers();
+    }
 
     init()
       .then(() => {
