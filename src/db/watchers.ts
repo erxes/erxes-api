@@ -1,58 +1,43 @@
-import * as telemetry from 'erxes-telemetry';
-import { sendRequest } from '../data/utils';
+import { fetchElk } from '../elasticsearch';
 import { Companies, Customers } from './models';
 
-const { ELASTICSEARCH_API_DOMAIN } = process.env;
-
-const sendElkRequest = (data, machineId: string, index: string) => {
+const sendElkRequest = (data, index: string) => {
   const { operationType, documentKey } = data;
 
-  const body: any = {
-    machineId,
-    index,
-  };
-
   switch (operationType) {
-    case 'delete': {
-      body.id = documentKey._id;
-
-      break;
-    }
     case 'update': {
-      body.doc = {
-        ...(data.updateDescription.updatedFields || {}),
+      const body = {
+        doc: {
+          ...(data.updateDescription.updatedFields || {}),
+          id: documentKey._id,
+        },
+      };
+
+      return fetchElk('update', index, body, documentKey._id);
+    }
+
+    case 'insert': {
+      const body = {
+        ...(data.fullDocument || {}),
         id: documentKey._id,
       };
 
-      break;
-    }
-    case 'insert': {
-      const fullDocument = { ...(data.fullDocument || {}), id: documentKey._id };
-      delete fullDocument._id;
+      delete body._id;
 
-      body.doc = fullDocument;
-
-      break;
+      return fetchElk('create', index, body, documentKey._id);
     }
-    default:
   }
 
-  return sendRequest({
-    method: 'POST',
-    url: `${ELASTICSEARCH_API_DOMAIN}/${operationType}`,
-    body,
-  });
+  return fetchElk('delete', index, {}, documentKey._id);
 };
 
 const init = () => {
-  const machineId = telemetry.getMachineId().toString();
-
   Customers.watch().on('change', data => {
-    sendElkRequest(data, machineId, 'customers');
+    sendElkRequest(data, 'customers');
   });
 
   Companies.watch().on('change', data => {
-    sendElkRequest(data, machineId, 'companies');
+    sendElkRequest(data, 'companies');
   });
 };
 

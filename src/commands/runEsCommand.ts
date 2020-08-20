@@ -1,10 +1,20 @@
-import { client, getMappings } from '../elasticsearch';
+import * as elasticsearch from 'elasticsearch';
+
 const argv = process.argv;
+const { ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
 
 /*
  * yarn run runEsCommand deleteByQuery  '{"index":"erxes_office__events","body":{"query":{"match":{"customerId":"CX2BFBGDEHFehNT8y"}}}}'
  */
 const main = async () => {
+  const client = new elasticsearch.Client({
+    hosts: [ELASTICSEARCH_URL],
+  });
+
+  const getMappings = async (index: string) => {
+    return client.indices.getMapping({ index });
+  };
+
   if (argv.length === 4) {
     const body = argv.pop() || '{}';
     const action = argv.pop();

@@ -93,6 +93,8 @@ const segmentQueries = {
         },
       });
 
+      console.log('response: ', response);
+
       return response.count;
     } catch (e) {
       return 0;

@@ -30,8 +30,11 @@ export default {
           },
         },
       },
+      '',
       { hits: { hits: [] } },
     );
+
+    console.log('response: ', response);
 
     return response.hits.hits.map(hit => {
       const source = hit._source;

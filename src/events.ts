@@ -1,7 +1,8 @@
 import * as getUuid from 'uuid-by-string';
+import { sendRequest } from './data/utils';
 import { Customers, Fields } from './db/models';
 import { debugBase } from './debuggers';
-import { client, fetchElk, getIndexPrefix } from './elasticsearch';
+import { fetchElk, getIndexPrefix } from './elasticsearch';
 
 interface ISaveEventArgs {
   type?: string;
@@ -41,26 +42,29 @@ export const saveEvent = async (args: ISaveEventArgs) => {
   }
 
   const index = `${getIndexPrefix()}events`;
+  const id = getUuid(JSON.stringify(searchQuery));
+  const body = {
+    script: {
+      source: 'ctx._source["count"] += 1',
+      lang: 'painless',
+    },
+    upsert: {
+      type,
+      name,
+      customerId,
+      createdAt: new Date(),
+      count: 1,
+      attributes: Fields.generateTypedListFromMap(attributes || {}),
+    },
+  };
 
   try {
-    const response = await client.update({
-      index,
-      // generate unique id based on searchQuery
-      id: getUuid(JSON.stringify(searchQuery)),
-      body: {
-        script: {
-          source: 'ctx._source["count"] += 1',
-          lang: 'painless',
-        },
-        upsert: {
-          type,
-          name,
-          customerId,
-          createdAt: new Date(),
-          count: 1,
-          attributes: Fields.generateTypedListFromMap(attributes || {}),
-        },
-      },
+    const { ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
+
+    const response = sendRequest({
+      method: 'POST',
+      url: `${ELASTICSEARCH_URL}/${index}/_update/${id}`,
+      body,
     });
 
     debugBase(`Response ${JSON.stringify(response)}`);
