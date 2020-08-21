@@ -115,7 +115,6 @@ const customerQueries = {
    * Get one customer
    */
   async customerDetail(_root, { _id }: { _id: string }) {
-    console.log('_id: ', await Customers.findOne({ _id }));
     return Customers.findOne({ _id });
   },
 };

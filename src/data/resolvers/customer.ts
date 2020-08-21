@@ -34,8 +34,6 @@ export default {
       { hits: { hits: [] } },
     );
 
-    console.log('response: ', response);
-
     return response.hits.hits.map(hit => {
       const source = hit._source;
       const firstAttribute = source.attributes[0] || {};

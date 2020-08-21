@@ -37,18 +37,14 @@ export const fetchElk = async (action, index: string, body: any, id?: string, de
     const args: { index: string; body: any; id?: string } = {
       index: `${getIndexPrefix()}${index}`,
       body,
+      id,
     };
-
-    if (id) {
-      args.id = id;
-    }
 
     const response = await client[action](args);
 
     return response;
   } catch (e) {
     if (defaultValue) {
-      console.log('defaultValue: ', defaultValue);
       return defaultValue;
     }
 
