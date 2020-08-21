@@ -8,9 +8,9 @@ import {
   Tasks,
 } from '../../../db/models';
 import { IActivityLogDocument } from '../../../db/models/definitions/activityLogs';
-// import { debugExternalApi } from '../../../debuggers';
+import { debugExternalApi } from '../../../debuggers';
 import { moduleRequireLogin } from '../../permissions/wrappers';
-// import { IContext } from '../../types';
+import { IContext } from '../../types';
 
 interface IListArgs {
   contentType: string;
@@ -22,7 +22,7 @@ const activityLogQueries = {
   /**
    * Get activity log list
    */
-  async activityLogs(_root, doc: IListArgs) {
+  async activityLogs(_root, doc: IListArgs, { dataSources }: IContext) {
     const { contentType, contentId, activityType } = doc;
 
     const activities: IActivityLogDocument[] = [];
@@ -72,18 +72,19 @@ const activityLogQueries = {
         await Conversations.find({ $or: [{ customerId: contentId }, { participatedUserIds: contentId }] }).limit(25),
         'conversation',
       );
-      // if (contentType === 'customer') {
-      //   let conversationIds;
 
-      //   try {
-      //     conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
-      //       customerId: contentId,
-      //     });
-      //     collectItems(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
-      //   } catch (e) {
-      //     debugExternalApi(e);
-      //   }
-      // }
+      if (contentType === 'customer') {
+        let conversationIds;
+
+        try {
+          conversationIds = await dataSources.IntegrationsAPI.fetchApi('/facebook/get-customer-posts', {
+            customerId: contentId,
+          });
+          collectItems(await Conversations.find({ _id: { $in: conversationIds } }), 'comment');
+        } catch (e) {
+          debugExternalApi(e);
+        }
+      }
     };
 
     const collectActivityLogs = async () => {

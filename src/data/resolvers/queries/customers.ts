@@ -114,7 +114,7 @@ const customerQueries = {
   /**
    * Get one customer
    */
-  async customerDetail(_root, { _id }: { _id: string }) {
+  customerDetail(_root, { _id }: { _id: string }) {
     return Customers.findOne({ _id });
   },
 };
