@@ -34,13 +34,11 @@ export const fetchElk = async (action, index: string, body: any, id?: string, de
   }
 
   try {
-    const args: { index: string; body: any; id?: string } = {
+    const response = await client[action]({
       index: `${getIndexPrefix()}${index}`,
       body,
       id,
-    };
-
-    const response = await client[action](args);
+    });
 
     return response;
   } catch (e) {
