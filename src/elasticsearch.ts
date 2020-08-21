@@ -18,7 +18,7 @@ export const getMappings = async (index: string) => {
 };
 
 export const getIndexPrefix = () => {
-  if (ELASTICSEARCH_URL === 'http://localhost:4300') {
+  if (ELASTICSEARCH_URL === 'http://138.68.4.166:4300') {
     return `${telemetry.getMachineId().toString()}__`;
   }
 
