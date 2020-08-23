@@ -102,7 +102,7 @@ const knowledgeBaseQueries = {
   /**
    * Category detail
    */
-  knowledgeBaseCategoryDetail(_root, { _id }: { _id: string }) {
+  async knowledgeBaseCategoryDetail(_root, { _id }: { _id: string }) {
     return KnowledgeBaseCategories.findOne({ _id }).then(category => {
       return category;
     });
@@ -147,7 +147,6 @@ const knowledgeBaseQueries = {
   },
 };
 
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticlesTotalCount');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicsTotalCount');
 requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesGetLast');
