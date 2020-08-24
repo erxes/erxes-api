@@ -24,6 +24,7 @@ export interface IConversationMessageAdd {
   mentionedUserIds?: string[];
   internal?: boolean;
   attachments?: any;
+  sendSms?: boolean;
 }
 
 interface IReplyFacebookComment {
@@ -258,6 +259,32 @@ const conversationMutations = {
     }
 
     const message = await ConversationMessages.addMessage(doc, user._id);
+
+    /**
+     * Send SMS only when:
+     * - marked to send SMS
+     * - customer has primary phone filled
+     * - customer's primary phone is valid
+     * - content length within 160 characters
+     */
+    if (
+      doc.sendSms &&
+      customer &&
+      customer.primaryPhone &&
+      customer.phoneValidationStatus === 'valid' &&
+      doc.content.length <= 160
+    ) {
+      await messageBroker().sendMessage('erxes-api:conversation-sms', {
+        action: 'sendConversationSms',
+        payload: JSON.stringify({
+          conversationMessageId: message._id,
+          conversationId,
+          integrationId,
+          toPhone: customer.primaryPhone,
+          content: strip(doc.content),
+        }),
+      });
+    }
 
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {

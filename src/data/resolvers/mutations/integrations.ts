@@ -115,7 +115,7 @@ const integrationMutations = {
     return Integrations.updateLeadIntegration(_id, doc);
   },
 
-  /*
+  /**
    * Create external integrations like twitter, facebook, gmail etc ...
    */
   async integrationsCreateExternalIntegration(
@@ -222,6 +222,7 @@ const integrationMutations = {
           'smooch-line',
           'smooch-twilio',
           'whatsapp',
+          'telnyx',
         ].includes(integration.kind)
       ) {
         await dataSources.IntegrationsAPI.removeIntegration({ integrationId: _id });
