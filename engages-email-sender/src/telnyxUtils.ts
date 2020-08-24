@@ -1,5 +1,19 @@
+import * as Telnyx from 'telnyx';
 import { SMS_DELIVERY_STATUSES } from './constants';
 import SmsRequests from './models/SmsRequests';
+import { getConfigs } from './utils';
+
+export const getTelnyxInstance = async () => {
+  const configs = await getConfigs();
+
+  const { telnyxApiKey, telnyxPhone } = configs;
+
+  if (!(telnyxApiKey && telnyxPhone)) {
+    throw new Error('Telnyx API key & phone numbers are missing');
+  }
+
+  return new Telnyx(telnyxApiKey);
+};
 
 export const saveTelnyxHookData = async (data: any) => {
   if (data && data.payload) {

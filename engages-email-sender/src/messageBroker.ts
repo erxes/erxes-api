@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import messageBroker from 'erxes-message-broker';
 import { debugBase } from './debuggers';
 import { Logs } from './models';
-import { sendSms, start } from './sender';
+import { sendBulkSms, start } from './sender';
 
 dotenv.config();
 
@@ -26,7 +26,7 @@ export const initBroker = async () => {
     }
 
     if (action === 'sendEngageSms') {
-      await sendSms(data);
+      await sendBulkSms(data);
     }
   });
 };
