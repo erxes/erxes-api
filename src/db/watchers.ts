@@ -7,20 +7,14 @@ const sendElkRequest = (data, index: string) => {
   switch (operationType) {
     case 'update': {
       const body = {
-        doc: {
-          ...(data.updateDescription.updatedFields || {}),
-          id: documentKey._id,
-        },
+        doc: data.updateDescription.updatedFields || {},
       };
 
       return fetchElk('update', index, body, documentKey._id);
     }
 
     case 'insert': {
-      const body = {
-        ...(data.fullDocument || {}),
-        id: documentKey._id,
-      };
+      const body = data.fullDocument || {};
 
       delete body._id;
 
