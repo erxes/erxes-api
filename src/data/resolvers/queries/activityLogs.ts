@@ -109,6 +109,12 @@ const activityLogQueries = {
           'taskDetail',
         );
       }
+
+      const contentIds = activities.filter(activity => activity.action === 'convert').map(activity => activity.content);
+
+      if (contentIds) {
+        collectItems(await Conversations.find({ _id: { $in: contentIds } }).limit(25), 'conversation');
+      }
     };
 
     switch (activityType) {
