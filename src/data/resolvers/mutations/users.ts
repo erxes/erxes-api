@@ -30,6 +30,24 @@ const sendInvitationEmail = ({ email, token }: { email: string; token: string })
 };
 
 const userMutations = {
+  async usersCreateOwner(
+    _root,
+    { email, password, passwordConfirmation }: { email: string; password: string; passwordConfirmation: string },
+  ) {
+    if (password !== passwordConfirmation) {
+      throw new Error('Passwords do not match.');
+    }
+
+    const doc: IUser = {
+      isOwner: true,
+      email,
+      password,
+    };
+
+    await Users.createUser(doc);
+
+    return 'success';
+  },
   /*
    * Login
    */

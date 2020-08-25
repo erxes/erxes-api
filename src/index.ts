@@ -26,6 +26,7 @@ import {
 } from './data/utils';
 import { updateContactsValidationStatus, updateContactValidationStatus } from './data/verifierUtils';
 import { connect, mongoStatus } from './db/connection';
+import { Users } from './db/models';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
 import { initMemoryStorage } from './inmemoryStorage';
@@ -87,7 +88,13 @@ app.use(cors(corsOptions));
 
 app.use(helmet({ frameguard: { action: 'sameorigin' } }));
 
-app.get('/set-frontend-cookies', async (req: any, res) => {
+app.get('/check-owner-and-set-frontend-cookies', async (req: any, res) => {
+  const owner = await Users.findOne({ isOwner: true });
+
+  if (!owner) {
+    return res.send('no owner');
+  }
+
   const envMaps = JSON.parse(req.query.envs || '{}');
 
   for (const key of Object.keys(envMaps)) {
