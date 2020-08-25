@@ -34,7 +34,7 @@ const command = async () => {
         },
         update: {
           $set: {
-            order: index,
+            order: index + 1,
           },
         },
       },
@@ -60,7 +60,7 @@ const command = async () => {
           },
           update: {
             $set: {
-              order: idx,
+              order: idx + 1,
             },
           },
         },

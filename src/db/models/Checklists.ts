@@ -125,10 +125,13 @@ export const loadItemClass = () => {
      * Create new checklistItem
      */
     public static async createChecklistItem({ checklistId, ...fields }: IChecklistItem, user: IUserDocument) {
+      const itemsCount = await ChecklistItems.count({ checklistId });
+
       const checklistItem = await ChecklistItems.create({
         checklistId,
         createdUserId: user._id,
         createdDate: new Date(),
+        order: itemsCount + 1,
         ...fields,
       });
 
