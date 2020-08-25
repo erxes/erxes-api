@@ -144,6 +144,19 @@ const checklistMutations = {
 
     return removed;
   },
+
+  async checklistItemsOrder(_root, { _id, destinationIndex }: { _id: string; destinationIndex: number }) {
+    const currentItem = await ChecklistItems.findOne({ _id }).lean();
+
+    await ChecklistItems.updateOne(
+      { checklistId: currentItem.checklistId, order: destinationIndex },
+      { $set: { order: currentItem.order } },
+    );
+
+    await ChecklistItems.updateOne({ _id }, { $set: { order: destinationIndex } });
+
+    return ChecklistItems.findOne({ _id }).lean();
+  },
 };
 
 moduleRequireLogin(checklistMutations);

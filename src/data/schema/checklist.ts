@@ -28,6 +28,7 @@ export const mutations = `
   checklistsAdd(contentType: String, contentTypeId: String, title: String): Checklist
   checklistsEdit(_id: String!, title: String, contentType: String, contentTypeId: String,): Checklist
   checklistsRemove(_id: String!): Checklist
+  checklistItemsOrder(_id: String!, destinationIndex: Int): Checklist
 
   checklistItemsAdd(checklistId: String, content: String, isChecked: Boolean): ChecklistItem
   checklistItemsEdit(_id: String!, checklistId: String, content: String, isChecked: Boolean): ChecklistItem
