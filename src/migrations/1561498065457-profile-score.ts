@@ -13,10 +13,10 @@ module.exports.up = async () => {
   let customerCount = await Customers.countDocuments({ profileScore: { $exists: false } });
 
   while (customerCount > 0) {
-    const bulks = [];
+    const bulks: any[] = [];
 
     for (const customer of await Customers.find({ profileScore: { $exists: false } }).limit(200)) {
-      bulks.push(await Customers.updateProfileScore(customer._id, false));
+      bulks.push(await Customers.updateProfileScore({ ...customer }, false));
       customerCount -= 1;
     }
 

@@ -76,7 +76,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   changeState(_id: string, value: string): Promise<ICustomerDocument>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
-  updateProfileScore(customerId: string, save: boolean): never;
+  updateProfileScore(doc: any, save: boolean): any;
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
@@ -230,10 +230,14 @@ export const loadClass = () => {
         doc.relatedIntegrationIds = [doc.integrationId];
       }
 
+      // calculateProfileScore
+      const profileScoreDoc = await Customers.updateProfileScore(doc, true);
+
       const customer = await Customers.create({
         createdAt: new Date(),
         modifiedAt: new Date(),
         ...doc,
+        ...profileScoreDoc,
       });
 
       if (doc.primaryEmail && !doc.emailValidationStatus) {
@@ -242,13 +246,6 @@ export const loadClass = () => {
 
       if (doc.primaryPhone && !doc.phoneValidationStatus) {
         validateSingle({ phone: doc.primaryPhone });
-      }
-
-      // calculateProfileScore
-      await Customers.updateProfileScore(customer._id, true);
-
-      if (doc.state) {
-        await Customers.updateOne({ _id: customer._id }, { $set: { state: doc.state } });
       }
 
       await ActivityLogs.createCocLog({ coc: customer, contentType: 'customer' });
@@ -263,14 +260,14 @@ export const loadClass = () => {
       // Checking duplicated fields of customer
       await Customers.checkDuplication(doc, _id);
 
+      const oldCustomer = await Customers.getCustomer(_id);
+
       if (doc.customFieldsData) {
         // clean custom field values
         doc.customFieldsData = await Fields.prepareCustomFieldsData(doc.customFieldsData);
       }
 
       if (doc.primaryEmail) {
-        const oldCustomer = await Customers.getCustomer(_id);
-
         if (doc.primaryEmail !== oldCustomer.primaryEmail) {
           doc.emailValidationStatus = 'unknown';
 
@@ -279,8 +276,6 @@ export const loadClass = () => {
       }
 
       if (doc.primaryPhone) {
-        const oldCustomer = await Customers.getCustomer(_id);
-
         if (doc.primaryPhone !== oldCustomer.primaryPhone) {
           doc.phoneValidationStatus = 'unknown';
 
@@ -288,10 +283,9 @@ export const loadClass = () => {
         }
       }
 
-      await Customers.updateOne({ _id }, { $set: { ...doc, modifiedAt: new Date() } });
+      const profileScoreDoc = await Customers.updateProfileScore(doc, true);
 
-      // calculateProfileScore
-      await Customers.updateProfileScore(_id, true);
+      await Customers.updateOne({ _id }, { $set: { ...doc, ...profileScoreDoc, modifiedAt: new Date() } });
 
       return Customers.findOne({ _id });
     }
@@ -326,14 +320,10 @@ export const loadClass = () => {
     /**
      * Update customer profile score
      */
-    public static async updateProfileScore(customerId: string, save: boolean) {
-      const customer = await Customers.findOne({ _id: customerId });
-
-      if (!customer) {
-        return 0;
-      }
-
+    public static async updateProfileScore(customer: any, save: boolean) {
       const nullValues = ['', null];
+
+      console.log('customer: ', customer);
 
       let possibleLead = false;
       let score = 0;
@@ -387,18 +377,18 @@ export const loadClass = () => {
         state = 'lead';
       }
 
-      const modifier = { $set: { profileScore: score, searchText, state } };
+      const doc = { profileScore: score, searchText, state };
 
       if (!save) {
         return {
           updateOne: {
-            filter: { _id: customerId },
-            update: modifier,
+            filter: { _id: customer._id },
+            update: { $set: doc },
           },
         };
       }
 
-      await Customers.updateOne({ _id: customerId }, modifier);
+      return doc;
     }
     /**
      * Remove customers
@@ -626,11 +616,7 @@ export const loadClass = () => {
      * Update messenger customer
      */
     public static async updateMessengerCustomer({ _id, doc, customData }: IUpdateMessengerCustomerParams) {
-      const customer = await Customers.findOne({ _id });
-
-      if (!customer) {
-        throw new Error('Customer not found');
-      }
+      const customer = await Customers.getCustomer(_id);
 
       this.fixListFields(doc, customData, customer);
 
@@ -643,7 +629,11 @@ export const loadClass = () => {
 
       await Customers.updateOne({ _id }, { $set: modifier });
 
-      await Customers.updateProfileScore(customer._id, true);
+      const updateCustomer = await Customers.getCustomer(_id);
+
+      const profileScoreDoc = await Customers.updateProfileScore(updateCustomer, true);
+
+      await Customers.updateOne({ _id }, { $set: profileScoreDoc });
 
       return Customers.findOne({ _id });
     }
@@ -725,9 +715,13 @@ export const loadClass = () => {
         await Customers.updateOne({ _id: customerId }, { $set: { 'visitorContactInfo.phone': value } });
       }
 
-      await Customers.updateProfileScore(customerId, true);
+      const customer = await Customers.getCustomer(customerId);
 
-      return Customers.findOne({ _id: customerId });
+      const profileScoreDoc = await Customers.updateProfileScore(customer, true);
+
+      await Customers.updateOne({ _id: customerId }, { $set: profileScoreDoc });
+
+      return Customers.getCustomer(customerId);
     }
   }
 
