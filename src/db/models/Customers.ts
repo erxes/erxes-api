@@ -283,7 +283,7 @@ export const loadClass = () => {
         }
       }
 
-      const profileScoreDoc = await Customers.updateProfileScore(doc, true);
+      const profileScoreDoc = await Customers.updateProfileScore({ ...oldCustomer.toObject(), ...doc }, true);
 
       await Customers.updateOne({ _id }, { $set: { ...doc, ...profileScoreDoc, modifiedAt: new Date() } });
 
@@ -322,8 +322,6 @@ export const loadClass = () => {
      */
     public static async updateProfileScore(customer: any, save: boolean) {
       const nullValues = ['', null];
-
-      console.log('customer: ', customer);
 
       let possibleLead = false;
       let score = 0;
