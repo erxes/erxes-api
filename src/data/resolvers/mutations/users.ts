@@ -60,7 +60,7 @@ const userMutations = {
     { res, requestInfo }: IContext,
   ) {
     if (password !== passwordConfirmation) {
-      throw new Error('Passwords do not match.');
+      throw new Error('Passwords do not match');
     }
 
     const doc: IUser = {
