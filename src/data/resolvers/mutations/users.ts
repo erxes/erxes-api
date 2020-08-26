@@ -73,7 +73,7 @@ const userMutations = {
 
     if (subscribeEmail) {
       await sendRequest({
-        url: 'http://localhost:3500/subscribe',
+        url: 'https://erxes.io/subscribe',
         method: 'POST',
         body: {
           email,

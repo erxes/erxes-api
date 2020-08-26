@@ -88,7 +88,7 @@ app.use(cors(corsOptions));
 
 app.use(helmet({ frameguard: { action: 'sameorigin' } }));
 
-app.get('/check-owner-and-set-frontend-cookies', async (req: any, res) => {
+app.get('/initial-setup', async (req: any, res) => {
   const owner = await Users.findOne({ isOwner: true });
 
   if (!owner) {
