@@ -59,6 +59,12 @@ const userMutations = {
     }: { email: string; password: string; passwordConfirmation: string; subscribeEmail: boolean },
     { res, requestInfo }: IContext,
   ) {
+    const userCount = await Users.countDocuments();
+
+    if (userCount > 0) {
+      throw new Error('Access denied');
+    }
+
     if (password !== passwordConfirmation) {
       throw new Error('Passwords do not match');
     }

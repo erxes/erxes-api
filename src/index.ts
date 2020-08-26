@@ -89,9 +89,9 @@ app.use(cors(corsOptions));
 app.use(helmet({ frameguard: { action: 'sameorigin' } }));
 
 app.get('/initial-setup', async (req: any, res) => {
-  const owner = await Users.findOne({ isOwner: true });
+  const userCount = await Users.countDocuments();
 
-  if (!owner) {
+  if (userCount === 0) {
     return res.send('no owner');
   }
 

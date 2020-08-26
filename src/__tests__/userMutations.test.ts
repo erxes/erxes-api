@@ -79,7 +79,7 @@ describe('User mutations', () => {
     await Channels.deleteMany({});
   });
 
-  test('Create owner (Passwords do not match)', async () => {
+  test('Create owner (Access denied)', async () => {
     process.env.HTTPS = 'false';
 
     const mutation = `
@@ -89,12 +89,45 @@ describe('User mutations', () => {
     `;
 
     try {
-      await graphqlRequest(mutation, 'usersCreateOwner', {
-        email: 'owner1@gmail.com',
-        password: 'pass',
-        passwordConfirmation: '111',
-        subscribeEmail: false,
-      });
+      await graphqlRequest(
+        mutation,
+        'usersCreateOwner',
+        {
+          email: 'owner1@gmail.com',
+          password: 'pass',
+          passwordConfirmation: '111',
+          subscribeEmail: false,
+        },
+        { user: {} },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Access denied');
+    }
+  });
+
+  test('Create owner (Passwords do not match)', async () => {
+    process.env.HTTPS = 'false';
+
+    await Users.deleteMany({});
+
+    const mutation = `
+      mutation usersCreateOwner($email: String! $password: String! $passwordConfirmation: String! $subscribeEmail: Boolean!) {
+        usersCreateOwner(email: $email password: $password passwordConfirmation: $passwordConfirmation, subscribeEmail: $subscribeEmail)
+      }
+    `;
+
+    try {
+      await graphqlRequest(
+        mutation,
+        'usersCreateOwner',
+        {
+          email: 'owner1@gmail.com',
+          password: 'pass',
+          passwordConfirmation: '111',
+          subscribeEmail: false,
+        },
+        { user: {} },
+      );
     } catch (e) {
       expect(e[0].message).toBe('Passwords do not match');
     }
@@ -103,24 +136,33 @@ describe('User mutations', () => {
   test('Create owner', async () => {
     process.env.HTTPS = 'false';
 
+    await Users.deleteMany({});
+
     const mutation = `
       mutation usersCreateOwner($email: String! $password: String! $passwordConfirmation: String! $subscribeEmail: Boolean!) {
         usersCreateOwner(email: $email password: $password passwordConfirmation: $passwordConfirmation, subscribeEmail: $subscribeEmail)
       }
     `;
 
-    const response = await graphqlRequest(mutation, 'usersCreateOwner', {
-      email: 'owner2@gmail.com',
-      password: 'Pass@123',
-      passwordConfirmation: 'Pass@123',
-      subscribeEmail: false,
-    });
+    const response = await graphqlRequest(
+      mutation,
+      'usersCreateOwner',
+      {
+        email: 'owner2@gmail.com',
+        password: 'Pass@123',
+        passwordConfirmation: 'Pass@123',
+        subscribeEmail: false,
+      },
+      { user: {} },
+    );
 
     expect(response).toBe('loggedIn');
   });
 
   test('Create owner (Subscribe email)', async () => {
     process.env.HTTPS = 'false';
+
+    await Users.deleteMany({});
 
     const mutation = `
       mutation usersCreateOwner($email: String! $password: String! $passwordConfirmation: String! $subscribeEmail: Boolean!) {
@@ -132,12 +174,17 @@ describe('User mutations', () => {
       return Promise.resolve('success');
     });
 
-    const response = await graphqlRequest(mutation, 'usersCreateOwner', {
-      email: 'owner3@gmail.com',
-      password: 'Pass@123',
-      passwordConfirmation: 'Pass@123',
-      subscribeEmail: true,
-    });
+    const response = await graphqlRequest(
+      mutation,
+      'usersCreateOwner',
+      {
+        email: 'owner3@gmail.com',
+        password: 'Pass@123',
+        passwordConfirmation: 'Pass@123',
+        subscribeEmail: true,
+      },
+      { user: {} },
+    );
 
     mock.restore();
 
