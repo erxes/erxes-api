@@ -1,6 +1,6 @@
 import { KnowledgeBaseArticles, KnowledgeBaseCategories, KnowledgeBaseTopics } from '../../../db/models';
 
-import { checkPermission, requireLogin } from '../../permissions/wrappers';
+// import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { paginate } from '../../utils';
 
@@ -147,14 +147,14 @@ const knowledgeBaseQueries = {
   },
 };
 
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticlesTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicsTotalCount');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesGetLast');
-requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesTotalCount');
+// requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticleDetail');
+// requireLogin(knowledgeBaseQueries, 'knowledgeBaseArticlesTotalCount');
+// requireLogin(knowledgeBaseQueries, 'knowledgeBaseTopicsTotalCount');
+// requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesGetLast');
+// requireLogin(knowledgeBaseQueries, 'knowledgeBaseCategoriesTotalCount');
 
-checkPermission(knowledgeBaseQueries, 'knowledgeBaseArticles', 'showKnowledgeBase', []);
-checkPermission(knowledgeBaseQueries, 'knowledgeBaseTopics', 'showKnowledgeBase', []);
-checkPermission(knowledgeBaseQueries, 'knowledgeBaseCategories', 'showKnowledgeBase', []);
+// checkPermission(knowledgeBaseQueries, 'knowledgeBaseArticles', 'showKnowledgeBase', []);
+// checkPermission(knowledgeBaseQueries, 'knowledgeBaseTopics', 'showKnowledgeBase', []);
+// checkPermission(knowledgeBaseQueries, 'knowledgeBaseCategories', 'showKnowledgeBase', []);
 
 export default knowledgeBaseQueries;
