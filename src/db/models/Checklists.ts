@@ -30,6 +30,7 @@ export interface IChecklistItemModel extends Model<IChecklistItemDocument> {
 
   updateChecklistItem(_id: string, doc: IChecklistItem): Promise<IChecklistItemDocument>;
   removeChecklistItem(_id: string): void;
+  updateItemOrder(_id: string, destinationOrder: number): Promise<IChecklistItemDocument>;
 }
 
 export const loadClass = () => {
@@ -179,6 +180,19 @@ export const loadItemClass = () => {
       });
 
       return checklistItem.remove();
+    }
+
+    public static async updateItemOrder(_id: string, destinationOrder: number) {
+      const currentItem = await ChecklistItems.findOne({ _id }).lean();
+
+      await ChecklistItems.updateOne(
+        { checklistId: currentItem.checklistId, order: destinationOrder },
+        { $set: { order: currentItem.order } },
+      );
+
+      await ChecklistItems.updateOne({ _id }, { $set: { order: destinationOrder } });
+
+      return ChecklistItems.findOne({ _id }).lean();
     }
   }
 
