@@ -40,4 +40,5 @@ export const mutations = `
   tasksWatch(_id: String, isAdd: Boolean): Task
   tasksCopy(_id: String!, proccessId: String): Task
   tasksArchive(stageId: String!, proccessId: String): String
+  taskUpdateTimeTracking(_id: String!, status: String!, startDate: Date, endDate: Date): Task
 `;

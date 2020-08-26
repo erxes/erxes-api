@@ -1,5 +1,9 @@
 import { Tasks } from '../../../db/models';
-import { IItemCommonFields as ITask, IItemDragCommonFields } from '../../../db/models/definitions/boards';
+import {
+  IItemCommonFields as ITask,
+  IItemDragCommonFields,
+  ITimeTracking,
+} from '../../../db/models/definitions/boards';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { registerOnboardHistory } from '../../utils';
@@ -60,6 +64,12 @@ const taskMutations = {
   async tasksArchive(_root, { stageId, proccessId }: { stageId: string; proccessId: string }, { user }: IContext) {
     return itemsArchive(stageId, 'task', proccessId, user);
   },
+
+  async taskUpdateTimeTracking(_root, { _id, timeTracking }: { _id: string; timeTracking: ITimeTracking }) {
+    const { status, startDate, endDate } = timeTracking;
+
+    return Tasks.updateTimeTracking(_id, status, startDate, endDate);
+  },
 };
 
 checkPermission(taskMutations, 'tasksAdd', 'tasksAdd');
@@ -67,5 +77,6 @@ checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
 checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
 checkPermission(taskMutations, 'tasksArchive', 'tasksArchive');
+checkPermission(taskMutations, 'taskUpdateTimeTracking', 'taskUpdateTimeTracking');
 
 export default taskMutations;

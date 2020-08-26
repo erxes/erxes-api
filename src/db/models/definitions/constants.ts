@@ -365,6 +365,13 @@ export const BOARD_STATUSES = {
   ALL: ['active', 'archived'],
 };
 
+export const TIME_TRACK_TYPES = {
+  STARTED: 'started',
+  STOPPED: 'stopped',
+  PAUSED: 'paused',
+  ALL: ['started', 'stopped', 'paused'],
+};
+
 export const BOARD_TYPES = {
   DEAL: 'deal',
   TICKET: 'ticket',
