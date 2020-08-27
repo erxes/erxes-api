@@ -39,7 +39,7 @@ export interface IItemCommonFields {
   priority?: string;
   sourceConversationId?: string;
   status?: string;
-  timeTrack: {
+  timeTrack?: {
     status: string;
     timeSpent: number;
     startDate?: string;
