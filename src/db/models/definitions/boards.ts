@@ -39,6 +39,11 @@ export interface IItemCommonFields {
   priority?: string;
   sourceConversationId?: string;
   status?: string;
+  timeTrack: {
+    status: string;
+    timeSpent: number;
+    startDate?: string;
+  };
 }
 
 export interface IItemCommonFieldsDocument extends IItemCommonFields, Document {
