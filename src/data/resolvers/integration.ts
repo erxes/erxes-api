@@ -22,9 +22,7 @@ export default {
 
   externalIntegrations(integration: IIntegrationDocument, _args, { dataSources }: IContext) {
     try {
-      const response = dataSources.IntegrationsAPI.fetchApi('/integrations', { kind: integration.kind });
-
-      return response;
+      return dataSources.IntegrationsAPI.fetchApi('/integrations', { kind: integration.kind });
     } catch (e) {
       debugExternalApi(e);
 
