@@ -19,6 +19,12 @@ interface IArchiveParams {
   status: boolean;
 }
 
+interface ISmsParams {
+  integrationId: string;
+  content: string;
+  to: string;
+}
+
 const integrationMutations = {
   /**
    * Creates a new messenger integration
@@ -312,6 +318,10 @@ const integrationMutations = {
 
   async integrationsUpdateConfigs(_root, { configsMap }, { dataSources }: IContext) {
     return dataSources.IntegrationsAPI.updateConfigs(configsMap);
+  },
+
+  async integrationsSendSms(_root, args: ISmsParams, { dataSources }: IContext) {
+    return dataSources.IntegrationsAPI.sendSms(args);
   },
 };
 
