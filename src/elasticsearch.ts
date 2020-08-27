@@ -7,7 +7,7 @@ import { debugBase } from './debuggers';
 // load environment variables
 dotenv.config();
 
-const { NODE_ENV, MONGO_URL, ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
+const { NODE_ENV, MONGO_URL, ELASTICSEARCH_URL } = process.env;
 
 export const client = new elasticsearch.Client({
   hosts: [ELASTICSEARCH_URL],
@@ -18,7 +18,7 @@ export const getMappings = async (index: string) => {
 };
 
 export const getIndexPrefix = () => {
-  if (ELASTICSEARCH_URL === 'http://46.101.135.20:4400') {
+  if (ELASTICSEARCH_URL === 'https://elasticsearch.erxes.io') {
     return `${telemetry.getMachineId().toString()}__`;
   }
 
