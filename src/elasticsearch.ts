@@ -7,7 +7,7 @@ import { debugBase } from './debuggers';
 // load environment variables
 dotenv.config();
 
-const { NODE_ENV, MONGO_URL, ELASTICSEARCH_URL } = process.env;
+const { NODE_ENV, MONGO_URL, ELASTICSEARCH_URL = 'http://localhost:9200' } = process.env;
 
 export const client = new elasticsearch.Client({
   hosts: [ELASTICSEARCH_URL],
