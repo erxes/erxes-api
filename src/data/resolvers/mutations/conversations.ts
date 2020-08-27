@@ -24,7 +24,6 @@ export interface IConversationMessageAdd {
   mentionedUserIds?: string[];
   internal?: boolean;
   attachments?: any;
-  sendSms?: boolean;
 }
 
 interface IReplyFacebookComment {
@@ -262,13 +261,13 @@ const conversationMutations = {
 
     /**
      * Send SMS only when:
-     * - marked to send SMS
+     * - integration is of kind telnyx
      * - customer has primary phone filled
      * - customer's primary phone is valid
      * - content length within 160 characters
      */
     if (
-      doc.sendSms &&
+      kind === KIND_CHOICES.TELNYX &&
       customer &&
       customer.primaryPhone &&
       customer.phoneValidationStatus === 'valid' &&
