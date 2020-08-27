@@ -1,5 +1,7 @@
 import { Brands, Channels, Forms, Tags } from '../../db/models';
 import { IIntegrationDocument } from '../../db/models/definitions/integrations';
+import { debugExternalApi } from '../../debuggers';
+import { IContext } from '../types';
 
 export default {
   brand(integration: IIntegrationDocument) {
@@ -16,5 +18,17 @@ export default {
 
   tags(integration: IIntegrationDocument) {
     return Tags.find({ _id: { $in: integration.tagIds || [] } });
+  },
+
+  externalIntegrations(integration: IIntegrationDocument, _args, { dataSources }: IContext) {
+    try {
+      const response = dataSources.IntegrationsAPI.fetchApi('/integrations', { kind: integration.kind });
+
+      return response;
+    } catch (e) {
+      debugExternalApi(e);
+
+      return null;
+    }
   },
 };

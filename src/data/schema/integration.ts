@@ -17,6 +17,7 @@ export const types = `
     brand: Brand
     form: Form
     channels: [Channel]
+    externalIntegrations: JSON
   }
 
   type integrationsTotalCount {
@@ -178,4 +179,6 @@ export const mutations = `
   ): JSON
 
   integrationsUpdateConfigs(configsMap: JSON!): JSON
+
+  integrationsSendSms(integrationId: String!, content: String!, to: String!): JSON
 `;
