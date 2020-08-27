@@ -1,8 +1,8 @@
 import { Model, model } from 'mongoose';
 import { ActivityLogs } from '.';
 import { destroyBoardItemRelations, fillSearchTextItem, watchItem } from './boardUtils';
-import { IItemCommonFields as ITask, ITimeTracking } from './definitions/boards';
-import { ACTIVITY_CONTENT_TYPES, TIME_TRACK_TYPES } from './definitions/constants';
+import { IItemCommonFields as ITask } from './definitions/boards';
+import { ACTIVITY_CONTENT_TYPES } from './definitions/constants';
 import { ITaskDocument, taskSchema } from './definitions/tasks';
 
 export interface ITaskModel extends Model<ITaskDocument> {
@@ -11,7 +11,7 @@ export interface ITaskModel extends Model<ITaskDocument> {
   updateTask(_id: string, doc: ITask): Promise<ITaskDocument>;
   watchTask(_id: string, isAdd: boolean, userId: string): void;
   removeTasks(_ids: string[]): Promise<{ n: number; ok: number }>;
-  updateTimeTracking(_id: string, status: string, startDate?: Date, endDate?: Date): Promise<ITaskDocument>;
+  updateTimeTracking(_id: string, status: string, timeSpent: number, startDate: string): Promise<ITaskDocument>;
 }
 
 export const loadTaskClass = () => {
@@ -81,20 +81,16 @@ export const loadTaskClass = () => {
       return Tasks.deleteMany({ _id: { $in: _ids } });
     }
 
-    public static async updateTimeTracking(_id: string, status, startDate, endDate) {
-      const doc: ITimeTracking = { status: TIME_TRACK_TYPES[status] };
+    public static async updateTimeTracking(_id: string, status: string, timeSpent: number, startDate?: string) {
+      const doc: { status: string; timeSpent: number; startDate?: string } = { status, timeSpent };
 
       if (startDate) {
         doc.startDate = startDate;
       }
 
-      if (endDate) {
-        doc.endDate = endDate;
-      }
+      await Tasks.updateOne({ _id }, { $set: { timeTrack: doc } });
 
-      await Tasks.updateOne({ _id }, { $et: { timeTracking: doc } });
-
-      return Tasks.findOne({ _id });
+      return Tasks.findOne({ _id }).lean();
     }
   }
 

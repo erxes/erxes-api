@@ -369,7 +369,8 @@ export const TIME_TRACK_TYPES = {
   STARTED: 'started',
   STOPPED: 'stopped',
   PAUSED: 'paused',
-  ALL: ['started', 'stopped', 'paused'],
+  COMPLETED: 'completed',
+  ALL: ['started', 'stopped', 'paused', 'completed'],
 };
 
 export const BOARD_TYPES = {

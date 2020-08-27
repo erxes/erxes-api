@@ -1,9 +1,5 @@
 import { Tasks } from '../../../db/models';
-import {
-  IItemCommonFields as ITask,
-  IItemDragCommonFields,
-  ITimeTracking,
-} from '../../../db/models/definitions/boards';
+import { IItemCommonFields as ITask, IItemDragCommonFields } from '../../../db/models/definitions/boards';
 import { checkPermission } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import { registerOnboardHistory } from '../../utils';
@@ -65,10 +61,11 @@ const taskMutations = {
     return itemsArchive(stageId, 'task', proccessId, user);
   },
 
-  async taskUpdateTimeTracking(_root, { _id, timeTracking }: { _id: string; timeTracking: ITimeTracking }) {
-    const { status, startDate, endDate } = timeTracking;
-
-    return Tasks.updateTimeTracking(_id, status, startDate, endDate);
+  async taskUpdateTimeTracking(
+    _root,
+    { _id, status, timeSpent, startDate }: { _id: string; status: string; timeSpent: number; startDate: string },
+  ) {
+    return Tasks.updateTimeTracking(_id, status, timeSpent, startDate);
   },
 };
 

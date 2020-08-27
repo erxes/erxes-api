@@ -16,12 +16,6 @@ interface ICommonFields {
   type: string;
 }
 
-export interface ITimeTracking {
-  startDate?: Date;
-  endDate?: Date;
-  status: string;
-}
-
 export interface IItemCommonFields {
   name?: string;
   // TODO migrate after remove 2row
@@ -137,8 +131,8 @@ const commonFieldsSchema = {
 
 const timeTrackSchema = new Schema(
   {
-    startDate: field({ type: Date }),
-    endDate: field({ type: Date }),
+    startDate: field({ type: String }),
+    timeSpent: field({ type: Number }),
     status: field({
       type: String,
       enum: TIME_TRACK_TYPES.ALL,
