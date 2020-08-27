@@ -63,6 +63,12 @@ export interface IBrowserInfo {
   country?: string;
 }
 
+interface IPSS {
+  profileScore: string;
+  searchText: string;
+  state: string;
+}
+
 export interface ICustomerModel extends Model<ICustomerDocument> {
   checkDuplication(customerFields: ICustomerFieldsInput, idsToExclude?: string[] | string): never;
   getCustomer(_id: string): Promise<ICustomerDocument>;
@@ -76,7 +82,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   changeState(_id: string, value: string): Promise<ICustomerDocument>;
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
-  updateProfileScore(doc: any, save: boolean): any;
+  calcPSS(doc: any): IPSS;
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
@@ -231,7 +237,7 @@ export const loadClass = () => {
       }
 
       // calculateProfileScore
-      const profileScoreDoc = await Customers.updateProfileScore(doc, true);
+      const profileScoreDoc = await Customers.calcPSS(doc);
 
       const customer = await Customers.create({
         createdAt: new Date(),
@@ -283,7 +289,7 @@ export const loadClass = () => {
         }
       }
 
-      const profileScoreDoc = await Customers.updateProfileScore({ ...oldCustomer.toObject(), ...doc }, true);
+      const profileScoreDoc = await Customers.calcPSS({ ...oldCustomer.toObject(), ...doc });
 
       await Customers.updateOne({ _id }, { $set: { ...doc, ...profileScoreDoc, modifiedAt: new Date() } });
 
@@ -318,9 +324,9 @@ export const loadClass = () => {
     }
 
     /**
-     * Update customer profile score
+     * Calc customer profileScore, searchText and state
      */
-    public static async updateProfileScore(customer: any, save: boolean) {
+    public static async calcPSS(customer: any) {
       const nullValues = ['', null];
 
       let possibleLead = false;
@@ -375,18 +381,7 @@ export const loadClass = () => {
         state = 'lead';
       }
 
-      const doc = { profileScore: score, searchText, state };
-
-      if (!save) {
-        return {
-          updateOne: {
-            filter: { _id: customer._id },
-            update: { $set: doc },
-          },
-        };
-      }
-
-      return doc;
+      return { profileScore: score, searchText, state };
     }
     /**
      * Remove customers
@@ -629,7 +624,7 @@ export const loadClass = () => {
 
       const updateCustomer = await Customers.getCustomer(_id);
 
-      const profileScoreDoc = await Customers.updateProfileScore(updateCustomer, true);
+      const profileScoreDoc = await Customers.calcPSS(updateCustomer);
 
       await Customers.updateOne({ _id }, { $set: profileScoreDoc });
 
@@ -715,7 +710,7 @@ export const loadClass = () => {
 
       const customer = await Customers.getCustomer(customerId);
 
-      const profileScoreDoc = await Customers.updateProfileScore(customer, true);
+      const profileScoreDoc = await Customers.calcPSS(customer);
 
       await Customers.updateOne({ _id: customerId }, { $set: profileScoreDoc });
 

@@ -526,11 +526,7 @@ describe('Customers model tests', () => {
   test('Update profile score', async () => {
     const customer = await customerFactory({});
 
-    let response = await Customers.updateProfileScore({ ...customer }, false);
-
-    expect(response.updateOne).toBeDefined();
-
-    response = await Customers.updateProfileScore({ ...customer }, true);
+    const response = await Customers.calcPSS({ ...customer });
 
     expect(response.profileScore).toBe(0);
   });
