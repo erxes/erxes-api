@@ -32,7 +32,6 @@
     "initProject": "ts-node ./src/commands/initProject.ts",
     "createGooglePubsubTopics": "ts-node ./src/commands/createGooglePubsubTopics.ts",
     "customCommand": "ts-node ./src/commands/customCommand.ts",
-    "addOrdertoChecklist": "ts-node ./src/commands/addOrdertoChecklist.ts",
     "resetMigrations": "ts-node ./src/commands/resetMigrations.ts",
     "verifyCustomerEmails": "DEBUG=erxes-api:* ts-node ./src/commands/verifyCustomerEmails.ts",
     "runEsCommand": "ts-node ./src/commands/runEsCommand.ts",
