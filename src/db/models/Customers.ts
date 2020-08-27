@@ -236,14 +236,13 @@ export const loadClass = () => {
         doc.relatedIntegrationIds = [doc.integrationId];
       }
 
-      // calculateProfileScore
-      const profileScoreDoc = await Customers.calcPSS(doc);
+      const pssDoc = await Customers.calcPSS(doc);
 
       const customer = await Customers.create({
         createdAt: new Date(),
         modifiedAt: new Date(),
         ...doc,
-        ...profileScoreDoc,
+        ...pssDoc,
       });
 
       if (doc.primaryEmail && !doc.emailValidationStatus) {
@@ -289,9 +288,9 @@ export const loadClass = () => {
         }
       }
 
-      const profileScoreDoc = await Customers.calcPSS({ ...oldCustomer.toObject(), ...doc });
+      const pssDoc = await Customers.calcPSS({ ...oldCustomer.toObject(), ...doc });
 
-      await Customers.updateOne({ _id }, { $set: { ...doc, ...profileScoreDoc, modifiedAt: new Date() } });
+      await Customers.updateOne({ _id }, { $set: { ...doc, ...pssDoc, modifiedAt: new Date() } });
 
       return Customers.findOne({ _id });
     }
@@ -624,9 +623,9 @@ export const loadClass = () => {
 
       const updateCustomer = await Customers.getCustomer(_id);
 
-      const profileScoreDoc = await Customers.calcPSS(updateCustomer);
+      const pssDoc = await Customers.calcPSS(updateCustomer);
 
-      await Customers.updateOne({ _id }, { $set: profileScoreDoc });
+      await Customers.updateOne({ _id }, { $set: pssDoc });
 
       return Customers.findOne({ _id });
     }
@@ -710,9 +709,9 @@ export const loadClass = () => {
 
       const customer = await Customers.getCustomer(customerId);
 
-      const profileScoreDoc = await Customers.calcPSS(customer);
+      const pssDoc = await Customers.calcPSS(customer);
 
-      await Customers.updateOne({ _id: customerId }, { $set: profileScoreDoc });
+      await Customers.updateOne({ _id: customerId }, { $set: pssDoc });
 
       return Customers.getCustomer(customerId);
     }
