@@ -399,6 +399,7 @@ describe('Test tasks mutations', () => {
       _id: task._id,
       status: TIME_TRACK_TYPES.STARTED,
       timeSpent: 10,
+      startDate: new Date().toISOString(),
     });
 
     const updatedTask = await Tasks.findOne({ _id: task._id });
