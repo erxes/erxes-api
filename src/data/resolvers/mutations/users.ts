@@ -45,8 +45,6 @@ const login = async (args: ILogin, res: express.Response, secure: boolean) => {
 
   telemetry.trackCli('logged_in');
 
-  await telemetryTrackLogin();
-
   return 'loggedIn';
 };
 
