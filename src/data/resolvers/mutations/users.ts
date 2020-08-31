@@ -3,11 +3,10 @@ import * as express from 'express';
 import { Channels, Users } from '../../../db/models';
 import { ILink } from '../../../db/models/definitions/common';
 import { IDetail, IEmailSignature, IUser } from '../../../db/models/definitions/users';
-import { get, set } from '../../../redisClient';
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { authCookieOptions, getEnv, sendRequest } from '../../utils';
+import utils, { authCookieOptions, getEnv, sendRequest, telemetryTrackLogin } from '../../utils';
 
 interface IUsersEdit extends IUser {
   channelIds?: string[];
@@ -45,6 +44,8 @@ const login = async (args: ILogin, res: express.Response, secure: boolean) => {
   res.cookie('auth-token', token, authCookieOptions(secure));
 
   telemetry.trackCli('logged_in');
+
+  await telemetryTrackLogin();
 
   return 'loggedIn';
 };
@@ -88,24 +89,13 @@ const userMutations = {
       });
     }
 
-    const currentDate = new Date();
-    const machineId = telemetry.getMachineId();
-
-    const previousData = await get(machineId);
-
-    if (previousData) {
-      const old = new Date(previousData);
-
-      if (old.getDay() !== currentDate.getDay()) {
-        set(machineId, currentDate);
-        telemetry.trackCli('last_login', { updatedAt: currentDate });
-      }
-    } else {
-      set(machineId, currentDate);
-      telemetry.trackCli('last_login', { updatedAt: currentDate });
-    }
-
-    return 'loggedIn';
+    return login({ email, password }, res, requestInfo.secure);
+  },
+  /*
+   * Login
+   */
+  async login(_root, args: ILogin, { res, requestInfo }: IContext) {
+    return login(args, res, requestInfo.secure);
   },
 
   async logout(_root, _args, { res }) {

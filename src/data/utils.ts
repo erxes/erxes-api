@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk';
+import * as telemetry from 'erxes-telemetry';
 import * as fileType from 'file-type';
 import * as admin from 'firebase-admin';
 import * as fs from 'fs';
@@ -1012,4 +1013,17 @@ export const s3Stream = async (key: string, errorCallback: (error: any) => void)
   stream.on('error', errorCallback);
 
   return stream;
+};
+
+export const telemetryTrackLogin = async () => {
+  const currentDate = new Date();
+  const machineId = telemetry.getMachineId();
+
+  const lastLoginDate = new Date(await memoryStorage().get(machineId));
+
+  if (lastLoginDate.getDay() !== currentDate.getDay()) {
+    memoryStorage().set(machineId, currentDate);
+
+    telemetry.trackCli('last_login', { updatedAt: currentDate });
+  }
 };
