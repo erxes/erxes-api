@@ -732,4 +732,19 @@ describe('engage message mutation tests', () => {
       expect(e[0].message).toBe(`SMS engage message of kind ${MESSAGE_KINDS.AUTO} is not supported`);
     }
   });
+
+  test('Test sms engage message with integration chosen', async () => {
+    const integration = await integrationFactory({ kind: 'telnyx' });
+
+    await graphqlRequest(engageMessageAddMutation, 'engageMessageAdd', {
+      ..._doc,
+      fromUserId: '',
+      kind: MESSAGE_KINDS.MANUAL,
+      method: METHODS.SMS,
+      smsContent: {
+        content: 'sms test',
+        fromIntegrationId: integration._id,
+      },
+    });
+  });
 });
