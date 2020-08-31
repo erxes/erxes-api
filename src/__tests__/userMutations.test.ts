@@ -6,7 +6,7 @@ import utils, * as allUtils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Brands, Channels, Users } from '../db/models';
-import * as redisUtils from '../redisClient';
+
 import './setup.ts';
 
 /*
@@ -202,10 +202,6 @@ describe('User mutations', () => {
       }
     `;
 
-    const redisMock = sinon.stub(redisUtils, 'get').callsFake(() => {
-      return Promise.resolve('2020-01-01');
-    });
-
     const response = await graphqlRequest(mutation, 'login', {
       email: _user.email,
       password: 'pass',
@@ -221,40 +217,6 @@ describe('User mutations', () => {
     expect(updatedUser.deviceTokens.length).toBe(1);
     expect(updatedUser.deviceTokens).toContain('111');
     expect(response).toBe('loggedIn');
-
-    redisMock.restore();
-  });
-
-  test('Login from fresh new install', async () => {
-    process.env.HTTPS = 'false';
-
-    const mutation = `
-      mutation login($email: String! $password: String! $deviceToken: String) {
-        login(email: $email password: $password deviceToken: $deviceToken)
-      }
-    `;
-
-    const redisMock = sinon.stub(redisUtils, 'get').callsFake(() => {
-      return Promise.resolve(null);
-    });
-
-    const response = await graphqlRequest(mutation, 'login', {
-      email: _user.email,
-      password: 'pass',
-      deviceToken: '111',
-    });
-
-    const updatedUser = await Users.findOne({ email: _user.email });
-
-    if (!updatedUser || !updatedUser.deviceTokens) {
-      throw new Error('Updated user not found');
-    }
-
-    expect(updatedUser.deviceTokens.length).toBe(1);
-    expect(updatedUser.deviceTokens).toContain('111');
-    expect(response).toBe('loggedIn');
-
-    redisMock.restore();
   });
 
   test('Forgot password', async () => {
