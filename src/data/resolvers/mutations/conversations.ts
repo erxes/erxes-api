@@ -273,7 +273,7 @@ const conversationMutations = {
       customer.phoneValidationStatus === 'valid' &&
       doc.content.length <= 160
     ) {
-      await messageBroker().sendMessage('erxes-api:conversation-sms', {
+      await messageBroker().sendMessage('erxes-api:integrations-notification', {
         action: 'sendConversationSms',
         payload: JSON.stringify({
           conversationMessageId: message._id,
