@@ -36,6 +36,7 @@ export const types = `
     brands: [Brand]
     fromUser: User
     getTags: [Tag]
+    fromIntegration: Integration
 
     stats: JSON
     logs: JSON
