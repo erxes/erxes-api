@@ -1,18 +1,27 @@
 import * as Telnyx from 'telnyx';
 import { SMS_DELIVERY_STATUSES } from './constants';
+import { sendRPCMessage } from './messageBroker';
 import SmsRequests from './models/SmsRequests';
-import { getConfigs } from './utils';
 
-export const getTelnyxInstance = async () => {
-  const configs = await getConfigs();
+// fetches telnyx config & integrations from erxes-integrations
+export const getTelnyxInfo = async () => {
+  const response = await sendRPCMessage({ action: 'getTelnyxInfo' });
 
-  const { telnyxApiKey, telnyxPhone } = configs;
+  const { telnyxApiKey, integrations = [] } = response;
 
-  if (!(telnyxApiKey && telnyxPhone)) {
-    throw new Error('Telnyx API key & phone numbers are missing');
+  if (!telnyxApiKey) {
+    throw new Error('Telnyx API key is not configured');
   }
 
-  return new Telnyx(telnyxApiKey);
+  if (integrations.length < 1) {
+    throw new Error('No telnyx integrations configured');
+  }
+
+  return {
+    telnyxApiKey,
+    instance: new Telnyx(telnyxApiKey),
+    integrations,
+  };
 };
 
 export const saveTelnyxHookData = async (data: any) => {

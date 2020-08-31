@@ -35,6 +35,10 @@ export const initBroker = async server => {
   });
 };
 
+export const sendRPCMessage = async (message): Promise<any> => {
+  return client.sendRPCMessage('rpc_queue:api_to_integrations', message);
+};
+
 export default function() {
   return client;
 }

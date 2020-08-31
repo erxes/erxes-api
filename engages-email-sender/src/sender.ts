@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as Random from 'meteor-random';
 import { debugEngages } from './debuggers';
 import { Logs, SmsRequests, Stats } from './models';
-import { getTelnyxInstance } from './telnyxUtils';
+import { getTelnyxInfo } from './telnyxUtils';
 import { createTransporter, getConfigs, getEnv, replaceKeys } from './utils';
 
 dotenv.config();
@@ -10,11 +10,21 @@ dotenv.config();
 interface IShortMessage {
   content: string;
   from?: string;
+  fromIntegrationId: string;
+}
+
+interface IIntegration {
+  _id: string;
+  kind: string;
+  erxesApiId: string;
+  telnyxProfileId?: string;
+  telnyxPhoneNumber: string;
 }
 
 interface IMessageParams {
   shortMessage: IShortMessage;
   to: string;
+  integrations: IIntegration[];
 }
 
 interface ITelnyxMessageParams {
@@ -37,35 +47,36 @@ const isNumberNorthAmerican = (phoneNumber: string) => {
 };
 
 // prepares sms object matching telnyx requirements
-const prepareMessage = async ({ shortMessage, to }: IMessageParams): Promise<ITelnyxMessageParams> => {
+const prepareMessage = async ({ shortMessage, to, integrations }: IMessageParams): Promise<ITelnyxMessageParams> => {
   const MAIN_API_DOMAIN = getEnv({ name: 'MAIN_API_DOMAIN' });
-  const configs = await getConfigs();
-  const { telnyxPhone, telnyxProfileId } = configs;
+  const { content, from, fromIntegrationId } = shortMessage;
 
-  if (!telnyxPhone) {
+  const integration = integrations.find(i => i.erxesApiId === fromIntegrationId);
+
+  if (!integration.telnyxPhoneNumber) {
     throw new Error('Telnyx phone is not configured');
   }
 
   const msg = {
-    from: telnyxPhone,
+    from: integration.telnyxPhoneNumber,
     to,
-    text: shortMessage.content,
+    text: content,
     messaging_profile_id: '',
     webhook_url: `${MAIN_API_DOMAIN}/telnyx/webhook`,
     webhook_failover_url: `${MAIN_API_DOMAIN}/telnyx/webhook-failover`,
   };
 
   // telnyx sets from text properly when making international sms
-  if (telnyxProfileId) {
-    msg.messaging_profile_id = telnyxProfileId;
+  if (integration.telnyxProfileId) {
+    msg.messaging_profile_id = integration.telnyxProfileId;
   }
 
-  if (shortMessage.from) {
-    msg.from = shortMessage.from;
+  if (from) {
+    msg.from = from;
   }
 
   if (isNumberNorthAmerican(msg.to)) {
-    msg.from = telnyxPhone;
+    msg.from = integration.telnyxPhoneNumber;
   }
 
   return msg;
@@ -209,7 +220,7 @@ export const start = async (data: any) => {
 export const sendBulkSms = async (data: any) => {
   const { customers, engageMessageId, shortMessage } = data;
 
-  const telnyx = await getTelnyxInstance();
+  const telnyxInfo = await getTelnyxInfo();
 
   const filteredCustomers = customers.filter(c => c.phone && c.phoneValidationStatus === 'valid');
 
@@ -220,10 +231,10 @@ export const sendBulkSms = async (data: any) => {
       setTimeout(resolve, 1000);
     });
 
-    const msg = await prepareMessage({ shortMessage, to: customer.phone });
+    const msg = await prepareMessage({ shortMessage, to: customer.phone, integrations: telnyxInfo.integrations });
 
     try {
-      await telnyx.messages.create(msg, async (err: any, res: any) => {
+      await telnyxInfo.instance.messages.create(msg, async (err: any, res: any) => {
         await handleMessageCallback(err, res, { engageMessageId, msg });
       }); // end sms creation
     } catch (e) {
