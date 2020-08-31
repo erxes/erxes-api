@@ -6,7 +6,7 @@ import { IDetail, IEmailSignature, IUser } from '../../../db/models/definitions/
 import { resetPermissionsCache } from '../../permissions/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { authCookieOptions, getEnv, sendRequest, telemetryTrackLogin } from '../../utils';
+import utils, { authCookieOptions, getEnv, sendRequest } from '../../utils';
 
 interface IUsersEdit extends IUser {
   channelIds?: string[];
