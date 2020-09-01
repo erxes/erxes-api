@@ -17,7 +17,6 @@ export const types = `
     brand: Brand
     form: Form
     channels: [Channel]
-    externalIntegrations: JSON
   }
 
   type integrationsTotalCount {

@@ -176,7 +176,6 @@ describe('integrationQueries', () => {
           leadData
           messengerData
           uiOptions
-          externalIntegrations
 
           brand { _id }
           form { _id }
@@ -195,7 +194,6 @@ describe('integrationQueries', () => {
 
     expect(response._id).toBe(integration._id);
     expect(response.tags.length).toBe(1);
-    expect(response.externalIntegrations).toBeDefined();
   });
 
   test('Get total count of integrations by kind', async () => {
