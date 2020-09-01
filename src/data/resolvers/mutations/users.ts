@@ -54,10 +54,10 @@ const userMutations = {
     {
       email,
       password,
-      passwordConfirmation,
+      firstName,
+      lastName,
       subscribeEmail,
-    }: { email: string; password: string; passwordConfirmation: string; subscribeEmail: boolean },
-    { res, requestInfo }: IContext,
+    }: { email: string; password: string; firstName: string; lastName?: string; subscribeEmail?: boolean },
   ) {
     const userCount = await Users.countDocuments();
 
@@ -65,14 +65,13 @@ const userMutations = {
       throw new Error('Access denied');
     }
 
-    if (password !== passwordConfirmation) {
-      throw new Error('Passwords do not match');
-    }
-
     const doc: IUser = {
       isOwner: true,
       email,
       password,
+      details: {
+        fullName: `${firstName} ${lastName || ''}`,
+      },
     };
 
     await Users.createUser(doc);
@@ -83,11 +82,13 @@ const userMutations = {
         method: 'POST',
         body: {
           email,
+          firstName,
+          lastName,
         },
       });
     }
 
-    return login({ email, password }, res, requestInfo.secure);
+    return 'success';
   },
   /*
    * Login
@@ -112,7 +113,7 @@ const userMutations = {
 
     const link = `${MAIN_APP_DOMAIN}/reset-password?token=${token}`;
 
-    utils.sendEmail({
+    await utils.sendEmail({
       toEmails: [email],
       title: 'Reset password',
       template: {
