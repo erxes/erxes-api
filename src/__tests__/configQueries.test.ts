@@ -36,30 +36,29 @@ describe('configQueries', () => {
     expect(response.USE_BRAND_RESTRICTIONS).toBe('true');
   });
 
-  test('configsVersions', async () => {
-    process.env.NODE_ENV = 'dev';
+  test('configsStatus', async () => {
+    process.env.MAIN_APP_DOMAIN = 'dev';
 
     const qry = `
-      query configsVersions {
-        configsVersions {
-          erxesVersion {
+      query configsStatus {
+        configsStatus {
+          erxes {
             packageVersion
           }
-          apiVersion {
+          erxesApi {
             packageVersion
           }
-          widgetVersion {
+          erxesIntegration {
             packageVersion
           }
         }
       }
     `;
 
-    const config = await graphqlRequest(qry, 'configsVersions');
+    const config = await graphqlRequest(qry, 'configsStatus');
 
-    expect(config.erxesVersion.packageVersion).toBe(null);
-    expect(config.apiVersion.packageVersion).toBe(null);
-    expect(config.widgetVersion.packageVersion).toBe(null);
+    expect(config.erxes.packageVersion).toBe('-');
+    expect(config.erxesIntegration.packageVersion).toBeDefined();
   });
 
   test('configsConstants', async () => {
