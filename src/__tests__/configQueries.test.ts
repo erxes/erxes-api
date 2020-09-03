@@ -1,5 +1,7 @@
 import { graphqlRequest } from '../db/connection';
 
+import * as sinon from 'sinon';
+import * as utils from '../data/utils';
 import { configFactory } from '../db/factories';
 import './setup.ts';
 
@@ -55,10 +57,21 @@ describe('configQueries', () => {
       }
     `;
 
-    const config = await graphqlRequest(qry, 'configsStatus');
+    let config = await graphqlRequest(qry, 'configsStatus');
 
     expect(config.erxes.packageVersion).toBe('-');
     expect(config.erxesIntegration.packageVersion).toBeDefined();
+
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve({ packageVersion: '-' });
+    });
+
+    config = await graphqlRequest(qry, 'configsStatus');
+
+    expect(config.erxes.packageVersion).toBe('-');
+    expect(config.erxesIntegration.packageVersion).toBe('-');
+
+    mock.restore();
   });
 
   test('configsConstants', async () => {
