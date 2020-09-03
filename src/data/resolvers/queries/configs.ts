@@ -67,7 +67,9 @@ const configQueries = {
 
       status.erxesIntegration = erxesIntegration;
     } catch (e) {
-      status.erxesIntegration = {};
+      status.erxesIntegration = {
+        packageVersion: '-',
+      };
     }
 
     return status;
