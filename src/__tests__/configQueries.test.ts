@@ -39,8 +39,6 @@ describe('configQueries', () => {
   });
 
   test('configsStatus', async () => {
-    process.env.MAIN_APP_DOMAIN = 'dev';
-
     const qry = `
       query configsStatus {
         configsStatus {
