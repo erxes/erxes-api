@@ -118,6 +118,7 @@
     "kerberos": "^1.0.0"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^2.0.0",
     "husky": "^0.13.4",
     "jest": "^24.9",
     "jest-tobetype": "^1.1.0",
