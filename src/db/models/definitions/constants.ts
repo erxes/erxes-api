@@ -80,6 +80,7 @@ export const KIND_CHOICES = {
   SMOOCH_TELEGRAM: 'smooch-telegram',
   SMOOCH_TWILIO: 'smooch-twilio',
   WHATSAPP: 'whatsapp',
+  TELNYX: 'telnyx',
   ALL: [
     'messenger',
     'lead',
@@ -100,6 +101,7 @@ export const KIND_CHOICES = {
     'smooch-telegram',
     'smooch-twilio',
     'whatsapp',
+    'telnyx',
   ],
 };
 
@@ -363,6 +365,14 @@ export const BOARD_STATUSES = {
   ACTIVE: 'active',
   ARCHIVED: 'archived',
   ALL: ['active', 'archived'],
+};
+
+export const TIME_TRACK_TYPES = {
+  STARTED: 'started',
+  STOPPED: 'stopped',
+  PAUSED: 'paused',
+  COMPLETED: 'completed',
+  ALL: ['started', 'stopped', 'paused', 'completed'],
 };
 
 export const BOARD_TYPES = {

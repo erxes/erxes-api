@@ -1,7 +1,8 @@
 import * as bcrypt from 'bcryptjs';
 import * as faker from 'faker';
 import * as moment from 'moment';
-import utils from '../data/utils';
+import * as sinon from 'sinon';
+import utils, * as allUtils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { brandFactory, channelFactory, userFactory, usersGroupFactory } from '../db/factories';
 import { Brands, Channels, Users } from '../db/models';
@@ -61,6 +62,12 @@ describe('User mutations', () => {
     channelIds: $channelIds
   `;
 
+  const usersCreateOwnerMutation = `
+    mutation usersCreateOwner($email: String! $password: String! $firstName: String! $subscribeEmail: Boolean!) {
+      usersCreateOwner(email: $email password: $password firstName: $firstName subscribeEmail: $subscribeEmail)
+    }
+  `;
+
   beforeEach(async () => {
     // Creating test data
     _user = await userFactory({});
@@ -76,6 +83,74 @@ describe('User mutations', () => {
     await Users.deleteMany({});
     await Brands.deleteMany({});
     await Channels.deleteMany({});
+  });
+
+  test('Create owner (Access denied)', async () => {
+    process.env.HTTPS = 'false';
+
+    try {
+      await graphqlRequest(
+        usersCreateOwnerMutation,
+        'usersCreateOwner',
+        {
+          email: 'owner1@gmail.com',
+          password: 'pass',
+          firstName: 'Firstname',
+          subscribeEmail: false,
+        },
+        { user: {} },
+      );
+    } catch (e) {
+      expect(e[0].message).toBe('Access denied');
+    }
+  });
+
+  test('Create owner', async () => {
+    process.env.HTTPS = 'false';
+
+    await Users.deleteMany({});
+
+    const response = await graphqlRequest(
+      usersCreateOwnerMutation,
+      'usersCreateOwner',
+      {
+        email: 'owner2@gmail.com',
+        password: 'Pass@123',
+        firstName: 'Firstname',
+        subscribeEmail: false,
+      },
+      { user: {} },
+    );
+
+    expect(response).toBe('success');
+  });
+
+  test('Create owner (Subscribe email)', async () => {
+    process.env.HTTPS = 'false';
+    process.env.NODE_ENV = 'production';
+
+    await Users.deleteMany({});
+
+    const mock = sinon.stub(allUtils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
+    const response = await graphqlRequest(
+      usersCreateOwnerMutation,
+      'usersCreateOwner',
+      {
+        email: 'owner3@gmail.com',
+        password: 'Pass@123',
+        firstName: 'Firstname',
+        subscribeEmail: true,
+      },
+      { user: {} },
+    );
+
+    mock.restore();
+    process.env.NODE_ENV = 'test';
+
+    expect(response).toBe('success');
   });
 
   test('Login', async () => {
