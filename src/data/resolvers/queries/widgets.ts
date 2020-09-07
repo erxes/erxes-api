@@ -6,6 +6,9 @@ import {
   KnowledgeBaseCategories as KnowledgeBaseCategoriesModel,
   KnowledgeBaseTopics,
   KnowledgeBaseTopics as KnowledgeBaseTopicsModel,
+  PipelineLabels,
+  Pipelines,
+  Tickets,
   Users,
 } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
@@ -176,5 +179,29 @@ export default {
     }
 
     return topic;
+  },
+
+  widgetsTickets(_root, args: { labelId: string; searchString: string }) {
+    const { labelId, searchString = '' } = args;
+    if (labelId) {
+      return Tickets.find({ labelIds: labelId });
+    }
+
+    if (searchString) {
+      return Tickets.find({
+        name: { $regex: `.*${searchString.trim()}.*`, $options: 'i' },
+      });
+    }
+    return Tickets.find({});
+  },
+
+  widgetsTicketDetails(_root, { _id }: { _id: string }) {
+    return Tickets.findOne({ _id });
+  },
+
+  async widgetsPipelineLabels(_root) {
+    const pipelineIds = await Pipelines.find({ type: 'ticket' }).distinct('_id');
+
+    return PipelineLabels.find({ pipelineId: pipelineIds });
   },
 };

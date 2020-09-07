@@ -58,6 +58,9 @@ export const queries = `
   widgetsMessengerSupporters(integrationId: String!): MessengerSupportersResponse
   widgetsKnowledgeBaseArticles(topicId: String!, searchString: String) : [KnowledgeBaseArticle]
   widgetsKnowledgeBaseTopicDetail(_id: String!): KnowledgeBaseTopic
+  widgetsTickets(labelId: String, searchString: String): [Ticket]
+  widgetsPipelineLabels: [PipelineLabel]
+  widgetsTicketDetails(_id: String): Ticket
 `;
 
 export const mutations = `
