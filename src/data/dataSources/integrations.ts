@@ -23,6 +23,7 @@ export default class IntegrationsAPI extends RESTDataSource {
     const error = e.extensions || {};
     const { response } = error;
     const { body } = response || { body: e.message };
+    console.log('Integrations error');
 
     if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
       throw new Error('Integrations api is not running');

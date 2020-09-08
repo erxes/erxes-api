@@ -31,6 +31,7 @@ import initWatchers from './db/watchers';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
 import { initMemoryStorage } from './inmemoryStorage';
+import { logger } from './logger';
 import { initBroker } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
@@ -374,6 +375,8 @@ httpServer.listen(PORT, () => {
 
 // GRACEFULL SHUTDOWN
 process.stdin.resume(); // so the program will not close instantly
+
+logger();
 
 // If the Node process ends, close the Mongoose connection
 if (NODE_ENV === 'production') {
