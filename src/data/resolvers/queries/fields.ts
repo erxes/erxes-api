@@ -77,7 +77,7 @@ const fieldQueries = {
    */
   async fieldsCombinedByContentType(
     _root,
-    { contentType, excludedNames }: { contentType: string; excludedNames?: string[] },
+    { contentType, usageType, excludedNames }: { contentType: string; usageType: string; excludedNames?: string[] },
   ) {
     let schema: any;
     let extendFields: Array<{ name: string; label?: string }> = [];
@@ -128,6 +128,10 @@ const fieldQueries = {
       }
     }
 
+    if (contentType === 'customer' && usageType) {
+      extendFields = EXTEND_FIELDS.CUSTOMER;
+    }
+
     for (const extendFeild of extendFields) {
       fields.push({
         _id: Math.random(),
@@ -135,7 +139,7 @@ const fieldQueries = {
       });
     }
 
-    if (contentType === 'company' || contentType === 'customer') {
+    if ((contentType === 'company' || contentType === 'customer') && !usageType) {
       const aggre = await fetchElk(
         'search',
         contentType === 'company' ? 'companies' : 'customers',
