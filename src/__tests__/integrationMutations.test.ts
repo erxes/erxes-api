@@ -1,7 +1,7 @@
 import './setup.ts';
 
 import * as faker from 'faker';
-import * as messageBroker from '../messageBroker';
+import messageBroker from '../messageBroker';
 
 import {
   brandFactory,
@@ -395,7 +395,7 @@ describe('mutations', () => {
 
     const integration1 = await integrationFactory();
 
-    const spy = jest.spyOn(messageBroker, 'sendRPCMessage');
+    const spy = jest.spyOn(messageBroker(), 'sendRPCMessage');
     spy.mockImplementation(() => Promise.resolve({ erxesApiIds: [integration1._id] }));
 
     const response = await graphqlRequest(mutation, 'integrationsRemoveAccount', { _id: 'accountId' });
@@ -410,7 +410,7 @@ describe('mutations', () => {
 
     spy.mockRestore();
 
-    const spy1 = jest.spyOn(messageBroker, 'sendRPCMessage');
+    const spy1 = jest.spyOn(messageBroker(), 'sendRPCMessage');
 
     spy1.mockImplementation(() => Promise.resolve({ erxesApiIds: [] }));
 
@@ -512,6 +512,22 @@ describe('mutations', () => {
     removeSpy.mockRestore();
   });
 
+  test('test integrationsRemove() to catch error', async () => {
+    const mutation = `
+      mutation integrationsRemove($_id: String!) {
+        integrationsRemove(_id: $_id)
+      }
+    `;
+
+    const fbPostIntegration = await integrationFactory({ kind: 'facebook-post' });
+
+    try {
+      await graphqlRequest(mutation, 'integrationsRemove', { _id: fbPostIntegration._id });
+    } catch (e) {
+      expect(e[0].message).toBeDefined();
+    }
+  });
+
   test('Integrations archive', async () => {
     const mutation = `
       mutation integrationsArchive($_id: String!, $status: Boolean!) {
@@ -560,5 +576,37 @@ describe('mutations', () => {
     expect(response._id).toBe(doc._id);
     expect(response.name).toBe(doc.name);
     expect(response.brandId).toBe(doc.brandId);
+  });
+
+  test('test integrationsSendSms()', async () => {
+    const mutation = `
+      mutation integrationsSendSms(
+        $integrationId: String!
+        $content: String!
+        $to: String!
+      ) {
+        integrationsSendSms(
+          integrationId: $integrationId
+          content: $content
+          to: $to
+        )
+      }
+    `;
+
+    const args = {
+      integrationId: 'integrationId',
+      content: 'Hello',
+      to: '+976123456789',
+    };
+
+    const spy = jest.spyOn(dataSources.IntegrationsAPI, 'sendSms');
+
+    spy.mockImplementation(() => Promise.resolve({ status: 'ok' }));
+
+    const response = await graphqlRequest(mutation, 'integrationsSendSms', args, { dataSources });
+
+    expect(response.status).toBe('ok');
+
+    spy.mockRestore();
   });
 });

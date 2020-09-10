@@ -14,8 +14,6 @@ import {
   Tickets,
   Users,
 } from '../db/models';
-import { initRabbitMQ } from '../messageBroker';
-import { graphqlPubsub } from '../pubsub';
 import { clearEmptyValues, connect, updateDuplicatedValue } from './utils';
 
 // tslint:disable-next-line
@@ -35,11 +33,8 @@ connect().then(async () => {
     return;
   }
 
-  await initRabbitMQ();
-
   const { user, scopeBrandIds, result, contentType, properties, importHistoryId, percentagePerData } = workerData;
 
-  let percentage = '0';
   let create: any = null;
   let model: any = null;
 
@@ -236,8 +231,19 @@ connect().then(async () => {
     await create(doc, user)
       .then(async cocObj => {
         if (doc.companiesPrimaryNames && doc.companiesPrimaryNames.length > 0 && contentType !== 'company') {
-          const companies = await Companies.find({ primaryName: { $in: doc.companiesPrimaryNames } }, { _id: 1 });
-          const companyIds = companies.map(company => company._id);
+          const companyIds: string[] = [];
+
+          for (const primaryName of doc.companiesPrimaryNames) {
+            let company = await Companies.findOne({ primaryName }).lean();
+
+            if (company) {
+              companyIds.push(company._id);
+            } else {
+              company = await Companies.createCompany({ primaryName });
+
+              companyIds.push(company._id);
+            }
+          }
 
           for (const _id of companyIds) {
             await Conformities.addConformity({
@@ -309,20 +315,6 @@ connect().then(async () => {
 
     if (!importHistory) {
       throw new Error('Could not find import history');
-    }
-
-    const fixedPercentage = (importHistory.percentage || 0).toFixed(0);
-
-    if (fixedPercentage !== percentage) {
-      percentage = fixedPercentage;
-
-      graphqlPubsub.publish('importHistoryChanged', {
-        importHistoryChanged: {
-          _id: importHistory._id,
-          status: importHistory.status,
-          percentage,
-        },
-      });
     }
   }
 

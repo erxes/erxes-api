@@ -23,10 +23,10 @@ const taskMutations = {
   async tasksEdit(_root, { _id, proccessId, ...doc }: ITasksEdit & { proccessId: string }, { user }: IContext) {
     const oldTask = await Tasks.getTask(_id);
 
-    const updatedTask = await itemsEdit(_id, 'task', oldTask, doc, proccessId, user, Tasks.updateTask)
+    const updatedTask = await itemsEdit(_id, 'task', oldTask, doc, proccessId, user, Tasks.updateTask);
 
     if (updatedTask.assignedUserIds) {
-      await registerOnboardHistory({type: 'taskAssignUser', user});
+      await registerOnboardHistory({ type: 'taskAssignUser', user });
     }
 
     return updatedTask;
@@ -57,8 +57,15 @@ const taskMutations = {
     return itemsCopy(_id, proccessId, 'task', user, [], Tasks.createTask);
   },
 
-  async tasksArchive(_root, { stageId, proccessId }: { stageId: string, proccessId: string }, { user }: IContext) {
+  async tasksArchive(_root, { stageId, proccessId }: { stageId: string; proccessId: string }, { user }: IContext) {
     return itemsArchive(stageId, 'task', proccessId, user);
+  },
+
+  async taskUpdateTimeTracking(
+    _root,
+    { _id, status, timeSpent, startDate }: { _id: string; status: string; timeSpent: number; startDate: string },
+  ) {
+    return Tasks.updateTimeTracking(_id, status, timeSpent, startDate);
   },
 };
 
@@ -67,5 +74,6 @@ checkPermission(taskMutations, 'tasksEdit', 'tasksEdit');
 checkPermission(taskMutations, 'tasksRemove', 'tasksRemove');
 checkPermission(taskMutations, 'tasksWatch', 'tasksWatch');
 checkPermission(taskMutations, 'tasksArchive', 'tasksArchive');
+checkPermission(taskMutations, 'taskUpdateTimeTracking', 'taskUpdateTimeTracking');
 
 export default taskMutations;

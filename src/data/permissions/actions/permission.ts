@@ -99,7 +99,15 @@ export const moduleObjects = {
       {
         name: 'customersAll',
         description: 'All',
-        use: ['showCustomers', 'customersAdd', 'customersEdit', 'customersMerge', 'customersRemove', 'exportCustomers'],
+        use: [
+          'showCustomers',
+          'customersAdd',
+          'customersEdit',
+          'customersMerge',
+          'customersRemove',
+          'exportCustomers',
+          'customersChangeState',
+        ],
       },
       {
         name: 'exportCustomers',
@@ -124,6 +132,10 @@ export const moduleObjects = {
       {
         name: 'customersRemove',
         description: 'Remove customers',
+      },
+      {
+        name: 'customersChangeState',
+        description: 'Change customer state',
       },
     ],
   },
@@ -529,6 +541,7 @@ export const moduleObjects = {
           'tasksRemove',
           'tasksWatch',
           'tasksArchive',
+          'taskUpdateTimeTracking',
           'exportTasks',
         ],
       },
@@ -599,6 +612,10 @@ export const moduleObjects = {
       {
         name: 'tasksArchive',
         description: 'Archive all tasks in a specific stage',
+      },
+      {
+        name: 'taskUpdateTimeTracking',
+        description: 'Update time tracking for a task',
       },
       {
         name: 'exportTasks',
