@@ -16,12 +16,19 @@ const dashBoardQueries = {
     return Dashboards.find({}).countDocuments();
   },
 
-  dashboardItems(_root, { dashboardId }: { dashboardId: string }) {
+  async dashboardItems(_root, { dashboardId }: { dashboardId: string }) {
+    const xxa = await DashboardItems.find({});
+
+    console.log(xxa);
     return DashboardItems.find({ dashboardId });
   },
 
   dashboardItemDetail(_root, { _id }: { _id: string }) {
     return DashboardItems.findOne({ _id });
+  },
+
+  async dashboardInitialDatas(_root, { type }: { type: string }, { dataSources }: IContext) {
+    return dataSources.HelpersApi.fetchApi('/get-dashboards', { type });
   },
 };
 

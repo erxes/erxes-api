@@ -20,6 +20,7 @@ export const queries = `
   dashboardsTotalCount: Int
   dashboardItems(dashboardId: String!): [DashboardItem]
   dashboardItemDetail(_id: String!): DashboardItem
+  dashboardInitialDatas(type: String): [DashboardItem]
 `;
 
 export const mutations = `
