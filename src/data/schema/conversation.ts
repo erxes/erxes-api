@@ -86,6 +86,7 @@ export const types = `
     erxesApiId: String
     attachments: [String]
     timestamp: Date
+    permalink_url: String
   }
 
   type FacebookComment {
@@ -95,6 +96,7 @@ export const types = `
     parentId: String
     recipientId:String
     senderId: String
+    permalink_url: String
     attachments: [String]
     content: String
     erxesApiId: String
@@ -111,6 +113,8 @@ export const types = `
   type MailData {
     messageId: String,
     threadId: String,
+    replyTo: [String],
+    inReplyTo: String,
     subject: String,
     body: String,
     integrationEmail: String,
@@ -120,9 +124,7 @@ export const types = `
     bcc: [Email],
     accountId: String,
     replyToMessageId: [String],
-    replyTo: [String],
-    reply: [String],
-    references: String,
+    references: [String],
     headerId: String,
     attachments: [MailAttachment]
   }
