@@ -169,8 +169,8 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
   // filter by search value
   public searchFilter(value: string): void {
     this.positiveList.push({
-      match_phrase: {
-        searchText: value,
+      wildcard: {
+        searchText: `*${value.toLowerCase()}*`,
       },
     });
   }
@@ -276,14 +276,23 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
   /*
    * Run queries
    */
-  public async runQueries(action = 'search'): Promise<any> {
+  public async runQueries(action = 'search', isExport?: boolean): Promise<any> {
     const { page = 0, perPage = 0 } = this.params;
     const paramKeys = Object.keys(this.params).join(',');
 
     const _page = Number(page || 1);
-    const _limit = Number(perPage || 20);
+    let _limit = Number(perPage || 20);
 
-    if (page === 1 && perPage === 20 && (paramKeys === 'page,perPage' || paramKeys === 'page,perPage,type')) {
+    if (isExport) {
+      _limit = 10000;
+    }
+
+    if (
+      !isExport &&
+      page === 1 &&
+      perPage === 20 &&
+      (paramKeys === 'page,perPage' || paramKeys === 'page,perPage,type')
+    ) {
       return this.findAllMongo(_limit);
     }
 
