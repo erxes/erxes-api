@@ -17,9 +17,6 @@ const dashBoardQueries = {
   },
 
   async dashboardItems(_root, { dashboardId }: { dashboardId: string }) {
-    const xxa = await DashboardItems.find({});
-
-    console.log(xxa);
     return DashboardItems.find({ dashboardId });
   },
 
