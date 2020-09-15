@@ -10,7 +10,7 @@ interface ICountArgs extends IListArgs {
   only?: string;
 }
 
-const generateFilter = async (params, commonQuerySelector) {
+const generateFilter = async (params, commonQuerySelector) => {
   const filter: any = commonQuerySelector;
 
   if (params.categoryId) {
@@ -41,7 +41,7 @@ const generateFilter = async (params, commonQuerySelector) {
   }
 
   return filter;
-},
+}
 
 const carQueries = {
 
