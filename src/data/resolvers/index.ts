@@ -3,6 +3,7 @@ import ActivityLog from './activityLog';
 import Board from './boards';
 import Brand from './brand';
 import Car from './car';
+import CarCategory from './carCategory';
 import Channel from './channel';
 import Checklist from './checklists';
 import Company from './company';
@@ -53,6 +54,7 @@ const resolvers: any = {
   Customer,
   Company,
   Car,
+  CarCategory,
   Segment,
   EngageMessage,
   EmailDelivery,

@@ -1,39 +1,73 @@
-import { CarCategories, Cars } from '../../../db/models';
+import { CarCategories, Cars, Conformities } from '../../../db/models';
 import { TAG_TYPES } from '../../../db/models/definitions/constants';
 import { Builder, IListArgs } from '../../modules/coc/cars';
 import { countByBrand, countByCategory, countBySegment, countByTag } from '../../modules/coc/utils';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
+import { paginate } from '../../utils';
 
 interface ICountArgs extends IListArgs {
   only?: string;
 }
 
+const generateFilter = async (params, commonQuerySelector) {
+  const filter: any = commonQuerySelector;
+
+  if (params.categoryId) {
+    filter.categoryId = params.categoryId;
+  }
+
+  if (params.searchValue) {
+    filter.searchText = { $in: [new RegExp(`.*${params.searchValue}.*`, 'i')] }
+  }
+
+  if (params.ids) {
+    filter._id = { $in: params.ids };
+  }
+
+  if (params.tag) {
+    filter.tagIds = { $in: [params.tag] };
+  }
+
+  if (params.brand) {
+    filter.brandIds = { $in: [params.brand] };
+  }
+
+  if (params.conformityMainTypeId && params.conformityMainType && params.conformityIsSaved) {
+    filter._id = { $in: await Conformities.savedConformity({mainType: params.conformityMainType, mainTypeId: params.conformityMainTypeId, relTypes: ['car']})}
+  }
+  if (params.conformityMainTypeId && params.conformityMainType && params.conformityIsRelated) {
+    filter._id = { $in: await Conformities.relatedConformity({mainType: params.conformityMainType, mainTypeId: params.conformityMainTypeId, relType: 'car'})}
+  }
+
+  return filter;
+},
+
 const carQueries = {
+
+
   /**
    * Cars list
    */
-  async cars(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
-    const qb = new Builder(params, { commonQuerySelector, commonQuerySelectorElk });
-
-    await qb.buildAllQueries();
-
-    const { list } = await qb.runQueries();
-
-    return list;
+  async cars(_root, params: IListArgs, { commonQuerySelector }: IContext) {
+    return paginate(Cars.find(await generateFilter(params, commonQuerySelector)), {
+      page: params.page,
+      perPage: params.perPage
+    });
   },
 
   /**
    * Cars for only main list
    */
-  async carsMain(_root, params: IListArgs, { commonQuerySelector, commonQuerySelectorElk }: IContext) {
-    const qb = new Builder(params, { commonQuerySelector, commonQuerySelectorElk });
+  async carsMain(_root, params: IListArgs, { commonQuerySelector }: IContext) {
+    const filter = generateFilter(params, commonQuerySelector);
 
-    await qb.buildAllQueries();
-
-    const { list, totalCount } = await qb.runQueries();
-
-    return { list, totalCount };
+    return {
+      list: paginate(Cars.find(filter), {
+        page: params.page,
+        perPage: params.perPage
+      }),
+      totalCount: Cars.find(filter).count()};
   },
 
   /**

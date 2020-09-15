@@ -136,9 +136,6 @@ car_mapping = {
     'fuelType': {
         'type': 'text',
     },
-    'series': {
-        'type': 'text',
-    },
     'gearBox': {
         'type': 'text',
     },
@@ -148,7 +145,8 @@ car_mapping = {
     'importYear': {
         'type': 'float',
     },
-    "customFieldsData" : nestedType
+    'customFieldsData' : nestedType,
+    'modifiedAt': { 'type': 'date'}
 }
 
 event_mapping = {
