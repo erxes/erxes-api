@@ -139,6 +139,7 @@ describe('activityLogQueries', () => {
     await conversationFactory({ customerId: customer._id });
     await internalNoteFactory({ contentTypeId: customer._id });
     await engageMessageFactory({ customerIds: [customer._id], method: 'email' });
+    await engageMessageFactory({ customerIds: [customer._id], method: 'sms' });
 
     const dataSources = { IntegrationsAPI: new IntegrationsAPI() };
     const spy = jest.spyOn(dataSources.IntegrationsAPI, 'fetchApi');
@@ -150,6 +151,7 @@ describe('activityLogQueries', () => {
       { type: 'email', content: 'email' },
       { type: 'internal_note', content: 'internal_note' },
       { type: 'task', content: 'task' },
+      { type: 'sms', content: 'sms' },
     ];
 
     for (const activityType of activityTypes) {
