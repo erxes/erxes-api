@@ -1,4 +1,4 @@
-import { Customers, Conformities, Cars, CarCategories, Deals } from '../../../db/models';
+import { Customers, Conformities, Cars, CarCategories, Deals, Products } from '../../../db/models';
 import { sendEmail } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
@@ -134,5 +134,14 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       return sendSuccess(await CarCategories.find(filter).sort({ order: 1 }));
+
+    case 'getProduct':
+      const product = await Products.findOne({_id: data.productId });
+
+      if (!product) {
+        return sendError('Product not found')
+      }
+
+      return sendSuccess(product);
   }
 }
