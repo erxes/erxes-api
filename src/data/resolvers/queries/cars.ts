@@ -44,8 +44,6 @@ const generateFilter = async (params, commonQuerySelector) => {
 }
 
 const carQueries = {
-
-
   /**
    * Cars list
    */
@@ -60,7 +58,7 @@ const carQueries = {
    * Cars for only main list
    */
   async carsMain(_root, params: IListArgs, { commonQuerySelector }: IContext) {
-    const filter = generateFilter(params, commonQuerySelector);
+    const filter = await generateFilter(params, commonQuerySelector);
 
     return {
       list: paginate(Cars.find(filter), {

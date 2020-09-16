@@ -6,6 +6,7 @@ import {
   receiveRpcMessage,
 } from './data/modules/integrations/receiveMessage';
 import { graphqlPubsub } from './pubsub';
+import { receiveMobileBackend, receiveRPCMobileBackend } from './data/modules/integrations/receiveMessageMobile';
 
 dotenv.config();
 
@@ -35,6 +36,11 @@ export const initBroker = async (server?) => {
   consumeQueue('engagesNotification', async data => {
     await receiveEngagesNotification(data);
   });
+
+  consumeQueue('mobile_backend_to_api', async data => {
+    await receiveMobileBackend(data)
+  })
+  consumeRPCQueue('mobile_backend_rpc_to_api', async data => receiveRPCMobileBackend(data))
 };
 
 export default function() {
