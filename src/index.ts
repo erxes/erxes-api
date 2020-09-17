@@ -26,7 +26,8 @@ import {
 } from './data/utils';
 import { updateContactsValidationStatus, updateContactValidationStatus } from './data/verifierUtils';
 import { connect, mongoStatus } from './db/connection';
-import { Users } from './db/models';
+import { EmailDeliveries, Users } from './db/models';
+import { EMAIL_DELIVERY_STATUS } from './db/models/definitions/emailDeliveries';
 import initWatchers from './db/watchers';
 import { debugBase, debugExternalApi, debugInit } from './debuggers';
 import { identifyCustomer, trackCustomEvent, trackViewPageEvent, updateCustomerProperty } from './events';
@@ -298,7 +299,38 @@ apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
 app.post(`/service/engage/tracker`, async (req, res, next) => {
   const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
 
-  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/service/engage/tracker`);
+  const chunks: any = [];
+
+  req.setEncoding('utf-8');
+
+  req.on('data', chunk => {
+    chunks.push(chunk);
+  });
+
+  req.on('end', async () => {
+    const messageParsed = JSON.parse(chunks.join(''));
+
+    const { Message = {} } = messageParsed;
+
+    let obj = Message;
+
+    try {
+      obj = JSON.parse(Message);
+    } catch (e) {
+      console.log(e.message);
+    }
+
+    const { mail } = obj;
+    const { headers } = mail;
+
+    const emailDeliveryId = headers.find(header => header.name === 'emailDeliveryId');
+
+    if (emailDeliveryId) {
+      return EmailDeliveries.updateEmailDeliveryStatus(emailDeliveryId, EMAIL_DELIVERY_STATUS.RECEIVED);
+    }
+
+    return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/service/engage/tracker`);
+  });
 });
 
 // relay telnyx sms web hook

@@ -8,7 +8,8 @@ import * as path from 'path';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Configs, Customers, Notifications, Users } from '../db/models';
+import { Configs, Customers, EmailDeliveries, Notifications, Users } from '../db/models';
+import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
@@ -532,15 +533,34 @@ export const sendEmail = async (params: IEmailParams) => {
       html = Handlebars.compile(customHtml)(customHtmlData || {});
     }
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
       subject: title,
       html,
-      headers: {
-        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
-      },
     };
+
+    let headers: { [key: string]: string } = {};
+
+    if (AWS_SES_CONFIG_SET) {
+      const emailDelivery = await EmailDeliveries.create({
+        kind: 'transaction',
+        to: toEmail,
+        from: fromEmail || COMPANY_EMAIL_FROM,
+        subjet: title,
+        body: html,
+        status: EMAIL_DELIVERY_STATUS.PENDING,
+      });
+
+      headers = {
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET,
+        emailDeliveryId: emailDelivery._id,
+      };
+    } else {
+      headers['X-SES-CONFIGURATION-SET'] = 'erxes';
+    }
+
+    mailOptions.headers = headers;
 
     return transporter.sendMail(mailOptions, (error, info) => {
       debugEmail(error);
