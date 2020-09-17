@@ -21,6 +21,7 @@ import {
   getEnv,
   getSubServiceDomain,
   handleUnsubscription,
+  printDashboard,
   readFileRequest,
   registerOnboardHistory,
 } from './data/utils';
@@ -210,6 +211,22 @@ app.get('/template-export', async (req: any, res) => {
     return res.send(response);
   } catch (e) {
     return res.end(filterXSS(e.message));
+  }
+});
+
+app.get('/print-dashboard', async (req: any, res) => {
+  // console.log('xaxaxa');
+
+  const { dashboardId } = req.query;
+
+  try {
+    const pdf = await printDashboard(dashboardId);
+
+    console.log('xaxaxa', pdf);
+
+    return res.send(pdf);
+  } catch (e) {
+    return res.end(express.response);
   }
 });
 

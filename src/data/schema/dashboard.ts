@@ -30,4 +30,5 @@ export const mutations = `
   dashboardItemAdd(dashboardId: String, layout: String, vizState: String, name: String, type: String): DashboardItem
   dashboardItemEdit(_id: String!, dashboardId:String, layout: String, vizState: String, name: String, type: String): DashboardItem
   dashboardItemRemove(_id: String!): String
+  dashboardPrint(_id:String!): String
 `;

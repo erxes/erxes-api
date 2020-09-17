@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
+import * as puppeteer from 'puppeteer';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
@@ -14,7 +15,6 @@ import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
 import memoryStorage from '../inmemoryStorage';
 import { graphqlPubsub } from '../pubsub';
-
 export const uploadsFolderPath = path.join(__dirname, '../private/uploads');
 
 export const initFirebase = (code: string): void => {
@@ -997,6 +997,34 @@ export const chunkArray = (myArray, chunkSize: number) => {
   }
 
   return tempArray;
+};
+
+export const printDashboard = async (dashboardId: string) => {
+  console.log(dashboardId);
+  const timeout = async ms => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
+
+  console.log('1');
+
+  try {
+    const browser = await puppeteer.launch({ headless: false, args: ['--disable-dev-shm-usage'] });
+    const page = await browser.newPage();
+
+    await page.goto(`https://office.erxes.io/dashboard/front/details/ZvgghG8aqRw8yFYC3`);
+
+    await timeout(5000);
+    console.log('5');
+    // page.pdf() is currently supported only in headless mode.
+    // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+    const pdf = await page.pdf({ format: 'A4' });
+    console.log('6');
+
+    await browser.close();
+    return pdf;
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 /**

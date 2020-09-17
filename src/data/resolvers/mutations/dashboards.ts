@@ -1,6 +1,7 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
 import { IDashboard, IDashboardItemInput } from '../../../db/models/definitions/dashboard';
 import { checkPermission } from '../../permissions/wrappers';
+import { printDashboard } from '../../utils';
 
 interface IDashboardEdit extends IDashboard {
   _id: string;
@@ -32,6 +33,10 @@ const dashboardsMutations = {
 
   async dashboardItemRemove(_root, { _id }: { _id: string }) {
     return DashboardItems.removeDashboardItem(_id);
+  },
+
+  async dashboardPrint(_root, { _id }: { _id: string }) {
+    return printDashboard(_id);
   },
 };
 
