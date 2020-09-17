@@ -1,4 +1,4 @@
-import { Customers, Conformities, Cars, CarCategories, Deals, Products } from '../../../db/models';
+import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories } from '../../../db/models';
 import { sendEmail } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
@@ -108,7 +108,6 @@ export const receiveRPCMobileBackend = async msg => {
         filter.categoryId = data.categoryId
       }
 
-
       return sendSuccess(await Cars.find({$and: [{_id: { $in: carIds }}, filter]}));
 
     case 'getCar':
@@ -143,5 +142,38 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       return sendSuccess(product);
+
+    case 'filterProductCategories':
+      filter = {}
+      if (data.parentId) {
+        filter.parentId = data.parentId;
+      }
+
+      if (data.searchValue) {
+        filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
+      }
+
+      return sendSuccess(await ProductCategories.find(filter).sort({ order: 1 }));
+
+    case 'filterProducts':
+      console.log(data)
+      if (data.type) {
+        filter.type = data.type;
+      }
+
+      if (data.searchValue) {
+        const fields = [
+          { name: { $in: [new RegExp(`.*${data.searchValue}.*`, 'i')] } },
+          { code: { $in: [new RegExp(`.*${data.searchValue}.*`, 'i')] } },
+        ];
+
+        filter.$or = fields;
+      }
+
+      if (data.categoryId) {
+        filter.categoryId = data.categoryId
+      }
+
+      return sendSuccess(await Products.find(filter))
   }
 }
