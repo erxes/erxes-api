@@ -46,7 +46,7 @@ export const types = `
     themeColor: String
     callout: JSON,
     rules: [InputRule]
-    isHide: Boolean
+    isRequireOnce: Boolean
   }
 
   input MessengerOnlineHoursSchema {

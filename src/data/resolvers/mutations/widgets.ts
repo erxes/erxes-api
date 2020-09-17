@@ -112,7 +112,7 @@ const widgetMutations = {
       registerOnboardHistory({ type: 'leadIntegrationInstalled', user });
     }
 
-    if (integ.leadData?.isHide && args.cachedCustomerId) {
+    if (integ.leadData?.isRequireOnce && args.cachedCustomerId) {
       const conversation = await Conversations.findOne({ customerId: args.cachedCustomerId, integrationId: integ.id });
       if (conversation) {
         return null;

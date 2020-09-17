@@ -530,7 +530,7 @@ describe('lead', () => {
       formId: form._id,
       leadData: {
         loadType: 'embedded',
-        isHide: true,
+        isRequireOnce: true,
       },
     });
 
