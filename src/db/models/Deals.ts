@@ -43,6 +43,10 @@ export const loadDealClass = () => {
         searchText: fillSearchTextItem(doc),
       });
 
+      if (!deal.userId) {
+        return deal;
+      }
+
       // create log
       await ActivityLogs.createBoardItemLog({ item: deal, contentType: 'deal' });
 

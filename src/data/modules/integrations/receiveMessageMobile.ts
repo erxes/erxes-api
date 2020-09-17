@@ -1,5 +1,5 @@
-import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories } from '../../../db/models';
-import { sendEmail } from '../../utils';
+import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages } from '../../../db/models';
+import { sendEmail, regexSearchText } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
 
@@ -117,8 +117,8 @@ export const receiveRPCMobileBackend = async msg => {
         return sendError('Car not found')
       }
 
-      const dealIds = await Conformities.savedConformity({mainType: 'car', mainTypeId: car._id, relTypes: ['deal']});
-      const deals = await Deals.find({_id: { $in: dealIds }});
+      let dealIds = await Conformities.savedConformity({mainType: 'car', mainTypeId: car._id, relTypes: ['deal']});
+      let deals = await Deals.find({_id: { $in: dealIds }});
 
       return sendSuccess({car, dealsOfCar: deals});
 
@@ -156,7 +156,6 @@ export const receiveRPCMobileBackend = async msg => {
       return sendSuccess(await ProductCategories.find(filter).sort({ order: 1 }));
 
     case 'filterProducts':
-      console.log(data)
       if (data.type) {
         filter.type = data.type;
       }
@@ -175,5 +174,50 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       return sendSuccess(await Products.find(filter))
+
+    case 'filterDeals':
+      customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
+
+      if (!customer) {
+        return sendError('User has not customer')
+      }
+
+      filter = {}
+      const dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
+
+      if (data.carId) {
+        const dealIdsOfCar = await Conformities.savedConformity({mainType: 'car', mainTypeId: data.carId, relTypes: ['deal']});
+        filter._id = { $in: dealIdsOfCar }
+      }
+
+      if (data.search){
+        Object.assign(filter, regexSearchText(data.search));
+      }
+
+      const stageFilter = data.kind === 'Won' ? { probability: 'Won' } : { probability: { $ne: 'Won' } }
+      const stageIds = await Stages.find(stageFilter, { _id: 1 })
+      filter.stageId = { $in: stageIds }
+
+      return sendSuccess(await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]}));
+
+    case 'getDeal':
+      return sendSuccess( await Deals.findOne({ _id: data._id }));
+
+    case 'createDeal':
+      customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
+
+      if (!customer) {
+        return sendError('User has not customer')
+      }
+
+      const deal = await Deals.createDeal({ ...data.dealDoc });
+
+      await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'customer', relTypeId: customer._id})
+
+      if (data.carId){
+        await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: data.carId})
+      }
+
+      return sendSuccess(deal);
   }
 }
