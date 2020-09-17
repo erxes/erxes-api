@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
-import * as puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer-core';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
@@ -1008,7 +1008,11 @@ export const printDashboard = async (dashboardId: string) => {
   console.log('1');
 
   try {
-    const browser = await puppeteer.launch({ headless: false, args: ['--disable-dev-shm-usage'] });
+    const browser = await puppeteer.launch({
+      headless: false,
+      executablePath: '/usr/bin/chromium-browser',
+      args: ['--disable-dev-shm-usage'],
+    });
     const page = await browser.newPage();
 
     await page.goto(`https://office.erxes.io/dashboard/front/details/ZvgghG8aqRw8yFYC3`);
