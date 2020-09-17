@@ -31,7 +31,10 @@ export const receiveMobileBackend = async msg => {
         email: data.email,
         phone: data.phoneNumber,
         deviceToken: data.deviceToken,
-        integrationId: 'MobileBend'
+        firstName: data.firstName,
+        lastName: data.lastName,
+        description: data.address,
+        integrationId: 'MobileBend',
       };
 
       customer = customer
