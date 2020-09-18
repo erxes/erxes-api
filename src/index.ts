@@ -18,10 +18,10 @@ import {
   authCookieOptions,
   deleteFile,
   frontendEnv,
+  getDashboardFile,
   getEnv,
   getSubServiceDomain,
   handleUnsubscription,
-  printDashboard,
   readFileRequest,
   registerOnboardHistory,
 } from './data/utils';
@@ -215,14 +215,12 @@ app.get('/template-export', async (req: any, res) => {
 });
 
 app.get('/print-dashboard', async (req: any, res) => {
-  // console.log('xaxaxa');
-
   const { dashboardId } = req.query;
 
   try {
-    const pdf = await printDashboard(dashboardId);
+    const pdf = await getDashboardFile(dashboardId);
 
-    console.log('xaxaxa', pdf);
+    res.attachment(`dashboard.pdf`);
 
     return res.send(pdf);
   } catch (e) {

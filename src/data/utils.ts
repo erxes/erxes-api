@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
-import * as puppeteer from 'puppeteer-core';
+import * as puppeteer from 'puppeteer';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
@@ -486,6 +486,7 @@ export interface IEmailParams {
   customHtml?: string;
   customHtmlData?: any;
   template?: { name?: string; data?: any };
+  attachments?: object[];
   modifier?: (data: any, email: string) => void;
 }
 
@@ -493,7 +494,7 @@ export interface IEmailParams {
  * Send email
  */
 export const sendEmail = async (params: IEmailParams) => {
-  const { toEmails = [], fromEmail, title, customHtml, customHtmlData, template = {}, modifier } = params;
+  const { toEmails = [], fromEmail, title, customHtml, customHtmlData, template = {}, modifier, attachments } = params;
 
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
@@ -537,6 +538,7 @@ export const sendEmail = async (params: IEmailParams) => {
       to: toEmail,
       subject: title,
       html,
+      attachments,
       headers: {
         'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
       },
@@ -999,35 +1001,30 @@ export const chunkArray = (myArray, chunkSize: number) => {
   return tempArray;
 };
 
-export const printDashboard = async (dashboardId: string) => {
-  console.log(dashboardId);
+export const getDashboardFile = async (dashboardId: string) => {
   const timeout = async ms => {
     return new Promise(resolve => setTimeout(resolve, ms));
   };
 
-  console.log('1');
+  const DASHBOARD_DOMAIN = getSubServiceDomain({ name: 'DASHBOARD_DOMAIN' });
+
+  console.log(dashboardId);
+  console.log(DASHBOARD_DOMAIN);
 
   try {
-    const browser = await puppeteer.launch({
-      headless: false,
-      executablePath: '/usr/bin/chromium-browser',
-      args: ['--disable-dev-shm-usage'],
-    });
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
     await page.goto(`https://office.erxes.io/dashboard/front/details/ZvgghG8aqRw8yFYC3`);
-
     await timeout(5000);
-    console.log('5');
-    // page.pdf() is currently supported only in headless mode.
-    // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+
     const pdf = await page.pdf({ format: 'A4' });
-    console.log('6');
 
     await browser.close();
+
     return pdf;
   } catch (e) {
-    console.log(e);
+    throw e;
   }
 };
 
