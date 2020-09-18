@@ -7,17 +7,13 @@ const emailDeliveryQueries = {
     return EmailDeliveries.findOne({ _id });
   },
 
-  async transactionEmailDeliveries(_root, { status, ...params }: { status: string; page: number; perPage: number }) {
-    const filter: { [key: string]: string | number } = { kind: 'transaction' };
+  async transactionEmailDeliveries(_root, params: { page: number; perPage: number }) {
+    const selector = { kind: 'transaction' };
 
-    if (status) {
-      filter.status = status;
-    }
-
-    const totalCount = await EmailDeliveries.countDocuments(filter);
+    const totalCount = await EmailDeliveries.countDocuments(selector);
 
     return {
-      list: paginate(EmailDeliveries.find(filter), params).sort({ createdAt: -1 }),
+      list: paginate(EmailDeliveries.find(selector), params).sort({ createdAt: -1 }),
       totalCount,
     };
   },

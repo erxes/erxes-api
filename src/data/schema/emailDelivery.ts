@@ -26,5 +26,5 @@ export const types = `
 
 export const queries = `
   emailDeliveryDetail(_id: String): EmailDelivery 
-  transactionEmailDeliveries(status: String, page: Int, perPage: Int): EmailDeliveryList
+  transactionEmailDeliveries(page: Int, perPage: Int): EmailDeliveryList
 `;
