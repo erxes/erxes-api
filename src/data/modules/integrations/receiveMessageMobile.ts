@@ -111,7 +111,16 @@ export const receiveRPCMobileBackend = async msg => {
         filter.categoryId = data.categoryId
       }
 
-      return sendSuccess(await Cars.find({$and: [{_id: { $in: carIds }}, filter]}));
+      return sendSuccess(await Cars.aggregate([
+        {$match: {$and: [{_id: { $in: carIds }}, filter]}},
+        { $lookup: {
+          from: 'car_categories',
+          localField: 'categoryId',
+          foreignField: '_id',
+          as: 'category'
+        }},
+        { $unwind: '$category' }
+      ]));
 
     case 'getCar':
       car = await Cars.findOne({ _id: data._id });
@@ -120,10 +129,7 @@ export const receiveRPCMobileBackend = async msg => {
         return sendError('Car not found')
       }
 
-      let dealIds = await Conformities.savedConformity({mainType: 'car', mainTypeId: car._id, relTypes: ['deal']});
-      let deals = await Deals.find({_id: { $in: dealIds }});
-
-      return sendSuccess({car, dealsOfCar: deals});
+      return sendSuccess({car, category: await CarCategories.findOne({ _id: car.categoryId })});
 
     case 'filterCarCategories':
       filter = {}
