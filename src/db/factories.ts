@@ -1297,6 +1297,7 @@ export const conformityFactory = (params: IConformityFactoryInput) => {
 interface IEmailDeliveryFactoryInput {
   attachments?: string[];
   subject?: string;
+  status?: string;
   body?: string;
   to?: string[];
   cc?: string[];
@@ -1311,6 +1312,7 @@ export const emailDeliveryFactory = async (params: IEmailDeliveryFactoryInput = 
   const emailDelviry = new EmailDeliveries({
     attachments: params.attachments || [],
     subject: params.subject || 'subject',
+    status: params.status || 'pending',
     body: params.body || 'body',
     to: params.to || ['to'],
     cc: params.cc || ['cc'],
