@@ -500,6 +500,8 @@ export const sendEmail = async (params: IEmailParams) => {
   const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
   const COMPANY_EMAIL_FROM = await getConfig('COMPANY_EMAIL_FROM', '');
   const AWS_SES_CONFIG_SET = await getConfig('AWS_SES_CONFIG_SET', '');
+  const AWS_ACCESS_KEY_ID = await getConfig('AWS_ACCESS_KEY_ID', '');
+  const AWS_SES_SECRET_ACCESS_KEY = await getConfig('AWS_SES_SECRET_ACCESS_KEY', '');
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
   // do not send email it is running in test mode
@@ -542,7 +544,7 @@ export const sendEmail = async (params: IEmailParams) => {
 
     let headers: { [key: string]: string } = {};
 
-    if (AWS_SES_CONFIG_SET) {
+    if (AWS_ACCESS_KEY_ID.length > 0 && AWS_SES_SECRET_ACCESS_KEY.length > 0) {
       const emailDelivery = await EmailDeliveries.create({
         kind: 'transaction',
         to: toEmail,
