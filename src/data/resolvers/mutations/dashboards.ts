@@ -47,6 +47,8 @@ const dashboardsMutations = {
   async dashboardSendEmail(_root, args: IDashboardEmailParams) {
     const { toEmails, subject, content, dashboardId } = args;
 
+    console.log(args);
+
     const file = await getDashboardFile(dashboardId);
 
     sendEmail({
