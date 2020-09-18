@@ -555,7 +555,7 @@ export const sendEmail = async (params: IEmailParams) => {
       });
 
       headers = {
-        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET,
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
         EmailDeliveryId: emailDelivery._id,
       };
     } else {
