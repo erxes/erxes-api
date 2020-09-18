@@ -133,9 +133,7 @@ export const receiveRPCMobileBackend = async msg => {
 
     case 'filterCarCategories':
       filter = {}
-      if (data.parentId) {
-        filter.parentId = data.parentId;
-      }
+      filter.parentId = data.parentId || '';
 
       if (data.searchValue) {
         filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
@@ -154,9 +152,7 @@ export const receiveRPCMobileBackend = async msg => {
 
     case 'filterProductCategories':
       filter = {}
-      if (data.parentId) {
-        filter.parentId = data.parentId;
-      }
+      filter.parentId = data.parentId;
 
       if (data.searchValue) {
         filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
