@@ -1,7 +1,7 @@
 import { DashboardItems, Dashboards } from '../../../db/models';
 import { IDashboard, IDashboardItemInput } from '../../../db/models/definitions/dashboard';
 import { checkPermission } from '../../permissions/wrappers';
-import { getDashboardFile, sendEmail } from '../../utils';
+import { getDashboardFile, getSubServiceDomain, sendEmail } from '../../utils';
 
 interface IDashboardEdit extends IDashboard {
   _id: string;
@@ -45,19 +45,23 @@ const dashboardsMutations = {
   },
 
   async dashboardSendEmail(_root, args: IDashboardEmailParams) {
-    const { toEmails, subject, content, dashboardId } = args;
-
-    console.log(args);
+    const { toEmails, subject, content, dashboardId, sendUrl } = args;
 
     const file = await getDashboardFile(dashboardId);
+    const data = { content } as any;
+
+    if (sendUrl) {
+      const DASHBOARD_DOMAIN = getSubServiceDomain({ name: 'DASHBOARD_DOMAIN' });
+
+      data.url = `${DASHBOARD_DOMAIN}/details/${dashboardId}?public=true`;
+    }
 
     sendEmail({
       toEmails,
       title: subject,
       template: {
-        data: {
-          content,
-        },
+        name: 'dashboard',
+        data,
       },
 
       attachments: [{ filename: 'dashboard.pdf', content: file }],
