@@ -556,7 +556,7 @@ export const sendEmail = async (params: IEmailParams) => {
 
       headers = {
         'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET,
-        emailDeliveryId: emailDelivery._id,
+        EmailDeliveryId: emailDelivery._id,
       };
     } else {
       headers['X-SES-CONFIGURATION-SET'] = 'erxes';
