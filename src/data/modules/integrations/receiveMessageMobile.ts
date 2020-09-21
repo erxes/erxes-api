@@ -148,7 +148,7 @@ export const receiveRPCMobileBackend = async msg => {
         return sendError('Product not found')
       }
 
-      return sendSuccess(product);
+      return sendSuccess({product, category: await ProductCategories.findOne({ _id: product.categoryId })});
 
     case 'filterProductCategories':
       filter = {}
@@ -178,7 +178,16 @@ export const receiveRPCMobileBackend = async msg => {
         filter.categoryId = data.categoryId
       }
 
-      return sendSuccess(await Products.find(filter))
+      return sendSuccess(await Products.aggregate([
+        {$match: filter},
+        { $lookup: {
+          from: 'product_categories',
+          localField: 'categoryId',
+          foreignField: '_id',
+          as: 'category'
+        }},
+        { $unwind: '$category' }
+      ]))
 
     case 'filterDeals':
       customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
