@@ -139,7 +139,17 @@ export const receiveRPCMobileBackend = async msg => {
         filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
       }
 
-      return sendSuccess(await CarCategories.find(filter).sort({ order: 1 }));
+      return sendSuccess(await CarCategories.aggregate( [
+        { $match: filter },
+        { $lookup: {
+          from: 'car_categories',
+          localField: '_id',
+          foreignField: 'parentId',
+          as: 'childs'
+        } },
+        { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: {$size: '$childs'} } },
+        { $sort: { order: 1 } }
+      ] ))
 
     case 'getProduct':
       const product = await Products.findOne({_id: data.productId });
@@ -158,7 +168,19 @@ export const receiveRPCMobileBackend = async msg => {
         filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
       }
 
-      return sendSuccess(await ProductCategories.find(filter).sort({ order: 1 }));
+      return sendSuccess(await ProductCategories.aggregate(
+        [
+          { $match: filter },
+          { $lookup: {
+            from: 'product_categories',
+            localField: '_id',
+            foreignField: 'parentId',
+            as: 'childs'
+          } },
+          { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: {$size: '$childs'} } },
+          { $sort: { order: 1 } }
+        ]
+      ));
 
     case 'filterProducts':
       if (data.type) {
