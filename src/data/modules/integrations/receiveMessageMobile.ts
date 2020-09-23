@@ -1,4 +1,4 @@
-import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages } from '../../../db/models';
+import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages, Pipelines, Boards } from '../../../db/models';
 import { sendEmail, regexSearchText } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
@@ -34,7 +34,7 @@ export const receiveMobileBackend = async msg => {
         firstName: data.firstName,
         lastName: data.lastName,
         description: data.address,
-        integrationId: 'MobileBend',
+        integrationId: data.integrationId,
       };
 
       customer = customer
@@ -183,6 +183,10 @@ export const receiveRPCMobileBackend = async msg => {
       ));
 
     case 'filterProducts':
+      if (data.ids) {
+        filter._id = { $in: data.ids }
+      }
+
       if (data.type) {
         filter.type = data.type;
       }
@@ -231,10 +235,34 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       const stageFilter = data.kind === 'Won' ? { probability: 'Won' } : { probability: { $ne: 'Won' } }
-      const stageIds = await Stages.find(stageFilter, { _id: 1 })
-      filter.stageId = { $in: stageIds }
+      const wonStageIds = await Stages.find(stageFilter, { _id: 1 })
+      filter.stageId = { $in: wonStageIds }
 
-      return sendSuccess(await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]}));
+      const deals = await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]});
+
+      const stageIds = deals.map(deal => deal.stageId);
+      const stages = await Stages.find({_id: {$in: stageIds}}, {_id: 1, name: 1, pipelineId: 1});
+      const pipelineIds = stages.map(stage => stage.pipelineId);
+      const pipelines = await Pipelines.find({_id: {$in: pipelineIds}}, {_id: 1, name: 1, boardId: 1});
+      const boardIds = pipelines.map(pipeline => pipeline.boardId);
+      const boards = await Boards.find({ _id: { $in: boardIds} }, {_id: 1, name: 1});
+
+      const copyDeals: any[] = [...deals];
+      const extDeals: any[] = [];
+
+      for (const deal of copyDeals) {
+        const stage = stages.find(stage => stage._id === deal.stageId);
+        const pipeline = pipelines.find(pipeline => pipeline._id === stage?.pipelineId);
+
+        extDeals.push({
+          ...deal._doc,
+          stage: stage?.name,
+          pipeline: pipeline?.name,
+          board: boards.find(board => board._id === pipeline?.boardId)?.name
+        });
+      }
+
+      return sendSuccess(extDeals);
 
     case 'getDeal':
       return sendSuccess( await Deals.findOne({ _id: data._id }));
