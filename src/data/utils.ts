@@ -4,21 +4,33 @@ import * as admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
+import * as path from 'path';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Configs, Customers, Notifications, Users } from '../db/models';
+import { Configs, Customers, EmailDeliveries, Notifications, Users } from '../db/models';
+import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
+import memoryStorage from '../inmemoryStorage';
 import { graphqlPubsub } from '../pubsub';
-import { get, set } from '../redisClient';
 
-export const initFirebase = (value: string): void => {
-  const serviceAccount = JSON.parse(value);
+export const uploadsFolderPath = path.join(__dirname, '../private/uploads');
 
-  if (serviceAccount.private_key) {
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+export const initFirebase = (code: string): void => {
+  if (code.length === 0) {
+    return;
+  }
+
+  const codeString = code.trim();
+
+  if (codeString[0] === '{' && codeString[codeString.length - 1] === '}') {
+    const serviceAccount = JSON.parse(codeString);
+
+    if (serviceAccount.private_key) {
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    }
   }
 };
 
@@ -43,8 +55,24 @@ export const checkFile = async (file, source?: string) => {
   // determine file type using magic numbers
   const ft = fileType(buffer);
 
+  const unsupportedMimeTypes = ['text/csv', 'image/svg+xml', 'text/plain', 'application/vnd.ms-excel'];
+
+  const oldMsOfficeDocs = ['application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint'];
+
+  // allow csv, svg to be uploaded
+  if (!ft && unsupportedMimeTypes.includes(file.type)) {
+    return 'ok';
+  }
+
   if (!ft) {
     return 'Invalid file type';
+  }
+
+  const { mime } = ft;
+
+  // allow old ms office docs to be uploaded
+  if (mime === 'application/x-msi' && oldMsOfficeDocs.includes(file.type)) {
+    return 'ok';
   }
 
   const defaultMimeTypes = [
@@ -58,8 +86,6 @@ export const checkFile = async (file, source?: string) => {
   ];
 
   const UPLOAD_FILE_TYPES = await getConfig(source === 'widgets' ? 'WIDGETS_UPLOAD_FILE_TYPES' : 'UPLOAD_FILE_TYPES');
-
-  const { mime } = ft;
 
   if (!((UPLOAD_FILE_TYPES && UPLOAD_FILE_TYPES.split(',')) || defaultMimeTypes).includes(mime)) {
     return 'Invalid configured file type';
@@ -186,6 +212,31 @@ export const deleteFileAWS = async (fileName: string) => {
 };
 
 /*
+ * Save file to local disk
+ */
+export const uploadFileLocal = async (file: { name: string; path: string; type: string }): Promise<string> => {
+  const oldPath = file.path;
+
+  if (!fs.existsSync(uploadsFolderPath)) {
+    fs.mkdirSync(uploadsFolderPath);
+  }
+
+  const fileName = `${Math.random()}${file.name.replace(/ /g, '')}`;
+  const newPath = `${uploadsFolderPath}/${fileName}`;
+  const rawData = fs.readFileSync(oldPath);
+
+  return new Promise((resolve, reject) => {
+    fs.writeFile(newPath, rawData, err => {
+      if (err) {
+        return reject(err);
+      }
+
+      return resolve(fileName);
+    });
+  });
+};
+
+/*
  * Save file to google cloud storage
  */
 export const uploadFileGCS = async (file: { name: string; path: string; type: string }): Promise<string> => {
@@ -225,6 +276,18 @@ export const uploadFileGCS = async (file: { name: string; path: string; type: st
   const { metadata, name } = response;
 
   return IS_PUBLIC === 'true' ? metadata.mediaLink : name;
+};
+
+const deleteFileLocal = async (fileName: string) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(`${uploadsFolderPath}/${fileName}`, error => {
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve('deleted');
+    });
+  });
 };
 
 const deleteFileGCS = async (fileName: string) => {
@@ -270,24 +333,38 @@ export const readFileRequest = async (key: string): Promise<any> => {
     return contents;
   }
 
-  const AWS_BUCKET = await getConfig('AWS_BUCKET');
-  const s3 = await createAWS();
+  if (UPLOAD_SERVICE_TYPE === 'AWS') {
+    const AWS_BUCKET = await getConfig('AWS_BUCKET');
+    const s3 = await createAWS();
 
-  return new Promise((resolve, reject) => {
-    s3.getObject(
-      {
-        Bucket: AWS_BUCKET,
-        Key: key,
-      },
-      (error, response) => {
+    return new Promise((resolve, reject) => {
+      s3.getObject(
+        {
+          Bucket: AWS_BUCKET,
+          Key: key,
+        },
+        (error, response) => {
+          if (error) {
+            return reject(error);
+          }
+
+          return resolve(response.Body);
+        },
+      );
+    });
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    return new Promise((resolve, reject) => {
+      fs.readFile(`${uploadsFolderPath}/${key}`, (error, response) => {
         if (error) {
           return reject(error);
         }
 
-        return resolve(response.Body);
-      },
-    );
-  });
+        return resolve(response);
+      });
+    });
+  }
 };
 
 /*
@@ -297,7 +374,19 @@ export const uploadFile = async (apiUrl: string, file, fromEditor = false): Prom
   const IS_PUBLIC = await getConfig('FILE_SYSTEM_PUBLIC');
   const UPLOAD_SERVICE_TYPE = await getConfig('UPLOAD_SERVICE_TYPE', 'AWS');
 
-  const nameOrLink = UPLOAD_SERVICE_TYPE === 'AWS' ? await uploadFileAWS(file) : await uploadFileGCS(file);
+  let nameOrLink = '';
+
+  if (UPLOAD_SERVICE_TYPE === 'AWS') {
+    nameOrLink = await uploadFileAWS(file);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'GCS') {
+    nameOrLink = await uploadFileGCS(file);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    nameOrLink = await uploadFileLocal(file);
+  }
 
   if (fromEditor) {
     const editorResult = { fileName: file.name, uploaded: 1, url: nameOrLink };
@@ -319,7 +408,13 @@ export const deleteFile = async (fileName: string): Promise<any> => {
     return deleteFileAWS(fileName);
   }
 
-  return deleteFileGCS(fileName);
+  if (UPLOAD_SERVICE_TYPE === 'GCS') {
+    return deleteFileGCS(fileName);
+  }
+
+  if (UPLOAD_SERVICE_TYPE === 'local') {
+    return deleteFileLocal(fileName);
+  }
 };
 
 /**
@@ -405,6 +500,8 @@ export const sendEmail = async (params: IEmailParams) => {
   const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
   const COMPANY_EMAIL_FROM = await getConfig('COMPANY_EMAIL_FROM', '');
   const AWS_SES_CONFIG_SET = await getConfig('AWS_SES_CONFIG_SET', '');
+  const AWS_ACCESS_KEY_ID = await getConfig('AWS_ACCESS_KEY_ID', '');
+  const AWS_SES_SECRET_ACCESS_KEY = await getConfig('AWS_SES_SECRET_ACCESS_KEY', '');
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
   // do not send email it is running in test mode
@@ -438,15 +535,34 @@ export const sendEmail = async (params: IEmailParams) => {
       html = Handlebars.compile(customHtml)(customHtmlData || {});
     }
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
       subject: title,
       html,
-      headers: {
-        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
-      },
     };
+
+    let headers: { [key: string]: string } = {};
+
+    if (AWS_ACCESS_KEY_ID.length > 0 && AWS_SES_SECRET_ACCESS_KEY.length > 0) {
+      const emailDelivery = await EmailDeliveries.create({
+        kind: 'transaction',
+        to: toEmail,
+        from: fromEmail || COMPANY_EMAIL_FROM,
+        subject: title,
+        body: html,
+        status: EMAIL_DELIVERY_STATUS.PENDING,
+      });
+
+      headers = {
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
+        EmailDeliveryId: emailDelivery._id,
+      };
+    } else {
+      headers['X-SES-CONFIGURATION-SET'] = 'erxes';
+    }
+
+    mailOptions.headers = headers;
 
     return transporter.sendMail(mailOptions, (error, info) => {
       debugEmail(error);
@@ -823,7 +939,7 @@ export const handleUnsubscription = async (query: { cid: string; uid: string }) 
 };
 
 export const getConfigs = async () => {
-  const configsCache = await get('configs_erxes_api');
+  const configsCache = await memoryStorage().get('configs_erxes_api');
 
   if (configsCache && configsCache !== '{}') {
     return JSON.parse(configsCache);
@@ -836,7 +952,7 @@ export const getConfigs = async () => {
     configsMap[config.code] = config.value;
   }
 
-  set('configs_erxes_api', JSON.stringify(configsMap));
+  memoryStorage().set('configs_erxes_api', JSON.stringify(configsMap));
 
   return configsMap;
 };
@@ -852,12 +968,12 @@ export const getConfig = async (code, defaultValue?) => {
 };
 
 export const resetConfigsCache = () => {
-  set('configs_erxes_api', '');
+  memoryStorage().set('configs_erxes_api', '');
 };
 
 export const frontendEnv = ({ name, req, requestInfo }: { name: string; req?: any; requestInfo?: any }): string => {
   const cookies = req ? req.cookies : requestInfo.cookies;
-  const keys = Object.keys(cookies).filter(key => key.startsWith('REACT_APP'));
+  const keys = Object.keys(cookies);
 
   const envs: { [key: string]: string } = {};
 
@@ -872,6 +988,7 @@ export const getSubServiceDomain = ({ name }: { name: string }): string => {
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
   const defaultMappings = {
+    API_DOMAIN: `${MAIN_APP_DOMAIN}/api`,
     WIDGETS_DOMAIN: `${MAIN_APP_DOMAIN}/widgets`,
     INTEGRATIONS_API_DOMAIN: `${MAIN_APP_DOMAIN}/integrations`,
     LOGS_API_DOMAIN: `${MAIN_APP_DOMAIN}/logs`,

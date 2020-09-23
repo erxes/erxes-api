@@ -20,8 +20,8 @@ import { IIntegrationDocument, IMessengerDataMessagesItem } from '../../../db/mo
 import { IKnowledgebaseCredentials, ILeadCredentials } from '../../../db/models/definitions/messengerApps';
 import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
+import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { get, set } from '../../../redisClient';
 import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
@@ -84,7 +84,7 @@ export const getMessengerData = async (integration: IIntegrationDocument) => {
 
 const widgetMutations = {
   // Find integrationId by brandCode
-  async widgetsLeadConnect(_root, args: { brandCode: string; formCode: string }) {
+  async widgetsLeadConnect(_root, args: { brandCode: string; formCode: string; cachedCustomerId?: string }) {
     const brand = await Brands.findOne({ code: args.brandCode });
     const form = await Forms.findOne({ code: args.formCode });
 
@@ -110,6 +110,13 @@ const widgetMutations = {
       const user = await Users.getUser(integ.createdUserId);
 
       registerOnboardHistory({ type: 'leadIntegrationInstalled', user });
+    }
+
+    if (integ.leadData?.isRequireOnce && args.cachedCustomerId) {
+      const conversation = await Conversations.findOne({ customerId: args.cachedCustomerId, integrationId: integ.id });
+      if (conversation) {
+        return null;
+      }
     }
 
     // return integration details
@@ -182,29 +189,28 @@ const widgetMutations = {
       });
     }
 
+    const customerDoc = {
+      location: browserInfo,
+      firstName: customer.firstName ? customer.firstName : firstName,
+      lastName: customer.lastName ? customer.lastName : lastName,
+      ...(customer.primaryEmail
+        ? {}
+        : {
+            emails: [email],
+            primaryEmail: email,
+          }),
+      ...(customer.primaryPhone
+        ? {}
+        : {
+            phones: [phone],
+            primaryPhone: phone,
+          }),
+    };
+
+    console.log('customerDoc: ', customerDoc);
+
     // update location info and missing fields
-    await Customers.findByIdAndUpdate(
-      { _id: customer._id },
-      {
-        $set: {
-          location: browserInfo,
-          firstName: customer.firstName ? customer.firstName : firstName,
-          lastName: customer.lastName ? customer.lastName : lastName,
-          ...(customer.primaryEmail
-            ? {}
-            : {
-                emails: [email],
-                primaryEmail: email,
-              }),
-          ...(customer.primaryPhone
-            ? {}
-            : {
-                phones: [phone],
-                primaryPhone: phone,
-              }),
-        },
-      },
-    );
+    await Customers.updateCustomer(customer._id, customerDoc);
 
     // Inserting customer id into submitted customer ids
     const doc = {
@@ -427,10 +433,10 @@ const widgetMutations = {
       conversationClientTypingStatusChanged: { conversationId, text: '' },
     });
 
-    const customerLastStatus = await get(`customer_last_status_${customerId}`, 'left');
+    const customerLastStatus = await memoryStorage().get(`customer_last_status_${customerId}`, 'left');
 
     if (customerLastStatus === 'left') {
-      set(`customer_last_status_${customerId}`, 'joined');
+      memoryStorage().set(`customer_last_status_${customerId}`, 'joined');
 
       // customer has joined + time
       const conversationMessages = await Conversations.changeCustomerStatus(

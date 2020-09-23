@@ -5,19 +5,24 @@ import { filterXSS } from 'xss';
 import configs from './api/configs';
 import deliveryReports from './api/deliveryReports';
 import telnyx from './api/telnyx';
-import { initRedis } from './redisClient';
 
 // load environment variables
 dotenv.config();
 
 import { connect } from './connection';
 import { debugBase, debugInit } from './debuggers';
-import { initConsumer } from './messageQueue';
+import { initBroker } from './messageBroker';
 import { trackEngages } from './trackers/engageTracker';
 
 const app = express();
 
 app.disable('x-powered-by');
+
+// for health checking
+app.get('/status', async (_req, res) => {
+  res.end('ok');
+});
+
 app.use((req: any, _res, next) => {
   req.rawBody = '';
 
@@ -51,11 +56,9 @@ const { PORT } = process.env;
 app.listen(PORT, () => {
   // connect to mongo database
   connect().then(async () => {
-    initConsumer().catch(e => {
-      debugBase(`Error ocurred during rabbitmq init ${e.message}`);
+    initBroker(app).catch(e => {
+      debugBase(`Error ocurred during message broker init ${e.message}`);
     });
-
-    initRedis();
   });
 
   debugInit(`Engages server is running on port ${PORT}`);

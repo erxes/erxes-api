@@ -75,6 +75,7 @@ export interface ILeadData {
   rules?: IRule;
   viewCount?: number;
   contactsGathered?: number;
+  isRequireOnce?: boolean;
 }
 
 export interface ILeadDataDocument extends ILeadData, Document {
@@ -86,6 +87,7 @@ export interface IUiOptions {
   color?: string;
   wallpaper?: string;
   logo?: string;
+  textColor?: string;
 }
 
 // subdocument schema for messenger UiOptions
@@ -102,6 +104,7 @@ export interface IIntegration {
   messengerData?: IMessengerData;
   uiOptions?: IUiOptions;
   isActive?: boolean;
+  channelIds?: string[];
 }
 
 export interface IIntegrationDocument extends IIntegration, Document {
@@ -257,6 +260,11 @@ export const leadDataSchema = new Schema(
       optional: true,
       label: 'Rules',
     }),
+    isRequireOnce: field({
+      type: Boolean,
+      optional: true,
+      label: 'Do now show again if already filled out',
+    }),
   },
   { _id: false },
 );
@@ -265,6 +273,7 @@ export const leadDataSchema = new Schema(
 const uiOptionsSchema = new Schema(
   {
     color: field({ type: String }),
+    textColor: field({ type: String }),
     wallpaper: field({ type: String }),
     logo: field({ type: String }),
   },

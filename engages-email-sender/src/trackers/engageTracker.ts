@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
 import { debugBase } from '../debuggers';
-import { sendMessage } from '../messageQueue';
+import messageBroker from '../messageBroker';
 import { Configs, DeliveryReports, Stats } from '../models';
 import { ISESConfig } from '../models/Configs';
 
@@ -42,6 +42,15 @@ const handleMessage = async message => {
 
   const customerId = headers.find(header => header.name === 'Customerid');
 
+  const emailDeliveryId = headers.find(header => header.name === 'Emaildeliveryid');
+
+  if (emailDeliveryId) {
+    await messageBroker().sendMessage('engagesNotification', {
+      action: 'transactionEmail',
+      data: { emailDeliveryId: emailDeliveryId.value, status: 'received' },
+    });
+  }
+
   const mailHeaders = {
     engageMessageId: engageMessageId.value,
     mailId: mailId.value,
@@ -55,7 +64,7 @@ const handleMessage = async message => {
   const rejected = await DeliveryReports.updateOrCreateReport(mailHeaders, type);
 
   if (rejected === 'reject') {
-    await sendMessage('engagesNotification', {
+    await messageBroker().sendMessage('engagesNotification', {
       action: 'setDoNotDisturb',
       data: { customerId: mail.customerId },
     });

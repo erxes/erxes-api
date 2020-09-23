@@ -46,6 +46,7 @@ export const types = `
     themeColor: String
     callout: JSON,
     rules: [InputRule]
+    isRequireOnce: Boolean
   }
 
   input MessengerOnlineHoursSchema {
@@ -83,6 +84,7 @@ export const types = `
     color: String
     wallpaper: String
     logo: String
+    textColor: String
   }
 `;
 
@@ -109,6 +111,7 @@ export const mutations = `
     name: String!,
     brandId: String!,
     languageCode: String
+    channelIds: [String]
     ): Integration
 
   integrationsEditMessengerIntegration(
@@ -116,6 +119,7 @@ export const mutations = `
     name: String!,
     brandId: String!,
     languageCode: String
+    channelIds: [String]
   ): Integration
 
   integrationsSaveMessengerAppearanceData(
@@ -146,14 +150,15 @@ export const mutations = `
     name: String!,
     brandId: String!,
     accountId: String,
+    channelIds: [String]
     data: JSON): Integration
 
-  integrationsEditCommonFields(_id: String!, name: String!, brandId: String!): Integration
+  integrationsEditCommonFields(_id: String!, name: String!, brandId: String!, channelIds: [String]): Integration
 
   integrationsRemove(_id: String!): JSON
   integrationsRemoveAccount(_id: String!): JSON
 
-  integrationsArchive(_id: String!): Integration
+  integrationsArchive(_id: String!, status: Boolean!): Integration
 
   integrationSendMail(
     erxesApiId: String!
@@ -165,13 +170,17 @@ export const mutations = `
     from: String!
     shouldResolve: Boolean
     headerId: String
+    replyTo: [String]
+    inReplyTo: String
     threadId: String
     messageId: String
     replyToMessageId: String
     kind: String
-    references: String
+    references: [String]
     attachments: [JSON]
   ): JSON
 
   integrationsUpdateConfigs(configsMap: JSON!): JSON
+
+  integrationsSendSms(integrationId: String!, content: String!, to: String!): JSON
 `;

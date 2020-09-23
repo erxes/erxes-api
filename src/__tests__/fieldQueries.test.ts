@@ -118,8 +118,8 @@ describe('fieldQueries', () => {
     await fieldFactory({ contentType: 'customer', groupId: invisibleGroup._id });
 
     const qry = `
-      query fieldsCombinedByContentType($contentType: String!) {
-        fieldsCombinedByContentType(contentType: $contentType)
+      query fieldsCombinedByContentType($contentType: String!, $usageType: String) {
+        fieldsCombinedByContentType(contentType: $contentType, usageType: $usageType)
       }
     `;
 
@@ -156,9 +156,12 @@ describe('fieldQueries', () => {
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', {
       contentType: 'customer',
+      usageType: 'import',
     });
 
     responses = await graphqlRequest(qry, 'fieldsCombinedByContentType', { contentType: 'customer' });
+
+    await graphqlRequest(qry, 'fieldsCombinedByContentType', { contentType: 'product' });
 
     // getting fields of customers schema
     responseFields = responses.map(response => response.name);
@@ -206,6 +209,15 @@ describe('fieldQueries', () => {
     expect(responses[4].name).toBe('plan');
     expect(responses[5].name).toBe('lastSeenAt');
     expect(responses[6].name).toBe('sessionCount');
+
+    // get product default config
+    responses = await graphqlRequest(qry, 'fieldsDefaultColumnsConfig', {
+      contentType: 'product',
+    });
+
+    expect(responses[0].name).toBe('categoryCode');
+    expect(responses[1].name).toBe('code');
+    expect(responses[2].name).toBe('name');
   });
 
   test('Field groups', async () => {

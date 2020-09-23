@@ -2,7 +2,6 @@ import * as AWS from 'aws-sdk';
 import * as nodemailer from 'nodemailer';
 import { debugBase } from './debuggers';
 import Configs, { ISESConfig } from './models/Configs';
-import { get, set } from './redisClient';
 import { getApi } from './trackers/engageTracker';
 
 export const createTransporter = async () => {
@@ -92,6 +91,9 @@ export const subscribeEngage = () => {
         Endpoint: `${MAIN_API_DOMAIN}/service/engage/tracker`,
       })
       .promise()
+      .then(response => {
+        debugBase(response);
+      })
       .catch(e => {
         return reject(e.message);
       });
@@ -155,10 +157,6 @@ export const getValueAsString = async name => {
   return entry.value;
 };
 
-export const resetConfigsCache = () => {
-  set('configs_erxes_engages', '');
-};
-
 export const updateConfigs = async (configsMap): Promise<void> => {
   const prevSESConfigs = await Configs.getSESConfigs();
 
@@ -166,28 +164,18 @@ export const updateConfigs = async (configsMap): Promise<void> => {
 
   const updatedSESConfigs = await Configs.getSESConfigs();
 
-  resetConfigsCache();
-
   if (JSON.stringify(prevSESConfigs) !== JSON.stringify(updatedSESConfigs)) {
     await subscribeEngage();
   }
 };
 
-export const getConfigs = async () => {
-  const configsCache = await get('configs_erxes_engages');
-
-  if (configsCache && configsCache !== '{}') {
-    return JSON.parse(configsCache);
-  }
-
+export const getConfigs = async (): Promise<any> => {
   const configsMap = {};
   const configs = await Configs.find({});
 
   for (const config of configs) {
     configsMap[config.code] = config.value;
   }
-
-  set('configs_erxes_engages', JSON.stringify(configsMap));
 
   return configsMap;
 };

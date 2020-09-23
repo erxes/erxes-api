@@ -78,4 +78,12 @@ export default class IntegrationsAPI extends RESTDataSource {
   public async updateConfigs(configsMap) {
     return this.post('/update-configs', { configsMap });
   }
+
+  public async createProductBoardNote(params) {
+    return this.post('/productBoard/create-note', params);
+  }
+
+  public async sendSms(params) {
+    return this.post('/telnyx/send-sms', params);
+  }
 }

@@ -1,6 +1,6 @@
 import * as strip from 'strip';
 import * as _ from 'underscore';
-import { ConversationMessages, Conversations, Customers, Integrations } from '../../../db/models';
+import { ConversationMessages, Conversations, Customers, Integrations, Tags } from '../../../db/models';
 import Messages from '../../../db/models/ConversationMessages';
 import {
   KIND_CHOICES,
@@ -12,7 +12,7 @@ import { IMessageDocument } from '../../../db/models/definitions/conversationMes
 import { IConversationDocument } from '../../../db/models/definitions/conversations';
 import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
-import { sendMessage } from '../../../messageBroker';
+import messageBroker from '../../../messageBroker';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
@@ -56,7 +56,7 @@ const sendConversationToIntegrations = (
       attachments.push({ type: 'image', url: img });
     });
 
-    return sendMessage('erxes-api:integrations-notification', {
+    return messageBroker().sendMessage('erxes-api:integrations-notification', {
       action,
       type,
       payload: JSON.stringify({
@@ -259,6 +259,32 @@ const conversationMutations = {
 
     const message = await ConversationMessages.addMessage(doc, user._id);
 
+    /**
+     * Send SMS only when:
+     * - integration is of kind telnyx
+     * - customer has primary phone filled
+     * - customer's primary phone is valid
+     * - content length within 160 characters
+     */
+    if (
+      kind === KIND_CHOICES.TELNYX &&
+      customer &&
+      customer.primaryPhone &&
+      customer.phoneValidationStatus === 'valid' &&
+      doc.content.length <= 160
+    ) {
+      await messageBroker().sendMessage('erxes-api:integrations-notification', {
+        action: 'sendConversationSms',
+        payload: JSON.stringify({
+          conversationMessageId: message._id,
+          conversationId,
+          integrationId,
+          toPhone: customer.primaryPhone,
+          content: strip(doc.content),
+        }),
+      });
+    }
+
     // send reply to facebook
     if (kind === KIND_CHOICES.FACEBOOK_MESSENGER) {
       type = 'facebook';
@@ -313,6 +339,21 @@ const conversationMutations = {
 
     try {
       await sendConversationToIntegrations(type, integrationId, conversationId, requestName, doc, dataSources, action);
+    } catch (e) {
+      debugExternalApi(e.message);
+      throw new Error(e.message);
+    }
+  },
+
+  async conversationsChangeStatusFacebookComment(_root, doc: IReplyFacebookComment, { dataSources }: IContext) {
+    const requestName = 'replyFacebookPost';
+    const type = 'facebook';
+    const action = 'change-status-comment';
+    const conversationId = doc.commentId;
+    doc.content = '';
+
+    try {
+      await sendConversationToIntegrations(type, '', conversationId, requestName, doc, dataSources, action);
     } catch (e) {
       debugExternalApi(e.message);
       throw new Error(e.message);
@@ -423,6 +464,35 @@ const conversationMutations = {
       debugExternalApi(e.message);
 
       await ConversationMessages.deleteOne({ _id: message._id });
+
+      throw new Error(e.message);
+    }
+  },
+
+  async conversationCreateProductBoardNote(_root, { _id }, { dataSources, user }: IContext) {
+    const conversation = await Conversations.findOne({ _id })
+      .select('customerId userId tagIds, integrationId')
+      .lean();
+    const tags = await Tags.find({ _id: { $in: conversation.tagIds } }).select('name');
+    const customer = await Customers.findOne({ _id: conversation.customerId });
+    const messages = await ConversationMessages.find({ conversationId: _id }).sort({
+      createdAt: 1,
+    });
+    const integrationId = conversation.integrationId;
+
+    try {
+      const productBoardLink = await dataSources.IntegrationsAPI.createProductBoardNote({
+        erxesApiConversationId: _id,
+        tags,
+        customer,
+        messages,
+        user,
+        integrationId,
+      });
+
+      return productBoardLink;
+    } catch (e) {
+      debugExternalApi(e.message);
 
       throw new Error(e.message);
     }

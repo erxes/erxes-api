@@ -1,6 +1,7 @@
 import { dateType } from 'aws-sdk/clients/sts'; // tslint:disable-line
 import * as faker from 'faker';
 import * as Random from 'meteor-random';
+import * as momentTz from 'moment-timezone';
 import { FIELDS_GROUPS_CONTENT_TYPES } from '../data/constants';
 import {
   ActivityLogs,
@@ -15,8 +16,6 @@ import {
   ConversationMessages,
   Conversations,
   Customers,
-  DashboardItems,
-  Dashboards,
   Deals,
   EmailDeliveries,
   EmailTemplates,
@@ -35,6 +34,7 @@ import {
   MessengerApps,
   NotificationConfigurations,
   Notifications,
+  OnboardingHistories,
   Permissions,
   PipelineLabels,
   Pipelines,
@@ -101,38 +101,6 @@ export const activityLogFactory = async (params: IActivityLogFactoryInput = {}) 
   });
 
   return activity.save();
-};
-
-interface IDashboardFactoryInput {
-  name?: string;
-}
-
-export const dashboardFactory = async (params: IDashboardFactoryInput) => {
-  const dashboard = new Dashboards({
-    name: params.name || 'name',
-  });
-
-  return dashboard.save();
-};
-
-interface IDashboardFactoryInput {
-  dashboardId?: string;
-  layout?: string;
-  vizState?: string;
-  name?: string;
-  type?: string;
-}
-
-export const dashboardItemsFactory = async (params: IDashboardFactoryInput) => {
-  const dashboardItem = new DashboardItems({
-    name: params.name || 'name',
-    dashboardId: params.dashboardId || 'dashboardId',
-    layout: params.layout || 'layout',
-    vizState: params.vizState || 'vizState',
-    type: params.type || 'type',
-  });
-
-  return dashboardItem.save();
 };
 
 interface IUserFactoryInput {
@@ -219,6 +187,8 @@ interface IEngageMessageFactoryInput {
   title?: string;
   email?: IEmail;
   smsContent?: string;
+  fromUserId?: string;
+  fromIntegrationId?: string;
 }
 
 export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) => {
@@ -235,7 +205,10 @@ export const engageMessageFactory = (params: IEngageMessageFactoryInput = {}) =>
     isDraft: params.isDraft || false,
     messenger: params.messenger,
     email: params.email,
-    smsContent: params.smsContent || 'Sms content',
+    smsContent: {
+      content: params.smsContent || 'Sms content',
+      fromIntegrationId: params.fromIntegrationId,
+    },
   });
 
   return engageMessage.save();
@@ -410,6 +383,7 @@ interface IChecklistItemFactoryInput {
   content?: string;
   isChecked?: boolean;
   createdUserId?: string;
+  order?: number;
 }
 
 export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
@@ -418,6 +392,7 @@ export const checklistItemFactory = (params: IChecklistItemFactoryInput) => {
     content: params.content || faker.random.uuid().toString,
     isChecked: params.isChecked || false,
     createdUserId: params.createdUserId || faker.random.uuid().toString(),
+    order: params.order || 0,
   });
 
   return checklistItem.save();
@@ -671,7 +646,7 @@ interface IIntegrationFactoryInput {
   leadData?: any;
   tagIds?: string[];
   isActive?: boolean;
-  messengerData?: object;
+  messengerData?: any;
   languageCode?: string;
 }
 
@@ -689,6 +664,10 @@ export const integrationFactory = async (params: IIntegrationFactoryInput = {}) 
     tagIds: params.tagIds,
     isActive: params.isActive === undefined || params.isActive === null ? true : params.isActive,
   };
+
+  if (params.messengerData && !params.messengerData.timezone) {
+    doc.messengerData.timezone = momentTz.tz.guess(true);
+  }
 
   const user = await userFactory({});
 
@@ -1121,7 +1100,7 @@ export const growthHackFactory = async (params: IGrowthHackFactoryInput = {}) =>
     impact: params.impact || 0,
     priority: params.priority,
     labelIds: params.labelIds || [],
-    order: params.order || Math.random()
+    order: params.order || Math.random(),
   });
 
   return growthHack.save();
@@ -1318,6 +1297,7 @@ export const conformityFactory = (params: IConformityFactoryInput) => {
 interface IEmailDeliveryFactoryInput {
   attachments?: string[];
   subject?: string;
+  status?: string;
   body?: string;
   to?: string[];
   cc?: string[];
@@ -1332,6 +1312,7 @@ export const emailDeliveryFactory = async (params: IEmailDeliveryFactoryInput = 
   const emailDelviry = new EmailDeliveries({
     attachments: params.attachments || [],
     subject: params.subject || 'subject',
+    status: params.status || 'pending',
     body: params.body || 'body',
     to: params.to || ['to'],
     cc: params.cc || ['cc'],
@@ -1364,3 +1345,15 @@ export function engageDataFactory(params: IMessageEngageDataParams) {
     sentAs: params.sentAs || 'post',
   };
 }
+
+interface IOnboardHistoryParams {
+  userId: string;
+  isCompleted?: boolean;
+  completedSteps?: string[];
+}
+
+export const onboardHistoryFactory = async (params: IOnboardHistoryParams) => {
+  const onboard = new OnboardingHistories(params);
+
+  return onboard.save();
+};

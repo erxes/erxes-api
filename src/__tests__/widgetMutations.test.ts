@@ -512,8 +512,41 @@ describe('lead', () => {
       },
     );
 
-    expect(response.integration._id).toBe(integration._id);
-    expect(response.form._id).toBe(form._id);
+    expect(response && response.integration._id).toBe(integration._id);
+    expect(response && response.form._id).toBe(form._id);
+
+    mock.restore();
+  });
+
+  test('leadConnect: Already filled', async () => {
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
+    const brand = await brandFactory({});
+    const form = await formFactory({});
+
+    const integration = await integrationFactory({
+      brandId: brand._id,
+      formId: form._id,
+      leadData: {
+        loadType: 'embedded',
+        isRequireOnce: true,
+      },
+    });
+
+    const conversation = await conversationFactory({ customerId: '123123', integrationId: integration._id });
+
+    const response = await widgetMutations.widgetsLeadConnect(
+      {},
+      {
+        brandCode: brand.code || '',
+        formCode: form.code || '',
+        cachedCustomerId: '123123',
+      },
+    );
+    expect(conversation).toBeDefined();
+    expect(response).toBeNull();
     mock.restore();
   });
 
@@ -629,10 +662,10 @@ describe('lead', () => {
 
     expect(response && response.status).toBe('ok');
 
-    expect(await Conversations.find().count()).toBe(1);
-    expect(await ConversationMessages.find().count()).toBe(1);
-    expect(await Customers.find().count()).toBe(1);
-    expect(await FormSubmissions.find().count()).toBe(1);
+    expect(await Conversations.find().countDocuments()).toBe(1);
+    expect(await ConversationMessages.find().countDocuments()).toBe(1);
+    expect(await Customers.find().countDocuments()).toBe(1);
+    expect(await FormSubmissions.find().countDocuments()).toBe(1);
 
     const message = await ConversationMessages.findOne();
     const formData = message ? message.formWidgetData : {};

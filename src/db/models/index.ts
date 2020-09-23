@@ -9,7 +9,6 @@ import Conformities from './Conformities';
 import ConversationMessages from './ConversationMessages';
 import Conversations from './Conversations';
 import Customers from './Customers';
-import { DashboardItems, Dashboards } from './Dashboard';
 import Deals from './Deals';
 import EmailDeliveries from './EmailDeliveries';
 import EmailTemplates from './EmailTemplates';
@@ -28,7 +27,7 @@ import PipelineLabels from './PipelineLabels';
 import PipelineTemplates from './PipelineTemplates';
 import { ProductCategories, Products } from './Products';
 import ResponseTemplates from './ResponseTemplates';
-import { RobotEntries } from './Robot';
+import { OnboardingHistories, RobotEntries } from './Robot';
 import Scripts from './Scripts';
 import Segments from './Segments';
 import Tags from './Tags';
@@ -83,6 +82,5 @@ export {
   PipelineLabels,
   Checklists,
   ChecklistItems,
-  DashboardItems,
-  Dashboards,
+  OnboardingHistories,
 };

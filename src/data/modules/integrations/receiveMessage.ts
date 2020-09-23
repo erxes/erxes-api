@@ -1,4 +1,11 @@
-import { ConversationMessages, Conversations, Customers, Integrations, Users } from '../../../db/models';
+import {
+  ConversationMessages,
+  Conversations,
+  Customers,
+  EmailDeliveries,
+  Integrations,
+  Users,
+} from '../../../db/models';
 import { CONVERSATION_STATUSES } from '../../../db/models/definitions/constants';
 import { graphqlPubsub } from '../../../pubsub';
 import { getConfigs } from '../../utils';
@@ -17,7 +24,7 @@ const sendSuccess = data => ({
  * Handle requests from integrations api
  */
 export const receiveRpcMessage = async msg => {
-  const { action, metaInfo, payload, hostname } = msg;
+  const { action, metaInfo, payload } = msg;
   const doc = JSON.parse(payload || '{}');
 
   if (action === 'get-create-update-customer') {
@@ -37,7 +44,7 @@ export const receiveRpcMessage = async msg => {
       customer = await getCustomer({ primaryPhone });
 
       if (customer) {
-        await Customers.updateCustomer(customer._id, doc, hostname);
+        await Customers.updateCustomer(customer._id, doc);
         return sendSuccess({ _id: customer._id });
       }
     }
@@ -118,6 +125,11 @@ export const receiveRpcMessage = async msg => {
     const configs = await getConfigs();
     return sendSuccess({ configs });
   }
+
+  if (action === 'getUserIds') {
+    const users = await Users.find({}, { _id: 1 });
+    return sendSuccess({ userIds: users.map(user => user._id) });
+  }
 };
 
 /*
@@ -127,7 +139,7 @@ export const receiveIntegrationsNotification = async msg => {
   const { action } = msg;
 
   if (action === 'external-integration-entry-added') {
-    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted');
+    graphqlPubsub.publish('conversationExternalIntegrationMessageInserted', {});
 
     return sendSuccess({ status: 'ok' });
   }
@@ -141,5 +153,9 @@ export const receiveEngagesNotification = async msg => {
 
   if (action === 'setDoNotDisturb') {
     await Customers.updateOne({ _id: data.customerId }, { $set: { doNotDisturb: 'Yes' } });
+  }
+
+  if (action === 'transactionEmail') {
+    await EmailDeliveries.updateEmailDeliveryStatus(data.emailDeliveryId, data.status);
   }
 };

@@ -225,7 +225,7 @@ describe('Customers model tests', () => {
 
     // test duplication
     try {
-      await Customers.updateCustomer(_customer._id, doc, 'localhost');
+      await Customers.updateCustomer(_customer._id, doc);
     } catch (e) {
       expect(e.message).toBe('Duplicated email');
     }
@@ -233,14 +233,14 @@ describe('Customers model tests', () => {
     // remove previous duplicated entry
     await Customers.deleteOne({ _id: previousCustomer._id });
 
-    let customerObj = await Customers.updateCustomer(_customer._id, doc, 'localhost');
+    let customerObj = await Customers.updateCustomer(_customer._id, doc);
 
     expect(customerObj.modifiedAt).toBeDefined();
     expect(customerObj.firstName).toBe(doc.firstName);
     expect(customerObj.primaryEmail).toBe(doc.primaryEmail);
     expect(customerObj.primaryPhone).toBe(doc.primaryPhone);
 
-    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' }, 'localhost');
+    customerObj = await Customers.updateCustomer(_customer._id, { primaryEmail: '' });
 
     expect(customerObj.primaryEmail).toBe('');
 
@@ -272,15 +272,11 @@ describe('Customers model tests', () => {
     }
 
     try {
-      await Customers.updateCustomer(
-        _customer._id,
-        {
-          primaryEmail: 'email',
-          emails: ['dombo@yahoo.com'],
-          customFieldsData: [{ field: field._id, value: 'invalid number' }],
-        },
-        'localhost',
-      );
+      await Customers.updateCustomer(_customer._id, {
+        primaryEmail: 'email',
+        emails: ['dombo@yahoo.com'],
+        customFieldsData: [{ field: field._id, value: 'invalid number' }],
+      });
     } catch (e) {
       expect(e.message).toBe(`${field.text}: Invalid number`);
     }
@@ -528,13 +524,11 @@ describe('Customers model tests', () => {
   });
 
   test('Update profile score', async () => {
-    const response = await Customers.updateProfileScore('fakeId', true);
-
-    expect(response).toBe(0);
-
     const customer = await customerFactory({});
 
-    Customers.updateProfileScore(customer._id, false);
+    const response = await Customers.calcPSS({ ...customer });
+
+    expect(response.profileScore).toBe(0);
   });
 
   test('Mark as active', async () => {
