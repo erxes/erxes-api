@@ -216,6 +216,7 @@ app.get('/template-export', async (req: any, res) => {
 
 app.get('/print-dashboard', async (req: any, res) => {
   const { dashboardId } = req.query;
+  debugBase(`Print dashboard request with ${req.query}`);
 
   try {
     const pdf = await getDashboardFile(dashboardId);
@@ -224,6 +225,7 @@ app.get('/print-dashboard', async (req: any, res) => {
 
     return res.send(pdf);
   } catch (e) {
+    debugBase(`error occured while printing dashboard ${e.message}}`);
     return res.end(express.response);
   }
 });
