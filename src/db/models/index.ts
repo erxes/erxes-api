@@ -67,6 +67,8 @@ export {
   Pipelines,
   Stages,
   Deals,
+  Dashboards,
+  DashboardItems,
   Products,
   ProductCategories,
   Configs,
@@ -83,7 +85,5 @@ export {
   PipelineLabels,
   Checklists,
   ChecklistItems,
-  DashboardItems,
-  Dashboards,
   OnboardingHistories,
 };

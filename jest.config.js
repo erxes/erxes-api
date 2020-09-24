@@ -18,6 +18,9 @@ module.exports = {
     '!src/data/resolvers/mutations/robot.ts',
     '!src/data/resolvers/queries/insights.ts',
     '!src/data/resolvers/queries/robot.ts',
+    '!src/data/resolvers/queries/dashboard.ts',
+    '!src/data/resolvers/mutations/dashboard.ts',
+    '!src/db/models/Dashboard.ts',
     '!src/data/resolvers/subscriptions/**',
   ],
   coverageThreshold: {
