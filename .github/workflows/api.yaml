@@ -3,35 +3,36 @@ name: Api CI
 on:
   push:
     branches:
-      - "**"
+      - '**'
     paths:
-      - "**"
-      - "!.github/**"
-      - ".github/workflows/api.yaml"
-      - "!elkSyncer/**"
-      - "!email-verifier/**"
-      - "!engages-email-sender/**"
-      - "!logger/**"
-      - "!**.md"
-      - "!base.Dockerfile"
-      - "!base.Dockerfile.dockerignore"
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/api.yaml'
+      - '!elkSyncer/**'
+      - '!email-verifier/**'
+      - '!engages-email-sender/**'
+      - '!logger/**'
+      - '!**.md'
+      - '!base.Dockerfile'
+      - '!base.Dockerfile.dockerignore'
   pull_request:
     branches:
       - master
       - develop
       - crons
       - workers
+      - enterprise
     paths:
-      - "**"
-      - "!.github/**"
-      - ".github/workflows/api.yaml"
-      - "!elkSyncer/**"
-      - "!email-verifier/**"
-      - "!engages-email-sender/**"
-      - "!logger/**"
-      - "!**.md"
-      - "!base.Dockerfile"
-      - "!base.Dockerfile.dockerignore"
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/api.yaml'
+      - '!elkSyncer/**'
+      - '!email-verifier/**'
+      - '!engages-email-sender/**'
+      - '!logger/**'
+      - '!**.md'
+      - '!base.Dockerfile'
+      - '!base.Dockerfile.dockerignore'
 
 jobs:
   api:
