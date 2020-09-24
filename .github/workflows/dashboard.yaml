@@ -12,14 +12,7 @@ on:
       - '*'
   pull_request:
     branches:
-<<<<<<< HEAD
       - enterprise
-=======
-      - master
-      - develop
-      - apm
-      - automations
->>>>>>> 153c6747f17d2999572a55a39a76975b14973819
     paths:
       - 'dashboard/**'
       - '!dashboard/mongosqld/**'
