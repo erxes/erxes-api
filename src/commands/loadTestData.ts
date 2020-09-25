@@ -1,11 +1,11 @@
 import * as dotenv from 'dotenv';
 import * as faker from 'faker';
 import * as fs from 'fs';
-// import { deleteFile } from '../data/utils';
+import { disconnect } from 'mongoose';
 import * as shelljs from 'shelljs';
-// import * as path from 'path';
 import * as XlsxStreamReader from 'xlsx-stream-reader';
 import { checkFieldNames } from '../data/modules/fields/utils';
+import widgetMutations from '../data/resolvers/mutations/widgets';
 import { getEnv } from '../data/utils';
 import { connect } from '../db/connection';
 import {
@@ -14,6 +14,7 @@ import {
   Channels,
   Companies,
   Conformities,
+  Conversations,
   Customers,
   Deals,
   Fields,
@@ -34,12 +35,11 @@ import {
   UsersGroups,
 } from '../db/models';
 import { IPipelineStage } from '../db/models/definitions/boards';
-
-import { LEAD_LOAD_TYPES } from '../db/models/definitions/constants';
+import { LEAD_LOAD_TYPES, MESSAGE_TYPES } from '../db/models/definitions/constants';
 import { debugWorkers } from '../debuggers';
+import { initMemoryStorage } from '../inmemoryStorage';
 import { clearEmptyValues, generatePronoun, updateDuplicatedValue } from '../workers/utils';
-// import { createWorkers, splitToCore } from '../workers/utils';
-
+import memoryStorage from './../inmemoryStorage';
 dotenv.config();
 
 export const icons = [
@@ -83,6 +83,7 @@ const main = async () => {
   });
 
   const connection = await connect();
+  initMemoryStorage();
 
   const dbName = connection.connection.db.databaseName;
   console.log(`drop and create database: ${dbName}`);
@@ -90,7 +91,12 @@ const main = async () => {
   await connection.connection.dropDatabase();
 
   const userGroup = await UsersGroups.create({ name: 'admin' });
-
+  const groups = ['support', 'development', 'management'];
+  console.log('Creating: UserGroups');
+  groups.forEach(async group => {
+    await UsersGroups.create({ name: group });
+  });
+  console.log('Finished: UserGroups');
   const brand = await Brands.create({ name: faker.random.word(), description: faker.lorem.lines() });
 
   const generator = require('generate-password');
@@ -101,8 +107,6 @@ const main = async () => {
     uppercase: true,
     strict: true,
   });
-
-  console.log('password: ', newPwd);
 
   const userDoc = {
     createdAt: faker.date.recent(),
@@ -128,12 +132,48 @@ const main = async () => {
     isActive: true,
   };
 
+  console.log('Creating: Users');
+
   const admin = await Users.createUser(userDoc);
 
+  for (let i = 0; i < 10; i++) {
+    const randomGroup = await UsersGroups.aggregate([{ $sample: { size: 1 } }]);
+    const fakeUserDoc = {
+      createdAt: faker.date.recent(),
+      username: faker.internet.userName(),
+      password: newPwd,
+      isOwner: true,
+      email: faker.internet.email(),
+      getNotificationByEmail: true,
+      details: {
+        avatar: faker.image.avatar(),
+        fullName: faker.name.findName(),
+        shortName: faker.name.firstName(),
+        position: faker.name.jobTitle(),
+        location: faker.address.streetAddress(),
+        description: faker.name.title(),
+        operatorPhone: faker.phone.phoneNumber(),
+      },
+      links: {
+        link: faker.internet.url(),
+      },
+      brandIds: [brand.id],
+      groupIds: [randomGroup[0].id],
+      isActive: true,
+    };
+    await Users.createUser(fakeUserDoc);
+  }
+  console.log('Finished: Users');
+
+  console.log('Creating: Channels');
   const channel = await Channels.createChannel(
     { name: faker.random.word(), description: faker.lorem.sentence(), memberIds: [admin._id] },
     admin._id,
   );
+
+  console.log('Finished: Channels');
+
+  console.log('Creating: Messenger Integration');
 
   const integration = await Integrations.createMessengerIntegration(
     {
@@ -148,7 +188,12 @@ const main = async () => {
 
   await Channels.updateMany({ _id: { $in: [channel._id] } }, { $push: { integrationIds: integration._id } });
 
+  console.log('Finished: Messenger Integration');
+
   // popup
+
+  console.log('Creating: Popups');
+
   const form = await Forms.createForm(
     {
       title: faker.random.word(),
@@ -160,7 +205,9 @@ const main = async () => {
   );
 
   const validations = ['datetime', 'date', 'email', 'number', 'phone'];
+
   let order = 0;
+
   for (const validation of validations) {
     await Fields.createField({
       contentTypeId: form._id,
@@ -171,17 +218,8 @@ const main = async () => {
       description: faker.random.word(),
       order,
     });
-
     order++;
   }
-
-  // const callout = {
-  //   title: faker.random.word(),
-  //   body: faker.lorem.sentence(),
-  //   buttonText: 'Confirm',
-  //   featuredImage: faker.random.image(),
-  //   skip: false,
-  // };
 
   let loadType = LEAD_LOAD_TYPES.ALL[Math.floor(Math.random() * LEAD_LOAD_TYPES.ALL.length)];
 
@@ -206,7 +244,11 @@ const main = async () => {
     admin._id,
   );
 
+  console.log('Finished: Popups');
+
   // Knowledgebase
+  console.log('Creating: KnowledgeBase');
+
   const kbTopic = await KnowledgeBaseTopics.createDoc(
     {
       brandId: brand._id,
@@ -256,41 +298,11 @@ const main = async () => {
       );
     }
   }
+  console.log('Finished: Knowledgebase');
 
-  // Sales PipeLine
+  // Contacts
 
-  const productCategory = await ProductCategories.createProductCategory({
-    name: 'Vehicles',
-    code: 'code001',
-    description: faker.lorem.sentence(),
-    order: '0',
-  });
-
-  for (let i = 0; i < 10; i++) {
-    await Products.createProduct({
-      name: faker.random.word(),
-      categoryId: productCategory._id,
-      unitPrice: faker.random.number({ min: 100000, max: 1000000 }),
-      type: 'product',
-      description: faker.lorem.sentence(),
-      sku: faker.random.number(),
-      code: faker.random.number(),
-    });
-  }
-
-  const stages: IPipelineStage[] = [];
-
-  for (let i = 0; i < 5; i++) {
-    const stage: IPipelineStage = { _id: faker.unique, name: faker.random.word(), type: 'deal', pipelineId: '' };
-    stages.push(stage);
-  }
-
-  for (let i = 0; i < 3; i++) {
-    const board = await Boards.createBoard({ name: faker.random.word(), type: 'deal', userId: admin._id });
-    for (let j = 0; j < 2; j++) {
-      await Pipelines.createPipeline({ name: faker.random.word(), type: 'deal', boardId: board._id }, stages);
-    }
-  }
+  console.log('Creating: Contacts');
 
   for (let i = 0; i < 10; i++) {
     await Customers.createVisitor();
@@ -313,6 +325,120 @@ const main = async () => {
       importHistoryId,
     });
   }
+
+  console.log('Finished: Contacts');
+
+  // Sales PipeLine
+  console.log('Creating: Sales & Pipelines');
+
+  const productCategory = await ProductCategories.createProductCategory({
+    name: 'Vehicles',
+    code: 'code001',
+    description: faker.lorem.sentence(),
+    order: '0',
+  });
+
+  for (let i = 0; i < 10; i++) {
+    await Products.createProduct({
+      name: faker.random.word(),
+      categoryId: productCategory._id,
+      unitPrice: faker.random.number({ min: 100000, max: 1000000 }),
+      type: 'product',
+      description: faker.lorem.sentence(),
+      sku: faker.random.number(),
+      code: faker.random.number(),
+    });
+  }
+
+  const dealStages = await populateStages('deal');
+  for (let i = 0; i < 3; i++) {
+    const board = await Boards.createBoard({ name: faker.random.word(), type: 'deal', userId: admin._id });
+
+    for (let j = 0; j < 2; j++) {
+      await Pipelines.createPipeline({ name: faker.random.word(), type: 'deal', boardId: board._id }, dealStages);
+    }
+  }
+
+  console.log('Finished: Sales & PipeLines');
+
+  // Conversation
+
+  console.log('Creating: Conversations');
+
+  for (let i = 0; i < 5; i++) {
+    const randomCustomer = await Customers.aggregate([{ $sample: { size: 1 } }]);
+
+    if (randomCustomer[0]) {
+      memoryStorage().set(`customer_last_status_${randomCustomer[0]._id}`, 'left');
+      await widgetMutations.widgetsInsertMessage(
+        {},
+        {
+          contentType: MESSAGE_TYPES.TEXT,
+          integrationId: integration._id,
+          customerId: randomCustomer[0]._id || '',
+          message: faker.lorem.sentence(),
+        },
+      );
+    }
+  }
+
+  console.log('Finished: Conversations');
+
+  // Ticket
+
+  console.log('Creating: Tickets');
+
+  const randomConversation = await Conversations.findOne();
+  const ticketBoard = await Boards.createBoard({ name: faker.random.word(), type: 'ticket', userId: admin._id });
+  const ticketStages = await populateStages('ticket');
+
+  for (let j = 0; j < 2; j++) {
+    await Pipelines.createPipeline(
+      { name: faker.random.word(), type: 'ticket', boardId: ticketBoard._id },
+      ticketStages,
+    );
+  }
+
+  const selectedTicketStage = await Stages.findOne({ type: 'ticket' });
+
+  await Tickets.createTicket({
+    name: faker.random.word(),
+    userId: admin._id,
+    initialStageId: selectedTicketStage?._id,
+    sourceConversationId: randomConversation?._id,
+    stageId: selectedTicketStage?._id || '',
+  });
+
+  console.log('Finished: Tickets');
+
+  // Task
+
+  console.log('Created: Tasks');
+
+  const randomUser = await Users.aggregate([{ $sample: { size: 1 } }]);
+  const taskBoard = await Boards.createBoard({ name: faker.random.word(), type: 'task', userId: admin._id });
+  const taskStages = await populateStages('task');
+
+  for (let j = 0; j < 2; j++) {
+    await Pipelines.createPipeline({ name: faker.random.word(), type: 'task', boardId: taskBoard._id }, taskStages);
+  }
+
+  const selectedTaskStage = await Stages.findOne({ type: 'task' });
+
+  await Tasks.createTask({
+    name: faker.random.word(),
+    userId: admin._id,
+    initialStageId: selectedTaskStage?._id,
+    assignedUserIds: [randomUser[0]._id || admin._id],
+    stageId: selectedTicketStage?._id || '',
+  });
+
+  console.log('Finished: Tasks');
+
+  await disconnect();
+
+  console.log('admin email: admin@erxes.io');
+  console.log('admin password: ', newPwd);
 
   process.exit();
 };
@@ -470,13 +596,6 @@ const insertToDB = async xlsData => {
     for (const property of properties) {
       const value = (fieldValue[colIndex] || '').toString();
 
-      // if (contentType === 'customer') {
-      //   doc.state = 'customer';
-      // }
-      // if (contentType === 'lead') {
-      //   doc.state = 'lead';
-      // }
-
       switch (property.type) {
         case 'customProperty':
           {
@@ -603,16 +722,9 @@ const insertToDB = async xlsData => {
         doc.stageId = stage && stage._id;
       }
     }
-    // if (contentType === 'company') {
-    // console.log(doc);
-    // }
 
     await create(doc, user)
       .then(async cocObj => {
-        // if(contentType === 'company'){
-        //   console.log(cocObj);
-        // }
-        // console.log(contentType);
         if (doc.companiesPrimaryNames && doc.companiesPrimaryNames.length > 0 && contentType !== 'company') {
           const companyIds: string[] = [];
 
@@ -699,6 +811,16 @@ const insertToDB = async xlsData => {
       throw new Error('Could not find import history');
     }
   }
+};
+
+const populateStages = async type => {
+  const stages: IPipelineStage[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    const stage: IPipelineStage = { _id: faker.unique, name: faker.random.word(), type, pipelineId: '' };
+    stages.push(stage);
+  }
+  return stages;
 };
 
 main();
