@@ -87,7 +87,16 @@ export const mutations = `
     message: String,
     attachments: [AttachmentInput],
     contentType: String
+    isBot: Boolean
   ): ConversationMessage
+
+  widgetPostRequest(
+    customerId: String!
+    conversationId: String!
+    integrationId: String!,
+    message: String!
+    payload: String!
+    ): JSON
 
   widgetsReadConversationMessages(conversationId: String): JSON
   widgetsSaveCustomerGetNotified(customerId: String!, type: String!, value: String!): JSON

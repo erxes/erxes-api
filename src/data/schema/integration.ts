@@ -65,6 +65,7 @@ export const types = `
   input IntegrationMessengerData {
     _id: String
     notifyCustomer: Boolean
+    botEndpointUrl: String
     availabilityMethod: String
     isOnline: Boolean,
     onlineHours: [MessengerOnlineHoursSchema]
