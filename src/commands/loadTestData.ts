@@ -17,6 +17,8 @@ import {
   Conversations,
   Customers,
   Deals,
+  EmailTemplates,
+  EngageMessages,
   Fields,
   Forms,
   ImportHistory,
@@ -25,8 +27,10 @@ import {
   KnowledgeBaseCategories,
   KnowledgeBaseTopics,
   Pipelines,
+  PipelineTemplates,
   ProductCategories,
   Products,
+  Segments,
   Stages,
   Tags,
   Tasks,
@@ -83,23 +87,30 @@ const main = async () => {
   });
 
   const connection = await connect();
+
   initMemoryStorage();
 
   const dbName = connection.connection.db.databaseName;
+
   console.log(`drop and create database: ${dbName}`);
 
   await connection.connection.dropDatabase();
 
   const userGroup = await UsersGroups.create({ name: 'admin' });
   const groups = ['support', 'development', 'management'];
+
   console.log('Creating: UserGroups');
+
   groups.forEach(async group => {
     await UsersGroups.create({ name: group });
   });
+
   console.log('Finished: UserGroups');
+
   const brand = await Brands.create({ name: faker.random.word(), description: faker.lorem.lines() });
 
   const generator = require('generate-password');
+
   const newPwd = generator.generate({
     length: 10,
     numbers: true,
@@ -194,32 +205,7 @@ const main = async () => {
 
   console.log('Creating: Popups');
 
-  const form = await Forms.createForm(
-    {
-      title: faker.random.word(),
-      description: faker.lorem.sentence(),
-      buttonText: faker.random.word(),
-      type: 'lead',
-    },
-    admin._id,
-  );
-
-  const validations = ['datetime', 'date', 'email', 'number', 'phone'];
-
-  let order = 0;
-
-  for (const validation of validations) {
-    await Fields.createField({
-      contentTypeId: form._id,
-      contentType: 'form',
-      type: 'input',
-      validation,
-      text: faker.random.word(),
-      description: faker.random.word(),
-      order,
-    });
-    order++;
-  }
+  const form = await createForms('lead', admin);
 
   let loadType = LEAD_LOAD_TYPES.ALL[Math.floor(Math.random() * LEAD_LOAD_TYPES.ALL.length)];
 
@@ -434,6 +420,103 @@ const main = async () => {
   });
 
   console.log('Finished: Tasks');
+
+  // Segment
+  console.log('Creating: Segments');
+
+  const template = await EmailTemplates.create({
+    name: faker.random.word(),
+    content: `<p>${faker.lorem.sentences()}</p>\n`,
+  });
+
+  const segment = await Segments.createSegment({
+    name: 'Happy customers',
+    description: faker.lorem.sentence(),
+    contentType: 'customer',
+    color: faker.internet.color(),
+    subOf: '',
+    conditions: [],
+  });
+
+  const docAutoMessage = {
+    kind: 'visitorAuto',
+    title: 'Visitor auto message',
+    fromUserId: randomUser[0]._id,
+    segmentIds: [segment._id],
+    brandIds: [brand._id],
+    tagIds: [],
+    isLive: false,
+    isDraft: true,
+  };
+
+  const docAutoEmail = {
+    kind: 'auto',
+    title: 'Auto email every friday',
+    fromUserId: randomUser[0]._id,
+    segmentIds: [segment._id],
+    brandIds: [brand._id],
+    tagIds: [],
+    isLive: false,
+    isDraft: true,
+    email: {
+      subject: faker.lorem.sentence(),
+      sender: faker.internet.email(),
+      replyTo: faker.internet.email(),
+      content: faker.lorem.paragraphs(),
+      attachments: [],
+      templateId: template._id,
+    },
+    scheduleDate: {
+      type: '5',
+      month: '',
+      day: '',
+    },
+    method: 'email',
+  };
+
+  await EngageMessages.createEngageMessage(docAutoMessage);
+  await EngageMessages.createEngageMessage(docAutoEmail);
+
+  console.log('Finished: Engages');
+
+  // Growth Hack
+
+  console.log('Creating: Growth Hack');
+
+  const growthForm = await createForms('growthHack', admin);
+  const growthBoard = await Boards.createBoard({ name: faker.random.word(), type: 'growthHack', userId: admin._id });
+
+  const pipelineTemplate = await PipelineTemplates.createPipelineTemplate(
+    {
+      name: faker.random.word(),
+      description: faker.lorem.sentence(),
+      type: 'growthHack',
+    },
+    [
+      {
+        _id: faker.unique,
+        name: faker.random.word(),
+        formId: growthForm._id,
+      },
+    ],
+  );
+
+  const growthHackDock = {
+    name: faker.random.word(),
+    startDate: faker.date.past(),
+    endDate: faker.date.future(),
+    visibility: 'public',
+    type: 'growthHack',
+    boardId: growthBoard._id,
+    memberIds: [],
+    bgColor: faker.internet.color(),
+    templateId: pipelineTemplate._id,
+    hackScoringType: 'rice',
+    metric: 'monthly-active-users',
+  };
+  await Pipelines.createPipeline(growthHackDock);
+
+  console.log('Finished: Growth Hack');
 
   await disconnect();
 
@@ -821,6 +904,45 @@ const populateStages = async type => {
     stages.push(stage);
   }
   return stages;
+};
+
+const createForms = async (type: string, user: any) => {
+  const form = await Forms.createForm(
+    {
+      title: faker.random.word(),
+      description: faker.lorem.sentence(),
+      buttonText: faker.random.word(),
+      type,
+    },
+    user._id,
+  );
+
+  const validations = ['datetime', 'date', 'email', 'number', 'phone'];
+
+  let order = 0;
+
+  for (const validation of validations) {
+    let text = faker.random.word();
+
+    if (validation === 'email') {
+      text = 'email';
+    } else if (validation === 'phone') {
+      text = 'phone number';
+    }
+
+    await Fields.createField({
+      contentTypeId: form._id,
+      contentType: 'form',
+      type: 'input',
+      validation,
+      text,
+      description: faker.random.word(),
+      order,
+    });
+    order++;
+  }
+
+  return form;
 };
 
 main();
