@@ -24,6 +24,7 @@ export const types = `
     messageCount: Int
     number: Int
     tagIds: [String]
+    operatorStatus: String
 
     messages: [ConversationMessage]
     facebookPost: FacebookPost
@@ -245,4 +246,5 @@ export const mutations = `
   conversationDeleteVideoChatRoom(name: String!): Boolean
   conversationCreateVideoChatRoom(_id: String!): VideoCallData
   conversationCreateProductBoardNote(_id: String!): String
+  changeConversationOperator(_id: String! operatorStatus: String!): JSON
 `;

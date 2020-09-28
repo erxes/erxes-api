@@ -497,6 +497,10 @@ const conversationMutations = {
       throw new Error(e.message);
     }
   },
+
+  async changeConversationOperator(_root, { _id, operatorStatus }: { _id: string; operatorStatus: string }) {
+    return Conversations.updateOne({ _id }, { $set: { operatorStatus } });
+  },
 };
 
 requireLogin(conversationMutations, 'conversationMarkAsRead');

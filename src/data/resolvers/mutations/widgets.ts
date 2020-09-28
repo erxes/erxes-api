@@ -208,8 +208,6 @@ const widgetMutations = {
           }),
     };
 
-    console.log('customerDoc: ', customerDoc);
-
     // update location info and missing fields
     await Customers.updateCustomer(customer._id, customerDoc);
 
@@ -379,8 +377,12 @@ const widgetMutations = {
     // customer can write a message
     // to the closed conversation even if it's closed
     let conversation;
+    let isConversationBot = isBot;
 
     if (conversationId) {
+      conversation = await Conversations.findOne({ _id: conversationId }).lean();
+      isConversationBot = conversation.operatorStatus === CONVERSATION_OPERATOR_STATUS.BOT;
+
       conversation = await Conversations.findByIdAndUpdate(
         conversationId,
         {
@@ -388,7 +390,7 @@ const widgetMutations = {
           readUserIds: [],
 
           // reopen this conversation if it's closed
-          status: CONVERSATION_STATUSES.OPEN,
+          status: isConversationBot ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
         },
         { new: true },
       );
@@ -397,7 +399,8 @@ const widgetMutations = {
       conversation = await Conversations.createConversation({
         customerId,
         integrationId,
-        operatorStatus: isBot ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
+        operatorStatus: isConversationBot ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
+        status: isConversationBot ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
         content: conversationContent,
       });
     }
@@ -408,11 +411,7 @@ const widgetMutations = {
       customerId,
       attachments,
       contentType,
-      botData: {
-        type: 'text',
-        text: message,
-        fromCustomer: true,
-      },
+      content: message,
     });
 
     await Conversations.updateOne(
@@ -420,7 +419,7 @@ const widgetMutations = {
       {
         $set: {
           // Reopen its conversation if it's closed
-          status: CONVERSATION_STATUSES.OPEN,
+          status: !isConversationBot ? CONVERSATION_STATUSES.OPEN : CONVERSATION_STATUSES.CLOSED,
 
           // setting conversation's content to last message
           content: conversationContent,
@@ -438,7 +437,7 @@ const widgetMutations = {
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
 
     // bot message ================
-    if (isBot) {
+    if (isConversationBot) {
       const integration = await Integrations.findOne({ _id: integrationId }).lean();
 
       const { botEndpointUrl } = integration.messengerData;
@@ -453,7 +452,10 @@ const widgetMutations = {
         conversationId: conversation._id,
         customerId,
         contentType,
-        botData: response,
+        botData: {
+          fromCustomer: false,
+          ...response,
+        },
       });
 
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
@@ -487,7 +489,7 @@ const widgetMutations = {
       });
     }
 
-    if (!isBot) {
+    if (!isConversationBot) {
       sendMobileNotification({
         title: 'You have a new message',
         body: conversationContent,

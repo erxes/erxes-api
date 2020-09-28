@@ -11,6 +11,7 @@ export const types = `
   type ConversationDetailResponse {
     _id: String
     messages: [ConversationMessage]
+    operatorStatus: String
     participatedUsers: [User]
     isOnline: Boolean
     supporters: [User]
