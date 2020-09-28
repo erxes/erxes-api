@@ -447,6 +447,10 @@ const widgetMutations = {
         throw new Error('BotPress endpoint URL not provided');
       }
 
+      graphqlPubsub.publish('conversationBotTypingStatus', {
+        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
+      });
+
       const response = await sendBotRequest(botEndpointUrl, message);
 
       const botMessage = await Messages.createMessage({
@@ -457,6 +461,9 @@ const widgetMutations = {
         isBotMessage: isConversationBot,
       });
 
+      graphqlPubsub.publish('conversationBotTypingStatus', {
+        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: false },
+      });
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
       graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: botMessage });
     }
