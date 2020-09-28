@@ -521,5 +521,6 @@ checkPermission(conversationMutations, 'conversationMessageAdd', 'conversationMe
 checkPermission(conversationMutations, 'conversationsAssign', 'assignConversation');
 checkPermission(conversationMutations, 'conversationsUnassign', 'assignConversation');
 checkPermission(conversationMutations, 'conversationsChangeStatus', 'changeConversationStatus');
+checkPermission(conversationMutations, 'conversationResolveAll', 'conversationResolveAll');
 
 export default conversationMutations;
