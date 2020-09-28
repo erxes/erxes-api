@@ -412,6 +412,7 @@ const widgetMutations = {
       attachments,
       contentType,
       content: message,
+      isBotMessage: isConversationBot,
     });
 
     await Conversations.updateOne(
@@ -452,10 +453,8 @@ const widgetMutations = {
         conversationId: conversation._id,
         customerId,
         contentType,
-        botData: {
-          fromCustomer: false,
-          ...response,
-        },
+        botData: response,
+        isBotMessage: isConversationBot,
       });
 
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
@@ -619,11 +618,8 @@ const widgetMutations = {
     const msg = await Messages.createMessage({
       conversationId,
       customerId,
-      botData: {
-        type: 'text',
-        text: message,
-        fromCustomer: true,
-      },
+      content: message,
+      isBotMessage: true,
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
@@ -634,6 +630,7 @@ const widgetMutations = {
       conversationId,
       customerId,
       botData: response,
+      isBotMessage: true,
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
