@@ -1039,6 +1039,10 @@ export const moduleObjects = {
         name: 'conversationMessageAdd',
         description: 'Add conversation message',
       },
+      {
+        name: 'conversationResolveAll',
+        description: 'Resolve all converstaion',
+      },
     ],
   },
   generalSettings: {
