@@ -1037,7 +1037,7 @@ export const getDashboardFile = async (dashboardId: string) => {
     const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
-    await page.goto(`${DASHBOARD_DOMAIN}/details/${dashboardId}?public=true`);
+    await page.goto(`${DASHBOARD_DOMAIN}/details/${dashboardId}?pdf=true`);
     await timeout(5000);
 
     const pdf = await page.pdf({ format: 'A4' });

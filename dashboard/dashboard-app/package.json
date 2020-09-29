@@ -1,0 +1,58 @@
+{
+  "name": "dashboard-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ant-design/compatible": "^1.0.8",
+    "@apollo/react-hooks": "^4.0.0",
+    "@cubejs-client/core": "^0.20.11",
+    "@cubejs-client/react": "^0.20.11",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "antd": "^4.6.6",
+    "apollo-cache-inmemory": "^1.6.6",
+    "apollo-client": "^2.6.10",
+    "apollo-link-schema": "^1.2.5",
+    "graphql": "^15.3.0",
+    "graphql-tag": "^2.11.0",
+    "graphql-tools": "^6.2.3",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-grid-layout": "^1.1.1",
+    "react-resizable": "^1.11.0",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "3.4.3",
+    "recharts": "^1.8.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "cubejsTemplates": {
+    "create-react-app": "0.0.1",
+    "react-antd-dynamic": "0.0.1",
+    "credentials": "0.0.1",
+    "recharts-charts": "0.0.1",
+    "antd-tables": "0.0.1"
+  }
+}
