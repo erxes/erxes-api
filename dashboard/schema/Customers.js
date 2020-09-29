@@ -96,7 +96,7 @@ cube(`Customers`, {
 
     locationCountryCube: {
       type: `string`,
-      title: `Location By Country`,
+      title: `Location Country`,
       case: {
         when: [{ sql: `${locationCountry} != ''`, label: { sql: `${locationCountry}` } }],
         else: { label: 'not registered' },
@@ -105,7 +105,7 @@ cube(`Customers`, {
 
     locationCityCube: {
       type: `string`,
-      title: `Location By City`,
+      title: `Location  City`,
       case: {
         when: [{ sql: `${locationCity} != ''`, label: { sql: `${locationCity}` } }],
         else: { label: 'not registered' },
@@ -120,11 +120,13 @@ cube(`Customers`, {
     createdat: {
       sql: `${CUBE}.\`createdAt\``,
       type: `time`,
+      title: 'Created Date',
     },
 
     modifiedat: {
       sql: `${CUBE}.\`modifiedAt\``,
       type: `time`,
+      title: 'Modified Date',
     },
   },
 });
