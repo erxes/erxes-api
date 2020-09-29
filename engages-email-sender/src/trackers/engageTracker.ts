@@ -25,15 +25,15 @@ export const getApi = async (type: string): Promise<any> => {
  * And updates engage message status and stats
  */
 const handleMessage = async message => {
-  let obj = message;
+  let parsedMessage;
 
   try {
-    obj = JSON.parse(message);
+    parsedMessage = JSON.parse(message);
   } catch (e) {
-    console.log(e.message);
+    parsedMessage = message;
   }
 
-  const { eventType, mail } = obj;
+  const { eventType, mail } = parsedMessage;
   const { headers } = mail;
 
   const engageMessageId = headers.find(header => header.name === 'Engagemessageid');
