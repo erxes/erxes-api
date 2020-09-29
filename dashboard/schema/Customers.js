@@ -33,6 +33,7 @@ cube(`Customers`, {
     },
 
     integrationName: {
+      title: 'Integration Name',
       type: `string`,
       case: {
         when: [{ sql: `${CUBE}.integrationId != ''`, label: { sql: `${Integrations}.name` } }],
@@ -41,6 +42,7 @@ cube(`Customers`, {
     },
 
     integrationKind: {
+      title: 'Integration Kind',
       type: `string`,
       case: {
         when: [{ sql: `${CUBE}.integrationId != ''`, label: { sql: `${Integrations}.kind` } }],
@@ -48,26 +50,30 @@ cube(`Customers`, {
       },
     },
 
-    emailvalidationstatus: {
+    emailValidationStatus: {
+      title: 'Email validation status',
       sql: `${CUBE}.\`emailValidationStatus\``,
       type: `string`,
     },
 
-    phonevalidationstatus: {
+    phoneValidationStatus: {
+      title: 'Phone Validation Status',
       sql: `${CUBE}.\`phoneValidationStatus\``,
       type: `string`,
     },
 
-    leadstatus: {
+    leadStatus: {
       type: `string`,
+      title: 'Lead Status',
       case: {
         when: [{ sql: `${CUBE}.leadStatus != ''`, label: { sql: `${CUBE}.leadStatus` } }],
         else: {},
       },
     },
 
-    lifecyclestate: {
+    lifecycleState: {
       type: `string`,
+      title: 'Lifecycle State',
       case: {
         when: [{ sql: `${CUBE}.lifecycleState != ''`, label: { sql: `${CUBE}.lifecycleState` } }],
         else: {},
@@ -90,7 +96,7 @@ cube(`Customers`, {
 
     locationCountryCube: {
       type: `string`,
-      title: `Location by country`,
+      title: `Location By Country`,
       case: {
         when: [{ sql: `${locationCountry} != ''`, label: { sql: `${locationCountry}` } }],
         else: { label: 'not registered' },
@@ -99,7 +105,7 @@ cube(`Customers`, {
 
     locationCityCube: {
       type: `string`,
-      title: `Location by city`,
+      title: `Location By City`,
       case: {
         when: [{ sql: `${locationCity} != ''`, label: { sql: `${locationCity}` } }],
         else: { label: 'not registered' },

@@ -59,7 +59,7 @@ cube(`Conversations`, {
         when: [{ sql: `${CUBE.assigneduserid} = ${Users._id}`, label: { sql: `${Users}.username` } }],
         else: {},
       },
-      title: `Assigned user`,
+      title: `Assigned User`,
     },
 
     closeduserid: {
@@ -74,7 +74,7 @@ cube(`Conversations`, {
         when: [{ sql: `${CUBE.closeduserid} = ${Users._id}`, label: { sql: `${Users}.username` } }],
         else: {},
       },
-      title: `Closed user`,
+      title: `Closed User`,
     },
 
     customerid: {
@@ -95,7 +95,7 @@ cube(`Conversations`, {
         when: [{ sql: `${CUBE.firstrespondeduserid} = ${Users._id}`, label: { sql: `${Users}.username` } }],
         else: {},
       },
-      title: `First responsed user`,
+      title: `First Responsed User`,
     },
 
     integrationid: {
@@ -108,9 +108,9 @@ cube(`Conversations`, {
       type: `string`,
       case: {
         when: [{ sql: `${CUBE}.integrationId != ''`, label: { sql: `${Integrations}.kind` } }],
-        else: {},
+        else: { label: 'undefined' },
       },
-      title: `integration kind`,
+      title: `Integration Kind`,
     },
 
     integrationName: {
@@ -119,12 +119,12 @@ cube(`Conversations`, {
         when: [{ sql: `${CUBE}.integrationId != ''`, label: { sql: `${Integrations}.name` } }],
         else: {},
       },
-      title: `integration name`,
+      title: `Integration Name`,
     },
 
     locationCountryCube: {
       type: `string`,
-      title: `Location by country`,
+      title: `Location By Country`,
       case: {
         when: [{ sql: `${Customers.locationCountry} != ''`, label: { sql: `${Customers.locationCountry}` } }],
         else: { label: 'not registered' },
@@ -145,11 +145,13 @@ cube(`Conversations`, {
     createdat: {
       sql: `${CUBE}.\`createdAt\``,
       type: `time`,
+      title: 'Created Date',
     },
 
     updatedat: {
       sql: `${CUBE}.\`updatedAt\``,
       type: `time`,
+      title: 'Updated Date',
     },
   },
 });
