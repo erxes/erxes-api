@@ -461,6 +461,10 @@ const widgetMutations = {
         botData: buildBotMessage(response),
       });
 
+      graphqlPubsub.publish('conversationBotTypingStatus', {
+        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
+      });
+
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
       graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: botMessage });
     }
