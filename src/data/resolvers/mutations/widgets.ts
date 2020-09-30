@@ -22,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { buildBotMessage, registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest } from '../../utils';
+import { registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -445,7 +445,7 @@ const widgetMutations = {
         conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
       });
 
-      const response = await sendRequest({
+      const botRequest = await sendRequest({
         method: 'POST',
         url: botEndpointUrl,
         body: {
@@ -458,7 +458,7 @@ const widgetMutations = {
         conversationId: conversation._id,
         customerId,
         contentType,
-        botData: buildBotMessage(response),
+        botData: botRequest.responses || [],
       });
 
       graphqlPubsub.publish('conversationBotTypingStatus', {
@@ -620,7 +620,7 @@ const widgetMutations = {
 
     const { botEndpointUrl } = integration.messengerData;
 
-    const response = await sendRequest({
+    const botRequest = await sendRequest({
       method: 'POST',
       url: botEndpointUrl,
       body: {
@@ -643,7 +643,7 @@ const widgetMutations = {
     const botMessage = await Messages.createMessage({
       conversationId,
       customerId,
-      botData: buildBotMessage(response),
+      botData: botRequest.responses || [],
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
