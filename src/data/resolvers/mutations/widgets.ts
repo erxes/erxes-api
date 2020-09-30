@@ -462,7 +462,7 @@ const widgetMutations = {
       });
 
       graphqlPubsub.publish('conversationBotTypingStatus', {
-        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
+        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: false },
       });
 
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
