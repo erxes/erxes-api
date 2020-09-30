@@ -1035,3 +1035,16 @@ export const s3Stream = async (key: string, errorCallback: (error: any) => void)
 
   return stream;
 };
+
+export const buildBotMessage = (responses: any) => {
+  if (responses.length === 0) {
+    return {
+      type: 'text',
+      text: 'I have nothing to say!',
+    };
+  }
+
+  const message = responses[responses.length === 1 ? 0 : 1];
+
+  return message;
+};

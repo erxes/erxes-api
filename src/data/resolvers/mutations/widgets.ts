@@ -22,8 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { sendBotRequest } from '../../botpress/utils';
-import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { buildBotMessage, registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -367,17 +366,21 @@ const widgetMutations = {
       message: string;
       attachments?: any[];
       contentType: string;
-      isBot?: boolean;
     },
   ) {
-    const { isBot, integrationId, customerId, conversationId, message, attachments, contentType } = args;
+    const { integrationId, customerId, conversationId, message, attachments, contentType } = args;
 
     const conversationContent = strip(message || '').substring(0, 100);
 
     // customer can write a message
     // to the closed conversation even if it's closed
     let conversation;
-    let isConversationBot = isBot;
+
+    const integration = await Integrations.findOne({ _id: integrationId }).lean();
+
+    const { botEndpointUrl } = integration.messengerData;
+
+    let isConversationBot = (botEndpointUrl || '').length > 0;
 
     if (conversationId) {
       conversation = await Conversations.findOne({ _id: conversationId }).lean();
@@ -412,7 +415,6 @@ const widgetMutations = {
       attachments,
       contentType,
       content: message,
-      isBotMessage: isConversationBot,
     });
 
     await Conversations.updateOne(
@@ -439,31 +441,26 @@ const widgetMutations = {
 
     // bot message ================
     if (isConversationBot) {
-      const integration = await Integrations.findOne({ _id: integrationId }).lean();
-
-      const { botEndpointUrl } = integration.messengerData;
-
-      if (!botEndpointUrl) {
-        throw new Error('BotPress endpoint URL not provided');
-      }
-
       graphqlPubsub.publish('conversationBotTypingStatus', {
         conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
       });
 
-      const response = await sendBotRequest(botEndpointUrl, message);
+      const response = await sendRequest({
+        method: 'POST',
+        url: botEndpointUrl,
+        body: {
+          type: 'text',
+          text: message,
+        },
+      });
 
       const botMessage = await Messages.createMessage({
         conversationId: conversation._id,
         customerId,
         contentType,
-        botData: response,
-        isBotMessage: isConversationBot,
+        botData: buildBotMessage(response),
       });
 
-      graphqlPubsub.publish('conversationBotTypingStatus', {
-        conversationBotTypingStatus: { conversationId: msg.conversationId, typing: false },
-      });
       graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
       graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: botMessage });
     }
@@ -619,14 +616,20 @@ const widgetMutations = {
 
     const { botEndpointUrl } = integration.messengerData;
 
-    const response = await sendBotRequest(botEndpointUrl, payload);
+    const response = await sendRequest({
+      method: 'POST',
+      url: botEndpointUrl,
+      body: {
+        type: 'text',
+        text: payload,
+      },
+    });
 
     // create customer message
     const msg = await Messages.createMessage({
       conversationId,
       customerId,
       content: message,
-      isBotMessage: true,
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
@@ -636,8 +639,7 @@ const widgetMutations = {
     const botMessage = await Messages.createMessage({
       conversationId,
       customerId,
-      botData: response,
-      isBotMessage: true,
+      botData: buildBotMessage(response),
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });

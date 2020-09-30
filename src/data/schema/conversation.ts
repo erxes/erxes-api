@@ -65,7 +65,6 @@ export const types = `
     conversationId: String
     internal: Boolean
     fromBot: Boolean
-    isBotMessage: Boolean
     botData: JSON
     customerId: String
     userId: String

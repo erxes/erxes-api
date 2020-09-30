@@ -4,7 +4,6 @@ export const debugExternalApi = debug('erxes-api:external-api-fetcher');
 export const debugInit = debug('erxes-api:init');
 export const debugCrons = debug('erxes-crons:');
 export const debugWorkers = debug('erxes-workers:');
-export const debugBot = debug('erxes-bot:');
 export const debugDb = debug('erxes-api:db');
 export const debugImport = debug('erxes-api:import');
 export const debugBase = debug('erxes-api:base');

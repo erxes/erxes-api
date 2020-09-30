@@ -88,7 +88,6 @@ export const mutations = `
     message: String,
     attachments: [AttachmentInput],
     contentType: String
-    isBot: Boolean
   ): ConversationMessage
 
   widgetPostRequest(
