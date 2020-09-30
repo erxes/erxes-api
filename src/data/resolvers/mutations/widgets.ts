@@ -22,6 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
+import { AUTO_BOT_MESSAGES } from '../../constants';
 import { registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
@@ -454,11 +455,23 @@ const widgetMutations = {
         },
       });
 
+      const { responses } = botRequest;
+
+      const botData =
+        responses.length !== 0
+          ? responses
+          : [
+              {
+                type: 'text',
+                text: AUTO_BOT_MESSAGES.NO_RESPONSE,
+              },
+            ];
+
       const botMessage = await Messages.createMessage({
         conversationId: conversation._id,
         customerId,
         contentType,
-        botData: botRequest.responses || [],
+        botData,
       });
 
       graphqlPubsub.publish('conversationBotTypingStatus', {
@@ -639,11 +652,23 @@ const widgetMutations = {
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
 
+    const { responses } = botRequest;
+
+    const botData =
+      responses.length !== 0
+        ? responses
+        : [
+            {
+              type: 'text',
+              text: AUTO_BOT_MESSAGES.NO_RESPONSE,
+            },
+          ];
+
     // create bot message
     const botMessage = await Messages.createMessage({
       conversationId,
       customerId,
-      botData: botRequest.responses || [],
+      botData,
     });
 
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: botMessage });
