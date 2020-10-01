@@ -7,9 +7,9 @@ import { Users } from '../db/models';
 dotenv.config();
 
 const main = async () => {
-  const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+  const MONGO_URL = getEnv({ name: 'MONGO_URL', defaultValue: 'mongodb://localhost/erxes-cypress' });
 
-  const connection = await connect();
+  const connection = await connect(MONGO_URL);
 
   const dbName = connection.connection.db.databaseName;
   console.log(`drop and create database: ${dbName}`)
