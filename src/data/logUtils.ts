@@ -3,7 +3,7 @@ import { Webhooks } from '../db/models';
 import { IPipelineDocument } from '../db/models/definitions/boards';
 import { IChannelDocument } from '../db/models/definitions/channels';
 import { ICompanyDocument } from '../db/models/definitions/companies';
-import { ACTIVITY_CONTENT_TYPES, WEBHOOK_ACTIONS } from '../db/models/definitions/constants';
+import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
 import { IEngageMessage, IEngageMessageDocument } from '../db/models/definitions/engages';
@@ -1332,7 +1332,7 @@ const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
 };
 
 const sendToWebhook = async (action: string, params: ILogDataParams) => {
-  const webhook = await Webhooks.findOne({ isOutgoing: true, 'actions.action': action, 'actions.type': params.type });
+  const webhook = await Webhooks.findOne({ 'actions.action': action, 'actions.type': params.type });
 
   if (!webhook) {
     return;

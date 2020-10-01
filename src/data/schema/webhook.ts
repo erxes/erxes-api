@@ -14,19 +14,19 @@ type WebhookAction {
 
 type Webhook {
   _id: String!
-  isOutgoing: Boolean
   url: String!
+  token: String
   actions: [WebhookAction]
 }`;
 
 export const queries = `
-  webhooks(isOutgoing: Boolean): [Webhook]
+  webhooks: [Webhook]
   webhookDetail(_id: String!): Webhook
-  webhooksTotalCount(isOutgoing: Boolean): Int
+  webhooksTotalCount: Int
 `;
 
 export const mutations = `
-	webhooksAdd(isOutgoing: Boolean, url: String!, actions: [WebhookActionInput]): Webhook
-	webhooksEdit(_id: String!, isOutgoing: Boolean, url: String!, actions: [WebhookActionInput]): Webhook
-  webhooksRemove(ids: [String!]!): JSON
+	webhooksAdd(url: String!, actions: [WebhookActionInput]): Webhook
+	webhooksEdit(_id: String!,url: String!, actions: [WebhookActionInput]): Webhook
+  webhooksRemove(_id: String!): JSON
 `;

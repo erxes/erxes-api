@@ -1,16 +1,32 @@
+import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
 import { IWebhook, IWebhookDocument, webhookSchema } from './definitions/webhook';
 
 export interface IWebhookModel extends Model<IWebhookDocument> {
   getWebHook(_id: string): Promise<IWebhookDocument>;
-  getWebHooks(isOutgoing: boolean): Promise<IWebhookDocument[]>;
+  getWebHooks(): Promise<IWebhookDocument[]>;
   createWebhook(doc: IWebhook): Promise<IWebhookDocument>;
   updateWebhook(_id: string, doc: IWebhook): Promise<IWebhookDocument>;
-  removeWebhooks(ids: string[]): void;
+  removeWebhooks(_id: string): void;
 }
 
 export const loadClass = () => {
   class Webhook {
+    public static async generateToken(code?: string) {
+      let generatedCode = code || Random.id().substr(0, 17);
+
+      let prevWebhook = await Webhooks.findOne({ token: generatedCode });
+
+      // search until not existing one found
+      while (prevWebhook) {
+        generatedCode = Random.id().substr(0, 17);
+
+        prevWebhook = await Webhooks.findOne({ token: generatedCode });
+      }
+
+      return generatedCode;
+    }
+
     /*
      * Get a Webhook
      */
@@ -24,8 +40,8 @@ export const loadClass = () => {
       return webhook;
     }
 
-    public static async getWebHooks(isOutgoing) {
-      const webhooks = await Webhooks.find({ isOutgoing });
+    public static async getWebHooks() {
+      const webhooks = await Webhooks.find({});
 
       return webhooks;
     }
@@ -37,7 +53,7 @@ export const loadClass = () => {
       if (!doc.url.includes('https')) {
         throw new Error('Url is not valid. Enter valid url with ssl cerfiticate');
       }
-      return Webhooks.create({ ...doc });
+      return Webhooks.create({ ...doc, token: await this.generateToken() });
     }
 
     public static async updateWebhook(_id: string, doc: IWebhook) {
@@ -50,8 +66,8 @@ export const loadClass = () => {
       return Webhooks.findOne({ _id });
     }
 
-    public static async removeWebhooks(ids: string[]) {
-      return Webhooks.deleteMany({ _id: { $in: ids } });
+    public static async removeWebhooks(_id) {
+      return Webhooks.deleteOne({ _id });
     }
   }
 
