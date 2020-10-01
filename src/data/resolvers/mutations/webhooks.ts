@@ -21,7 +21,7 @@ const webhookMutations = {
         type: MODULE_NAMES.WEBHOOK,
         newData: webhook,
         object: webhook,
-        description: `"${webhook.name}" has been created`,
+        description: `${webhook.url} has been created`,
       },
       user,
     );
@@ -41,7 +41,7 @@ const webhookMutations = {
         type: MODULE_NAMES.WEBHOOK,
         object: webhook,
         newData: doc,
-        description: `"${webhook.name}" has been edited`,
+        description: `${webhook.url} has been edited`,
       },
       user,
     );
@@ -52,20 +52,18 @@ const webhookMutations = {
   /**
    * Removes a webhook
    */
-  async webhooksRemove(_root, { ids }: { ids: string[] }, { user }: IContext) {
-    const webhooks = await Webhooks.find({ _id: { $in: ids } });
-    const removed = await Webhooks.removeWebhooks(ids);
+  async webhooksRemove(_root, { _id }: { _id: string }, { user }: IContext) {
+    const webhook = await Webhooks.getWebHook(_id);
+    const removed = await Webhooks.removeWebhooks(_id);
 
-    for (const webhook of webhooks) {
-      await putDeleteLog(
-        {
-          type: MODULE_NAMES.WEBHOOK,
-          object: webhook,
-          description: `"${webhook.name}" has been removed`,
-        },
-        user,
-      );
-    }
+    await putDeleteLog(
+      {
+        type: MODULE_NAMES.WEBHOOK,
+        object: webhook,
+        description: `${webhook.url} has been removed`,
+      },
+      user,
+    );
 
     return removed;
   },

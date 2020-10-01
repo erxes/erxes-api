@@ -20,13 +20,12 @@ export interface IWebhookActionDocument extends IWebhookAction, Document {}
 
 export interface IWebhook {
   url: string;
+  token: string;
   actions: IWebhookActionDocument[];
-  isOutgoing: boolean;
 }
 
 export interface IWebhookDocument extends IWebhook, Document {
   _id: string;
-  isOutgoing: boolean;
 }
 
 // Mongoose schemas ===========
@@ -34,6 +33,6 @@ export interface IWebhookDocument extends IWebhook, Document {
 export const webhookSchema = new Schema({
   _id: field({ pkey: true }),
   url: field({ type: String, required: true, unique: true }),
+  token: field({ type: String }),
   actions: field({ type: [webhookActionSchema], label: 'actions' }),
-  isOutgoing: field({ type: Boolean }),
 });

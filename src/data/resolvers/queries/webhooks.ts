@@ -6,8 +6,8 @@ const webhookQueries = {
   /**
    * Webhooks list
    */
-  webhooks(_root, { isOutgoing }: { isOutgoing: boolean }) {
-    return Webhooks.find({ isOutgoing });
+  webhooks(_root) {
+    return Webhooks.find({});
   },
 
   /**
@@ -17,8 +17,8 @@ const webhookQueries = {
     return Webhooks.findOne({ _id });
   },
 
-  async webhooksTotalCount(_root, { isOutgoing }: { isOutgoing: boolean }, { commonQuerySelector }: IContext) {
-    return Webhooks.find({ ...commonQuerySelector, isOutgoing }).countDocuments();
+  async webhooksTotalCount(_root, { commonQuerySelector }: IContext) {
+    return Webhooks.find({ ...commonQuerySelector }).countDocuments();
   },
 };
 
