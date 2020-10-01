@@ -1,8 +1,9 @@
 import * as _ from 'underscore';
+import { Webhooks } from '../db/models';
 import { IPipelineDocument } from '../db/models/definitions/boards';
 import { IChannelDocument } from '../db/models/definitions/channels';
 import { ICompanyDocument } from '../db/models/definitions/companies';
-import { ACTIVITY_CONTENT_TYPES } from '../db/models/definitions/constants';
+import { ACTIVITY_CONTENT_TYPES, WEBHOOK_ACTIONS } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IDealDocument, IProductDocument } from '../db/models/definitions/deals';
 import { IEngageMessage, IEngageMessageDocument } from '../db/models/definitions/engages';
@@ -1251,6 +1252,8 @@ export const putCreateLog = async (params: ILogDataParams, user: IUserDocument) 
 
   const descriptions = await gatherDescriptions({ action: LOG_ACTIONS.CREATE, type: params.type, obj: params.object });
 
+  await sendToWebhook(LOG_ACTIONS.CREATE, params);
+
   return putLog(
     {
       ...params,
@@ -1275,6 +1278,8 @@ export const putUpdateLog = async (params: ILogDataParams, user: IUserDocument) 
     updatedDocument: params.updatedDocument,
   });
 
+  await sendToWebhook(LOG_ACTIONS.UPDATE, params);
+
   return putLog(
     {
       ...params,
@@ -1297,6 +1302,8 @@ export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) 
     type: params.type,
     obj: params.object,
   });
+
+  await sendToWebhook(LOG_ACTIONS.DELETE, params);
 
   return putLog(
     {
@@ -1322,6 +1329,24 @@ const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
   } catch (e) {
     return e.message;
   }
+};
+
+const sendToWebhook = async (action: string, params: ILogDataParams) => {
+  const webhook = await Webhooks.findOne({ isOutgoing: true, 'actions.action': action, 'actions.type': params.type });
+
+  if (!webhook) {
+    return;
+  }
+
+  if (action === 'delete') {
+    return sendRequest({
+      url: webhook?.url,
+      method: 'post',
+      body: { data: JSON.stringify({ type: params.type, object: { _id: params.object._id } }), action },
+    });
+  }
+
+  sendRequest({ url: webhook?.url, method: 'post', body: { data: JSON.stringify(params), action } });
 };
 
 /**

@@ -635,3 +635,22 @@ export const SEGMENT_STRING_OPERATORS = ['e', 'dne', 'c', 'dnc'];
 export const SEGMENT_BOOLEAN_OPERATORS = ['is', 'ins', 'it', 'if'];
 export const SEGMENT_NUMBER_OPERATORS = ['numbere', 'numberdne', 'numberigt', 'numberilt'];
 export const SEGMENT_DATE_OPERATORS = ['dateigt', 'dateilt', 'wobm', 'woam', 'wobd', 'woad', 'drlt', 'drgt'];
+
+export const WEBHOOK_ACTIONS = {
+  outgoing: [
+    { label: 'Customer created', action: 'create', type: 'customer' },
+    { label: 'Customer updated', action: 'update', type: 'customer' },
+    { label: 'Customer deleted', action: 'delete', type: 'customer' },
+    { label: 'Company created', action: 'create', type: 'company' },
+    { label: 'Company updated', action: 'update', type: 'company' },
+    { label: 'Company deleted', action: 'delete', type: 'company' },
+  ],
+  incoming: [
+    { label: 'Customer created', action: 'create', type: 'customer' },
+    { label: 'Customer updated', action: 'update', type: 'customer' },
+    { label: 'Customer deleted', action: 'delete', type: 'customer' },
+    { label: 'Company created', action: 'create', type: 'company' },
+    { label: 'Company updated', action: 'update', type: 'company' },
+    { label: 'Company deleted', action: 'delete', type: 'company' },
+  ],
+};
