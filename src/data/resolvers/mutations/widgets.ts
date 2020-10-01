@@ -382,11 +382,11 @@ const widgetMutations = {
     const messengerData = integration.messengerData || {};
     const { botEndpointUrl } = messengerData;
 
-    let isConversationBot = (botEndpointUrl || '').length > 0;
+    let isBotConversation = (botEndpointUrl || '').length > 0;
 
     if (conversationId) {
       conversation = await Conversations.findOne({ _id: conversationId }).lean();
-      isConversationBot = conversation.operatorStatus === CONVERSATION_OPERATOR_STATUS.BOT;
+      isBotConversation = conversation.operatorStatus === CONVERSATION_OPERATOR_STATUS.BOT;
 
       conversation = await Conversations.findByIdAndUpdate(
         conversationId,
@@ -395,7 +395,7 @@ const widgetMutations = {
           readUserIds: [],
 
           // reopen this conversation if it's closed
-          status: isConversationBot ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
+          status: isBotConversation ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
         },
         { new: true },
       );
@@ -404,8 +404,8 @@ const widgetMutations = {
       conversation = await Conversations.createConversation({
         customerId,
         integrationId,
-        operatorStatus: isConversationBot ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
-        status: isConversationBot ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
+        operatorStatus: isBotConversation ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
+        status: isBotConversation ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
         content: conversationContent,
       });
     }
@@ -424,7 +424,7 @@ const widgetMutations = {
       {
         $set: {
           // Reopen its conversation if it's closed
-          status: !isConversationBot ? CONVERSATION_STATUSES.OPEN : CONVERSATION_STATUSES.CLOSED,
+          status: !isBotConversation ? CONVERSATION_STATUSES.OPEN : CONVERSATION_STATUSES.CLOSED,
 
           // setting conversation's content to last message
           content: conversationContent,
@@ -442,7 +442,7 @@ const widgetMutations = {
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
 
     // bot message ================
-    if (isConversationBot) {
+    if (isBotConversation) {
       graphqlPubsub.publish('conversationBotTypingStatus', {
         conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
       });
@@ -510,7 +510,7 @@ const widgetMutations = {
       });
     }
 
-    if (!isConversationBot) {
+    if (!isBotConversation) {
       sendMobileNotification({
         title: 'You have a new message',
         body: conversationContent,
