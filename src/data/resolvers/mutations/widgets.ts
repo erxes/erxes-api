@@ -22,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { messageSendtoWebhook, registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -465,6 +465,8 @@ const widgetMutations = {
       conversationId: conversation._id,
       receivers: conversationNotifReceivers(conversation, customerId),
     });
+
+    messageSendtoWebhook(msg, 'customerMessages');
 
     return msg;
   },

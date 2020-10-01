@@ -118,8 +118,6 @@ export const receiveRpcMessage = async msg => {
       conversationMessageInserted: message,
     });
 
-    console.log('mesage: ', message);
-
     return sendSuccess({ _id: message._id });
   }
 
