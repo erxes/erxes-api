@@ -28,7 +28,7 @@ import {
   MessengerApps,
 } from '../db/models';
 import { IBrandDocument } from '../db/models/definitions/brands';
-import { CONVERSATION_STATUSES, MESSAGE_TYPES } from '../db/models/definitions/constants';
+import { CONVERSATION_OPERATOR_STATUS, CONVERSATION_STATUSES, MESSAGE_TYPES } from '../db/models/definitions/constants';
 import { ICustomerDocument } from '../db/models/definitions/customers';
 import { IIntegrationDocument } from '../db/models/definitions/integrations';
 import './setup.ts';
@@ -186,12 +186,20 @@ describe('messenger connect', () => {
 describe('insertMessage()', () => {
   let _integration: IIntegrationDocument;
   let _customer: ICustomerDocument;
+  let _integrationBot: IIntegrationDocument;
 
   beforeEach(async () => {
     // Creating test data
     _integration = await integrationFactory({
       brandId: Random.id(),
       kind: 'messenger',
+    });
+    _integrationBot = await integrationFactory({
+      brandId: Random.id(),
+      kind: 'messenger',
+      messengerData: {
+        botEndpointUrl: 'botEndpointUrl',
+      },
     });
     _customer = await customerFactory({ integrationId: _integration._id });
   });
@@ -254,6 +262,141 @@ describe('insertMessage()', () => {
     );
 
     expect(message.content).toBe('withConversationId');
+  });
+
+  test('Widget bot message with conversationId', async () => {
+    const conversation = await conversationFactory({ operatorStatus: CONVERSATION_OPERATOR_STATUS.BOT });
+
+    const sendRequestMock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve({
+        responses: [
+          {
+            type: 'text',
+            text: 'Bot message',
+          },
+        ],
+      });
+    });
+
+    const message = await widgetMutations.widgetsInsertMessage(
+      {},
+      {
+        contentType: MESSAGE_TYPES.TEXT,
+        integrationId: _integrationBot._id,
+        message: 'User message',
+        customerId: _customer._id,
+        conversationId: conversation._id,
+      },
+    );
+
+    expect(message.content).toBe('User message');
+
+    const botMessage = await ConversationMessages.findOne({
+      conversationId: conversation._id,
+      botData: { $exists: true },
+    });
+
+    if (botMessage) {
+      expect(botMessage.botData).toEqual([
+        {
+          type: 'text',
+          text: 'Bot message',
+        },
+      ]);
+    } else {
+      fail('Bot message not found');
+    }
+
+    sendRequestMock.restore();
+  });
+
+  test('Bot message without conversationId', async () => {
+    const sendRequestMock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve({
+        responses: [
+          {
+            type: 'text',
+            text: 'Bot message',
+          },
+        ],
+      });
+    });
+
+    const message = await widgetMutations.widgetsInsertMessage(
+      {},
+      {
+        contentType: MESSAGE_TYPES.TEXT,
+        integrationId: _integrationBot._id,
+        message: 'User message',
+        customerId: _customer._id,
+      },
+    );
+
+    expect(message.content).toBe('User message');
+
+    const botMessage = await ConversationMessages.findOne({
+      conversationId: message.conversationId,
+      botData: { $exists: true },
+    });
+
+    if (botMessage) {
+      expect(botMessage.botData).toEqual([
+        {
+          type: 'text',
+          text: 'Bot message',
+        },
+      ]);
+    } else {
+      fail('Bot message not found');
+    }
+
+    sendRequestMock.restore();
+  });
+
+  test('Bot widget post request', async () => {
+    const conversation = await conversationFactory({ operatorStatus: CONVERSATION_OPERATOR_STATUS.BOT });
+
+    const sendRequestMock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve({
+        responses: [
+          {
+            type: 'text',
+            text: 'Response of quick reply',
+          },
+        ],
+      });
+    });
+
+    const botMessage = await widgetMutations.widgetPostRequest(
+      {},
+      {
+        integrationId: _integrationBot._id,
+        conversationId: conversation._id,
+        customerId: _customer._id,
+        message: 'Reply message',
+        payload: 'Response of reply',
+      },
+    );
+
+    const message = await ConversationMessages.findOne({
+      conversationId: conversation._id,
+      botData: { $exists: false },
+    });
+
+    if (message) {
+      expect(message.content).toBe('Reply message');
+    } else {
+      fail('Message not found');
+    }
+
+    expect(botMessage.botData).toEqual([
+      {
+        type: 'text',
+        text: 'Response of quick reply',
+      },
+    ]);
+
+    sendRequestMock.restore();
   });
 });
 

@@ -379,7 +379,8 @@ const widgetMutations = {
 
     const integration = await Integrations.findOne({ _id: integrationId }).lean();
 
-    const { botEndpointUrl } = integration.messengerData;
+    const messengerData = integration.messengerData || {};
+    const { botEndpointUrl } = messengerData;
 
     let isConversationBot = (botEndpointUrl || '').length > 0;
 
@@ -626,10 +627,6 @@ const widgetMutations = {
     }: { conversationId: string; customerId: string; integrationId: string; message: string; payload: string },
   ) {
     const integration = await Integrations.findOne({ _id: integrationId }).lean();
-
-    if (!integration) {
-      throw new Error('Integration not found');
-    }
 
     const { botEndpointUrl } = integration.messengerData;
 
