@@ -30,7 +30,7 @@ export default {
   },
 
   /*
-   * Show typing while waiting BotPress response
+   * Show typing while waiting Bot response
    */
   conversationBotTypingStatus: {
     subscribe: withFilter(
