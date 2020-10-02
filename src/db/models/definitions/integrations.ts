@@ -78,6 +78,11 @@ export interface ILeadData {
   isRequireOnce?: boolean;
 }
 
+export interface IWebhookData {
+  script: string;
+  token: string;
+}
+
 export interface ILeadDataDocument extends ILeadData, Document {
   viewCount?: number;
   contactsGathered?: number;
@@ -280,6 +285,14 @@ const uiOptionsSchema = new Schema(
   { _id: false },
 );
 
+const webhookDataSchema = new Schema(
+  {
+    script: field({ type: String }),
+    token: field({ type: String }),
+  },
+  { _id: false },
+);
+
 // schema for integration document
 export const integrationSchema = new Schema({
   _id: field({ pkey: true }),
@@ -303,6 +316,7 @@ export const integrationSchema = new Schema({
   formId: field({ type: String, label: 'Form' }),
   leadData: field({ type: leadDataSchema, label: 'Lead data' }),
   isActive: field({ type: Boolean, optional: true, default: true, label: 'Is active' }),
+  webhookData: field({ type: webhookDataSchema }),
   // TODO: remove
   formData: field({ type: leadDataSchema }),
   messengerData: field({ type: messengerDataSchema }),
