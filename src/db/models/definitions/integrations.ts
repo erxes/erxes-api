@@ -119,6 +119,7 @@ export interface IIntegrationDocument extends IIntegration, Document {
   formData?: ILeadData;
   leadData?: ILeadDataDocument;
   messengerData?: IMessengerDataDocument;
+  webhookData?: IWebhookData;
   uiOptions?: IUiOptionsDocument;
 }
 
@@ -287,7 +288,7 @@ const uiOptionsSchema = new Schema(
 
 const webhookDataSchema = new Schema(
   {
-    script: field({ type: String }),
+    script: field({ type: String, optional: true }),
     token: field({ type: String }),
   },
   { _id: false },
