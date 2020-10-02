@@ -1,4 +1,3 @@
-import { mergeSchemas } from 'graphql-tools';
 import * as strip from 'strip';
 import {
   Brands,
@@ -23,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { sendToWebhook, registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { registerOnboardHistory, sendEmail, sendMobileNotification, sendToWebhook } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
