@@ -1,4 +1,3 @@
-import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
 import { getUniqueValue } from '../factories';
 import { IWebhook, IWebhookDocument, webhookSchema } from './definitions/webhook';
