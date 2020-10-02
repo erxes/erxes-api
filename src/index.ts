@@ -35,6 +35,7 @@ import { initMemoryStorage } from './inmemoryStorage';
 import { initBroker } from './messageBroker';
 import { importer, uploader } from './middlewares/fileMiddleware';
 import userMiddleware from './middlewares/userMiddleware';
+import webhookMiddleware from './middlewares/webhookMiddleware';
 import widgetsMiddleware from './middlewares/widgetsMiddleware';
 import init from './startup';
 
@@ -133,6 +134,7 @@ app.get('/initial-setup', async (req: any, res) => {
   return res.send('success');
 });
 
+app.post('/webhooks/:id', webhookMiddleware);
 app.get('/script-manager', cors({ origin: '*' }), widgetsMiddleware);
 
 // events

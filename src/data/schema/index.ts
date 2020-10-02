@@ -127,6 +127,7 @@ import {
 } from './pipelineLabel';
 
 import { mutations as DashboardMutations, queries as DashboardQueries, types as DashboardTypes } from './dashboard';
+import { mutations as WebhookMutations, queries as WebhookQueries, types as WebhookTypes } from './webhook';
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 export const types = `
@@ -173,6 +174,7 @@ export const types = `
   ${PipelineLabelTypes}
   ${WidgetTypes}
   ${DashboardTypes}
+  ${WebhookTypes}
 `;
 
 export const queries = `
@@ -216,6 +218,7 @@ export const queries = `
     ${PipelineLabelQueries}
     ${WidgetQueries}
     ${DashboardQueries}
+    ${WebhookQueries}
   }
 `;
 
@@ -257,6 +260,7 @@ export const mutations = `
     ${PipelineLabelMutations}
     ${WidgetMutations}
     ${DashboardMutations}
+    ${WebhookMutations}
   }
 `;
 
