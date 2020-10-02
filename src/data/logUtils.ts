@@ -42,7 +42,7 @@ import {
 } from '../db/models/index';
 import messageBroker from '../messageBroker';
 import { MODULE_NAMES, RABBITMQ_QUEUES } from './constants';
-import { getSubServiceDomain, registerOnboardHistory, sendRequest } from './utils';
+import { getSubServiceDomain, registerOnboardHistory, sendRequest, sendToWebhook } from './utils';
 
 export type LogDesc = {
   [key: string]: any;
@@ -1252,7 +1252,7 @@ export const putCreateLog = async (params: ILogDataParams, user: IUserDocument) 
 
   const descriptions = await gatherDescriptions({ action: LOG_ACTIONS.CREATE, type: params.type, obj: params.object });
 
-  await sendToWebhook(LOG_ACTIONS.CREATE, params);
+  await sendToWebhook(LOG_ACTIONS.CREATE, params.type, params);
 
   return putLog(
     {
@@ -1278,7 +1278,7 @@ export const putUpdateLog = async (params: ILogDataParams, user: IUserDocument) 
     updatedDocument: params.updatedDocument,
   });
 
-  await sendToWebhook(LOG_ACTIONS.UPDATE, params);
+  await sendToWebhook(LOG_ACTIONS.UPDATE, params.type, params);
 
   return putLog(
     {
@@ -1303,7 +1303,7 @@ export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) 
     obj: params.object,
   });
 
-  await sendToWebhook(LOG_ACTIONS.DELETE, params);
+  await sendToWebhook(LOG_ACTIONS.DELETE, params.type, params);
 
   return putLog(
     {
@@ -1328,41 +1328,6 @@ const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
     });
   } catch (e) {
     return e.message;
-  }
-};
-
-const sendToWebhook = async (action: string, params: ILogDataParams) => {
-  const webhooks = await Webhooks.find({ 'actions.action': action, 'actions.type': params.type });
-
-  if (!webhooks) {
-    return;
-  }
-  for (const webhook of webhooks) {
-    if (!webhook.url || webhook.url.length === 0) {
-      continue;
-    }
-
-    if (action === 'delete') {
-      return sendRequest({
-        url: webhook.url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Erxes-token': webhook.token,
-        },
-        method: 'post',
-        body: { data: JSON.stringify({ type: params.type, object: { _id: params.object._id } }), action },
-      });
-    }
-
-    sendRequest({
-      url: webhook?.url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Erxes-token': webhook.token,
-      },
-      method: 'post',
-      body: { data: JSON.stringify(params), action, type: params.type },
-    });
   }
 };
 

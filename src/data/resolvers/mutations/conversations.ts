@@ -16,7 +16,7 @@ import messageBroker from '../../../messageBroker';
 import { graphqlPubsub } from '../../../pubsub';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
-import utils, { messageSendtoWebhook } from '../../utils';
+import utils from '../../utils';
 import QueryBuilder, { IListArgs } from '../queries/conversationQueryBuilder';
 
 export interface IConversationMessageAdd {
@@ -314,7 +314,7 @@ const conversationMutations = {
 
     const dbMessage = await ConversationMessages.getMessage(message._id);
 
-    messageSendtoWebhook(dbMessage, 'userMessages');
+    utils.sendToWebhook('create', 'userMessages', dbMessage);
     // Publishing both admin & client
     publishMessage(dbMessage, conversation.customerId);
 

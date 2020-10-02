@@ -1,3 +1,4 @@
+import { mergeSchemas } from 'graphql-tools';
 import * as strip from 'strip';
 import {
   Brands,
@@ -22,7 +23,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { messageSendtoWebhook, registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { sendToWebhook, registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -467,7 +468,7 @@ const widgetMutations = {
       receivers: conversationNotifReceivers(conversation, customerId),
     });
 
-    messageSendtoWebhook(msg, 'customerMessages');
+    sendToWebhook('create', 'customerMessages', msg);
 
     return msg;
   },

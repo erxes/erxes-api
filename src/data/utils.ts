@@ -869,12 +869,46 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   return { start, end };
 };
 
+/**
+ * Send to webhook
+ */
+
+export const sendToWebhook = async (action: string, type: string, params: any) => {
+  const webhooks = await Webhooks.find({ 'actions.action': action, 'actions.type': type });
+
+  if (!webhooks) {
+    return;
+  }
+
+  let data = params;
+  for (const webhook of webhooks) {
+    if (!webhook.url || webhook.url.length === 0) {
+      continue;
+    }
+
+    if (action === 'delete') {
+      data = { type, object: { _id: params.object._id } };
+    }
+
+    sendRequest({
+      url: webhook?.url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Erxes-token': webhook.token || '',
+      },
+      method: 'post',
+      body: { data: JSON.stringify(data), action, type },
+    });
+  }
+};
+
 export default {
   sendEmail,
   sendNotification,
   sendMobileNotification,
   readFile,
   createTransporter,
+  sendToWebhook,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);
@@ -1035,31 +1069,4 @@ export const s3Stream = async (key: string, errorCallback: (error: any) => void)
   stream.on('error', errorCallback);
 
   return stream;
-};
-
-/**
- * Send to webhook
- */
-
-export const messageSendtoWebhook = async (message: any, type: string) => {
-  const webhooks = await Webhooks.find({ 'actions.action': 'create', 'actions.type': type });
-
-  if (!webhooks) {
-    return;
-  }
-
-  for (const webhook of webhooks) {
-    if (!webhook.url || webhook.url.length === 0) {
-      continue;
-    }
-    sendRequest({
-      url: webhook?.url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Erxes-token': webhook.token,
-      },
-      method: 'post',
-      body: { data: JSON.stringify(message), action: 'create', type },
-    });
-  }
 };

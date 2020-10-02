@@ -1,5 +1,6 @@
 import * as Random from 'meteor-random';
 import { Model, model } from 'mongoose';
+import { getUniqueValue } from '../factories';
 import { IWebhook, IWebhookDocument, webhookSchema } from './definitions/webhook';
 
 export interface IWebhookModel extends Model<IWebhookDocument> {
@@ -12,21 +13,6 @@ export interface IWebhookModel extends Model<IWebhookDocument> {
 
 export const loadClass = () => {
   class Webhook {
-    public static async generateToken(code?: string) {
-      let generatedCode = code || Random.id().substr(0, 17);
-
-      let prevWebhook = await Webhooks.findOne({ token: generatedCode });
-
-      // search until not existing one found
-      while (prevWebhook) {
-        generatedCode = Random.id().substr(0, 17);
-
-        prevWebhook = await Webhooks.findOne({ token: generatedCode });
-      }
-
-      return generatedCode;
-    }
-
     /*
      * Get a Webhook
      */
@@ -53,7 +39,11 @@ export const loadClass = () => {
       if (!doc.url.includes('https')) {
         throw new Error('Url is not valid. Enter valid url with ssl cerfiticate');
       }
-      return Webhooks.create({ ...doc, token: await this.generateToken() });
+
+      const modifiedDoc: any = { ...doc };
+      modifiedDoc.token = await getUniqueValue(Webhooks, 'token');
+
+      return Webhooks.create(modifiedDoc);
     }
 
     public static async updateWebhook(_id: string, doc: IWebhook) {

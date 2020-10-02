@@ -10,6 +10,7 @@ describe('Test webhooks model', () => {
   beforeEach(async () => {
     // Creating test data
     _webhook = await webhookFactory({});
+
     _webhook2 = await webhookFactory({});
   });
 
@@ -30,52 +31,54 @@ describe('Test webhooks model', () => {
     expect(response).toBeDefined();
   });
 
-  test('Create webhook check duplicated', async () => {
+  test('Get webhooks', async () => {
+    const response = await Webhooks.getWebHooks();
+
+    expect(response.length).toEqual(2);
+  });
+
+  test('Create webhook check valid url', async () => {
     expect.assertions(1);
     try {
-      await Webhooks.createWebhook(_webhook2);
+      await Webhooks.createWebhook({ token: _webhook.token, url: 'http://alskdjalksjd.com', actions: [] });
     } catch (e) {
-      expect(e.message).toEqual('Webhook duplicated');
+      expect(e.message).toEqual('Url is not valid. Enter valid url with ssl cerfiticate');
     }
   });
 
-  test('Update webhook check duplicated', async () => {
+  test('Update webhook check valid url', async () => {
     expect.assertions(1);
     try {
       await Webhooks.updateWebhook(_webhook2._id, {
-        url: _webhook.url,
+        url: 'http://alskdjalksjd.com',
         token: _webhook.token,
         actions: _webhook.actions,
       });
     } catch (e) {
-      expect(e.message).toEqual('Webhook duplicated');
+      expect(e.message).toEqual('Url is not valid. Enter valid url with ssl cerfiticate');
     }
   });
 
   test('Create Webhook', async () => {
     const webhookObj = await Webhooks.createWebhook({
-      url: `${_webhook.url}1`,
+      url: 'https://test.com',
       actions: _webhook.actions,
-      token: _webhook.token,
     });
 
-    expect(webhookObj).toBeDefined();
-    expect(webhookObj.url).toEqual(`${_webhook.name}1`);
-    expect(webhookObj.actions).toEqual(_webhook.actions);
-    expect(webhookObj.token).toEqual(_webhook.token);
+    expect(webhookObj.url).toEqual('https://test.com');
+    expect(webhookObj.actions.length).toBeGreaterThan(0);
+    expect(webhookObj.token).toBeDefined();
   });
 
   test('Update Webhook', async () => {
     const webhookObj = await Webhooks.updateWebhook(_webhook._id, {
-      url: _webhook.name,
+      url: 'https://test.com',
       actions: _webhook.actions,
-      token: _webhook.token,
     });
 
     expect(webhookObj).toBeDefined();
-    expect(webhookObj.url).toEqual(_webhook.url);
-    expect(webhookObj.actions).toEqual(_webhook.actions);
-    expect(webhookObj.token).toEqual(_webhook.token);
+    expect(webhookObj.url).toEqual('https://test.com');
+    expect(webhookObj.actions.length).toBeGreaterThan(0);
   });
 
   test('Remove Webhook', async () => {

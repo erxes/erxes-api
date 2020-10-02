@@ -20,7 +20,7 @@ export interface IWebhookActionDocument extends IWebhookAction, Document {}
 
 export interface IWebhook {
   url: string;
-  token: string;
+  token?: string;
   actions: IWebhookActionDocument[];
 }
 

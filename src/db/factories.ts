@@ -62,6 +62,7 @@ import {
   NOTIFICATION_TYPES,
   PROBABILITY,
   PRODUCT_TYPES,
+  WEBHOOK_ACTIONS,
 } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
@@ -1347,18 +1348,26 @@ export function engageDataFactory(params: IMessageEngageDataParams) {
   };
 }
 
+interface IWebhookActionInput {
+  label?: string;
+  type?: string;
+  action?: any;
+}
+
 interface IWebhookParams {
   url?: string;
-  actions?: Array<{ label: string; action: string; type: string }>;
+  actions?: IWebhookActionInput[];
   token?: string;
 }
 
 export function webhookFactory(params: IWebhookParams) {
-  return {
+  const webhook = new Webhooks({
     url: params.url || faker.internet.url(),
-    actions: params.actions || [{ action: 'create', type: 'customer', label: 'Customer created' }],
+    actions: params.actions || WEBHOOK_ACTIONS,
     token: params.token || faker.unique,
-  };
+  });
+
+  return webhook.save();
 }
 
 interface IOnboardHistoryParams {
