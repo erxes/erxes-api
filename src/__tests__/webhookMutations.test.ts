@@ -1,6 +1,7 @@
 import { graphqlRequest } from '../db/connection';
 import { userFactory, webhookFactory } from '../db/factories';
 import { Users, Webhooks } from '../db/models';
+import { WEBHOOK_ACTIONS } from '../db/models/definitions/constants';
 
 import './setup.ts';
 
@@ -29,7 +30,7 @@ describe('Test webhooks mutations', () => {
 
     doc = {
       url: `${_webhook.url}1`,
-      actions: _webhook.actions,
+      actions: WEBHOOK_ACTIONS,
     };
   });
 
@@ -80,18 +81,18 @@ describe('Test webhooks mutations', () => {
     const webhook = await graphqlRequest(mutation, 'webhooksEdit', { _id: _webhook._id, ...doc }, context);
 
     expect(webhook._id).toBe(_webhook._id);
-    expect(webhook.url).toBe(doc.name);
+    expect(webhook.url).toBe(doc.url);
     expect(webhook.actions.length).toBeGreaterThan(1);
   });
 
   test('Remove webhook', async () => {
     const mutation = `
-      mutation webhooksRemove($id: String!) {
-        webhooksRemove(id: $id)
+      mutation webhooksRemove($_id: String!) {
+        webhooksRemove(_id: $_id)
       }
     `;
 
-    await graphqlRequest(mutation, 'webhooksRemove', { ids: _webhook._id }, context);
+    await graphqlRequest(mutation, 'webhooksRemove', { _id: _webhook._id }, context);
 
     expect(await Webhooks.find({ _id: _webhook._id })).toEqual([]);
   });

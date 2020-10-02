@@ -1362,7 +1362,7 @@ interface IWebhookParams {
 
 export function webhookFactory(params: IWebhookParams) {
   const webhook = new Webhooks({
-    url: params.url || faker.internet.url(),
+    url: params.url || `https://${faker.random.word()}.com`,
     actions: params.actions || WEBHOOK_ACTIONS,
     token: params.token || faker.unique,
   });
