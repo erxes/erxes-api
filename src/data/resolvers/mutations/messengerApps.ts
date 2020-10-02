@@ -1,4 +1,4 @@
-import { Forms, MessengerApps } from '../../../db/models';
+import { MessengerApps } from '../../../db/models';
 import { IMessengerApp } from '../../../db/models/definitions/messengerApps';
 import { putDeleteLog } from '../../logUtils';
 import { requireLogin } from '../../permissions/wrappers';
@@ -11,63 +11,8 @@ const messengerAppMutations = {
     return MessengerApps.updateApp(_id, docModifier(doc));
   },
 
-  async messengerAppsAddKnowledgebase(_root, params, { docModifier }: IContext) {
-    const { name, integrationId, topicId } = params;
-
-    return MessengerApps.createApp(
-      docModifier({
-        name,
-        kind: 'knowledgebase',
-        showInInbox: false,
-        credentials: {
-          integrationId,
-          topicId,
-        },
-      }),
-    );
-  },
-
-  async messengerAppsAddWebsite(_root, params, { docModifier }: IContext) {
-    const { name, integrationId, description, buttonText, url } = params;
-
-    return MessengerApps.createApp(
-      docModifier({
-        name,
-        kind: 'website',
-        showInInbox: false,
-        credentials: {
-          integrationId,
-          description,
-          buttonText,
-          url,
-        },
-      }),
-    );
-  },
-
-  /**
-   * Creates a messenger app lead
-   * @param {string} params.name Name
-   * @param {string} params.integrationId Integration
-   * @param {string} params.formId Form
-   */
-  async messengerAppsAddLead(_root, params, { docModifier }: IContext) {
-    const { name, integrationId, formId } = params;
-    const form = await Forms.getForm(formId);
-
-    const lead = await MessengerApps.createApp(
-      docModifier({
-        name,
-        kind: 'lead',
-        showInInbox: false,
-        credentials: {
-          integrationId,
-          formCode: form.code,
-        },
-      }),
-    );
-
-    return lead;
+  async messengerAppsAdd(_root, params: IMessengerApp, { docModifier }: IContext) {
+    return MessengerApps.createApp(docModifier(params));
   },
 
   /*
@@ -91,8 +36,6 @@ const messengerAppMutations = {
 };
 
 requireLogin(messengerAppMutations, 'messengerAppsEdit');
-requireLogin(messengerAppMutations, 'messengerAppsAddKnowledgebase');
-requireLogin(messengerAppMutations, 'messengerAppsAddWebsite');
-requireLogin(messengerAppMutations, 'messengerAppsAddLead');
+requireLogin(messengerAppMutations, 'messengerAppsAdd');
 
 export default messengerAppMutations;
