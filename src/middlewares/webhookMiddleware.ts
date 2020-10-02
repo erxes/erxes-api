@@ -1,15 +1,20 @@
 import { NodeVM } from 'vm2';
 
 import { ConversationMessages, Conversations, Customers, Integrations } from '../db/models';
+import { graphqlPubsub } from '../pubsub';
 
 const findCustomer = async doc => {
-  let customer = await Customers.findOne({ primaryEmail: doc.customerPrimaryEmail });
+  let customer;
 
-  if (!customer) {
+  if (doc.customerPrimaryEmail) {
+    customer = await Customers.findOne({ primaryEmail: doc.customerPrimaryEmail });
+  }
+
+  if (!customer && doc.customerPrimaryPhone) {
     customer = await Customers.findOne({ primaryPhone: doc.customerPrimaryPhone });
   }
 
-  if (!customer) {
+  if (!customer && doc.customerPrimaryPhone) {
     customer = await Customers.findOne({ code: doc.customerPrimaryPhone });
   }
 
@@ -24,25 +29,21 @@ const webhookMiddleware = async (req, res, next) => {
       return next(new Error('Invalid request'));
     }
 
-    if (!Object.values(req.headers).includes('token')) {
+    const webhookData = integration.webhookData;
+
+    if (!webhookData || !Object.values(req.headers).includes(webhookData.token)) {
       return next(new Error('Invalid request'));
     }
 
     const params = req.body;
 
-    const script = `
-        params.customerPrimaryEmail = params.primaryEmail;
-        params.customerPrimaryPhone = params.primaryPhone;
+    if (webhookData.script) {
+      const vm = new NodeVM({
+        sandbox: { params },
+      });
 
-        delete params.primaryEmail;
-        delete params.primaryPhone;
-    `;
-
-    const vm = new NodeVM({
-      sandbox: { params },
-    });
-
-    vm.run(script);
+      vm.run(webhookData.script);
+    }
 
     // get or create customer
     let customer = await findCustomer(params);
@@ -74,11 +75,19 @@ const webhookMiddleware = async (req, res, next) => {
     }
 
     // create conversation message
-    await ConversationMessages.createMessage({
+    const message = await ConversationMessages.createMessage({
       conversationId: conversation._id,
       customerId: customer._id,
       content: params.content,
       attachments: params.attachments,
+    });
+
+    graphqlPubsub.publish('conversationClientMessageInserted', {
+      conversationClientMessageInserted: message,
+    });
+
+    graphqlPubsub.publish('conversationMessageInserted', {
+      conversationMessageInserted: message,
     });
 
     return res.send('ok');
