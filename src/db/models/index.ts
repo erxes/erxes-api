@@ -36,6 +36,7 @@ import Tags from './Tags';
 import Tasks from './Tasks';
 import Tickets from './Tickets';
 import Users from './Users';
+import Loyalties from './Loyalties';
 
 export {
   EmailDeliveries,
@@ -88,5 +89,6 @@ export {
   Dashboards,
   Cars,
   CarCategories,
+  Loyalties,
   OnboardingHistories,
 };

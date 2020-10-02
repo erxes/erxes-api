@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { Deals } from '../../../db/models';
+import { Deals, Loyalties } from '../../../db/models';
 import { IItemDragCommonFields } from '../../../db/models/definitions/boards';
 import { IDeal } from '../../../db/models/definitions/deals';
 import { checkPermission } from '../../permissions/wrappers';
@@ -63,7 +63,11 @@ const dealMutations = {
    * Change deal
    */
   async dealsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
-    return itemsChange(doc, 'deal', user, Deals.updateDeal);
+    const deal = await itemsChange(doc, 'deal', user, Deals.updateDeal);
+    console.log(new Date(), '111111111111111111')
+    Loyalties.dealChangeCheckLoyalty(doc, deal);
+    console.log(new Date(), '222222222222222')
+    return deal;
   },
 
   /**

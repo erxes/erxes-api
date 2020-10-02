@@ -1,4 +1,4 @@
-import { Companies, Conformities, Conversations, Integrations, Tags, Users } from '../../db/models';
+import { Companies, Conformities, Conversations, Integrations, Loyalties, Tags, Users } from '../../db/models';
 import { ICustomerDocument } from '../../db/models/definitions/customers';
 import { fetchElk } from '../../elasticsearch';
 
@@ -62,5 +62,9 @@ export default {
 
   owner(customer: ICustomerDocument) {
     return Users.findOne({ _id: customer.ownerId });
+  },
+
+  loyalty(customer: ICustomerDocument) {
+    return Loyalties.getLoyalty(customer);
   },
 };

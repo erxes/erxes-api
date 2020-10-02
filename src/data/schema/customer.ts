@@ -44,7 +44,7 @@ export const types = `
     code: String
     emailValidationStatus: String
     phoneValidationStatus: String
-    
+
     isOnline: Boolean
     lastSeenAt: Date
     sessionCount: Int
@@ -56,6 +56,7 @@ export const types = `
     conversations: [Conversation]
     getTags: [Tag]
     owner: User
+    loyalty: Float
   }
 
   type CustomersListResponse {
