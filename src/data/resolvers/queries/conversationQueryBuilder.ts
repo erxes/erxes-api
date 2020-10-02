@@ -189,9 +189,9 @@ export default class Builder {
   }
 
   // filter by awaiting Response
-  public awaitingResponse(): { customerRespondedLast: boolean } {
+  public awaitingResponse(): { isCustomerRespondedLast: boolean } {
     return {
-      customerRespondedLast: true,
+      isCustomerRespondedLast: true,
     };
   }
 
