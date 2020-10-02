@@ -27,9 +27,7 @@ export const loadClass = () => {
     }
 
     public static async getWebHooks() {
-      const webhooks = await Webhooks.find({});
-
-      return webhooks;
+      return Webhooks.find({});
     }
 
     /**
