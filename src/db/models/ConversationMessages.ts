@@ -44,12 +44,13 @@ export const loadClass = () => {
       }).countDocuments();
 
       // update conversation ====
-      const convDocModifier: { messageCount?: number; updatedAt: Date } = {
+      const convDocModifier: { messageCount?: number; updatedAt: Date; customerRespondedLast?: boolean } = {
         updatedAt: new Date(),
       };
 
       if (!doc.fromBot) {
         convDocModifier.messageCount = messageCount;
+        convDocModifier.customerRespondedLast = doc.customerId ? true : false;
       }
 
       await Conversations.updateConversation(message.conversationId, convDocModifier);
