@@ -80,7 +80,7 @@ export const loadClass = () => {
         messageCount: 0,
       });
 
-      sendToWebhook('create', 'conversation', result);
+      await sendToWebhook('create', 'conversation', result);
 
       return result;
     }

@@ -38,7 +38,7 @@ const engageMutations = {
 
     const engageMessage = await EngageMessages.createEngageMessage(docModifier(doc));
 
-    sendToWebhook('create', 'engageMessages', engageMessage);
+    await sendToWebhook('create', 'engageMessages', engageMessage);
 
     await send(engageMessage);
 
