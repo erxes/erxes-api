@@ -1,9 +1,16 @@
 import { Forms, MessengerApps } from '../../../db/models';
+import { IMessengerApp } from '../../../db/models/definitions/messengerApps';
 import { putDeleteLog } from '../../logUtils';
 import { requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 
+type IMessengerAppEdit = IMessengerApp & { _id: string };
+
 const messengerAppMutations = {
+  messengerAppsEdit(_root, { _id, ...doc }: IMessengerAppEdit, { docModifier }: IContext) {
+    return MessengerApps.updateApp(_id, docModifier(doc));
+  },
+
   async messengerAppsAddKnowledgebase(_root, params, { docModifier }: IContext) {
     const { name, integrationId, topicId } = params;
 
@@ -83,6 +90,7 @@ const messengerAppMutations = {
   },
 };
 
+requireLogin(messengerAppMutations, 'messengerAppsEdit');
 requireLogin(messengerAppMutations, 'messengerAppsAddKnowledgebase');
 requireLogin(messengerAppMutations, 'messengerAppsAddWebsite');
 requireLogin(messengerAppMutations, 'messengerAppsAddLead');
