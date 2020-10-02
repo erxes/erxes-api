@@ -1049,6 +1049,9 @@ export const messageSendtoWebhook = async (message: any, type: string) => {
   }
 
   for (const webhook of webhooks) {
+    if (!webhook.url || webhook.url.length === 0) {
+      continue;
+    }
     sendRequest({
       url: webhook?.url,
       headers: {

@@ -1338,9 +1338,13 @@ const sendToWebhook = async (action: string, params: ILogDataParams) => {
     return;
   }
   for (const webhook of webhooks) {
+    if (!webhook.url || webhook.url.length === 0) {
+      continue;
+    }
+
     if (action === 'delete') {
       return sendRequest({
-        url: webhook?.url,
+        url: webhook.url,
         headers: {
           'Content-Type': 'application/json',
           'Erxes-token': webhook.token,
@@ -1352,6 +1356,10 @@ const sendToWebhook = async (action: string, params: ILogDataParams) => {
 
     sendRequest({
       url: webhook?.url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Erxes-token': webhook.token,
+      },
       method: 'post',
       body: { data: JSON.stringify(params), action, type: params.type },
     });
