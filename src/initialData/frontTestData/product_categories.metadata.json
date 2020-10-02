@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":2,"key":{"_id":1},"name":"_id_","ns":"erxes_aaa.product_categories"},{"v":2,"unique":true,"key":{"code":1},"name":"code_1","ns":"erxes_aaa.product_categories","background":true}],"uuid":"0015d01ac438497096453f9992a615a3"}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"code":{"$numberInt":"1"}},"name":"code_1","background":true}],"uuid":"cfaaefc8d8af491dadf1fbd9d089b612","collectionName":"product_categories"}
