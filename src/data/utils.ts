@@ -890,9 +890,8 @@ export const sendToWebhook = async (action: string, type: string, params: any) =
     }
 
     sendRequest({
-      url: webhook?.url,
+      url: webhook.url,
       headers: {
-        'Content-Type': 'application/json',
         'Erxes-token': webhook.token || '',
       },
       method: 'post',
