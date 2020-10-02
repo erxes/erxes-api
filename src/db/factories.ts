@@ -49,6 +49,7 @@ import {
   Tickets,
   Users,
   UsersGroups,
+  Webhooks,
 } from './models';
 import { ICustomField } from './models/definitions/common';
 import {
@@ -1343,6 +1344,20 @@ export function engageDataFactory(params: IMessageEngageDataParams) {
     fromUserId: params.fromUserId || Random.id(),
     kind: params.kind || 'popup',
     sentAs: params.sentAs || 'post',
+  };
+}
+
+interface IWebhookParams {
+  url?: string;
+  actions?: Array<{ label: string; action: string; type: string }>;
+  token?: string;
+}
+
+export function webhookFactory(params: IWebhookParams) {
+  return {
+    url: params.url || faker.internet.url(),
+    actions: params.actions || [{ action: 'create', type: 'customer', label: 'Customer created' }],
+    token: params.token || faker.unique,
   };
 }
 
