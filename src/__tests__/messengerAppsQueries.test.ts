@@ -31,8 +31,8 @@ describe('Messenger app queries', () => {
     });
 
     const qry = `
-      query messengerApps($kind: String) {
-        messengerApps(kind: $kind) {
+      query messengerApps($kind: String $integrationId: String) {
+        messengerApps(kind: $kind integrationId: $integrationId) {
           _id
         }
       }
@@ -49,13 +49,19 @@ describe('Messenger app queries', () => {
         access_token: '123',
         expiry_date: Date.now(),
         formCode: '123',
-        integrationId: '123',
+        integrationId: '124',
       },
     });
 
     responses = await graphqlRequest(qry, 'messengerApps');
 
     expect(responses.length).toBe(3);
+
+    responses = await graphqlRequest(qry, 'messengerApps', {
+      integrationId: '123',
+    });
+
+    expect(responses.length).toBe(2);
   });
 
   test('Messenger Apps count', async () => {
@@ -79,8 +85,8 @@ describe('Messenger app queries', () => {
     });
 
     const qry = `
-      query messengerAppsCount($kind: String) {
-        messengerAppsCount(kind: $kind)
+      query messengerAppsCount($kind: String $integrationId: String) {
+        messengerAppsCount(kind: $kind integrationId: $integrationId)
       }
     `;
 
@@ -96,12 +102,18 @@ describe('Messenger app queries', () => {
         access_token: '123',
         expiry_date: Date.now(),
         formCode: '123',
-        integrationId: '123',
+        integrationId: '124',
       },
     });
 
     response = await graphqlRequest(qry, 'messengerAppsCount');
 
     expect(response).toBe(3);
+
+    response = await graphqlRequest(qry, 'messengerAppsCount', {
+      integrationId: '123',
+    });
+
+    expect(response).toBe(2);
   });
 });

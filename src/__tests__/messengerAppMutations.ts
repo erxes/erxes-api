@@ -10,6 +10,30 @@ describe('mutations', () => {
     await MessengerApps.deleteMany({});
   });
 
+  test('Edit messenger app', async () => {
+    const messengerApp = await messengerAppFactory({});
+
+    const mutation = `
+      mutation messengerAppsEdit($_id: String!, $name: String, $kind: String) {
+        messengerAppsEdit(_id: $_id, name: $name, kind: $kind) {
+          name
+          kind
+        }
+      }
+    `;
+
+    const args = {
+      _id: messengerApp._id,
+      name: 'Knowledge base',
+      kind: 'knowledgebase',
+    };
+
+    const app = await graphqlRequest(mutation, 'messengerAppsEdit', args);
+
+    expect(app.kind).toBe(args.kind);
+    expect(app.name).toBe(args.name);
+  });
+
   test('Add knowledgebase', async () => {
     const args = {
       name: 'knowledgebase',
