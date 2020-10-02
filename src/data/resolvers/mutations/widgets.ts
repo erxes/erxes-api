@@ -22,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { registerOnboardHistory, sendEmail, sendMobileNotification, sendToWebhook } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -183,6 +183,7 @@ const widgetMutations = {
       customer = await Customers.createCustomer({
         integrationId,
         primaryEmail: email,
+        emails: [email],
         firstName,
         lastName,
         primaryPhone: phone,
@@ -191,8 +192,8 @@ const widgetMutations = {
 
     const customerDoc = {
       location: browserInfo,
-      firstName: customer.firstName ? customer.firstName : firstName,
-      lastName: customer.lastName ? customer.lastName : lastName,
+      firstName: customer.firstName || firstName,
+      lastName: customer.lastName || lastName,
       ...(customer.primaryEmail
         ? {}
         : {
@@ -206,8 +207,6 @@ const widgetMutations = {
             primaryPhone: phone,
           }),
     };
-
-    console.log('customerDoc: ', customerDoc);
 
     // update location info and missing fields
     await Customers.updateCustomer(customer._id, customerDoc);
@@ -467,6 +466,8 @@ const widgetMutations = {
       conversationId: conversation._id,
       receivers: conversationNotifReceivers(conversation, customerId),
     });
+
+    await sendToWebhook('create', 'customerMessages', msg);
 
     return msg;
   },
