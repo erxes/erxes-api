@@ -9,7 +9,6 @@ import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Configs, Customers, EmailDeliveries, Notifications, Users, Webhooks } from '../db/models';
-import { IMessageDocument } from '../db/models/definitions/conversationMessages';
 import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';

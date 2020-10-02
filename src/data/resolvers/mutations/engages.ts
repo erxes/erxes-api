@@ -1,6 +1,6 @@
 import * as _ from 'underscore';
 import { EngageMessages } from '../../../db/models';
-import { METHODS, WEBHOOK_ACTIONS } from '../../../db/models/definitions/constants';
+import { METHODS } from '../../../db/models/definitions/constants';
 import { IEngageMessage } from '../../../db/models/definitions/engages';
 import { MESSAGE_KINDS, MODULE_NAMES } from '../../constants';
 import { putCreateLog, putDeleteLog, putUpdateLog } from '../../logUtils';
