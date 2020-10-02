@@ -8,7 +8,8 @@ import * as path from 'path';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Configs, Customers, EmailDeliveries, Notifications, Users } from '../db/models';
+import { Configs, Customers, EmailDeliveries, Notifications, Users, Webhooks } from '../db/models';
+import { IMessageDocument } from '../db/models/definitions/conversationMessages';
 import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
@@ -1034,4 +1035,28 @@ export const s3Stream = async (key: string, errorCallback: (error: any) => void)
   stream.on('error', errorCallback);
 
   return stream;
+};
+
+/**
+ * Send to webhook
+ */
+
+export const messageSendtoWebhook = async (message: any, type: string) => {
+  const webhooks = await Webhooks.find({ 'actions.action': 'create', 'actions.type': type });
+
+  if (!webhooks) {
+    return;
+  }
+
+  for (const webhook of webhooks) {
+    sendRequest({
+      url: webhook?.url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Erxes-token': webhook.token,
+      },
+      method: 'post',
+      body: { data: JSON.stringify(message), action: 'create', type },
+    });
+  }
 };

@@ -639,21 +639,17 @@ export const SEGMENT_BOOLEAN_OPERATORS = ['is', 'ins', 'it', 'if'];
 export const SEGMENT_NUMBER_OPERATORS = ['numbere', 'numberdne', 'numberigt', 'numberilt'];
 export const SEGMENT_DATE_OPERATORS = ['dateigt', 'dateilt', 'wobm', 'woam', 'wobd', 'woad', 'drlt', 'drgt'];
 
-export const WEBHOOK_ACTIONS = {
-  outgoing: [
-    { label: 'Customer created', action: 'create', type: 'customer' },
-    { label: 'Customer updated', action: 'update', type: 'customer' },
-    { label: 'Customer deleted', action: 'delete', type: 'customer' },
-    { label: 'Company created', action: 'create', type: 'company' },
-    { label: 'Company updated', action: 'update', type: 'company' },
-    { label: 'Company deleted', action: 'delete', type: 'company' },
-  ],
-  incoming: [
-    { label: 'Customer created', action: 'create', type: 'customer' },
-    { label: 'Customer updated', action: 'update', type: 'customer' },
-    { label: 'Customer deleted', action: 'delete', type: 'customer' },
-    { label: 'Company created', action: 'create', type: 'company' },
-    { label: 'Company updated', action: 'update', type: 'company' },
-    { label: 'Company deleted', action: 'delete', type: 'company' },
-  ],
-};
+export const WEBHOOK_ACTIONS = [
+  { label: 'Customer created', action: 'create', type: 'customer' },
+  { label: 'Customer updated', action: 'update', type: 'customer' },
+  { label: 'Customer deleted', action: 'delete', type: 'customer' },
+  { label: 'Company created', action: 'create', type: 'company' },
+  { label: 'Company updated', action: 'update', type: 'company' },
+  { label: 'Company deleted', action: 'delete', type: 'company' },
+  { label: 'Knowledge Base created', action: 'create', type: 'knowledgeBaseArticle' },
+  { label: 'Knowledge Base updated', action: 'update', type: 'knowledgeBaseArticle' },
+  { label: 'Knowledge Base deleted', action: 'delete', type: 'knowledgeBaseArticle' },
+  { label: 'User messages', action: 'create', type: 'userMessages' },
+  { label: 'Customer messages', action: 'create', type: 'customerMessages' },
+  { label: 'Engage messages', action: 'create', type: 'engageMessages' },
+];

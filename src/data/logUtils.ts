@@ -1332,21 +1332,30 @@ const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
 };
 
 const sendToWebhook = async (action: string, params: ILogDataParams) => {
-  const webhook = await Webhooks.findOne({ 'actions.action': action, 'actions.type': params.type });
+  const webhooks = await Webhooks.find({ 'actions.action': action, 'actions.type': params.type });
 
-  if (!webhook) {
+  if (!webhooks) {
     return;
   }
+  for (const webhook of webhooks) {
+    if (action === 'delete') {
+      return sendRequest({
+        url: webhook?.url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Erxes-token': webhook.token,
+        },
+        method: 'post',
+        body: { data: JSON.stringify({ type: params.type, object: { _id: params.object._id } }), action },
+      });
+    }
 
-  if (action === 'delete') {
-    return sendRequest({
+    sendRequest({
       url: webhook?.url,
       method: 'post',
-      body: { data: JSON.stringify({ type: params.type, object: { _id: params.object._id } }), action },
+      body: { data: JSON.stringify(params), action, type: params.type },
     });
   }
-
-  sendRequest({ url: webhook?.url, method: 'post', body: { data: JSON.stringify(params), action } });
 };
 
 /**
