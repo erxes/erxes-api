@@ -22,6 +22,7 @@ export interface IWebhook {
   url: string;
   token?: string;
   actions: IWebhookActionDocument[];
+  status?: string;
 }
 
 export interface IWebhookDocument extends IWebhook, Document {
@@ -35,4 +36,5 @@ export const webhookSchema = new Schema({
   url: field({ type: String, required: true, unique: true }),
   token: field({ type: String }),
   actions: field({ type: [webhookActionSchema], label: 'actions' }),
+  status: field({ type: String }),
 });

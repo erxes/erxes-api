@@ -9,6 +9,7 @@ import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
 import { Configs, Customers, EmailDeliveries, Notifications, Users, Webhooks } from '../db/models';
+import { WEBHOOK_STATUS } from '../db/models/definitions/constants';
 import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
@@ -896,7 +897,13 @@ export const sendToWebhook = async (action: string, type: string, params: any) =
       },
       method: 'post',
       body: { data: JSON.stringify(data), action, type },
-    });
+    })
+      .then(async () => {
+        await Webhooks.updateStatus(webhook._id, WEBHOOK_STATUS.AVAILABLE);
+      })
+      .catch(async () => {
+        await Webhooks.updateStatus(webhook._id, WEBHOOK_STATUS.UNAVAILABLE);
+      });
   }
 };
 

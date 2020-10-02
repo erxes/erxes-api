@@ -653,3 +653,9 @@ export const WEBHOOK_ACTIONS = [
   { label: 'Customer messages', action: 'create', type: 'customerMessages' },
   { label: 'Engage messages', action: 'create', type: 'engageMessages' },
 ];
+
+export const WEBHOOK_STATUS = {
+  AVAILABLE: 'available',
+  UNAVAILABLE: 'unavailable',
+  ALL: ['available', 'unavailable'],
+};

@@ -1,3 +1,5 @@
+import * as sinon from 'sinon';
+import * as utils from '../data/utils';
 import { graphqlRequest } from '../db/connection';
 import { userFactory, webhookFactory } from '../db/factories';
 import { Users, Webhooks } from '../db/models';
@@ -55,11 +57,47 @@ describe('Test webhooks mutations', () => {
       }
     `;
 
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.resolve('success');
+    });
+
     const webhook = await graphqlRequest(mutation, 'webhooksAdd', doc, context);
 
     expect(webhook.url).toBe(doc.url);
     expect(webhook.actions.length).toBeGreaterThan(1);
     expect(webhook.token).toBeDefined();
+
+    mock.restore();
+  });
+
+  test('Add webhook with request error', async () => {
+    const mutation = `
+      mutation webhooksAdd(${commonParamDefs}) {
+        webhooksAdd(${commonParams}) {
+          url
+          actions{
+              label
+              type
+              action
+          }
+          status
+          token
+        }
+      }
+    `;
+
+    const mock = sinon.stub(utils, 'sendRequest').callsFake(() => {
+      return Promise.reject('error');
+    });
+
+    const webhook = await graphqlRequest(mutation, 'webhooksAdd', doc, context);
+
+    mock.restore();
+
+    expect(webhook.url).toBe(doc.url);
+    expect(webhook.actions.length).toBeGreaterThan(1);
+    expect(webhook.token).toBeDefined();
+    expect(webhook.status).toBe('unavailable');
   });
 
   test('Edit webhook', async () => {

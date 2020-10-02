@@ -17,6 +17,7 @@ type Webhook {
   url: String!
   token: String
   actions: [WebhookAction]
+  status: String
 }`;
 
 export const queries = `

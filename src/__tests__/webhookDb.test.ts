@@ -83,6 +83,13 @@ describe('Test webhooks model', () => {
 
   test('Remove Webhook', async () => {
     const isDeleted = await Webhooks.removeWebhooks(_webhook.id);
+
     expect(isDeleted).toBeTruthy();
+  });
+
+  test('Update webhook status', async () => {
+    const response = await Webhooks.updateStatus(_webhook2._id, 'available');
+
+    expect(response.status).toEqual('available');
   });
 });

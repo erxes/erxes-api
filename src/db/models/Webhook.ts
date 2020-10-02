@@ -1,5 +1,6 @@
 import { Model, model } from 'mongoose';
 import { getUniqueValue } from '../factories';
+import { WEBHOOK_STATUS } from './definitions/constants';
 import { IWebhook, IWebhookDocument, webhookSchema } from './definitions/webhook';
 
 export interface IWebhookModel extends Model<IWebhookDocument> {
@@ -7,6 +8,7 @@ export interface IWebhookModel extends Model<IWebhookDocument> {
   getWebHooks(): Promise<IWebhookDocument[]>;
   createWebhook(doc: IWebhook): Promise<IWebhookDocument>;
   updateWebhook(_id: string, doc: IWebhook): Promise<IWebhookDocument>;
+  updateStatus(_id: string, status: string): Promise<IWebhookDocument>;
   removeWebhooks(_id: string): void;
 }
 
@@ -39,6 +41,7 @@ export const loadClass = () => {
 
       const modifiedDoc: any = { ...doc };
       modifiedDoc.token = await getUniqueValue(Webhooks, 'token');
+      modifiedDoc.status = WEBHOOK_STATUS.UNAVAILABLE;
 
       return Webhooks.create(modifiedDoc);
     }
@@ -55,6 +58,12 @@ export const loadClass = () => {
 
     public static async removeWebhooks(_id) {
       return Webhooks.deleteOne({ _id });
+    }
+
+    public static async updateStatus(_id: string, status: string) {
+      await Webhooks.updateOne({ _id }, { $set: { status } }, { runValidators: true });
+
+      return Webhooks.findOne({ _id });
     }
   }
 
