@@ -467,7 +467,7 @@ const widgetMutations = {
       receivers: conversationNotifReceivers(conversation, customerId),
     });
 
-    sendToWebhook('create', 'customerMessages', msg);
+    await sendToWebhook('create', 'customerMessages', msg);
 
     return msg;
   },
