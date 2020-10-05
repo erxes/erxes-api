@@ -121,4 +121,6 @@ export const mutations = `
   customersRemove(customerIds: [String]): [String]
   customersChangeState(_id: String!, value: String!): Customer
   customersVerify(verificationType:String!): String
+  customersChangeVerificationStatus(type: String!,_id: String!): Customer
+  customersBulkChangeVerificationStatus(type: String!,customerIds: [String!]): [Customer]
 `;

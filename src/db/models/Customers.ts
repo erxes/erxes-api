@@ -83,6 +83,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   calcPSS(doc: any): IPSS;
+  updateVerificationStatus(_id: string, type: string): Promise<ICustomerDocument>;
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
@@ -726,6 +727,31 @@ export const loadClass = () => {
       await Customers.updateOne({ _id: customerId }, { $set: pssDoc });
 
       return Customers.getCustomer(customerId);
+    }
+
+    public static async updateVerificationStatus(_id: string, type: string) {
+      const customer = await Customers.findById({ _id }).select({ emailValidationStatus: 1, phoneValidationStatus: 1 });
+
+      const set: any = {
+        _id,
+        emailValidationStatus: customer?.emailValidationStatus,
+        phoneValidationStatus: customer?.phoneValidationStatus,
+      };
+
+      if (type === 'phone') {
+        set.phoneValidationStatus = customer?.phoneValidationStatus !== 'valid' ? 'valid' : 'invalid';
+      } else {
+        set.emailValidationStatus = customer?.emailValidationStatus !== 'valid' ? 'valid' : 'invalid';
+      }
+
+      await Customers.findByIdAndUpdate(
+        { _id },
+        {
+          $set: set,
+        },
+      );
+
+      return Customers.findOne({ _id });
     }
   }
 
