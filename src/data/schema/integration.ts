@@ -13,6 +13,7 @@ export const types = `
     messengerData: JSON
     uiOptions: JSON
     isActive: Boolean
+    webhookData: JSON
 
     brand: Brand
     form: Form
@@ -46,6 +47,7 @@ export const types = `
     themeColor: String
     callout: JSON,
     rules: [InputRule]
+    isRequireOnce: Boolean
   }
 
   input MessengerOnlineHoursSchema {
@@ -152,7 +154,7 @@ export const mutations = `
     channelIds: [String]
     data: JSON): Integration
 
-  integrationsEditCommonFields(_id: String!, name: String!, brandId: String!, channelIds: [String]): Integration
+  integrationsEditCommonFields(_id: String!, name: String!, brandId: String!, channelIds: [String], data: JSON): Integration
 
   integrationsRemove(_id: String!): JSON
   integrationsRemoveAccount(_id: String!): JSON
@@ -169,11 +171,13 @@ export const mutations = `
     from: String!
     shouldResolve: Boolean
     headerId: String
+    replyTo: [String]
+    inReplyTo: String
     threadId: String
     messageId: String
     replyToMessageId: String
     kind: String
-    references: String
+    references: [String]
     attachments: [JSON]
   ): JSON
 

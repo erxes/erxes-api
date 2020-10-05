@@ -126,7 +126,7 @@ import {
   types as PipelineLabelTypes,
 } from './pipelineLabel';
 
-import { mutations as DashboardMutations, queries as DashboardQueries, types as DashboardTypes } from './dashboard';
+import { mutations as WebhookMutations, queries as WebhookQueries, types as WebhookTypes } from './webhook';
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 export const types = `
@@ -172,7 +172,7 @@ export const types = `
   ${RobotTypes}
   ${PipelineLabelTypes}
   ${WidgetTypes}
-  ${DashboardTypes}
+  ${WebhookTypes}
 `;
 
 export const queries = `
@@ -215,7 +215,7 @@ export const queries = `
     ${RobotQueries}
     ${PipelineLabelQueries}
     ${WidgetQueries}
-    ${DashboardQueries}
+    ${WebhookQueries}
   }
 `;
 
@@ -256,7 +256,7 @@ export const mutations = `
     ${RobotMutations}
     ${PipelineLabelMutations}
     ${WidgetMutations}
-    ${DashboardMutations}
+    ${WebhookMutations}
   }
 `;
 

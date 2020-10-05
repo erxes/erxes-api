@@ -22,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { registerOnboardHistory, sendEmail, sendMobileNotification } from '../../utils';
+import { registerOnboardHistory, sendEmail, sendMobileNotification, sendToWebhook } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -84,7 +84,7 @@ export const getMessengerData = async (integration: IIntegrationDocument) => {
 
 const widgetMutations = {
   // Find integrationId by brandCode
-  async widgetsLeadConnect(_root, args: { brandCode: string; formCode: string }) {
+  async widgetsLeadConnect(_root, args: { brandCode: string; formCode: string; cachedCustomerId?: string }) {
     const brand = await Brands.findOne({ code: args.brandCode });
     const form = await Forms.findOne({ code: args.formCode });
 
@@ -110,6 +110,13 @@ const widgetMutations = {
       const user = await Users.getUser(integ.createdUserId);
 
       registerOnboardHistory({ type: 'leadIntegrationInstalled', user });
+    }
+
+    if (integ.leadData?.isRequireOnce && args.cachedCustomerId) {
+      const conversation = await Conversations.findOne({ customerId: args.cachedCustomerId, integrationId: integ.id });
+      if (conversation) {
+        return null;
+      }
     }
 
     // return integration details
@@ -176,6 +183,7 @@ const widgetMutations = {
       customer = await Customers.createCustomer({
         integrationId,
         primaryEmail: email,
+        emails: [email],
         firstName,
         lastName,
         primaryPhone: phone,
@@ -184,8 +192,8 @@ const widgetMutations = {
 
     const customerDoc = {
       location: browserInfo,
-      firstName: customer.firstName ? customer.firstName : firstName,
-      lastName: customer.lastName ? customer.lastName : lastName,
+      firstName: customer.firstName || firstName,
+      lastName: customer.lastName || lastName,
       ...(customer.primaryEmail
         ? {}
         : {
@@ -199,8 +207,6 @@ const widgetMutations = {
             primaryPhone: phone,
           }),
     };
-
-    console.log('customerDoc: ', customerDoc);
 
     // update location info and missing fields
     await Customers.updateCustomer(customer._id, customerDoc);
@@ -460,6 +466,8 @@ const widgetMutations = {
       conversationId: conversation._id,
       receivers: conversationNotifReceivers(conversation, customerId),
     });
+
+    await sendToWebhook('create', 'customerMessages', msg);
 
     return msg;
   },

@@ -7,7 +7,6 @@ import companies from './companies';
 import configs from './configs';
 import conversations from './conversations';
 import customers from './customers';
-import dashboards from './dashboards';
 import dealInsights from './dealInsights';
 import deals from './deals';
 import emailDeliveries from './emailDelivery';
@@ -36,10 +35,10 @@ import tags from './tags';
 import tasks from './tasks';
 import tickets from './tickets';
 import users from './users';
+import webhooks from './webhooks';
 import widgets from './widgets';
 
 export default {
-  ...dashboards,
   ...users,
   ...channels,
   ...brands,
@@ -80,4 +79,5 @@ export default {
   ...robot,
   ...pipelineLabels,
   ...widgets,
+  ...webhooks,
 };
