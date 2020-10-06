@@ -7,8 +7,7 @@ import { app } from '../index';
 import './setup.ts';
 
 /**
- * Run this test when erxes-api is stopped, because it uses the entire express app.
- * Otherwise, all the endpoints would have to be redeclared to be tested.
+ * Run this test when erxes-api is stopped, because while erxes-api is running, it throws port being used error.
  */
 describe('HTTP endpoint tests', () => {
   afterEach(async () => {
