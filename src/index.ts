@@ -352,7 +352,7 @@ const PORT = getEnv({ name: 'PORT' });
 // subscriptions server
 apolloServer.installSubscriptionHandlers(httpServer);
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT || 65535, () => {
   // connect to mongo database
   connect().then(async () => {
     initBroker(app).catch(e => {
