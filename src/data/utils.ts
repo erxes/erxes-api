@@ -8,7 +8,9 @@ import * as path from 'path';
 import * as requestify from 'requestify';
 import * as strip from 'strip';
 import * as xlsxPopulate from 'xlsx-populate';
-import { Configs, Customers, Notifications, Users } from '../db/models';
+import { Configs, Customers, EmailDeliveries, Notifications, Users, Webhooks } from '../db/models';
+import { WEBHOOK_STATUS } from '../db/models/definitions/constants';
+import { EMAIL_DELIVERY_STATUS } from '../db/models/definitions/emailDeliveries';
 import { IUser, IUserDocument } from '../db/models/definitions/users';
 import { OnboardingHistories } from '../db/models/Robot';
 import { debugBase, debugEmail, debugExternalApi } from '../debuggers';
@@ -499,6 +501,8 @@ export const sendEmail = async (params: IEmailParams) => {
   const DEFAULT_EMAIL_SERVICE = await getConfig('DEFAULT_EMAIL_SERVICE', 'SES');
   const COMPANY_EMAIL_FROM = await getConfig('COMPANY_EMAIL_FROM', '');
   const AWS_SES_CONFIG_SET = await getConfig('AWS_SES_CONFIG_SET', '');
+  const AWS_ACCESS_KEY_ID = await getConfig('AWS_ACCESS_KEY_ID', '');
+  const AWS_SES_SECRET_ACCESS_KEY = await getConfig('AWS_SES_SECRET_ACCESS_KEY', '');
   const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 
   // do not send email it is running in test mode
@@ -532,15 +536,34 @@ export const sendEmail = async (params: IEmailParams) => {
       html = Handlebars.compile(customHtml)(customHtmlData || {});
     }
 
-    const mailOptions = {
+    const mailOptions: any = {
       from: fromEmail || COMPANY_EMAIL_FROM,
       to: toEmail,
       subject: title,
       html,
-      headers: {
-        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
-      },
     };
+
+    let headers: { [key: string]: string } = {};
+
+    if (AWS_ACCESS_KEY_ID.length > 0 && AWS_SES_SECRET_ACCESS_KEY.length > 0) {
+      const emailDelivery = await EmailDeliveries.create({
+        kind: 'transaction',
+        to: toEmail,
+        from: fromEmail || COMPANY_EMAIL_FROM,
+        subject: title,
+        body: html,
+        status: EMAIL_DELIVERY_STATUS.PENDING,
+      });
+
+      headers = {
+        'X-SES-CONFIGURATION-SET': AWS_SES_CONFIG_SET || 'erxes',
+        EmailDeliveryId: emailDelivery._id,
+      };
+    } else {
+      headers['X-SES-CONFIGURATION-SET'] = 'erxes';
+    }
+
+    mailOptions.headers = headers;
 
     return transporter.sendMail(mailOptions, (error, info) => {
       debugEmail(error);
@@ -846,12 +869,51 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   return { start, end };
 };
 
+/**
+ * Send to webhook
+ */
+
+export const sendToWebhook = async (action: string, type: string, params: any) => {
+  const webhooks = await Webhooks.find({ 'actions.action': action, 'actions.type': type });
+
+  if (!webhooks) {
+    return;
+  }
+
+  let data = params;
+  for (const webhook of webhooks) {
+    if (!webhook.url || webhook.url.length === 0) {
+      continue;
+    }
+
+    if (action === 'delete') {
+      data = { type, object: { _id: params.object._id } };
+    }
+
+    sendRequest({
+      url: webhook.url,
+      headers: {
+        'Erxes-token': webhook.token || '',
+      },
+      method: 'post',
+      body: { data: JSON.stringify(data), action, type },
+    })
+      .then(async () => {
+        await Webhooks.updateStatus(webhook._id, WEBHOOK_STATUS.AVAILABLE);
+      })
+      .catch(async () => {
+        await Webhooks.updateStatus(webhook._id, WEBHOOK_STATUS.UNAVAILABLE);
+      });
+  }
+};
+
 export default {
   sendEmail,
   sendNotification,
   sendMobileNotification,
   readFile,
   createTransporter,
+  sendToWebhook,
 };
 
 export const cleanHtml = (content?: string) => strip(content || '').substring(0, 100);

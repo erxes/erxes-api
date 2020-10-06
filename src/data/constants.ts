@@ -293,6 +293,7 @@ export const MODULE_NAMES = {
   ENGAGE: 'engage',
   SCRIPT: 'script',
   FIELD: 'field',
+  WEBHOOK: 'webhook',
 };
 
 export const RABBITMQ_QUEUES = {
