@@ -65,6 +65,6 @@ export default {
   },
 
   loyalty(customer: ICustomerDocument) {
-    return Loyalties.getLoyalty(customer);
+    return Loyalties.getLoyaltyValue(customer);
   },
 };

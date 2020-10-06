@@ -1,4 +1,4 @@
-import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages, Pipelines, Boards } from '../../../db/models';
+import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages, Pipelines, Boards, Loyalties } from '../../../db/models';
 import { sendEmail, regexSearchText } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
@@ -68,8 +68,33 @@ export const receiveRPCMobileBackend = async msg => {
   let customer: ICustomerDocument | null = null;
   let filter: any = {}
   let car: ICarDocument | null = null;
+  let dealIdsOfCustomer: string[] = [];
 
   switch (action) {
+    case 'getUserAdditionInfo':
+      customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
+
+      if (!customer) {
+        return sendError('User has not customer')
+      }
+
+      const loyalty = await Loyalties.getLoyaltyValue(customer)
+
+      filter = {}
+      dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
+
+      if (data.carId) {
+        const dealIdsOfCar = await Conformities.savedConformity({mainType: 'car', mainTypeId: data.carId, relTypes: ['deal']});
+        filter._id = { $in: dealIdsOfCar }
+      }
+
+      const wStageIds = await Stages.find({probability: 'Won'}, { _id: 1 })
+      filter.stageId = { $in: wStageIds }
+
+      const dealCount = await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]}).countDocuments();
+
+      return sendSuccess({ loyalty, dealCount });
+
     case 'createCar':
       try{
         car = await Cars.createCar({...data});
@@ -223,7 +248,7 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       filter = {}
-      const dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
+      dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
 
       if (data.carId) {
         const dealIdsOfCar = await Conformities.savedConformity({mainType: 'car', mainTypeId: data.carId, relTypes: ['deal']});

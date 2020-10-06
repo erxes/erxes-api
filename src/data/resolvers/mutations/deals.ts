@@ -56,7 +56,9 @@ const dealMutations = {
       }
     }
 
-    return itemsEdit(_id, 'deal', oldDeal, doc, proccessId, user, Deals.updateDeal);
+    const deal = await itemsEdit(_id, 'deal', oldDeal, doc, proccessId, user, Deals.updateDeal);
+    Loyalties.dealChangeCheckLoyalty(deal, deal.stageId);
+    return deal;
   },
 
   /**
@@ -64,9 +66,7 @@ const dealMutations = {
    */
   async dealsChange(_root, doc: IItemDragCommonFields, { user }: IContext) {
     const deal = await itemsChange(doc, 'deal', user, Deals.updateDeal);
-    console.log(new Date(), '111111111111111111')
-    Loyalties.dealChangeCheckLoyalty(doc, deal);
-    console.log(new Date(), '222222222222222')
+    Loyalties.dealChangeCheckLoyalty(deal, doc.destinationStageId);
     return deal;
   },
 
@@ -74,6 +74,7 @@ const dealMutations = {
    * Remove deal
    */
   async dealsRemove(_root, { _id }: { _id: string }, { user }: IContext) {
+    await Loyalties.deleteLoyaltyOfDeal(_id);
     return itemsRemove(_id, 'deal', user);
   },
 

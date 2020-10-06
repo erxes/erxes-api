@@ -1,8 +1,8 @@
 import { Model, model } from 'mongoose';
 import { Customers, Loyalties } from '.';
+import { getConfig } from '../../data/utils';
 import { Stages } from './Boards';
 import Conformities from './Conformities';
-import { IItemDragCommonFields } from './definitions/boards';
 import { PROBABILITY } from './definitions/constants';
 import { ICustomerDocument } from './definitions/customers';
 import { IDealDocument } from './definitions/deals';
@@ -10,21 +10,26 @@ import { loyaltySchema, ILoyaltyDocument } from './definitions/loyalties';
 import { IUserDocument } from './definitions/users';
 
 export interface ICompanyModel extends Model<ILoyaltyDocument> {
-  getLoyalty(customer: ICustomerDocument): number;
-  getOneLoyalty(_id: string): Promise<ILoyaltyDocument>;
-  dealChangeCheckLoyalty(doc: IItemDragCommonFields, deal: IDealDocument): void;
+  getLoyaltyValue(customer: ICustomerDocument, excludeDealId?: string): number;
+  dealChangeCheckLoyalty(deal: IDealDocument, stageId: string, user?: IUserDocument): void;
   addLoyalty(customer: ICustomerDocument, amount: number, user?: IUserDocument): void;
   minusLoyalty(customer: ICustomerDocument, amount: number, user?: IUserDocument): void;
-  updateLoyalty(_id: string, doc: ILoyaltyDocument, user: IUserDocument): Promise<ILoyaltyDocument>;
-  deleteLoyalty(_id: string): void;
+  deleteLoyaltyOfDeal(dealId: string): void;
+  convertLoyaltyToCurrency(value: number)
 }
 
 export const loadClass = () => {
   class Loyalty {
-    public static async getLoyalty(customer: ICustomerDocument) {
+    public static async getLoyaltyValue(customer: ICustomerDocument, excludeDealId?: string) {
+      let match:any = { customerId: customer._id };
+
+      if (excludeDealId) {
+        match = { $and: [ { customerId: customer._id }, { dealId: { $ne: excludeDealId } } ] };
+      }
+
       const response = await Loyalties.aggregate([
-        { $match: { customerId: customer._id } },
-        { $group: { _id: customer._id, sumLoyalty: { $sum: "$amount" } } }
+        { $match: match },
+        { $group: { _id: customer._id, sumLoyalty: { $sum: "$value" } } }
       ]);
 
       if (!response.length) {
@@ -34,29 +39,24 @@ export const loadClass = () => {
       return response[0].sumLoyalty
     }
 
-    public static async getOneLoyalty(_id: string) {
-      const loyalty = await Loyalties.findOne({ _id });
-      if (!loyalty) {
-        throw new Error('Loyalty not found');
-      }
-
-      return loyalty;
+    static async getLoyaltyOfDeal(customer: ICustomerDocument, deal: IDealDocument) {
+      return Loyalties.findOne({customerId: customer._id, dealId: deal._id})
     }
 
-    public static addLoyalty(customer: ICustomerDocument, amount: number, user?: IUserDocument) {
-      if (amount <= 0) {
+    public static async addLoyalty(customer: ICustomerDocument, value: number, user?: IUserDocument) {
+      if (value <= 0) {
         return;
       }
 
       return Loyalties.create({
         customerId: customer._id,
-        amount,
+        value,
         modifiedAt: new Date(),
         userId: user?._id
       })
     }
 
-    public static minusLoyalty(customer: ICustomerDocument, amount: number, user?: IUserDocument) {
+    public static async minusLoyalty(customer: ICustomerDocument, amount: number, user?: IUserDocument) {
       if (amount === 0) {
         return;
       }
@@ -65,46 +65,84 @@ export const loadClass = () => {
 
       return Loyalties.create({
         customerId: customer._id,
-        amount: fixAmount,
+        value: fixAmount,
         modifiedAt: new Date(),
         userId: user?._id
       })
     }
 
     public static async CalcLoyalty(deal: IDealDocument) {
-      const amounts = deal.productsData?.map(item => item.tickUsed ? item.amount : 0);
-      const sumAmount = amounts?.reduce((pre, current) => {
-        return pre || 0 + current || 0;
-      }, 0) || 0;
-      return sumAmount * 0.001;
+      const amounts = deal.productsData?.map(item => item.tickUsed ? item.amount || 0 : 0) || [];
+      const sumAmount = amounts.reduce((preVal, currVal) => {
+        return preVal + currVal
+      })
+
+      return this.convertCurrencyToLoyalty(sumAmount);
     }
 
-    public static async dealChangeCheckLoyalty(doc: IItemDragCommonFields, deal: IDealDocument, user?: IUserDocument) {
+    static async UseLoyalty(deal: IDealDocument) {
+      const ratio = await getConfig('LOYALTY_RATIO_CURRENCY', 1);
+      return (deal.paymentsData?.loyalty?.amount || 0) / ratio;
+    }
+
+    public static async convertLoyaltyToCurrency(value: number) {
+      const ratio = await getConfig('LOYALTY_RATIO_CURRENCY', 1);
+      return value * ratio;
+    }
+
+    static async convertCurrencyToLoyalty(currency: number) {
+      const percent = await getConfig('LOYALTY_PERCENT_OF_DEAL', 0);
+      return currency / 100 * percent;
+    }
+
+    public static async dealChangeCheckLoyalty(deal: IDealDocument, stageId: string, user?: IUserDocument) {
       const customerIds = await Conformities.savedConformity({ mainType: 'deal', mainTypeId: deal._id, relTypes: ['customer'] });
       if (!customerIds) {
         return;
       }
 
-      const { destinationStageId, sourceStageId } = doc;
-
-      const destinationStage = await Stages.getStage(destinationStageId);
-      const sourceStage = await Stages.getStage(sourceStageId);
-
-      if (destinationStage.probability === PROBABILITY.WON) {
-        return Loyalties.addLoyalty(await Customers.getCustomer(customerIds[0]), await this.CalcLoyalty(deal), user);
+      const customers = await Customers.find({_id: { $in: customerIds}});
+      const stage = await Stages.getStage(stageId);
+      let valueForDeal = 0;
+      let valueForUse = 0;
+      if (stage.probability === PROBABILITY.WON) {
+        valueForDeal += await this.CalcLoyalty(deal);
+        valueForUse += await this.UseLoyalty(deal);
+        console.log(valueForDeal, valueForUse, customers.length);
       }
 
-      if (sourceStage.probability === PROBABILITY.WON) {
-        return Loyalties.minusLoyalty(await Customers.getCustomer(customerIds[0]), await this.CalcLoyalty(deal), user)
+      const value = (valueForDeal - valueForUse) / (customers.length || 1);
+
+      for (const customer of customers){
+        const loyalty = await this.getLoyaltyOfDeal(customer, deal);
+
+        const limit = await Loyalties.getLoyaltyValue(customer, deal._id)
+
+        console.log(customer.primaryEmail, limit, value)
+        if (limit < value * -1) {
+          console.log('hhhhhhhhhhhhhhhhh')
+          throw new Error('The loyalty used exceeds the accumulated loyalty.');
+        }
+
+        const doc = {
+          customerId: customer._id,
+          modifiedAt: new Date(),
+          value,
+          dealId: deal._id,
+          userId: user?._id,
+        }
+
+        if (loyalty) {
+          await Loyalties.updateOne({ _id: loyalty._id }, { $set: doc })
+        } else {
+          await Loyalties.create(doc);
+        }
       }
+      return
     }
 
-    public static updateLoyalty(_id: string, doc: ILoyaltyDocument) {
-      return Loyalties.updateOne({ _id }, { $set: { ...doc } });
-    }
-
-    public static deleteLoyalty(_id: string) {
-      return Loyalties.deleteOne({ _id });
+    public static async deleteLoyaltyOfDeal(dealId: string) {
+      return Loyalties.deleteOne({ dealId })
     }
   }
 

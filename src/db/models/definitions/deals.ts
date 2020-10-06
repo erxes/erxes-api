@@ -60,7 +60,7 @@ interface IPaymentsData {
 
 export interface IDeal extends IItemCommonFields {
   productsData?: IProductData[];
-  paymentsData?: IPaymentsData[];
+  paymentsData?: IPaymentsData;
 }
 
 export interface IDealDocument extends IDeal, Document {
