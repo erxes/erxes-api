@@ -106,8 +106,8 @@ const customerMutations = {
     await validateBulk(verificationType);
   },
 
-  async customersChangeVerificationStatus(_root, args: { _id: string; type: string }) {
-    return Customers.updateVerificationStatus(args._id, args.type);
+  async customersChangeVerificationStatus(_root, args: { customerIds: [string]; type: string; status: string }) {
+    return Customers.updateVerificationStatus(args.customerIds, args.type, args.status);
   },
 };
 

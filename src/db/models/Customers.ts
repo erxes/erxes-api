@@ -83,7 +83,7 @@ export interface ICustomerModel extends Model<ICustomerDocument> {
   mergeCustomers(customerIds: string[], customerFields: ICustomer, user?: IUserDocument): Promise<ICustomerDocument>;
   bulkInsert(fieldNames: string[], fieldValues: string[][], user: IUserDocument): Promise<string[]>;
   calcPSS(doc: any): IPSS;
-  updateVerificationStatus(_id: string, type: string): Promise<ICustomerDocument>;
+  updateVerificationStatus(customerIds: string[], type: string, status: string): Promise<ICustomerDocument[]>;
 
   // widgets ===
   getWidgetCustomer(doc: IGetCustomerParams): Promise<ICustomerDocument | null>;
@@ -729,29 +729,12 @@ export const loadClass = () => {
       return Customers.getCustomer(customerId);
     }
 
-    public static async updateVerificationStatus(_id: string, type: string) {
-      const customer = await Customers.findById({ _id }).select({ emailValidationStatus: 1, phoneValidationStatus: 1 });
+    public static async updateVerificationStatus(customerIds: string, type: string, status: string) {
+      const set: any = type !== 'email' ? { phoneValidationStatus: status } : { emailValidationStatus: status };
 
-      const set: any = {
-        _id,
-        emailValidationStatus: customer?.emailValidationStatus,
-        phoneValidationStatus: customer?.phoneValidationStatus,
-      };
+      await Customers.updateMany({ _id: { $in: customerIds } }, { $set: set });
 
-      if (type === 'phone') {
-        set.phoneValidationStatus = customer?.phoneValidationStatus !== 'valid' ? 'valid' : 'invalid';
-      } else {
-        set.emailValidationStatus = customer?.emailValidationStatus !== 'valid' ? 'valid' : 'invalid';
-      }
-
-      await Customers.findByIdAndUpdate(
-        { _id },
-        {
-          $set: set,
-        },
-      );
-
-      return Customers.findOne({ _id });
+      return Customers.find({ _id: { $in: customerIds } });
     }
   }
 

@@ -112,6 +112,8 @@ const fields = `
   code: String
   sex: Int
   birthDate: Date
+  emailValidationStatus: String
+  phoneValidationStatus: String
 `;
 
 export const mutations = `
@@ -121,6 +123,5 @@ export const mutations = `
   customersRemove(customerIds: [String]): [String]
   customersChangeState(_id: String!, value: String!): Customer
   customersVerify(verificationType:String!): String
-  customersChangeVerificationStatus(type: String!,_id: String!): Customer
-  customersBulkChangeVerificationStatus(type: String!,customerIds: [String!]): [Customer]
+  customersChangeVerificationStatus(customerIds: [String], type: String!, status: String!): [Customer]
 `;
