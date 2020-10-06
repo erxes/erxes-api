@@ -70,7 +70,7 @@ const WIDGETS_DOMAIN = getSubServiceDomain({ name: 'WIDGETS_DOMAIN' });
 const INTEGRATIONS_API_DOMAIN = getSubServiceDomain({ name: 'INTEGRATIONS_API_DOMAIN' });
 const CLIENT_PORTAL_DOMAIN = getSubServiceDomain({ name: 'CLIENT_PORTAL_DOMAIN' });
 
-const app = express();
+export const app = express();
 
 app.disable('x-powered-by');
 
