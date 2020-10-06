@@ -1,3 +1,6 @@
+* Merge branch 'develop' (46f0430f)
+* make sms engage from text optional (2d909c73)
+
 * Merge branch 'develop' (0427f6a8)
 * erxes/erxes#2359 (fdd1416b)
 * update load test data (34196c3c)
