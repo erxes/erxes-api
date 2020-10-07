@@ -315,6 +315,7 @@ const conversationMutations = {
 
     const dbMessage = await ConversationMessages.getMessage(message._id);
 
+    await utils.sendToWebhook('create', 'userMessages', dbMessage);
     // Publishing both admin & client
     publishMessage(dbMessage, conversation.customerId);
 

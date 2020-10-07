@@ -26,6 +26,8 @@ export interface IConversation {
 
   firstRespondedUserId?: string;
   firstRespondedDate?: Date;
+
+  isCustomerRespondedLast?: boolean;
 }
 
 // Conversation schema
@@ -76,4 +78,6 @@ export const conversationSchema = new Schema({
 
   firstRespondedUserId: field({ type: String }),
   firstRespondedDate: field({ type: Date }),
+
+  isCustomerRespondedLast: field({ type: Boolean }),
 });

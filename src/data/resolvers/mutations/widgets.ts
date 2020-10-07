@@ -23,7 +23,7 @@ import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
 import { AUTO_BOT_MESSAGES } from '../../constants';
-import { registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest } from '../../utils';
+import { registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest, sendToWebhook } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
 interface ISubmission {
@@ -184,6 +184,7 @@ const widgetMutations = {
       customer = await Customers.createCustomer({
         integrationId,
         primaryEmail: email,
+        emails: [email],
         firstName,
         lastName,
         primaryPhone: phone,
@@ -192,8 +193,8 @@ const widgetMutations = {
 
     const customerDoc = {
       location: browserInfo,
-      firstName: customer.firstName ? customer.firstName : firstName,
-      lastName: customer.lastName ? customer.lastName : lastName,
+      firstName: customer.firstName || firstName,
+      lastName: customer.lastName || lastName,
       ...(customer.primaryEmail
         ? {}
         : {
@@ -519,6 +520,8 @@ const widgetMutations = {
         receivers: conversationNotifReceivers(conversation, customerId),
       });
     }
+
+    await sendToWebhook('create', 'customerMessages', msg);
 
     return msg;
   },
