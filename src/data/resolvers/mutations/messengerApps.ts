@@ -1,4 +1,3 @@
-import { Db } from 'mongodb';
 import { MessengerApps } from '../../../db/models';
 import { IMessengerApp } from '../../../db/models/definitions/messengerApps';
 import { putDeleteLog } from '../../logUtils';
@@ -78,7 +77,7 @@ const messengerAppMutations = {
           kind: 'lead',
           credentials: {
             integrationId,
-            formCode: lead.formCode,
+            topicId: lead.formCode,
           },
         };
 
@@ -92,5 +91,6 @@ const messengerAppMutations = {
 
 requireLogin(messengerAppMutations, 'messengerAppsEdit');
 requireLogin(messengerAppMutations, 'messengerAppsAdd');
+requireLogin(messengerAppMutations, 'messengerAppSave');
 
 export default messengerAppMutations;
