@@ -354,7 +354,8 @@ describe('insertMessage()', () => {
   });
 
   test('Bot widget post request', async () => {
-    const conversation = await conversationFactory({ operatorStatus: CONVERSATION_OPERATOR_STATUS.BOT });
+    const conversation1 = await conversationFactory({ operatorStatus: CONVERSATION_OPERATOR_STATUS.BOT });
+    const conversation2 = await conversationFactory({ operatorStatus: CONVERSATION_OPERATOR_STATUS.BOT });
 
     const sendRequestMock = sinon.stub(utils, 'sendRequest').callsFake(() => {
       return Promise.resolve({
@@ -367,32 +368,63 @@ describe('insertMessage()', () => {
       });
     });
 
-    const botMessage = await widgetMutations.widgetPostRequest(
+    const botMessage1 = await widgetMutations.widgetPostRequest(
       {},
       {
         integrationId: _integrationBot._id,
-        conversationId: conversation._id,
+        conversationId: conversation1._id,
         customerId: _customer._id,
         message: 'Reply message',
         payload: 'Response of reply',
+        type: 'postback',
       },
     );
 
-    const message = await ConversationMessages.findOne({
-      conversationId: conversation._id,
+    const message1 = await ConversationMessages.findOne({
+      conversationId: conversation1._id,
       botData: { $exists: false },
     });
 
-    if (message) {
-      expect(message.content).toBe('Reply message');
+    if (message1) {
+      expect(message1.content).toBe('Reply message');
     } else {
       fail('Message not found');
     }
 
-    expect(botMessage.botData).toEqual([
+    expect(botMessage1.botData).toEqual([
       {
         type: 'text',
         text: 'Response of quick reply',
+      },
+    ]);
+
+    const botMessage2 = await widgetMutations.widgetPostRequest(
+      {},
+      {
+        integrationId: _integrationBot._id,
+        conversationId: conversation2._id,
+        customerId: _customer._id,
+        message: 'Reply message 2',
+        payload: 'Response of reply',
+        type: 'say_something',
+      },
+    );
+
+    const message2 = await ConversationMessages.findOne({
+      conversationId: conversation2._id,
+      botData: { $exists: false },
+    });
+
+    if (message2) {
+      expect(message2.content).toBe('Reply message 2');
+    } else {
+      fail('Message not found');
+    }
+
+    expect(botMessage2.botData).toEqual([
+      {
+        type: 'text',
+        text: 'Response of reply',
       },
     ]);
 
