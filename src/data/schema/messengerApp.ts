@@ -7,6 +7,26 @@ export const types = `
     credentials: JSON
     accountId: String
   }
+
+  input WebSiteMessengerAppInput {
+    description: String
+    buttonText: String
+    url: String
+  }
+
+  input KnowledgeBaseMessengerAppInput {
+    topicId: String
+  }
+
+  input LeadMessengerAppInput {
+    formCode: String
+  }
+
+  input MessengerAppsInput {
+    websites: [WebSiteMessengerAppInput]
+    knowledgebases: [KnowledgeBaseMessengerAppInput]
+    leads: [LeadMessengerAppInput]
+  }
 `;
 
 const queryParams = `
@@ -29,4 +49,5 @@ export const mutations = `
   messengerAppsAdd(${mutationParams}): MessengerApp
   messengerAppsEdit(_id: String!, ${mutationParams}): MessengerApp
   messengerAppsRemove(_id: String!): JSON
+  messengerAppSave(integrationId: String!, messengerApps: MessengerAppsInput): String
 `;
