@@ -96,6 +96,7 @@ export const mutations = `
     integrationId: String!,
     message: String!
     payload: String!
+    type: String!
     ): JSON
 
   widgetsReadConversationMessages(conversationId: String): JSON

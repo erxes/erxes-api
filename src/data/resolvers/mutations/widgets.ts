@@ -22,7 +22,7 @@ import { debugBase } from '../../../debuggers';
 import { trackViewPageEvent } from '../../../events';
 import memoryStorage from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
-import { AUTO_BOT_MESSAGES } from '../../constants';
+import { AUTO_BOT_MESSAGES, BOT_MESSAGE_TYPES } from '../../constants';
 import { registerOnboardHistory, sendEmail, sendMobileNotification, sendRequest, sendToWebhook } from '../../utils';
 import { conversationNotifReceivers } from './conversations';
 
@@ -627,20 +627,19 @@ const widgetMutations = {
       customerId,
       message,
       payload,
-    }: { conversationId: string; customerId: string; integrationId: string; message: string; payload: string },
+      type,
+    }: {
+      conversationId: string;
+      customerId: string;
+      integrationId: string;
+      message: string;
+      payload: string;
+      type: string;
+    },
   ) {
     const integration = await Integrations.findOne({ _id: integrationId }).lean();
 
     const { botEndpointUrl } = integration.messengerData;
-
-    const botRequest = await sendRequest({
-      method: 'POST',
-      url: botEndpointUrl,
-      body: {
-        type: 'text',
-        text: payload,
-      },
-    });
 
     // create customer message
     const msg = await Messages.createMessage({
@@ -652,20 +651,41 @@ const widgetMutations = {
     graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: msg });
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
 
-    const { responses } = botRequest;
+    let botMessage;
+    let botData;
 
-    const botData =
-      responses.length !== 0
-        ? responses
-        : [
-            {
-              type: 'text',
-              text: AUTO_BOT_MESSAGES.NO_RESPONSE,
-            },
-          ];
+    if (type !== BOT_MESSAGE_TYPES.SAY_SOMETHING) {
+      const botRequest = await sendRequest({
+        method: 'POST',
+        url: botEndpointUrl,
+        body: {
+          type: 'text',
+          text: payload,
+        },
+      });
+
+      const { responses } = botRequest;
+
+      botData =
+        responses.length !== 0
+          ? responses
+          : [
+              {
+                type: 'text',
+                text: AUTO_BOT_MESSAGES.NO_RESPONSE,
+              },
+            ];
+    } else {
+      botData = [
+        {
+          type: 'text',
+          text: payload,
+        },
+      ];
+    }
 
     // create bot message
-    const botMessage = await Messages.createMessage({
+    botMessage = await Messages.createMessage({
       conversationId,
       customerId,
       botData,

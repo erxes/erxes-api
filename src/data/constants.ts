@@ -304,3 +304,7 @@ export const AUTO_BOT_MESSAGES = {
   NO_RESPONSE: 'No reply',
   CHANGE_OPERATOR: 'The team will reply in message',
 };
+
+export const BOT_MESSAGE_TYPES = {
+  SAY_SOMETHING: 'say_something',
+};
