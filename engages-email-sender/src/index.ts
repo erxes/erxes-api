@@ -14,7 +14,7 @@ import { debugBase, debugInit } from './debuggers';
 import { initBroker } from './messageBroker';
 import { trackEngages } from './trackers/engageTracker';
 
-const app = express();
+export const app = express();
 
 app.disable('x-powered-by');
 
