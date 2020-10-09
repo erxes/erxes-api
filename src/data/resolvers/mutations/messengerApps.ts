@@ -77,7 +77,7 @@ const messengerAppMutations = {
           kind: 'lead',
           credentials: {
             integrationId,
-            topicId: lead.formCode,
+            formCode: lead.formCode,
           },
         };
 
