@@ -113,6 +113,8 @@ const fields = `
   code: String
   sex: Int
   birthDate: Date
+  emailValidationStatus: String
+  phoneValidationStatus: String
 `;
 
 export const mutations = `
@@ -122,4 +124,5 @@ export const mutations = `
   customersRemove(customerIds: [String]): [String]
   customersChangeState(_id: String!, value: String!): Customer
   customersVerify(verificationType:String!): String
+  customersChangeVerificationStatus(customerIds: [String], type: String!, status: String!): [Customer]
 `;
