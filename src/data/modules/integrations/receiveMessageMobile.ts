@@ -305,6 +305,11 @@ export const receiveRPCMobileBackend = async msg => {
 
       if (data.carId){
         await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: data.carId})
+      } else {
+        const carIds = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['car']});
+        if (carIds.length > 0){
+          await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: carIds[0]})
+        }
       }
 
       return sendSuccess(deal);
