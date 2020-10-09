@@ -1,6 +1,7 @@
 import { graphqlRequest } from '../db/connection';
-import { messengerAppFactory } from '../db/factories';
+import { integrationFactory } from '../db/factories';
 import { MessengerApps } from '../db/models';
+import { KIND_CHOICES } from '../db/models/definitions/constants';
 
 import './setup.ts';
 
@@ -10,64 +11,32 @@ describe('mutations', () => {
     await MessengerApps.deleteMany({});
   });
 
-  test('Edit messenger app', async () => {
-    const messengerApp = await messengerAppFactory({});
+  test('Save messenger app', async () => {
+    const integration = await integrationFactory({ kind: KIND_CHOICES.MESSENGER });
 
     const mutation = `
-      mutation messengerAppsEdit($_id: String!, $name: String, $kind: String) {
-        messengerAppsEdit(_id: $_id, name: $name, kind: $kind) {
-          name
-          kind
-        }
+      mutation messengerAppSave($integrationId: String!, $messengerApps: MessengerAppsInput) {
+        messengerAppSave(integrationId: $integrationId, messengerApps: $messengerApps)
       }
     `;
 
-    const args = {
-      _id: messengerApp._id,
-      name: 'Knowledge base',
-      kind: 'knowledgebase',
+    const args: any = {
+      integrationId: integration._id,
+      messengerApps: {
+        websites: [{ description: 'description' }],
+        knowledgebases: [{ topicId: 'topicId' }],
+        leads: [{ formCode: 'formCode' }],
+      },
     };
 
-    const app = await graphqlRequest(mutation, 'messengerAppsEdit', args);
+    let response = await graphqlRequest(mutation, 'messengerAppSave', args);
 
-    expect(app.kind).toBe(args.kind);
-    expect(app.name).toBe(args.name);
-  });
+    expect(response).toBe('success');
 
-  test('Add messenger app', async () => {
-    const args = {
-      name: 'Knowledge base',
-      kind: 'knowledgebase',
-    };
+    args.messengerApps = {};
 
-    const mutation = `
-      mutation messengerAppsAdd($name: String, $kind: String, $credentials: JSON) {
-        messengerAppsAdd(name: $name, kind: $kind, credentials: $credentials) {
-          name
-          kind
-        }
-      }
-    `;
+    response = await graphqlRequest(mutation, 'messengerAppSave', args);
 
-    const app = await graphqlRequest(mutation, 'messengerAppsAdd', args);
-
-    expect(app.name).toBe(args.name);
-    expect(app.kind).toBe(args.kind);
-  });
-
-  test('Remove', async () => {
-    const app = await messengerAppFactory({ credentials: { integrationId: '_id', formCode: 'code' } });
-
-    const mutation = `
-      mutation messengerAppsRemove($_id: String!) {
-        messengerAppsRemove(_id: $_id)
-      }
-    `;
-
-    await graphqlRequest(mutation, 'messengerAppsRemove', { _id: app._id });
-
-    const count = await MessengerApps.find().countDocuments();
-
-    expect(count).toBe(0);
+    expect(response).toBe('success');
   });
 });
