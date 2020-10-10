@@ -1,7 +1,23 @@
-import { Customers, Conformities, Cars, CarCategories, Deals, Products, ProductCategories, Stages, Pipelines, Boards, Loyalties } from '../../../db/models';
-import { sendEmail, regexSearchText } from '../../utils';
+import {
+  Customers,
+  Conformities,
+  Cars,
+  CarCategories,
+  Deals,
+  Products,
+  ProductCategories,
+  Stages,
+  Pipelines,
+  Boards,
+  Loyalties,
+  KnowledgeBaseTopics,
+  KnowledgeBaseCategories,
+  KnowledgeBaseArticles
+} from '../../../db/models';
+import { sendEmail, regexSearchText, paginate } from '../../utils';
 import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
+import { PUBLISH_STATUSES } from '../../../db/models/definitions/constants';
 
 const sendError = message => ({
   status: 'error',
@@ -313,5 +329,34 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       return sendSuccess(deal);
+
+    case 'getKnowledgeBaseTopicDetail':
+      return sendSuccess( await KnowledgeBaseTopics.getTopic(data._id));
+
+    case 'filterKnowledgeBaseCategories':
+      const topic = await KnowledgeBaseTopics.getTopic(data.topicId);
+
+      const knowledgeBaseCategories = KnowledgeBaseCategories.find({
+        _id: { $in: topic.categoryIds }
+      })
+
+      return sendSuccess( await paginate(knowledgeBaseCategories, { ...data }) );
+
+    case 'getKnowledgeBaseCategory':
+      return sendSuccess( await KnowledgeBaseCategories.getCategory(data));
+
+    case 'filterKnowledgeBaseArticles':
+      const category = await KnowledgeBaseCategories.getCategory(data.categoryId);
+
+      const articles = KnowledgeBaseArticles.find({
+        _id: { $in: category.articleIds }, status: PUBLISH_STATUSES.PUBLISH
+      }).sort({
+        createdAt: -1,
+      });
+
+      return sendSuccess( await paginate( articles, { ...data }));
+
+    case 'getKnowledgeBaseArticle':
+      return sendSuccess( await KnowledgeBaseArticles.getArticle(data._id) );
   }
 }
