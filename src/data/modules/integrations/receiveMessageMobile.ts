@@ -224,26 +224,30 @@ export const receiveRPCMobileBackend = async msg => {
       ));
 
     case 'filterProducts':
-      if (data.ids) {
-        filter._id = { $in: data.ids }
+      const { page = 0, perPage = 0, ids, type, searchValue, categoryId } = data;
+      if (ids) {
+        filter._id = { $in: ids }
       }
 
-      if (data.type) {
-        filter.type = data.type;
+      if (type) {
+        filter.type = type;
       }
 
-      if (data.searchValue) {
+      if (searchValue) {
         const fields = [
-          { name: { $in: [new RegExp(`.*${data.searchValue}.*`, 'i')] } },
-          { code: { $in: [new RegExp(`.*${data.searchValue}.*`, 'i')] } },
+          { name: { $in: [new RegExp(`.*${searchValue}.*`, 'i')] } },
+          { code: { $in: [new RegExp(`.*${searchValue}.*`, 'i')] } },
         ];
 
         filter.$or = fields;
       }
 
-      if (data.categoryId) {
-        filter.categoryId = data.categoryId
+      if (categoryId) {
+        filter.categoryId = categoryId
       }
+
+      const _page = Number(page || '1');
+      const _limit = Number(perPage || '20');
 
       return sendSuccess(await Products.aggregate([
         {$match: filter},
@@ -253,7 +257,9 @@ export const receiveRPCMobileBackend = async msg => {
           foreignField: '_id',
           as: 'category'
         }},
-        { $unwind: '$category' }
+        { $unwind: '$category' },
+        { $skip: (_page - 1) * _limit},
+        { $limit: _limit }
       ]))
 
     case 'filterDeals':
