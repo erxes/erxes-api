@@ -122,7 +122,6 @@ describe('messenger integration model edit method', () => {
   });
 
   test('check if messenger integration update method is running successfully', async () => {
-    expect.assertions(4);
     const doc = {
       name: 'Integration test 2',
       brandId: _brand2._id,
