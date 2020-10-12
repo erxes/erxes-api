@@ -73,4 +73,35 @@ describe('HTTP endpoint tests', () => {
     expect(response.body).toBeDefined();
     expect(response.body.customerId).toBe(customer._id);
   });
+
+  test('Test /telnyx/webhook', async () => {
+    const webhookParams = {
+      from: faker.phone.phoneNumber(),
+      to: faker.phone.phoneNumber(),
+      telnyxId: faker.random.uuid(),
+    };
+
+    const webhookData = {
+      data: {
+        payload: {
+          from: webhookParams.from || faker.phone.phoneNumber(),
+          id: webhookParams.telnyxId || faker.random.uuid(),
+          to: [{ phone_number: webhookParams.to || faker.phone.phoneNumber(), status: faker.random.word() }],
+        },
+      },
+    };
+
+    const response = await request(app)
+      .post('/telnyx/webhook')
+      .send(webhookData);
+
+    const { status, data } = response.body;
+
+    expect(status).toBeDefined();
+    expect(status).toBe('ok');
+    expect(data).toBeDefined();
+    expect(data.payload).toBeDefined();
+    expect(data.payload.from).toBe(webhookParams.from);
+    expect(data.payload.id).toBe(webhookParams.telnyxId);
+  });
 });

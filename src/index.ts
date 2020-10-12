@@ -65,6 +65,16 @@ const pipeRequest = (req: any, res: any, next: any, url: string) => {
   );
 };
 
+const handleTelnyxWebhook = (req, res, next, hookName: string) => {
+  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
+
+  if (NODE_ENV === 'test') {
+    return res.json({ ...req.body, status: 'ok' });
+  }
+
+  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/${hookName}`);
+};
+
 const MAIN_APP_DOMAIN = getEnv({ name: 'MAIN_APP_DOMAIN' });
 const WIDGETS_DOMAIN = getSubServiceDomain({ name: 'WIDGETS_DOMAIN' });
 const INTEGRATIONS_API_DOMAIN = getSubServiceDomain({ name: 'INTEGRATIONS_API_DOMAIN' });
@@ -83,20 +93,6 @@ app.post(`/service/engage/tracker`, async (req, res, next) => {
   return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/service/engage/tracker`);
 });
 
-// relay telnyx sms web hook
-app.post(`/telnyx/webhook`, async (req, res, next) => {
-  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
-
-  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/webhook`);
-});
-
-// relay telnyx sms web hook fail over url
-app.post(`/telnyx/webhook-failover`, async (req, res, next) => {
-  const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
-
-  return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/webhook-failover`);
-});
-
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
@@ -104,6 +100,16 @@ app.use(
     limit: '15mb',
   }),
 );
+
+// relay telnyx sms web hook
+app.post(`/telnyx/webhook`, (req, res, next) => {
+  return handleTelnyxWebhook(req, res, next, 'webhook');
+});
+
+// relay telnyx sms web hook fail over url
+app.post(`/telnyx/webhook-failover`, (req, res, next) => {
+  return handleTelnyxWebhook(req, res, next, 'webhook-failover');
+});
 
 app.use(cookieParser());
 

@@ -5,10 +5,6 @@ import { saveTelnyxHookData } from '../telnyxUtils';
 const handleWebhookData = async (req, res) => {
   debugRequest(debugEngages, req);
 
-  if (!req.body) {
-    return res.json({ status: 'error', message: 'Request body does not contain data' });
-  }
-
   const { data } = req.body;
 
   await saveTelnyxHookData(data);
