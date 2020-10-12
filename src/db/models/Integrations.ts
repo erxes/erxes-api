@@ -2,8 +2,6 @@ import * as momentTz from 'moment-timezone';
 import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
 import { Brands, ConversationMessages, Conversations, Customers, Forms } from '.';
-import { message } from '../../data/resolvers/engage';
-import integration from '../../data/resolvers/integration';
 import { KIND_CHOICES } from './definitions/constants';
 import {
   IIntegration,
