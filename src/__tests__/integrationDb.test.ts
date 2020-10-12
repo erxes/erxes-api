@@ -80,6 +80,8 @@ describe('messenger integration model add method', () => {
   });
 
   test('check if messenger integration create method is running successfully', async () => {
+    expect.assertions(4);
+
     const doc = {
       name: 'Integration test',
       brandId: _brand._id,
@@ -91,6 +93,12 @@ describe('messenger integration model add method', () => {
     expect(integration.name).toBe(doc.name);
     expect(integration.brandId).toBe(doc.brandId);
     expect(integration.kind).toBe(KIND_CHOICES.MESSENGER);
+
+    try {
+      await Integrations.createMessengerIntegration(doc, _user._id);
+    } catch (e) {
+      expect(e.message).toBe('Duplicated messenger for single brand');
+    }
   });
 });
 
@@ -114,6 +122,7 @@ describe('messenger integration model edit method', () => {
   });
 
   test('check if messenger integration update method is running successfully', async () => {
+    expect.assertions(4);
     const doc = {
       name: 'Integration test 2',
       brandId: _brand2._id,
@@ -125,6 +134,12 @@ describe('messenger integration model edit method', () => {
     expect(updatedIntegration.name).toBe(doc.name);
     expect(updatedIntegration.brandId).toBe(doc.brandId);
     expect(updatedIntegration.kind).toBe(KIND_CHOICES.MESSENGER);
+
+    try {
+      await Integrations.updateMessengerIntegration(_integration._id, doc);
+    } catch (e) {
+      expect(e.message).toBe('Duplicated messenger for single brand');
+    }
   });
 });
 

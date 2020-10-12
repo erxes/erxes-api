@@ -2,6 +2,8 @@ import * as momentTz from 'moment-timezone';
 import { Model, model, Query } from 'mongoose';
 import 'mongoose-type-email';
 import { Brands, ConversationMessages, Conversations, Customers, Forms } from '.';
+import { message } from '../../data/resolvers/engage';
+import integration from '../../data/resolvers/integration';
 import { KIND_CHOICES } from './definitions/constants';
 import {
   IIntegration,
@@ -126,7 +128,13 @@ export const loadClass = () => {
     /**
      * Create a messenger kind integration
      */
-    public static createMessengerIntegration(doc: IMessengerIntegration, userId: string) {
+    public static async createMessengerIntegration(doc: IMessengerIntegration, userId: string) {
+      const integration = await Integrations.findOne({ kind: KIND_CHOICES.MESSENGER, brandId: doc.brandId });
+
+      if (integration) {
+        throw new Error('Duplicated messenger for single brand');
+      }
+
       return this.createIntegration({ ...doc, kind: KIND_CHOICES.MESSENGER }, userId);
     }
 
@@ -134,6 +142,16 @@ export const loadClass = () => {
      * Update messenger integration document
      */
     public static async updateMessengerIntegration(_id: string, doc: IMessengerIntegration) {
+      const integration = await Integrations.findOne({
+        _id: { $ne: _id },
+        kind: KIND_CHOICES.MESSENGER,
+        brandId: doc.brandId,
+      });
+
+      if (integration) {
+        throw new Error('Duplicated messenger for single brand');
+      }
+
       await Integrations.updateOne({ _id }, { $set: doc }, { runValidators: true });
 
       return Integrations.findOne({ _id });
