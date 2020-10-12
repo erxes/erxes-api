@@ -95,10 +95,8 @@ describe('HTTP endpoint tests', () => {
       .post('/telnyx/webhook')
       .send(webhookData);
 
-    const { status, data } = response.body;
+    const { data } = response.body;
 
-    expect(status).toBeDefined();
-    expect(status).toBe('ok');
     expect(data).toBeDefined();
     expect(data.payload).toBeDefined();
     expect(data.payload.from).toBe(webhookParams.from);

@@ -69,7 +69,7 @@ const handleTelnyxWebhook = (req, res, next, hookName: string) => {
   const ENGAGES_API_DOMAIN = getSubServiceDomain({ name: 'ENGAGES_API_DOMAIN' });
 
   if (NODE_ENV === 'test') {
-    return res.json({ ...req.body, status: 'ok' });
+    return res.json(req.body);
   }
 
   return pipeRequest(req, res, next, `${ENGAGES_API_DOMAIN}/telnyx/${hookName}`);
