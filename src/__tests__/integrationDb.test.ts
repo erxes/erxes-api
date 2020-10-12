@@ -133,6 +133,39 @@ describe('messenger integration model edit method', () => {
     expect(updatedIntegration.name).toBe(doc.name);
     expect(updatedIntegration.brandId).toBe(doc.brandId);
     expect(updatedIntegration.kind).toBe(KIND_CHOICES.MESSENGER);
+  });
+});
+
+describe('messenger integration model edit with duplicated brand method', () => {
+  let _brand;
+  let _integration;
+  let _integration2;
+  let _brand2;
+
+  beforeEach(async () => {
+    _brand = await brandFactory({});
+    _brand2 = await brandFactory({});
+    _integration = await integrationFactory({
+      kind: KIND_CHOICES.MESSENGER,
+      brandId: _brand._id,
+    });
+    _integration2 = await integrationFactory({
+      kind: KIND_CHOICES.MESSENGER,
+      brandId: _brand2._id,
+    });
+  });
+
+  afterEach(async () => {
+    await Brands.deleteMany({});
+    await Integrations.deleteMany({});
+  });
+
+  test('check if messenger integration update method is throwing exception', async () => {
+    const doc = {
+      name: 'Integration test 2',
+      brandId: _brand2._id,
+      kind: KIND_CHOICES.MESSENGER,
+    };
 
     try {
       await Integrations.updateMessengerIntegration(_integration._id, doc);
@@ -160,7 +193,7 @@ describe('lead integration create model test without leadData', () => {
     await Forms.deleteMany({});
   });
 
-  test('check if create lead integration test wihtout leadData is throwing exception', async () => {
+  test('check if create lead integration test without leadData is throwing exception', async () => {
     expect.assertions(1);
 
     const mainDoc = {
