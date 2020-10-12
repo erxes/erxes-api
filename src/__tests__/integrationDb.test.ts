@@ -137,30 +137,19 @@ describe('messenger integration model edit method', () => {
 });
 
 describe('messenger integration model edit with duplicated brand method', () => {
-  let _brand;
-  let _integration;
-  let _integration2;
-  let _brand2;
-
-  beforeEach(async () => {
-    _brand = await brandFactory({});
-    _brand2 = await brandFactory({});
-    _integration = await integrationFactory({
+  test('check if messenger integration update method is throwing exception', async () => {
+    const _brand = await brandFactory({});
+    const _brand2 = await brandFactory({});
+    const _integration = await integrationFactory({
       kind: KIND_CHOICES.MESSENGER,
       brandId: _brand._id,
     });
-    _integration2 = await integrationFactory({
+
+    await integrationFactory({
       kind: KIND_CHOICES.MESSENGER,
       brandId: _brand2._id,
     });
-  });
 
-  afterEach(async () => {
-    await Brands.deleteMany({});
-    await Integrations.deleteMany({});
-  });
-
-  test('check if messenger integration update method is throwing exception', async () => {
     const doc = {
       name: 'Integration test 2',
       brandId: _brand2._id,
@@ -172,6 +161,9 @@ describe('messenger integration model edit with duplicated brand method', () => 
     } catch (e) {
       expect(e.message).toBe('Duplicated messenger for single brand');
     }
+
+    await Brands.deleteMany({});
+    await Integrations.deleteMany({});
   });
 });
 
