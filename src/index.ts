@@ -354,13 +354,21 @@ app.use((error, _req, res, _next) => {
 const httpServer = createServer(app);
 
 const PORT = getEnv({ name: 'PORT' });
+const MONGO_URL = getEnv({ name: 'MONGO_URL' });
+const TEST_MONGO_URL = getEnv({ name: 'TEST_MONGO_URL' });
 
 // subscriptions server
 apolloServer.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(PORT, () => {
+  let mongoUrl = MONGO_URL;
+
+  if (NODE_ENV === 'test') {
+    mongoUrl = TEST_MONGO_URL;
+  }
+
   // connect to mongo database
-  connect().then(async () => {
+  connect(mongoUrl).then(async () => {
     initBroker(app).catch(e => {
       debugBase(`Error ocurred during message broker init ${e.message}`);
     });
