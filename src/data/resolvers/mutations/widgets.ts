@@ -398,11 +398,9 @@ const widgetMutations = {
 
       if (IS_CONVERSATION_OPERATOR) {
         HAS_BOTENDPOINT_URL = false;
-
-        return IS_CONVERSATION_OPERATOR ? OPEN : CLOSED;
       }
 
-      return HAS_BOTENDPOINT_URL ? CLOSED : OPEN;
+      return !HAS_BOTENDPOINT_URL || IS_CONVERSATION_OPERATOR ? OPEN : CLOSED;
     };
 
     if (conversationId) {

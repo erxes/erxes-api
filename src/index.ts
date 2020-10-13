@@ -314,15 +314,13 @@ app.post('/import-file', importer);
 
 // unsubscribe
 app.get('/unsubscribe', async (req: any, res) => {
-  const unsubscribed = await handleUnsubscription(req.query);
+  await handleUnsubscription(req.query);
 
-  if (unsubscribed) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    const template = fs.readFileSync(__dirname + '/private/emailTemplates/unsubscribe.html');
-    res.send(template);
-  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
-  res.end();
+  const template = fs.readFileSync(__dirname + '/private/emailTemplates/unsubscribe.html');
+
+  return res.send(template);
 });
 
 apolloServer.applyMiddleware({ app, path: '/graphql', cors: corsOptions });
