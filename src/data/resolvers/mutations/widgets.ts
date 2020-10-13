@@ -388,13 +388,25 @@ const widgetMutations = {
     const integration = await Integrations.findOne({ _id: integrationId }).lean();
 
     const messengerData = integration.messengerData || {};
+
     const { botEndpointUrl } = messengerData;
 
-    let isBotConversation = (botEndpointUrl || '').length > 0;
+    let HAS_BOTENDPOINT_URL = (botEndpointUrl || '').length > 0;
+
+    const getConversationStatus = (IS_CONVERSATION_OPERATOR?: boolean) => {
+      const { OPEN, CLOSED } = CONVERSATION_STATUSES;
+
+      if (IS_CONVERSATION_OPERATOR) {
+        HAS_BOTENDPOINT_URL = false;
+
+        return IS_CONVERSATION_OPERATOR ? OPEN : CLOSED;
+      }
+
+      return HAS_BOTENDPOINT_URL ? CLOSED : OPEN;
+    };
 
     if (conversationId) {
       conversation = await Conversations.findOne({ _id: conversationId }).lean();
-      isBotConversation = conversation.operatorStatus === CONVERSATION_OPERATOR_STATUS.BOT;
 
       conversation = await Conversations.findByIdAndUpdate(
         conversationId,
@@ -403,7 +415,7 @@ const widgetMutations = {
           readUserIds: [],
 
           // reopen this conversation if it's closed
-          status: isBotConversation ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
+          status: getConversationStatus(conversation.operatorStatus !== CONVERSATION_OPERATOR_STATUS.BOT),
         },
         { new: true },
       );
@@ -412,8 +424,8 @@ const widgetMutations = {
       conversation = await Conversations.createConversation({
         customerId,
         integrationId,
-        operatorStatus: isBotConversation ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
-        status: isBotConversation ? CONVERSATION_STATUSES.CLOSED : CONVERSATION_STATUSES.OPEN,
+        operatorStatus: HAS_BOTENDPOINT_URL ? CONVERSATION_OPERATOR_STATUS.BOT : CONVERSATION_OPERATOR_STATUS.OPERATOR,
+        status: getConversationStatus(),
         content: conversationContent,
       });
     }
@@ -432,7 +444,7 @@ const widgetMutations = {
       {
         $set: {
           // Reopen its conversation if it's closed
-          status: !isBotConversation ? CONVERSATION_STATUSES.OPEN : CONVERSATION_STATUSES.CLOSED,
+          status: getConversationStatus(),
 
           // setting conversation's content to last message
           content: conversationContent,
@@ -450,7 +462,7 @@ const widgetMutations = {
     graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: msg });
 
     // bot message ================
-    if (isBotConversation) {
+    if (HAS_BOTENDPOINT_URL) {
       graphqlPubsub.publish('conversationBotTypingStatus', {
         conversationBotTypingStatus: { conversationId: msg.conversationId, typing: true },
       });
@@ -518,7 +530,7 @@ const widgetMutations = {
       });
     }
 
-    if (!isBotConversation) {
+    if (!HAS_BOTENDPOINT_URL) {
       sendMobileNotification({
         title: 'You have a new message',
         body: conversationContent,
@@ -626,7 +638,7 @@ const widgetMutations = {
     });
   },
 
-  async widgetPostRequest(
+  async widgetBotRequest(
     _root,
     {
       integrationId,

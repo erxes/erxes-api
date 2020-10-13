@@ -368,7 +368,7 @@ describe('insertMessage()', () => {
       });
     });
 
-    const botMessage1 = await widgetMutations.widgetPostRequest(
+    const botMessage1 = await widgetMutations.widgetBotRequest(
       {},
       {
         integrationId: _integrationBot._id,
@@ -398,7 +398,7 @@ describe('insertMessage()', () => {
       },
     ]);
 
-    const botMessage2 = await widgetMutations.widgetPostRequest(
+    const botMessage2 = await widgetMutations.widgetBotRequest(
       {},
       {
         integrationId: _integrationBot._id,
