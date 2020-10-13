@@ -247,6 +247,13 @@ const widgetMutations = {
       conversationMessageInserted: message,
     });
 
+    await sendToWebhook('create', 'popupSubmitted', {
+      formId: args.formId,
+      submissions: args.submissions,
+      customer: customerDoc,
+      cachedCustomerId: args.cachedCustomerId,
+    });
+
     return { status: 'ok', messageId: message._id };
   },
 
