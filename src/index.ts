@@ -194,7 +194,7 @@ app.get('/download-template', async (req: any, res) => {
 });
 
 // for health check
-app.get('/status', async (_req, res, next) => {
+app.get('/health', async (_req, res, next) => {
   try {
     await mongoStatus();
   } catch (e) {
@@ -315,6 +315,8 @@ app.post('/delete-file', async (req: any, res) => {
 });
 
 app.post('/upload-file', uploader);
+
+app.post('/upload-file&responseType=json', uploader);
 
 // redirect to integration
 app.get('/connect-integration', async (req: any, res, _next) => {
