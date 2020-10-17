@@ -1,23 +1,12 @@
 import {
-  Customers,
-  Conformities,
-  Cars,
-  CarCategories,
-  Deals,
-  Products,
-  ProductCategories,
-  Stages,
-  Pipelines,
-  Boards,
-  Loyalties,
-  KnowledgeBaseTopics,
-  KnowledgeBaseCategories,
-  KnowledgeBaseArticles
+    Boards, CarCategories, Cars, Conformities, Customers, Deals, KnowledgeBaseArticles,
+    KnowledgeBaseCategories, KnowledgeBaseTopics, Loyalties, Pipelines, ProductCategories, Products,
+    Stages
 } from '../../../db/models';
-import { sendEmail, regexSearchText, paginate } from '../../utils';
-import { ICustomerDocument } from '../../../db/models/definitions/customers';
 import { ICarDocument } from '../../../db/models/definitions/cars';
 import { PUBLISH_STATUSES } from '../../../db/models/definitions/constants';
+import { ICustomerDocument } from '../../../db/models/definitions/customers';
+import { paginate, regexSearchText, sendEmail } from '../../utils';
 
 const sendError = message => ({
   status: 'error',
@@ -72,10 +61,24 @@ export const receiveMobileBackend = async msg => {
       }));
 
     case 'updateCar':
-      return sendSuccess(await Cars.updateCar(data._id, {...data}));
+      return sendSuccess(await Cars.updateCar(data._id, { ...data }));
 
     case 'removeCars':
-      return sendSuccess(await Cars.removeCars(data.carIds))
+      return sendSuccess(await Cars.removeCars(data.carIds));
+
+    case 'addLoyalty':
+      customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
+      if (!customer) {
+        customer = await Customers.createMessengerCustomer({
+          doc: {
+            email: data.user.email,
+            phone: data.user.phoneNumber,
+            deviceToken: data.deviceToken,
+            integrationId: data.integrationId,
+          }
+        });
+      }
+      await Loyalties.addLoyalty(customer, data.loyalty);
   }
 };
 
@@ -97,33 +100,35 @@ export const receiveRPCMobileBackend = async msg => {
       const loyalty = await Loyalties.getLoyaltyValue(customer)
 
       filter = {}
-      dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
+      dealIdsOfCustomer = await Conformities.savedConformity({ mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal'] });
 
       if (data.carId) {
-        const dealIdsOfCar = await Conformities.savedConformity({mainType: 'car', mainTypeId: data.carId, relTypes: ['deal']});
+        const dealIdsOfCar = await Conformities.savedConformity({ mainType: 'car', mainTypeId: data.carId, relTypes: ['deal'] });
         filter._id = { $in: dealIdsOfCar }
       }
 
-      const wStageIds = await Stages.find({probability: 'Won'}, { _id: 1 })
+      const wStageIds = await Stages.find({ probability: 'Won' }, { _id: 1 })
       filter.stageId = { $in: wStageIds }
 
-      const dealCount = await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]}).countDocuments();
+      const dealCount = await Deals.find({ $and: [{ _id: { $in: dealIdsOfCustomer } }, filter] }).countDocuments();
 
       return sendSuccess({ loyalty, dealCount });
 
     case 'createCar':
-      try{
-        car = await Cars.createCar({...data});
+      try {
+        car = await Cars.createCar({ ...data });
         customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
         if (!customer) {
-          customer = await Customers.createMessengerCustomer({doc: {
-            email: data.user.email,
-            phone: data.user.phoneNumber,
-            deviceToken: data.deviceToken,
-            integrationId: 'MobileBend'
-          }});
+          customer = await Customers.createMessengerCustomer({
+            doc: {
+              email: data.user.email,
+              phone: data.user.phoneNumber,
+              deviceToken: data.deviceToken,
+              integrationId: data.integrationId,
+            }
+          });
         }
-        await Conformities.addConformity({mainType: 'customer', mainTypeId: customer._id, relType: 'car', relTypeId: car._id});
+        await Conformities.addConformity({ mainType: 'customer', mainTypeId: customer._id, relType: 'car', relTypeId: car._id });
       } catch (e) {
         return sendError(e.message)
       }
@@ -136,15 +141,15 @@ export const receiveRPCMobileBackend = async msg => {
       if (!customer) {
         return sendError('User has not customer')
       }
-      const carIds = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['car'] })
+      const carIds = await Conformities.savedConformity({ mainType: 'customer', mainTypeId: customer._id, relTypes: ['car'] })
 
       filter = {};
 
       if (data.ids) {
-        filter._id = {$in: data.ids}
+        filter._id = { $in: data.ids }
       }
 
-      if (data.searchValue){
+      if (data.searchValue) {
         filter.searchText = { $in: [new RegExp(`.*${data.searchValue}.*`, 'i')] }
       }
 
@@ -153,13 +158,15 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       return sendSuccess(await Cars.aggregate([
-        {$match: {$and: [{_id: { $in: carIds }}, filter]}},
-        { $lookup: {
-          from: 'car_categories',
-          localField: 'categoryId',
-          foreignField: '_id',
-          as: 'category'
-        }},
+        { $match: { $and: [{ _id: { $in: carIds } }, filter] } },
+        {
+          $lookup: {
+            from: 'car_categories',
+            localField: 'categoryId',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
         { $unwind: '$category' }
       ]));
 
@@ -170,7 +177,7 @@ export const receiveRPCMobileBackend = async msg => {
         return sendError('Car not found')
       }
 
-      return sendSuccess({car, category: await CarCategories.findOne({ _id: car.categoryId })});
+      return sendSuccess({ car, category: await CarCategories.findOne({ _id: car.categoryId }) });
 
     case 'filterCarCategories':
       filter = {}
@@ -180,26 +187,28 @@ export const receiveRPCMobileBackend = async msg => {
         filter.name = new RegExp(`.*${data.searchValue}.*`, 'i');
       }
 
-      return sendSuccess(await CarCategories.aggregate( [
+      return sendSuccess(await CarCategories.aggregate([
         { $match: filter },
-        { $lookup: {
-          from: 'car_categories',
-          localField: '_id',
-          foreignField: 'parentId',
-          as: 'childs'
-        } },
-        { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: {$size: '$childs'} } },
+        {
+          $lookup: {
+            from: 'car_categories',
+            localField: '_id',
+            foreignField: 'parentId',
+            as: 'childs'
+          }
+        },
+        { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: { $size: '$childs' } } },
         { $sort: { order: 1 } }
-      ] ))
+      ]))
 
     case 'getProduct':
-      const product = await Products.findOne({_id: data.productId });
+      const product = await Products.findOne({ _id: data.productId });
 
       if (!product) {
         return sendError('Product not found')
       }
 
-      return sendSuccess({product, category: await ProductCategories.findOne({ _id: product.categoryId })});
+      return sendSuccess({ product, category: await ProductCategories.findOne({ _id: product.categoryId }) });
 
     case 'filterProductCategories':
       filter = {}
@@ -212,13 +221,15 @@ export const receiveRPCMobileBackend = async msg => {
       return sendSuccess(await ProductCategories.aggregate(
         [
           { $match: filter },
-          { $lookup: {
-            from: 'product_categories',
-            localField: '_id',
-            foreignField: 'parentId',
-            as: 'childs'
-          } },
-          { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: {$size: '$childs'} } },
+          {
+            $lookup: {
+              from: 'product_categories',
+              localField: '_id',
+              foreignField: 'parentId',
+              as: 'childs'
+            }
+          },
+          { $project: { code: 1, name: 1, description: 1, parentId: 1, order: 1, childCount: { $size: '$childs' } } },
           { $sort: { order: 1 } }
         ]
       ));
@@ -250,15 +261,17 @@ export const receiveRPCMobileBackend = async msg => {
       const _limit = Number(perPage || '20');
 
       return sendSuccess(await Products.aggregate([
-        {$match: filter},
-        { $lookup: {
-          from: 'product_categories',
-          localField: 'categoryId',
-          foreignField: '_id',
-          as: 'category'
-        }},
+        { $match: filter },
+        {
+          $lookup: {
+            from: 'product_categories',
+            localField: 'categoryId',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
         { $unwind: '$category' },
-        { $skip: (_page - 1) * _limit},
+        { $skip: (_page - 1) * _limit },
         { $limit: _limit }
       ]))
 
@@ -270,14 +283,14 @@ export const receiveRPCMobileBackend = async msg => {
       }
 
       filter = {}
-      dealIdsOfCustomer = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal']});
+      dealIdsOfCustomer = await Conformities.savedConformity({ mainType: 'customer', mainTypeId: customer._id, relTypes: ['deal'] });
 
       if (data.carId) {
-        const dealIdsOfCar = await Conformities.savedConformity({mainType: 'car', mainTypeId: data.carId, relTypes: ['deal']});
+        const dealIdsOfCar = await Conformities.savedConformity({ mainType: 'car', mainTypeId: data.carId, relTypes: ['deal'] });
         filter._id = { $in: dealIdsOfCar }
       }
 
-      if (data.search){
+      if (data.search) {
         Object.assign(filter, regexSearchText(data.search));
       }
 
@@ -285,14 +298,14 @@ export const receiveRPCMobileBackend = async msg => {
       const wonStageIds = await Stages.find(stageFilter, { _id: 1 })
       filter.stageId = { $in: wonStageIds }
 
-      const deals = await Deals.find({ $and: [{_id: { $in: dealIdsOfCustomer }}, filter]});
+      const deals = await Deals.find({ $and: [{ _id: { $in: dealIdsOfCustomer } }, filter] });
 
       const stageIds = deals.map(deal => deal.stageId);
-      const stages = await Stages.find({_id: {$in: stageIds}}, {_id: 1, name: 1, pipelineId: 1});
+      const stages = await Stages.find({ _id: { $in: stageIds } }, { _id: 1, name: 1, pipelineId: 1 });
       const pipelineIds = stages.map(stage => stage.pipelineId);
-      const pipelines = await Pipelines.find({_id: {$in: pipelineIds}}, {_id: 1, name: 1, boardId: 1});
+      const pipelines = await Pipelines.find({ _id: { $in: pipelineIds } }, { _id: 1, name: 1, boardId: 1 });
       const boardIds = pipelines.map(pipeline => pipeline.boardId);
-      const boards = await Boards.find({ _id: { $in: boardIds} }, {_id: 1, name: 1});
+      const boards = await Boards.find({ _id: { $in: boardIds } }, { _id: 1, name: 1 });
 
       const copyDeals: any[] = [...deals];
       const extDeals: any[] = [];
@@ -312,7 +325,7 @@ export const receiveRPCMobileBackend = async msg => {
       return sendSuccess(extDeals);
 
     case 'getDeal':
-      return sendSuccess( await Deals.findOne({ _id: data._id }));
+      return sendSuccess(await Deals.findOne({ _id: data._id }));
 
     case 'createDeal':
       customer = await Customers.getWidgetCustomer({ email: data.user.email, phone: data.user.phoneNumber });
@@ -323,21 +336,21 @@ export const receiveRPCMobileBackend = async msg => {
 
       const deal = await Deals.createDeal({ ...data.dealDoc });
 
-      await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'customer', relTypeId: customer._id})
+      await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'customer', relTypeId: customer._id })
 
-      if (data.carId){
-        await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: data.carId})
+      if (data.carId) {
+        await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: data.carId })
       } else {
-        const carIds = await Conformities.savedConformity({mainType: 'customer', mainTypeId: customer._id, relTypes: ['car']});
-        if (carIds.length > 0){
-          await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: carIds[0]})
+        const carIds = await Conformities.savedConformity({ mainType: 'customer', mainTypeId: customer._id, relTypes: ['car'] });
+        if (carIds.length > 0) {
+          await Conformities.addConformity({ mainType: 'deal', mainTypeId: deal._id, relType: 'car', relTypeId: carIds[0] })
         }
       }
 
       return sendSuccess(deal);
 
     case 'getKnowledgeBaseTopicDetail':
-      return sendSuccess( await KnowledgeBaseTopics.getTopic(data._id));
+      return sendSuccess(await KnowledgeBaseTopics.getTopic(data._id));
 
     case 'filterKnowledgeBaseCategories':
       const topic = await KnowledgeBaseTopics.getTopic(data.topicId);
@@ -346,10 +359,10 @@ export const receiveRPCMobileBackend = async msg => {
         _id: { $in: topic.categoryIds }
       })
 
-      return sendSuccess( await paginate(knowledgeBaseCategories, { ...data }) );
+      return sendSuccess(await paginate(knowledgeBaseCategories, { ...data }));
 
     case 'getKnowledgeBaseCategory':
-      return sendSuccess( await KnowledgeBaseCategories.getCategory(data));
+      return sendSuccess(await KnowledgeBaseCategories.getCategory(data));
 
     case 'filterKnowledgeBaseArticles':
       const category = await KnowledgeBaseCategories.getCategory(data.categoryId);
@@ -360,9 +373,9 @@ export const receiveRPCMobileBackend = async msg => {
         createdAt: -1,
       });
 
-      return sendSuccess( await paginate( articles, { ...data }));
+      return sendSuccess(await paginate(articles, { ...data }));
 
     case 'getKnowledgeBaseArticle':
-      return sendSuccess( await KnowledgeBaseArticles.getArticle(data._id) );
+      return sendSuccess(await KnowledgeBaseArticles.getArticle(data._id));
   }
 }
