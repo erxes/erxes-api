@@ -95,11 +95,7 @@ import {
   types as ImportHistoryTypes,
 } from './importHistory';
 
-import {
-  mutations as MessengerAppMutations,
-  queries as MessengerAppQueries,
-  types as MessengerAppTypes,
-} from './messengerApp';
+import { mutations as MessengerAppMutations, types as MessengerAppTypes } from './messengerApp';
 
 import { mutations as TicketMutations, queries as TicketQueries, types as TicketTypes } from './ticket';
 
@@ -127,6 +123,7 @@ import {
 } from './pipelineLabel';
 
 import { mutations as DashboardMutations, queries as DashboardQueries, types as DashboardTypes } from './dashboard';
+import { mutations as WebhookMutations, queries as WebhookQueries, types as WebhookTypes } from './webhook';
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 export const types = `
@@ -173,6 +170,7 @@ export const types = `
   ${PipelineLabelTypes}
   ${WidgetTypes}
   ${DashboardTypes}
+  ${WebhookTypes}
 `;
 
 export const queries = `
@@ -204,7 +202,6 @@ export const queries = `
     ${ConfigQueries}
     ${FieldGroupQueries}
     ${ImportHistoryQueries}
-    ${MessengerAppQueries}
     ${PermissionQueries}
     ${TicketQueries}
     ${TaskQueries}
@@ -216,6 +213,7 @@ export const queries = `
     ${PipelineLabelQueries}
     ${WidgetQueries}
     ${DashboardQueries}
+    ${WebhookQueries}
   }
 `;
 
@@ -257,6 +255,7 @@ export const mutations = `
     ${PipelineLabelMutations}
     ${WidgetMutations}
     ${DashboardMutations}
+    ${WebhookMutations}
   }
 `;
 
@@ -268,6 +267,7 @@ export const subscriptions = `
     conversationClientTypingStatusChanged(_id: String!): ConversationClientTypingStatusChangedResponse
     conversationAdminMessageInserted(customerId: String!): ConversationAdminMessageInsertedResponse
     conversationExternalIntegrationMessageInserted: JSON
+    conversationBotTypingStatus(_id: String!): JSON
     customerConnectionChanged(_id: String): CustomerConnectionChangedResponse
     activityLogsChanged: Boolean
     importHistoryChanged(_id: String!): ImportHistory

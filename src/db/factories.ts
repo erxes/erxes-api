@@ -49,26 +49,29 @@ import {
   Tickets,
   Users,
   UsersGroups,
+  Webhooks,
 } from './models';
 import { ICustomField } from './models/definitions/common';
 import {
   ACTIVITY_CONTENT_TYPES,
   BOARD_STATUSES,
   BOARD_TYPES,
+  CONVERSATION_OPERATOR_STATUS,
   CONVERSATION_STATUSES,
   FORM_TYPES,
   MESSAGE_TYPES,
   NOTIFICATION_TYPES,
   PROBABILITY,
   PRODUCT_TYPES,
+  WEBHOOK_ACTIONS,
 } from './models/definitions/constants';
 import { IEmail, IMessenger } from './models/definitions/engages';
 import { IMessengerAppCrendentials } from './models/definitions/messengerApps';
 import { IUserDocument } from './models/definitions/users';
 import PipelineTemplates from './models/PipelineTemplates';
 
-const getUniqueValue = async (collection: any, fieldName: string = 'code', defaultValue?: string) => {
-  const getRandomValue = (type: string) => (type === 'email' ? faker.internet.email() : faker.random.word());
+export const getUniqueValue = async (collection: any, fieldName: string = 'code', defaultValue?: string) => {
+  const getRandomValue = (type: string) => (type === 'email' ? faker.internet.email() : Random.id());
 
   let uniqueValue = defaultValue || getRandomValue(fieldName);
 
@@ -568,6 +571,7 @@ interface IConversationFactoryInput {
   customerId?: string;
   assignedUserId?: string;
   integrationId?: string;
+  operatorStatus?: string;
   userId?: string;
   content?: string;
   participatedUserIds?: string[];
@@ -580,6 +584,7 @@ interface IConversationFactoryInput {
   number?: number;
   firstRespondedUserId?: string;
   firstRespondedDate?: dateType;
+  isCustomerRespondedLast?: boolean;
 }
 
 export const conversationFactory = (params: IConversationFactoryInput = {}) => {
@@ -588,6 +593,7 @@ export const conversationFactory = (params: IConversationFactoryInput = {}) => {
     customerId: params.customerId || Random.id(),
     integrationId: params.integrationId || Random.id(),
     status: params.status || CONVERSATION_STATUSES.NEW,
+    operatorStatus: params.operatorStatus || CONVERSATION_OPERATOR_STATUS.OPERATOR,
   };
 
   return Conversations.createConversation({
@@ -1344,6 +1350,28 @@ export function engageDataFactory(params: IMessageEngageDataParams) {
     kind: params.kind || 'popup',
     sentAs: params.sentAs || 'post',
   };
+}
+
+interface IWebhookActionInput {
+  label?: string;
+  type?: string;
+  action?: any;
+}
+
+interface IWebhookParams {
+  url?: string;
+  actions?: IWebhookActionInput[];
+  token?: string;
+}
+
+export function webhookFactory(params: IWebhookParams) {
+  const webhook = new Webhooks({
+    url: params.url || `https://${faker.random.word()}.com`,
+    actions: params.actions || WEBHOOK_ACTIONS,
+    token: params.token || faker.unique,
+  });
+
+  return webhook.save();
 }
 
 interface IOnboardHistoryParams {

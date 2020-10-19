@@ -14,6 +14,7 @@ import { IUserDocument } from '../../../db/models/definitions/users';
 import { debugExternalApi } from '../../../debuggers';
 import messageBroker from '../../../messageBroker';
 import { graphqlPubsub } from '../../../pubsub';
+import { AUTO_BOT_MESSAGES } from '../../constants';
 import { checkPermission, requireLogin } from '../../permissions/wrappers';
 import { IContext } from '../../types';
 import utils from '../../utils';
@@ -314,6 +315,7 @@ const conversationMutations = {
 
     const dbMessage = await ConversationMessages.getMessage(message._id);
 
+    await utils.sendToWebhook('create', 'userMessages', dbMessage);
     // Publishing both admin & client
     publishMessage(dbMessage, conversation.customerId);
 
@@ -512,6 +514,23 @@ const conversationMutations = {
 
       throw new Error(e.message);
     }
+  },
+
+  async changeConversationOperator(_root, { _id, operatorStatus }: { _id: string; operatorStatus: string }) {
+    const message = await Messages.createMessage({
+      conversationId: _id,
+      botData: [
+        {
+          type: 'text',
+          text: AUTO_BOT_MESSAGES.CHANGE_OPERATOR,
+        },
+      ],
+    });
+
+    graphqlPubsub.publish('conversationClientMessageInserted', { conversationClientMessageInserted: message });
+    graphqlPubsub.publish('conversationMessageInserted', { conversationMessageInserted: message });
+
+    return Conversations.updateOne({ _id }, { $set: { operatorStatus } });
   },
 };
 
