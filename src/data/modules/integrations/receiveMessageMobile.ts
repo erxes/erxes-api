@@ -352,6 +352,12 @@ export const receiveRPCMobileBackend = async msg => {
     case 'getKnowledgeBaseTopicDetail':
       return sendSuccess(await KnowledgeBaseTopics.getTopic(data._id));
 
+    case 'getKnowlegeBaseForCatIds':
+      return sendSuccess({
+        topics: await KnowledgeBaseTopics.find({ categoryIds: { $in: data.categoryIds } }),
+        categories: await KnowledgeBaseCategories.find({ _id: { $in: data.categoryIds } })
+      });
+
     case 'filterKnowledgeBaseCategories':
       const topic = await KnowledgeBaseTopics.getTopic(data.topicId);
 
