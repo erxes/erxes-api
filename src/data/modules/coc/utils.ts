@@ -271,9 +271,6 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     }
 
     // filter by search value
-    if (this.params.searchValue && !this.params.autoCompletion) {
-    }
-
     if (this.params.searchValue) {
       this.params.autoCompletion
         ? this.searchByAutoCompletionType(this.params.searchValue, this.params.autoCompletionType || '')
