@@ -113,6 +113,8 @@ interface ICommonListArgs {
   tag?: string;
   ids?: string[];
   searchValue?: string;
+  autoCompletion?: boolean;
+  autoCompletionType?: string;
   brand?: string;
   leadStatus?: string;
   conformityMainType?: string;
@@ -172,6 +174,15 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     this.positiveList.push({
       wildcard: {
         searchText: `*${value.toLowerCase()}*`,
+      },
+    });
+  }
+
+  // filter by auto-completion type
+  public searchByAutoCompletionType(value: string, type: string): void {
+    this.positiveList.push({
+      wildcard: {
+        [type]: `*${value}*`,
       },
     });
   }
@@ -260,8 +271,12 @@ export class CommonBuilder<IListArgs extends ICommonListArgs> {
     }
 
     // filter by search value
-    if (this.params.searchValue) {
+    if (this.params.searchValue && !this.params.autoCompletion) {
       this.searchFilter(this.params.searchValue);
+    }
+
+    if (this.params.searchValue && this.params.autoCompletionType) {
+      this.searchByAutoCompletionType(this.params.searchValue, this.params.autoCompletionType);
     }
 
     await this.conformityFilter();
