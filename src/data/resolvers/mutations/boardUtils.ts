@@ -62,7 +62,7 @@ export const itemsAdd = async (
   docModifier: any,
   createModel: any,
 ) => {
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   doc.initialStageId = doc.stageId;
   doc.watchedUserIds = [user._id];
@@ -148,7 +148,7 @@ export const changeItemStatus = async ({
     return;
   }
 
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   const aboveItems = await collection
     .find({
@@ -205,6 +205,7 @@ export const itemsEdit = async (
   };
 
   const updatedItem = await modelUpate(_id, extendedDoc);
+
   // labels should be copied to newly moved pipeline
   if (doc.stageId) {
     await copyPipelineLabels({ item: oldItem, doc, user });
@@ -337,7 +338,7 @@ export const itemMover = async (
 };
 
 export const itemsChange = async (doc: IItemDragCommonFields, type: string, user: IUserDocument, modelUpdate: any) => {
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
   const { proccessId, itemId, aboveItemId, destinationStageId, sourceStageId } = doc;
 
   const item = await getItem(type, itemId);
@@ -470,7 +471,7 @@ export const itemsCopy = async (
 };
 
 export const itemsArchive = async (stageId: string, type: string, proccessId: string, user: IUserDocument) => {
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   const items = await collection.find({ stageId, status: { $ne: BOARD_STATUSES.ARCHIVED } });
 

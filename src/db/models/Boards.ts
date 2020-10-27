@@ -27,7 +27,7 @@ const removeStageWithItems = async (type: string, pipelineId: string, prevItemId
 
   const stageIds = await Stages.find(selector).distinct('_id');
 
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   await collection.deleteMany({ stageId: { $in: stageIds } });
 
@@ -37,7 +37,7 @@ const removeStageWithItems = async (type: string, pipelineId: string, prevItemId
 const removePipelineStagesWithItems = async (type: string, pipelineId: string) => {
   const stageIds = await Stages.find({ pipelineId }).distinct('_id');
 
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   await collection.deleteMany({ stageId: { $in: stageIds } });
 
@@ -45,7 +45,7 @@ const removePipelineStagesWithItems = async (type: string, pipelineId: string) =
 };
 
 const removeStageItems = async (type: string, stageId: string) => {
-  const collection = getCollection(type);
+  const { collection } = getCollection(type);
 
   return collection.deleteMany({ stageId });
 };

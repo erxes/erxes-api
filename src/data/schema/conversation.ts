@@ -253,4 +253,5 @@ export const mutations = `
   conversationCreateProductBoardNote(_id: String!): String
   changeConversationOperator(_id: String! operatorStatus: String!): JSON
   conversationResolveAll(${mutationFilterParams}): Int
+  conversationConvertToCard(_id: String!, type: String!, itemId: String, itemName: String, stageId: String): String
 `;

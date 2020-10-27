@@ -303,7 +303,7 @@ export const copyChecklists = async (params: IChecklistParams) => {
 };
 
 export const prepareBoardItemDoc = async (_id: string, type: string, userId: string) => {
-  const collection = await getCollection(type);
+  const { collection } = await getCollection(type);
   const item = await collection.findOne({ _id });
 
   const doc = {

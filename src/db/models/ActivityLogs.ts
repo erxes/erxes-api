@@ -91,11 +91,11 @@ export const loadClass = () => {
 
     public static createBoardItemLog({ item, contentType }: { item: IItemCommonFieldsDocument; contentType: string }) {
       let action = ACTIVITY_ACTIONS.CREATE;
-      let content = '';
+      let content: any = '';
 
-      if (item.sourceConversationId) {
+      if (item.sourceConversationIds) {
         action = ACTIVITY_ACTIONS.CONVERT;
-        content = item.sourceConversationId;
+        content = item.sourceConversationIds[0];
       }
 
       return ActivityLogs.addActivityLog({

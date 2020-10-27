@@ -111,7 +111,7 @@ export const loadPipelineLabelClass = () => {
 
       const pipeline = await Pipelines.getPipeline(pipelineLabel.pipelineId);
 
-      const collection = getCollection(pipeline.type);
+      const { collection } = getCollection(pipeline.type);
 
       // delete labelId from collection that used labelId
       await collection.updateMany(
