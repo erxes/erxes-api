@@ -95,11 +95,7 @@ import {
   types as ImportHistoryTypes,
 } from './importHistory';
 
-import {
-  mutations as MessengerAppMutations,
-  queries as MessengerAppQueries,
-  types as MessengerAppTypes,
-} from './messengerApp';
+import { mutations as MessengerAppMutations, types as MessengerAppTypes } from './messengerApp';
 
 import { mutations as TicketMutations, queries as TicketQueries, types as TicketTypes } from './ticket';
 
@@ -204,7 +200,6 @@ export const queries = `
     ${ConfigQueries}
     ${FieldGroupQueries}
     ${ImportHistoryQueries}
-    ${MessengerAppQueries}
     ${PermissionQueries}
     ${TicketQueries}
     ${TaskQueries}
@@ -268,6 +263,7 @@ export const subscriptions = `
     conversationClientTypingStatusChanged(_id: String!): ConversationClientTypingStatusChangedResponse
     conversationAdminMessageInserted(customerId: String!): ConversationAdminMessageInsertedResponse
     conversationExternalIntegrationMessageInserted: JSON
+    conversationBotTypingStatus(_id: String!): JSON
     customerConnectionChanged(_id: String): CustomerConnectionChangedResponse
     activityLogsChanged: Boolean
     importHistoryChanged(_id: String!): ImportHistory

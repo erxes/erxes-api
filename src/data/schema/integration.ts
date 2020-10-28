@@ -18,6 +18,10 @@ export const types = `
     brand: Brand
     form: Form
     channels: [Channel]
+
+    websiteMessengerApps: [MessengerApp]
+    knowledgeBaseMessengerApps: [MessengerApp]
+    leadMessengerApps: [MessengerApp]
   }
 
   type integrationsTotalCount {
@@ -66,6 +70,7 @@ export const types = `
   input IntegrationMessengerData {
     _id: String
     notifyCustomer: Boolean
+    botEndpointUrl: String
     availabilityMethod: String
     isOnline: Boolean,
     onlineHours: [MessengerOnlineHoursSchema]
@@ -179,6 +184,7 @@ export const mutations = `
     kind: String
     references: [String]
     attachments: [JSON]
+    customerId: String
   ): JSON
 
   integrationsUpdateConfigs(configsMap: JSON!): JSON

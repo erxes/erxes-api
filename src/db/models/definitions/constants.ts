@@ -5,6 +5,12 @@ export const CONVERSATION_STATUSES = {
   ALL: ['new', 'open', 'closed'],
 };
 
+export const CONVERSATION_OPERATOR_STATUS = {
+  BOT: 'bot',
+  OPERATOR: 'operator',
+  ALL: ['bot', 'operator'],
+};
+
 export const TAG_TYPES = {
   CONVERSATION: 'conversation',
   CUSTOMER: 'customer',
@@ -652,6 +658,7 @@ export const WEBHOOK_ACTIONS = [
   { label: 'User messages', action: 'create', type: 'userMessages' },
   { label: 'Customer messages', action: 'create', type: 'customerMessages' },
   { label: 'Engage messages', action: 'create', type: 'engageMessages' },
+  { label: 'Popup submitted', action: 'create', type: 'popupSubmitted' },
 ];
 
 export const WEBHOOK_STATUS = {
