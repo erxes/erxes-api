@@ -1,38 +1,38 @@
-import { tableSchema } from '../tablePrefix';
+// import { tableSchema } from '../tablePrefix';
 
-cube(`Pipelines`, {
-  sql: `SELECT * FROM ${tableSchema()}.pipelines`,
+// cube(`Pipelines`, {
+//   sql: `SELECT * FROM ${tableSchema()}__pipelines`,
 
-  joins: {},
+//   joins: {},
 
-  measures: {
-    count: {
-      type: `count`,
-      drillMembers: [boardid, name, createdat],
-    },
-  },
+//   measures: {
+//     count: {
+//       type: `count`,
+//       drillMembers: [boardid, name, createdat],
+//     },
+//   },
 
-  dimensions: {
-    _id: {
-      sql: `${CUBE}.\`_id\``,
-      type: `string`,
-      primaryKey: true,
-    },
+//   dimensions: {
+//     uid: {
+//       sql: `${CUBE}.\`uid\``,
+//       type: `string`,
+//       primaryKey: true,
+//     },
 
-    boardid: {
-      sql: `${CUBE}.\`boardId\``,
-      type: `string`,
-      shown: false,
-    },
+//     boardid: {
+//       sql: `${CUBE}.\`boardId\``,
+//       type: `string`,
+//       shown: false,
+//     },
 
-    name: {
-      sql: `name`,
-      type: `string`,
-    },
+//     name: {
+//       sql: `name`,
+//       type: `string`,
+//     },
 
-    createdat: {
-      sql: `${CUBE}.\`createdAt\``,
-      type: `time`,
-    },
-  },
-});
+//     createdat: {
+//       sql: `${CUBE}.\`createdAt\``,
+//       type: `time`,
+//     },
+//   },
+// });

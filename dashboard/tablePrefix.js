@@ -1,1 +1,1 @@
-exports.tableSchema = () => process.env.CUBEJS_DB_NAME;
+exports.tableSchema = () => 'erxes';

@@ -1,46 +1,46 @@
-import { tableSchema } from '../tablePrefix';
+// import { tableSchema } from '../tablePrefix';
 
-cube(`Channels`, {
-  sql: `SELECT * FROM ${tableSchema()}.channels`,
+// cube(`Channels`, {
+//   sql: `SELECT * FROM ${tableSchema()}__channels`,
 
-  joins: {},
+//   joins: {},
 
-  measures: {
-    count: {
-      type: `count`,
-      drillMembers: [name, userid, createdat],
-    },
+//   measures: {
+//     count: {
+//       type: `count`,
+//       drillMembers: [name, userid, createdat],
+//     },
 
-    conversationcount: {
-      sql: `${CUBE}.\`conversationCount\``,
-      type: `sum`,
-    },
+//     conversationcount: {
+//       sql: `${CUBE}.\`conversationCount\``,
+//       type: `sum`,
+//     },
 
-    openconversationcount: {
-      sql: `${CUBE}.\`openConversationCount\``,
-      type: `sum`,
-    },
-  },
+//     openconversationcount: {
+//       sql: `${CUBE}.\`openConversationCount\``,
+//       type: `sum`,
+//     },
+//   },
 
-  dimensions: {
-    description: {
-      sql: `description`,
-      type: `string`,
-    },
+//   dimensions: {
+//     description: {
+//       sql: `description`,
+//       type: `string`,
+//     },
 
-    name: {
-      sql: `name`,
-      type: `string`,
-    },
+//     name: {
+//       sql: `name`,
+//       type: `string`,
+//     },
 
-    userid: {
-      sql: `${CUBE}.\`userId\``,
-      type: `string`,
-    },
+//     userid: {
+//       sql: `${CUBE}.\`userId\``,
+//       type: `string`,
+//     },
 
-    createdat: {
-      sql: `${CUBE}.\`createdAt\``,
-      type: `time`,
-    },
-  },
-});
+//     createdat: {
+//       sql: `${CUBE}.\`createdAt\``,
+//       type: `time`,
+//     },
+//   },
+// });
