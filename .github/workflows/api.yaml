@@ -96,7 +96,7 @@ jobs:
           yarn build
 
       - name: Build docker image
-        if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/heads/plugin-car')
+        if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/heads/plugin-cars')
         env:
           BASE_IMAGE: erxes/erxes-api:base-12.18.3-slim
         run: |
