@@ -39,6 +39,7 @@ import {
   Users,
   UsersGroups,
 } from '../db/models/index';
+import { automationHelper } from './automationUtils';
 import messageBroker from '../messageBroker';
 import { MODULE_NAMES, RABBITMQ_QUEUES } from './constants';
 import { getSubServiceDomain, registerOnboardHistory, sendRequest, sendToWebhook } from './utils';
@@ -77,7 +78,7 @@ export interface ILogDataParams {
   updatedDocument?: any;
 }
 
-interface IFinalLogParams extends ILogDataParams {
+export interface IFinalLogParams extends ILogDataParams {
   action: string;
 }
 
@@ -1317,6 +1318,9 @@ export const putDeleteLog = async (params: ILogDataParams, user: IUserDocument) 
 
 const putLog = async (params: IFinalLogParams, user: IUserDocument) => {
   try {
+    // mutation wrapper automation
+    await automationHelper({ params, user });
+
     return messageBroker().sendMessage(RABBITMQ_QUEUES.PUT_LOG, {
       ...params,
       createdBy: user._id,

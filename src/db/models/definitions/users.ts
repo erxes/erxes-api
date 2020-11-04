@@ -41,6 +41,7 @@ export interface IUser {
   groupIds?: string[];
   deviceTokens?: string[];
   doNotDisturb?: string;
+  sessionCode?: string;
 }
 
 export interface IUserDocument extends IUser, Document {

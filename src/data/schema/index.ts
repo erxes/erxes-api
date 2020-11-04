@@ -125,11 +125,13 @@ import {
 } from './pipelineLabel';
 
 import { mutations as WebhookMutations, queries as WebhookQueries, types as WebhookTypes } from './webhook';
+import { types as AutomationTypes } from './automation';
 import { mutations as WidgetMutations, queries as WidgetQueries, types as WidgetTypes } from './widget';
 
 export const types = `
   scalar JSON
   scalar Date
+  ${AutomationTypes}
   ${CommonTypes}
   ${UserTypes}
   ${InternalNoteTypes}
@@ -274,7 +276,7 @@ export const subscriptions = `
     importHistoryChanged(_id: String!): ImportHistory
     notificationInserted(userId: String): Notification
     onboardingChanged(userId: String!): OnboardingNotification
-
+    automationResponded(userId: String, sessionCode: String): AutomationResponse
     pipelinesChanged(_id: String!): PipelineChangeResponse
 
     checklistsChanged(contentType: String!, contentTypeId: String!): Checklist

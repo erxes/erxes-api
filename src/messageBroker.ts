@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import { receiveRpcMessage as automationsRecRpcMsg } from './data/modules/automations/receiveMessage';
 import messageBroker from 'erxes-message-broker';
 import {
   receiveEngagesNotification,
@@ -38,9 +39,10 @@ export const initBroker = async (server?) => {
   });
 
   consumeQueue('mobile_backend_to_api', async data => {
-    await receiveMobileBackend(data)
-  })
-  consumeRPCQueue('mobile_backend_rpc_to_api', async data => receiveRPCMobileBackend(data))
+    await receiveMobileBackend(data);
+  });
+  consumeRPCQueue('mobile_backend_rpc_to_api', async data => receiveRPCMobileBackend(data));
+  consumeRPCQueue('rpc_queue:erxes-automations', async data => automationsRecRpcMsg(data));
 };
 
 export default function() {

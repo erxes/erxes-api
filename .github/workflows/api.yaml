@@ -21,6 +21,7 @@ on:
       - develop
       - crons
       - workers
+      - automations
     paths:
       - "**"
       - "!.github/**"
@@ -77,7 +78,7 @@ jobs:
           yarn build
 
       - name: Build docker image
-        if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/heads/plugin-cars')
+        if: github.event_name == 'push' && ( github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/crons' || github.ref == 'refs/heads/workers' || github.ref == 'refs/heads/prius-test')
         env:
           BASE_IMAGE: erxes/erxes-api:base-12.18.3-slim
         run: |
